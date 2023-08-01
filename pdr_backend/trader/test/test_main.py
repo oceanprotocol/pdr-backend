@@ -1,4 +1,4 @@
-from pdr_backend.predictoor.main import process_block, log_loop, main
+from pdr_backend.trader.main import process_block, main
 
-def test_predictoor_main():
+def test_trader_main():
     pass

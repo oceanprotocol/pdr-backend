@@ -2,9 +2,9 @@ import time
 import os
 
 
-from pdr_utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_utils.contract import PredictorContract, Web3Config
-from trade import trade
+from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
+from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.trader.trade import trade
 
 # TODO - check for all envs
 assert os.environ.get("RPC_URL", None), "You must set RPC_URL environment variable"

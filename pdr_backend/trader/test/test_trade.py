@@ -1,4 +1,4 @@
-from pdr_backend.predictoor.predict import predict_function
+from pdr_backend.trader.trade import trade
 
-def test_predict_functionx():
+def test_trade():
     pass
