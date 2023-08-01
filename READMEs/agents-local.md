@@ -30,6 +30,8 @@ from pdr_backend.trueval.trueval import process_block as trueval_process_block
 
 ## 2. Run loop with agents interacting
 
+This is currently single-threaded. We could make it async & multi-threaded, but that hurts debuggability.
+
 In the same Python console:
 ```python
 print("Starting main loop...")
