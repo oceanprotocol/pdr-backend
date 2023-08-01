@@ -12,7 +12,7 @@ In a new console:
 ```console
 # clone the repo and enter into it
 git clone https://github.com/oceanprotocol/pdr-backend
-cd pdr-utils
+cd pdr-backend
 
 # Create & activate virtualenv
 python -m venv venv
