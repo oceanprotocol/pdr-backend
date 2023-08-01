@@ -9,17 +9,18 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
+    "bumpversion",
+    "ccxt",
+    "coverage",
     "enforce_typing",
+    "eth-account",
+    "eth-keys",
+    "pathlib",
     "pylint",
     "pytest",
-    "bumpversion",
     "requests",
     "web3",
-    "coverage",
-    "eth-account",
-    "pathlib",
-    "eth-keys",
-    "ocean-contracts==2.0.0a2"
+    "ocean-contracts==2.0.0a2", #install this last
 ]
 
 # Required to run setup.py:

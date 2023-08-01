@@ -1,8 +1,13 @@
+<!--
+Copyright 2023 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # pdr-backend
 
-## 0. Intro
+## 0. Overview
 
-Predictoor backend repo.
+This is the repo for Predictoor backend.
 
 - This repo merges prior repos: pdr-utils + pdr-trueval + pdr-predictoor + pdr-trader + pdr-dfbuyer.
   - Each has its own sub-directory
@@ -29,10 +34,11 @@ For those who want to change backend components (predictoor, trader, ..)
 Follow these steps in sequence.
 
  1. **[Install pdr-backend](READMEs/install.md)**
- 2. **Setup.** Outcome is a running running with accounts
+ 2. **Setup.** Outcome is a running chain + Ocean contracts + accounts
     - **[Local](READMEs/setup-local.md)**, *or* 
     - **[Remote](READMEs/setup-remote.md)** 
- 3. **[Walk through main flow](READMEs/main-flow.md)**: deploy DT3, run agents (trueval, predictoor, trader)
+ 3. **[Deploy DT3](READMEs/deploy-dt3.md)**
+ 3. **[Walk through main flow](READMEs/main-flow.md)**: run agents (trueval, predictoor, trader)
 
 
 ### 2.2 Backend Devs: Testing
@@ -72,21 +78,3 @@ Quickstart
 Then, observe:
 - Relax & watch as pdr-predictoor is submiting random predictions , pdr-trueval submits random true_vals for each epoch and pdr-trader signals trades.
 - You can query [subgraph](http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql) and see [this populated data PR](https://github.com/oceanprotocol/ocean-subgraph/pull/678) here for entities 
-
-## Appendix
-
-### Appendix: Useful Links
-
-To docker images
-- https://hub.docker.com/r/oceanprotocol/ocean-contracts
-- etc
-
-PR for old vs new predictoor in barge:
-- https://github.com/oceanprotocol/barge/blob/2bf56ed49abc478d3c5555aaacf7443b0e56a7ed/start_ocean.sh
-
-### Appendix: On Private Keys
-
-The READMEs above use these private keys from barge:
-- OPF_DEPLOYER_PRIVATE_KEY:  `0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58`  - contracts owner, ocean token owner
-- PREDICTOOR_PRIVATE_KEY: `0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209`  - predictoor
-- TRADER_PRIVATE_KEY: `0x8467415bb2ba7c91084d932276214b11a3dd9bdb2930fefa194b666dd8020b99`  - trader
