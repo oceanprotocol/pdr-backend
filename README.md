@@ -29,9 +29,9 @@ For those who want to change backend components (predictoor, trader, ..)
 Follow these steps in sequence.
 
  1. **[Install pdr-backend](READMEs/install.md)**
- 2. **Setup:** - outcome: chain running, accounts set up
-    - **[Remote](READMEs/setup-remote.md)**
-    - *or* **[Local](READMEs/setup-local.md)**
+ 2. **Setup.** Outcome is a running running with accounts
+    - **[Local](READMEs/setup-local.md)**, *or* 
+    - **[Remote](READMEs/setup-remote.md)** 
  3. **[Walk through main flow](READMEs/main-flow.md)**: deploy DT3, run agents (trueval, predictoor, trader)
 
 
