@@ -1,6 +1,7 @@
-### Usage: For Frontend Devs
+WARNING: This is obsolete! We're keeping it for reference as we build out the rest
 
-For those developing predictoor.ai or other frontends. Uses barge locally. Backend components don't change.
+### Usage: For Backend Devs
+
 - This version uses *remote* components
 - aka "Partial Barge Approach"
 - This flows runs only contracts and subgraph in barge.

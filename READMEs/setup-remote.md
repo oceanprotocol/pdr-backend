@@ -85,10 +85,3 @@ In your working console:
 export REMOTE_TEST_PRIVATE_KEY1=<your REMOTE_TEST_PRIVATE_KEY1>
 export REMOTE_TEST_PRIVATE_KEY2=<your REMOTE_TEST_PRIVATE_KEY2>
 ```
-
-## Next step
-
-Congrats, you're done remote setup!
-
-The next step is to [deploy DT3](deploy-dt3.md).
-

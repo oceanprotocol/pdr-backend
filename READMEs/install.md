@@ -21,11 +21,3 @@ source venv/bin/activate
 # Install modules in the environment
 pip3 install -r requirements.txt
 ```
-
-## Next step
-
-You've now installed pdr-backend, great!
-
-Next step is setup:
-- **[Local](setup-local.md)**, *or* 
-- **[Remote](setup-remote.md)** 

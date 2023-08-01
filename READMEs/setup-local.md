@@ -53,8 +53,3 @@ export PREDICTOOR_PRIVATE_KEY=0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869
 export TRADER_PRIVATE_KEY=0x8467415bb2ba7c91084d932276214b11a3dd9bdb2930fefa194b666dd8020b99
 ```
 
-## Next step
-
-Congrats, you're done local setup!
-
-The next step is to [deploy DT3](deploy-dt3.md).

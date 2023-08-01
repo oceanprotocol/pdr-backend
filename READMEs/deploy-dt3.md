@@ -108,12 +108,3 @@ DT = DatatokenBase.get_typed(config, new_elements[0])
 DT.setup_exchange({"from": deployer}, to_wei(DT_price))
 print("Done")
 ```
-
-## Next step
-
-You've now deployed DT3, great!
-
-Next step: run agents
-- [Local agents](agents-local.md), _or_
-- [Remote agents](agents-remote.md) (on Azure)
-

@@ -3,37 +3,36 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Run agents, Locally
+# Run local agents, one process for all agents
 
-In this step, you run and create agents that live on your local machine.
+### Overview
 
-We assume you've already
-- (a) [installed pdr-backend](install.md)
-- (b) [done local setup](setup-local.md) or [remote setup](setup-remote.md)
-- (c) [deployed DT3](deploy-dt3.md)
+In this step, you run and create agents.
 
-Steps in this flow:
-1. Create agents: trueval, predictoor, trader, ..
-2. Run loop with agents interacting
+In this README:
+- agents live on your local machine
+- all agents are on a _single_ process
 
-Let's go!
+This is the easiest setup for debugging.
 
-## 1. Create agents
+Prerequisites:
+- [Installed pdr-backend](install.md)
+- [Setup local chain](setup-local.md) or [remote chain](setup-remote.md)
+- [Deployed DT3](deploy-dt3.md)
 
-In the same Python console:
+In console:
+```console
+python
+```
+
+### Step: Create & run agents in a single process
+
+In Python console:
 ```python
 import time
 from pdr_backend.trueval.trueval import process_block as trueval_process_block
 # FIXME: add similar for predictoor, trader, etc
-```
 
-
-## 2. Run loop with agents interacting
-
-This is currently single-threaded. We could make it async & multi-threaded, but that hurts debuggability.
-
-In the same Python console:
-```python
 print("Starting main loop...")
 trueval_lastblock = 0
 while True:
@@ -46,4 +45,3 @@ while True:
         time.sleep(1)
     # FIXME: add similar for predictoor, trader, etc
 ```
-
