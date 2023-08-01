@@ -26,21 +26,16 @@ For those developing predictoor.ai or other frontends. Uses barge locally. Backe
 
 For those who want to change backend components (predictoor, trader, ..)
 
-- **[Backend-dev-local](READMEs/backend-dev-local.md)** -- Local components
-- **[Backend-dev-remote](READMEs/backend-dev-remote.md)** -- Remote components
+Follow these steps in sequence.
 
-Then, observe:
-- Relax & watch as pdr-predictoor is submiting random predictions , pdr-trueval submits random true_vals for each epoch and pdr-trader signals trades.
-- You can query [subgraph](http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql) and see [this populated data PR](https://github.com/oceanprotocol/ocean-subgraph/pull/678) here for entities 
+ 1. **[Install pdr-backend](READMEs/install.md)**
+ 2. **Setup:** - outcome: chain running, accounts set up
+    - **[Remote](READMEs/setup-remote.md)**
+    - *or* **[Local](READMEs/setup-local.md)**
+ 3. **[Walk through main flow](READMEs/main-flow.md)**: deploy DT3, run agents (trueval, predictoor, trader)
 
-### 2.2 Backend Devs: Customize
 
-Ways to customize
-- Customize [pdr-trueval](https://github.com/oceanprotocol/pdr-trueval) to submit real data, not random.
-- Customize [pdr-predictoor](https://github.com/oceanprotocol/pdr-predictoor) to submit real predictions, not random.
-- Customize [pdr-trader](https://github.com/oceanprotocol/pdr-trader) to actually trade.
-
-### 2.3 Backend Devs: Testing
+### 2.2 Backend Devs: Testing
 
 In console:
 ```console
@@ -54,9 +49,29 @@ pytest ocean_lib/models/test/test_data_nft_factory.py
 pytest
 ```
 
+
+### 2.2 Backend Devs: Customize
+
+Ways to customize
+- Customize [pdr-trueval](https://github.com/oceanprotocol/pdr-trueval) to submit real data, not random.
+- Customize [pdr-predictoor](https://github.com/oceanprotocol/pdr-predictoor) to submit real predictions, not random.
+- Customize [pdr-trader](https://github.com/oceanprotocol/pdr-trader) to actually trade.
+
 ### 2.4 Backend Devs: Release Process
 
 (FIXME)
+
+
+### 2.x Backend Devs: (OLD) Quickstart
+
+
+Quickstart
+- **[Backend-dev-local](READMEs/backend-dev-local.md)** -- Local components
+- **[Backend-dev-remote](READMEs/backend-dev-remote.md)** -- Remote components
+
+Then, observe:
+- Relax & watch as pdr-predictoor is submiting random predictions , pdr-trueval submits random true_vals for each epoch and pdr-trader signals trades.
+- You can query [subgraph](http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql) and see [this populated data PR](https://github.com/oceanprotocol/ocean-subgraph/pull/678) here for entities 
 
 ## Appendix
 
