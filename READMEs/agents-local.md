@@ -22,7 +22,9 @@ Let's go!
 
 In the same Python console:
 ```python
-foo bar
+import time
+from pdr_backend.trueval.trueval import process_block as trueval_process_block
+# FIXME: add similar for predictoor, trader, etc
 ```
 
 
@@ -30,6 +32,16 @@ foo bar
 
 In the same Python console:
 ```python
-foo bar
+print("Starting main loop...")
+trueval_lastblock = 0
+while True:
+    # trueval agent
+    trueval_block = web3_config.w3.eth.block_number
+    if block > lastblock:
+        trueval_lastblock = trueval_block
+        trueval_process_block(web3_config.w3.eth.get_block(trueval_block, full_transactions=False))
+    else:
+        time.sleep(1)
+    # FIXME: add similar for predictoor, trader, etc
 ```
 

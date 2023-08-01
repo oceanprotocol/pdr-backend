@@ -42,8 +42,10 @@ Then, set envvars.
 export TEST_PRIVATE_KEY1=0x8467415bb2ba7c91084d932276214b11a3dd9bdb2930fefa194b666dd8020b99
 export TEST_PRIVATE_KEY2=0x1d751ded5a32226054cd2e71261039b65afb9ee1c746d055dd699b1150a5befc
 
-# address file (we may be able to remove this, since we set it later in python?)
+# address file
 export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+export RPC_URL=http://127.0.0.1:8545
+export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 
 # private keys from barge
 export OPF_DEPLOYER_PRIVATE_KEY=0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
