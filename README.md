@@ -35,11 +35,12 @@ Follow these steps in sequence.
 
  1. **[Install pdr-backend](READMEs/install.md)**
  2. **Setup.** Outcome is a running chain + Ocean contracts + accounts
-    - **[Local](READMEs/setup-local.md)**, *or* 
-    - **[Remote](READMEs/setup-remote.md)** 
+    - **[Local chain](READMEs/setup-local.md)**, *or*
+    - **[Remote chain](READMEs/setup-remote.md)** 
  3. **[Deploy DT3](READMEs/deploy-dt3.md)**
- 3. **[Walk through main flow](READMEs/main-flow.md)**: run agents (trueval, predictoor, trader)
-
+ 4. **Run agents.** Trueval, predictoor, trader, etc.
+    - **[Local agents](READMEs/agents-local.md)**, *or*
+    - **[Remote agents](READMEs/agents-remote.md)** - on Azure
 
 ### 2.2 Backend Devs: Testing
 

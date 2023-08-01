@@ -113,5 +113,7 @@ print("Done")
 
 You've now deployed DT3, great!
 
-The next step is to walk through the [main flow](main-flow.md) where you create & run agents.
+Next step: run agents
+- [Local agents](agents-local.md), _or_
+- [Remote agents](agents-remote.md) (on Azure)
 

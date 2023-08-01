@@ -3,12 +3,12 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Main flow
+# Run agents, Locally
 
-This step is the fun one! In it, you'll create agents, then run them.
+In this step, you run and create agents that live on your local machine.
 
 We assume you've already
-- (a) [installed pdr-backend](install.md),
+- (a) [installed pdr-backend](install.md)
 - (b) [done local setup](setup-local.md) or [remote setup](setup-remote.md)
 - (c) [deployed DT3](deploy-dt3.md)
 

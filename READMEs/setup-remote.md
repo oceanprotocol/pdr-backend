@@ -5,7 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # Remote Setup
 
-Here, we do setup for Oasis Saphhire testnet (Sapptest). It's similar for Oasis Sapphire mainnet (Sappmain).
+**NOTE: THIS IS NOT COMPLETE! It will need heavy revisions to work on Oasis, and proper testing.**
+
+Here, we do setup for Oasis Sapphire testnet (Sapptest). It's similar for Oasis Sapphire mainnet (Sappmain).
 
 We assume you've already [installed pdr-backend](install.md).
 
