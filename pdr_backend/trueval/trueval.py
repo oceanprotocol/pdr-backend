@@ -1,3 +1,23 @@
+"""
+Flow
+  - reads from subgraph list of template3 contracts, this gets list of all template3 deployed contracts
+  - for every contract, monitors when epoch is changing
+  - once an epoch is ended, calculate the true_val and submit.
+
+Notes on customization:
+
+  The actual true_val is fetched by calling function get_true_val()
+
+  We call get_true_val() with 4 args:
+   - topic: this is pair object
+   - initial_timestamp:   blocktime for begining of epoch - 2
+   - end_timestamp:   blocktime for begining of epoch -1
+
+  Then it returns true_val, which gets submitted to contract
+
+  You need to change the code to support more complex flows. Now, it's based on ccxt
+"""
+
 from datetime import datetime, timedelta, timezone
 from threading import Thread
 import time

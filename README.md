@@ -44,30 +44,30 @@ Do the following steps sequentially. They start with a local/synchronous/testing
   - [Setup local chain](READMEs/setup-local.md). Run ganache, deploy Ocean, create accounts
   - [Deploy DT3](READMEs/deploy-dt3.md) - to ganache
   - [Run agents-local-oneprocess](READMEs/agents-local-oneprocess.md)
-  - Observe, test, customize, etc (details below)
+  - Observe, test, filter, customize, etc (details below)
 
 **2. Switch local agents to: each agent gets its own process**
   - (Turn off previous agents)
   - [Run agents-local-manyprocess](READMEs/agents-local-manyprocess.md)
-  - Observe, test, customize, etc (details below)
+  - Observe, test, filter, customize, etc (details below)
 
-**3. Switch chain to remote testnet**
+**3. Switch chain to: remote testnet**
   - (Turn off previous chain & agents)
   - [Setup remote](READMEs/setup-remote.md) - with *testnet* settings
   - [Deploy DT3](READMEs/deploy-dt3.md) - to remote testnet
   - [Run agents-local-manyprocess](READMEs/agents-local-manyprocess.md)
-  - Observe, test, customize, etc (details below)
+  - Observe, test, filter, customize, etc (details below)
 
-**4. Switch agents to remote (on Azure)**
+**4. Switch agents to: remote (on Azure)**
   - (Turn off previous agents)
   - [Run agents-remote](READMEs/agents-remote.md) - use existing, or deploy own
-  - Observe, test, customize, etc (details below)
+  - Observe, test, filter, customize, etc (details below)
 
-**5. Switch chain to remote mainnet - for the real $**
+**5. Switch chain to: remote mainnet - for the real $**
   - (Turn off previous)
   - [Setup remote](READMEs/setup-remote.md) - with *mainnet* settings
   - [Run agents-remote](READMEs/agents-remote.md) - use existing, or deploy own
-  - Observe, test, customize, etc (details below)
+  - Observe, test, filter, customize, etc (details below)
 
 ### 4.3 Usage for Backend: How to observe
 
@@ -88,11 +88,22 @@ pytest pytest pdr_backend/trueval/test/test_trueval.py
 pytest
 ```
 
-### 4.4 Usage for Backend: How to customize
+### 4.4 Usage for Backend: How to filter
 
-- Customize `pdr_backend/trueval` to submit real data, not random.
-- Customize `pdr_backend/predictoor` to submit real predictions, not random.
-- Customize `pdr_backend/trader` to actually trade.
+Here are additional envvars used to filter:
+
+- PAIR_FILTER = if we do want to act upon only same pair, like  "BTC/USDT,ETH/USDT"
+- TIMEFRAME_FILTER = if we do want to act upon only same timeframes, like  "5m,15m"
+- SOURCE_FILTER = if we do want to act upon only same sources, like  "binance,kraken"
+- OWNER_ADDRS = if we do want to act upon only same publishers, like  "0x123,0x124"
+
+### 4.5 Usage for Backend: How to customize
+
+Possible places to customize:
+- [`pdr_backend/trueval/trueval.py`](pdr_backend/trueval/trueval.py) - to submit real data, not random
+- [`pdr_backend/predictoor/predict.py`](pdr_backend/predictoor/predict.py) - to submit real predictions, not random
+- [`pdr_backend/trader/trade.py`](pdr_backend/trader/trade.py) - to actually trade
+
 
 ## 5. Release Process
 
