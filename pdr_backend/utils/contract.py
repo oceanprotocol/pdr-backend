@@ -15,7 +15,7 @@ from os.path import expanduser
 from sapphire_wrapper import wrapper
 import artifacts  # noqa
 
-from pdr_utils.constants import (
+from pdr_backend.utils.constants import (
     ZERO_ADDRESS,
     SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,

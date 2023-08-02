@@ -20,6 +20,7 @@ install_requirements = [
     "pytest",
     "requests",
     "web3",
+    "pdr-sapphire-wrapper",
     "ocean-contracts==2.0.0a2", #install this last
 ]
 
