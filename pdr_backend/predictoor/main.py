@@ -40,44 +40,38 @@ def process_block(block, avergage_time_between_blocks):
         topic = topics[address]
         predictor_contract = PredictorContract(web3_config, address)
         epoch = predictor_contract.get_current_epoch()
-        blocks_per_epoch = predictor_contract.get_blocksPerEpoch()
-        blocks_till_epoch_end = (
-            epoch * blocks_per_epoch + blocks_per_epoch - block["number"]
+        seconds_per_epoch = predictor_contract.get_secondsPerEpoch()
+        seconds_till_epoch_end = (
+            epoch * seconds_per_epoch + seconds_per_epoch - block["number"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, blocks_per_epoch: {blocks_per_epoch}, blocks_till_epoch_end: {blocks_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
-        if epoch > topic["last_submited_epoch"] and blocks_till_epoch_end <= int(
-            os.getenv("BLOCKS_TILL_EPOCH_END", 5)
+        if epoch > topic["last_submited_epoch"] and seconds_till_epoch_end <= int(
+            os.getenv("SECONDS_TILL_EPOCH_END", 5)
         ):
             """Try to estimate timestamp of prediction"""
-            soonest_block = (epoch + 2) * blocks_per_epoch
-            now = datetime.now(timezone.utc).timestamp()
-            estimated_time = (
-                now + (soonest_block - block["number"]) * avergage_time_between_blocks
-            )
+            target_time = (epoch + 2) * seconds_per_epoch
+
             """ Let's fetch the prediction """
             (predicted_value, predicted_confidence) = predict_function(
-                topic, estimated_time
+                topic, target_time
             )
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
-                stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+                stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100 # TODO have a customizable function to handle this
                 print(
-                    f"Contract:{predictor_contract.contract_address} - Submiting prediction for slot:{soonest_block}"
+                    f"Contract:{predictor_contract.contract_address} - Submiting prediction for slot:{target_time}"
                 )
                 predictor_contract.submit_prediction(
-                    predicted_value, stake_amount, soonest_block, False
+                    predicted_value, stake_amount, target_time, False
                 )
             else:
                 print(
                     f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
                 )
             # let's get the payout for previous epoch.  We don't care if it fails...
-            trueValSubmitTimeoutBlock = (
-                predictor_contract.get_trueValSubmitTimeoutBlock()
-            )
-            slot = epoch * blocks_per_epoch - trueValSubmitTimeoutBlock - 1
+            slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
                 f"Contract:{predictor_contract.contract_address} - Claiming revenue for slot:{slot}"
             )
