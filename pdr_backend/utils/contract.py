@@ -12,11 +12,47 @@ from pathlib import Path
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from web3.middleware import construct_sign_and_send_raw_middleware
 from os.path import expanduser
-
+from sapphire_wrapper import wrapper
 import artifacts  # noqa
 
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+from pdr_utils.constants import (
+    ZERO_ADDRESS,
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
+
 keys = KeyAPI(NativeECCBackend)
+
+
+def is_sapphire_network(chain_id: int) -> bool:
+    return chain_id in [SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID]
+
+
+def send_encrypted_tx(
+    contract_instance,
+    function_name,
+    args,
+    pk,
+    sender,
+    receiver,
+    rpc_url,
+    value=0,  # in wei
+    gasLimit=10000000,
+    gasCost=0,  # in wei
+    nonce=0,
+) -> tuple:
+    data = contract_instance.encodeABI(fn_name=function_name, args=args)
+    return wrapper.send_encrypted_sapphire_tx(
+        pk,
+        sender,
+        receiver,
+        rpc_url,
+        value,
+        gasLimit,
+        data,
+        gasCost,
+        nonce,
+    )
 
 
 class Web3Config:
@@ -24,10 +60,7 @@ class Web3Config:
         self.rpc_url = rpc_url
 
         if rpc_url is None:
-            raise ValueError("You must set RPC_URL environment variable")
-
-        if private_key is None:
-            raise ValueError("You must set PRIVATE_KEY environment variable")
+            raise ValueError("You must set RPC_URL variable")
 
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
 
@@ -86,6 +119,9 @@ class PredictorContract:
         return self.contract_instance.functions.isValidSubscription(
             self.config.owner
         ).call()
+
+    def getid(self):
+        return self.contract_instance.functions.getId().call()
 
     def get_empty_provider_fee(self):
         return {
@@ -240,13 +276,21 @@ class PredictorContract:
         ) = exchange.get_dt_price(exchange_id)
         return baseTokenAmount
 
-    def get_current_epoch(self):
+    def get_current_epoch(self) -> int:
+        # curEpoch returns the timestamp of current candle start
+        # this function returns the "epoch number" that increases by one each secondsPerEpoch seconds
+        current_epoch_ts = self.get_current_epoch_ts()
+        seconds_per_epoch = self.get_secondsPerEpoch()
+        return int(current_epoch_ts / seconds_per_epoch)
+
+    def get_current_epoch_ts(self) -> int:
+        """returns the current candle start timestamp"""
         return self.contract_instance.functions.curEpoch().call()
 
-    def get_blocksPerEpoch(self):
-        return self.contract_instance.functions.blocksPerEpoch().call()
+    def get_secondsPerEpoch(self) -> int:
+        return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, block):
+    def get_agg_predval(self, timestamp):
         """check subscription"""
         if not self.is_valid_subscription():
             print("Buying a new subscription...")
@@ -256,7 +300,7 @@ class PredictorContract:
             print("Reading contract values...")
             auth = self.get_auth_signature()
             (nom, denom) = self.contract_instance.functions.getAggPredval(
-                block, auth
+                timestamp, auth
             ).call({"from": self.config.owner})
             print(f" Got {nom} and {denom}")
             if denom == 0:
@@ -281,31 +325,83 @@ class PredictorContract:
             print(e)
             return None
 
-    def soonest_block_to_predict(self, block):
-        return self.contract_instance.functions.soonestBlockToPredict(block).call()
+    def soonest_timestamp_to_predict(self, timestamp):
+        return self.contract_instance.functions.soonestEpochToPredict(timestamp).call()
 
     def submit_prediction(
-        self, predicted_value, stake_amount, prediction_block, wait_for_receipt=True
+        self,
+        predicted_value: bool,
+        stake_amount: int,
+        prediction_ts: int,
+        wait_for_receipt=True,
     ):
-        """Sumbits a prediction"""
-        # TO DO - check allowence first, only do approve if needed
+        """
+        Submits a prediction with the specified stake amount to the smart contract on the blockchain.
+
+        @param predicted_value: The predicted value (True or False)
+        @param stake_amount: The amount of ETH to be staked on the prediction
+        @param prediction_ts: The prediction timestamp, must be the start timestamp of a candle.
+        @param wait_for_receipt: If True, the function waits for the transaction receipt after submission.
+                                If False, it returns immediately after sending the transaction. Default is True.
+
+        @return: If wait_for_receipt is True, returns the transaction receipt.
+                If wait_for_receipt is False, returns the transaction hash immediately after sending the transaction.
+                If an exception occurs during the  process, returns None.
+        """
         amount_wei = self.config.w3.to_wei(str(stake_amount), "ether")
+
+        # Check allowance first, only approve if needed
+        current_allowance = self.token.allowance(
+            self.config.owner, self.contract_address
+        )
+        if current_allowance < amount_wei:
+            try:
+                self.token.approve(self.contract_address, amount_wei)
+            except Exception as e:
+                print("Error while approving the contract to spend tokens:", e)
+                return None
+
         self.token.approve(self.contract_address, amount_wei)
         gasPrice = self.config.w3.eth.gas_price
         try:
-            tx = self.contract_instance.functions.submitPredval(
-                predicted_value, amount_wei, prediction_block
-            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
-            print(f"Submitted prediction, txhash: {tx.hex()}")
+            txhash = None
+            if is_sapphire_network(self.config.w3.eth.chain_id):
+                data = self.contract_instance.encodeABI(
+                    fn_name="submitPredval",
+                    args=[predicted_value, amount_wei, prediction_ts],
+                )
+                sender = self.config.owner
+                receiver = self.contract_instance.address
+                pk = self.config.account.key.hex()[2:]
+                res, txhash = send_encrypted_tx(
+                    self.contract_instance,
+                    "submitPredval",
+                    [predicted_value, amount_wei, prediction_ts],
+                    pk,
+                    sender,
+                    receiver,
+                    self.config.rpc_url,
+                    0,
+                    1000000,
+                    data,
+                )
+                print("Encrypted transaction status code:", res)
+            else:
+                tx = self.contract_instance.functions.submitPredval(
+                    predicted_value, amount_wei, prediction_ts
+                ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+                txhash = tx.hex()
+
+            print(f"Submitted prediction, txhash: {txhash}")
             if not wait_for_receipt:
-                return tx
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+                return txhash
+            return self.config.w3.eth.wait_for_transaction_receipt(txhash)
         except Exception as e:
             print(e)
             return None
 
-    def get_trueValSubmitTimeoutBlock(self):
-        return self.contract_instance.functions.trueValSubmitTimeoutBlock().call()
+    def get_trueValSubmitTimeoutEpoch(self):
+        return self.contract_instance.functions.trueValSubmitTimeoutEpoch().call()
 
     def get_prediction(self, slot):
         return self.contract_instance.functions.getPrediction(slot).call(
@@ -313,13 +409,13 @@ class PredictorContract:
         )
 
     def submit_trueval(
-        self, true_val, block, float_value, cancel_round, wait_for_receipt=True
+        self, true_val, timestamp, float_value, cancel_round, wait_for_receipt=True
     ):
         gasPrice = self.config.w3.eth.gas_price
         try:
             fl_value = self.config.w3.to_wei(str(float_value), "ether")
             tx = self.contract_instance.functions.submitTrueVal(
-                block, true_val, fl_value, cancel_round
+                timestamp, true_val, fl_value, cancel_round
             ).transact({"from": self.config.owner, "gasPrice": gasPrice})
             print(f"Submitted trueval, txhash: {tx.hex()}")
             if not wait_for_receipt:
@@ -329,11 +425,11 @@ class PredictorContract:
             print(e)
             return None
 
-    def redeem_unused_slot_revenue(self, block, wait_for_receipt=True):
+    def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
         try:
             tx = self.contract_instance.functions.redeemUnusedSlotRevenue(
-                block
+                timestamp
             ).transact({"from": self.config.owner, "gasPrice": gasPrice})
             if not wait_for_receipt:
                 return tx
