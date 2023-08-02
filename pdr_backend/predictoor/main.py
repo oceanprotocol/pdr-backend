@@ -15,12 +15,15 @@ avergage_time_between_blocks = 0
 last_block_time = 0
 topics = []
 
-# TODO - check for all envs
-assert os.environ.get("RPC_URL", None), "You must set RPC_URL environment variable"
-assert os.environ.get(
-    "SUBGRAPH_URL", None
-), "You must set SUBGRAPH_URL environment variable"
-web3_config = Web3Config(os.environ.get("RPC_URL"), os.environ.get("PRIVATE_KEY"))
+rpc_url = env.get_rpc_url_or_exit()
+subgraph_url = env.get_subgraph_or_exit()
+private_key = env.get_private_key_or_exit()
+pair_filters = env.get_pair_filter()
+timeframe_filter = env.get_timeframe_filter()
+source_filter = env.get_source_filter()
+owner_addresses = env.get_owner_addresses()
+
+web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 
@@ -29,11 +32,11 @@ def process_block(block, avergage_time_between_blocks):
     """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
         topics = get_all_interesting_prediction_contracts(
-            os.environ.get("SUBGRAPH_URL"),
-            os.environ.get("PAIR_FILTER", None),
-            os.environ.get("TIMEFRAME_FILTER", None),
-            os.environ.get("SOURCE_FILTER", None),
-            os.environ.get("OWNER_ADDRS", None),
+            subgraph_url,
+            pair_filters,
+            timeframe_filter,
+            source_filter,
+            owner_addresses,
         )
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
