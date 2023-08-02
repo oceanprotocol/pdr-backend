@@ -11,7 +11,6 @@ from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictorContract, Web3Config
 
 
-avergage_time_between_blocks = 0
 last_block_time = 0
 topics = []
 
@@ -24,7 +23,7 @@ web3_config = Web3Config(os.environ.get("RPC_URL"), os.environ.get("PRIVATE_KEY"
 owner = web3_config.owner
 
 
-def process_block(block, avergage_time_between_blocks):
+def process_block(block):
     global topics
     """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
@@ -81,15 +80,11 @@ def process_block(block, avergage_time_between_blocks):
 
 
 def log_loop(blockno):
-    global avergage_time_between_blocks, last_block_time
+    global last_block_time
     block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
     if block:
-        if last_block_time > 0:
-            avergage_time_between_blocks = (
-                avergage_time_between_blocks + (block["timestamp"] - last_block_time)
-            ) / 2
         last_block_time = block["timestamp"]
-    process_block(block, avergage_time_between_blocks)
+        process_block(block)
 
 
 def main():
