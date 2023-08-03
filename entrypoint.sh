@@ -14,5 +14,5 @@ then
     exit 1
 fi
 
-echo "Running main.py for $MODULE_NAME..."
+echo "Running $MODULE_NAME..."
 python /app/pdr_backend/$MODULE_NAME/main.py

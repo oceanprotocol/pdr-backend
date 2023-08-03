@@ -20,7 +20,7 @@ To run a specific module (for example `trader`), run the following command:
 ```bash
 docker run --name pdr_trader_container -it pdrbackend trader
 
-$ Running main.py for trader...
+$ Running trader...
 ```
 
 This will run the `trader` module. You can replace `trader` with the name of any other module in the `pdr_backend` directory except `utils` since it's not a module.
