@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Here, we do setup for Oasis Sapphire testnet (Sapptest). It's similar for Oasis Sapphire mainnet (Sappmain).
 
-We assume you've already [installed pdr-backend](install.md).
+We assume you've already [installed pdr-backend](install.md) or [built a Docker image](docker.md).
 
 For brevity, we refer to 
 
