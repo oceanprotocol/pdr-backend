@@ -17,15 +17,19 @@ This is the repo for Predictoor backend.
 
 (Once it's working, we no longer need any of the above pdr-* repos)
 
-## 2. Installation
+## 2. Install
 
-[Install](READMEs/install.md)
+- [Install pdr-backend](READMEs/install.md)
 
 ## 3. Usage for Frontend
 
-For frontend devs who are developing predictoor.ai etc. Uses barge locally. Backend components don't change.
+This is for frontend devs who are developing predictoor.ai etc. Uses barge locally. Backend components don't change.
 
-**[Frontend-dev](READMEs/frontend-dev.md)**
+First, [set up barge](READMEs/setup-barge.md).
+
+Then, run barge with all components: `./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-trader --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer`
+
+Then, run frontend components that talk to chain & agents in barge, via http api.
 
 ## 4. Usage for Backend Devs, Predictoors, Traders
 
@@ -36,45 +40,70 @@ This flow is for those who want to change one or more backend components
 - Predictoors - focus on changing predictoor component
 - Traders - focus on changing trader component
 
-### 4.2 Usage for Backend: Steps
+### 4.2 Usage for Backend: Local variants
 
-Do the following steps sequentially. They start with a local/synchronous/testing setup, and progress to end up at remote/asynchronous/production. 
+First, [set up barge](READMEs/setup-barge.md).
 
-**1. Run basic debugging setup:** local chain, local agents, one process for all agents
-  - [Setup local chain](READMEs/setup-local.md). Run ganache, deploy Ocean, create accounts
-  - [Deploy DT3](READMEs/deploy-dt3.md) - to ganache
+Then, use any configuration below.
+
+**Local chain, local agents all in one synchronous process**
+  - Run barge with no predictoor agents: `./start_ocean.sh --predictoor`
   - [Run agents-local-oneprocess](READMEs/agents-local-oneprocess.md)
   - Observe, test, filter, customize, etc (details below)
 
-**2. Switch local agents to: each agent gets its own process**
-  - (Turn off previous agents)
-  - [Run agents-local-manyprocess](READMEs/agents-local-manyprocess.md)
-  - Observe, test, filter, customize, etc (details below)
+**Local chain, iterate on predictoor agent changes, other agents in barge**
+  - Run barge with all agents except predictoor agent:  `./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer`
+  - Run a predictoor agent from pdr-util as follows. Start new console and:
+```console
+# Setup env
+cd pdr-backend
+source venv/bin/activate
 
-**3. Switch chain to: remote testnet**
-  - (Turn off previous chain & agents)
+# Set envvars
+export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+export RPC_URL=http://127.0.0.1:8545
+export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
+export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+
+# Run
+python3 pdr_backend/predictoor/main.py
+```
+
+**Local chain, iterate changes to agent XX1, with other agents in barge**
+  - Where XX1 can be trader, trueval, dfbuyer, etc
+  - Do like "predictoor" above, except predictoor --> XX1
+
+
+**Local chain, iterate changes to agent {XX1, XX2, ..}, with other agents in barge**
+  - Where XX1, XX2, .. can be trader, trueval, dfbuyer, etc
+  - Do like "predictoor" above, except one new console for each of XX1, XX2, etc
+
+
+### 4.3 Usage for Backend: Remote, for Predictoors
+
+(WIP, don't worry about this for now!)
+
+**Remote testnet, local predictoor, other agents run remotely by others**
   - [Setup remote](READMEs/setup-remote.md) - with *testnet* settings
-  - [Deploy DT3](READMEs/deploy-dt3.md) - to remote testnet
-  - [Run agents-local-manyprocess](READMEs/agents-local-manyprocess.md)
+  - Run predictoor with settings like above, except set RPC to remote
   - Observe, test, filter, customize, etc (details below)
 
-**4. Switch agents to: remote (on Azure)**
-  - (Turn off previous agents)
-  - [Run agents-remote](READMEs/agents-remote.md) - use existing, or deploy own
-  - Observe, test, filter, customize, etc (details below)
+**Remote testnet, remote predictoor, other agents run remotely by others**
+  - [Setup remote](READMEs/setup-remote.md) - with *testnet* settings
+  - Deploy predictoor to Azure. Details in [Run agents-remote](READMEs/agents-remote.md)
 
-**5. Switch chain to: remote mainnet - for the real $**
-  - (Turn off previous)
+*Remote mainnet, remote predictoor*
   - [Setup remote](READMEs/setup-remote.md) - with *mainnet* settings
   - [Run agents-remote](READMEs/agents-remote.md) - use existing, or deploy own
-  - Observe, test, filter, customize, etc (details below)
 
-### 4.3 Usage for Backend: How to observe
+(For non-predictoors, it's similar. We'll flesh this out as we go.)
+
+### 4.4 Usage for Backend: How to observe
 
 - Relax & watch as predictoor submits random predictions , trueval submits random true_vals for each epoch and trader signals trades.
 - You can query [subgraph](http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql) and see [this populated data PR](https://github.com/oceanprotocol/ocean-subgraph/pull/678) here for entities 
 
-### 4.4 Usage for Backend: How to test
+### 4.5 Usage for Backend: How to test
 
 In console:
 ```console
@@ -88,7 +117,7 @@ pytest pytest pdr_backend/trueval/test/test_trueval.py
 pytest
 ```
 
-### 4.4 Usage for Backend: How to filter
+### 4.6 Usage for Backend: How to filter
 
 Here are additional envvars used to filter:
 
@@ -97,7 +126,7 @@ Here are additional envvars used to filter:
 - SOURCE_FILTER = if we do want to act upon only same sources, like  "binance,kraken"
 - OWNER_ADDRS = if we do want to act upon only same publishers, like  "0x123,0x124"
 
-### 4.5 Usage for Backend: How to customize
+### 4.7 Usage for Backend: How to customize
 
 Possible places to customize:
 - [`pdr_backend/trueval/trueval.py`](pdr_backend/trueval/trueval.py) - to submit real data, not random
