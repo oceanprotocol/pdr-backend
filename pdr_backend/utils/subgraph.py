@@ -1,9 +1,79 @@
+"""
+From this ref...
+https://github.com/oceanprotocol/ocean-subgraph/pull/678 "Predictoor support")
+... here's an example query:
+
+query {
+  predictContracts{
+    id	
+    token{
+      name
+    }
+    blocksPerEpoch
+    blocksPerSubscription
+    truevalSubmitTimeoutBlock
+    block
+    eventIndex
+    slots{
+      id
+      predictions{
+        id
+        user {
+          id
+        }
+        stake
+        payout {
+          id
+          predictedValue
+          trueValue
+          payout
+        }
+      }
+      trueValues{
+        trueValue
+        floatValue
+        txId
+      }
+      revenue
+      revenues{
+        
+        amount
+        txId
+      }
+      
+      
+    }
+    subscriptions{
+      
+      user {
+        id
+      }
+      expireTime
+      txId
+    }
+    }
+    
+ }
+"""
+
+
 import os
 import requests
+from typing import Optional, Dict
+
+from enforce_typing import enforce_types
 from web3 import Web3
 
-
-def query_subgraph(subgraph_url, query):
+@enforce_types
+def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
+    """
+    @arguments
+      subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+      query -- e.g. in docstring above
+    
+    @return
+      result -- e.g. {"data" : {"predictContracts": ..}}
+    """
     request = requests.post(subgraph_url, "", json={"query": query}, timeout=1.5)
     if request.status_code != 200:
         # pylint: disable=broad-exception-raised
@@ -13,13 +83,34 @@ def query_subgraph(subgraph_url, query):
     result = request.json()
     return result
 
-
+@enforce_types
 def get_all_interesting_prediction_contracts(
-    subgraph_url, pairs=None, timeframes=None, sources=None, owners=None
-):
+        subgraph_url:str,
+        pairs=Optional[str],
+        timeframes=Optional[str],
+        sources=Optional[str],
+        owners=Optional[str],
+) -> Dict[str, dict]:
+    """
+    @description
+      Query the chain for prediction contracts, then filter down 
+      according to pairs, timeframes, sources, or owners.
+    
+    @arguments
+      subgraph_url -- e.g.
+      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None, allow all
+      timeframes -- E.g. filter to "5m,15m". If None, allow all
+      sources -- E.g. filter to "binance,kraken". If None, allow all
+      owners -- E.g. filter to "0x123,0x124". If None, allow all
+
+    @return
+      contracts -- dict of [contract_id] : contract_info
+        where contract_info is a dict with fields name, address, symbol, ..
+    """
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     contracts = {}
+    
     # prepare keys
     owners_filter = []
     pairs_filter = []
