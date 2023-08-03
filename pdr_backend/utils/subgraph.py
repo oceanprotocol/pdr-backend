@@ -55,9 +55,9 @@ def get_all_interesting_prediction_contracts(
                         }
                     }
                 }
-                blocksPerEpoch
-                blocksPerSubscription
-                truevalSubmitTimeoutBlock
+                secondsPerEpoch
+                secondsPerSubscription
+                truevalSubmitTimeout
             }
         }
         """ % (
@@ -113,8 +113,8 @@ def get_all_interesting_prediction_contracts(
                     "name": contract["token"]["name"],
                     "address": contract["id"],
                     "symbol": contract["token"]["symbol"],
-                    "blocks_per_epoch": contract["blocksPerEpoch"],
-                    "blocks_per_subscription": contract["blocksPerSubscription"],
+                    "seconds_per_epoch": contract["secondsPerEpoch"],
+                    "seconds_per_subscription": contract["secondsPerSubscription"],
                     "last_submited_epoch": 0,
                 }
                 contracts[contract["id"]].update(info)
