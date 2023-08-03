@@ -65,6 +65,50 @@ from enforce_typing import enforce_types
 from web3 import Web3
 
 @enforce_types
+def key_to_725(key:str):
+    key725 = Web3.keccak(key.encode("utf-8")).hex()
+    return key725
+
+
+@enforce_types
+def value_to_725(value:str):
+    value725 = Web3.to_hex(text=value)
+    return value725
+
+
+@enforce_types
+def value_from_725(value725) -> str:
+    value = Web3.to_text(hexstr=value725)
+    return value
+
+
+@enforce_types
+def info_from_725(info725_list: list) -> Dict[str, str]:
+    """
+    @arguments
+      info725_list -- eg [{"key":encoded("pair"), "value":encoded("ETH/USDT")},
+                          {"key":encoded("timeframe"), "value":encoded("5m") },
+                           ... ]
+    @return
+      info_dict -- e.g. {"pair": "ETH/USDT", 
+                         "timeframe": "5m", 
+                          ... }
+    """
+    target_keys = ["pair", "base", "quote", "source", "timeframe"]
+    info_dict = {}
+    for key in target_keys:
+        for item725 in info725_list:
+            key725 = item725["key"]
+            value725 = item725["value"]
+            if key725 == key_to_725(key):
+                value = value_from_725(value725)
+                info_dict[key] = value
+                break
+
+    return info_dict
+
+
+@enforce_types
 def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
     """
     @arguments
@@ -82,6 +126,7 @@ def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
         )
     result = request.json()
     return result
+
 
 @enforce_types
 def get_all_interesting_prediction_contracts(
@@ -112,10 +157,9 @@ def get_all_interesting_prediction_contracts(
     contracts = {}
     
     # prepare keys
-    owners_filter = []
-    pairs_filter = []
-    timeframes_filter = []
-    sources_filter = []
+    owners_filter, pairs_filter, timeframes_filter, sources_filter = \
+        [], [], [], []
+    
     if owners:
         owners_filter = [owner.lower() for owner in owners.split(",")]
     if pairs:
@@ -158,24 +202,15 @@ def get_all_interesting_prediction_contracts(
         offset += chunk_size
         try:
             result = query_subgraph(subgraph_url, query)
-            if result["data"]["predictContracts"] == []:
+            contract_list = result["data"]["predictContracts"]  
+            if contract_list == []:
                 break
-            for contract in result["data"]["predictContracts"]:
-                # loop 725 values and get what we need
-                info = {
-                    "pair": None,
-                    "base": None,
-                    "quote": None,
-                    "source": None,
-                    "timeframe": None,
-                }
-                for nftData in contract["token"]["nft"]["nftData"]:
-                    for info_key, info_values in info.items():
-                        if (
-                            nftData["key"]
-                            == Web3.keccak(info_key.encode("utf-8")).hex()
-                        ):
-                            info[info_key] = Web3.to_text(hexstr=nftData["value"])
+            for contract in contract_list:
+                info725 = contract["token"]["nft"]["nftData"]
+                
+                # dict of {"pair": "ETH/USDT", "base":...}
+                info = info_from_725(info725)
+                            
                 # now do filtering
                 if (
                     (
