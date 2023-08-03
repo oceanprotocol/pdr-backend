@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Local Setup
 
-We assume you've already [installed pdr-backend](install.md) or [built a Docker image](docker.md).
+We assume you've already [installed pdr-backend](install.md).
 
 ## 1. Download barge and run services
 
