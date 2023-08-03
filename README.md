@@ -152,7 +152,7 @@ To create a new release for pdr-backend, follow these steps:
 4. Add release notes and any relevant information about the new release.
 5. Once everything is ready, click "Publish release."
 
-The CI will automatically build and publish a new Docker image with the release tag, making it available for installation and use.
+The CI/CD will automatically build and publish a new Docker image with the release tag, making it available for installation and use.
 
 ## Appendix: OLD backend quickstart
 
