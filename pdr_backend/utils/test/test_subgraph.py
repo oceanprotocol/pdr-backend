@@ -34,19 +34,24 @@ def test_query_subgraph(monkeypatch):
 
 def test_get_all_interesting_prediction_contracts(monkeypatch):    
     class MockResponse:
-        status_code = 200
+        def __init__(self, contracts: list = [], status_code:int = 200):
+            self.contracts = contracts
+            self.status_code = status_code
 
         @staticmethod
         def json():
-            return {"data": {"predictContracts": []}}
+            return {"data": {"predictContracts": contracts}}
         
     subgraph_url = "foo"
 
     #happy path
-    def mock_post(*args, **kwargs):
-        return MockResponse()
+    class MockPost:
+        def __init__(self, contracts):
+            self.response = MockResponse(contracts)
+        def __call__(self, *args, **kwargs):
+            return self.response
 
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(requests, "post", MockPost([]))
     contracts = get_all_interesting_prediction_contracts(subgraph_url)
     assert contracts == {}
 
