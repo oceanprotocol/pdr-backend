@@ -15,6 +15,9 @@ In this README:
 
 This is the easiest setup for debugging.
 
+> [!NOTE]
+> If you would like to run agents in a container, simply follow the steps outlined in [Running on Docker](./docker.md).
+
 Prerequisites:
 - [Installed pdr-backend](install.md)
 - [Setup local chain](setup-local.md) or [remote chain](setup-remote.md)
