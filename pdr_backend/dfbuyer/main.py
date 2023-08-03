@@ -15,7 +15,6 @@ assert os.environ.get(
     "SUBGRAPH_URL", None
 ), "You must set SUBGRAPH_URL environment variable"
 
-avergage_time_between_blocks = 0
 last_block_time = 0
 WEEK = 7 * 86400
 
@@ -38,7 +37,7 @@ topics = []
 predictoor_contracts = []
 
 
-def process_block(block, avergage_time_between_blocks):
+def process_block(block):
     global topics
     """ Process each contract and see if we need to submit """
     if not topics:
@@ -63,11 +62,9 @@ def process_block(block, avergage_time_between_blocks):
         return
     estimated_week_end = estimated_week_start + WEEK
     print(f"estimated_week_end:{estimated_week_end}")
-    estimated_blocks_left = (
-        estimated_week_end - block["timestamp"]
-    ) / avergage_time_between_blocks
-    print(f"estimated_blocks_left:{estimated_blocks_left}")
-    consume_target = random.uniform(0, consume_left / estimated_blocks_left * 100)
+    estimated_time_left = estimated_week_end - estimated_week_start
+    print(f"estimated_time_left:{estimated_time_left}")
+    consume_target = random.uniform(0, consume_left / estimated_time_left * 100)
     print(f"consume_target:{consume_target}")
     # do random allocation
     buy_percentage_per_topic = numbers_with_sum(len(topics), 100)
@@ -87,16 +84,11 @@ def process_block(block, avergage_time_between_blocks):
 
 
 def log_loop(blockno):
-    global avergage_time_between_blocks, last_block_time
+    global last_block_time
     block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
     if block:
-        if last_block_time > 0:
-            avergage_time_between_blocks = (
-                avergage_time_between_blocks + (block["timestamp"] - last_block_time)
-            ) / 2
         last_block_time = block["timestamp"]
-    if avergage_time_between_blocks > 0:
-        process_block(block, avergage_time_between_blocks)
+        process_block(block)
 
 
 def main():

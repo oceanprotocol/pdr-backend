@@ -400,8 +400,8 @@ class PredictorContract:
             print(e)
             return None
 
-    def get_trueValSubmitTimeoutEpoch(self):
-        return self.contract_instance.functions.trueValSubmitTimeoutEpoch().call()
+    def get_trueValSubmitTimeout(self):
+        return self.contract_instance.functions.trueValSubmitTimeout().call()
 
     def get_prediction(self, slot):
         return self.contract_instance.functions.getPrediction(slot).call(
