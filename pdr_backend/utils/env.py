@@ -1,35 +1,33 @@
 import os
 import sys
 
-def get_rpc_url_or_exit() -> str:
-    url = os.environ.get("RPC_URL", None)
-    if url == None:
-        print("You must set RPC_URL environment variable")
+def get_envvar(envvar_name: str, default=None) -> str:
+    return os.environ.get(envvar_name, default)
+
+def get_envvar_or_exit(envvar_name: str) -> str:
+    value = get_envvar(envvar_name)
+    if value == None:
+        print(f"You must set {envvar_name} environment variable")
         sys.exit(1)
-    return url
+    return value
+
+def get_rpc_url_or_exit() -> str:
+    return get_envvar_or_exit("RPC_URL")
 
 def get_subgraph_or_exit() -> str:
-    url = os.environ.get("SUBGRAPH_URL", None)
-    if url == None:
-        print("You must set SUBGRAPH_URL environment variable")
-        sys.exit(1)
-    return os.environ.get("SUBGRAPH_URL", None)
+    return get_envvar_or_exit("SUBGRAPH_URL")
 
 def get_private_key_or_exit() -> str:
-    private_key = os.environ.get("PRIVATE_KEY", None)
-    if not private_key:
-        print("You must set PRIVATE_KEY environment variable")
-        sys.exit(1)
-    return private_key
+    return get_envvar_or_exit("PRIVATE_KEY")
 
 def get_pair_filter() -> str:
-    return os.environ.get("PAIR_FILTER", None)
+    return get_envvar("PAIR_FILTER")
 
 def get_timeframe_filter() -> str:
-    return os.environ.get("TIMEFRAME_FILTER", None)
+    return get_envvar("TIMEFRAME_FILTER")
 
 def get_source_filter() -> str:
-    return os.environ.get("SOURCE_FILTER", None)
+    return get_envvar("SOURCE_FILTER")
 
 def get_owner_addresses() -> str:
-    return os.environ.get("OWNER_ADDRS", None)
+    return get_envvar("OWNER_ADDRS")
