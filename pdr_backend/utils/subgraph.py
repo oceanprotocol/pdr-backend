@@ -86,10 +86,10 @@ def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
 @enforce_types
 def get_all_interesting_prediction_contracts(
         subgraph_url:str,
-        pairs=Optional[str],
-        timeframes=Optional[str],
-        sources=Optional[str],
-        owners=Optional[str],
+        pairs:Optional[str]=None,
+        timeframes:Optional[str]=None,
+        sources:Optional[str]=None,
+        owners:Optional[str]=None,
 ) -> Dict[str, dict]:
     """
     @description
