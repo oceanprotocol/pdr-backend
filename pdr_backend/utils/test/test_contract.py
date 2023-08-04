@@ -43,7 +43,9 @@ def test_Web3Config_bad_rpc():
 def test_Web3Config_bad_key():
     with pytest.raises(ValueError):
         Web3Config(rpc_url=TEST_RPC_URL, private_key="foo")
-    
+
+
+@enforce_types
 def test_Web3Config_happy_nokey():
     c = Web3Config(rpc_url=TEST_RPC_URL, private_key=None)
     assert c.w3 is not None
