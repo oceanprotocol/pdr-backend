@@ -38,7 +38,6 @@ def test_Web3Config_bad_rpc():
     with pytest.raises(ValueError):
         Web3Config(rpc_url=None, private_key=TEST_PRIVATE_KEY)
 
-
 @enforce_types
 def test_Web3Config_bad_key():
     with pytest.raises(ValueError):
@@ -46,8 +45,9 @@ def test_Web3Config_bad_key():
 
 
 @enforce_types
-def test_Web3Config_happy_nokey():
+def test_Web3Config_happy_noPrivateKey():
     c = Web3Config(rpc_url=TEST_RPC_URL, private_key=None)
+    
     assert c.w3 is not None
     assert not hasattr(c, "account")
     assert not hasattr(c, "owner")
@@ -55,10 +55,23 @@ def test_Web3Config_happy_nokey():
 
 
 @enforce_types
-def test_Web3Config_happy_withkey():
+def test_Web3Config_happy_havePrivateKey_noKeywords():
+    c = Web3Config(TEST_RPC_URL, TEST_PRIVATE_KEY)
+    assert c.account
+    assert c.owner == c.account.address
+    assert c.private_key == TEST_PRIVATE_KEY
+
+
+@enforce_types
+def test_Web3Config_happy_havePrivateKey_withKeywords():
     c = Web3Config(rpc_url=TEST_RPC_URL, private_key=TEST_PRIVATE_KEY)
     assert c.account
     assert c.owner == c.account.address
     assert c.private_key == TEST_PRIVATE_KEY
 
     
+@enforce_types
+def test_Token():
+    config = Web3Config(TEST_RPC_URL, TEST_PRIVATE_KEY)
+    #token_address = FIXME
+    #token = Token(config, token_address)
