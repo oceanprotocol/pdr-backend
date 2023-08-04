@@ -1,7 +1,7 @@
 import time
 
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.trader.trade import trade
 from pdr_backend.utils import env
 
@@ -35,20 +35,20 @@ def process_block(block):
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
         topic = topics[address]
-        predictor_contract = PredictorContract(web3_config, address)
-        epoch = predictor_contract.get_current_epoch()
-        blocks_per_epoch = predictor_contract.get_blocksPerEpoch()
-        blocks_till_epoch_end = (
-            epoch * blocks_per_epoch + blocks_per_epoch - block["number"]
+        predictoor_contract = PredictoorContract(web3_config, address)
+        epoch = predictoor_contract.get_current_epoch()
+        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+        seconds_till_epoch_end = (
+            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, blocks_per_epoch: {blocks_per_epoch}, blocks_till_epoch_end: {blocks_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
         if epoch > topic["last_submited_epoch"] and epoch > 0:
             topic["last_submited_epoch"] = epoch
             print(f"Read new prediction")
             """ Let's get the prediction and trade it """
-            prediction = predictor_contract.get_agg_predval(block["number"])
+            prediction = predictoor_contract.get_agg_predval(epoch * seconds_per_epoch)
             print(f"Got {prediction}.")
             if prediction is not None:
                 trade(topic, prediction)

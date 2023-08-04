@@ -23,7 +23,7 @@ Notes on customization:
 
 (Note: this may become obsolete with the new definition of epoch based on 'epoch_start'. If that's the case, delete this section:)
 
-  If we want to predict the value for epoch E, we need to do it in epoch E - 2 (latest.  Of course, we could predictor values for a distant epoch in the future if we want to)
+  If we want to predict the value for epoch E, we need to do it in epoch E - 2 (latest.  Of course, we could predict values for a distant epoch in the future if we want to)
   And to do so, our tx needs to be confirmed in the last block of epoch (otherwise, it's going to be part of next epoch and our prediction tx will revert)
 
   But, for every prediction, there are some steps involved, each one taking it's toll on duration:

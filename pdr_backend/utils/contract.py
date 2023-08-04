@@ -7,12 +7,12 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
+from sapphire_wrapper import wrapper
 
 from pathlib import Path
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from web3.middleware import construct_sign_and_send_raw_middleware
 from os.path import expanduser
-from sapphire_wrapper import wrapper
 import artifacts  # noqa
 
 from pdr_backend.utils.constants import (
@@ -104,7 +104,7 @@ class Token:
             return None
 
 
-class PredictorContract:
+class PredictoorContract:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
         self.contract_address = config.w3.to_checksum_address(address)
@@ -400,8 +400,8 @@ class PredictorContract:
             print(e)
             return None
 
-    def get_trueValSubmitTimeoutEpoch(self):
-        return self.contract_instance.functions.trueValSubmitTimeoutEpoch().call()
+    def get_trueValSubmitTimeout(self):
+        return self.contract_instance.functions.trueValSubmitTimeout().call()
 
     def get_prediction(self, slot):
         return self.contract_instance.functions.getPrediction(slot).call(

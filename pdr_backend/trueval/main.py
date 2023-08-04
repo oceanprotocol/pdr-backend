@@ -7,6 +7,7 @@ from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictorContract, Web3Config
 from pdr_backend.utils import env
 
+
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()
 private_key = env.get_private_key_or_exit()
@@ -23,38 +24,36 @@ topics = []
 
 
 class NewTrueVal(Thread):
-    def __init__(self, topic, predictor_contract, current_block_num, epoch):
+    def __init__(self, topic, predictoor_contract, current_ts, epoch):
         # set a default value
         self.values = {
             "last_submited_epoch": epoch,
-            "contract_address": predictor_contract.contract_address,
+            "contract_address": predictoor_contract.contract_address,
         }
         self.topic = topic
         self.epoch = epoch
-        self.predictor_contract = predictor_contract
-        self.current_block_num = current_block_num
+        self.predictoor_contract = predictoor_contract
+        self.current_ts = current_ts
 
     def run(self):
         """Get timestamp of previous epoch-2 , get the price"""
         """ Get timestamp of previous epoch-1, get the price """
         """ Compare and submit trueval """
-        blocks_per_epoch = self.predictor_contract.get_blocksPerEpoch()
-        initial_block = self.predictor_contract.get_block(
-            (self.epoch - 2) * blocks_per_epoch
-        )
-        end_block = self.predictor_contract.get_block(
-            (self.epoch - 1) * blocks_per_epoch
-        )
-        slot = (self.epoch - 1) * blocks_per_epoch
+        seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
+        initial_ts =  (self.epoch - 2) * seconds_per_epoch
+        
+        end_ts = (self.epoch - 1) * seconds_per_epoch
+
+        slot = (self.epoch - 1) * seconds_per_epoch
 
         (true_val, float_value, cancel_round) = get_true_val(
-            self.topic, initial_block["timestamp"], end_block["timestamp"]
+            self.topic, initial_ts, end_ts
         )
         print(
-            f"Contract:{self.predictor_contract.contract_address} - Submiting true_val {true_val} for slot:{slot}"
+            f"Contract:{self.predictoor_contract.contract_address} - Submiting true_val {true_val} for slot:{slot}"
         )
         try:
-            self.predictor_contract.submit_trueval(
+            self.predictoor_contract.submit_trueval(
                 true_val, slot, float_value, cancel_round
             )
         except Exception as e:
@@ -77,18 +76,18 @@ def process_block(block):
     threads = []
     for address in topics:
         topic = topics[address]
-        predictor_contract = PredictorContract(web3_config, address)
-        epoch = predictor_contract.get_current_epoch()
-        blocks_per_epoch = predictor_contract.get_blocksPerEpoch()
-        blocks_till_epoch_end = (
-            epoch * blocks_per_epoch + blocks_per_epoch - block["number"]
+        predictoor_contract = PredictoorContract(web3_config, address)
+        epoch = predictoor_contract.get_current_epoch()
+        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+        seconds_till_epoch_end = (
+            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, blocks_per_epoch: {blocks_per_epoch}, blocks_till_epoch_end: {blocks_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
         if epoch > topic["last_submited_epoch"] and epoch > 1:
             """Let's make a prediction & claim rewards"""
-            thr = NewTrueVal(topic, predictor_contract, block["number"], epoch)
+            thr = NewTrueVal(topic, predictoor_contract, block["timestamp"], epoch)
             thr.run()
             address = thr.values["contract_address"].lower()
             new_epoch = thr.values["last_submited_epoch"]
