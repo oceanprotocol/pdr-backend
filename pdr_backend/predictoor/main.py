@@ -50,6 +50,15 @@ def process_block(block):
         print(
             f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
+
+        if epoch > topic["last_submited_epoch"]:
+            # let's get the payout for previous epoch.  We don't care if it fails...
+            slot = epoch * seconds_per_epoch - seconds_per_epoch
+            print(
+                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
+            )
+            predictoor_contract.payout(slot, False)
+
         if seconds_till_epoch_end <= int(
             os.getenv("SECONDS_TILL_EPOCH_END", 60)
         ):
@@ -79,15 +88,6 @@ def process_block(block):
                 print(
                     f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
                 )
-
-        if epoch > topic["last_submited_epoch"]:
-            # let's get the payout for previous epoch.  We don't care if it fails...
-            slot = epoch * seconds_per_epoch - seconds_per_epoch
-            print(
-                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
-            )
-            predictoor_contract.payout(slot, False)
-            # update topics
 
 
 def log_loop(blockno):
