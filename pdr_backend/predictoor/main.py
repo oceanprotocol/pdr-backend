@@ -72,7 +72,7 @@ def process_block(block):
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
                 stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100 # TODO have a customizable function to handle this
-                if topics[address]["last_submited_epoch"] == epoch and topics[address]["last_submited_stake"] is not None:
+                if topics[address]["last_submited_epoch"] == epoch and "last_submited_stake" in topics[address]:
                     # overwrite stake amount to previous one
                     # smart contract does not allow modifying the stake amount
                     stake_amount = topics[address]["last_submited_stake"]
