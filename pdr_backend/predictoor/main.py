@@ -74,7 +74,7 @@ def process_block(block):
                     predicted_value, stake_amount, target_time, False
                 )
                 topics[address]["last_submited_epoch"] = epoch
-                topics[address]["last_submited_stake"] = stake
+                topics[address]["last_submited_stake"] = stake_amount
             else:
                 print(
                     f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
