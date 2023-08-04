@@ -51,7 +51,7 @@ def process_block(block):
             f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
 
-        if epoch > topic["last_submited_epoch"]:
+        if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
             # let's get the payout for previous epoch.  We don't care if it fails...
             slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
