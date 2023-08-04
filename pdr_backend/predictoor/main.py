@@ -8,7 +8,7 @@ from threading import Thread
 
 from pdr_backend.predictoor.predict import predict_function
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils import env
 
 
