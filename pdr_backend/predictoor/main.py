@@ -53,10 +53,10 @@ def process_block(block):
         if seconds_till_epoch_end <= int(
             os.getenv("SECONDS_TILL_EPOCH_END", 60)
         ):
-            """Try to estimate timestamp of prediction"""
+            """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
-            """ Let's fetch the prediction """
+            """Let's fetch the prediction """
             (predicted_value, predicted_confidence) = predict_function(
                 topic, target_time
             )
@@ -79,6 +79,8 @@ def process_block(block):
                 print(
                     f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
                 )
+
+        if epoch > topic["last_submited_epoch"]:
             # let's get the payout for previous epoch.  We don't care if it fails...
             slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
