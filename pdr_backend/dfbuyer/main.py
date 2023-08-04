@@ -3,22 +3,22 @@ import os
 import math
 import random
 
-
 from pdr_backend.dfbuyer.utils.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-
-
-# TODO - check for all envs
-assert os.environ.get("RPC_URL", None), "You must set RPC_URL environment variable"
-assert os.environ.get(
-    "SUBGRAPH_URL", None
-), "You must set SUBGRAPH_URL environment variable"
+from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils import env
+rpc_url = env.get_rpc_url_or_exit()
+subgraph_url = env.get_subgraph_or_exit()
+private_key = env.get_private_key_or_exit()
+pair_filters = env.get_pair_filter()
+timeframe_filter = env.get_timeframe_filter()
+source_filter = env.get_source_filter()
+owner_addresses = env.get_owner_addresses()
 
 last_block_time = 0
 WEEK = 7 * 86400
 
-web3_config = Web3Config(os.environ.get("RPC_URL"), os.environ.get("PRIVATE_KEY"))
+web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 
@@ -42,11 +42,11 @@ def process_block(block):
     """ Process each contract and see if we need to submit """
     if not topics:
         topics = get_all_interesting_prediction_contracts(
-            os.environ.get("SUBGRAPH_URL"),
-            os.environ.get("PAIR_FILTER", None),
-            os.environ.get("TIMEFRAME_FILTER", None),
-            os.environ.get("SOURCE_FILTER", None),
-            os.environ.get("OWNER_ADDRS", None),
+            subgraph_url,
+            pair_filters,
+            timeframe_filter,
+            source_filter,
+            owner_addresses,
         )
     if len(topics) < 1:
         return
