@@ -1,3 +1,4 @@
+from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.utils.contract import (
@@ -18,19 +19,27 @@ from pdr_backend.utils.constants import (
 TEST_RPC_URL = "http://127.0.0.1:8545"
 TEST_PRIVATE_KEY = "0x1f4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 
+
+@enforce_types
 def test_is_sapphire_network():
     assert not is_sapphire_network(0)
     assert is_sapphire_network(SAPPHIRE_TESTNET_CHAINID)
     assert is_sapphire_network(SAPPHIRE_MAINNET_CHAINID)
 
+
+@enforce_types
 def test_send_encrypted_tx():
     # FIXME
     pass
 
+
+@enforce_types
 def test_Web3Config_bad_rpc():
     with pytest.raises(ValueError):
         Web3Config(rpc_url=None, private_key=TEST_PRIVATE_KEY)
-        
+
+
+@enforce_types
 def test_Web3Config_bad_key():
     with pytest.raises(ValueError):
         Web3Config(rpc_url=TEST_RPC_URL, private_key="foo")
@@ -41,9 +50,13 @@ def test_Web3Config_happy_nokey():
     assert not hasattr(c, "account")
     assert not hasattr(c, "owner")
     assert not hasattr(c, "private_key")
-    
+
+
+@enforce_types
 def test_Web3Config_happy_withkey():
     c = Web3Config(rpc_url=TEST_RPC_URL, private_key=TEST_PRIVATE_KEY)
     assert c.account
     assert c.owner == c.account.address
     assert c.private_key == TEST_PRIVATE_KEY
+
+    
