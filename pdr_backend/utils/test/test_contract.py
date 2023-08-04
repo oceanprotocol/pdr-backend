@@ -1,3 +1,4 @@
+import pytest
 
 from pdr_backend.utils.contract import (
     is_sapphire_network,
@@ -13,8 +14,36 @@ from pdr_backend.utils.constants import (
     SAPPHIRE_MAINNET_CHAINID,
 )
 
+
+TEST_RPC_URL = "http://127.0.0.1:8545"
+TEST_PRIVATE_KEY = "0x1f4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+
 def test_is_sapphire_network():
     assert not is_sapphire_network(0)
     assert is_sapphire_network(SAPPHIRE_TESTNET_CHAINID)
     assert is_sapphire_network(SAPPHIRE_MAINNET_CHAINID)
 
+def test_send_encrypted_tx():
+    # FIXME
+    pass
+
+def test_Web3Config_bad_rpc():
+    with pytest.raises(ValueError):
+        Web3Config(rpc_url=None, private_key=TEST_PRIVATE_KEY)
+        
+def test_Web3Config_bad_key():
+    with pytest.raises(ValueError):
+        Web3Config(rpc_url=TEST_RPC_URL, private_key="foo")
+    
+def test_Web3Config_happy_nokey():
+    c = Web3Config(rpc_url=TEST_RPC_URL, private_key=None)
+    assert c.w3 is not None
+    assert not hasattr(c, "account")
+    assert not hasattr(c, "owner")
+    assert not hasattr(c, "private_key")
+    
+def test_Web3Config_happy_withkey():
+    c = Web3Config(rpc_url=TEST_RPC_URL, private_key=TEST_PRIVATE_KEY)
+    assert c.account
+    assert c.owner == c.account.address
+    assert c.private_key == TEST_PRIVATE_KEY
