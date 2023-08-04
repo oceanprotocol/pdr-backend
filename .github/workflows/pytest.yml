@@ -13,7 +13,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Setup repository
