@@ -3,7 +3,7 @@ import os
 import math
 import random
 
-from pdr_backend.dfbuyer.utils.subgraph import get_consume_so_far
+from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils import env
