@@ -8,7 +8,7 @@ from threading import Thread
 
 from pdr_backend.predictoor.predict import predict_function
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
 
 
 last_block_time = 0
@@ -37,9 +37,9 @@ def process_block(block):
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
         topic = topics[address]
-        predictor_contract = PredictorContract(web3_config, address)
-        epoch = predictor_contract.get_current_epoch()
-        seconds_per_epoch = predictor_contract.get_secondsPerEpoch()
+        predictoor_contract = PredictoorContract(web3_config, address)
+        epoch = predictoor_contract.get_current_epoch()
+        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
         seconds_till_epoch_end = (
             epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
@@ -60,9 +60,9 @@ def process_block(block):
                 """We have a prediction, let's submit it"""
                 stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100 # TODO have a customizable function to handle this
                 print(
-                    f"Contract:{predictor_contract.contract_address} - Submiting prediction for slot:{target_time}"
+                    f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
                 )
-                predictor_contract.submit_prediction(
+                predictoor_contract.submit_prediction(
                     predicted_value, stake_amount, target_time, False
                 )
             else:
@@ -72,9 +72,9 @@ def process_block(block):
             # let's get the payout for previous epoch.  We don't care if it fails...
             slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
-                f"Contract:{predictor_contract.contract_address} - Claiming revenue for slot:{slot}"
+                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
             )
-            predictor_contract.payout(slot, False)
+            predictoor_contract.payout(slot, False)
             # update topics
             topics[address]["last_submited_epoch"] = epoch
 

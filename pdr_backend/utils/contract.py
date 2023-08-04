@@ -104,7 +104,7 @@ class Token:
             return None
 
 
-class PredictorContract:
+class PredictoorContract:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
         self.contract_address = config.w3.to_checksum_address(address)

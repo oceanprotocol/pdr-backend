@@ -6,7 +6,7 @@ import random
 
 from pdr_backend.dfbuyer.utils.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
 
 
 # TODO - check for all envs
@@ -74,9 +74,9 @@ def process_block(block):
     for address in topics:
         print(f"Percentage:{buy_percentage_per_topic[cnt]}")
         max_to_spend = consume_target * (buy_percentage_per_topic[cnt] / 100)
-        predictor_contract = PredictorContract(web3_config, address)
-        price = predictor_contract.get_price() / 10**18
-        txs = predictor_contract.buy_many(
+        predictoor_contract = PredictoorContract(web3_config, address)
+        price = predictoor_contract.get_price() / 10**18
+        txs = predictoor_contract.buy_many(
             int(max_to_spend / price), int(block["gasLimit"] * 0.99)
         )
         print(txs)
