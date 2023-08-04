@@ -127,34 +127,31 @@ def test_get_all_interesting_prediction_contracts_fullchain(monkeypatch):
 
 
 @enforce_types
-def test_filter(monkeypatch):
-    N, T, F = None, True, False
-    for (expect_result, tup) in [
-            (T, (N, N, N, N)),
-            (T, ("ETH/USDT", "5m", "binance", "owner1")),
-            (T, ("ETH/USDT,BTC/USDT", "5m,15m", "binance,kraken", "owner1,o2")),
+@pytest.mark.parametrize(
+    "expect_result, pairs, timeframes, sources, owners",
+    [
+        (True, None, None, None, None),
+        (True, "ETH/USDT", "5m", "binance", "owner1"),
+        (True, "ETH/USDT,BTC/USDT", "5m,15m", "binance,kraken", "owner1,o2"),
+        
+        (True, "ETH/USDT", None, None, None),
+        (False, "BTC/USDT", None, None, None),
+        (True, "ETH/USDT,BTC/USDT", None, None, None),
             
-            (T, ("ETH/USDT", N, N, N)),
-            (F, ("BTC/USDT", N, N, N)),
-            (T, ("ETH/USDT,BTC/USDT", N, N, N)),
+        (True, None, "5m", None, None),
+        (False, None, "15m", None, None),
+        (True, None, "5m,15m", None, None),
             
-            (T, (N, "5m", N, N)),
-            (F, (N, "15m", N, N)),
-            (T, (N, "5m,15m", N, N)),
+        (True, None, None, "binance", None),
+        (False, None, None, "kraken", None),
+        (True, None, None, "binance,kraken", None),
             
-            (T, (N, N, "binance", N)),
-            (F, (N, N, "kraken", N)),
-            (T, (N, N, "binance,kraken", N)),
-            
-            (T, (N, N, N, "owner1")),
-            (F, (N, N, N, "owner2")),
-            (T, (N, N, N, "owner1,owner2")),
-    ]:
-        _test_filter(monkeypatch, expect_result, tup)
-
-@enforce_types
-def _test_filter(monkeypatch, expect_result:bool, tup:tuple):
-    pairs, timeframes, sources, owners = tup
+        (True, None, None, None, "owner1"),
+        (False, None, None, None, "owner2"),
+        (True, None, None, None, "owner1,owner2"),
+    ]
+)
+def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     info725_list = [
         {"key":key_to_725("pair"), "value":value_to_725("ETH/USDT")},
         {"key":key_to_725("timeframe"), "value":value_to_725("5m")},
