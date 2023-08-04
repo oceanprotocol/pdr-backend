@@ -35,6 +35,9 @@ def test_info_from_725():
     assert info_dict == {
         "pair": "ETH/USDT", 
         "timeframe": "5m",
+        "base": None,
+        "quote": None,
+        "source": None,
         }
 
     
@@ -75,7 +78,7 @@ def test_query_subgraph_badpath(monkeypatch):
 
 
 @enforce_types
-def test_get_all_interesting_prediction_contracts_emptychain(monkeypatch):
+def test_get_contracts_emptychain(monkeypatch):
     contract_list = []
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
     contracts = get_all_interesting_prediction_contracts(subgraph_url="foo")
@@ -83,7 +86,9 @@ def test_get_all_interesting_prediction_contracts_emptychain(monkeypatch):
 
 
 @enforce_types
-def test_get_all_interesting_prediction_contracts_fullchain(monkeypatch):
+def test_get_contracts_fullchain(monkeypatch):
+    # This test is a simple-as-possible happy path. Start here.
+    # Then follow up with test_filter() below, which is complex but thorough
     info725_list = [
         {"key":key_to_725("pair"), "value":value_to_725("ETH/USDT")},
         {"key":key_to_725("timeframe"), "value":value_to_725("5m")},
