@@ -43,10 +43,13 @@ class MockResponse:
     def __init__(self, contract_list:list, status_code:int):
         self.contract_list = contract_list
         self.status_code = status_code
+        self.num_queries = 0
 
     def json(self) -> dict:
+        self.num_queries += 1
+        if self.num_queries > 1:
+            self.contract_list = []
         return {"data": {"predictContracts": self.contract_list}}
-
 
 @enforce_types
 class MockPost:
@@ -86,10 +89,31 @@ def test_get_all_interesting_prediction_contracts_fullchain(monkeypatch):
         {"key":key_to_725("timeframe"), "value":value_to_725("5m")},
         ]
     
-    contract1 = {"token": {"nft": {"nftData": info725_list}}}
+    contract1 = {
+        "id" : "contract1",
+        "token": {"nft": {"nftData": info725_list,
+                          "owner": {"id": {"owner1"}}},
+                  "name": "ether",
+                  "symbol": "ETH"},
+        "blocksPerEpoch": 7,
+        "blocksPerSubscription": 700,
+    }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
     contracts = get_all_interesting_prediction_contracts(subgraph_url="foo")
-    #import pdb; pdb.set_trace()
-    #assert contracts == FIXME
+    assert contracts == {
+        "contract1": {
+            "name": "ether",
+            "address": "contract1",
+            "symbol": "ETH",
+            "blocks_per_epoch": 7,
+            "blocks_per_subscription": 700,
+            "last_submited_epoch": 0,
+            "pair": "ETH/USDT",
+            "base": None,
+            "quote": None,
+            "source": None,
+            "timeframe": "5m"
+        }
+    }
 

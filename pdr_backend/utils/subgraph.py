@@ -97,9 +97,9 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
     target_keys = ["pair", "base", "quote", "source", "timeframe"]
     info_dict = {}
     for key in target_keys:
+        info_dict[key] = None
         for item725 in info725_list:
-            key725 = item725["key"]
-            value725 = item725["value"]
+            key725, value725 = item725["key"], item725["value"]
             if key725 == key_to_725(key):
                 value = value_from_725(value725)
                 info_dict[key] = value
@@ -127,7 +127,6 @@ def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
     result = request.json()
     return result
 
-
 @enforce_types
 def get_all_interesting_prediction_contracts(
         subgraph_url:str,
@@ -152,24 +151,18 @@ def get_all_interesting_prediction_contracts(
       contracts -- dict of [contract_id] : contract_info
         where contract_info is a dict with fields name, address, symbol, ..
     """
+    if owners:
+        owners = owners.lower().split()
+    if pairs:
+        pairs = pairs.split(",")
+    if timeframes:
+        timeframes = timeframes.split(",")
+    if sources:
+        sources = sources.split(",")
+        
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     contracts = {}
-    
-    # prepare keys
-    owners_filter, pairs_filter, timeframes_filter, sources_filter = \
-        [], [], [], []
-    
-    if owners:
-        owners_filter = [owner.lower() for owner in owners.split(",")]
-    if pairs:
-        pairs_filter = [pair for pair in pairs.split(",") if pairs]
-    if timeframes:
-        timeframes_filter = [
-            timeframe for timeframe in timeframes.split(",") if timeframes
-        ]
-    if sources:
-        sources_filter = [source for source in sources.split(",") if sources]
 
     while True:
         query = """
@@ -203,38 +196,30 @@ def get_all_interesting_prediction_contracts(
         try:
             result = query_subgraph(subgraph_url, query)
             contract_list = result["data"]["predictContracts"]  
-            if contract_list == []:
+            if not contract_list:
                 break
             for contract in contract_list:
                 info725 = contract["token"]["nft"]["nftData"]
+                info = info_from_725(info725) # {"pair": "ETH/USDT", "base":...}
                 
-                # dict of {"pair": "ETH/USDT", "base":...}
-                info = info_from_725(info725)
-                            
-                # now do filtering
-                if (
-                    (
-                        len(owners_filter) > 0
-                        and contract["token"]["nft"]["owner"]["id"] not in owners_filter
-                    )
-                    or (
-                        len(pairs_filter) > 0
-                        and info["pair"]
-                        and info["pair"] not in pairs_filter
-                    )
-                    or (
-                        len(timeframes_filter) > 0
-                        and info["timeframe"]
-                        and info["timeframe"] not in timeframes_filter
-                    )
-                    or (
-                        len(sources_filter) > 0
-                        and info["source"]
-                        and info["source"] not in sources_filter
-                    )
-                ):
+                # filter out unwanted
+                owner_id = contract["token"]["nft"]["owner"]["id"]
+                if owners and (owner_id not in owners):
                     continue
 
+                pair = info["pair"]
+                if pair and pairs and (pair not in pairs_filter):
+                    continue
+
+                timeframe = info["timeframe"]
+                if timeframe and timeframes and (timeframe not in timeframes):
+                    continue
+
+                source = info["source"]
+                if source and sources and (source not in sources):
+                    continue
+                
+                # ok, add this one
                 contracts[contract["id"]] = {
                     "name": contract["token"]["name"],
                     "address": contract["id"],
@@ -244,7 +229,9 @@ def get_all_interesting_prediction_contracts(
                     "last_submited_epoch": 0,
                 }
                 contracts[contract["id"]].update(info)
+                
         except Exception as e:
             print(e)
             return {}
+    
     return contracts
