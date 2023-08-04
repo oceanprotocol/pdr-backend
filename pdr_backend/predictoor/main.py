@@ -41,7 +41,7 @@ def process_block(block):
         epoch = predictor_contract.get_current_epoch()
         seconds_per_epoch = predictor_contract.get_secondsPerEpoch()
         seconds_till_epoch_end = (
-            epoch * seconds_per_epoch + seconds_per_epoch - block["number"]
+            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
             f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
