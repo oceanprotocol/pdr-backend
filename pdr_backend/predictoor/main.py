@@ -51,7 +51,7 @@ def process_block(block):
             f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
         if epoch > topic["last_submited_epoch"] and seconds_till_epoch_end <= int(
-            os.getenv("SECONDS_TILL_EPOCH_END", 5)
+            os.getenv("SECONDS_TILL_EPOCH_END", 20)
         ):
             """Try to estimate timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
