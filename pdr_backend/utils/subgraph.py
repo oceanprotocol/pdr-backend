@@ -9,9 +9,9 @@ query {
     token{
       name
     }
-    blocksPerEpoch
-    blocksPerSubscription
-    truevalSubmitTimeoutBlock
+    secondsPerEpoch
+    secondsPerSubscription
+    truevalSubmitTimeout
     block
     eventIndex
     slots{

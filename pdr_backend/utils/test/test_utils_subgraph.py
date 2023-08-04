@@ -107,9 +107,9 @@ def test_get_contracts_fullchain(monkeypatch):
                 "nftData": info725_list,
             },
         },
-        "blocksPerEpoch": 7,
-        "blocksPerSubscription": 700,
-        "truevalSubmitTimeoutBlock": 5,
+        "secondsPerEpoch": 7,
+        "secondsPerSubscription": 700,
+        "truevalSubmitTimeout": 5,
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
@@ -119,8 +119,8 @@ def test_get_contracts_fullchain(monkeypatch):
             "name": "ether",
             "address": "contract1",
             "symbol": "ETH",
-            "blocks_per_epoch": 7,
-            "blocks_per_subscription": 700,
+            "seconds_per_epoch": 7,
+            "seconds_per_subscription": 700,
             "last_submited_epoch": 0,
             "pair": "ETH/USDT",
             "base": None,
@@ -182,9 +182,9 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
                 "nftData": info725_list,
             },
         },
-        "blocksPerEpoch": 7,
-        "blocksPerSubscription": 700,
-        "truevalSubmitTimeoutBlock": 5,
+        "secondsPerEpoch": 7,
+        "secondsPerSubscription": 700,
+        "truevalSubmitTimeout": 5,
     }
     
     contract_list = [contract1]
