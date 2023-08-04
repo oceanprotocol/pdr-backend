@@ -91,12 +91,20 @@ def test_get_all_interesting_prediction_contracts_fullchain(monkeypatch):
     
     contract1 = {
         "id" : "contract1",
-        "token": {"nft": {"nftData": info725_list,
-                          "owner": {"id": {"owner1"}}},
-                  "name": "ether",
-                  "symbol": "ETH"},
+        "token": {
+            "id": "token1",
+            "name": "ether",
+            "symbol": "ETH",
+            "nft": {
+                "owner": {
+                    "id": "owner1",
+                },
+                "nftData": info725_list,
+            },
+        },
         "blocksPerEpoch": 7,
         "blocksPerSubscription": 700,
+        "truevalSubmitTimeoutBlock": 5,
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
@@ -116,4 +124,73 @@ def test_get_all_interesting_prediction_contracts_fullchain(monkeypatch):
             "timeframe": "5m"
         }
     }
+
+
+@enforce_types
+def test_filter(monkeypatch):
+    N, T, F = None, True, False
+    for (expect_result, tup) in [
+            (T, (N, N, N, N)),
+            (T, ("ETH/USDT", "5m", "binance", "owner1")),
+            (T, ("ETH/USDT,BTC/USDT", "5m,15m", "binance,kraken", "owner1,o2")),
+            
+            (T, ("ETH/USDT", N, N, N)),
+            (F, ("BTC/USDT", N, N, N)),
+            (T, ("ETH/USDT,BTC/USDT", N, N, N)),
+            
+            (T, (N, "5m", N, N)),
+            (F, (N, "15m", N, N)),
+            (T, (N, "5m,15m", N, N)),
+            
+            (T, (N, N, "binance", N)),
+            (F, (N, N, "kraken", N)),
+            (T, (N, N, "binance,kraken", N)),
+            
+            (T, (N, N, N, "owner1")),
+            (F, (N, N, N, "owner2")),
+            (T, (N, N, N, "owner1,owner2")),
+    ]:
+        _test_filter(monkeypatch, expect_result, tup)
+
+@enforce_types
+def _test_filter(monkeypatch, expect_result:bool, tup:tuple):
+    pairs, timeframes, sources, owners = tup
+    info725_list = [
+        {"key":key_to_725("pair"), "value":value_to_725("ETH/USDT")},
+        {"key":key_to_725("timeframe"), "value":value_to_725("5m")},
+        {"key":key_to_725("source"), "value":value_to_725("binance")},
+        
+        {"key":key_to_725("base"), "value":value_to_725("USDT")},
+        {"key":key_to_725("quote"), "value":value_to_725("1400.1")},
+        
+        {"key":key_to_725("extra1"), "value":value_to_725("extra1_value")},
+        {"key":key_to_725("extra2"), "value":value_to_725("extra2_value")},
+        ]
+    
+    contract1 = {
+        "id" : "contract1",
+        "token": {
+            "id": "token1",
+            "name": "ether",
+            "symbol": "ETH",
+            "nft": {
+                "owner": {
+                    "id": "owner1",
+                },
+                "nftData": info725_list,
+            },
+        },
+        "blocksPerEpoch": 7,
+        "blocksPerSubscription": 700,
+        "truevalSubmitTimeoutBlock": 5,
+    }
+    
+    contract_list = [contract1]
+    
+    monkeypatch.setattr(requests, "post", MockPost(contract_list))
+    contracts = get_all_interesting_prediction_contracts(
+        "foo", pairs, timeframes, sources, owners)
+    
+    assert bool(contracts) == bool(expect_result)
+    
 

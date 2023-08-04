@@ -94,7 +94,7 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
                          "timeframe": "5m", 
                           ... }
     """
-    target_keys = ["pair", "base", "quote", "source", "timeframe"]
+    target_keys = ["pair", "timeframe", "source", "base", "quote"]
     info_dict = {}
     for key in target_keys:
         info_dict[key] = None
@@ -151,14 +151,14 @@ def get_all_interesting_prediction_contracts(
       contracts -- dict of [contract_id] : contract_info
         where contract_info is a dict with fields name, address, symbol, ..
     """
-    if owners:
-        owners = owners.lower().split()
     if pairs:
         pairs = pairs.split(",")
     if timeframes:
         timeframes = timeframes.split(",")
     if sources:
         sources = sources.split(",")
+    if owners:
+        owners = owners.lower().split(",")
         
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
@@ -208,7 +208,7 @@ def get_all_interesting_prediction_contracts(
                     continue
 
                 pair = info["pair"]
-                if pair and pairs and (pair not in pairs_filter):
+                if pair and pairs and (pair not in pairs):
                     continue
 
                 timeframe = info["timeframe"]
