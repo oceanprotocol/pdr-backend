@@ -5,7 +5,7 @@ import random
 
 from pdr_backend.dfbuyer.utils.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictorContract, Web3Config
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils import env
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()

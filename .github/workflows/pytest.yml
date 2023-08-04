@@ -1,0 +1,40 @@
+##
+## Copyright 2023 Ocean Protocol Foundation
+## SPDX-License-Identifier: Apache-2.0
+##
+name: pdr-backend tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repository
+        uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest       
+      - name: Test with pytest
+        id: pytest
+        env:
+          ADDRESS_FILE: "${{env.HOME}}/.ocean/ocean-contracts/artifacts/address.json"
+          RPC_URL: "http://127.0.0.1:8545"
+          SUBGRAPH_URL: "http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
+          PRIVATE_KEY: "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+        run: |
+          coverage run --omit="*test*" -m pytest
+          coverage report
