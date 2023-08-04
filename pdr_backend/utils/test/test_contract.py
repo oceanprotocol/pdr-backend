@@ -1,8 +1,4 @@
 
-from pdr_backend.utils.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
-)
 from pdr_backend.utils.contract import (
     is_sapphire_network,
     send_encrypted_tx,
@@ -12,6 +8,10 @@ from pdr_backend.utils.contract import (
     FixedRate,
     get_contract_filename,
     )
+from pdr_backend.utils.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
 
 def test_is_sapphire_network():
     assert not is_sapphire_network(0)
