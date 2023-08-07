@@ -50,13 +50,22 @@ def process_block(block):
         print(
             f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
-        if epoch > topic["last_submited_epoch"] and seconds_till_epoch_end <= int(
-            os.getenv("SECONDS_TILL_EPOCH_END", 20)
+
+        if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
+            # let's get the payout for previous epoch.  We don't care if it fails...
+            slot = epoch * seconds_per_epoch - seconds_per_epoch
+            print(
+                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
+            )
+            predictoor_contract.payout(slot, False)
+
+        if seconds_till_epoch_end <= int(
+            os.getenv("SECONDS_TILL_EPOCH_END", 60)
         ):
-            """Try to estimate timestamp of prediction"""
+            """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
-            """ Let's fetch the prediction """
+            """Let's fetch the prediction """
             (predicted_value, predicted_confidence) = predict_function(
                 topic, target_time
             )
@@ -69,18 +78,11 @@ def process_block(block):
                 predictoor_contract.submit_prediction(
                     predicted_value, stake_amount, target_time, False
                 )
+                topics[address]["last_submited_epoch"] = epoch
             else:
                 print(
                     f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
                 )
-            # let's get the payout for previous epoch.  We don't care if it fails...
-            slot = epoch * seconds_per_epoch - seconds_per_epoch
-            print(
-                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
-            )
-            predictoor_contract.payout(slot, False)
-            # update topics
-            topics[address]["last_submited_epoch"] = epoch
 
 
 def log_loop(blockno):
