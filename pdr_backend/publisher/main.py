@@ -7,7 +7,7 @@ publish(
     quote="USDT",
     source="kraken",
     timeframe="5m",
-    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260", # barge trueval submitter address
+    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # barge trueval submitter address
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,
