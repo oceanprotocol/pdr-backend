@@ -5,7 +5,7 @@ import web3
 
 from pdr_backend.utils.subgraph import query_subgraph
 
-def get_consume_so_far(predictoor_contracts, week_start_timestamp, consumer_address):
+def get_consume_so_far(predictoor_contracts, week_start_timestamp, consumer_address, subgraph_url):
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far = 0
@@ -33,7 +33,7 @@ def get_consume_so_far(predictoor_contracts, week_start_timestamp, consumer_addr
         )
         offset += chunk_size
         try:
-            result = query_subgraph(query)
+            result = query_subgraph(subgraph_url, query)
             new_orders = result["data"]["predictContracts"]
             if new_orders == []:
                 break
