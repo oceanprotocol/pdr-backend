@@ -14,12 +14,12 @@ factory = ERC721Factory(web3_config)
 
 MAX_UINT256 = 2**256 - 1
 
-def publish(s_per_epoch, s_per_subscription, base, quote, source, timeframe,trueval_submiter_addr, feeCollector_addr, rate, cut):
+def publish(s_per_epoch, s_per_subscription, base, quote, source, timeframe,trueval_submitter_addr, feeCollector_addr, rate, cut):
     pair = base + "/" + quote
     trueval_timeout = 4 * 12 * s_per_epoch
 
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
-    trueval_submiter = web3_config.w3.to_checksum_address(trueval_submiter_addr)
+    trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
 
     rate = web3_config.w3.to_wei(rate,'ether')
     cut = web3_config.w3.to_wei(cut,'ether')
