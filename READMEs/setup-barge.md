@@ -11,7 +11,7 @@ In a new console:
 # Grab repo
 git clone https://github.com/oceanprotocol/barge
 cd barge
-git checkout predictoor # use barge's predictoor branch (for now)
+git checkout issue374-replace-pdr-components-with-pdr-backend # use this branch for now
 
 # (optional) Clean up previous Ocean-related containers
 ./cleanup.sh

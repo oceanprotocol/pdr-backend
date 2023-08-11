@@ -54,7 +54,7 @@ def process_block(block):
     estimated_week_start = (math.floor(block["timestamp"] / WEEK)) * WEEK
     print(f"estimated_week_start:{estimated_week_start}")
     # get consume so far
-    consume_so_far = get_consume_so_far(topics, estimated_week_start, owner)
+    consume_so_far = get_consume_so_far(topics, estimated_week_start, owner, subgraph_url)
     print(f"consume_so_far:{consume_so_far}")
     consume_left = float(os.getenv("WEEKLY_SPEND_LIMIT", 0)) - consume_so_far
     print(f"consume_left:{consume_left}")

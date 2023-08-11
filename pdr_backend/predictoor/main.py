@@ -76,7 +76,7 @@ def process_block(block):
                     f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
                 )
                 predictoor_contract.submit_prediction(
-                    predicted_value, stake_amount, target_time, False
+                    predicted_value, stake_amount, target_time, True
                 )
                 topics[address]["last_submited_epoch"] = epoch
             else:
