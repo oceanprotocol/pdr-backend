@@ -71,7 +71,7 @@ def publish(s_per_epoch, s_per_subscription, base, quote, source, timeframe,true
     print(f"Deployed NFT: {data_nft_address}")
     data_nft = DataNft(web3_config,data_nft_address)
     tx = data_nft.set_data("pair", pair)
-    print(f"Pait set to {pair} in {tx.hex()}")
+    print(f"Pair set to {pair} in {tx.hex()}")
     tx = data_nft.set_data("base", base)
     print(f"base set to {base} in {tx.hex()}")
     tx = data_nft.set_data("quote", quote)
