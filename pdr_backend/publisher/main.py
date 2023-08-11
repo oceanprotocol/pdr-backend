@@ -26,7 +26,6 @@ publish(
     cut=0.2,
 )
 
-
 publish(
     s_per_epoch=300,
     s_per_subscription=60 * 60 * 24,
