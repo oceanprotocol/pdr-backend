@@ -21,6 +21,7 @@ install_requirements = [
     "requests",
     "web3",
     "pdr-sapphire-wrapper",
+    "python-dotenv",
     "ocean-contracts==2.0.0a2", #install this last
 ]
 

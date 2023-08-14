@@ -1,5 +1,9 @@
 import os
 import sys
+from dotenv import load_dotenv
+
+def load():
+    load_dotenv()
 
 def get_envvar(envvar_name: str, default=None) -> str:
     return os.environ.get(envvar_name, default)
