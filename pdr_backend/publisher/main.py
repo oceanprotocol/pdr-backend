@@ -29,7 +29,7 @@ accounts_to_fund = [
     ("TRADER_PRIVATE_KEY", 2000.0),
     ("DFBUYER_PRIVATE_KEY", 10000.0),
     ("PDR_WEBSOCKET_KEY", 10000.0),
-    ("PDR_MM_USER", 10000.0)
+    ("PDR_MM_USER", 10000.0),
 ]
 
 fund_dev_accounts(accounts_to_fund)

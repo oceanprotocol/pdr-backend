@@ -14,6 +14,7 @@ factory = ERC721Factory(web3_config)
 
 MAX_UINT256 = 2**256 - 1
 
+
 def fund_dev_accounts(accounts_to_fund):
     for env_key, amount in accounts_to_fund:
         if env_key in os.environ:
@@ -21,6 +22,7 @@ def fund_dev_accounts(accounts_to_fund):
             account_name = env_key.split("_")[0].lower()
             print(f"Sending Ocean to {account_name}")
             OCEAN.transfer(account.address, to_wei(amount), {"from": deployer})
+
 
 def publish(
     s_per_epoch,
