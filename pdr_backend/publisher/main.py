@@ -1,4 +1,5 @@
 import os
+from eth_account import Account
 from ocean_lib.ocean.ocean import Ocean
 from ocean_lib.web3_internal.utils import connect_to_network
 from ocean_lib.ocean.util import to_wei
@@ -11,7 +12,7 @@ if "OPF_DEPLOYER_PRIVATE_KEY" not in os.environ:
     print("Missing OPF_DEPLOYER_PRIVATE_KEY")
     exit(1)
 
-deployer = br_accounts.add(os.getenv("OPF_DEPLOYER_PRIVATE_KEY"))
+deployer = Account.from_key(os.getenv("OPF_DEPLOYER_PRIVATE_KEY"))
 connect_to_network("development")
 ADDRESS_FILE = "~/.ocean/ocean-contracts/artifacts/address.json"
 address_file = os.path.expanduser(ADDRESS_FILE)
@@ -23,35 +24,35 @@ OCEAN = ocean.OCEAN_token
 
 # transfer ocean tokens to predictoor & trader
 if "PREDICTOOR_PRIVATE_KEY" in os.environ:
-    predictoor = br_accounts.add(os.getenv("PREDICTOOR_PRIVATE_KEY"))
+    predictoor = Account.from_key(os.getenv("PREDICTOOR_PRIVATE_KEY"))
     print("Sending Ocean to predictoor")
     OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
 if "PREDICTOOR2_PRIVATE_KEY" in os.environ:
-    predictoor = br_accounts.add(os.getenv("PREDICTOOR2_PRIVATE_KEY"))
+    predictoor = Account.from_key(os.getenv("PREDICTOOR2_PRIVATE_KEY"))
     print("Sending Ocean to predictoor2")
     OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
 if "PREDICTOOR3_PRIVATE_KEY" in os.environ:
-    predictoor = br_accounts.add(os.getenv("PREDICTOOR3_PRIVATE_KEY"))
+    predictoor = Account.from_key(os.getenv("PREDICTOOR3_PRIVATE_KEY"))
     print("Sending Ocean to predictoor3")
     OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
 
 if "TRADER_PRIVATE_KEY" in os.environ:
-    trader = br_accounts.add(os.getenv("TRADER_PRIVATE_KEY"))
+    trader = Account.from_key(os.getenv("TRADER_PRIVATE_KEY"))
     print("Sending Ocean to trader")
     OCEAN.transfer(trader.address, to_wei(2000.0), {"from": deployer})
 
 if "DFBUYER_PRIVATE_KEY" in os.environ:
-    dfbuyer = br_accounts.add(os.getenv("DFBUYER_PRIVATE_KEY"))
+    dfbuyer = Account.from_key(os.getenv("DFBUYER_PRIVATE_KEY"))
     print("Sending Ocean to dfbuyer")
     OCEAN.transfer(dfbuyer.address, to_wei(10000.0), {"from": deployer})
 
 if "PDR_WEBSOCKET_KEY" in os.environ:
-    pdr_websocket_user = br_accounts.add(os.getenv("PDR_WEBSOCKET_KEY"))
+    pdr_websocket_user = Account.from_key(os.getenv("PDR_WEBSOCKET_KEY"))
     print("Sending Ocean to pdr_websocket_user")
     OCEAN.transfer(pdr_websocket_user.address, to_wei(10000.0), {"from": deployer})
 
 if "PDR_MM_USER" in os.environ:
-    pdr_mm_user = br_accounts.add(os.getenv("PDR_MM_USER"))
+    pdr_mm_user = Account.from_key(os.getenv("PDR_MM_USER"))
     print("Sending Ocean to pdr_mm_user")
     OCEAN.transfer(pdr_mm_user.address, to_wei(10000.0), {"from": deployer})
 
