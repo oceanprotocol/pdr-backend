@@ -22,6 +22,7 @@ config["ADDRESS_FILE"] = address_file
 ocean = Ocean(config)
 OCEAN = ocean.OCEAN_token
 
+# account_address, OCEAN_to_send
 accounts_to_fund = [
     ("PREDICTOOR_PRIVATE_KEY", 2000.0),
     ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
