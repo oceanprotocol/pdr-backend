@@ -1,5 +1,6 @@
 import time
 
+from typing import Dict
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.trader.trade import trade
