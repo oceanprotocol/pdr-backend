@@ -5,7 +5,7 @@ from ocean_lib.web3_internal.utils import connect_to_network
 from ocean_lib.ocean.util import to_wei
 from ocean_lib.example_config import get_config_dict
 from ocean_lib.web3_internal.constants import ZERO_ADDRESS, MAX_UINT256
-from pdr_backend.publisher.publish import publish
+from pdr_backend.publisher.publish import publish, fund_dev_accounts
 
 # add accounts
 if "OPF_DEPLOYER_PRIVATE_KEY" not in os.environ:
@@ -32,13 +32,7 @@ accounts_to_fund = [
     ("PDR_MM_USER", 10000.0)
 ]
 
-for env_key, amount in accounts_to_fund:
-    if env_key in os.environ:
-        account = Account.from_key(os.getenv(env_key))
-        account_name = env_key.split("_")[0].lower()
-        print(f"Sending Ocean to {account_name}")
-        OCEAN.transfer(account.address, to_wei(amount), {"from": deployer})
-
+fund_dev_accounts(accounts_to_fund)
 
 publish(
     s_per_epoch=300,
