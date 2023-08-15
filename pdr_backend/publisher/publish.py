@@ -24,7 +24,7 @@ def fund_dev_accounts(accounts_to_fund):
             print(
                 f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
             )
-            OCEAN.transfer(account.address, amount * 1e18, {"from": owner})
+            OCEAN.transfer(account.address, amount * 1e18, owner)
 
 
 def publish(
