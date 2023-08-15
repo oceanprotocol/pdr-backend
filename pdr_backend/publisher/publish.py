@@ -21,7 +21,9 @@ def fund_dev_accounts(accounts_to_fund, OCEAN, deployer):
     for env_key, amount in accounts_to_fund:
         if env_key in os.environ:
             account = Account.from_key(os.getenv(env_key))
-            print(f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}")
+            print(
+                f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
+            )
             OCEAN.transfer(account.address, to_wei(amount), {"from": deployer})
 
 
