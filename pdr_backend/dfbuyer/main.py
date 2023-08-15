@@ -27,30 +27,29 @@ owner = web3_config.owner
 def numbers_with_sum(n, k):
     """
     Generate a list of n random integers such that their sum equals to k.
-    
+
     @param
         n - Number of integers to generate.
         k - The total sum of generated integers.
-    
+
     @return:
         A list of n integers that sum up to k.
-    
+
     @note
         If n < 1 or k < n, it returns an empty list.
     """
-    
+
     print(f"numbers_with_sum ({n},{k})")
     if n < 1 or k < n:
         return []
-    
+
     # Generate n-1 random numbers, ensure each number can't exceed k - n + 1
     numbers = [random.randint(1, k - n + 1) for _ in range(n - 1)]
 
     # Add the final number by subtracting the sum of the generated numbers from k
     numbers.append(k - sum(numbers))
-    
-    return numbers
 
+    return numbers
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """

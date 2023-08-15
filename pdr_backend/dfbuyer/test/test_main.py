@@ -2,6 +2,7 @@ import random
 import pytest
 from pdr_backend.dfbuyer.main import numbers_with_sum
 
+
 class TestNumbersWithSum:
     def test_basic():
         result = numbers_with_sum(3, 6)
@@ -34,12 +35,10 @@ class TestNumbersWithSum:
                 passed_tests += 1
         assert passed_tests == total_tests
 
-    @pytest.mark.parametrize("n, k, expected_length, expected_sum", [
-        (5, 15, 5, 15),
-        (3, 9, 3, 9),
-        (4, 7, 4, 7),
-        (2, 11, 2, 11)
-    ])
+    @pytest.mark.parametrize(
+        "n, k, expected_length, expected_sum",
+        [(5, 15, 5, 15), (3, 9, 3, 9), (4, 7, 4, 7), (2, 11, 2, 11)],
+    )
     def test_parametrize(self, n, k, expected_length, expected_sum):
         result = numbers_with_sum(n, k)
         assert len(result) == expected_length
