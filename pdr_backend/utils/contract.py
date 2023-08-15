@@ -7,7 +7,7 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
-from sapphire_wrapper import wrapper
+from sapphirepy import wrapper
 
 from pathlib import Path
 from web3 import Web3, HTTPProvider, WebsocketProvider
