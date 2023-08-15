@@ -50,10 +50,11 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     # Add 0 and k to the list
     a.extend([0, k])
     a.sort()
-    random.shuffle(a)
+    result = [a[i+1] - a[i] for i in range(len(a) - 1)]
+    random.shuffle(result)
 
     # Calculate the difference between consecutive numbers and output
-    return [a[i+1] - a[i] for i in range(len(a) - 1)]
+    return result
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
