@@ -1,5 +1,4 @@
 import os
-from eth_account import Account
 from ocean_lib.ocean.ocean import Ocean
 from ocean_lib.web3_internal.utils import connect_to_network
 from ocean_lib.ocean.util import to_wei

@@ -1,6 +1,8 @@
 import time
 import os
 
+from eth_account import Account
+
 from pdr_backend.utils.contract import DataNft, ERC721Factory, Web3Config, get_address
 from pdr_backend.utils import env
 
