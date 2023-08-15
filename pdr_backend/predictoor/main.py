@@ -6,6 +6,7 @@ import threading
 from datetime import datetime, timedelta, timezone
 from threading import Thread
 
+from typing import Dict
 from pdr_backend.predictoor.predict import predict_function
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
@@ -13,7 +14,7 @@ from pdr_backend.utils import env
 
 
 last_block_time = 0
-topics = []
+topics: Dict[str, dict] = {}
 
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()
@@ -59,9 +60,7 @@ def process_block(block):
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(
-            os.getenv("SECONDS_TILL_EPOCH_END", 60)
-        ):
+        if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
             """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
@@ -71,7 +70,9 @@ def process_block(block):
             )
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
-                stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100 # TODO have a customizable function to handle this
+                stake_amount = (
+                    os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+                )  # TODO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
                 )

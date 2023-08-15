@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from threading import Thread
 import time
 
+from typing import Dict
 from pdr_backend.trueval.trueval import get_true_val
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
@@ -20,7 +21,7 @@ web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 """ Get all intresting topics that we can submit trueval """
-topics = []
+topics: Dict[str, dict] = {}
 
 
 class NewTrueVal(Thread):
@@ -40,8 +41,8 @@ class NewTrueVal(Thread):
         """ Get timestamp of previous epoch-1, get the price """
         """ Compare and submit trueval """
         seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
-        initial_ts =  (self.epoch - 2) * seconds_per_epoch
-        
+        initial_ts = (self.epoch - 2) * seconds_per_epoch
+
         end_ts = (self.epoch - 1) * seconds_per_epoch
 
         slot = (self.epoch - 1) * seconds_per_epoch
