@@ -7,6 +7,7 @@ import artifacts
 
 from pathlib import Path
 
+import addresses
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
