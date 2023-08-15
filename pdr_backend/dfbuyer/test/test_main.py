@@ -4,29 +4,29 @@ from pdr_backend.dfbuyer.main import numbers_with_sum
 
 
 class TestNumbersWithSum:
-    def test_basic():
+    def test_basic(self):
         result = numbers_with_sum(3, 6)
         assert len(result) == 3
         assert sum(result) == 6
 
-    def test_empty_list():
+    def test_empty_list(self):
         assert numbers_with_sum(-1, 10) == []
         assert numbers_with_sum(5, 3) == []
         assert numbers_with_sum(0, 0) == []
 
-    def test_single_number():
+    def test_single_number(self):
         assert numbers_with_sum(1, 5) == [5]
         assert numbers_with_sum(1, 1) == [1]
 
-    def test_sum_lesser_than_numbers():
+    def test_sum_lesser_than_numbers(self):
         assert numbers_with_sum(10, 5) == []
 
-    def test_large_numbers():
+    def test_large_numbers(self):
         result = numbers_with_sum(1000, 500500)
         assert len(result) == 1000
         assert sum(result) == 500500
 
-    def test_fuzz():
+    def test_fuzz(self):
         total_tests = 1000
         passed_tests = 0
         for _ in range(total_tests):
