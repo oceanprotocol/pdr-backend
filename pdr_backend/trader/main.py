@@ -18,7 +18,7 @@ owner = web3_config.owner
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
-topics = []
+topics: Dict[str, dict] = []
 
 
 def process_block(block):

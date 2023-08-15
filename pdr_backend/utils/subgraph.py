@@ -96,7 +96,7 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
                           ... }
     """
     target_keys = ["pair", "timeframe", "source", "base", "quote"]
-    info_dict = {}
+    info_dict: Dict[str, str] = {}
     for key in target_keys:
         info_dict[key] = None
         for item725 in info725_list:

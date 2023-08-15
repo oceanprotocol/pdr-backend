@@ -34,8 +34,7 @@ def numbers_with_sum(n, k):
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
-topics = []
-predictoor_contracts = []
+topics: Dict[str, dict] = []
 
 
 def process_block(block):
