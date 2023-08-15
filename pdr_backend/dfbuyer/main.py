@@ -23,33 +23,34 @@ WEEK = 7 * 86400
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
-
 def numbers_with_sum(n: int, k: int) -> List[int]:
     """
-    Generate a list of n random integers such that their sum equals to k.
+    Generate a list of n integers that sum up to k.
 
-    @param
+    @param:
         n - Number of integers to generate.
-        k - The total sum of generated integers.
-
+        k - The total sum of the generated integers.
+        
     @return:
         A list of n integers that sum up to k.
-
-    @note
-        If n < 1 or k < n, it returns an empty list.
     """
 
-    print(f"numbers_with_sum ({n},{k})")
-    if n < 1 or k < n:
+    # If n is 1, the only possible list is [k].
+    if n == 1:
+        return [k]
+    # If n > k, it's impossible to generate n positive integers summing to k.
+    elif n > k:
         return []
 
-    # Generate n-1 random numbers, ensure each number can't exceed k - n + 1
-    numbers = [random.randint(1, k - n + 1) for _ in range(n - 1)]
+    # Generate n-1 unique random integers between 1 and k-1
+    a = random.sample(range(1, k), n - 1)
+    
+    # Add 0 and k to the list
+    a.extend([0, k])
+    a.sort()
 
-    # Add the final number by subtracting the sum of the generated numbers from k
-    numbers.append(k - sum(numbers))
-
-    return numbers
+    # Calculate the difference between consecutive numbers and output
+    return [a[i+1] - a[i] for i in range(len(a) - 1)
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
