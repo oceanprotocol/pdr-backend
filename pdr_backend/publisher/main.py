@@ -33,7 +33,7 @@ accounts_to_fund = [
     ("PDR_MM_USER", 10000.0),
 ]
 
-fund_dev_accounts(accounts_to_fund, OCEAN)
+fund_dev_accounts(accounts_to_fund, OCEAN, deployer)
 
 publish(
     s_per_epoch=300,

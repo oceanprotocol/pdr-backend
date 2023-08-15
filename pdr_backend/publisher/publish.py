@@ -17,7 +17,7 @@ factory = ERC721Factory(web3_config)
 MAX_UINT256 = 2**256 - 1
 
 
-def fund_dev_accounts(accounts_to_fund, OCEAN):
+def fund_dev_accounts(accounts_to_fund, OCEAN, deployer):
     for env_key, amount in accounts_to_fund:
         if env_key in os.environ:
             account = Account.from_key(os.getenv(env_key))
