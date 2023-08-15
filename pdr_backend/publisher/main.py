@@ -1,8 +1,8 @@
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 
 
-# account_address, OCEAN_to_send
 accounts_to_fund = [
+# account_address, OCEAN_to_send
     ("PREDICTOOR_PRIVATE_KEY", 2000.0),
     ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
     ("PREDICTOOR3_PRIVATE_KEY", 2000.0),
