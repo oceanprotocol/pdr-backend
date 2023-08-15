@@ -26,12 +26,11 @@ owner = web3_config.owner
 
 def numbers_with_sum(n, k):
     print(f"numbers_with_sum ({n},{k})")
-    if n < 1:
+    if n < 1 or k < n:
         return []
-    if n == 1:
-        return [k]
-    num = random.randint(1, k)
-    return [num] + numbers_with_sum(n - 1, k - num)
+    numbers = [random.randint(1, k - n + 1) for _ in range(n - 1)]
+    numbers.append(k - sum(numbers))
+    return numbers
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
