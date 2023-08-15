@@ -2,7 +2,7 @@ from pdr_backend.publisher.publish import publish, fund_dev_accounts
 
 
 accounts_to_fund = [
-# account_address, OCEAN_to_send
+#    account_key_env,   OCEAN_to_send
     ("PREDICTOOR_PRIVATE_KEY", 2000.0),
     ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
     ("PREDICTOOR3_PRIVATE_KEY", 2000.0),
