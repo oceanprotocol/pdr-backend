@@ -7,6 +7,7 @@ from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils import env
+
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()
 private_key = env.get_private_key_or_exit()
@@ -54,7 +55,9 @@ def process_block(block):
     estimated_week_start = (math.floor(block["timestamp"] / WEEK)) * WEEK
     print(f"estimated_week_start:{estimated_week_start}")
     # get consume so far
-    consume_so_far = get_consume_so_far(topics, estimated_week_start, owner, subgraph_url)
+    consume_so_far = get_consume_so_far(
+        topics, estimated_week_start, owner, subgraph_url
+    )
     print(f"consume_so_far:{consume_so_far}")
     consume_left = float(os.getenv("WEEKLY_SPEND_LIMIT", 0)) - consume_so_far
     print(f"consume_left:{consume_left}")

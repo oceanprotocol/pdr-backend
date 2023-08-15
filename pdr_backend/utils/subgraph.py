@@ -64,14 +64,15 @@ from typing import Optional, Dict
 from enforce_typing import enforce_types
 from web3 import Web3
 
+
 @enforce_types
-def key_to_725(key:str):
+def key_to_725(key: str):
     key725 = Web3.keccak(key.encode("utf-8")).hex()
     return key725
 
 
 @enforce_types
-def value_to_725(value:str):
+def value_to_725(value: str):
     value725 = Web3.to_hex(text=value)
     return value725
 
@@ -90,8 +91,8 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
                           {"key":encoded("timeframe"), "value":encoded("5m") },
                            ... ]
     @return
-      info_dict -- e.g. {"pair": "ETH/USDT", 
-                         "timeframe": "5m", 
+      info_dict -- e.g. {"pair": "ETH/USDT",
+                         "timeframe": "5m",
                           ... }
     """
     target_keys = ["pair", "timeframe", "source", "base", "quote"]
@@ -109,12 +110,12 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
 
 
 @enforce_types
-def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
+def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
     """
     @arguments
       subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
       query -- e.g. in docstring above
-    
+
     @return
       result -- e.g. {"data" : {"predictContracts": ..}}
     """
@@ -127,19 +128,20 @@ def query_subgraph(subgraph_url:str, query:str) -> Dict[str, dict]:
     result = request.json()
     return result
 
+
 @enforce_types
 def get_all_interesting_prediction_contracts(
-        subgraph_url:str,
-        pairs:Optional[str]=None,
-        timeframes:Optional[str]=None,
-        sources:Optional[str]=None,
-        owners:Optional[str]=None,
+    subgraph_url: str,
+    pairs: Optional[str] = None,
+    timeframes: Optional[str] = None,
+    sources: Optional[str] = None,
+    owners: Optional[str] = None,
 ) -> Dict[str, dict]:
     """
     @description
-      Query the chain for prediction contracts, then filter down 
+      Query the chain for prediction contracts, then filter down
       according to pairs, timeframes, sources, or owners.
-    
+
     @arguments
       subgraph_url -- e.g.
       pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None, allow all
@@ -159,7 +161,7 @@ def get_all_interesting_prediction_contracts(
         sources = sources.split(",")
     if owners:
         owners = owners.lower().split(",")
-        
+
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     contracts = {}
@@ -195,13 +197,13 @@ def get_all_interesting_prediction_contracts(
         offset += chunk_size
         try:
             result = query_subgraph(subgraph_url, query)
-            contract_list = result["data"]["predictContracts"]  
+            contract_list = result["data"]["predictContracts"]
             if not contract_list:
                 break
             for contract in contract_list:
                 info725 = contract["token"]["nft"]["nftData"]
-                info = info_from_725(info725) # {"pair": "ETH/USDT", "base":...}
-                
+                info = info_from_725(info725)  # {"pair": "ETH/USDT", "base":...}
+
                 # filter out unwanted
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
@@ -218,7 +220,7 @@ def get_all_interesting_prediction_contracts(
                 source = info["source"]
                 if source and sources and (source not in sources):
                     continue
-                
+
                 # ok, add this one
                 contracts[contract["id"]] = {
                     "name": contract["token"]["name"],
@@ -229,9 +231,9 @@ def get_all_interesting_prediction_contracts(
                     "last_submited_epoch": 0,
                 }
                 contracts[contract["id"]].update(info)
-                
+
         except Exception as e:
             print(e)
             return {}
-    
+
     return contracts

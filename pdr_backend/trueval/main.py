@@ -40,8 +40,8 @@ class NewTrueVal(Thread):
         """ Get timestamp of previous epoch-1, get the price """
         """ Compare and submit trueval """
         seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
-        initial_ts =  (self.epoch - 2) * seconds_per_epoch
-        
+        initial_ts = (self.epoch - 2) * seconds_per_epoch
+
         end_ts = (self.epoch - 1) * seconds_per_epoch
 
         slot = (self.epoch - 1) * seconds_per_epoch
