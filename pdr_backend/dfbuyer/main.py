@@ -3,7 +3,7 @@ import os
 import math
 import random
 
-from typing import Dict
+from typing import Dict, List
 from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
@@ -24,7 +24,7 @@ web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 
-def numbers_with_sum(n, k):
+def numbers_with_sum(n: int, k: int) -> List[int]:
     """
     Generate a list of n random integers such that their sum equals to k.
 
