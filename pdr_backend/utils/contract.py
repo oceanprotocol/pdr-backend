@@ -2,18 +2,21 @@ import json
 import os
 import glob
 import time
+import hashlib
+import artifacts
+
+from pathlib import Path
 
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
 from sapphirepy import wrapper
-
 from pathlib import Path
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from web3.middleware import construct_sign_and_send_raw_middleware
-from os.path import expanduser
-import artifacts  # noqa
+from web3.logs import DISCARD
+
 
 from pdr_backend.utils.constants import (
     ZERO_ADDRESS,
@@ -455,6 +458,129 @@ class FixedRate:
         return self.contract_instance.functions.calcBaseInGivenOutDT(
             exchangeId, self.config.w3.to_wei("1", "ether"), 0
         ).call()
+
+
+class ERC721Factory:
+    def __init__(self, config: Web3Config, chain_id=None):
+        if not chain_id:
+            chain_id = config.w3.eth.chain_id
+        address = get_address(chain_id, "ERC721Factory")
+        if not address:
+            raise ValueError("Cannot figure out ERC721Factory address")
+        self.contract_address = config.w3.to_checksum_address(address)
+        self.contract_instance = config.w3.eth.contract(
+            address=config.w3.to_checksum_address(address),
+            abi=get_contract_abi("ERC721Factory"),
+        )
+        self.config = config
+
+    def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
+        #            gasPrice = self.config.w3.eth.gas_price
+        call_params = {
+            "from": self.config.owner,
+            "gasPrice": 100000000000,
+        }
+
+        tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
+            NftCreateData, ErcCreateData, FixedData
+        ).transact(call_params)
+        receipt = self.config.w3.eth.wait_for_transaction_receipt(tx)
+        if receipt["status"] != 1:
+            raise ValueError(f"createNftWithErc20WithFixedRate failed in {tx.hex()}")
+        # print(receipt)
+        logs = self.contract_instance.events.NFTCreated().process_receipt(
+            receipt, errors=DISCARD
+        )
+        return logs[0]["args"]["newTokenAddress"]
+
+
+class DataNft:
+    def __init__(self, config: Web3Config, address: str):
+        self.contract_address = config.w3.to_checksum_address(address)
+        self.contract_instance = config.w3.eth.contract(
+            address=config.w3.to_checksum_address(address),
+            abi=get_contract_abi("ERC721Template"),
+        )
+        self.config = config
+
+    def set_data(self, field_label, field_value, wait_for_receipt=True):
+        """Set key/value data via ERC725, with strings for key/value"""
+        field_label_hash = Web3.keccak(text=field_label)  # to keccak256 hash
+        field_value_bytes = field_value.encode()  # to array of bytes
+        #        gasPrice = self.config.w3.eth.gas_price
+        call_params = {
+            "from": self.config.owner,
+            "gasPrice": 100000000000,
+            "gas": 100000,
+        }
+        tx = self.contract_instance.functions.setNewData(
+            field_label_hash, field_value_bytes
+        ).transact(call_params)
+        if wait_for_receipt:
+            self.config.w3.eth.wait_for_transaction_receipt(tx)
+        return tx
+
+    def add_erc20_deployer(self, address, wait_for_receipt=True):
+        #        gasPrice = self.config.w3.eth.gas_price
+        call_params = {
+            "from": self.config.owner,
+            "gasPrice": 100000000000,
+        }
+        tx = self.contract_instance.functions.addToCreateERC20List(
+            self.config.w3.to_checksum_address(address)
+        ).transact(call_params)
+        if wait_for_receipt:
+            self.config.w3.eth.wait_for_transaction_receipt(tx)
+        return tx
+
+    def set_ddo(self, ddo, wait_for_receipt=True):
+        #        gasPrice = self.config.w3.eth.gas_price
+        call_params = {
+            "from": self.config.owner,
+            "gasPrice": 100000000000,
+        }
+        js = json.dumps(ddo)
+        stored_ddo = Web3.to_bytes(text=js)
+        tx = self.contract_instance.functions.setMetaData(
+            1,
+            "",
+            str(self.config.owner),
+            bytes([0]),
+            stored_ddo,
+            Web3.to_bytes(hexstr=hashlib.sha256(js.encode("utf-8")).hexdigest()),
+            [],
+        ).transact(call_params)
+        if wait_for_receipt:
+            self.config.w3.eth.wait_for_transaction_receipt(tx)
+        return tx
+
+
+def get_address(chain_id, contract_name):
+    network = get_addresses(chain_id)
+    if not network:
+        raise ValueError(f"Cannot figure out {contract_name} address")
+    address = network.get(contract_name)
+    return address
+
+
+def get_addresses(chain_id):
+    address_filename = os.getenv("ADDRESS_FILE")
+    path = None
+    if address_filename:
+        path = Path(address_filename)
+    else:
+        path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
+
+    if not path.exists():
+        raise TypeError("Cannot find address.json")
+
+    with open(path) as f:
+        data = json.load(f)
+    for name in data:
+        network = data[name]
+        if network["chainId"] == chain_id:
+            return network
+    return None
 
 
 def get_contract_abi(contract_name):
