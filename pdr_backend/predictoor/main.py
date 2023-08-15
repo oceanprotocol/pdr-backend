@@ -14,7 +14,7 @@ from pdr_backend.utils import env
 
 
 last_block_time = 0
-topics: Dict[str, dict] = []
+topics: Dict[str, dict] = {}
 
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()

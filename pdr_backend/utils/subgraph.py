@@ -84,7 +84,7 @@ def value_from_725(value725) -> str:
 
 
 @enforce_types
-def info_from_725(info725_list: list) -> Dict[str, str]:
+def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
     """
     @arguments
       info725_list -- eg [{"key":encoded("pair"), "value":encoded("ETH/USDT")},
@@ -96,7 +96,7 @@ def info_from_725(info725_list: list) -> Dict[str, str]:
                           ... }
     """
     target_keys = ["pair", "timeframe", "source", "base", "quote"]
-    info_dict: Dict[str, str] = {}
+    info_dict: Dict[str, Optional[str]] = {}
     for key in target_keys:
         info_dict[key] = None
         for item725 in info725_list:
@@ -132,10 +132,10 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
 @enforce_types
 def get_all_interesting_prediction_contracts(
     subgraph_url: str,
-    pairs: Optional[str] = None,
-    timeframes: Optional[str] = None,
-    sources: Optional[str] = None,
-    owners: Optional[str] = None,
+    pairs_string: Optional[str] = None,
+    timeframes_string: Optional[str] = None,
+    sources_string: Optional[str] = None,
+    owners_string: Optional[str] = None,
 ) -> Dict[str, dict]:
     """
     @description
@@ -153,14 +153,19 @@ def get_all_interesting_prediction_contracts(
       contracts -- dict of [contract_id] : contract_info
         where contract_info is a dict with fields name, address, symbol, ..
     """
-    if pairs:
-        pairs = pairs.split(",")
-    if timeframes:
-        timeframes = timeframes.split(",")
-    if sources:
-        sources = sources.split(",")
-    if owners:
-        owners = owners.lower().split(",")
+    pairs = None
+    timeframes = None
+    sources = None
+    owners = None
+    
+    if pairs_string is not None:
+        pairs = pairs_string.split(",")
+    if timeframes_string is not None:
+        timeframes = timeframes_string.split(",")
+    if sources_string is not None:
+        sources = sources_string.split(",")
+    if owners_string is not None:
+        owners = owners_string.lower().split(",")
 
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0

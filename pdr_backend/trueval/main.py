@@ -21,7 +21,7 @@ web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 """ Get all intresting topics that we can submit trueval """
-topics: Dict[str, dict] = []
+topics: Dict[str, dict] = {}
 
 
 class NewTrueVal(Thread):

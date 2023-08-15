@@ -3,6 +3,7 @@ import os
 import math
 import random
 
+from typing import Dict
 from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
@@ -34,7 +35,7 @@ def numbers_with_sum(n, k):
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
-topics: Dict[str, dict] = []
+topics: Dict[str, dict] = {}
 
 
 def process_block(block):
