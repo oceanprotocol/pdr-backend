@@ -1,4 +1,18 @@
-from pdr_backend.publisher.publish import publish
+from pdr_backend.publisher.publish import publish, fund_dev_accounts
+
+
+accounts_to_fund = [
+    #    account_key_env,   OCEAN_to_send
+    ("PREDICTOOR_PRIVATE_KEY", 2000.0),
+    ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
+    ("PREDICTOOR3_PRIVATE_KEY", 2000.0),
+    ("TRADER_PRIVATE_KEY", 2000.0),
+    ("DFBUYER_PRIVATE_KEY", 10000.0),
+    ("PDR_WEBSOCKET_KEY", 10000.0),
+    ("PDR_MM_USER", 10000.0),
+]
+
+fund_dev_accounts(accounts_to_fund)
 
 publish(
     s_per_epoch=300,
