@@ -40,7 +40,7 @@ class TestNumbersWithSum:
         (4, 7, 4, 7),
         (2, 11, 2, 11)
     ])
-    def test_parametrize(n, k, expected_length, expected_sum):
+    def test_parametrize(self, n, k, expected_length, expected_sum):
         result = numbers_with_sum(n, k)
         assert len(result) == expected_length
         assert sum(result) == expected_sum
