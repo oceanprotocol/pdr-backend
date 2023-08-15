@@ -36,6 +36,8 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     """
 
     # If n is 1, the only possible list is [k].
+    if n < 1:
+        return []
     if n == 1:
         return [k]
     # If n > k, it's impossible to generate n positive integers summing to k.
