@@ -2,7 +2,13 @@ import os
 
 from eth_account import Account
 
-from pdr_backend.utils.contract import DataNft, ERC721Factory, Web3Config, Token, get_address
+from pdr_backend.utils.contract import (
+    DataNft,
+    ERC721Factory,
+    Web3Config,
+    Token,
+    get_address,
+)
 from pdr_backend.utils import env
 
 rpc_url = env.get_rpc_url_or_exit()
