@@ -1,26 +1,5 @@
-import os
-from eth_account import Account
-from ocean_lib.ocean.ocean import Ocean
-from ocean_lib.web3_internal.utils import connect_to_network
-from ocean_lib.ocean.util import to_wei
-from ocean_lib.example_config import get_config_dict
-from ocean_lib.web3_internal.constants import ZERO_ADDRESS, MAX_UINT256
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 
-# add accounts
-if "OPF_DEPLOYER_PRIVATE_KEY" not in os.environ:
-    print("Missing OPF_DEPLOYER_PRIVATE_KEY")
-    exit(1)
-
-deployer = Account.from_key(os.getenv("OPF_DEPLOYER_PRIVATE_KEY"))
-connect_to_network("development")
-ADDRESS_FILE = "~/.ocean/ocean-contracts/artifacts/address.json"
-address_file = os.path.expanduser(ADDRESS_FILE)
-print(f"Load contracts from address_file: {address_file}")
-config = get_config_dict("development")
-config["ADDRESS_FILE"] = address_file
-ocean = Ocean(config)
-OCEAN = ocean.OCEAN_token
 
 # account_address, OCEAN_to_send
 accounts_to_fund = [
@@ -33,7 +12,7 @@ accounts_to_fund = [
     ("PDR_MM_USER", 10000.0),
 ]
 
-fund_dev_accounts(accounts_to_fund, OCEAN, deployer)
+fund_dev_accounts(accounts_to_fund)
 
 publish(
     s_per_epoch=300,
