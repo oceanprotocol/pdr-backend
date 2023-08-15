@@ -22,39 +22,22 @@ config["ADDRESS_FILE"] = address_file
 ocean = Ocean(config)
 OCEAN = ocean.OCEAN_token
 
-# transfer ocean tokens to predictoor & trader
-if "PREDICTOOR_PRIVATE_KEY" in os.environ:
-    predictoor = Account.from_key(os.getenv("PREDICTOOR_PRIVATE_KEY"))
-    print("Sending Ocean to predictoor")
-    OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
-if "PREDICTOOR2_PRIVATE_KEY" in os.environ:
-    predictoor = Account.from_key(os.getenv("PREDICTOOR2_PRIVATE_KEY"))
-    print("Sending Ocean to predictoor2")
-    OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
-if "PREDICTOOR3_PRIVATE_KEY" in os.environ:
-    predictoor = Account.from_key(os.getenv("PREDICTOOR3_PRIVATE_KEY"))
-    print("Sending Ocean to predictoor3")
-    OCEAN.transfer(predictoor.address, to_wei(2000.0), {"from": deployer})
+accounts_to_fund = [
+    ("PREDICTOOR_PRIVATE_KEY", 2000.0),
+    ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
+    ("PREDICTOOR3_PRIVATE_KEY", 2000.0),
+    ("TRADER_PRIVATE_KEY", 2000.0),
+    ("DFBUYER_PRIVATE_KEY", 10000.0),
+    ("PDR_WEBSOCKET_KEY", 10000.0),
+    ("PDR_MM_USER", 10000.0)
+]
 
-if "TRADER_PRIVATE_KEY" in os.environ:
-    trader = Account.from_key(os.getenv("TRADER_PRIVATE_KEY"))
-    print("Sending Ocean to trader")
-    OCEAN.transfer(trader.address, to_wei(2000.0), {"from": deployer})
-
-if "DFBUYER_PRIVATE_KEY" in os.environ:
-    dfbuyer = Account.from_key(os.getenv("DFBUYER_PRIVATE_KEY"))
-    print("Sending Ocean to dfbuyer")
-    OCEAN.transfer(dfbuyer.address, to_wei(10000.0), {"from": deployer})
-
-if "PDR_WEBSOCKET_KEY" in os.environ:
-    pdr_websocket_user = Account.from_key(os.getenv("PDR_WEBSOCKET_KEY"))
-    print("Sending Ocean to pdr_websocket_user")
-    OCEAN.transfer(pdr_websocket_user.address, to_wei(10000.0), {"from": deployer})
-
-if "PDR_MM_USER" in os.environ:
-    pdr_mm_user = Account.from_key(os.getenv("PDR_MM_USER"))
-    print("Sending Ocean to pdr_mm_user")
-    OCEAN.transfer(pdr_mm_user.address, to_wei(10000.0), {"from": deployer})
+for env_key, amount in accounts_to_fund:
+    if env_key in os.environ:
+        account = Account.from_key(os.getenv(env_key))
+        account_name = env_key.split("_")[0].lower()
+        print(f"Sending Ocean to {account_name}")
+        OCEAN.transfer(account.address, to_wei(amount), {"from": deployer})
 
 
 publish(
