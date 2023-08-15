@@ -157,7 +157,7 @@ def get_all_interesting_prediction_contracts(
     timeframes = None
     sources = None
     owners = None
-    
+
     if pairs_string is not None:
         pairs = pairs_string.split(",")
     if timeframes_string is not None:
