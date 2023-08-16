@@ -14,16 +14,15 @@ from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
 from sapphirepy import wrapper
 from pathlib import Path
-from web3.constants import MAX_INT
 from web3 import Web3, HTTPProvider, WebsocketProvider
 from web3.middleware import construct_sign_and_send_raw_middleware
 from web3.logs import DISCARD
-
 
 from pdr_backend.utils.constants import (
     ZERO_ADDRESS,
     SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,
+    MAX_UINT,
 )
 
 keys = KeyAPI(NativeECCBackend)
@@ -372,7 +371,7 @@ class PredictoorContract:
             )
         if self.last_allowance < amount_wei:
             try:
-                self.token.approve(self.contract_address, MAX_INT)
+                self.token.approve(self.contract_address, MAX_UINT)
                 self.last_allowance = self.token.allowance(
                     self.config.owner, self.contract_address
                 )
