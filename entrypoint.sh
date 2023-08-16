@@ -34,8 +34,9 @@ then
   sleep 10
 fi
 
-echo "Delaying startup for ${DELAYED_STARTUP} seconds.."
-sleep $DELAYED_STARTUP
+DELAY=${DELAYED_STARTUP:-0}
+echo "Delaying startup for ${DELAY} seconds.."
+sleep $DELAY
 
 echo "Running $MODULE_NAME..."
 python /app/pdr_backend/$MODULE_NAME/main.py

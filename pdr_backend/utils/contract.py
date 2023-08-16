@@ -94,6 +94,15 @@ class Token:
     def balanceOf(self, account):
         return self.contract_instance.functions.balanceOf(account).call()
 
+    def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
+        gasPrice = self.config.w3.eth.gas_price
+        tx = self.contract_instance.functions.transfer(to, int(amount)).transact(
+            {"from": sender, "gasPrice": gasPrice}
+        )
+        if wait_for_receipt:
+            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+        return tx
+
     def approve(self, spender, amount, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
         # print(f"Approving {amount} for {spender} on contract {self.contract_address}")
@@ -387,7 +396,8 @@ class PredictoorContract:
                     self.config.rpc_url,
                     0,
                     1000000,
-                    data,
+                    0,
+                    0,
                 )
                 print("Encrypted transaction status code:", res)
             else:
