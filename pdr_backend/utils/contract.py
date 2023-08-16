@@ -396,7 +396,8 @@ class PredictoorContract:
                     self.config.rpc_url,
                     0,
                     1000000,
-                    data,
+                    0,
+                    0,
                 )
                 print("Encrypted transaction status code:", res)
             else:
