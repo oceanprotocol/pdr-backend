@@ -365,16 +365,14 @@ class PredictoorContract:
         amount_wei = self.config.w3.to_wei(str(stake_amount), "ether")
 
         # Check allowance first, only approve if needed
-        if self.last_allowance == 0:
+        if self.last_allowance <= 0:
             self.last_allowance = self.token.allowance(
                 self.config.owner, self.contract_address
             )
         if self.last_allowance < amount_wei:
             try:
                 self.token.approve(self.contract_address, MAX_UINT)
-                self.last_allowance = self.token.allowance(
-                    self.config.owner, self.contract_address
-                )
+                self.last_allowance = MAX_UINT
             except Exception as e:
                 print("Error while approving the contract to spend tokens:", e)
                 return None
