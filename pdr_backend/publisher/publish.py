@@ -1,7 +1,14 @@
-import time
 import os
 
-from pdr_backend.utils.contract import DataNft, ERC721Factory, Web3Config, get_address
+from eth_account import Account
+
+from pdr_backend.utils.contract import (
+    DataNft,
+    ERC721Factory,
+    Web3Config,
+    Token,
+    get_address,
+)
 from pdr_backend.utils import env
 
 rpc_url = env.get_rpc_url_or_exit()
@@ -11,8 +18,19 @@ owner = web3_config.owner
 ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
 fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
 factory = ERC721Factory(web3_config)
+OCEAN = Token(web3_config, ocean_address)
 
 MAX_UINT256 = 2**256 - 1
+
+
+def fund_dev_accounts(accounts_to_fund):
+    for env_key, amount in accounts_to_fund:
+        if env_key in os.environ:
+            account = Account.from_key(os.getenv(env_key))
+            print(
+                f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
+            )
+            OCEAN.transfer(account.address, amount * 1e18, owner)
 
 
 def publish(
