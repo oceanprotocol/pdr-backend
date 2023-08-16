@@ -373,6 +373,9 @@ class PredictoorContract:
         if self.last_allowance < amount_wei:
             try:
                 self.token.approve(self.contract_address, MAX_INT)
+                self.last_allowance = self.token.allowance(
+                    self.config.owner, self.contract_address
+                )
             except Exception as e:
                 print("Error while approving the contract to spend tokens:", e)
                 return None
