@@ -3,7 +3,7 @@ import os
 import math
 import random
 
-from typing import Dict
+from typing import Dict, List
 from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
@@ -24,14 +24,36 @@ web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 
-def numbers_with_sum(n, k):
-    print(f"numbers_with_sum ({n},{k})")
+def numbers_with_sum(n: int, k: int) -> List[int]:
+    """
+    Generate a list of n integers that sum up to k.
+
+    @param:
+        n - Number of integers to generate.
+        k - The total sum of the generated integers.
+
+    @return:
+        A list of n integers that sum up to k.
+    """
+
+    # If n is 1, the only possible list is [k].
     if n < 1:
         return []
     if n == 1:
         return [k]
-    num = random.randint(1, k)
-    return [num] + numbers_with_sum(n - 1, k - num)
+    # If n > k, it's impossible to generate n positive integers summing to k.
+    elif n > k:
+        return []
+
+    # Generate n-1 unique random integers between 1 and k-1
+    a = random.sample(range(1, k), n - 1)
+
+    # Add 0 and k to the list
+    a.extend([0, k])
+    a.sort()
+
+    # Calculate the difference between consecutive numbers and output
+    return [a[i + 1] - a[i] for i in range(len(a) - 1)]
 
 
 """ Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
