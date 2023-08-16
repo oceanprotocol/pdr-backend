@@ -15,6 +15,7 @@ from pdr_backend.utils import env
 
 last_block_time = 0
 topics: Dict[str, dict] = {}
+contract_map: Dict[str, PredictoorContract] = {}
 
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()
@@ -42,7 +43,9 @@ def process_block(block):
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
         topic = topics[address]
-        predictoor_contract = PredictoorContract(web3_config, address)
+        if contract_map.get(address) is None:
+            contract_map[address] = PredictoorContract(web3_config, address)
+        predictoor_contract = contract_map[address]
         epoch = predictoor_contract.get_current_epoch()
         seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
         seconds_till_epoch_end = (

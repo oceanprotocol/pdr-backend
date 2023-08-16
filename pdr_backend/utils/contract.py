@@ -18,11 +18,11 @@ from web3 import Web3, HTTPProvider, WebsocketProvider
 from web3.middleware import construct_sign_and_send_raw_middleware
 from web3.logs import DISCARD
 
-
 from pdr_backend.utils.constants import (
     ZERO_ADDRESS,
     SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,
+    MAX_UINT,
 )
 
 keys = KeyAPI(NativeECCBackend)
@@ -127,6 +127,7 @@ class PredictoorContract:
         )
         stake_token = self.get_stake_token()
         self.token = Token(config, stake_token)
+        self.last_allowance = 0
 
     def is_valid_subscription(self):
         return self.contract_instance.functions.isValidSubscription(
@@ -364,17 +365,18 @@ class PredictoorContract:
         amount_wei = self.config.w3.to_wei(str(stake_amount), "ether")
 
         # Check allowance first, only approve if needed
-        current_allowance = self.token.allowance(
-            self.config.owner, self.contract_address
-        )
-        if current_allowance < amount_wei:
+        if self.last_allowance <= 0:
+            self.last_allowance = self.token.allowance(
+                self.config.owner, self.contract_address
+            )
+        if self.last_allowance < amount_wei:
             try:
-                self.token.approve(self.contract_address, amount_wei)
+                self.token.approve(self.contract_address, MAX_UINT)
+                self.last_allowance = MAX_UINT
             except Exception as e:
                 print("Error while approving the contract to spend tokens:", e)
                 return None
 
-        self.token.approve(self.contract_address, amount_wei)
         gasPrice = self.config.w3.eth.gas_price
         try:
             txhash = None
@@ -405,7 +407,7 @@ class PredictoorContract:
                     predicted_value, amount_wei, prediction_ts
                 ).transact({"from": self.config.owner, "gasPrice": gasPrice})
                 txhash = tx.hex()
-
+            self.last_allowance -= amount_wei
             print(f"Submitted prediction, txhash: {txhash}")
             if not wait_for_receipt:
                 return txhash
