@@ -36,6 +36,14 @@ jobs:
           SUBGRAPH_VERSION: main
         run: |
           bash -x start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --with-thegraph --predictoor > start_ocean.log &
+          
+      - name: Wait for contracts deployment
+        working-directory: ${{ github.workspace }}/barge
+        run: |
+          for i in $(seq 1 250); do
+            sleep 5
+            [ -f "$HOME/.ocean/ocean-contracts/artifacts/ready" ] && break
+            done
 
       - name: Install dependencies
         working-directory: ${{ github.workspace }}
