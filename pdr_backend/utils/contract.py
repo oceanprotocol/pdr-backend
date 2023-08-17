@@ -578,6 +578,8 @@ def get_address(chain_id, contract_name):
 
 def get_addresses(chain_id):
     address_filename = os.getenv("ADDRESS_FILE")
+    if "~" in address_filename:
+        address_filename = os.path.expanduser(address_filename)
     path = None
     if address_filename:
         path = Path(address_filename)
