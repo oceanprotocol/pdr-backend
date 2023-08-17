@@ -11,6 +11,7 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ADDRESS_FILE: "~/.ocean/ocean-contracts/artifacts/address.json"
 
 jobs:
   test:
