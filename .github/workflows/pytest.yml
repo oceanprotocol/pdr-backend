@@ -27,7 +27,7 @@ jobs:
         name: Checkout Barge
         with:
           repository: "oceanprotocol/barge"
-          reference: "predictoor"
+          ref: "predictoor"
           path: "barge"
 
       - name: Run Barge
