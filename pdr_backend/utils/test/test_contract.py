@@ -9,7 +9,7 @@ from pdr_backend.utils.contract import (
     PredictoorContract,
     FixedRate,
     get_contract_filename,
-    get_address
+    get_address,
 )
 from pdr_backend.utils.constants import (
     SAPPHIRE_TESTNET_CHAINID,
@@ -78,7 +78,9 @@ def test_Token(rpc_url, private_key, chain_id):
     owner_addr = config.owner
     alice = accounts[1]
 
-    token.contract_instance.functions.mint(owner_addr, 1000000000).transact({"from": owner_addr, "gasPrice": config.w3.eth.gas_price})
+    token.contract_instance.functions.mint(owner_addr, 1000000000).transact(
+        {"from": owner_addr, "gasPrice": config.w3.eth.gas_price}
+    )
 
     allowance_start = token.allowance(owner_addr, alice)
     token.approve(alice, 100, True)
@@ -89,6 +91,7 @@ def test_Token(rpc_url, private_key, chain_id):
     token.transfer(alice, 100, owner_addr)
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
+
 
 @pytest.fixture(autouse=True)
 def run_before_each_test():
