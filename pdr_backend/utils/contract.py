@@ -420,7 +420,11 @@ class PredictoorContract:
         return self.contract_instance.functions.trueValSubmitTimeout().call()
 
     def get_prediction(self, slot):
+        auth_signature = self.get_auth_signature()
         return self.contract_instance.functions.getPrediction(slot).call(
+            slot,
+            self.config.owner,
+            auth_signature,
             {"from": self.config.owner}
         )
 
