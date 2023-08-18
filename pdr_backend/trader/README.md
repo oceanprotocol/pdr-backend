@@ -31,7 +31,7 @@ The topic object is structured as follows:
 
 - [Install pdr-backend](../../../READMEs/install.md)
 - Customization
-        - Go to trade.py. Here, you'll find the [trade](#trade-function) function. Modify the trade function to implement your trading strategy.
+    - Go to trade.py. Here, you'll find the [trade](#trade-function) function. Modify the trade function to implement your trading strategy.
 - [Run trader agent](../../../READMEs/running-an-agent.md)
 
 ## Notes
