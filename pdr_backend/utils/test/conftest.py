@@ -31,6 +31,6 @@ def web3_config(rpc_url, private_key):
 
 
 @pytest.fixture(scope="session")
-def ocean_token(web3_config) -> Token:
+def ocean_token(web3_config, chain_id) -> Token:
     token_address = get_address(chain_id, "Ocean")
     return Token(web3_config, token_address)
