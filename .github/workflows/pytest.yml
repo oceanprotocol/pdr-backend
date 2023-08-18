@@ -15,8 +15,6 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      ADDRESS_FILE: "${{ runner.home }}/ocean/ocean-contracts/artifacts/address.json"
     steps:
       - name: Setup repository
         uses: actions/checkout@v3
