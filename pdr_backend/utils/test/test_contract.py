@@ -35,12 +35,6 @@ def test_is_sapphire_network():
 
 
 @enforce_types
-def test_send_encrypted_tx():
-    # FIXME
-    pass
-
-
-@enforce_types
 def test_Web3Config_bad_rpc(private_key):
     with pytest.raises(ValueError):
         Web3Config(rpc_url=None, private_key=private_key)
