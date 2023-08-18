@@ -102,7 +102,7 @@ def test_PredictoorContract(rpc_url, private_key):
     owner = config.owner
     print("owner: ", owner)
     
-    nft_addr = publish(
+    _, _, _,nft_addr= publish(
         s_per_epoch=300,
         s_per_subscription=300 * 24,
         base="ETH",
@@ -118,7 +118,30 @@ def test_PredictoorContract(rpc_url, private_key):
 
     contract = PredictoorContract(config, nft_addr)
 
+    id = contract.getid()
+    assert id == 3
 
+    is_valid_sub = contract.is_valid_subscription()
+    assert is_valid_sub == False
+
+    auth_sig = contract.get_auth_signature()
+    assert "v" in auth_sig
+    assert "r" in auth_sig
+    assert "s" in auth_sig
+
+    max_gas_limit = contract.get_max_gas()
+    assert max_gas_limit == int(config.w3.eth.getBlock("latest").gasLimit * 0.99)
+
+    receipt = contract.buy_and_start_subscription()
+    assert receipt["status"] == 1
+    
+    is_valid_sub = contract.is_valid_subscription()
+    assert is_valid_sub == True
+
+    receipts = contract.buy_many(2, None, True)
+    assert len(receipts) == 2
+
+    
 
 @pytest.fixture(autouse=True)
 def run_before_each_test():
