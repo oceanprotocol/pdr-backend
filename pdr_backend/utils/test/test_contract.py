@@ -1,3 +1,6 @@
+import time
+
+from pdr_backend.publisher.publish import publish
 from enforce_typing import enforce_types
 import pytest
 
@@ -83,7 +86,8 @@ def test_Token(rpc_url, private_key, chain_id):
     )
 
     allowance_start = token.allowance(owner_addr, alice)
-    token.approve(alice, 100, True)
+    token.approve(alice, allowance_start + 100, True)
+    time.sleep(5)
     allowance_end = token.allowance(owner_addr, alice)
     assert allowance_end - allowance_start == 100
 
@@ -91,6 +95,29 @@ def test_Token(rpc_url, private_key, chain_id):
     token.transfer(alice, 100, owner_addr)
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
+
+@enforce_types
+def test_PredictoorContract(rpc_url, private_key):
+    config = Web3Config(rpc_url, private_key)
+    owner = config.owner
+    print("owner: ", owner)
+    
+    nft_addr = publish(
+        s_per_epoch=300,
+        s_per_subscription=300 * 24,
+        base="ETH",
+        quote="USDT",
+        source="kraken",
+        timeframe="5m",
+        trueval_submitter_addr=owner,
+        feeCollector_addr=owner,
+        rate=3,
+        cut=0.2,
+        web3_config=config,
+    )
+
+    contract = PredictoorContract(config, nft_addr)
+
 
 
 @pytest.fixture(autouse=True)
