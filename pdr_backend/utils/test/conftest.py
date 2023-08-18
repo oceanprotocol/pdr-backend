@@ -6,6 +6,11 @@ from pdr_backend.utils.contract import (
     get_address,
 )
 
+_BARGE_ADDRESS_FILE = "~/.ocean/ocean-contracts/artifacts/address.json"
+
+@pytest.fixture(autouse=True)
+def barge_address_file():
+    os.environ["ADDRESS_FILE"] = os.path.expanduser(_BARGE_ADDRESS_FILE)
 
 @pytest.fixture(scope="session")
 def rpc_url():
