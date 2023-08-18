@@ -578,10 +578,10 @@ def get_address(chain_id, contract_name):
 
 def get_addresses(chain_id):
     address_filename = os.getenv("ADDRESS_FILE")
-    if address_filename != None and "~" in address_filename:
-        address_filename = os.path.expanduser(address_filename)
     path = None
     if address_filename:
+        if "~" in address_filename:
+            address_filename = os.path.expanduser(address_filename)
         path = Path(address_filename)
     else:
         path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
@@ -617,9 +617,9 @@ def get_contract_filename(contract_name):
     # first, try to find locally
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
-    if address_filename != None and "~" in address_filename:
-        address_filename = os.path.expanduser(address_filename)
     if address_filename:
+        if "~" in address_filename:
+            address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
         os.chdir(root_dir)
