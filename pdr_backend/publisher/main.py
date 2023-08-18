@@ -1,5 +1,19 @@
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
+from pdr_backend.utils.contract import (
+    DataNft,
+    Web3Config,
+    Token,
+    get_address,
+)
+from pdr_backend.utils import env
 
+rpc_url = env.get_rpc_url_or_exit()
+private_key = env.get_private_key_or_exit()
+web3_config = Web3Config(rpc_url, private_key)
+ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+
+
+OCEAN = Token(web3_config, ocean_address)
 
 accounts_to_fund = [
     #    account_key_env,   OCEAN_to_send
@@ -12,7 +26,7 @@ accounts_to_fund = [
     ("PDR_MM_USER", 10000.0),
 ]
 
-fund_dev_accounts(accounts_to_fund)
+fund_dev_accounts(accounts_to_fund, web3_config.owner, OCEAN)
 
 publish(
     s_per_epoch=300,
@@ -25,6 +39,7 @@ publish(
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,
+    web3_config=web3_config,
 )
 
 publish(
@@ -38,6 +53,7 @@ publish(
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,
+    web3_config=web3_config,
 )
 
 publish(
@@ -51,4 +67,5 @@ publish(
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,
+    web3_config=web3_config,
 )
