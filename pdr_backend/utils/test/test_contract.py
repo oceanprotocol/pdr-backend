@@ -78,17 +78,17 @@ def test_Token():
     token_address = get_address(DEVELOPMENT_CHAIN_ID, "Ocean")
     token = Token(config, token_address)
 
-    accounts = config.w3.accounts
+    accounts = config.w3.eth.accounts
 
     owner_addr = config.owner
-    alice = accounts[1].address
+    alice = accounts[1]
 
-    allowance_start = token.allowance(owner_addr, accounts[1].address)
+    allowance_start = token.allowance(owner_addr, alice)
     assert allowance_start == 0
 
     token.approve(alice, 100)
 
-    allowance_end = token.allowance(owner_addr, accounts[1].address)
+    allowance_end = token.allowance(owner_addr, alice)
     assert allowance_end == 100
 
     balance_start = token.balanceOf(alice)

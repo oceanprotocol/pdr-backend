@@ -617,6 +617,8 @@ def get_contract_filename(contract_name):
     # first, try to find locally
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
+    if "~" in address_filename:
+        address_filename = os.path.expanduser(address_filename)
     if address_filename:
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
