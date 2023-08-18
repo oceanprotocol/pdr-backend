@@ -421,9 +421,9 @@ class PredictoorContract:
 
     def get_prediction(self, slot: int, address: str):
         auth_signature = self.get_auth_signature()
-        return self.contract_instance.functions.getPrediction(slot, address, auth_signature).call(
-            {"from": self.config.owner}
-        )
+        return self.contract_instance.functions.getPrediction(
+            slot, address, auth_signature
+        ).call({"from": self.config.owner})
 
     def submit_trueval(
         self, true_val, timestamp, float_value, cancel_round, wait_for_receipt=True

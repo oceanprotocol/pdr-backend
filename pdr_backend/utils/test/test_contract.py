@@ -14,7 +14,7 @@ from pdr_backend.utils.contract import (
     get_contract_filename,
     get_address,
     get_contract_abi,
-    get_addresses
+    get_addresses,
 )
 from pdr_backend.utils.constants import (
     SAPPHIRE_TESTNET_CHAINID,
@@ -215,7 +215,6 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
         True, soonest_timestamp, 0, False, True
     )
     assert receipt["status"] == 1
-
 
     receipt = predictoor_contract.payout(soonest_timestamp, True)
     assert receipt["status"] == 1
