@@ -27,7 +27,7 @@ jobs:
         name: Checkout Barge
         with:
           repository: "oceanprotocol/barge"
-          ref: "predictoor"
+          ref: "issue374-replace-pdr-components-with-pdr-backend"
           path: "barge"
 
       - name: Run Barge
