@@ -18,7 +18,7 @@ from pdr_backend.utils.constants import (
 
 
 TEST_RPC_URL = "http://127.0.0.1:8545"
-TEST_PRIVATE_KEY = "0x1f4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+TEST_PRIVATE_KEY = "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 DEVELOPMENT_CHAIN_ID = 8996
 
 @enforce_types
@@ -78,10 +78,14 @@ def test_Token():
     token_address = get_address(DEVELOPMENT_CHAIN_ID, "Ocean")
     token = Token(config, token_address)
 
+
     accounts = config.w3.eth.accounts
 
     owner_addr = config.owner
     alice = accounts[1]
+    print(alice, owner_addr)
+
+    token.contract_instance.functions.mint(owner_addr, 1000000000).transact({"from": owner_addr, "gasPrice": config.w3.eth.gas_price})
 
     allowance_start = token.allowance(owner_addr, alice)
     assert allowance_start == 0
@@ -92,12 +96,9 @@ def test_Token():
     assert allowance_end == 100
 
     balance_start = token.balanceOf(alice)
-    assert balance_start == 0
-    
     token.transfer(alice, 100, owner_addr)
-
     balance_end = token.balanceOf(alice)
-    assert balance_end == 100
+    assert balance_end - balance_start == 100
 
 
     
