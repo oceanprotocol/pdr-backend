@@ -89,3 +89,5 @@ def publish(
     print(f"timeframe set to {timeframe} in {tx.hex()}")
     tx = data_nft.add_erc20_deployer(trueval_submiter)
     print(f"Erc20Deployer set to {trueval_submiter} in {tx.hex()}")
+
+    return nft_data, erc_data, fre_data, data_nft_address
