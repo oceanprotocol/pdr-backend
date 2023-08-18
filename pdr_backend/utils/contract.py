@@ -157,7 +157,7 @@ class PredictoorContract:
         return bytes(myBytes32, "utf-8")
 
     def get_auth_signature(self):
-        valid_until = int(time.time()) + 3600
+        valid_until = self.config.w3.eth.get_block("latest").timestamp + 3600
         message_hash = self.config.w3.solidity_keccak(
             ["address", "uint256"],
             [self.config.owner, valid_until],

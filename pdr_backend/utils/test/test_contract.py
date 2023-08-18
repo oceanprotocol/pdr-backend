@@ -23,6 +23,8 @@ from pdr_backend.utils.constants import (
     SAPPHIRE_MAINNET_CHAINID,
 )
 
+SECONDS_PER_EPOCH = 300
+
 
 @enforce_types
 def test_is_sapphire_network():
@@ -157,19 +159,19 @@ def test_get_price(predictoor_contract):
 
 def test_get_current_epoch(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch()
-    utcnow = int(time.time())
-    assert current_epoch == int(utcnow // 300)
+    now = predictoor_contract.config.w3.eth.get_block("latest").timestamp
+    assert current_epoch == int(now // SECONDS_PER_EPOCH)
 
 
 def test_get_current_epoch_ts(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
-    utcnow = int(time.time())
-    assert current_epoch == int(utcnow // 300) * 300
+    now = predictoor_contract.config.w3.eth.get_block("latest").timestamp
+    assert current_epoch == int(now // SECONDS_PER_EPOCH) * SECONDS_PER_EPOCH
 
 
 def test_get_seconds_per_epoch(predictoor_contract):
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    assert seconds_per_epoch == 300
+    assert seconds_per_epoch == SECONDS_PER_EPOCH
 
 
 def test_get_aggpredval(predictoor_contract):
@@ -181,12 +183,12 @@ def test_get_aggpredval(predictoor_contract):
 def test_soonest_timestamp_to_predict(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     soonest_timestamp = predictoor_contract.soonest_timestamp_to_predict(current_epoch)
-    assert soonest_timestamp == current_epoch + 300 * 2
+    assert soonest_timestamp == current_epoch + SECONDS_PER_EPOCH * 2
 
 
 def test_get_trueValSubmitTimeout(predictoor_contract):
     trueValSubmitTimeout = predictoor_contract.get_trueValSubmitTimeout()
-    assert trueValSubmitTimeout == 4 * 12 * 300
+    assert trueValSubmitTimeout == 4 * 12 * SECONDS_PER_EPOCH
 
 
 def test_get_block(predictoor_contract):
@@ -211,8 +213,10 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     assert prediction[0] == True
     assert prediction[1] == 1e18
 
-    predictoor_contract.config.w3.provider.make_request("evm_increaseTime", [300 * 2])
-
+    predictoor_contract.config.w3.provider.make_request(
+        "evm_increaseTime", [SECONDS_PER_EPOCH * 2]
+    )
+    predictoor_contract.config.w3.provider.make_request("evm_mine", [])
     receipt = predictoor_contract.submit_trueval(
         True, soonest_timestamp, 0, False, True
     )
@@ -221,8 +225,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     receipt = predictoor_contract.payout(soonest_timestamp, True)
     assert receipt["status"] == 1
     balance_final = ocean_token.balanceOf(owner_addr)
-
-    assert balance_before == balance_final
+    assert balance_before / 1e18 == approx(balance_final / 1e18)  # + sub revenue
 
 
 def test_redeem_unused_slot_revenue(predictoor_contract):
@@ -253,13 +256,16 @@ def test_get_address(chain_id):
     result = get_address(chain_id, "Ocean")
     assert result is not None
 
+
 def test_get_addresses(chain_id):
     result = get_addresses(chain_id)
     assert result is not None
 
+
 def test_get_contract_abi():
     result = get_contract_abi("ERC20Template3")
     assert len(result) > 0 and isinstance(result, list)
+
 
 def test_get_contract_filename():
     result = get_contract_filename("ERC20Template3")
@@ -276,8 +282,8 @@ def run_before_each_test():
 def predictoor_contract(rpc_url, private_key):
     config = Web3Config(rpc_url, private_key)
     _, _, _, _, logs = publish(
-        s_per_epoch=300,
-        s_per_subscription=300 * 24,
+        s_per_epoch=SECONDS_PER_EPOCH,
+        s_per_subscription=SECONDS_PER_EPOCH * 24,
         base="ETH",
         quote="USDT",
         source="kraken",
