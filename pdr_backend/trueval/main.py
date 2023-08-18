@@ -47,16 +47,12 @@ class NewTrueVal(Thread):
 
         slot = (self.epoch - 1) * seconds_per_epoch
 
-        (true_val, cancel_round) = get_true_val(
-            self.topic, initial_ts, end_ts
-        )
+        (true_val, cancel_round) = get_true_val(self.topic, initial_ts, end_ts)
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submiting true_val {true_val} for slot:{slot}"
         )
         try:
-            self.predictoor_contract.submit_trueval(
-                true_val, slot, cancel_round
-            )
+            self.predictoor_contract.submit_trueval(true_val, slot, cancel_round)
         except Exception as e:
             print(e)
             pass

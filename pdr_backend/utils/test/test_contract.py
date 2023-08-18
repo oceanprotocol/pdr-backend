@@ -213,7 +213,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     )
     predictoor_contract.config.w3.provider.make_request("evm_mine", [])
     receipt = predictoor_contract.submit_trueval(
-        True, soonest_timestamp, 0, False, True
+        True, soonest_timestamp, False, True
     )
     assert receipt["status"] == 1
 
