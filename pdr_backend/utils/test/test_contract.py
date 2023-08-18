@@ -5,14 +5,15 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 from pathlib import Path
-
+from unittest.mock import patch, Mock
 from pdr_backend.utils.contract import (
     is_sapphire_network,
     send_encrypted_tx,
+    ERC721Factory,
+    FixedRate,
     Web3Config,
     Token,
     PredictoorContract,
-    FixedRate,
     get_contract_filename,
     get_address,
     get_contract_abi,
@@ -229,8 +230,8 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
 
 
 def test_redeem_unused_slot_revenue(predictoor_contract):
-    current_epoch = predictoor_contract.get_current_epoch_ts()
-    receipt = predictoor_contract.redeem_unused_slot_revenue(current_epoch)
+    current_epoch = predictoor_contract.get_current_epoch_ts() - SECONDS_PER_EPOCH * 123
+    receipt = predictoor_contract.redeem_unused_slot_revenue(current_epoch, True)
     assert receipt["status"] == 1
 
 
@@ -272,6 +273,114 @@ def test_get_contract_filename():
     assert result is not None and isinstance(result, Path)
 
 
+def test_FixedRate(predictoor_contract, web3_config):
+    exchanges = predictoor_contract.get_exchanges()
+    address = exchanges[0][0]
+    id = exchanges[0][1]
+    print(exchanges)
+    rate = FixedRate(web3_config, address)
+    assert rate.get_dt_price(id)[0] / 1e18 == approx(3.603)
+
+
+def test_ERC721Factory(web3_config):
+    factory = ERC721Factory(web3_config)
+    assert factory is not None
+
+    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
+
+    rate = 3
+    cut = 0.2
+
+    nft_data = ("TestToken", "TT", 1, "", True, web3_config.owner)
+    erc_data = (
+        3,
+        ["ERC20Test", "ET"],
+        [
+            web3_config.owner,
+            web3_config.owner,
+            web3_config.owner,
+            ocean_address,
+            ocean_address,
+        ],
+        [2**256 - 1, 0, 300, 3000, 30000],
+        [],
+    )
+    fre_data = (
+        fre_address,
+        [
+            ocean_address,
+            web3_config.owner,
+            web3_config.owner,
+            web3_config.owner,
+        ],
+        [
+            18,
+            18,
+            web3_config.w3.to_wei(rate, "ether"),
+            web3_config.w3.to_wei(cut, "ether"),
+            1,
+        ],
+    )
+
+    logs_nft, logs_erc = factory.createNftWithErc20WithFixedRate(
+        nft_data, erc_data, fre_data
+    )
+
+    assert len(logs_nft) > 0
+    assert len(logs_erc) > 0
+
+
+def test_send_encrypted_tx(
+    mock_send_encrypted_sapphire_tx, ocean_token, private_key, web3_config
+):
+    # Set up dummy return value for the mocked function
+    mock_send_encrypted_sapphire_tx.return_value = (
+        0,
+        "dummy_tx_hash",
+    )
+    # Sample inputs for send_encrypted_tx
+    function_name = "transfer"
+    args = [web3_config.owner, 100]
+    pk = private_key
+    sender = web3_config.owner
+    receiver = web3_config.w3.eth.accounts[1]
+    rpc_url = "http://localhost:8545"
+    value = 0
+    gasLimit = 10000000
+    gasCost = 0
+    nonce = 0
+    tx_hash, encrypted_data = send_encrypted_tx(
+        ocean_token.contract_instance,
+        function_name,
+        args,
+        pk,
+        sender,
+        receiver,
+        rpc_url,
+        value,
+        gasLimit,
+        gasCost,
+        nonce,
+    )
+    assert tx_hash == 0
+    assert encrypted_data == "dummy_tx_hash"
+    mock_send_encrypted_sapphire_tx.assert_called_once_with(
+        pk,
+        sender,
+        receiver,
+        rpc_url,
+        value,
+        gasLimit,
+        ocean_token.contract_instance.encodeABI(fn_name=function_name, args=args),
+        gasCost,
+        nonce,
+    )
+
+
+# --------------------
+
+
 @pytest.fixture(autouse=True)
 def run_before_each_test():
     # This setup code will be run before each test
@@ -296,3 +405,10 @@ def predictoor_contract(rpc_url, private_key):
     )
     dt_addr = logs["newTokenAddress"]
     return PredictoorContract(config, dt_addr)
+
+
+@pytest.fixture
+def mock_send_encrypted_sapphire_tx(monkeypatch):
+    mock_function = Mock(return_value=(0, "dummy_tx_hash"))
+    monkeypatch.setattr("sapphirepy.wrapper.send_encrypted_sapphire_tx", mock_function)
+    return mock_function
