@@ -578,7 +578,7 @@ def get_address(chain_id, contract_name):
 
 def get_addresses(chain_id):
     address_filename = os.getenv("ADDRESS_FILE")
-    if "~" in address_filename:
+    if address_filename != None and "~" in address_filename:
         address_filename = os.path.expanduser(address_filename)
     path = None
     if address_filename:
@@ -587,7 +587,7 @@ def get_addresses(chain_id):
         path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
 
     if not path.exists():
-        raise TypeError("Cannot find address.json")
+        raise TypeError(f"Cannot find address.json file at {path}")
 
     with open(path) as f:
         data = json.load(f)
@@ -617,7 +617,7 @@ def get_contract_filename(contract_name):
     # first, try to find locally
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
-    if "~" in address_filename:
+    if address_filename != None and "~" in address_filename:
         address_filename = os.path.expanduser(address_filename)
     if address_filename:
         address_dir = os.path.dirname(address_filename)
