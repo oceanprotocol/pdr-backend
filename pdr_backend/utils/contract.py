@@ -419,12 +419,9 @@ class PredictoorContract:
     def get_trueValSubmitTimeout(self):
         return self.contract_instance.functions.trueValSubmitTimeout().call()
 
-    def get_prediction(self, slot):
+    def get_prediction(self, slot: int, address: str):
         auth_signature = self.get_auth_signature()
-        return self.contract_instance.functions.getPrediction(slot).call(
-            slot,
-            self.config.owner,
-            auth_signature,
+        return self.contract_instance.functions.getPrediction(slot, address, auth_signature).call(
             {"from": self.config.owner}
         )
 
@@ -508,7 +505,9 @@ class ERC721Factory:
         logs_nft = self.contract_instance.events.NFTCreated().process_receipt(
             receipt, errors=DISCARD
         )
-        logs_erc = self.contract_instance.events.TokenCreated().process_receipt(receipt, errors=DISCARD)
+        logs_erc = self.contract_instance.events.TokenCreated().process_receipt(
+            receipt, errors=DISCARD
+        )
         return logs_nft[0]["args"], logs_erc[0]["args"]
 
 
