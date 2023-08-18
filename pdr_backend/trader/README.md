@@ -13,15 +13,10 @@ By default, `trade` function only prints the incoming trading signal. You need t
 
 ### Topic Object
 
-The topic object is structured as follows:
+The topic object has all the details about the pair:
 
 - `name` - The name of the trading pair, e.g., "ETH-USDT".
-- `address` - Contract address of the datatoken.
 - `symbol` - Symbol of the trading pair.
-- `seconds_per_epoch` - Number of seconds per epoch.
-- `seconds_per_subscription` - Number of seconds per subscription.
-- `last_submited_epoch` - Last submitted epoch count.
-- `pair` - Another representation of the trading pair.
 - `base` - Base currency of the trading pair.
 - `quote` - Quote currency of the trading pair.
 - `source` - Source exchange or platform.
@@ -29,10 +24,25 @@ The topic object is structured as follows:
 
 ## Instructions
 
-- [Install pdr-backend](../../../READMEs/install.md)
-- Customization
-    - Go to trade.py. Here, you'll find the [trade](#trade-function) function. Modify the trade function to implement your trading strategy.
-- [Run trader agent](../../../READMEs/running-an-agent.md)
+### Install pdr-backend
+
+Follow the [installation guide](../../../READMEs/install.md) to install pdr-backend.
+
+### Customization
+
+Modify `trade.py` as explained in the [Trade function](#trade-function) section.
+
+### Setup environment variables
+
+Refer to [4.6 Usage for Backend: How to filter](../../../README.md#46-usage-for-backend-how-to-filter)
+
+### Run trader agent
+
+Run the agent by:
+
+```bash
+python3 pdr_backend/trader/main.py
+```
 
 ## Notes
 
