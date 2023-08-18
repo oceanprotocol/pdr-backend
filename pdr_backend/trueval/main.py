@@ -47,7 +47,7 @@ class NewTrueVal(Thread):
 
         slot = (self.epoch - 1) * seconds_per_epoch
 
-        (true_val, float_value, cancel_round) = get_true_val(
+        (true_val, cancel_round) = get_true_val(
             self.topic, initial_ts, end_ts
         )
         print(
@@ -55,7 +55,7 @@ class NewTrueVal(Thread):
         )
         try:
             self.predictoor_contract.submit_trueval(
-                true_val, slot, float_value, cancel_round
+                true_val, slot, cancel_round
             )
         except Exception as e:
             print(e)

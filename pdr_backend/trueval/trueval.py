@@ -49,6 +49,6 @@ def get_true_val(topic, initial_timestamp, end_timestamp):
         price_end = exchange_ccxt.fetch_ohlcv(
             topic["pair"], "1m", since=end_timestamp, limit=1
         )
-        return (price_end[0][1] >= price_initial[0][1], price_end[0][1], False)
+        return (price_end[0][1] >= price_initial[0][1], False)
     except Exception as e:
         return (False, 0, True)
