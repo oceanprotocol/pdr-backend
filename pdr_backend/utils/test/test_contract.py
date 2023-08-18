@@ -1,8 +1,10 @@
+import os
 import time
 from pdr_backend.publisher.publish import publish
 from enforce_typing import enforce_types
 import pytest
 from pytest import approx
+from pathlib import Path
 
 from pdr_backend.utils.contract import (
     is_sapphire_network,
@@ -201,7 +203,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     assert receipt["status"] == 1
 
     balance_after = ocean_token.balanceOf(owner_addr)
-    assert balance_after - balance_before == 1e18
+    assert balance_before - balance_after == 1e18
 
     prediction = predictoor_contract.get_prediction(
         soonest_timestamp, predictoor_contract.config.owner
@@ -245,6 +247,23 @@ def test_string_to_bytes32(input_data, expected_output, predictoor_contract):
     assert (
         result == expected_output
     ), f"For {input_data}, expected {expected_output}, but got {result}"
+
+
+def test_get_address(chain_id):
+    result = get_address(chain_id, "Ocean")
+    assert result is not None
+
+def test_get_addresses(chain_id):
+    result = get_addresses(chain_id)
+    assert result is not None
+
+def test_get_contract_abi():
+    result = get_contract_abi("ERC20Template3")
+    assert len(result) > 0 and isinstance(result, list)
+
+def test_get_contract_filename():
+    result = get_contract_filename("ERC20Template3")
+    assert result is not None and isinstance(result, Path)
 
 
 @pytest.fixture(autouse=True)
