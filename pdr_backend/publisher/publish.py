@@ -72,9 +72,10 @@ def publish(
         [18, 18, rate, cut, 1],
     )
 
-    data_nft_address = factory.createNftWithErc20WithFixedRate(
+    logs_nft, logs_erc = factory.createNftWithErc20WithFixedRate(
         nft_data, erc_data, fre_data
     )
+    data_nft_address = logs_nft["newTokenAddress"]
     print(f"Deployed NFT: {data_nft_address}")
     data_nft = DataNft(web3_config, data_nft_address)
     tx = data_nft.set_data("pair", pair)
@@ -90,4 +91,4 @@ def publish(
     tx = data_nft.add_erc20_deployer(trueval_submiter)
     print(f"Erc20Deployer set to {trueval_submiter} in {tx.hex()}")
 
-    return nft_data, erc_data, fre_data, data_nft_address
+    return (nft_data, erc_data, fre_data, logs_nft, logs_erc)

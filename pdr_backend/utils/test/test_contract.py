@@ -97,27 +97,9 @@ def test_Token(rpc_url, private_key, chain_id):
     assert balance_end - balance_start == 100
 
 @enforce_types
-def test_PredictoorContract(rpc_url, private_key):
+def test_PredictoorContract(rpc_url, private_key, predictoor_contract):
     config = Web3Config(rpc_url, private_key)
-    owner = config.owner
-    print("owner: ", owner)
-    
-    _, _, _,nft_addr= publish(
-        s_per_epoch=300,
-        s_per_subscription=300 * 24,
-        base="ETH",
-        quote="USDT",
-        source="kraken",
-        timeframe="5m",
-        trueval_submitter_addr=owner,
-        feeCollector_addr=owner,
-        rate=3,
-        cut=0.2,
-        web3_config=config,
-    )
-
-    contract = PredictoorContract(config, nft_addr)
-
+    contract = predictoor_contract
     id = contract.getid()
     assert id == 3
 
@@ -130,7 +112,7 @@ def test_PredictoorContract(rpc_url, private_key):
     assert "s" in auth_sig
 
     max_gas_limit = contract.get_max_gas()
-    assert max_gas_limit == int(config.w3.eth.getBlock("latest").gasLimit * 0.99)
+    assert max_gas_limit == int(config.w3.eth.get_block("latest").gasLimit * 0.99)
 
     receipt = contract.buy_and_start_subscription()
     assert receipt["status"] == 1
@@ -147,3 +129,22 @@ def test_PredictoorContract(rpc_url, private_key):
 def run_before_each_test():
     # This setup code will be run before each test
     print("Setting up!")
+
+@pytest.fixture(scope='module')
+def predictoor_contract(rpc_url, private_key):
+    config = Web3Config(rpc_url, private_key)
+    _ ,_ ,_ ,_ ,logs= publish(
+        s_per_epoch=300,
+        s_per_subscription=300 * 24,
+        base="ETH",
+        quote="USDT",
+        source="kraken",
+        timeframe="5m",
+        trueval_submitter_addr=config.owner,
+        feeCollector_addr=config.owner,
+        rate=3,
+        cut=0.2,
+        web3_config=config,
+    )
+    dt_addr = logs["newTokenAddress"]
+    return PredictoorContract(config, dt_addr)

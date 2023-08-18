@@ -501,10 +501,11 @@ class ERC721Factory:
         if receipt["status"] != 1:
             raise ValueError(f"createNftWithErc20WithFixedRate failed in {tx.hex()}")
         # print(receipt)
-        logs = self.contract_instance.events.NFTCreated().process_receipt(
+        logs_nft = self.contract_instance.events.NFTCreated().process_receipt(
             receipt, errors=DISCARD
         )
-        return logs[0]["args"]["newTokenAddress"]
+        logs_erc = self.contract_instance.events.TokenCreated().process_receipt(receipt, errors=DISCARD)
+        return logs_nft[0]["args"], logs_erc[0]["args"]
 
 
 class DataNft:
