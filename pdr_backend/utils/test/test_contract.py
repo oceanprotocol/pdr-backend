@@ -87,7 +87,7 @@ def test_Token(rpc_url, private_key, chain_id):
 
     allowance_start = token.allowance(owner_addr, alice)
     token.approve(alice, allowance_start + 100, True)
-    time.sleep(5)
+    time.sleep(1)
     allowance_end = token.allowance(owner_addr, alice)
     assert allowance_end - allowance_start == 100
 
@@ -96,34 +96,48 @@ def test_Token(rpc_url, private_key, chain_id):
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
 
-@enforce_types
-def test_PredictoorContract(rpc_url, private_key, predictoor_contract):
-    config = Web3Config(rpc_url, private_key)
-    contract = predictoor_contract
-    id = contract.getid()
+def test_get_id(predictoor_contract):
+    id = predictoor_contract.getid()
     assert id == 3
 
-    is_valid_sub = contract.is_valid_subscription()
+def test_is_valid_subscription_initially(predictoor_contract):
+    is_valid_sub = predictoor_contract.is_valid_subscription()
     assert is_valid_sub == False
 
-    auth_sig = contract.get_auth_signature()
+def test_auth_signature(predictoor_contract):
+    auth_sig = predictoor_contract.get_auth_signature()
     assert "v" in auth_sig
     assert "r" in auth_sig
     assert "s" in auth_sig
 
-    max_gas_limit = contract.get_max_gas()
-    assert max_gas_limit == int(config.w3.eth.get_block("latest").gasLimit * 0.99)
+def test_max_gas_limit(predictoor_contract):
+    max_gas_limit = predictoor_contract.get_max_gas()
+    # You'll have access to the config object if required, using predictoor_contract.config
+    expected_limit = int(predictoor_contract.config.w3.eth.get_block("latest").gasLimit * 0.99)
+    assert max_gas_limit == expected_limit
 
-    receipt = contract.buy_and_start_subscription()
+def test_buy_and_start_subscription(predictoor_contract):
+    receipt = predictoor_contract.buy_and_start_subscription()
     assert receipt["status"] == 1
-    
-    is_valid_sub = contract.is_valid_subscription()
+    is_valid_sub = predictoor_contract.is_valid_subscription()
     assert is_valid_sub == True
 
-    receipts = contract.buy_many(2, None, True)
+def test_buy_many(predictoor_contract):
+    receipts = predictoor_contract.buy_many(2, None, True)
     assert len(receipts) == 2
-
     
+@pytest.mark.parametrize(
+    "input_data,expected_output",
+    [
+        ("short", b"short" + b"0" * 27),
+        ("this is exactly 32 chars", b"this is exactly 32 chars"),
+        ("this is a very long string which is more than 32 chars", b"this is a very long string wh"),
+    ],
+)
+def test_string_to_bytes32(input_data, expected_output, predictoor_contract):
+    result = predictoor_contract.string_to_bytes32(input_data)
+    assert result == expected_output, f"For {input_data}, expected {expected_output}, but got {result}"
+
 
 @pytest.fixture(autouse=True)
 def run_before_each_test():
