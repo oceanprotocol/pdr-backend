@@ -11,11 +11,12 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  ADDRESS_FILE: "~/.ocean/ocean-contracts/artifacts/address.json"
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+        ADDRESS_FILE: "~/.ocean/ocean-contracts/artifacts/address.json"
     steps:
       - name: Setup repository
         uses: actions/checkout@v3

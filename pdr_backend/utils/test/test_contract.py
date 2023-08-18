@@ -80,10 +80,8 @@ def test_Token():
 
 
     accounts = config.w3.eth.accounts
-
     owner_addr = config.owner
     alice = accounts[1]
-    print(alice, owner_addr)
 
     token.contract_instance.functions.mint(owner_addr, 1000000000).transact({"from": owner_addr, "gasPrice": config.w3.eth.gas_price})
 
