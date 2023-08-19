@@ -5,32 +5,20 @@ from eth_account import Account
 from pdr_backend.utils.contract import (
     DataNft,
     ERC721Factory,
-    Web3Config,
-    Token,
     get_address,
 )
-from pdr_backend.utils import env
-
-rpc_url = env.get_rpc_url_or_exit()
-private_key = env.get_private_key_or_exit()
-web3_config = Web3Config(rpc_url, private_key)
-owner = web3_config.owner
-ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
-fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
-factory = ERC721Factory(web3_config)
-OCEAN = Token(web3_config, ocean_address)
 
 MAX_UINT256 = 2**256 - 1
 
 
-def fund_dev_accounts(accounts_to_fund):
+def fund_dev_accounts(accounts_to_fund, owner, token):
     for env_key, amount in accounts_to_fund:
         if env_key in os.environ:
             account = Account.from_key(os.getenv(env_key))
             print(
                 f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
             )
-            OCEAN.transfer(account.address, amount * 1e18, owner)
+            token.transfer(account.address, amount * 1e18, owner)
 
 
 def publish(
@@ -44,9 +32,14 @@ def publish(
     feeCollector_addr,
     rate,
     cut,
+    web3_config,
 ):
     pair = base + "/" + quote
     trueval_timeout = 4 * 12 * s_per_epoch
+    owner = web3_config.owner
+    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
+    factory = ERC721Factory(web3_config)
 
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
     trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
@@ -79,9 +72,10 @@ def publish(
         [18, 18, rate, cut, 1],
     )
 
-    data_nft_address = factory.createNftWithErc20WithFixedRate(
+    logs_nft, logs_erc = factory.createNftWithErc20WithFixedRate(
         nft_data, erc_data, fre_data
     )
+    data_nft_address = logs_nft["newTokenAddress"]
     print(f"Deployed NFT: {data_nft_address}")
     data_nft = DataNft(web3_config, data_nft_address)
     tx = data_nft.set_data("pair", pair)
@@ -96,3 +90,5 @@ def publish(
     print(f"timeframe set to {timeframe} in {tx.hex()}")
     tx = data_nft.add_erc20_deployer(trueval_submiter)
     print(f"Erc20Deployer set to {trueval_submiter} in {tx.hex()}")
+
+    return (nft_data, erc_data, fre_data, logs_nft, logs_erc)

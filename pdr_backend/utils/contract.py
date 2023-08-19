@@ -157,7 +157,7 @@ class PredictoorContract:
         return bytes(myBytes32, "utf-8")
 
     def get_auth_signature(self):
-        valid_until = int(time.time()) + 3600
+        valid_until = self.config.w3.eth.get_block("latest").timestamp + 3600
         message_hash = self.config.w3.solidity_keccak(
             ["address", "uint256"],
             [self.config.owner, valid_until],
@@ -419,10 +419,11 @@ class PredictoorContract:
     def get_trueValSubmitTimeout(self):
         return self.contract_instance.functions.trueValSubmitTimeout().call()
 
-    def get_prediction(self, slot):
-        return self.contract_instance.functions.getPrediction(slot).call(
-            {"from": self.config.owner}
-        )
+    def get_prediction(self, slot: int, address: str):
+        auth_signature = self.get_auth_signature()
+        return self.contract_instance.functions.getPrediction(
+            slot, address, auth_signature
+        ).call({"from": self.config.owner})
 
     def submit_trueval(
         self, true_val, timestamp, float_value, cancel_round, wait_for_receipt=True
@@ -501,10 +502,13 @@ class ERC721Factory:
         if receipt["status"] != 1:
             raise ValueError(f"createNftWithErc20WithFixedRate failed in {tx.hex()}")
         # print(receipt)
-        logs = self.contract_instance.events.NFTCreated().process_receipt(
+        logs_nft = self.contract_instance.events.NFTCreated().process_receipt(
             receipt, errors=DISCARD
         )
-        return logs[0]["args"]["newTokenAddress"]
+        logs_erc = self.contract_instance.events.TokenCreated().process_receipt(
+            receipt, errors=DISCARD
+        )
+        return logs_nft[0]["args"], logs_erc[0]["args"]
 
 
 class DataNft:
@@ -580,12 +584,13 @@ def get_addresses(chain_id):
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
     if address_filename:
+        address_filename = os.path.expanduser(address_filename)
         path = Path(address_filename)
     else:
         path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
 
     if not path.exists():
-        raise TypeError("Cannot find address.json")
+        raise TypeError(f"Cannot find address.json file at {path}")
 
     with open(path) as f:
         data = json.load(f)
@@ -616,6 +621,7 @@ def get_contract_filename(contract_name):
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
     if address_filename:
+        address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
         os.chdir(root_dir)
