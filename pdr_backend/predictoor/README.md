@@ -1,3 +1,1 @@
-# Predictoor
-
-FIXME. This is a placeholder. Fill me in.
+See [READMEs/predictoor.md](../../READMEs/predictoor.md).
