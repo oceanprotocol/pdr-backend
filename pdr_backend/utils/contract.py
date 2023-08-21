@@ -426,20 +426,19 @@ class PredictoorContract:
         ).call({"from": self.config.owner})
 
     def submit_trueval(
-        self, true_val, timestamp, float_value, cancel_round, wait_for_receipt=True
+        self, true_val, timestamp, cancel_round, wait_for_receipt=True
     ):
         gasPrice = self.config.w3.eth.gas_price
         try:
-            fl_value = self.config.w3.to_wei(str(float_value), "ether")
             tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, fl_value, cancel_round
+                timestamp, true_val, cancel_round
             ).transact({"from": self.config.owner, "gasPrice": gasPrice})
             print(f"Submitted trueval, txhash: {tx.hex()}")
             if not wait_for_receipt:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
-            print(e)
+            print("An error occured": e)
             return None
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
