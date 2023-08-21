@@ -438,7 +438,7 @@ class PredictoorContract:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
-            print("An error occured": e)
+            print(e)
             return None
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
