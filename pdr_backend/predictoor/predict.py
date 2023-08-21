@@ -16,7 +16,6 @@ Notes on customization:
    - predicted_value:  boolean, up/down
    - predicted_confidence:   int, 1 -> 100%. This sets the stake (STAKE_AMOUNT * predicted_confidence/100) that you are willing to put in your prediction.
 
-
   You need to change the function code and do some of your stuff. Now, it's just doing some random predictions
 
 ## About SECONDS_TILL_EPOCH_END
