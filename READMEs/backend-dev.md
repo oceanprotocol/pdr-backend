@@ -13,6 +13,7 @@ This is for backend devs working on `pdr-backend` itself.
 - [Local Usage](#local-usage)
 - [Remote Testnet Usage](#remote-testnet-usage)
 - [Remote Mainnet Usage](#remote-mainnet-usage)
+- [Release Process](#release-process)
 
 ## Install
 
@@ -78,15 +79,19 @@ Relax & watch as the predictoor agent submits random predictions, trueval submit
 
 You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
 
-### 3.5 Usage: How to filter
+## Remote Testnet Usage
 
+FIXME
 
-### 4. Release Process
+## Remote Mainnet Usage
+
+FIXME
+
+## Release Process
 
 Follow instructions in [release-process.md](release-process.md).
 
-
-### Appendix: Create & run agents in a single process
+## Appendix: Create & run agents in a single process
 
 (If you're feeling extra bold)
 
