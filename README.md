@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # pdr-backend: Predictoor Backend
 
-## Quickstart (per Stakeholder)
+## Quickstart, per Stakeholder
 
 Main
 - If you are a **predictoor**, do [Predictoor README](READMEs/predictoor.md)
