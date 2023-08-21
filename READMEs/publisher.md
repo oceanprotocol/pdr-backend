@@ -36,79 +36,28 @@ Open a new console and:
 cd pdr-backend
 source venv/bin/activate
 
-# Set envvars
+# Set envvars - note that publisher needs WAY more private keys than others
 export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export RPC_URL=http://127.0.0.1:8545
 export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
-export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+export PREDICTOOR_PRIVATE_KEY = "<your key>"
+export PREDICTOOR2_PRIVATE_KEY = "<your key>"
+export PREDICTOOR3_PRIVATE_KEY = "<your key>"
+export TRADER_PRIVATE_KEY = "<your key>"
+export DFBUYER_PRIVATE_KEY = "<your key>"
+export PDR_WEBSOCKET_KEY = "<your key>"
+export PDR_MM_USER = "<your key>"
+"""
 
-#run a single test
-pytest pdr_backend/utils/test/test_constants.py::test_constants1
-
-#run all tests in a file
-pytest pdr_backend/utils/test/test_constants.py
-
-#run all regular tests; see details on pytest markers to select specific suites
-pytest
+# publish! main.py & publish.py do all the work
+python3 pdr_backend/publisher/main.py
 ```
 
-### Local Usage: Run a custom agent
+## Remote Testnet Usage
 
-Let's say you want to change the trader agent, and use off-the-shelf agents for everything else. Here's how.
+FIXME
 
-In barge console:
-```console
-# (Hit ctrl-c to stop existing barge)
+## Remote Mainnet Usage
 
-# Run all agents except trader
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
-```
-
-Open a new console and:
-```console
-# Set envvars
-# (copy and paste the envvar-setting code above)
-# (export ADDRESS_FILE=...)
-
-# run trader agent
-python3 pdr_backend/trader/main.py
-```
-
-Relax & watch as the predictoor agent submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
-
-You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
-
-### 3.5 Usage: How to filter
-
-
-### 4. Release Process
-
-Follow instructions in [release-process.md](release-process.md).
-
-
-### Appendix: Create & run agents in a single process
-
-(If you're feeling extra bold)
-
-In Python console:
-```python
-import time
-from pdr_backend.trueval.trueval import process_block as trueval_process_block
-# FIXME: add similar for predictoor, trader, etc
-
-print("Starting main loop...")
-trueval_lastblock = 0
-while True:
-    # trueval agent
-    trueval_block = web3_config.w3.eth.block_number
-    if block > lastblock:
-        trueval_lastblock = trueval_block
-        trueval_process_block(web3_config.w3.eth.get_block(trueval_block, full_transactions=False))
-    else:
-        time.sleep(1)
-    # FIXME: add similar for predictoor, trader, etc
-```
-
-
-
+FIXME
 
