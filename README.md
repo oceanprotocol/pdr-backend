@@ -7,10 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Quickstart (per Stakeholder)
 
+Main
 - If you are a **predictoor**, do [Predictoor README](READMEs/predictoor.md)
 - If you are a **trader**, do [Trader README](READMEs/trader.md)
+
+Developers
 - If you are a **frontend dev** working on predictoor.ai: do [Frontend-Dev README](READMEs/frontend-dev.md)
 - If you are a **backend dev** working on `pdr-backend` itself: do [Backend-Dev README](READMEs/backend-dev.md)
+- If you are a **publisher**: do [Publisher README](READMEs/publisher.md)
 
 ## About
 
