@@ -28,6 +28,7 @@ Each agent has a directory:
 
 Other directories:
 - `utils` - tools for use by any agent
+- `publisher` - used for publishing
 
 The `predictoor` and `trader` agents are meant to be customized by predictoor and trader stakeholders, respectively.
 
