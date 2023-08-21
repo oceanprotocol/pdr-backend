@@ -10,7 +10,7 @@ Notes on customization:
 
   We call predict_function() with 2 args:
    - topic:  this is pair object
-   - estimated_time:  estimated timestamp of block that we are going to predict.   This is informal, blockchain mining time is not accurate
+   - timestamp: timestamp of the prediction 
 
   It returns two variables:
    - predicted_value:  boolean, up/down
@@ -19,7 +19,7 @@ Notes on customization:
 
   You need to change the function code and do some of your stuff. Now, it's just doing some random predictions
 
-## About BLOCKS_TILL_EPOCH_END
+## About SECONDS_TILL_EPOCH_END
 
 (Note: this may become obsolete with the new definition of epoch based on 'epoch_start'. If that's the case, delete this section:)
 
@@ -32,7 +32,7 @@ Notes on customization:
     - time until your pending tx in mempool is picked by miner
     - time until your tx is confirmed in a block
 
-  You can control how early to predict, taking the above in consideration, using env BLOCKS_TILL_EPOCH_END.
+  You can control how early to predict, taking the above in consideration, using env SECONDS_TILL_EPOCH_END.
   It's translation is:  With how many blocks in advanced untill epoch end do we start the prediction process.
   The default value is 5, which leaves us enough time.  (Ie: if block generation duration is 12 sec, we have 60 seconds to do our job)
 
@@ -47,7 +47,7 @@ import ccxt
 import random
 
 
-def predict_function(topic, estimated_time):
+def predict_function(topic, timestamp):
     """Given a topic, let's predict
     Topic object looks like:
 
