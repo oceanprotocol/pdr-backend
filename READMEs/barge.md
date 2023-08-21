@@ -18,6 +18,8 @@ Reference: how to run barge with...
 
 ## Install Barge
 
+- Pre-requisites: [Docker](https://docs.docker.com/engine/install/), [Docker Compose](https://docs.docker.com/compose/install/), [allowing non-root users](https://www.thegeekdiary.com/run-docker-as-a-non-root-user/)
+
 In a new console:
 
 ```console
