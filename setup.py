@@ -21,7 +21,7 @@ install_requirements = [
     "requests",
     "web3",
     "sapphire.py",
-    "ocean-contracts==2.0.0a9",  # install this last
+    "ocean-contracts==2.0.0a10",  # install this last
 ]
 
 # Required to run setup.py:
