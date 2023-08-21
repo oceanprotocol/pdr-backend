@@ -1,26 +1,38 @@
 """
 Flow
-- reads from subgraph list of template3 contracts, this gets list of all template3 deployed contracts
-- for every contract, monitors when epoch is changing
-- once we can predict a value, we call predict_function in predict.py. See below
-
+ - Fetches a list of Predictoor contracts from subgraph and filters them based on the filters set.
+ - Monitors each contract for epoch changes.
+ - When a value can be predicted, the `predict_function` in predict.py is called.
 Notes on customization:
 
+## Predict Function
   The actual prediction code is in *this file*, in predict_function().
 
-  We call predict_function() with 2 args:
-   - topic:  this is pair object
-   - timestamp: timestamp of the prediction 
+  The function is called with 2 arguments:
 
-  It returns two variables:
-   - predicted_value:  boolean, up/down
-   - predicted_confidence:   int, 1 -> 100%. This sets the stake (STAKE_AMOUNT * predicted_confidence/100) that you are willing to put in your prediction.
+  - topic: Information about the trading pair.
+  - timestamp: Timestamp of the prediction.
 
-  You need to change the function code and do some of your stuff. Now, it's just doing some random predictions
+  The function should return:
+
+  - predicted_value: Boolean, indicating the prediction direction (True for up, False for down).
+  - predicted_confidence: Integer between 1 and 100. Represents the confidence level in the prediction.
+  - stake_amount: Amount of tokens to stake for the prediction.
+
+  By default, `predict_function` uses random values for predictions. You need to customize it and implement your own strategy.
+
+## Topic Object
+
+  The topic object has all the details about the pair:
+
+  - `name` - The name of the trading pair, e.g., "ETH-USDT".
+  - `symbol` - Symbol of the trading pair.
+  - `base` - Base currency of the trading pair.
+  - `quote` - Quote currency of the trading pair.
+  - `source` - Source exchange or platform.
+  - `timeframe` - Timeframe for the trade signal, e.g., "5m" for 5 minutes.
 
 ## About SECONDS_TILL_EPOCH_END
-
-(Note: this may become obsolete with the new definition of epoch based on 'epoch_start'. If that's the case, delete this section:)
 
   If we want to predict the value for epoch E, we need to do it in epoch E - 2 (latest.  Of course, we could predict values for a distant epoch in the future if we want to)
   And to do so, our tx needs to be confirmed in the last block of epoch (otherwise, it's going to be part of next epoch and our prediction tx will revert)
@@ -31,10 +43,9 @@ Notes on customization:
     - time until your pending tx in mempool is picked by miner
     - time until your tx is confirmed in a block
 
-  You can control how early to predict, taking the above in consideration, using env SECONDS_TILL_EPOCH_END.
-  It's translation is:  With how many blocks in advanced untill epoch end do we start the prediction process.
-  The default value is 5, which leaves us enough time.  (Ie: if block generation duration is 12 sec, we have 60 seconds to do our job)
+  Adjust the environment variable `SECONDS_TILL_EPOCH_END` to control how many seconds in advance of the epoch ending you want the prediction process to start. A predictoor can submit multiple predictions, however, only the final submission made before the deadline is considered valid.
 
+  To clarify further: if this value is set to 60, the predictoor will be asked to predict in every block during the last 60 seconds before the epoch concludes.
 
 ## TO DO
   - [ ]  - improve payouts collect flow
