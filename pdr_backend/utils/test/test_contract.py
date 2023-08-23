@@ -192,9 +192,6 @@ def test_get_block(predictoor_contract):
     assert block.number == 0
 
 
-pytest.mark.skip("Failing. Skip until #69 is fixed")
-
-
 def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: Token):
     owner_addr = predictoor_contract.config.owner
     balance_before = ocean_token.balanceOf(owner_addr)
@@ -216,9 +213,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
         "evm_increaseTime", [SECONDS_PER_EPOCH * 2]
     )
     predictoor_contract.config.w3.provider.make_request("evm_mine", [])
-    receipt = predictoor_contract.submit_trueval(
-        True, soonest_timestamp, 0, False, True
-    )
+    receipt = predictoor_contract.submit_trueval(True, soonest_timestamp, False, True)
     assert receipt["status"] == 1
 
     receipt = predictoor_contract.payout(soonest_timestamp, True)

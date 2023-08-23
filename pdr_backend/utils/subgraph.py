@@ -31,7 +31,6 @@ query {
       }
       trueValues{
         trueValue
-        floatValue
         txId
       }
       revenue
