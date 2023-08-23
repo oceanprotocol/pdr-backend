@@ -7,5 +7,4 @@ def getenv_or_exit(envvar_name: str) -> str:
     if value == None:
         print(f"You must set {envvar_name} environment variable")
         sys.exit(1)
-    return value
-
+    return value  # type: ignore
