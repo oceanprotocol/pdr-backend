@@ -15,20 +15,20 @@ import pandas as pd
 
 from pdr_backend.predictoor.approach2.predict import predict_function
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.env import get_envvar_or_exit
+from pdr_backend.utils.env import getenv_or_exit
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 
 # set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
 # then, the pickled trained models live in $MODELDIR/trained_models/
 # and, OceanModel module lives in $MODELDIR/model.py
-model_dir: str = get_envvar_or_exit("MODELDIR")
+model_dir: str = getenv_or_exit("MODELDIR")
 trained_models_dir = os.path.join(model_dir, "trained_models")
 sys.path.append(model_dir)
 from model import OceanModel  # type: ignore  # fmt: off
 
-rpc_url = get_envvar_or_exit("RPC_URL")
-subgraph_url = get_envvar_or_exit("SUBGRAPH_URL")
-private_key = get_envvar_or_exit("PRIVATE_KEY")
+rpc_url = getenv_or_exit("RPC_URL")
+subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
 pair_filters = getenv("PAIR_FILTER")
 timeframe_filter = getenv("TIMEFRAME_FILTER")
 source_filter = getenv("SOURCE_FILTER")

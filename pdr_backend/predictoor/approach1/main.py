@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-import os
 from os import getenv
 import time
 import threading
@@ -7,7 +6,7 @@ from threading import Thread
 from typing import Dict
 
 from pdr_backend.predictoor.approach1.predict import predict_function
-from pdr_backend.utils.env import get_envvar_or_exit
+from pdr_backend.utils.env import getenv_or_exit
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 
@@ -15,9 +14,9 @@ last_block_time = 0
 topics: Dict[str, dict] = {}
 contract_map: Dict[str, PredictoorContract] = {}
 
-rpc_url = get_envvar_or_exit("RPC_URL")
-subgraph_url = get_envvar_or_exit("SUBGRAPH_URL")
-private_key = get_envvar_or_exit("PRIVATE_KEY")
+rpc_url = getenv_or_exit("RPC_URL")
+subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
 pair_filters = getenv("PAIR_FILTER")
 timeframe_filter = getenv("TIMEFRAME_FILTER")
 source_filter = getenv("SOURCE_FILTER")
