@@ -1,4 +1,6 @@
+import os
 import time
+import threading
 
 from typing import Dict
 from pdr_backend.trueval.trueval import get_true_val
@@ -23,12 +25,12 @@ owner = web3_config.owner
 topics: Dict[str, dict] = {}
 
 
-class NewTrueVal:
-    def __init__(self, slot: Slot, predictoor_contract, epoch):
+class NewTrueVal(threading.Thread):
+    def __init__(self, slot: Slot, predictoor_contract: PredictoorContract, epoch):
         # set a default value
         self.values = {
             "last_submited_epoch": epoch,
-            "contract_address": predictoor_contract.address,
+            "contract_address": predictoor_contract.contract_address,
         }
         self.slot = slot
         self.epoch = epoch
@@ -51,7 +53,7 @@ class NewTrueVal:
 
         (true_val, cancel_round) = get_true_val(self.slot.contract, initial_ts, end_ts)
         print(
-            f"Contract:{self.predictoor_contract.address} - Submiting true_val {true_val} for slot:{slot}"
+            f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} for slot:{slot}"
         )
 
         return self.predictoor_contract.trueval_sign(
@@ -77,24 +79,28 @@ def process_slot(slot: Slot, nonce: int):
 
 
 def main():
-    print("Starting main loop...")
-
+    sleep_time = os.getenv("SLEEP_TIME", 15)
     pending_contracts = get_pending_slots(subgraph_url, web3_config)
-    nonce = web3_config.w3.eth.getTransactionCount(owner)
+    print(f"Found {len(pending_contracts)} pending slots")
+    nonce = web3_config.w3.eth.get_transaction_count(owner)
     signatures = []
-    try:
-        for slot in pending_contracts:
-            nonce += 1
-            sig = process_slot(slot, nonce)
-            signatures.append(sig)
-    except Exception as e:
-        print("An error occured while processing pending slots", e)
-    print(f"Generated {len(signatures)} signatures")
-    # execute all signatures
-    for sig in signatures:
-        web3_config.w3.eth.sendRawTransaction(sig.rawTransaction)
 
-    time.sleep(15)
+    # try:
+    for slot in pending_contracts:
+        nonce += 1
+        sig = process_slot(slot, nonce)
+        signatures.append(sig)
+    # except Exception as e:
+    #     print("An error occured while processing pending slots", e)
+    print(f"Generated {len(signatures)} signatures")
+
+    # execute all signatures
+    print("Sending transactions...")
+    for sig in signatures:
+        web3_config.w3.eth.send_raw_transaction(sig.rawTransaction)
+
+    print("Sleeping for 15 seconds...")
+    time.sleep(sleep_time)
 
     main()
 
