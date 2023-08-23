@@ -3,9 +3,10 @@ import time
 
 from typing import Dict
 from pdr_backend.trueval.trueval import get_true_val
-from pdr_backend.trueval.subgraph import get_pending_slots, Slot
+from pdr_backend.trueval.subgraph import get_pending_slots
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils import env
+from pdr_backend.utils.models import Slot
 
 
 rpc_url = env.get_rpc_url_or_exit()
@@ -49,13 +50,13 @@ class NewTrueVal(Thread):
 
         slot = (self.epoch - 1) * seconds_per_epoch
 
-        (true_val, cancel_round) = get_true_val(self.topic, initial_ts, end_ts)
+        (true_val, cancel_round) = get_true_val(self.slot.contract, initial_ts, end_ts)
         print(
             f"Contract:{self.predictoor_contract.address} - Submiting true_val {true_val} for slot:{slot}"
         )
 
         return self.predictoor_contract.trueval_sign(
-            true_val, slot, float_value, cancel_round, nonce
+            true_val, slot, cancel_round, nonce
         )
 
 
@@ -63,7 +64,10 @@ def process_slot(slot: Slot, nonce: int):
     predictoor_contract = PredictoorContract(web3_config, slot.contract.address)
     epoch = predictoor_contract.get_current_epoch()
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    seconds_till_epoch_end = epoch * seconds_per_epoch + seconds_per_epoch - epoch.slot
+    block_timestamp = web3_config.w3.eth.getBlock("latest").timestamp
+    seconds_till_epoch_end = (
+        epoch * seconds_per_epoch + seconds_per_epoch - block_timestamp
+    )
     print(
         f"\t{slot.contract.name} (at address {slot.contract.address} is at epoch {slot.slot}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
     )
