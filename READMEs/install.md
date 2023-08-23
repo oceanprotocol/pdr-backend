@@ -19,7 +19,7 @@ python -m venv venv
 source venv/bin/activate
 
 # Install modules in the environment
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 If you're running MacOS, then also do in the same console:
