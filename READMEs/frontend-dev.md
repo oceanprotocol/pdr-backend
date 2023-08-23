@@ -18,7 +18,7 @@ Follow instructions in [barge.md "install"](barge.md#install-barge).
 In barge console:
 ```console
 # run barge with all agents
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-trader --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 ## 4. Run frontend

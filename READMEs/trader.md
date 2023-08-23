@@ -26,7 +26,7 @@ Then, [install barge](barge.md#install-barge).
 In barge console:
 ```console
 #run barge with all agents except trader
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 Open a new console and:

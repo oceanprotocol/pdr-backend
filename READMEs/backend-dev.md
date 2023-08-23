@@ -42,8 +42,8 @@ Each subsection below gives different local usage options.
 
 In barge console:
 ```console
-# Run barge with just predictoor contracts, but no agents
-./start_ocean.sh --predictoor
+# Run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --predictoor --with-thegraph
 ```
 
 In work console, run tests:
@@ -81,7 +81,7 @@ In barge console:
 # (Hit ctrl-c to stop existing barge)
 
 # Run all agents except trader
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 In work console:

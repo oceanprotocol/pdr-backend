@@ -26,8 +26,8 @@ Then, [install barge](barge.md#install-barge).
 
 In barge console:
 ```console
-# Run barge with just predictoor contracts, but no agents
-./start_ocean.sh --predictoor
+# Run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --predictoor --with-thegraph
 ```
 
 Open a new console and:
