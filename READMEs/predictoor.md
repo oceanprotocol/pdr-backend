@@ -68,7 +68,9 @@ python3 pdr_backend/predictoor/examples/models/main.py
 
 ## Remote Testnet Usage
 
-FIXME
+To run predictoor as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+
+To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
 ## Remote Mainnet Usage
 
