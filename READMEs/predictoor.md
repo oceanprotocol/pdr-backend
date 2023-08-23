@@ -39,7 +39,12 @@ export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export RPC_URL=http://127.0.0.1:8545
 export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+```
 
+### Option A: Use Random Predictions
+
+In the same console:
+```
 # run predictoor agent
 python3 pdr_backend/predictoor/main.py
 ```
@@ -49,6 +54,17 @@ Relax & watch as the predictoor agent submits random predictions, trueval submit
 You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
 
 The agent predicts according to the `predict()` function in [`pdr_backend/predictoor/predict.py`](../pdr_backend/predictoor/predict.py). Its default strategy is simplistic (random predictions). So you need to customize it. The docstring at the top of `predict.py` provides more info.
+
+### Option B: Use Simple or Custom Model
+
+- Clone the simple model [repo](https://github.com/oceanprotocol/pdr-model-simple) or fork the repo and create a custom model 
+- From pdr-backend, make a symlink to the repo subdirectory for the simple model (or your own customized model) e.g. `ln -s /path/to/pdr-model-simple/pdr_model_simple/ pdr_backend/predictoor/examples/models`
+
+In the same console:
+```
+# run predictoor agent
+python3 pdr_backend/predictoor/examples/models/main.py
+```
 
 ## Remote Testnet Usage
 
