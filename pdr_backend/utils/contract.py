@@ -425,14 +425,11 @@ class PredictoorContract:
             slot, address, auth_signature
         ).call({"from": self.config.owner})
 
-    def submit_trueval(
-        self, true_val, timestamp, float_value, cancel_round, wait_for_receipt=True
-    ):
+    def submit_trueval(self, true_val, timestamp, cancel_round, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
         try:
-            fl_value = self.config.w3.to_wei(str(float_value), "ether")
             tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, fl_value, cancel_round
+                timestamp, true_val, cancel_round
             ).transact({"from": self.config.owner, "gasPrice": gasPrice})
             print(f"Submitted trueval, txhash: {tx.hex()}")
             if not wait_for_receipt:
@@ -636,8 +633,8 @@ def get_contract_filename(contract_name):
         address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
-        os.chdir(root_dir)
-        paths = glob.glob(f"**/{contract_basename}", recursive=True)
+        paths = Path(root_dir).rglob(contract_basename)
+        paths = [str(path) for path in paths]
         if paths:
             assert len(paths) == 1, "had duplicates for {contract_basename}"
             path = paths[0]

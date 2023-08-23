@@ -6,6 +6,7 @@ import pytest
 from pytest import approx
 from pathlib import Path
 from unittest.mock import patch, Mock
+
 from pdr_backend.utils.contract import (
     is_sapphire_network,
     send_encrypted_tx,
@@ -212,9 +213,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
         "evm_increaseTime", [SECONDS_PER_EPOCH * 2]
     )
     predictoor_contract.config.w3.provider.make_request("evm_mine", [])
-    receipt = predictoor_contract.submit_trueval(
-        True, soonest_timestamp, 0, False, True
-    )
+    receipt = predictoor_contract.submit_trueval(True, soonest_timestamp, False, True)
     assert receipt["status"] == 1
 
     receipt = predictoor_contract.payout(soonest_timestamp, True)

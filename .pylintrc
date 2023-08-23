@@ -34,7 +34,8 @@ ignore=
   LICENSE,
   docker-compose.yml,
   Dockerfile,
-  entrypoint.sh
+  entrypoint.sh,
+  pdr_backend.egg-info,
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
