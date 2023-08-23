@@ -91,7 +91,7 @@ def main():
         print("Nonce:", nonce)
         threads = []
         results = []
-        max_threads = os.getenv("MAX_THREADS", 2)
+        max_threads = os.getenv("MAX_THREADS", 50)
         pending_contracts = pending_contracts[:max_threads]
 
         if len(pending_contracts) > 0:
