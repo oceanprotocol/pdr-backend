@@ -192,9 +192,6 @@ def test_get_block(predictoor_contract):
     assert block.number == 0
 
 
-pytest.mark.skip("Failing. Skip until #69 is fixed")
-
-
 def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: Token):
     owner_addr = predictoor_contract.config.owner
     balance_before = ocean_token.balanceOf(owner_addr)
