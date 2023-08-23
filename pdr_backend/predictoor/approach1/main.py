@@ -6,7 +6,7 @@ import threading
 from threading import Thread
 from typing import Dict
 
-from pdr_backend.predictoor.predict import predict_function
+from pdr_backend.predictoor.approach1.predict import predict_function
 from pdr_backend.utils.env import get_envvar_or_exit
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts

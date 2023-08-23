@@ -43,27 +43,33 @@ export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 ```
 
-### Local Usage: Random Predictions
+### Local Usage: Random (Approach 1)
 
-To get started, let's run a predictoor agent with _random_ predictions.
+To get started, let's run a predictoor agent with random predictions.
+
+- The agent runs from [`predictoor/approach1/main.py`](../pdr_backend/predictoor/approach1/main.py)
+- Which predicts according to the `predict()` function in [`predictoor/approach1/predict.py`](../pdr_backend/predictoor/approach1/predict.py) in the same dir.
 
 In work console:
 ```console
 # run random predictoor agent
-python3 pdr_backend/predictoor/main.py
+python3 pdr_backend/predictoor/approach1/main.py
 ```
 
 Observe the agents in action:
-- in the barge console: trueval agent submitting (mock random) truevals, trader is (mock) trading, etc
-- in your work console: predictoor agent is submitting (mock random) predictions
-
-Under the hood, the predictoor agent predicts according to the `predict()` function in [`pdr_backend/predictoor/predict.py`](../pdr_backend/predictoor/predict.py). Its docstring has details.
+- In the barge console: trueval agent submitting (mock random) truevals, trader is (mock) trading, etc
+- In your work console: predictoor agent is submitting (mock random) predictions
 
 You can query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
 
-### Local Usage: Model-based Predictions
+### Local Usage: Model-based (Approach 2)
 
-Since random predictions aren't accurate, let's use AI/ML models. For illustration, we use models from [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo. Once you're familiar with this, you'll want to fork it and run your own.
+Since random predictions aren't accurate, let's use AI/ML models. Here's an example flow that loads pre-learned models ("approach2"):
+
+- The agent runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
+- Which imports a model stored in [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo
+
+Once you're familiar with this, you'll want to fork it and run your own.
 
 In work console:
 ```console
@@ -82,7 +88,7 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 pip install scikit-learn ta
 
 #run model-powered predictoor agent
-python pdr_backend/predictoor/examples/models/main.py
+python pdr_backend/predictoor/approach2/main.py
 ```
 
 ## Remote Testnet Usage

@@ -13,7 +13,7 @@ import ccxt
 import numpy as np
 import pandas as pd
 
-from pdr_backend.predictoor.examples.models.predict import predict_function
+from pdr_backend.predictoor.approach2.predict import predict_function
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
 from pdr_backend.utils.env import get_envvar_or_exit
 from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
