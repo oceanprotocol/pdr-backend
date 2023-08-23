@@ -445,7 +445,7 @@ class PredictoorContract:
         try:
             tx = self.contract_instance.functions.submitTrueVal(
                 timestamp, true_val, 0, cancel_round  # FIXME remove floatvalue
-            ).buildTransaction({"from": self.config.owner, "nonce": nonce})
+            ).build_transaction({"from": self.config.owner, "nonce": nonce})
             return self.config.account.sign_transaction(tx)
         except Exception as e:
             print(e)

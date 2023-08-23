@@ -1,4 +1,3 @@
-from threading import Thread
 import time
 
 from typing import Dict
@@ -24,7 +23,7 @@ owner = web3_config.owner
 topics: Dict[str, dict] = {}
 
 
-class NewTrueVal(Thread):
+class NewTrueVal:
     def __init__(self, slot: Slot, predictoor_contract, epoch):
         # set a default value
         self.values = {
@@ -36,7 +35,7 @@ class NewTrueVal(Thread):
         self.predictoor_contract = predictoor_contract
         self.current_ts = slot.slot
 
-    def run(self, nonce: int):
+    def run(self, nonce: int) -> dict:
         """
         Get timestamp of previous epoch-2 , get the price
         Get timestamp of previous epoch-1, get the price
@@ -64,7 +63,7 @@ def process_slot(slot: Slot, nonce: int):
     predictoor_contract = PredictoorContract(web3_config, slot.contract.address)
     epoch = predictoor_contract.get_current_epoch()
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    block_timestamp = web3_config.w3.eth.getBlock("latest").timestamp
+    block_timestamp = web3_config.w3.eth.get_block("latest").timestamp
     seconds_till_epoch_end = (
         epoch * seconds_per_epoch + seconds_per_epoch - block_timestamp
     )
