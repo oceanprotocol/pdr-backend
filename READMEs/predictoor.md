@@ -53,7 +53,7 @@ To get started, let's run a predictoor agent with random predictions.
 In work console:
 ```console
 # run random predictoor agent
-python3 pdr_backend/predictoor/approach1/main.py
+python pdr_backend/predictoor/approach1/main.py
 ```
 
 Observe the agents in action:
