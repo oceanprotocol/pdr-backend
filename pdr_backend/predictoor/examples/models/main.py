@@ -21,8 +21,8 @@ from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 # set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
 model_dir = getenv("MODELDIR")
 trained_models_dir = os.path.join(model_dir, "trained_models")
-sys.path.append(model_dir) 
-from model import OceanModel # OceanModel lives in $MODELDIR/model.py
+sys.path.append(model_dir)
+from model import OceanModel  # OceanModel lives in $MODELDIR/model.py
 
 rpc_url = get_envvar_or_exit("RPC_URL")
 subgraph_url = get_envvar_or_exit("SUBGRAPH_URL")
@@ -37,7 +37,7 @@ pair = "BTC/USDT"
 timeframe = "5m"
 
 # ===================
-# done imports and constants. Now start running... 
+# done imports and constants. Now start running...
 
 last_block_time = 0
 topics: List[dict] = []
@@ -142,7 +142,8 @@ def main():
         + models[0].timeframe
         + "_"
         + str(ts_now)
-        + ".csv"    )
+        + ".csv"
+    )
 
     columns_short = ["datetime", "open", "high", "low", "close", "volume"]
 
