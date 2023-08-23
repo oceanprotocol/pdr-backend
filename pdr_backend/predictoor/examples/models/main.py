@@ -7,6 +7,7 @@ import time
 import threading
 from datetime import datetime, timedelta, timezone
 from threading import Thread
+from typing import List
 
 from pdr_backend.predictoor.examples.models.pdr_model_simple.model import OceanModel
 from pdr_backend.predictoor.examples.models.predict import predict_function
@@ -16,7 +17,7 @@ from pdr_backend.utils import env
 
 
 last_block_time = 0
-topics = []
+topics: List[dict] = []
 
 rpc_url = env.get_rpc_url_or_exit()
 subgraph_url = env.get_subgraph_or_exit()
