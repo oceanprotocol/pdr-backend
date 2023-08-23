@@ -11,7 +11,7 @@ class TrueValSlot(Slot):
 
 
 def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
-    timestamp = web3_config.w3.eth.get_block("latest").timestamp
+    timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
     chunk_size = 1000
     offset = 0
     owners: List[str] = []  # TODO: add owners

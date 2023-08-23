@@ -440,7 +440,7 @@ class PredictoorContract:
             return None
 
     def trueval_sign(
-        self, true_val: bool, timestamp: int, cancel_round: bool, nonce: int, index: int
+        self, true_val: bool, timestamp: int, cancel_round: bool, nonce, index: int
     ):
         try:
             tx = self.contract_instance.functions.submitTrueVal(
@@ -449,7 +449,7 @@ class PredictoorContract:
                 {
                     "from": self.config.owner,
                     "nonce": nonce,
-                    "gasPrice": int(self.config.w3.eth.gas_price + index * 100),
+                    "gasPrice": self.config.w3.eth.gas_price,
                     "gas": 300000,
                     "chainId": self.config.w3.eth.chain_id,
                 }

@@ -45,7 +45,7 @@ class NewTrueVal(threading.Thread):
         self.seconds_per_epoch = seconds_per_epoch
         self.index = index
 
-    def run(self) -> dict:
+    def run(self):
         """
         Get timestamp of previous epoch-2 , get the price
         Get timestamp of previous epoch-1, get the price
