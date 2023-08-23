@@ -117,17 +117,20 @@ def main():
                 results.append(thr.signature)
 
             sorted_signatures = sorted(results, key=lambda x: x["nonce"])
-            print("Sorted signatures:", sorted_signatures)
             print(f"Generated {len(sorted_signatures)} signatures")
 
-            # execute all signatures
             print("Sending transactions...")
             for sig in sorted_signatures:
+                while (
+                    web3_config.w3.eth.get_transaction_count(owner, "pending")
+                    != sig["nonce"]
+                ):
+                    time.sleep(2)
                 tx = web3_config.w3.eth.send_raw_transaction(
                     sig["signature"].rawTransaction
                 )
                 # web3_config.w3.eth.wait_for_transaction_receipt(tx)
-                # print(f"Transaction {tx.hex()} sent")
+                print(f"Transaction {tx.hex()} sent")
 
         print("Sleeping for 15 seconds...")
         time.sleep(sleep_time)

@@ -449,7 +449,7 @@ class PredictoorContract:
                 {
                     "from": self.config.owner,
                     "nonce": nonce,
-                    "gasPrice": int(self.config.w3.eth.gas_price + index),
+                    "gasPrice": int(self.config.w3.eth.gas_price + index * 100),
                     "gas": 300000,
                     "chainId": self.config.w3.eth.chain_id,
                 }
