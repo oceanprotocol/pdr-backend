@@ -28,7 +28,12 @@ contract_cache: Dict[str, tuple] = {}
 
 class NewTrueVal(threading.Thread):
     def __init__(
-        self, slot: Slot, predictoor_contract: PredictoorContract, epoch, nonce: int
+        self,
+        slot: Slot,
+        predictoor_contract: PredictoorContract,
+        epoch,
+        nonce: int,
+        semaphore,
     ):
         super().__init__()
         # set a default value
@@ -43,6 +48,7 @@ class NewTrueVal(threading.Thread):
 
         self.nonce = nonce
         self.signature = None  # This will store the result
+        self.semaphore = semaphore
 
     def run(self) -> dict:
         """
@@ -50,7 +56,7 @@ class NewTrueVal(threading.Thread):
         Get timestamp of previous epoch-1, get the price
         Compare and submit trueval
         """
-
+        self.semaphore.acquire()
         seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
         initial_ts = (self.epoch - 2) * seconds_per_epoch
 
@@ -68,9 +74,10 @@ class NewTrueVal(threading.Thread):
         )
 
         self.signature = {"signature": sig, "nonce": self.nonce}
+        self.semaphore.release()
 
 
-def process_slot(slot: Slot, nonce: int) -> NewTrueVal:
+def process_slot(slot: Slot, nonce: int, semaphore) -> NewTrueVal:
     contract_address = slot.contract.address
     if contract_address in contract_cache:
         predictoor_contract, epoch, seconds_per_epoch = contract_cache[contract_address]
@@ -83,12 +90,8 @@ def process_slot(slot: Slot, nonce: int) -> NewTrueVal:
             epoch,
             seconds_per_epoch,
         )
-
-    print(
-        f"\t{slot.contract.name} (at address {slot.contract.address} is at epoch {slot.slot}, seconds_per_epoch: {seconds_per_epoch}"
-    )
-
-    return NewTrueVal(slot, predictoor_contract, epoch, nonce)
+    print(f"Processing slot  NEW {slot.slot} for contract {slot.contract.address}")
+    return NewTrueVal(slot, predictoor_contract, epoch, nonce, semaphore)
 
 
 def main():
@@ -98,14 +101,19 @@ def main():
     nonce = web3_config.w3.eth.get_transaction_count(owner)
     threads = []
     results = []
+    thread_limiter = threading.Semaphore(1)
 
     if len(pending_contracts) > 0:
         # try:
         for slot in pending_contracts:
             nonce += 1
-            sig = process_slot(slot, nonce)
-            sig.start()
+            sig = process_slot(slot, nonce, thread_limiter)
+            print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
+            # threading.Thread(target=sig.run, args=(thread_limiter,)).start()
             threads.append(sig)
+
+        for thr in threads:
+            thr.start()
 
         for thr in threads:
             thr.join()
