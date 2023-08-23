@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-import os
 from os import getenv
 import time
 import threading

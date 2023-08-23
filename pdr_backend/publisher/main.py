@@ -5,13 +5,13 @@ from pdr_backend.utils.contract import (
     Token,
     get_address,
 )
-from pdr_backend.utils import env
+from pdr_backend.utils.env import getenv_or_exit
 
-rpc_url = env.get_rpc_url_or_exit()
-private_key = env.get_private_key_or_exit()
+rpc_url = getenv_or_exit("RPC_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
+
 web3_config = Web3Config(rpc_url, private_key)
 ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
-
 
 OCEAN = Token(web3_config, ocean_address)
 
