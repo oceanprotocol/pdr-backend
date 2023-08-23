@@ -58,38 +58,39 @@ def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
         offset += chunk_size
         try:
             result = query_subgraph(subgraph_url, query)
-            contract_list = result["data"]["predictContracts"]
-            if not "predictContracts" in result["data"]:
+            if not "data" in result:
+                print("No data in result")
                 break
+            slot_list = result["data"]["predictSlots"]
+            if slot_list == []:
+                break
+            for slot in slot_list:
+                timestamp = slot["slot"]
+                if slot["trueValues"] != []:
+                    continue
 
-            for contract in contract_list:
-                for slot in contract["predictSlots"]:
-                    timestamp = slot["slot"]
-                    if slot["trueValues"] != []:
-                        continue
+                contract = slot["predictContract"]
+                info725 = contract["token"]["nft"]["nftData"]
+                info = info_from_725(info725)
 
-                    contract = contract["predictContract"]
-                    info725 = contract["token"]["nft"]["nftData"]
-                    info = info_from_725(info725)
+                owner_id = contract["token"]["nft"]["owner"]["id"]
+                if len(owners) > 0 and (owner_id not in owners):
+                    continue
 
-                    owner_id = contract["token"]["nft"]["owner"]["id"]
-                    if len(owners) > 0 and (owner_id not in owners):
-                        continue
+                contract_object = Contract(
+                    name=contract["token"]["name"],
+                    address=contract["id"],
+                    symbol=contract["token"]["symbol"],
+                    seconds_per_epoch=contract["secondsPerEpoch"],
+                    seconds_per_subscription=contract["secondsPerSubscription"],
+                    trueval_submit_timeout=contract["truevalSubmitTimeout"],
+                    owner=contract["token"]["nft"]["owner"]["id"],
+                    pair=info["pair"],
+                    timeframe=info["timeframe"],
+                    source=info["source"],
+                )
 
-                    contract_object = Contract(
-                        name=contract["token"]["name"],
-                        address=contract["id"],
-                        symbol=contract["token"]["symbol"],
-                        seconds_per_epoch=contract["secondsPerEpoch"],
-                        seconds_per_subscription=contract["secondsPerSubscription"],
-                        trueval_submit_timeout=contract["truevalSubmitTimeout"],
-                        owner=contract["token"]["nft"]["owner"]["id"],
-                        pair=info["pair"],
-                        timeframe=info["timeframe"],
-                        source=info["source"],
-                    )
-
-                    slots.append(Slot(slot, contract_object))
+                slots.append(Slot(slot, contract_object))
 
         except Exception as e:
             print(e)

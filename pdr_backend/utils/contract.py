@@ -444,11 +444,20 @@ class PredictoorContract:
     ):
         try:
             tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, 0, cancel_round  # FIXME remove floatvalue
-            ).build_transaction({"from": self.config.owner, "nonce": nonce})
+                timestamp, true_val, cancel_round
+            ).build_transaction(
+                {
+                    "from": self.config.owner,
+                    "nonce": nonce,
+                    "gasPrice": self.config.w3.eth.gas_price,
+                    "gas": 300000,
+                    "chainId": self.config.w3.eth.chain_id,
+                }
+            )
+            print(f"Submitted trueval, txhash: {tx}")
             return self.config.account.sign_transaction(tx)
         except Exception as e:
-            print(e)
+            print(f"Failed to sign trueval: {e}")
             return None
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
