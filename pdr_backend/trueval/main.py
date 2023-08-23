@@ -32,8 +32,8 @@ class NewTrueVal(threading.Thread):
         slot: Slot,
         predictoor_contract: PredictoorContract,
         nonce: int,
-        semaphore,
         seconds_per_epoch,
+        index: int,
     ):
         super().__init__()
         self.slot = slot
@@ -42,8 +42,8 @@ class NewTrueVal(threading.Thread):
 
         self.nonce = nonce
         self.signature = None  # This will store the result
-        self.semaphore = semaphore
         self.seconds_per_epoch = seconds_per_epoch
+        self.index = index
 
     def run(self) -> dict:
         """
@@ -51,7 +51,6 @@ class NewTrueVal(threading.Thread):
         Get timestamp of previous epoch-1, get the price
         Compare and submit trueval
         """
-        self.semaphore.acquire()
         self.slot.slot = int(self.slot.slot)
         initial_ts = self.slot.slot - self.seconds_per_epoch
         end_ts = self.slot.slot
@@ -62,14 +61,13 @@ class NewTrueVal(threading.Thread):
         )
 
         sig = self.predictoor_contract.trueval_sign(
-            true_val, self.slot.slot, cancel_round, self.nonce
+            true_val, self.slot.slot, cancel_round, self.nonce, self.index
         )
 
         self.signature = {"signature": sig, "nonce": self.nonce}
-        self.semaphore.release()
 
 
-def process_slot(slot: Slot, nonce: int, semaphore) -> NewTrueVal:
+def process_slot(slot: Slot, nonce: int, index: int) -> NewTrueVal:
     contract_address = slot.contract.address
     if contract_address in contract_cache:
         predictoor_contract, seconds_per_epoch = contract_cache[contract_address]
@@ -80,7 +78,7 @@ def process_slot(slot: Slot, nonce: int, semaphore) -> NewTrueVal:
             predictoor_contract,
             seconds_per_epoch,
         )
-    return NewTrueVal(slot, predictoor_contract, nonce, semaphore, seconds_per_epoch)
+    return NewTrueVal(slot, predictoor_contract, nonce, seconds_per_epoch, index)
 
 
 def main():
@@ -93,14 +91,17 @@ def main():
         print("Nonce:", nonce)
         threads = []
         results = []
-        thread_limiter = threading.Semaphore(1)
-
-        pending_contracts = pending_contracts[:2]
+        max_threads = os.getenv("MAX_THREADS", 2)
+        pending_contracts = pending_contracts[:max_threads]
 
         if len(pending_contracts) > 0:
             # try:
             for slot in pending_contracts:
-                sig = process_slot(slot, nonce, thread_limiter)
+                sig = process_slot(
+                    slot,
+                    nonce,
+                    len(pending_contracts) - pending_contracts.index(slot) + 1,
+                )
                 nonce += 1
                 print(
                     f"Processing slot {slot.slot} for contract {slot.contract.address}"
@@ -116,18 +117,17 @@ def main():
                 results.append(thr.signature)
 
             sorted_signatures = sorted(results, key=lambda x: x["nonce"])
-            signatures = [res["signature"] for res in sorted_signatures]
-
-            # except Exception as e:
-            #     print("An error occured while processing pending slots", e)
-            print(f"Generated {len(signatures)} signatures")
+            print("Sorted signatures:", sorted_signatures)
+            print(f"Generated {len(sorted_signatures)} signatures")
 
             # execute all signatures
             print("Sending transactions...")
-            for sig in signatures:
-                print(sig)
-                tx = web3_config.w3.eth.send_raw_transaction(sig.rawTransaction)
-                print(f"Transaction {tx} sent")
+            for sig in sorted_signatures:
+                tx = web3_config.w3.eth.send_raw_transaction(
+                    sig["signature"].rawTransaction
+                )
+                # web3_config.w3.eth.wait_for_transaction_receipt(tx)
+                # print(f"Transaction {tx.hex()} sent")
 
         print("Sleeping for 15 seconds...")
         time.sleep(sleep_time)
