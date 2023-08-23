@@ -19,14 +19,7 @@ Notes on customization:
 """
 
 import ccxt
-from functools import lru_cache
 from pdr_backend.trueval.subgraph import Contract
-
-
-@lru_cache(maxsize=None)
-def fetch_ohlcv(exchange, pair, timeframe, since, limit):
-    return exchange.fetch_ohlcv(pair, timeframe, since, limit)
-
 
 def get_true_val(topic: Contract, initial_timestamp, end_timestamp):
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp
@@ -50,11 +43,11 @@ def get_true_val(topic: Contract, initial_timestamp, end_timestamp):
     try:
         exchange_class = getattr(ccxt, topic.source)
         exchange_ccxt = exchange_class()
-        price_initial = fetch_ohlcv(
-            exchange_ccxt, topic.pair, "1m", since=initial_timestamp, limit=1
+        price_initial = exchange_ccxt.fetch_ohlcv(
+            topic.pair, "1m", since=initial_timestamp, limit=1
         )
-        price_end = fetch_ohlcv(
-            exchange_ccxt, topic.pair, "1m", since=end_timestamp, limit=1
+        price_end = exchange_ccxt.fetch_ohlcv(
+            topic.pair, "1m", since=end_timestamp, limit=1
         )
         return (price_end[0][1] >= price_initial[0][1], False)
     except Exception as e:
