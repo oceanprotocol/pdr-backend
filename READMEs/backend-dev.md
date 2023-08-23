@@ -23,15 +23,7 @@ Then, [install barge](barge.md#install-barge).
 
 ## Local Usage
 
-### Local Usage: Testing
-
-In barge console:
-```console
-# Run barge with just predictoor contracts, but no agents
-./start_ocean.sh --predictoor
-```
-
-Open a new console and:
+First, open a new "work" console and:
 ```console
 # Setup virtualenv
 cd pdr-backend
@@ -42,6 +34,21 @@ export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export RPC_URL=http://127.0.0.1:8545
 export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+```
+
+Each subsection below gives different local usage options.
+
+### Local Usage: Testing & linting
+
+In barge console:
+```console
+# Run barge with just predictoor contracts, but no agents
+./start_ocean.sh --predictoor
+```
+
+In work console, run tests:
+```console
+#(ensure envvars set as above)
 
 #run a single test
 pytest pdr_backend/utils/test/test_constants.py::test_constants1
@@ -51,6 +58,18 @@ pytest pdr_backend/utils/test/test_constants.py
 
 #run all regular tests; see details on pytest markers to select specific suites
 pytest
+```
+
+In work console, run linting checks:
+```console
+#run static type-checking. By default, uses config mypy.ini. Note: pytest does dynamic type-checking.
+mypy ./
+
+#run linting on code style
+pylint *
+
+#auto-fix some pylint complaints
+black ./
 ```
 
 ### Local Usage: Run a custom agent
@@ -65,17 +84,15 @@ In barge console:
 ./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
-Open a new console and:
+In work console:
 ```console
-# Set envvars
-# (copy and paste the envvar-setting code above)
-# (export ADDRESS_FILE=...)
+#(ensure envvars set as above)
 
 # run trader agent
 python3 pdr_backend/trader/main.py
 ```
 
-Relax & watch as the predictoor agent submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
+Relax & watch as the predictoor agent submits random predictions, trueval submits random truevals for each epoch and trader signals trades.
 
 You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
 

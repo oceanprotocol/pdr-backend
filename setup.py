@@ -15,6 +15,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account",
     "eth-keys",
+    "pandas",
     "pathlib",
     "pylint",
     "pytest",

@@ -621,8 +621,8 @@ def get_contract_filename(contract_name):
         address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
-        os.chdir(root_dir)
-        paths = glob.glob(f"**/{contract_basename}", recursive=True)
+        paths = Path(root_dir).rglob(contract_basename)
+        paths = [str(path) for path in paths]
         if paths:
             assert len(paths) == 1, "had duplicates for {contract_basename}"
             path = paths[0]
