@@ -454,7 +454,6 @@ class PredictoorContract:
                     "chainId": self.config.w3.eth.chain_id,
                 }
             )
-            print(f"Signed trueval, txhash: {tx}")
             return self.config.account.sign_transaction(tx)
         except Exception as e:
             print(f"Failed to sign trueval: {e}")

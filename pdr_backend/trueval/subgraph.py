@@ -90,7 +90,7 @@ def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
                     source=info["source"],
                 )
 
-                slots.append(Slot(slot, contract_object))
+                slots.append(Slot(int(slot["slot"]), contract_object))
 
         except Exception as e:
             print(e)
