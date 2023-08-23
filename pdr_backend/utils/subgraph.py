@@ -63,7 +63,7 @@ from typing import Optional, Dict
 from enforce_typing import enforce_types
 from web3 import Web3
 
-_N_ERRORS = {} # exception_str : num_occurrences
+_N_ERRORS = {}  # exception_str : num_occurrences
 _N_THR = 3
 
 
@@ -240,10 +240,10 @@ def get_all_interesting_prediction_contracts(
                 contracts[contract["id"]].update(info)
 
         except Exception as e:
-            e = str(e)
-            e_key = str(e)
-            if "Connection object" in e:
-                i = e.find("Connection object") + len("Connection object")
+            e_str = str(e)
+            e_key = e_str
+            if "Connection object" in e_str:
+                i = e_str.find("Connection object") + len("Connection object")
                 e_key = e_key[:i]
 
             if e_key not in _N_ERRORS:
@@ -251,7 +251,7 @@ def get_all_interesting_prediction_contracts(
             _N_ERRORS[e_key] += 1
 
             if _N_ERRORS[e_key] <= _N_THR:
-                print(e)
+                print(e_str)
             if _N_ERRORS[e_key] == _N_THR:
                 print("Future errors like this will be hidden")
             return {}
