@@ -29,17 +29,16 @@ owner_addresses = env.get_owner_addresses()
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
-exchange_id = 'binance'
-pair='BTC/TUSD'
-timeframe='5m'
+exchange_id = "binance"
+pair = "BTC/TUSD"
+timeframe = "5m"
 exchange_class = getattr(ccxt, exchange_id)
-exchange_ccxt = exchange_class({
-    'timeout': 30000
-})
+exchange_ccxt = exchange_class({"timeout": 30000})
 
 models = [
-    OceanModel(exchange_id,pair,timeframe),
+    OceanModel(exchange_id, pair, timeframe),
 ]
+
 
 def process_block(block, model, main_pd):
     global topics
@@ -73,9 +72,7 @@ def process_block(block, model, main_pd):
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(
-            os.getenv("SECONDS_TILL_EPOCH_END", 60)
-        ):
+        if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
             """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
@@ -85,7 +82,9 @@ def process_block(block, model, main_pd):
             )
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
-                stake_amount = os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100 # TODO have a customizable function to handle this
+                stake_amount = (
+                    os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+                )  # TODO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
                 )
@@ -105,80 +104,85 @@ def log_loop(blockno, model, main_pd):
     block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
     if block:
         last_block_time = block["timestamp"]
-        prediction = process_block(block,model,main_pd)
+        prediction = process_block(block, model, main_pd)
         if prediction is not None:
             return prediction
+
 
 def main():
     print("Starting main loop...")
 
-    ts_now=int( time.time() )
+    ts_now = int(time.time())
 
     results_path = "results"
     if not os.path.exists(results_path):
         os.makedirs(results_path)
 
-    results_csv_name="./"+results_path+'/'+exchange_id+"_"+models[0].pair+"_"+models[0].timeframe+"_"+str(ts_now)+".csv"
+    results_csv_name = (
+        "./"
+        + results_path
+        + "/"
+        + exchange_id
+        + "_"
+        + models[0].pair
+        + "_"
+        + models[0].timeframe
+        + "_"
+        + str(ts_now)
+        + ".csv"
+    )
 
-    columns_short = [
-        "datetime",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume"
-    ]
+    columns_short = ["datetime", "open", "high", "low", "close", "volume"]
 
     columns_models = []
     for model in models:
         model.unpickle_model("./pdr_backend/predictoor/examples/models")
-        columns_models.append(model.model_name) # prediction column.  0 or 1
+        columns_models.append(model.model_name)  # prediction column.  0 or 1
 
-    all_columns=columns_short+columns_models
+    all_columns = columns_short + columns_models
 
-    #write csv header for results
+    # write csv header for results
     size = 0
     try:
-        files_stats=os.stat(results_csv_name)
+        files_stats = os.stat(results_csv_name)
         size = files_stats.st_size
     except:
         pass
-    if size==0:
-        with open(results_csv_name, 'a') as f:
+    if size == 0:
+        with open(results_csv_name, "a") as f:
             writer = csv.writer(f)
             writer.writerow(all_columns)
 
-    #read initial set of candles
+    # read initial set of candles
     candles = exchange_ccxt.fetch_ohlcv(pair, "5m")
-    #load past data
+    # load past data
     main_pd = pd.DataFrame(columns=all_columns)
     for ohl in candles:
-            ohlc= {
-                    'timestamp':int(ohl[0]/1000),
-                    'open':float(ohl[1]),
-                    'close':float(ohl[4]),
-                    'low':float(ohl[3]),
-                    'high':float(ohl[2]),
-                    'volume':float(ohl[5]),
-            }
-            main_pd.loc[ohlc["timestamp"]]=ohlc
-            main_pd["datetime"] = pd.to_datetime(main_pd.index.values, unit="s", utc=True)
+        ohlc = {
+            "timestamp": int(ohl[0] / 1000),
+            "open": float(ohl[1]),
+            "close": float(ohl[4]),
+            "low": float(ohl[3]),
+            "high": float(ohl[2]),
+            "volume": float(ohl[5]),
+        }
+        main_pd.loc[ohlc["timestamp"]] = ohlc
+        main_pd["datetime"] = pd.to_datetime(main_pd.index.values, unit="s", utc=True)
 
     lastblock = 0
     last_finalized_timestamp = 0
     while True:
-
         candles = exchange_ccxt.fetch_ohlcv(pair, "5m")
 
-        #update last two candles
+        # update last two candles
         for ohl in candles[-2:]:
-            t = int(ohl[0]/1000)
-            main_pd.loc[t,['datetime']]=pd.to_datetime(t, unit="s", utc=True)
-            main_pd.loc[t,['open']]=float(ohl[1])
-            main_pd.loc[t,['close']]=float(ohl[4])
-            main_pd.loc[t,['low']]=float(ohl[3])
-            main_pd.loc[t,['high']]=float(ohl[2])
-            main_pd.loc[t,['volume']]=float(ohl[5])
+            t = int(ohl[0] / 1000)
+            main_pd.loc[t, ["datetime"]] = pd.to_datetime(t, unit="s", utc=True)
+            main_pd.loc[t, ["open"]] = float(ohl[1])
+            main_pd.loc[t, ["close"]] = float(ohl[4])
+            main_pd.loc[t, ["low"]] = float(ohl[3])
+            main_pd.loc[t, ["high"]] = float(ohl[2])
+            main_pd.loc[t, ["volume"]] = float(ohl[5])
 
         timestamp = main_pd.index.values[-2]
 
@@ -187,7 +191,7 @@ def main():
             lastblock = block
 
             # #we have a new candle
-            if last_finalized_timestamp<timestamp:
+            if last_finalized_timestamp < timestamp:
                 last_finalized_timestamp = timestamp
 
                 should_write = False
@@ -197,12 +201,12 @@ def main():
                         should_write = True
 
                 if should_write:
-                    with open(results_csv_name, 'a') as f:
+                    with open(results_csv_name, "a") as f:
                         writer = csv.writer(f)
                         row = [
                             main_pd.index.values[-2],
-                            main_pd.iloc[-2]['datetime'],
-                            main_pd.iloc[-2]['open'],
+                            main_pd.iloc[-2]["datetime"],
+                            main_pd.iloc[-2]["open"],
                             main_pd.iloc[-2]["high"],
                             main_pd.iloc[-2]["low"],
                             main_pd.iloc[-2]["close"],
@@ -216,11 +220,19 @@ def main():
                 index = main_pd.index.values[-1]
                 current_prediction = main_pd.iloc[-1][model.model_name]
                 if np.isnan(current_prediction):
-                    prediction = log_loop(block, model, main_pd.drop(columns_models+['datetime'], axis=1))
+                    prediction = log_loop(
+                        block,
+                        model,
+                        main_pd.drop(columns_models + ["datetime"], axis=1),
+                    )
                     if prediction is not None:
-                        main_pd.loc[index,[model.model_name]]=float(prediction)
+                        main_pd.loc[index, [model.model_name]] = float(prediction)
 
-            print(main_pd.loc[:, ~main_pd.columns.isin(['volume','open','high','low'])].tail(15))
+            print(
+                main_pd.loc[
+                    :, ~main_pd.columns.isin(["volume", "open", "high", "low"])
+                ].tail(15)
+            )
 
         else:
             time.sleep(1)

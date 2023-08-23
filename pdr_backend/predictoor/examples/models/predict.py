@@ -26,7 +26,9 @@ def predict_function(topic, estimated_time, model, main_pd):
     try:
         predicted_value, predicted_confidence = model.predict(main_pd)
         predicted_value = bool(predicted_value)
-        print(f"Predicting {predicted_value} with a confidence of {predicted_confidence}")
+        print(
+            f"Predicting {predicted_value} with a confidence of {predicted_confidence}"
+        )
 
     except Exception as e:
         print(e)
