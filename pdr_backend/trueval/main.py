@@ -1,22 +1,24 @@
+from datetime import datetime, timedelta, timezone
+from os import getenv
 import os
-import time
 import threading
-
+import time
 from typing import Dict
+
 from pdr_backend.trueval.trueval import get_true_val
 from pdr_backend.trueval.subgraph import get_pending_slots
 from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils import env
+from pdr_backend.utils.env import getenv_or_exit
 from pdr_backend.utils.models import Slot
 
 
-rpc_url = env.get_rpc_url_or_exit()
-subgraph_url = env.get_subgraph_or_exit()
-private_key = env.get_private_key_or_exit()
-pair_filters = env.get_pair_filter()
-timeframe_filter = env.get_timeframe_filter()
-source_filter = env.get_source_filter()
-owner_addresses = env.get_owner_addresses()
+rpc_url = getenv_or_exit("RPC_URL")
+subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
+pair_filters = getenv("PAIR_FILTER")
+timeframe_filter = getenv("TIMEFRAME_FILTER")
+source_filter = getenv("SOURCE_FILTER")
+owner_addresses = getenv("OWNER_ADDRS")
 
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner

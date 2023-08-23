@@ -1,29 +1,26 @@
-import time
-import os
-import time
-import os
-import threading
 from datetime import datetime, timedelta, timezone
+from os import getenv
+import time
+import threading
 from threading import Thread
-
 from typing import Dict
-from pdr_backend.predictoor.predict import predict_function
-from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils import env
 
+from pdr_backend.predictoor.approach1.predict import predict_function
+from pdr_backend.utils.env import getenv_or_exit
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
+from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
 
 last_block_time = 0
 topics: Dict[str, dict] = {}
 contract_map: Dict[str, PredictoorContract] = {}
 
-rpc_url = env.get_rpc_url_or_exit()
-subgraph_url = env.get_subgraph_or_exit()
-private_key = env.get_private_key_or_exit()
-pair_filters = env.get_pair_filter()
-timeframe_filter = env.get_timeframe_filter()
-source_filter = env.get_source_filter()
-owner_addresses = env.get_owner_addresses()
+rpc_url = getenv_or_exit("RPC_URL")
+subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
+pair_filters = getenv("PAIR_FILTER")
+timeframe_filter = getenv("TIMEFRAME_FILTER")
+source_filter = getenv("SOURCE_FILTER")
+owner_addresses = getenv("OWNER_ADDRS")
 
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
@@ -63,7 +60,7 @@ def process_block(block):
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
+        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", 60)):
             """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
@@ -74,7 +71,7 @@ def process_block(block):
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
                 stake_amount = (
-                    os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+                    getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
                 )  # TODO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"

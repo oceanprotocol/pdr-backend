@@ -77,7 +77,7 @@ def predict_function(topic, timestamp):
 
     """
     print(
-        f" We were asked to predict {topic['name']} (contract: {topic['address']}) value at estimated timestamp: {estimated_time}"
+        f" We were asked to predict {topic['name']} (contract: {topic['address']}) value at estimated timestamp: {timestamp}"
     )
     predicted_confidence = None
     predicted_value = None

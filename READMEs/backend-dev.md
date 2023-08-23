@@ -42,8 +42,8 @@ Each subsection below gives different local usage options.
 
 In barge console:
 ```console
-# Run barge with just predictoor contracts, but no agents
-./start_ocean.sh --predictoor
+# Run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --predictoor --with-thegraph
 ```
 
 In work console, run tests:
@@ -81,7 +81,7 @@ In barge console:
 # (Hit ctrl-c to stop existing barge)
 
 # Run all agents except trader
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 In work console:
@@ -89,7 +89,7 @@ In work console:
 #(ensure envvars set as above)
 
 # run trader agent
-python3 pdr_backend/trader/main.py
+python pdr_backend/trader/main.py
 ```
 
 Relax & watch as the predictoor agent submits random predictions, trueval submits random truevals for each epoch and trader signals trades.
@@ -98,7 +98,9 @@ You can query predictoor subgraph for detailed run info. See [subgraph.md](subgr
 
 ## Remote Testnet Usage
 
-FIXME
+To run predictoor as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+
+To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
 ## Remote Mainnet Usage
 
