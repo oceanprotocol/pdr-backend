@@ -22,13 +22,15 @@ Then, [install barge](barge.md#install-barge).
 
 ## Local Usage
 
+### Local Usage: Setup
+
 In barge console:
 ```console
 #run barge with all agents except predictoor
 ./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
-Open a new console and:
+Open a new "work" console and:
 ```
 # Setup virtualenv
 cd pdr-backend
@@ -41,29 +43,46 @@ export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 ```
 
-### Option A: Use Random Predictions
+### Local Usage: Random Predictions
 
-In the same console:
-```
-# run predictoor agent
+To get started, let's run a predictoor agent with _random_ predictions.
+
+In work console:
+```console
+# run random predictoor agent
 python3 pdr_backend/predictoor/main.py
 ```
 
-Relax & watch as the predictoor agent submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
+Observe the agents in action:
+- in the barge console: trueval agent submitting (mock random) truevals, trader is (mock) trading, etc
+- in your work console: predictoor agent is submitting (mock random) predictions
 
-You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
+Under the hood, the predictoor agent predicts according to the `predict()` function in [`pdr_backend/predictoor/predict.py`](../pdr_backend/predictoor/predict.py). Its docstring has details.
 
-The agent predicts according to the `predict()` function in [`pdr_backend/predictoor/predict.py`](../pdr_backend/predictoor/predict.py). Its default strategy is simplistic (random predictions). So you need to customize it. The docstring at the top of `predict.py` provides more info.
+You can query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
 
-### Option B: Use Simple or Custom Model
+### Local Usage: Model-based Predictions
 
-- Clone the simple model [repo](https://github.com/oceanprotocol/pdr-model-simple) or fork the repo and create a custom model 
-- From pdr-backend, make a symlink to the repo subdirectory for the simple model (or your own customized model) e.g. `ln -s /path/to/pdr-model-simple/pdr_model_simple/ pdr_backend/predictoor/examples/models`
+Since random predictions aren't accurate, let's use AI/ML models. For illustration, we use models from [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo. Once you're familiar with this, you'll want to fork it and run your own.
 
-In the same console:
-```
-# run predictoor agent
-python3 pdr_backend/predictoor/examples/models/main.py
+In work console:
+```console
+# (ctrl-c existing run)
+
+# go to a directory where you'll want to clone to. 
+cd ..
+
+#clone model repo
+git clone https://github.com/oceanprotocol/pdr-model-simple
+
+#the script below needs this envvar, to know where to import model.py from
+export MODELDIR=$(pwd)/pdr-model-simple/
+
+#pip install anything that pdr-model-simple/model.py needs
+pip install scikit-learn ta
+
+#run model-powered predictoor agent
+python pdr_backend/predictoor/examples/models/main.py
 ```
 
 ## Remote Testnet Usage
