@@ -84,15 +84,14 @@ def process_slot(slot: Slot, nonce: int, index: int) -> NewTrueVal:
 def main():
     while True:
         sleep_time = os.getenv("SLEEP_TIME", 15)
+        max_threads = os.getenv("MAX_THREADS", 50)
+
         pending_contracts = get_pending_slots(subgraph_url, web3_config)
+        pending_contracts = pending_contracts[:max_threads]
         print(f"Found {len(pending_contracts)} pending slots")
-        print("Owner addresses:", owner)
         nonce = web3_config.w3.eth.get_transaction_count(owner)
-        print("Nonce:", nonce)
         threads = []
         results = []
-        max_threads = os.getenv("MAX_THREADS", 50)
-        pending_contracts = pending_contracts[:max_threads]
 
         if len(pending_contracts) > 0:
             # try:
