@@ -43,9 +43,9 @@ export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 ```
 
-### Local Usage: Random Predictions
+### Local Usage: Random (Approach 1)
 
-To get started, let's run a predictoor agent with _random_ predictions, ie "approach1".
+To get started, let's run a predictoor agent with random predictions.
 
 - The agent runs from [`predictoor/approach1/main.py`](../pdr_backend/predictoor/approach1/main.py)
 - Which predicts according to the `predict()` function in [`predictoor/approach1/predict.py`](../pdr_backend/predictoor/approach1/predict.py) in the same dir.
@@ -62,7 +62,7 @@ Observe the agents in action:
 
 You can query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
 
-### Local Usage: Model-based Predictions
+### Local Usage: Model-based (Approach 2)
 
 Since random predictions aren't accurate, let's use AI/ML models. Here's an example flow that loads pre-learned models ("approach2"):
 
