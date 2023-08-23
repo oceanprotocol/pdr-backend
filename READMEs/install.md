@@ -24,5 +24,5 @@ pip3 install -r requirements.txt
 
 If you're running MacOS, then also do in the same console:
 ```console
-pytest pdrcodesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
+codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 ```
