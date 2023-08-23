@@ -49,6 +49,7 @@ To get started, let's run a predictoor agent with _random_ predictions.
 
 In work console:
 ```console
+# run random predictoor agent
 python3 pdr_backend/predictoor/main.py
 ```
 
@@ -74,13 +75,13 @@ cd ..
 #clone model repo
 git clone https://github.com/oceanprotocol/pdr-model-simple
 
-#in pdr-backend repo, create a symlink pointing to pdr-model-simple
-ln -s pdr-model-simple/pdr_model_simple/ pdr-backend/pdr_backend/predictoor/examples/models/pdr_model_simple`
-```
+#the script below needs this envvar, to know where to import model.py from
+export MODELDIR=$(pwd)/pdr-model-simple/
 
-In the same console:
-```
-# run predictoor agent
+#pip install anything that pdr-model-simple/model.py needs
+pip install scikit-learn ta
+
+#run model-powered predictoor agent
 python pdr_backend/predictoor/examples/models/main.py
 ```
 

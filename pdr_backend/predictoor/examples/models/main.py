@@ -1,40 +1,52 @@
-import ccxt
+import copy
 import csv
-import numpy as np
-import os
-import pandas as pd
-import time
-import threading
 from datetime import datetime, timedelta, timezone
+import os
+from os import getenv
+import sys
+import threading
 from threading import Thread
+import time
 from typing import List
 
-from pdr_backend.predictoor.examples.models.pdr_model_simple.model import OceanModel
-from pdr_backend.predictoor.examples.models.predict import predict_function
-from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils import env
+import ccxt
+import numpy as np
+import pandas as pd
 
+from pdr_backend.predictoor.examples.models.predict import predict_function
+from pdr_backend.utils.contract import PredictoorContract, Web3Config
+from pdr_backend.utils.env import get_envvar_or_exit
+from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
+
+# set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
+model_dir = getenv("MODELDIR")
+trained_models_dir = os.path.join(model_dir, "trained_models")
+sys.path.append(model_dir) 
+from model import OceanModel # OceanModel lives in $MODELDIR/model.py
+
+rpc_url = get_envvar_or_exit("RPC_URL")
+subgraph_url = get_envvar_or_exit("SUBGRAPH_URL")
+private_key = get_envvar_or_exit("PRIVATE_KEY")
+pair_filters = getenv("PAIR_FILTER")
+timeframe_filter = getenv("TIMEFRAME_FILTER")
+source_filter = getenv("SOURCE_FILTER")
+owner_addresses = getenv("OWNER_ADDRS")
+
+exchange_id = "binance"
+pair = "BTC/USDT"
+timeframe = "5m"
+
+# ===================
+# done imports and constants. Now start running... 
 
 last_block_time = 0
 topics: List[dict] = []
 
-rpc_url = env.get_rpc_url_or_exit()
-subgraph_url = env.get_subgraph_or_exit()
-private_key = env.get_private_key_or_exit()
-pair_filters = env.get_pair_filter()
-timeframe_filter = env.get_timeframe_filter()
-source_filter = env.get_source_filter()
-owner_addresses = env.get_owner_addresses()
+exchange_class = getattr(ccxt, exchange_id)
+exchange_ccxt = exchange_class({"timeout": 30000})
 
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
-
-exchange_id = "binance"
-pair = "BTC/TUSD"
-timeframe = "5m"
-exchange_class = getattr(ccxt, exchange_id)
-exchange_ccxt = exchange_class({"timeout": 30000})
 
 models = [
     OceanModel(exchange_id, pair, timeframe),
@@ -73,7 +85,7 @@ def process_block(block, model, main_pd):
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
+        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", 60)):
             """Timestamp of prediction"""
             target_time = (epoch + 2) * seconds_per_epoch
 
@@ -84,7 +96,7 @@ def process_block(block, model, main_pd):
             if predicted_value is not None and predicted_confidence > 0:
                 """We have a prediction, let's submit it"""
                 stake_amount = (
-                    os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+                    getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
                 )  # TODO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
@@ -130,14 +142,13 @@ def main():
         + models[0].timeframe
         + "_"
         + str(ts_now)
-        + ".csv"
-    )
+        + ".csv"    )
 
     columns_short = ["datetime", "open", "high", "low", "close", "volume"]
 
     columns_models = []
     for model in models:
-        model.unpickle_model("./pdr_backend/predictoor/examples/models")
+        model.unpickle_model(trained_models_dir)
         columns_models.append(model.model_name)  # prediction column.  0 or 1
 
     all_columns = columns_short + columns_models
