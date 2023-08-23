@@ -439,13 +439,13 @@ class PredictoorContract:
             print(e)
             return None
 
-    def trueval_sign(self, true_val: bool, timestamp: int, cancel_round: bool, nonce: int):
+    def trueval_sign(
+        self, true_val: bool, timestamp: int, cancel_round: bool, nonce: int
+    ):
         try:
             tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, 0, cancel_round # FIXME remove floatvalue
-            ).buildTransaction(
-                {"from": self.config.owner, "nonce": nonce}
-            )
+                timestamp, true_val, 0, cancel_round  # FIXME remove floatvalue
+            ).buildTransaction({"from": self.config.owner, "nonce": nonce})
             return self.config.account.sign_transaction(tx)
         except Exception as e:
             print(e)

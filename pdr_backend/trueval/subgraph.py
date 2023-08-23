@@ -4,7 +4,19 @@ from pdr_backend.utils.subgraph import query_subgraph, info_from_725
 
 
 class Contract:
-    def __init__(self, name:str, address: str, symbol: str, seconds_per_epoch: int, seconds_per_subscription: int, trueval_submit_timeout: int, owner: str, pair: str, timeframe: str, source: str):
+    def __init__(
+        self,
+        name: str,
+        address: str,
+        symbol: str,
+        seconds_per_epoch: int,
+        seconds_per_subscription: int,
+        trueval_submit_timeout: int,
+        owner: str,
+        pair: str,
+        timeframe: str,
+        source: str,
+    ):
         self.name = name
         self.address = address
         self.symbol = symbol
@@ -16,11 +28,15 @@ class Contract:
         self.timeframe = timeframe
         self.source = source
 
+
 class Slot:
-    def __init__(self, slot: int, contract: Contract, true_value: Optional[bool] = None):
+    def __init__(
+        self, slot: int, contract: Contract, true_value: Optional[bool] = None
+    ):
         self.slot = slot
         self.contract = contract
         self.true_value = true_value
+
 
 def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
     timestamp = web3_config.w3.eth.getBlock("latest").timestamp
@@ -98,7 +114,7 @@ def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
                         owner=contract["token"]["nft"]["owner"]["id"],
                         pair=info["pair"],
                         timeframe=info["timeframe"],
-                        source=info["source"]
+                        source=info["source"],
                     )
 
                     slots.append(Slot(slot, contract_object))

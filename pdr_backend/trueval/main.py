@@ -63,9 +63,7 @@ def process_slot(slot: Slot, nonce: int):
     predictoor_contract = PredictoorContract(web3_config, slot.contract.address)
     epoch = predictoor_contract.get_current_epoch()
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    seconds_till_epoch_end = (
-        epoch * seconds_per_epoch + seconds_per_epoch - epoch.slot
-    )
+    seconds_till_epoch_end = epoch * seconds_per_epoch + seconds_per_epoch - epoch.slot
     print(
         f"\t{slot.contract.name} (at address {slot.contract.address} is at epoch {slot.slot}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
     )
@@ -73,6 +71,7 @@ def process_slot(slot: Slot, nonce: int):
     thr = NewTrueVal(slot, predictoor_contract, epoch)
     signature = thr.run(nonce)
     return signature
+
 
 def main():
     print("Starting main loop...")
