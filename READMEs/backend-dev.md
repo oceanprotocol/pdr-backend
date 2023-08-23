@@ -89,7 +89,7 @@ In work console:
 #(ensure envvars set as above)
 
 # run trader agent
-python3 pdr_backend/trader/main.py
+python pdr_backend/trader/main.py
 ```
 
 Relax & watch as the predictoor agent submits random predictions, trueval submits random truevals for each epoch and trader signals trades.

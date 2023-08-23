@@ -50,7 +50,7 @@ export PDR_MM_USER = "<your key>"
 """
 
 # publish! main.py & publish.py do all the work
-python3 pdr_backend/publisher/main.py
+python pdr_backend/publisher/main.py
 ```
 
 ## Remote Testnet Usage
