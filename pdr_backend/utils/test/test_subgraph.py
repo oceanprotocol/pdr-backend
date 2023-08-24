@@ -10,7 +10,7 @@ from pdr_backend.utils.subgraph import (
     value_from_725,
     info_from_725,
     query_subgraph,
-    get_all_interesting_prediction_contracts,
+    query_predictContractss,
 )
 
 
@@ -88,7 +88,7 @@ def test_query_subgraph_badpath(monkeypatch):
 def test_get_contracts_emptychain(monkeypatch):
     contract_list = []
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = get_all_interesting_prediction_contracts(subgraph_url="foo")
+    contracts = query_predictContractss(subgraph_url="foo")
     assert contracts == {}
 
 
@@ -120,7 +120,7 @@ def test_get_contracts_fullchain(monkeypatch):
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = get_all_interesting_prediction_contracts(subgraph_url="foo")
+    contracts = query_predictContractss(subgraph_url="foo")
     assert contracts == {
         "contract1": {
             "name": "ether",
@@ -191,7 +191,7 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = get_all_interesting_prediction_contracts(
+    contracts = query_predictContractss(
         "foo", pairs, timeframes, sources, owners
     )
 
