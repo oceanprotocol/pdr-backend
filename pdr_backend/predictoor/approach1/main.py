@@ -8,7 +8,7 @@ from typing import Dict
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.approach1.predict import predict_function
 from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContractss
+from pdr_backend.util.subgraph import query_predictContracts
 from pdr_backend.util.web3_config import Web3Config
 
 last_block_time = 0
@@ -31,7 +31,7 @@ def process_block(block):
     global topics
     """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
-        topics = query_predictContractss(
+        topics = query_predictContracts(
             subgraph_url,
             pair_filters,
             timeframe_filter,

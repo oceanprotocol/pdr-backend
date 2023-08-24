@@ -56,7 +56,6 @@ class NewTrueVal:
 
         tx = self.predictoor_contract.submit_trueval(
             true_val, self.slot.slot, cancel_round, True
-        )
 
         return tx
 
