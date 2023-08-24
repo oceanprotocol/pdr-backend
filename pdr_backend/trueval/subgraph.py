@@ -5,12 +5,6 @@ from pdr_backend.models.contract_data import ContractData
 from pdr_backend.models.slot import Slot
 
 
-class TrueValSlot(Slot):
-    def __init__(self, slot: int, contract: ContractData, true_value: Optional[bool]):
-        super().__init__(slot, contract)
-        self.true_value = true_value
-
-
 def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
     timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
     chunk_size = 1000
