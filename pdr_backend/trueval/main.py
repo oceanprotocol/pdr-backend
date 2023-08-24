@@ -7,7 +7,7 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
 from pdr_backend.trueval.trueval import get_true_val
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.trueval.subgraph import get_pending_slots
+from pdr_backend.util.subgraph import get_pending_slots
 from pdr_backend.models.slot import Slot
 
 
