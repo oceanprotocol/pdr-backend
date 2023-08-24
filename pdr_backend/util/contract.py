@@ -1,11 +1,10 @@
-import artifacts
-import glob
 import json
 import os
 from pathlib import Path
 from typing import Union
 
 import addresses
+import artifacts
 from enforce_typing import enforce_types
 
 
@@ -65,7 +64,7 @@ def get_contract_filename(contract_name: str):
         address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
-        paths = [path for path in Path(root_dir).rglob(contract_basename)]
+        paths = list(Path(root_dir).rglob(contract_basename))
         if paths:
             assert len(paths) == 1, "had duplicates for {contract_basename}"
             path = paths[0]

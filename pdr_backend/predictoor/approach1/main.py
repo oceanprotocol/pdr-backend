@@ -1,8 +1,5 @@
-from datetime import datetime, timedelta, timezone
 from os import getenv
 import time
-import threading
-from threading import Thread
 from typing import Dict
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
@@ -28,8 +25,11 @@ owner = web3_config.owner
 
 
 def process_block(block):
+    """
+    Process each contract.
+    If needed, get a prediction, submit it and claim revenue for past epoch
+    """
     global topics
-    """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
         topics = query_predictContracts(
             subgraph_url,
@@ -50,32 +50,36 @@ def process_block(block):
             epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} "
+            f"is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
+            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
 
         if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
             # let's get the payout for previous epoch.  We don't care if it fails...
             slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
-                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
+                f"Contract:{predictoor_contract.contract_address} - "
+                f"Claiming revenue for slot:{slot}"
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", 60)):
-            """Timestamp of prediction"""
+        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", "60")):
+            # Timestamp of prediction
             target_time = (epoch + 2) * seconds_per_epoch
 
-            """Let's fetch the prediction """
+            # Fetch the prediction
             (predicted_value, predicted_confidence) = predict_function(
                 topic, target_time
             )
             if predicted_value is not None and predicted_confidence > 0:
-                """We have a prediction, let's submit it"""
+                # We have a prediction, let's submit it
                 stake_amount = (
-                    getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
-                )  # TODO have a customizable function to handle this
+                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+                )  # TO DO have a customizable function to handle this
                 print(
-                    f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
+                    f"Contract:{predictoor_contract.contract_address} - "
+                    f"Submitting prediction for slot:{target_time}"
                 )
                 predictoor_contract.submit_prediction(
                     predicted_value, stake_amount, target_time, True
@@ -83,7 +87,8 @@ def process_block(block):
                 topics[address]["last_submited_epoch"] = epoch
             else:
                 print(
-                    f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
+                    "We do not submit, prediction function returned "
+                    f"({predicted_value}, {predicted_confidence})"
                 )
 
 

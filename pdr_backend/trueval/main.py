@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta, timezone
 from os import getenv
 from threading import Thread
 import time
@@ -27,6 +26,8 @@ topics: Dict[str, dict] = {}
 
 class NewTrueVal(Thread):
     def __init__(self, topic, predictoor_contract, current_ts, epoch):
+        Thread.__init__(self)
+
         # set a default value
         self.values = {
             "last_submited_epoch": epoch,
@@ -38,9 +39,11 @@ class NewTrueVal(Thread):
         self.current_ts = current_ts
 
     def run(self):
-        """Get timestamp of previous epoch-2 , get the price"""
-        """ Get timestamp of previous epoch-1, get the price """
-        """ Compare and submit trueval """
+        """
+        Get timestamp of previous epoch-2 , get the price
+        Get timestamp of previous epoch-1, get the price
+        Compare and submit trueval
+        """
         seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
         initial_ts = (self.epoch - 2) * seconds_per_epoch
 
@@ -50,18 +53,18 @@ class NewTrueVal(Thread):
 
         (true_val, cancel_round) = get_true_val(self.topic, initial_ts, end_ts)
         print(
-            f"Contract:{self.predictoor_contract.contract_address} - Submiting true_val {true_val} for slot:{slot}"
+            f"Contract:{self.predictoor_contract.contract_address} - "
+            f"Submitting true_val {true_val} for slot:{slot}"
         )
         try:
             self.predictoor_contract.submit_trueval(true_val, slot, cancel_round)
         except Exception as e:
             print(e)
-            pass
 
 
 def process_block(block):
+    """Process each contract and see if we need to submit"""
     global topics
-    """ Process each contract and see if we need to submit """
     if not topics:
         topics = query_predictContracts(
             subgraph_url,
@@ -71,7 +74,6 @@ def process_block(block):
             owner_addresses,
         )
     print(f"Got new block: {block['number']} with {len(topics)} topics")
-    threads = []
     for address in topics:
         topic = topics[address]
         predictoor_contract = PredictoorContract(web3_config, address)
@@ -81,10 +83,12 @@ def process_block(block):
             epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} "
+            f"is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
+            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
         if epoch > topic["last_submited_epoch"] and epoch > 1:
-            """Let's make a prediction & claim rewards"""
+            # Let's make a prediction & claim rewards
             thr = NewTrueVal(topic, predictoor_contract, block["timestamp"], epoch)
             thr.run()
             address = thr.values["contract_address"].lower()

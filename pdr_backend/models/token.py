@@ -26,11 +26,9 @@ class Token:
             {"from": sender, "gasPrice": gasPrice}
         )
 
-        return (
-            tx
-            if not wait_for_receipt
-            else self.config.w3.eth.wait_for_transaction_receipt(tx)
-        )
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def approve(self, spender, amount, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
@@ -39,11 +37,8 @@ class Token:
             tx = self.contract_instance.functions.approve(spender, amount).transact(
                 {"from": self.config.owner, "gasPrice": gasPrice}
             )
-
-            return (
-                tx
-                if not wait_for_receipt
-                else self.config.w3.eth.wait_for_transaction_receipt(tx)
-            )
-        except:
+            if not wait_for_receipt:
+                return tx
+            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+        except:  # pylint: disable=bare-except
             return None

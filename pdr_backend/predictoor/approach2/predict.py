@@ -18,7 +18,9 @@ def predict_function(topic, estimated_time, model, main_pd):
 
     """
     print(
-        f" We were asked to predict {topic['name']} (contract: {topic['address']}) value at estimated timestamp: {estimated_time}"
+        f" We were asked to predict {topic['name']} "
+        f"(contract: {topic['address']}) value "
+        f"at estimated timestamp: {estimated_time}"
     )
     predicted_confidence = None
     predicted_value = None
@@ -32,5 +34,5 @@ def predict_function(topic, estimated_time, model, main_pd):
 
     except Exception as e:
         print(e)
-        pass
+
     return (predicted_value, predicted_confidence)

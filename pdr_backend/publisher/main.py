@@ -1,4 +1,3 @@
-from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
@@ -33,7 +32,7 @@ publish(
     quote="USDT",
     source="kraken",
     timeframe="5m",
-    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # barge trueval submitter address
+    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # on arge
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,
