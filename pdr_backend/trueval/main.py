@@ -78,7 +78,8 @@ def process_slot(slot: Slot) -> dict:
 
 
 def main():
-    while Tru        sleep_time = os.getenv("SLEEP_TIME", 15)
+    while True:
+        sleep_time = os.getenv("SLEEP_TIME", 30)
         batch_size = os.getenv("BATCH_SIZE", 50)
 
         pending_contracts = get_pending_slots(subgraph_url, web3_config)
@@ -97,7 +98,7 @@ def main():
                     slot,
                 )
                 results.append(tx)
-        print("Sleeping for 15 seconds...")
+        print(f"Sleeping for {sleep_time} seconds...")
         time.sleep(sleep_time)
 
 
