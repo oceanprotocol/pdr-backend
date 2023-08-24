@@ -19,6 +19,7 @@ install_requirements = [
     "pathlib",
     "pylint",
     "pytest",
+    "pytest-env",
     "requests",
     "web3",
     "sapphire.py",
