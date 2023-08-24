@@ -81,18 +81,24 @@ def main():
     batch_size = os.getenv("BATCH_SIZE", 50)
     while True:
         pending_slots = get_pending_slots(subgraph_url, web3_config)
-        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
         pending_slots = pending_slots[:batch_size]
-        if len(slots) > 0:
-            for slot in slots:
-                print(
-                    f"Processing slot {slot.slot} for contract {slot.contract.address}"
-                )
-                try:
-                    process_slot(slot)
-                except Exception as e:
-                    print("An error occured", e)
-        print(f"Sleeping for {sleep_time} seconds...")
+
+        if len(slots) == 0:
+            print(f"No pending slots, sleeping for {sleep_time} seconds...")
+            time.sleep(sleep_time)
+            pass
+
+        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
+
+        for slot in slots:
+            print(
+                f"Processing slot {slot.slot} for contract {slot.contract.address}"
+            )
+            try:
+                process_slot(slot)
+            except Exception as e:
+                print("An error occured", e)
+        print(f"Done processing, sleeping for {sleep_time} seconds...")
         time.sleep(sleep_time)
 
 
