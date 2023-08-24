@@ -1,11 +1,10 @@
+import artifacts
+import glob
+import hashlib
 import json
 import os
-import glob
-import time
-import hashlib
-import artifacts
-
 from pathlib import Path
+import time
 
 import addresses
 from eth_account import Account
@@ -13,10 +12,9 @@ from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
 from sapphirepy import wrapper
-from pathlib import Path
 from web3 import Web3, HTTPProvider, WebsocketProvider
-from web3.middleware import construct_sign_and_send_raw_middleware
 from web3.logs import DISCARD
+from web3.middleware import construct_sign_and_send_raw_middleware
 
 from pdr_backend.utils.constants import (
     ZERO_ADDRESS,

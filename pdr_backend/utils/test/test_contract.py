@@ -1,12 +1,17 @@
 import os
+from pathlib import Path
 import time
-from pdr_backend.publisher.publish import publish
+from unittest.mock import patch, Mock
+
 from enforce_typing import enforce_types
 import pytest
 from pytest import approx
-from pathlib import Path
-from unittest.mock import patch, Mock
 
+from pdr_backend.publisher.publish import publish
+from pdr_backend.utils.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
 from pdr_backend.utils.contract import (
     is_sapphire_network,
     send_encrypted_tx,
@@ -19,10 +24,6 @@ from pdr_backend.utils.contract import (
     get_address,
     get_contract_abi,
     get_addresses,
-)
-from pdr_backend.utils.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
 )
 
 SECONDS_PER_EPOCH = 300
