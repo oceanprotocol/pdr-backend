@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 import pytest
 from web3 import Web3
 
-from pdr_backend.utils.subgraph import (
+from pdr_backend.util.subgraph import (
     key_to_725,
     value_to_725,
     value_from_725,
@@ -191,8 +191,6 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(
-        "foo", pairs, timeframes, sources, owners
-    )
+    contracts = query_predictContractss("foo", pairs, timeframes, sources, owners)
 
     assert bool(contracts) == bool(expect_result)

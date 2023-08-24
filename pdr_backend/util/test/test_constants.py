@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.utils.constants import (
+from pdr_backend.util.constants import (
     ZERO_ADDRESS,
     SAPPHIRE_TESTNET_RPC,
     SAPPHIRE_TESTNET_CHAINID,

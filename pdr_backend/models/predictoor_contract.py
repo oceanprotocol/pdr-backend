@@ -1,120 +1,20 @@
-import artifacts
-import glob
-import hashlib
-import json
-import os
-from pathlib import Path
 import time
 
-import addresses
-from eth_account import Account
-from eth_account.signers.local import LocalAccount
+from enforce_typing import enforce_types
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
-from sapphirepy import wrapper
-from web3 import Web3, HTTPProvider, WebsocketProvider
-from web3.logs import DISCARD
-from web3.middleware import construct_sign_and_send_raw_middleware
 
-from pdr_backend.utils.constants import (
-    ZERO_ADDRESS,
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
-    MAX_UINT,
-)
+from pdr_backend.models.fixed_rate import FixedRate
+from pdr_backend.models.token import Token
+from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
+from pdr_backend.util.contract import get_contract_abi
+from pdr_backend.util.networkutil import is_sapphire_network, send_encrypted_tx
+from pdr_backend.util.web3_config import Web3Config
 
-keys = KeyAPI(NativeECCBackend)
+_KEYS = KeyAPI(NativeECCBackend)
 
 
-def is_sapphire_network(chain_id: int) -> bool:
-    return chain_id in [SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID]
-
-
-def send_encrypted_tx(
-    contract_instance,
-    function_name,
-    args,
-    pk,
-    sender,
-    receiver,
-    rpc_url,
-    value=0,  # in wei
-    gasLimit=10000000,
-    gasCost=0,  # in wei
-    nonce=0,
-) -> tuple:
-    data = contract_instance.encodeABI(fn_name=function_name, args=args)
-    return wrapper.send_encrypted_sapphire_tx(
-        pk,
-        sender,
-        receiver,
-        rpc_url,
-        value,
-        gasLimit,
-        data,
-        gasCost,
-        nonce,
-    )
-
-
-class Web3Config:
-    def __init__(self, rpc_url: str, private_key: str):
-        self.rpc_url = rpc_url
-
-        if rpc_url is None:
-            raise ValueError("You must set RPC_URL variable")
-
-        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
-
-        if private_key is not None:
-            if not private_key.startswith("0x"):
-                raise ValueError("Private key must start with 0x hex prefix")
-            self.account: LocalAccount = Account.from_key(private_key)
-            self.owner = self.account.address
-            self.private_key = private_key
-            self.w3.middleware_onion.add(
-                construct_sign_and_send_raw_middleware(self.account)
-            )
-
-
-class Token:
-    def __init__(self, config: Web3Config, address: str):
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC20Template3"),
-        )
-        self.config = config
-
-    def allowance(self, account, spender):
-        return self.contract_instance.functions.allowance(account, spender).call()
-
-    def balanceOf(self, account):
-        return self.contract_instance.functions.balanceOf(account).call()
-
-    def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
-        gasPrice = self.config.w3.eth.gas_price
-        tx = self.contract_instance.functions.transfer(to, int(amount)).transact(
-            {"from": sender, "gasPrice": gasPrice}
-        )
-        if wait_for_receipt:
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
-        return tx
-
-    def approve(self, spender, amount, wait_for_receipt=True):
-        gasPrice = self.config.w3.eth.gas_price
-        # print(f"Approving {amount} for {spender} on contract {self.contract_address}")
-        try:
-            tx = self.contract_instance.functions.approve(spender, amount).transact(
-                {"from": self.config.owner, "gasPrice": gasPrice}
-            )
-            if not wait_for_receipt:
-                return tx
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
-        except:
-            return None
-
-
+@enforce_types
 class PredictoorContract:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
@@ -160,7 +60,7 @@ class PredictoorContract:
             ["address", "uint256"],
             [self.config.owner, valid_until],
         )
-        pk = keys.PrivateKey(self.config.account.key)
+        pk = _KEYS.PrivateKey(self.config.account.key)
         prefix = "\x19Ethereum Signed Message:\n32"
         signable_hash = self.config.w3.solidity_keccak(
             ["bytes", "bytes"],
@@ -169,7 +69,7 @@ class PredictoorContract:
                 self.config.w3.to_bytes(message_hash),
             ],
         )
-        signed = keys.ecdsa_sign(message_hash=signable_hash, private_key=pk)
+        signed = _KEYS.ecdsa_sign(message_hash=signable_hash, private_key=pk)
         auth = {
             "userAddress": self.config.owner,
             "v": (signed.v + 27) if signed.v <= 1 else signed.v,
@@ -452,186 +352,3 @@ class PredictoorContract:
 
     def get_block(self, block):
         return self.config.w3.eth.get_block(block)
-
-
-class FixedRate:
-    def __init__(self, config: Web3Config, address: str):
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("FixedRateExchange"),
-        )
-        self.config = config
-
-    def get_dt_price(self, exchangeId):
-        return self.contract_instance.functions.calcBaseInGivenOutDT(
-            exchangeId, self.config.w3.to_wei("1", "ether"), 0
-        ).call()
-
-
-class ERC721Factory:
-    def __init__(self, config: Web3Config, chain_id=None):
-        if not chain_id:
-            chain_id = config.w3.eth.chain_id
-        address = get_address(chain_id, "ERC721Factory")
-        if not address:
-            raise ValueError("Cannot figure out ERC721Factory address")
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC721Factory"),
-        )
-        self.config = config
-
-    def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
-        #            gasPrice = self.config.w3.eth.gas_price
-        call_params = {
-            "from": self.config.owner,
-            "gasPrice": 100000000000,
-        }
-
-        tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
-            NftCreateData, ErcCreateData, FixedData
-        ).transact(call_params)
-        receipt = self.config.w3.eth.wait_for_transaction_receipt(tx)
-        if receipt["status"] != 1:
-            raise ValueError(f"createNftWithErc20WithFixedRate failed in {tx.hex()}")
-        # print(receipt)
-        logs_nft = self.contract_instance.events.NFTCreated().process_receipt(
-            receipt, errors=DISCARD
-        )
-        logs_erc = self.contract_instance.events.TokenCreated().process_receipt(
-            receipt, errors=DISCARD
-        )
-        return logs_nft[0]["args"], logs_erc[0]["args"]
-
-
-class DataNft:
-    def __init__(self, config: Web3Config, address: str):
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC721Template"),
-        )
-        self.config = config
-
-    def set_data(self, field_label, field_value, wait_for_receipt=True):
-        """Set key/value data via ERC725, with strings for key/value"""
-        field_label_hash = Web3.keccak(text=field_label)  # to keccak256 hash
-        field_value_bytes = field_value.encode()  # to array of bytes
-        #        gasPrice = self.config.w3.eth.gas_price
-        call_params = {
-            "from": self.config.owner,
-            "gasPrice": 100000000000,
-            "gas": 100000,
-        }
-        tx = self.contract_instance.functions.setNewData(
-            field_label_hash, field_value_bytes
-        ).transact(call_params)
-        if wait_for_receipt:
-            self.config.w3.eth.wait_for_transaction_receipt(tx)
-        return tx
-
-    def add_erc20_deployer(self, address, wait_for_receipt=True):
-        #        gasPrice = self.config.w3.eth.gas_price
-        call_params = {
-            "from": self.config.owner,
-            "gasPrice": 100000000000,
-        }
-        tx = self.contract_instance.functions.addToCreateERC20List(
-            self.config.w3.to_checksum_address(address)
-        ).transact(call_params)
-        if wait_for_receipt:
-            self.config.w3.eth.wait_for_transaction_receipt(tx)
-        return tx
-
-    def set_ddo(self, ddo, wait_for_receipt=True):
-        #        gasPrice = self.config.w3.eth.gas_price
-        call_params = {
-            "from": self.config.owner,
-            "gasPrice": 100000000000,
-        }
-        js = json.dumps(ddo)
-        stored_ddo = Web3.to_bytes(text=js)
-        tx = self.contract_instance.functions.setMetaData(
-            1,
-            "",
-            str(self.config.owner),
-            bytes([0]),
-            stored_ddo,
-            Web3.to_bytes(hexstr=hashlib.sha256(js.encode("utf-8")).hexdigest()),
-            [],
-        ).transact(call_params)
-        if wait_for_receipt:
-            self.config.w3.eth.wait_for_transaction_receipt(tx)
-        return tx
-
-
-def get_address(chain_id, contract_name):
-    network = get_addresses(chain_id)
-    if not network:
-        raise ValueError(f"Cannot figure out {contract_name} address")
-    address = network.get(contract_name)
-    return address
-
-
-def get_addresses(chain_id):
-    address_filename = os.getenv("ADDRESS_FILE")
-    path = None
-    if address_filename:
-        address_filename = os.path.expanduser(address_filename)
-        path = Path(address_filename)
-    else:
-        path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
-
-    if not path.exists():
-        raise TypeError(f"Cannot find address.json file at {path}")
-
-    with open(path) as f:
-        data = json.load(f)
-    for name in data:
-        network = data[name]
-        if network["chainId"] == chain_id:
-            return network
-    return None
-
-
-def get_contract_abi(contract_name):
-    """Returns the abi for a contract name."""
-    path = get_contract_filename(contract_name)
-
-    if not path.exists():
-        raise TypeError("Contract name does not exist in artifacts.")
-
-    with open(path) as f:
-        data = json.load(f)
-        return data["abi"]
-
-
-def get_contract_filename(contract_name):
-    """Returns abi for a contract."""
-    contract_basename = f"{contract_name}.json"
-
-    # first, try to find locally
-    address_filename = os.getenv("ADDRESS_FILE")
-    path = None
-    if address_filename:
-        address_filename = os.path.expanduser(address_filename)
-        address_dir = os.path.dirname(address_filename)
-        root_dir = os.path.join(address_dir, "..")
-        paths = Path(root_dir).rglob(contract_basename)
-        paths = [str(path) for path in paths]
-        if paths:
-            assert len(paths) == 1, "had duplicates for {contract_basename}"
-            path = paths[0]
-            path = Path(path).expanduser().resolve()
-            assert (
-                path.exists()
-            ), f"Found path = '{path}' via glob, yet path.exists() is False"
-            return path
-    # didn't find locally, so use use artifacts lib
-    path = os.path.join(os.path.dirname(artifacts.__file__), "", contract_basename)
-    path = Path(path).expanduser().resolve()
-    if not path.exists():
-        raise TypeError(f"Contract '{contract_name}' not found in artifacts.")
-    return path

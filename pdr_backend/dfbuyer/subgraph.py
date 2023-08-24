@@ -3,7 +3,7 @@ import os
 import requests
 import web3
 
-from pdr_backend.utils.subgraph import query_subgraph
+from pdr_backend.util.subgraph import query_subgraph
 
 
 def get_consume_so_far(
