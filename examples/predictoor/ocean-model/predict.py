@@ -1,6 +1,3 @@
-
-
-
 def predict_function(topic, estimated_time, main_pd):
     """Given a topic, let's predict
     Topic object looks like:
