@@ -2,11 +2,9 @@ import os
 
 from eth_account import Account
 
-from pdr_backend.utils.contract import (
-    DataNft,
-    ERC721Factory,
-    get_address,
-)
+from pdr_backend.models.data_nft import DataNft
+from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.util.contract import get_address
 
 MAX_UINT256 = 2**256 - 1
 

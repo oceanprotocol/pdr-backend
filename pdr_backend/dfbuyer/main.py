@@ -5,9 +5,10 @@ import random
 from typing import Dict, List
 
 from pdr_backend.dfbuyer.subgraph import get_consume_so_far
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.env import getenv_or_exit
-from pdr_backend.utils.subgraph import query_predictContractss
+from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContracts
+from pdr_backend.util.web3_config import Web3Config
 
 rpc_url = getenv_or_exit("RPC_URL")
 subgraph_url = getenv_or_exit("SUBGRAPH_URL")
@@ -64,7 +65,7 @@ def process_block(block):
     global topics
     """ Process each contract and see if we need to submit """
     if not topics:
-        topics = query_predictContractss(
+        topics = query_predictContracts(
             subgraph_url,
             pair_filters,
             timeframe_filter,

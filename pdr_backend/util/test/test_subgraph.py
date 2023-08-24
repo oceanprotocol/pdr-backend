@@ -4,13 +4,13 @@ from enforce_typing import enforce_types
 import pytest
 from web3 import Web3
 
-from pdr_backend.utils.subgraph import (
+from pdr_backend.util.subgraph import (
     key_to_725,
     value_to_725,
     value_from_725,
     info_from_725,
     query_subgraph,
-    query_predictContractss,
+    query_predictContracts,
 )
 
 
@@ -88,7 +88,7 @@ def test_query_subgraph_badpath(monkeypatch):
 def test_get_contracts_emptychain(monkeypatch):
     contract_list = []
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(subgraph_url="foo")
+    contracts = query_predictContracts(subgraph_url="foo")
     assert contracts == {}
 
 
@@ -120,7 +120,7 @@ def test_get_contracts_fullchain(monkeypatch):
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(subgraph_url="foo")
+    contracts = query_predictContracts(subgraph_url="foo")
     assert contracts == {
         "contract1": {
             "name": "ether",
@@ -191,6 +191,6 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss("foo", pairs, timeframes, sources, owners)
+    contracts = query_predictContracts("foo", pairs, timeframes, sources, owners)
 
     assert bool(contracts) == bool(expect_result)

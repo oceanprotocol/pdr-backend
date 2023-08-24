@@ -1,11 +1,9 @@
+from pdr_backend.models.data_nft import DataNft
+from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
-from pdr_backend.utils.contract import (
-    DataNft,
-    Web3Config,
-    Token,
-    get_address,
-)
-from pdr_backend.utils.env import getenv_or_exit
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.web3_config import Web3Config
 
 rpc_url = getenv_or_exit("RPC_URL")
 private_key = getenv_or_exit("PRIVATE_KEY")

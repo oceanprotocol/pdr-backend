@@ -55,7 +55,6 @@ query {
  }
 """
 
-
 import os
 import requests
 from typing import Optional, Dict
@@ -132,7 +131,7 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
 
 
 @enforce_types
-def query_predictContractss(
+def query_predictContracts(
     subgraph_url: str,
     pairs_string: Optional[str] = None,
     timeframes_string: Optional[str] = None,
