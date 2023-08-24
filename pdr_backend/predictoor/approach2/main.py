@@ -13,10 +13,11 @@ import ccxt
 import numpy as np
 import pandas as pd
 
+from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.approach2.predict import predict_function
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.env import getenv_or_exit
-from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContractss
+from pdr_backend.util.web3_config import Web3Config
 
 # set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
 # then, the pickled trained models live in $MODELDIR/trained_models/
@@ -59,7 +60,7 @@ def process_block(block, model, main_pd):
     global topics
     """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
-        topics = get_all_interesting_prediction_contracts(
+        topics = query_predictContractss(
             subgraph_url,
             pair_filters,
             timeframe_filter,
