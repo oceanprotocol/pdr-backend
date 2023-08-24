@@ -1,19 +1,14 @@
-from datetime import datetime, timedelta, timezone
 from os import getenv
 import os
-import threading
 import time
 from typing import Dict
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContractss
 from pdr_backend.trueval.trueval import get_true_val
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.trueval.subgraph import get_pending_slots
-from pdr_backend.util.contract import PredictoorContract, Web3Config
-from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.models import Slot
+from pdr_backend.models.slot import Slot
 
 
 rpc_url = getenv_or_exit("RPC_URL")
