@@ -1,7 +1,7 @@
 from os import getenv
 import os
 import time
-from typing import Dict
+from typing import Dict, List
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
@@ -77,26 +77,21 @@ def process_slot(slot: Slot) -> dict:
 
 
 def main():
+    sleep_time = os.getenv("SLEEP_TIME", 30)
+    batch_size = os.getenv("BATCH_SIZE", 50)
     while True:
-        sleep_time = os.getenv("SLEEP_TIME", 30)
-        batch_size = os.getenv("BATCH_SIZE", 50)
-
-        pending_contracts = get_pending_slots(subgraph_url, web3_config)
-        print(f"Found {len(pending_contracts)} pending slots, processing {batch_size}")
-        pending_contracts = pending_contracts[:batch_size]
-
-        results = []
-
-        if len(pending_contracts) > 0:
-            # try:
-            for slot in pending_contracts:
+        pending_slots = get_pending_slots(subgraph_url, web3_config)
+        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
+        pending_slots = pending_slots[:batch_size]
+        if len(slots) > 0:
+            for slot in slots:
                 print(
                     f"Processing slot {slot.slot} for contract {slot.contract.address}"
                 )
-                tx = process_slot(
-                    slot,
-                )
-                results.append(tx)
+                try:
+                    process_slot(slot)
+                except Exception as e:
+                    print("An error occured", e)
         print(f"Sleeping for {sleep_time} seconds...")
         time.sleep(sleep_time)
 
