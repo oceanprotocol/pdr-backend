@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from pdr_backend.utils.contract import (
+from pdr_backend.util.contract import (
     Token,
     Web3Config,
     get_address,

@@ -1,11 +1,11 @@
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
-from pdr_backend.utils.contract import (
+from pdr_backend.util.contract import (
     DataNft,
     Web3Config,
     Token,
     get_address,
 )
-from pdr_backend.utils.env import getenv_or_exit
+from pdr_backend.util.env import getenv_or_exit
 
 rpc_url = getenv_or_exit("RPC_URL")
 private_key = getenv_or_exit("PRIVATE_KEY")

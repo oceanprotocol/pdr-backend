@@ -2,7 +2,7 @@ import os
 
 from eth_account import Account
 
-from pdr_backend.utils.contract import (
+from pdr_backend.util.contract import (
     DataNft,
     ERC721Factory,
     get_address,

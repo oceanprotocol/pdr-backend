@@ -14,9 +14,9 @@ import numpy as np
 import pandas as pd
 
 from pdr_backend.predictoor.approach2.predict import predict_function
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.env import getenv_or_exit
-from pdr_backend.utils.subgraph import query_predictContractss
+from pdr_backend.util.contract import PredictoorContract, Web3Config
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContractss
 
 # set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
 # then, the pickled trained models live in $MODELDIR/trained_models/

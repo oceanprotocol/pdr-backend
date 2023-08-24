@@ -3,9 +3,9 @@ import time
 from typing import Dict
 
 from pdr_backend.trader.trade import trade
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.env import getenv_or_exit
-from pdr_backend.utils.subgraph import query_predictContractss
+from pdr_backend.util.contract import PredictoorContract, Web3Config
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContractss
 
 rpc_url = getenv_or_exit("RPC_URL")
 subgraph_url = getenv_or_exit("SUBGRAPH_URL")

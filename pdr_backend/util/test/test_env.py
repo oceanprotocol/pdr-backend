@@ -1,6 +1,6 @@
 import pytest
 
-from pdr_backend.utils.env import getenv_or_exit
+from pdr_backend.util.env import getenv_or_exit
 
 
 def test_getenv_or_exit(monkeypatch):

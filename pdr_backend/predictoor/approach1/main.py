@@ -6,9 +6,9 @@ from threading import Thread
 from typing import Dict
 
 from pdr_backend.predictoor.approach1.predict import predict_function
-from pdr_backend.utils.env import getenv_or_exit
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils.subgraph import query_predictContractss
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.contract import PredictoorContract, Web3Config
+from pdr_backend.util.subgraph import query_predictContractss
 
 last_block_time = 0
 topics: Dict[str, dict] = {}
