@@ -2,6 +2,10 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 
+from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
+from pdr_backend.models.token import Token
+from pdr_backend.util.contract import get_address
+
 @enforce_types
 def test_get_id(predictoor_contract):
     id = predictoor_contract.getid()
@@ -150,21 +154,3 @@ def test_string_to_bytes32(input_data, expected_output, predictoor_contract):
     ), f"For {input_data}, expected {expected_output}, but got {result}"
 
 
-@pytest.fixture(scope="module")
-def predictoor_contract(rpc_url, private_key):
-    config = Web3Config(rpc_url, private_key)
-    _, _, _, _, logs = publish(
-        s_per_epoch=SECONDS_PER_EPOCH,
-        s_per_subscription=SECONDS_PER_EPOCH * 24,
-        base="ETH",
-        quote="USDT",
-        source="kraken",
-        timeframe="5m",
-        trueval_submitter_addr=config.owner,
-        feeCollector_addr=config.owner,
-        rate=3,
-        cut=0.2,
-        web3_config=config,
-    )
-    dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(config, dt_addr)

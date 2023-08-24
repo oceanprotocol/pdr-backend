@@ -1,14 +1,18 @@
 import time
 
 from enforce_typing import enforce_types
+from eth_keys import KeyAPI
+from eth_keys.backends import NativeECCBackend
 
-from pdr_backend.util.constants import (
-    ZERO_ADDRESS,
-    MAX_UINT,
-)
-from pdr_backend.util.contract import get_contract_abi
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.models.fixed_rate import FixedRate
 from pdr_backend.models.token import Token
+from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
+from pdr_backend.util.contract import get_contract_abi
+from pdr_backend.util.networkutil import is_sapphire_network
+from pdr_backend.util.web3_config import Web3Config
+
+_KEYS = KeyAPI(NativeECCBackend)
+
 
 @enforce_types
 class PredictoorContract:
@@ -56,7 +60,7 @@ class PredictoorContract:
             ["address", "uint256"],
             [self.config.owner, valid_until],
         )
-        pk = keys.PrivateKey(self.config.account.key)
+        pk = _KEYS.PrivateKey(self.config.account.key)
         prefix = "\x19Ethereum Signed Message:\n32"
         signable_hash = self.config.w3.solidity_keccak(
             ["bytes", "bytes"],
@@ -65,7 +69,7 @@ class PredictoorContract:
                 self.config.w3.to_bytes(message_hash),
             ],
         )
-        signed = keys.ecdsa_sign(message_hash=signable_hash, private_key=pk)
+        signed = _KEYS.ecdsa_sign(message_hash=signable_hash, private_key=pk)
         auth = {
             "userAddress": self.config.owner,
             "v": (signed.v + 27) if signed.v <= 1 else signed.v,

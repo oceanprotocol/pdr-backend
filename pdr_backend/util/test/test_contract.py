@@ -14,8 +14,6 @@ from pdr_backend.util.contract import (
 )
 from pdr_backend.util.web3_config import Web3Config
 
-SECONDS_PER_EPOCH = 300
-
 
 @enforce_types
 def test_get_address(chain_id):

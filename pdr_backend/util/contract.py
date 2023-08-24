@@ -6,10 +6,6 @@ from pathlib import Path
 
 import addresses
 from enforce_typing import enforce_types
-from eth_keys import KeyAPI
-from eth_keys.backends import NativeECCBackend
-
-keys = KeyAPI(NativeECCBackend)
 
 @enforce_types
 def get_address(chain_id: int, contract_name: str):
