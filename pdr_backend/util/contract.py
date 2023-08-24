@@ -3,6 +3,7 @@ import glob
 import json
 import os
 from pathlib import Path
+from typing import Union
 
 import addresses
 from enforce_typing import enforce_types
@@ -59,13 +60,12 @@ def get_contract_filename(contract_name: str):
 
     # first, try to find locally
     address_filename = os.getenv("ADDRESS_FILE")
-    path = None
+    path: Union[None, str, Path] = None
     if address_filename:
         address_filename = os.path.expanduser(address_filename)
         address_dir = os.path.dirname(address_filename)
         root_dir = os.path.join(address_dir, "..")
-        paths = Path(root_dir).rglob(contract_basename)
-        paths = [str(path) for path in paths]
+        paths = [path for path in Path(root_dir).rglob(contract_basename)]
         if paths:
             assert len(paths) == 1, "had duplicates for {contract_basename}"
             path = paths[0]
