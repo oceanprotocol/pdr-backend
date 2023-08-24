@@ -91,9 +91,7 @@ def main():
         print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
 
         for slot in slots:
-            print(
-                f"Processing slot {slot.slot} for contract {slot.contract.address}"
-            )
+            print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
             try:
                 process_slot(slot)
             except Exception as e:
