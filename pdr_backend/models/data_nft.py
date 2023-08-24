@@ -1,4 +1,11 @@
+from enforce_typing import enforce_types
+import hashlib
+import json
 
+from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.contract import get_contract_abi
+
+@enforce_types
 class DataNft:
     def __init__(self, config: Web3Config, address: str):
         self.contract_address = config.w3.to_checksum_address(address)

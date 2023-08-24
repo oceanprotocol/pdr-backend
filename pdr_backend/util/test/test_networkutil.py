@@ -1,4 +1,16 @@
+from unittest.mock import Mock
 
+from enforce_typing import enforce_types
+import pytest
+
+from pdr_backend.util.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
+from pdr_backend.util.networkutil import (
+    is_sapphire_network,
+    send_encrypted_tx,
+)
 
 @enforce_types
 def test_is_sapphire_network():
@@ -7,6 +19,7 @@ def test_is_sapphire_network():
     assert is_sapphire_network(SAPPHIRE_MAINNET_CHAINID)
 
 
+@enforce_types
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx, ocean_token, private_key, web3_config
 ):

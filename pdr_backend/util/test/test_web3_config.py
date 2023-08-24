@@ -1,4 +1,7 @@
+from enforce_typing import enforce_types
+import pytest
 
+from pdr_backend.util.web3_config import Web3Config
 
 @enforce_types
 def test_Web3Config_bad_rpc(private_key):

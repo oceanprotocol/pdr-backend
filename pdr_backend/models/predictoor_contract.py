@@ -1,4 +1,16 @@
+import time
 
+from enforce_typing import enforce_types
+
+from pdr_backend.util.constants import (
+    ZERO_ADDRESS,
+    MAX_UINT,
+)
+from pdr_backend.util.contract import get_contract_abi
+from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.models.token import Token
+
+@enforce_types
 class PredictoorContract:
     def __init__(self, config: Web3Config, address: str):
         self.config = config

@@ -1,40 +1,26 @@
 import artifacts
 import glob
-import hashlib
 import json
 import os
 from pathlib import Path
-import time
 
 import addresses
-from eth_account import Account
-from eth_account.signers.local import LocalAccount
+from enforce_typing import enforce_types
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
-from sapphirepy import wrapper
-from web3 import Web3, HTTPProvider, WebsocketProvider
-from web3.logs import DISCARD
-from web3.middleware import construct_sign_and_send_raw_middleware
-
-from pdr_backend.util.constants import (
-    ZERO_ADDRESS,
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
-    MAX_UINT,
-)
 
 keys = KeyAPI(NativeECCBackend)
 
-
-def get_address(chain_id, contract_name):
+@enforce_types
+def get_address(chain_id: int, contract_name: str):
     network = get_addresses(chain_id)
     if not network:
         raise ValueError(f"Cannot figure out {contract_name} address")
     address = network.get(contract_name)
     return address
 
-
-def get_addresses(chain_id):
+@enforce_types
+def get_addresses(chain_id: int):
     address_filename = os.getenv("ADDRESS_FILE")
     path = None
     if address_filename:
@@ -55,6 +41,7 @@ def get_addresses(chain_id):
     return None
 
 
+@enforce_types
 def get_contract_abi(contract_name):
     """Returns the abi for a contract name."""
     path = get_contract_filename(contract_name)
@@ -66,8 +53,9 @@ def get_contract_abi(contract_name):
         data = json.load(f)
         return data["abi"]
 
-
-def get_contract_filename(contract_name):
+    
+@enforce_types
+def get_contract_filename(contract_name: str):
     """Returns abi for a contract."""
     contract_basename = f"{contract_name}.json"
 

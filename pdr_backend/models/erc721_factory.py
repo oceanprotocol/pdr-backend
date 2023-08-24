@@ -1,4 +1,10 @@
+from enforce_typing import enforce_types
+from web3.logs import DISCARD
 
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.web3_config import Web3Config
+
+@enforce_types
 class ERC721Factory:
     def __init__(self, config: Web3Config, chain_id=None):
         if not chain_id:

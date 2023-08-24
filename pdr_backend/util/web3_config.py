@@ -1,6 +1,14 @@
+from typing import Optional
 
+from enforce_typing import enforce_types
+from eth_account import Account
+from eth_account.signers.local import LocalAccount
+from web3 import Web3
+from web3.middleware import construct_sign_and_send_raw_middleware
+
+@enforce_types
 class Web3Config:
-    def __init__(self, rpc_url: str, private_key: str):
+    def __init__(self, rpc_url: Optional[str], private_key: Optional[str]):
         self.rpc_url = rpc_url
 
         if rpc_url is None:

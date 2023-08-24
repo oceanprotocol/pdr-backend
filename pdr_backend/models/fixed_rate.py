@@ -1,4 +1,8 @@
+from enforce_typing import enforce_types
 
+from pdr_backend.util.contract import get_contract_abi
+
+@enforce_types
 class FixedRate:
     def __init__(self, config: Web3Config, address: str):
         self.contract_address = config.w3.to_checksum_address(address)
