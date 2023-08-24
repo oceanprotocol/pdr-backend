@@ -21,6 +21,7 @@ Notes on customization:
 import ccxt
 from pdr_backend.trueval.subgraph import Contract
 
+
 def get_true_val(topic: Contract, initial_timestamp, end_timestamp):
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp
     Topic object looks like:
