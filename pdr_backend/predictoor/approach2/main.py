@@ -1,11 +1,7 @@
-import copy
 import csv
-from datetime import datetime, timedelta, timezone
 import os
 from os import getenv
 import sys
-import threading
-from threading import Thread
 import time
 from typing import List
 
@@ -25,7 +21,7 @@ from pdr_backend.util.web3_config import Web3Config
 model_dir: str = getenv_or_exit("MODELDIR")
 trained_models_dir = os.path.join(model_dir, "trained_models")
 sys.path.append(model_dir)
-from model import OceanModel  # type: ignore  # fmt: off
+from model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
 
 rpc_url = getenv_or_exit("RPC_URL")
 subgraph_url = getenv_or_exit("SUBGRAPH_URL")
@@ -57,8 +53,11 @@ models = [
 
 
 def process_block(block, model, main_pd):
+    """
+    Process each contract.
+    If needed, get a prediction, submit it and claim revenue for past epoch
+    """
     global topics
-    """ Process each contract and if needed, get a prediction, submit it and claim revenue for past epoch """
     if not topics:
         topics = query_predictContracts(
             subgraph_url,
@@ -67,7 +66,9 @@ def process_block(block, model, main_pd):
             source_filter,
             owner_addresses,
         )
+
     print(f"Got new block: {block['number']} with {len(topics)} topics")
+
     for address in topics:
         topic = topics[address]
         predictoor_contract = PredictoorContract(web3_config, address)
@@ -77,42 +78,49 @@ def process_block(block, model, main_pd):
             epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} is at "
+            f"epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
+            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
 
         if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
             # let's get the payout for previous epoch.  We don't care if it fails...
             slot = epoch * seconds_per_epoch - seconds_per_epoch
             print(
-                f"Contract:{predictoor_contract.contract_address} - Claiming revenue for slot:{slot}"
+                f"Contract:{predictoor_contract.contract_address} - "
+                f"Claiming revenue for slot:{slot}"
             )
             predictoor_contract.payout(slot, False)
 
-        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", 60)):
-            """Timestamp of prediction"""
+        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", "60")):
+            # Timestamp of prediction
             target_time = (epoch + 2) * seconds_per_epoch
 
-            """Let's fetch the prediction """
+            # Fetch the prediction
             (predicted_value, predicted_confidence) = predict_function(
                 topic, target_time, model, main_pd
             )
+
             if predicted_value is not None and predicted_confidence > 0:
-                """We have a prediction, let's submit it"""
+                # We have a prediction, let's submit it
                 stake_amount = (
-                    getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
-                )  # TODO have a customizable function to handle this
+                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+                )  # TO DO have a customizable function to handle this
                 print(
-                    f"Contract:{predictoor_contract.contract_address} - Submiting prediction for slot:{target_time}"
+                    f"Contract:{predictoor_contract.contract_address} - "
+                    f"Submitting prediction for slot:{target_time}"
                 )
                 predictoor_contract.submit_prediction(
                     predicted_value, stake_amount, target_time, True
                 )
                 topics[address]["last_submited_epoch"] = epoch
                 return predicted_value
-            else:
-                print(
-                    f"We do not submit, prediction function returned ({predicted_value}, {predicted_confidence})"
-                )
+
+            print(
+                "We do not submit, prediction function returned "
+                f"({predicted_value}, {predicted_confidence})"
+            )
+    return None
 
 
 def log_loop(blockno, model, main_pd):
@@ -123,9 +131,10 @@ def log_loop(blockno, model, main_pd):
         prediction = process_block(block, model, main_pd)
         if prediction is not None:
             return prediction
+    return None
 
 
-def main():
+def main():  # pylint: disable=too-many-statements
     print("Starting main loop...")
 
     ts_now = int(time.time())
@@ -162,7 +171,7 @@ def main():
     try:
         files_stats = os.stat(results_csv_name)
         size = files_stats.st_size
-    except:
+    except:  # pylint: disable=bare-except
         pass
     if size == 0:
         with open(results_csv_name, "a") as f:

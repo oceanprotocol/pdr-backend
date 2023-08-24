@@ -43,7 +43,7 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     if n == 1:
         return [k]
     # If n > k, it's impossible to generate n positive integers summing to k.
-    elif n > k:
+    if n > k:
         return []
 
     # Generate n-1 unique random integers between 1 and k-1
@@ -57,13 +57,13 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     return [a[i + 1] - a[i] for i in range(len(a) - 1)]
 
 
-""" Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
+# Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT
 topics: Dict[str, dict] = {}
 
 
 def process_block(block):
+    """Process each contract and see if we need to submit"""
     global topics
-    """ Process each contract and see if we need to submit """
     if not topics:
         topics = query_predictContracts(
             subgraph_url,
@@ -82,7 +82,7 @@ def process_block(block):
         topics, estimated_week_start, owner, subgraph_url
     )
     print(f"consume_so_far:{consume_so_far}")
-    consume_left = float(getenv("WEEKLY_SPEND_LIMIT", 0)) - consume_so_far
+    consume_left = float(getenv("WEEKLY_SPEND_LIMIT", "0")) - consume_so_far
     print(f"consume_left:{consume_left}")
     if consume_left <= 0:
         return

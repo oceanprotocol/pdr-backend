@@ -1,6 +1,6 @@
 """
 Flow
-  - reads from subgraph list of template3 contracts, this gets list of all template3 deployed contracts
+  - reads from subgraph list of dt3 contracts, to get all deployed contracts
   - for every contract, monitors when epoch is changing
   - once an epoch is ended, calculate the true_val and submit.
 
@@ -50,5 +50,5 @@ def get_true_val(topic, initial_timestamp, end_timestamp):
             topic["pair"], "1m", since=end_timestamp, limit=1
         )
         return (price_end[0][1] >= price_initial[0][1], False)
-    except Exception as e:
+    except Exception:
         return (False, 0, True)

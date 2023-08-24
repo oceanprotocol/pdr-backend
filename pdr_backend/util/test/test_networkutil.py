@@ -22,10 +22,10 @@ def test_is_sapphire_network():
 
 @enforce_types
 def test_send_encrypted_tx(
-    mock_send_encrypted_sapphire_tx, ocean_token, private_key, web3_config
+    mock_send_encrypted_sapphire_tx_, ocean_token, private_key, web3_config
 ):
     # Set up dummy return value for the mocked function
-    mock_send_encrypted_sapphire_tx.return_value = (
+    mock_send_encrypted_sapphire_tx_.return_value = (
         0,
         "dummy_tx_hash",
     )
@@ -55,7 +55,7 @@ def test_send_encrypted_tx(
     )
     assert tx_hash == 0
     assert encrypted_data == "dummy_tx_hash"
-    mock_send_encrypted_sapphire_tx.assert_called_once_with(
+    mock_send_encrypted_sapphire_tx_.assert_called_once_with(
         pk,
         sender,
         receiver,

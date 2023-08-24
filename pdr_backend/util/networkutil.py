@@ -1,10 +1,10 @@
 from enforce_typing import enforce_types
+from sapphirepy import wrapper
 
 from pdr_backend.util.constants import (
     SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,
 )
-from sapphirepy import wrapper
 
 
 @enforce_types
