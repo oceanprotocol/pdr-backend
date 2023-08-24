@@ -54,12 +54,10 @@ query {
     
  }
 """
-
-import os
-import requests
 from typing import Optional, Dict
 
 from enforce_typing import enforce_types
+import requests
 from web3 import Web3
 
 _N_ERRORS = {}  # exception_str : num_occurrences
@@ -114,7 +112,7 @@ def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
 def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
     """
     @arguments
-      subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+      subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql # pylint: disable=line-too-long
       query -- e.g. in docstring above
 
     @return
@@ -131,7 +129,7 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
 
 
 @enforce_types
-def query_predictContracts(
+def query_predictContracts(  # pylint: disable=too-many-statements
     subgraph_url: str,
     pairs_string: Optional[str] = None,
     timeframes_string: Optional[str] = None,

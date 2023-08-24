@@ -39,5 +39,5 @@ class Token:
             if not wait_for_receipt:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
-        except:
+        except:  # pylint: disable=bare-except
             return None
