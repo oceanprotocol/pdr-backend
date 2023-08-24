@@ -327,7 +327,7 @@ class PredictoorContract:
         gasPrice = self.config.w3.eth.gas_price
         try:
             tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, 0, cancel_round
+                timestamp, true_val, cancel_round
             ).transact({"from": self.config.owner, "gasPrice": gasPrice})
             print(f"Submitted trueval, txhash: {tx.hex()}")
             if not wait_for_receipt:
