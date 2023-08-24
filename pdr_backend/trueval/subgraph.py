@@ -1,11 +1,12 @@
 from typing import List, Optional
-from pdr_backend.utils.contract import Web3Config
-from pdr_backend.utils.models import Contract, Slot
-from pdr_backend.utils.subgraph import query_subgraph, info_from_725
+from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.subgraph import query_subgraph, info_from_725
+from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.slot import Slot
 
 
 class TrueValSlot(Slot):
-    def __init__(self, slot: int, contract: Contract, true_value: Optional[bool]):
+    def __init__(self, slot: int, contract: ContractData, true_value: Optional[bool]):
         super().__init__(slot, contract)
         self.true_value = true_value
 
@@ -77,7 +78,7 @@ def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
                 if len(owners) > 0 and (owner_id not in owners):
                     continue
 
-                contract_object = Contract(
+                contract_object = ContractData(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
