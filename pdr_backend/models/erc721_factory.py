@@ -4,6 +4,7 @@ from web3.logs import DISCARD
 from pdr_backend.util.contract import get_address, get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
+
 @enforce_types
 class ERC721Factory:
     def __init__(self, config: Web3Config, chain_id=None):
@@ -40,5 +41,3 @@ class ERC721Factory:
             receipt, errors=DISCARD
         )
         return logs_nft[0]["args"], logs_erc[0]["args"]
-
-

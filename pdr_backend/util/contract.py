@@ -7,6 +7,7 @@ from pathlib import Path
 import addresses
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def get_address(chain_id: int, contract_name: str):
     network = get_addresses(chain_id)
@@ -14,6 +15,7 @@ def get_address(chain_id: int, contract_name: str):
         raise ValueError(f"Cannot figure out {contract_name} address")
     address = network.get(contract_name)
     return address
+
 
 @enforce_types
 def get_addresses(chain_id: int):
@@ -49,7 +51,7 @@ def get_contract_abi(contract_name):
         data = json.load(f)
         return data["abi"]
 
-    
+
 @enforce_types
 def get_contract_filename(contract_name: str):
     """Returns abi for a contract."""

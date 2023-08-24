@@ -7,6 +7,7 @@ from web3 import Web3
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.contract import get_contract_abi
 
+
 @enforce_types
 class DataNft:
     def __init__(self, config: Web3Config, address: str):
@@ -67,4 +68,3 @@ class DataNft:
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
-

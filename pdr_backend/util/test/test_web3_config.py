@@ -3,6 +3,7 @@ import pytest
 
 from pdr_backend.util.web3_config import Web3Config
 
+
 @enforce_types
 def test_Web3Config_bad_rpc(private_key):
     with pytest.raises(ValueError):

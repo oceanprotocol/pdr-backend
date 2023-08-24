@@ -6,9 +6,11 @@ from pdr_backend.util.constants import (
 )
 from sapphirepy import wrapper
 
+
 @enforce_types
 def is_sapphire_network(chain_id: int) -> bool:
     return chain_id in [SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID]
+
 
 @enforce_types
 def send_encrypted_tx(
@@ -36,4 +38,3 @@ def send_encrypted_tx(
         gasCost,
         nonce,
     )
-

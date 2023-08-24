@@ -41,4 +41,3 @@ class Token:
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except:
             return None
-

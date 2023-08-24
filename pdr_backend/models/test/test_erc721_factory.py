@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.erc721_factory import ERC721Factory
 from pdr_backend.util.contract import get_address
 
+
 @enforce_types
 def test_ERC721Factory(web3_config):
     factory = ERC721Factory(web3_config)
@@ -51,4 +52,3 @@ def test_ERC721Factory(web3_config):
 
     assert len(logs_nft) > 0
     assert len(logs_erc) > 0
-

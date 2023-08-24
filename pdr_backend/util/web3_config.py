@@ -6,6 +6,7 @@ from eth_account.signers.local import LocalAccount
 from web3 import Web3
 from web3.middleware import construct_sign_and_send_raw_middleware
 
+
 @enforce_types
 class Web3Config:
     def __init__(self, rpc_url: Optional[str], private_key: Optional[str]):
@@ -25,5 +26,3 @@ class Web3Config:
             self.w3.middleware_onion.add(
                 construct_sign_and_send_raw_middleware(self.account)
             )
-
-

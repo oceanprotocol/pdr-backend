@@ -191,8 +191,6 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(
-        "foo", pairs, timeframes, sources, owners
-    )
+    contracts = query_predictContractss("foo", pairs, timeframes, sources, owners)
 
     assert bool(contracts) == bool(expect_result)

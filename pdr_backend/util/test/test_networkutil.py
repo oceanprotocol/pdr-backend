@@ -12,6 +12,7 @@ from pdr_backend.util.networkutil import (
     send_encrypted_tx,
 )
 
+
 @enforce_types
 def test_is_sapphire_network():
     assert not is_sapphire_network(0)
@@ -65,7 +66,6 @@ def test_send_encrypted_tx(
         gasCost,
         nonce,
     )
-
 
 
 @pytest.fixture

@@ -6,6 +6,7 @@ from pdr_backend.util.contract import get_address
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.models.token import Token
 
+
 @enforce_types
 def test_Token(rpc_url, private_key, chain_id):
     config = Web3Config(rpc_url, private_key)
@@ -30,4 +31,3 @@ def test_Token(rpc_url, private_key, chain_id):
     token.transfer(alice, 100, owner_addr)
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
-
