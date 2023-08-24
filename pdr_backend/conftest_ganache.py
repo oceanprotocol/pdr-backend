@@ -61,7 +61,7 @@ def _web3_config():
 @pytest.fixture(scope="session")
 def ocean_token() -> Token:
     token_address = get_address(_chain_id(), "Ocean")
-    return Token(web3_config(), token_address)
+    return Token(_web3_config(), token_address)
 
 
 @pytest.fixture(scope="module")
