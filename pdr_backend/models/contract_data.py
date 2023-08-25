@@ -22,3 +22,11 @@ class ContractData:
         self.pair = pair
         self.timeframe = timeframe
         self.source = source
+
+    @property
+    def quote(self):
+        return self.pair.split("/")[1]
+    
+    @property
+    def base(self):
+        return self.pair.split("/")[0]
