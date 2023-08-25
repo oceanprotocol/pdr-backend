@@ -265,13 +265,12 @@ def query_predictContracts(  # pylint: disable=too-many-statements
 
 def get_pending_slots(
     subgraph_url: str,
-    web3_config: Web3Config,
+    timestamp: int,
     owner_addresses: Optional[List[str]],
     pair_filter: Optional[str] = None,
     timeframe_filter: Optional[str] = None,
     source_filter: Optional[str] = None,
 ):
-    timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
     chunk_size = 1000
     offset = 0
     owners: Optional[List[str]] = owner_addresses

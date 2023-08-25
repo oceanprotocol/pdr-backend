@@ -81,9 +81,10 @@ def main(testing=False):
     web3_config = Web3Config(rpc_url, private_key)
 
     while True:
+        timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
         pending_slots = get_pending_slots(
             subgraph_url,
-            web3_config,
+            timestamp,
             owner_addresses,
             pair_filter,
             timeframe_filter,
