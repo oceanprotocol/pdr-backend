@@ -86,11 +86,12 @@ def main(testing=False):
         if len(pending_slots) == 0:
             print(f"No pending slots, sleeping for {sleep_time} seconds...")
             time.sleep(sleep_time)
-            pass
+            continue
 
         print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
 
         for slot in pending_slots:
+            print("-"*30)
             print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
             try:
                 process_slot(slot, web3_config)
