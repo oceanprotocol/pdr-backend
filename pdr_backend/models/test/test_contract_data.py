@@ -9,7 +9,7 @@ def test_contract_data_initialization():
         60,
         15,
         "0xowner",
-        "BTC/ETH",
+        "BTC-ETH",
         "1h",
         "binance"
     )
@@ -21,6 +21,8 @@ def test_contract_data_initialization():
     assert contract.seconds_per_subscription == 60
     assert contract.trueval_submit_timeout == 15
     assert contract.owner == "0xowner"
-    assert contract.pair == "BTC/ETH"
+    assert contract.pair == "BTC-ETH"
     assert contract.timeframe == "1h"
     assert contract.source == "binance"
+    assert contract.quote == "ETH"
+    assert contract.base == "BTC"
