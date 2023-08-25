@@ -81,6 +81,7 @@ def main(testing=False):
 
     while True:
         pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses)
+        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
         pending_slots = pending_slots[:batch_size]
 
         if len(pending_slots) == 0:
@@ -88,10 +89,8 @@ def main(testing=False):
             time.sleep(sleep_time)
             continue
 
-        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
-
         for slot in pending_slots:
-            print("-"*30)
+            print("-" * 30)
             print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
             try:
                 process_slot(slot, web3_config)

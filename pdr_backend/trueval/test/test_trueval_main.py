@@ -48,6 +48,7 @@ def test_trueval_with_mocked_price(slot):
                 False, 1692943200, False, True
             )
 
+
 def test_main(slot):
     mocked_env = {
         "RPC_URL": "http://localhost:8545",
@@ -59,18 +60,21 @@ def test_main(slot):
 
     mocked_web3_config = MagicMock()
 
-    with patch.dict('os.environ', mocked_env), \
-         patch('time.sleep'), \
-         patch('pdr_backend.trueval.main.get_pending_slots', return_value=[slot]), \
-         patch('pdr_backend.trueval.main.Web3Config', return_value=mocked_web3_config), \
-         patch('pdr_backend.trueval.main.process_slot') as ps_mock:
-
-         main(True)
+    with patch.dict("os.environ", mocked_env), patch("time.sleep"), patch(
+        "pdr_backend.trueval.main.get_pending_slots", return_value=[slot]
+    ), patch(
+        "pdr_backend.trueval.main.Web3Config", return_value=mocked_web3_config
+    ), patch(
+        "pdr_backend.trueval.main.process_slot"
+    ) as ps_mock:
+        main(True)
 
     ps_mock.assert_called_once_with(slot, mocked_web3_config)
 
+
 # ------------------------------------------------------------
 ### Fixtures
+
 
 @pytest.fixture(scope="module")
 def slot():
@@ -100,6 +104,7 @@ def clear_cache():
 
 # ------------------------------------------------------------
 ### Mocks
+
 
 def mock_contract(*args, **kwarg):
     m = Mock()
