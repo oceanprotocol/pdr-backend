@@ -263,11 +263,13 @@ def query_predictContracts(  # pylint: disable=too-many-statements
     return contracts
 
 
-def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
+def get_pending_slots(
+    subgraph_url: str, web3_config: Web3Config, owner_addresses: Optional[List[str]]
+):
     timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
     chunk_size = 1000
     offset = 0
-    owners: List[str] = []  # TODO: add owners
+    owners: Optional[List[str]] = owner_addresses
 
     slots: List[Slot] = []
 
@@ -327,7 +329,7 @@ def get_pending_slots(subgraph_url: str, web3_config: Web3Config):
                 info = info_from_725(info725)
 
                 owner_id = contract["token"]["nft"]["owner"]["id"]
-                if len(owners) > 0 and (owner_id not in owners):
+                if owners and (owner_id not in owners):
                     continue
 
                 contract_object = ContractData(

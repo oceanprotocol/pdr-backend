@@ -4,14 +4,13 @@ from pdr_backend.models.contract_data import ContractData
 
 
 def mock_fetch_ohlcv(*args, **kwargs):
-    since = kwargs.get('since')
+    since = kwargs.get("since")
     if since == 1:
         return [[None, 100]]
     elif since == 2:
         return [[None, 200]]
     else:
         raise ValueError("Invalid timestamp")
-
 
 
 def mock_fetch_ohlcv_fail(*args, **kwargs):
@@ -36,6 +35,7 @@ def test_get_trueval_success():
         result = get_true_val(contract, 1, 2)
         assert result == (True, False)  # 1st True because 200 > 100
 
+
 def test_get_trueval_live_lowercase_slash():
     contract = ContractData(
         name="ETH-USDT",
@@ -53,6 +53,7 @@ def test_get_trueval_live_lowercase_slash():
     result = get_true_val(contract, 1692943200, 1692943500)
     assert result == (True, False)
 
+
 def test_get_trueval_live_lowercase_dash():
     contract = ContractData(
         name="ETH-USDT",
@@ -69,6 +70,7 @@ def test_get_trueval_live_lowercase_dash():
 
     result = get_true_val(contract, 1692943200, 1692943500)
     assert result == (True, False)
+
 
 def test_get_trueval_fail():
     contract = ContractData(
