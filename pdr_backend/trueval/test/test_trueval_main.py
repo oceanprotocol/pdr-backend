@@ -1,8 +1,9 @@
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from pdr_backend.models.contract_data import ContractData
 from pdr_backend.models.slot import Slot
 from pdr_backend.trueval.main import NewTrueVal, process_slot, main, contract_cache
+from pdr_backend.util.web3_config import Web3Config
 
 
 def test_new_trueval(slot):
@@ -47,9 +48,29 @@ def test_trueval_with_mocked_price(slot):
                 False, 1692943200, False, True
             )
 
+def test_main(slot):
+    mocked_env = {
+        "RPC_URL": "http://localhost:8545",
+        "SUBGRAPH_URL": "http://localhost:9000",
+        "PRIVATE_KEY": "0x2b93e10997249bbb0f8daab932f7ed03163ffb2d4c8a2cab02992b92d2ade6ba",
+        "SLEEP_TIME": "1",
+        "BATCH_SIZE": "1",
+    }
 
+    mocked_web3_config = MagicMock()
+
+    with patch.dict('os.environ', mocked_env), \
+         patch('time.sleep'), \
+         patch('pdr_backend.trueval.main.get_pending_slots', return_value=[slot]), \
+         patch('pdr_backend.trueval.main.Web3Config', return_value=mocked_web3_config), \
+         patch('pdr_backend.trueval.main.process_slot') as ps_mock:
+
+         main(True)
+
+    ps_mock.assert_called_once_with(slot, mocked_web3_config)
+
+# ------------------------------------------------------------
 ### Fixtures
-
 
 @pytest.fixture(scope="module")
 def slot():
@@ -77,8 +98,8 @@ def clear_cache():
     contract_cache.clear()
 
 
+# ------------------------------------------------------------
 ### Mocks
-
 
 def mock_contract(*args, **kwarg):
     m = Mock()
