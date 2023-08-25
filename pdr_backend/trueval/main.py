@@ -75,8 +75,8 @@ def main(testing=False):
     timeframe_filter = getenv("TIMEFRAME_FILTER")
     source_filter = getenv("SOURCE_FILTER")
     owner_addresses = getenv("OWNER_ADDRS")
-    sleep_time = int(getenv("SLEEP_TIME", 30))
-    batch_size = int(getenv("BATCH_SIZE", 50))
+    sleep_time = int(getenv("SLEEP_TIME", "30"))
+    batch_size = int(getenv("BATCH_SIZE", "50"))
 
     web3_config = Web3Config(rpc_url, private_key)
 
