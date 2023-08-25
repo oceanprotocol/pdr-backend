@@ -40,16 +40,20 @@ def get_true_val(topic: ContractData, initial_timestamp, end_timestamp):
     }
 
     """
+    symbol = topic.pair
+    if topic.source == "binance" or topic.source == "kraken":
+        symbol = symbol.replace("-", "/")
+        symbol = symbol.upper()
     try:
         exchange_class = getattr(ccxt, topic.source)
         exchange_ccxt = exchange_class()
         price_initial = exchange_ccxt.fetch_ohlcv(
-            topic.pair, "1m", since=initial_timestamp, limit=1
+            symbol, "1m", since=initial_timestamp, limit=1
         )
         price_end = exchange_ccxt.fetch_ohlcv(
-            topic.pair, "1m", since=end_timestamp, limit=1
+            symbol, "1m", since=end_timestamp, limit=1
         )
         return (price_end[0][1] >= price_initial[0][1], False)
     except Exception as e:
-        print(f"Error getting trueval for {topic.pair} {e}")
+        print(f"Error getting trueval for {symbol} {e}")
         return (False, True)
