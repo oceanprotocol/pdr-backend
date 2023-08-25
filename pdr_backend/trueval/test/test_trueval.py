@@ -26,6 +26,8 @@ def test_get_trueval_success():
         pair="eth-usdt",
         source="kraken",
         timeframe="5m",
+        trueval_submit_timeout=100,
+        owner="0xowner",
     )
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv):
@@ -43,6 +45,8 @@ def test_get_trueval_fail():
         pair="eth-usdt",
         source="kraken",
         timeframe="5m",
+        trueval_submit_timeout=100,
+        owner="0xowner",
     )
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail):
