@@ -1,3 +1,4 @@
+import pytest
 from pdr_backend.predictoor.approach1.main import (  # pylint: disable=unused-import
     process_block,
     log_loop,
