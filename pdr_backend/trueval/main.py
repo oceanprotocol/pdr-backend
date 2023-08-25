@@ -1,7 +1,6 @@
-from os import getenv
-import os
 import time
-from typing import Dict, List
+from os import getenv
+from typing import Dict
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
@@ -78,7 +77,6 @@ def main():
     batch_size = getenv("BATCH_SIZE", 50)
 
     web3_config = Web3Config(rpc_url, private_key)
-    owner = web3_config.owner
 
     while True:
         pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses)
