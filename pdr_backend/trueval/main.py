@@ -12,6 +12,7 @@ from pdr_backend.models.slot import Slot
 
 contract_cache: Dict[str, tuple] = {}
 
+
 class NewTrueVal:
     def __init__(
         self,
@@ -42,7 +43,7 @@ class NewTrueVal:
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )
-        
+
         tx = self.predictoor_contract.submit_trueval(
             true_val, self.slot.slot, False, True
         )
