@@ -32,7 +32,6 @@ def get_true_val(topic: ContractData, initial_timestamp, end_timestamp):
         "symbol":"ETH-USDT",
         "blocks_per_epoch":"60",
         "blocks_per_subscription":"86400",
-        "last_submited_epoch":0,
         "pair":"eth-usdt",
         "base":"eth",
         "quote":"usdt",
