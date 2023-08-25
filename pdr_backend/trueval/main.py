@@ -49,13 +49,16 @@ class NewTrueVal:
         initial_ts = self.slot.slot - self.seconds_per_epoch
         end_ts = self.slot.slot
 
-        (true_val, cancel_round) = get_true_val(self.slot.contract, initial_ts, end_ts)
+        (true_val, error) = get_true_val(self.slot.contract, initial_ts, end_ts)
+        if error:
+            raise Exception(f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}")
+        
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )
 
         tx = self.predictoor_contract.submit_trueval(
-            true_val, self.slot.slot, cancel_round, True
+            true_val, self.slot.slot, False, True
         )
 
         return tx

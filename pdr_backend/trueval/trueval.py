@@ -53,4 +53,4 @@ def get_true_val(topic: ContractData, initial_timestamp, end_timestamp):
         return (price_end[0][1] >= price_initial[0][1], False)
     except Exception as e:
         print(f"Error getting trueval for {topic.pair} {e}")
-        return (False, 0, True)
+        return (False, True)
