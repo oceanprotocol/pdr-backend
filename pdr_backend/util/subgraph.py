@@ -145,7 +145,9 @@ def query_pending_payouts(addr: str) -> List[int]:
                     timestamp
                 }
         }
-        """ % (addr)
+        """ % (
+            addr
+        )
 
         offset += chunk_size
         try:
@@ -160,6 +162,7 @@ def query_pending_payouts(addr: str) -> List[int]:
             print("An error occured", e)
 
     return timestamps
+
 
 @enforce_types
 def query_predictContractss(
