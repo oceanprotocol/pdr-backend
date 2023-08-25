@@ -66,7 +66,7 @@ def process_slot(slot: Slot, web3_config: Web3Config) -> dict:
     return trueval.run()
 
 
-def main():
+def main(testing=False):
     rpc_url = getenv_or_exit("RPC_URL")
     subgraph_url = getenv_or_exit("SUBGRAPH_URL")
     private_key = getenv_or_exit("PRIVATE_KEY")
@@ -74,8 +74,8 @@ def main():
     timeframe_filter = getenv("TIMEFRAME_FILTER")
     source_filter = getenv("SOURCE_FILTER")
     owner_addresses = getenv("OWNER_ADDRS")
-    sleep_time = getenv("SLEEP_TIME", 30)
-    batch_size = getenv("BATCH_SIZE", 50)
+    sleep_time = int(getenv("SLEEP_TIME", 30))
+    batch_size = int(getenv("BATCH_SIZE", 50))
 
     web3_config = Web3Config(rpc_url, private_key)
 
@@ -96,6 +96,8 @@ def main():
                 process_slot(slot, web3_config)
             except Exception as e:
                 print("An error occured", e)
+        if testing:
+            break
         print(f"Done processing, sleeping for {sleep_time} seconds...")
         time.sleep(sleep_time)
 
