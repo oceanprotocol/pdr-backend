@@ -51,8 +51,10 @@ class NewTrueVal:
 
         (true_val, error) = get_true_val(self.slot.contract, initial_ts, end_ts)
         if error:
-            raise Exception(f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}")
-        
+            raise Exception(
+                f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}"
+            )
+
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )

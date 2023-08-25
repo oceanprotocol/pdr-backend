@@ -1,5 +1,6 @@
 from pdr_backend.models.contract_data import ContractData
 
+
 def test_contract_data_initialization():
     contract = ContractData(
         "Contract Name",
@@ -11,7 +12,7 @@ def test_contract_data_initialization():
         "0xowner",
         "BTC-ETH",
         "1h",
-        "binance"
+        "binance",
     )
 
     assert contract.name == "Contract Name"
