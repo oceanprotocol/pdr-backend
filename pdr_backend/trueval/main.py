@@ -71,7 +71,7 @@ def main(testing=False):
     rpc_url = getenv_or_exit("RPC_URL")
     subgraph_url = getenv_or_exit("SUBGRAPH_URL")
     private_key = getenv_or_exit("PRIVATE_KEY")
-    pair_filters = getenv("PAIR_FILTER")
+    pair_filter = getenv("PAIR_FILTER")
     timeframe_filter = getenv("TIMEFRAME_FILTER")
     source_filter = getenv("SOURCE_FILTER")
     owner_addresses = getenv("OWNER_ADDRS")
@@ -81,7 +81,7 @@ def main(testing=False):
     web3_config = Web3Config(rpc_url, private_key)
 
     while True:
-        pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses)
+        pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses, pair_filter, timeframe_filter, source_filter)
         print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
         pending_slots = pending_slots[:batch_size]
 
