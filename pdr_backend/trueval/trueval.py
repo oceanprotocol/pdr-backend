@@ -1,6 +1,6 @@
 """
 Flow
-  - reads from subgraph list of template3 contracts, this gets list of all template3 deployed contracts
+  - reads from subgraph list of dt3 contracts, to get all deployed contracts
   - for every contract, monitors when epoch is changing
   - once an epoch is ended, calculate the true_val and submit.
 

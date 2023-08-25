@@ -14,7 +14,8 @@ def fund_dev_accounts(accounts_to_fund, owner, token):
         if env_key in os.environ:
             account = Account.from_key(os.getenv(env_key))
             print(
-                f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
+                f"Sending OCEAN to account defined by envvar key {env_key}"
+                f", with address {account.address}"
             )
             token.transfer(account.address, amount * 1e18, owner)
 
