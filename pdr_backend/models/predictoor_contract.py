@@ -224,7 +224,7 @@ class PredictoorContract:
             print(e)
             return None
 
-    def payout_multiple(self, slots: List[int]):
+    def payout_multiple(self, slots: List[int], wait_for_receipt=True):
         """Claims the payout for given slots"""
         gasPrice = self.config.w3.eth.gas_price
         try:
