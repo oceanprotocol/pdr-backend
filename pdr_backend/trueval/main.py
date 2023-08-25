@@ -40,6 +40,7 @@ class NewTrueVal:
                 f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}"
             )
 
+        #pylint: disable=line-too-long
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )
