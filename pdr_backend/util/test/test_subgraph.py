@@ -196,6 +196,7 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
 
     assert bool(contracts) == bool(expect_result)
 
+
 @enforce_types
 def test_get_pending_slots(monkeypatch):
     sample_slot_data = [
@@ -212,8 +213,14 @@ def test_get_pending_slots(monkeypatch):
                     "nft": {
                         "owner": {"id": "owner1"},
                         "nftData": [
-                            {"key": key_to_725("pair"), "value": value_to_725("ETH/USDT")},
-                            {"key": key_to_725("timeframe"), "value": value_to_725("5m")},
+                            {
+                                "key": key_to_725("pair"),
+                                "value": value_to_725("ETH/USDT"),
+                            },
+                            {
+                                "key": key_to_725("timeframe"),
+                                "value": value_to_725("5m"),
+                            },
                         ],
                     },
                 },
@@ -224,8 +231,8 @@ def test_get_pending_slots(monkeypatch):
         }
     ]
 
-
     call_count = 0
+
     def mock_query_subgraph(subgraph_url, query):
         nonlocal call_count
         call_count += 1
