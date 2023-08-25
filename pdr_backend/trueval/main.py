@@ -22,7 +22,6 @@ class NewTrueVal:
     ):
         self.slot = slot
         self.predictoor_contract = predictoor_contract
-        self.current_ts = slot.slot
         self.seconds_per_epoch = seconds_per_epoch
 
     def run(self) -> dict:
