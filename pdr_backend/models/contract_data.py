@@ -25,8 +25,8 @@ class ContractData:
 
     @property
     def quote(self):
-        return self.pair.split("/")[1]
+        return self.pair.split("-")[1]
 
     @property
     def base(self):
-        return self.pair.split("/")[0]
+        return self.pair.split("-")[0]
