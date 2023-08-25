@@ -3,7 +3,8 @@ from pdr_backend.trueval.trueval import get_true_val
 from pdr_backend.models.contract_data import ContractData
 
 
-def mock_fetch_ohlcv(pair, timeframe, since, limit):
+def mock_fetch_ohlcv(*args, **kwargs):
+    since = kwargs.get('since')
     if since == 1:
         return [[None, 100]]
     elif since == 2:
@@ -12,7 +13,8 @@ def mock_fetch_ohlcv(pair, timeframe, since, limit):
         raise ValueError("Invalid timestamp")
 
 
-def mock_fetch_ohlcv_fail(pair, timeframe, since, limit):
+
+def mock_fetch_ohlcv_fail(*args, **kwargs):
     return []
 
 
@@ -32,7 +34,7 @@ def test_get_trueval_success():
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv):
         result = get_true_val(contract, 1, 2)
-        assert result == (True, False)  # True because 200 > 100
+        assert result == (True, False)  # 1st True because 200 > 100
 
 
 def test_get_trueval_fail():
@@ -51,4 +53,4 @@ def test_get_trueval_fail():
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail):
         result = get_true_val(contract, 1, 2)
-        assert result == (False, True)  # True because failed
+        assert result == (False, True)  # 2nd True because failed
