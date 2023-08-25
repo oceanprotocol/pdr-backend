@@ -23,6 +23,7 @@ owner_addresses = getenv("OWNER_ADDRS")
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
+
 def process_block(block):
     """
     Process each contract.
@@ -40,7 +41,8 @@ def process_block(block):
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
         process_topic(address, block["timestamp"])
-        
+
+
 def process_topic(address, timestamp):
     topic = topics[address]
 
@@ -50,22 +52,20 @@ def process_topic(address, timestamp):
     predictoor_contract = contract_map[address]
     epoch = predictoor_contract.get_current_epoch()
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    seconds_till_epoch_end = (
-        epoch * seconds_per_epoch + seconds_per_epoch - timestamp
-    )
+    seconds_till_epoch_end = epoch * seconds_per_epoch + seconds_per_epoch - timestamp
 
     print(
         f"\t{topic['name']} (at address {topic['address']} is at epoch "
-        f'{epoch}, seconds_per_epoch: {seconds_per_epoch}, '
-        f'seconds_till_epoch_end: {seconds_till_epoch_end}'
+        f"{epoch}, seconds_per_epoch: {seconds_per_epoch}, "
+        f"seconds_till_epoch_end: {seconds_till_epoch_end}"
     )
 
     if epoch > topic["last_submited_epoch"] > 0:
         # let's get the payout for previous epoch.  We don't care if it fails
         slot = epoch * seconds_per_epoch - seconds_per_epoch
         print(
-            f'Contract:{predictoor_contract.contract_address} - '
-            f'Claiming revenue for slot:{slot}'
+            f"Contract:{predictoor_contract.contract_address} - "
+            f"Claiming revenue for slot:{slot}"
         )
         predictoor_contract.payout(slot, False)
 
@@ -76,14 +76,14 @@ def process_topic(address, timestamp):
 
 
 def do_prediction(topic, epoch, predictoor_contract):
-    """Let's fetch the prediction """
+    """Let's fetch the prediction"""
     target_time = (epoch + 2) * predictoor_contract.get_secondsPerEpoch()
     predicted_value, predicted_confidence = predict_function(topic, target_time)
 
     if predicted_value is None or predicted_confidence <= 0:
         print(
-            f'We do not submit, prediction function returned '
-            f'({predicted_value}, {predicted_confidence})'
+            f"We do not submit, prediction function returned "
+            f"({predicted_value}, {predicted_confidence})"
         )
         return False
 
@@ -93,8 +93,8 @@ def do_prediction(topic, epoch, predictoor_contract):
     )  # TODO have a customizable function to handle this
 
     print(
-        f'Contract:{predictoor_contract.contract_address} - '
-        f'Submiting prediction for slot:{target_time}'
+        f"Contract:{predictoor_contract.contract_address} - "
+        f"Submiting prediction for slot:{target_time}"
     )
 
     predictoor_contract.submit_prediction(
@@ -102,6 +102,7 @@ def do_prediction(topic, epoch, predictoor_contract):
     )
 
     return True
+
 
 def log_loop(blockno):
     global last_block_time
