@@ -11,17 +11,6 @@ from pdr_backend.util.subgraph import get_pending_slots
 from pdr_backend.models.slot import Slot
 
 
-rpc_url = getenv_or_exit("RPC_URL")
-subgraph_url = getenv_or_exit("SUBGRAPH_URL")
-private_key = getenv_or_exit("PRIVATE_KEY")
-pair_filters = getenv("PAIR_FILTER")
-timeframe_filter = getenv("TIMEFRAME_FILTER")
-source_filter = getenv("SOURCE_FILTER")
-owner_addresses = getenv("OWNER_ADDRS")
-
-web3_config = Web3Config(rpc_url, private_key)
-owner = web3_config.owner
-
 """ Get all intresting topics that we can submit trueval """
 topics: Dict[str, dict] = {}
 contract_cache: Dict[str, tuple] = {}
@@ -66,7 +55,7 @@ class NewTrueVal:
         return tx
 
 
-def process_slot(slot: Slot) -> dict:
+def process_slot(slot: Slot, web3_config: Web3Config) -> dict:
     contract_address = slot.contract.address
     if contract_address in contract_cache:
         predictoor_contract, seconds_per_epoch = contract_cache[contract_address]
@@ -82,10 +71,21 @@ def process_slot(slot: Slot) -> dict:
 
 
 def main():
-    sleep_time = os.getenv("SLEEP_TIME", 30)
-    batch_size = os.getenv("BATCH_SIZE", 50)
+    rpc_url = getenv_or_exit("RPC_URL")
+    subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+    private_key = getenv_or_exit("PRIVATE_KEY")
+    pair_filters = getenv("PAIR_FILTER")
+    timeframe_filter = getenv("TIMEFRAME_FILTER")
+    source_filter = getenv("SOURCE_FILTER")
+    owner_addresses = getenv("OWNER_ADDRS")
+    sleep_time = getenv("SLEEP_TIME", 30)
+    batch_size = getenv("BATCH_SIZE", 50)
+
+    web3_config = Web3Config(rpc_url, private_key)
+    owner = web3_config.owner
+
     while True:
-        pending_slots = get_pending_slots(subgraph_url, web3_config)
+        pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses)
         pending_slots = pending_slots[:batch_size]
 
         if len(pending_slots) == 0:
@@ -98,7 +98,7 @@ def main():
         for slot in pending_slots:
             print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
             try:
-                process_slot(slot)
+                process_slot(slot, web3_config)
             except Exception as e:
                 print("An error occured", e)
         print(f"Done processing, sleeping for {sleep_time} seconds...")
