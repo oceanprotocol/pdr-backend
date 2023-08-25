@@ -16,7 +16,7 @@ _KEYS = KeyAPI(NativeECCBackend)
 
 
 @enforce_types
-class PredictoorContract:
+class PredictoorContract:  # pylint: disable=too-many-public-methods
     def __init__(self, config: Web3Config, address: str):
         self.config = config
         self.contract_address = config.w3.to_checksum_address(address)
@@ -95,18 +95,17 @@ class PredictoorContract:
         """Buys 1 datatoken and starts a subscription"""
         fixed_rates = self.get_exchanges()
         if not fixed_rates:
-            return
+            return None
+
         (fixed_rate_address, exchange_id) = fixed_rates[0]
+
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
-        (
-            baseTokenAmount,
-            oceanFeeAmount,
-            publishMarketFeeAmount,
-            consumeMarketFeeAmount,
-        ) = exchange.get_dt_price(exchange_id)
+        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
+
         # approve
         self.token.approve(self.contract_instance.address, baseTokenAmount)
+
         # buy 1 DT
         gasPrice = self.config.w3.eth.gas_price
         provider_fees = self.get_empty_provider_fee()
@@ -136,7 +135,7 @@ class PredictoorContract:
             call_params = {
                 "from": self.config.owner,
                 "gasPrice": gasPrice,
-                #                    'nonce': self.config.w3.eth.get_transaction_count(self.config.owner),
+                # 'nonce': self.config.w3.eth.get_transaction_count(self.config.owner),
             }
             if gasLimit is None:
                 try:
@@ -162,9 +161,9 @@ class PredictoorContract:
         """Buys multiple accesses and returns tx hashes"""
         txs = []
         if how_many < 1:
-            return
+            return None
         print(f"Buying {how_many} accesses....")
-        for i in range(0, how_many):
+        for _ in range(0, how_many):
             txs.append(self.buy_and_start_subscription(gasLimit, wait_for_receipt))
         return txs
 
@@ -177,21 +176,17 @@ class PredictoorContract:
     def get_price(self):
         fixed_rates = self.get_exchanges()
         if not fixed_rates:
-            return
+            return None
         (fixed_rate_address, exchange_id) = fixed_rates[0]
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
-        (
-            baseTokenAmount,
-            oceanFeeAmount,
-            publishMarketFeeAmount,
-            consumeMarketFeeAmount,
-        ) = exchange.get_dt_price(exchange_id)
+        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
         return baseTokenAmount
 
     def get_current_epoch(self) -> int:
         # curEpoch returns the timestamp of current candle start
-        # this function returns the "epoch number" that increases by one each secondsPerEpoch seconds
+        # this function returns the "epoch number" that increases
+        #   by one each secondsPerEpoch seconds
         current_epoch_ts = self.get_current_epoch_ts()
         seconds_per_epoch = self.get_secondsPerEpoch()
         return int(current_epoch_ts / seconds_per_epoch)
@@ -263,17 +258,20 @@ class PredictoorContract:
         wait_for_receipt=True,
     ):
         """
-        Submits a prediction with the specified stake amount to the smart contract on the blockchain.
+        Submits a prediction with the specified stake amount, to the contract.
 
         @param predicted_value: The predicted value (True or False)
         @param stake_amount: The amount of ETH to be staked on the prediction
-        @param prediction_ts: The prediction timestamp, must be the start timestamp of a candle.
-        @param wait_for_receipt: If True, the function waits for the transaction receipt after submission.
-                                If False, it returns immediately after sending the transaction. Default is True.
+        @param prediction_ts: The prediction timestamp == start a candle.
+        @param wait_for_receipt:
+          If True, waits for tx receipt after submission.
+          If False, immediately after sending the transaction.
+          Default is True.
 
-        @return: If wait_for_receipt is True, returns the transaction receipt.
-                If wait_for_receipt is False, returns the transaction hash immediately after sending the transaction.
-                If an exception occurs during the  process, returns None.
+        @return:
+          If wait_for_receipt is True, returns the tx receipt.
+          If False, returns the tx hash immediately after sending.
+          If an exception occurs during the  process, returns None.
         """
         amount_wei = self.config.w3.to_wei(str(stake_amount), "ether")
 
@@ -294,7 +292,7 @@ class PredictoorContract:
         try:
             txhash = None
             if is_sapphire_network(self.config.w3.eth.chain_id):
-                data = self.contract_instance.encodeABI(
+                self.contract_instance.encodeABI(
                     fn_name="submitPredval",
                     args=[predicted_value, amount_wei, prediction_ts],
                 )

@@ -9,14 +9,14 @@ from pdr_backend.util.contract import get_address
 
 @enforce_types
 def test_get_id(predictoor_contract):
-    id = predictoor_contract.getid()
-    assert id == 3
+    id_ = predictoor_contract.getid()
+    assert id_ == 3
 
 
 @enforce_types
 def test_is_valid_subscription_initially(predictoor_contract):
     is_valid_sub = predictoor_contract.is_valid_subscription()
-    assert is_valid_sub == False
+    assert not is_valid_sub
 
 
 @enforce_types
@@ -42,7 +42,7 @@ def test_buy_and_start_subscription(predictoor_contract):
     receipt = predictoor_contract.buy_and_start_subscription()
     assert receipt["status"] == 1
     is_valid_sub = predictoor_contract.is_valid_subscription()
-    assert is_valid_sub == True
+    assert is_valid_sub
 
 
 @enforce_types
@@ -130,7 +130,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     prediction = predictoor_contract.get_prediction(
         soonest_timestamp, predictoor_contract.config.owner
     )
-    assert prediction[0] == True
+    assert prediction[0]
     assert prediction[1] == 1e18
 
     predictoor_contract.config.w3.provider.make_request(

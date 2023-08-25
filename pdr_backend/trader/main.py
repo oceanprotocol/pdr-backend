@@ -5,7 +5,7 @@ from typing import Dict
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.trader.trade import trade
 from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContractss
+from pdr_backend.util.subgraph import query_predictContracts
 from pdr_backend.util.web3_config import Web3Config
 
 rpc_url = getenv_or_exit("RPC_URL")
@@ -20,15 +20,15 @@ web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 
-""" Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
+# Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT
 topics: Dict[str, dict] = {}
 
 
 def process_block(block):
+    """Process each contract and see if we need to submit"""
     global topics
-    """ Process each contract and see if we need to submit """
     if not topics:
-        topics = query_predictContractss(
+        topics = query_predictContracts(
             subgraph_url,
             pair_filters,
             timeframe_filter,
@@ -45,12 +45,14 @@ def process_block(block):
             epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
         )
         print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
+            f"\t{topic['name']} (at address {topic['address']} "
+            f"is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
+            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
         if epoch > topic["last_submited_epoch"] and epoch > 0:
             topic["last_submited_epoch"] = epoch
-            print(f"Read new prediction")
-            """ Let's get the prediction and trade it """
+            print("Read new prediction")
+            # Let's get the prediction and trade it
             prediction = predictoor_contract.get_agg_predval(epoch * seconds_per_epoch)
             print(f"Got {prediction}.")
             if prediction is not None:

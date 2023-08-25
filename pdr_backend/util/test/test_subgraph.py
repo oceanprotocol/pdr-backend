@@ -10,7 +10,8 @@ from pdr_backend.util.subgraph import (
     value_from_725,
     info_from_725,
     query_subgraph,
-    query_predictContractss,
+    query_predictContracts,
+    get_pending_slots,
 )
 
 
@@ -88,7 +89,7 @@ def test_query_subgraph_badpath(monkeypatch):
 def test_get_contracts_emptychain(monkeypatch):
     contract_list = []
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(subgraph_url="foo")
+    contracts = query_predictContracts(subgraph_url="foo")
     assert contracts == {}
 
 
@@ -120,7 +121,7 @@ def test_get_contracts_fullchain(monkeypatch):
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss(subgraph_url="foo")
+    contracts = query_predictContracts(subgraph_url="foo")
     assert contracts == {
         "contract1": {
             "name": "ether",
@@ -191,6 +192,65 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_predictContractss("foo", pairs, timeframes, sources, owners)
+    contracts = query_predictContracts("foo", pairs, timeframes, sources, owners)
 
     assert bool(contracts) == bool(expect_result)
+
+
+@enforce_types
+def test_get_pending_slots(monkeypatch):
+    sample_slot_data = [
+        {
+            "id": "slot1",
+            "slot": 1000,
+            "trueValues": [],
+            "predictContract": {
+                "id": "contract1",
+                "token": {
+                    "id": "token1",
+                    "name": "ether",
+                    "symbol": "ETH",
+                    "nft": {
+                        "owner": {"id": "owner1"},
+                        "nftData": [
+                            {
+                                "key": key_to_725("pair"),
+                                "value": value_to_725("ETH/USDT"),
+                            },
+                            {
+                                "key": key_to_725("timeframe"),
+                                "value": value_to_725("5m"),
+                            },
+                        ],
+                    },
+                },
+                "secondsPerEpoch": 7,
+                "secondsPerSubscription": 700,
+                "truevalSubmitTimeout": 5,
+            },
+        }
+    ]
+
+    call_count = 0
+
+    def mock_query_subgraph(subgraph_url, query):
+        nonlocal call_count
+        call_count += 1
+        if call_count > 2:
+            return {"data": {"predictSlots": []}}
+        return {"data": {"predictSlots": sample_slot_data}}
+
+    monkeypatch.setattr("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph)
+
+    result = get_pending_slots(
+        subgraph_url="foo",
+        timestamp=2000,
+        owner_addresses=None,
+        pair_filter=None,
+        timeframe_filter=None,
+        source_filter=None,
+    )
+
+    assert len(result) == 2
+    assert result[0].slot == 1000
+    assert result[0].contract.name == "ether"

@@ -7,7 +7,8 @@ Therefore you _need_ to customize it. Here are details, to equip you to do this.
 
 `trade()` is called when there's a signal for a specific trading pair, like ETH-USDT.
 
-`trade()` accepts two inbound arguments, `topic` and `direction`. As a trader, your `trade()` implementation can leverage them to make informed decisions and then do trades.
+`trade()` accepts two inbound arguments, `topic` and `direction`.
+As a trader, your `trade()` implementation uses them for trading decisions.
 
 1. `topic` is a `dict` with info about the trading pair:
   - `name` - The name of the trading pair, e.g., "ETH-USDT".
@@ -40,9 +41,10 @@ def trade(topic, direction):
         "source":"kraken",
         "timeframe":"5m"
     }
-
     """
     print(
-        f" {topic['name']} (contract {topic['address']}) has a new prediction: {direction}.  Let's buy or sell"
+        f" {topic['name']} (contract {topic['address']}) "
+        f"has a new prediction: {direction}.  Let's buy or sell"
     )
-    """  Do your things here """
+    # Do your things here
+    # ...
