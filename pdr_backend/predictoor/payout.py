@@ -12,9 +12,11 @@ def batchify(data, batch_size):
     return [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
 
 
-def claim_pending_payouts(predictoor_contract: PredictoorContract, batch_size: int):
+def claim_pending_payouts(
+    subgraph_url: str, predictoor_contract: PredictoorContract, batch_size: int
+):
     addr = predictoor_contract.config.owner
-    pending = query_pending_payouts(addr)
+    pending = query_pending_payouts(subgraph_url, addr)
     batches = batchify(pending, batch_size)
 
     for batch in batches:
