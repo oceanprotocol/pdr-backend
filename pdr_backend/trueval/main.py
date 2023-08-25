@@ -40,7 +40,7 @@ class NewTrueVal:
                 f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}"
             )
 
-        #pylint: disable=line-too-long
+        # pylint: disable=line-too-long
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )
@@ -81,7 +81,14 @@ def main(testing=False):
     web3_config = Web3Config(rpc_url, private_key)
 
     while True:
-        pending_slots = get_pending_slots(subgraph_url, web3_config, owner_addresses, pair_filter, timeframe_filter, source_filter)
+        pending_slots = get_pending_slots(
+            subgraph_url,
+            web3_config,
+            owner_addresses,
+            pair_filter,
+            timeframe_filter,
+            source_filter,
+        )
         print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
         pending_slots = pending_slots[:batch_size]
 

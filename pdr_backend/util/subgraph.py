@@ -264,7 +264,9 @@ def query_predictContracts(  # pylint: disable=too-many-statements
 
 
 def get_pending_slots(
-    subgraph_url: str, web3_config: Web3Config, owner_addresses: Optional[List[str]], 
+    subgraph_url: str,
+    web3_config: Web3Config,
+    owner_addresses: Optional[List[str]],
     pair_filter: Optional[str] = None,
     timeframe_filter: Optional[str] = None,
     source_filter: Optional[str] = None,
@@ -334,7 +336,7 @@ def get_pending_slots(
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
                     continue
-                
+
                 if pair_filter and (info["pair"] not in pair_filter):
                     continue
 
