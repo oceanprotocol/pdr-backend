@@ -11,10 +11,7 @@ from pdr_backend.util.subgraph import get_pending_slots
 from pdr_backend.models.slot import Slot
 
 
-""" Get all intresting topics that we can submit trueval """
-topics: Dict[str, dict] = {}
 contract_cache: Dict[str, tuple] = {}
-
 
 class NewTrueVal:
     def __init__(
@@ -47,7 +44,7 @@ class NewTrueVal:
         print(
             f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
         )
-
+        
         tx = self.predictoor_contract.submit_trueval(
             true_val, self.slot.slot, False, True
         )
