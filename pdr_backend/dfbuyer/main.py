@@ -1,21 +1,22 @@
 import time
-import os
+from os import getenv
 import math
 import random
-
 from typing import Dict, List
-from pdr_backend.dfbuyer.subgraph import get_consume_so_far
-from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils import env
 
-rpc_url = env.get_rpc_url_or_exit()
-subgraph_url = env.get_subgraph_or_exit()
-private_key = env.get_private_key_or_exit()
-pair_filters = env.get_pair_filter()
-timeframe_filter = env.get_timeframe_filter()
-source_filter = env.get_source_filter()
-owner_addresses = env.get_owner_addresses()
+from pdr_backend.dfbuyer.subgraph import get_consume_so_far
+from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContracts
+from pdr_backend.util.web3_config import Web3Config
+
+rpc_url = getenv_or_exit("RPC_URL")
+subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
+pair_filters = getenv("PAIR_FILTER")
+timeframe_filter = getenv("TIMEFRAME_FILTER")
+source_filter = getenv("SOURCE_FILTER")
+owner_addresses = getenv("OWNER_ADDRS")
 
 last_block_time = 0
 WEEK = 7 * 86400
@@ -42,7 +43,7 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     if n == 1:
         return [k]
     # If n > k, it's impossible to generate n positive integers summing to k.
-    elif n > k:
+    if n > k:
         return []
 
     # Generate n-1 unique random integers between 1 and k-1
@@ -56,15 +57,15 @@ def numbers_with_sum(n: int, k: int) -> List[int]:
     return [a[i + 1] - a[i] for i in range(len(a) - 1)]
 
 
-""" Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT """
+# Get all intresting topics that we can predict.  Like ETH-USDT, BTC-USDT
 topics: Dict[str, dict] = {}
 
 
 def process_block(block):
+    """Process each contract and see if we need to submit"""
     global topics
-    """ Process each contract and see if we need to submit """
     if not topics:
-        topics = get_all_interesting_prediction_contracts(
+        topics = query_predictContracts(
             subgraph_url,
             pair_filters,
             timeframe_filter,
@@ -81,7 +82,7 @@ def process_block(block):
         topics, estimated_week_start, owner, subgraph_url
     )
     print(f"consume_so_far:{consume_so_far}")
-    consume_left = float(os.getenv("WEEKLY_SPEND_LIMIT", 0)) - consume_so_far
+    consume_left = float(getenv("WEEKLY_SPEND_LIMIT", "0")) - consume_so_far
     print(f"consume_left:{consume_left}")
     if consume_left <= 0:
         return

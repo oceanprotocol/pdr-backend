@@ -1,9 +1,4 @@
-import json
-import os
-import requests
-import web3
-
-from pdr_backend.utils.subgraph import query_subgraph
+from pdr_backend.util.subgraph import query_subgraph
 
 
 def get_consume_so_far(
@@ -12,7 +7,7 @@ def get_consume_so_far(
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far = 0
-    while True:
+    while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
             predictContracts(skip:%s, first:%s){

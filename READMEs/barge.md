@@ -44,7 +44,7 @@ Barge with basic Predictoor components is:
 
 To run this, go to the barge console and:
 ```console
-./start_ocean.sh --predictoor
+./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 When barge runs, it will auto-publish DT3 tokens. Currently this is {`BTC/TUSD`, Binance, 5min}, {`ETH/USDT`, Kraken, 5min} and {`XRP/USDT`, Binance, 5min}.
@@ -55,7 +55,7 @@ Barge can run with any subset of the agents.
 
 For example, to run barge with just trueval agent:
 ```console
-./start_ocean.sh --predictoor --with-pdr-trueval
+./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval
 ```
 
 ## Barge All Agents
@@ -63,7 +63,7 @@ For example, to run barge with just trueval agent:
 To run with all agents:
 
 ```console
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-trader --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 This will run all of the following at once:

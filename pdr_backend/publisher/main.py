@@ -1,17 +1,14 @@
+from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
-from pdr_backend.utils.contract import (
-    DataNft,
-    Web3Config,
-    Token,
-    get_address,
-)
-from pdr_backend.utils import env
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.web3_config import Web3Config
 
-rpc_url = env.get_rpc_url_or_exit()
-private_key = env.get_private_key_or_exit()
+rpc_url = getenv_or_exit("RPC_URL")
+private_key = getenv_or_exit("PRIVATE_KEY")
+
 web3_config = Web3Config(rpc_url, private_key)
 ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
-
 
 OCEAN = Token(web3_config, ocean_address)
 
@@ -35,7 +32,7 @@ publish(
     quote="USDT",
     source="kraken",
     timeframe="5m",
-    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # barge trueval submitter address
+    trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # on arge
     feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
     rate=3,
     cut=0.2,

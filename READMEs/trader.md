@@ -26,7 +26,7 @@ Then, [install barge](barge.md#install-barge).
 In barge console:
 ```console
 #run barge with all agents except trader
-./start_ocean.sh --predictoor --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 Open a new console and:
@@ -42,7 +42,7 @@ export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-
 export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 
 # run trader agent
-python3 pdr_backend/trader/main.py
+python pdr_backend/trader/main.py
 ```
 
 Relax & watch as the predictoor agent submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
@@ -53,7 +53,9 @@ The agent trades according to the `trade()` function in [`pdr_backend/trader/tra
 
 ## Remote Testnet Usage
 
-FIXME
+To run predictoor as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+
+To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
 ## Remote Mainnet Usage
 

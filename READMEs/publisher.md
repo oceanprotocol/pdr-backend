@@ -26,8 +26,8 @@ Then, [install barge](barge.md#install-barge).
 
 In barge console:
 ```console
-# Run barge with just predictoor contracts, but no agents
-./start_ocean.sh --predictoor
+# Run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 Open a new console and:
@@ -50,7 +50,7 @@ export PDR_MM_USER = "<your key>"
 """
 
 # publish! main.py & publish.py do all the work
-python3 pdr_backend/publisher/main.py
+python pdr_backend/publisher/main.py
 ```
 
 ## Remote Testnet Usage

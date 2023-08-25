@@ -1,110 +1,114 @@
-from datetime import datetime, timedelta, timezone
-from threading import Thread
 import time
-
+from os import getenv
 from typing import Dict
+
+from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.util.env import getenv_or_exit
 from pdr_backend.trueval.trueval import get_true_val
-from pdr_backend.utils.subgraph import get_all_interesting_prediction_contracts
-from pdr_backend.utils.contract import PredictoorContract, Web3Config
-from pdr_backend.utils import env
+from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.subgraph import get_pending_slots
+from pdr_backend.models.slot import Slot
 
 
-rpc_url = env.get_rpc_url_or_exit()
-subgraph_url = env.get_subgraph_or_exit()
-private_key = env.get_private_key_or_exit()
-pair_filters = env.get_pair_filter()
-timeframe_filter = env.get_timeframe_filter()
-source_filter = env.get_source_filter()
-owner_addresses = env.get_owner_addresses()
-
-web3_config = Web3Config(rpc_url, private_key)
-owner = web3_config.owner
-
-""" Get all intresting topics that we can submit trueval """
-topics: Dict[str, dict] = {}
+contract_cache: Dict[str, tuple] = {}
 
 
-class NewTrueVal(Thread):
-    def __init__(self, topic, predictoor_contract, current_ts, epoch):
-        # set a default value
-        self.values = {
-            "last_submited_epoch": epoch,
-            "contract_address": predictoor_contract.contract_address,
-        }
-        self.topic = topic
-        self.epoch = epoch
+class NewTrueVal:
+    def __init__(
+        self,
+        slot: Slot,
+        predictoor_contract: PredictoorContract,
+        seconds_per_epoch,
+    ):
+        self.slot = slot
         self.predictoor_contract = predictoor_contract
-        self.current_ts = current_ts
+        self.seconds_per_epoch = seconds_per_epoch
 
-    def run(self):
-        """Get timestamp of previous epoch-2 , get the price"""
-        """ Get timestamp of previous epoch-1, get the price """
-        """ Compare and submit trueval """
-        seconds_per_epoch = self.predictoor_contract.get_secondsPerEpoch()
-        initial_ts = (self.epoch - 2) * seconds_per_epoch
+    def run(self) -> dict:
+        """
+        Get timestamp of previous epoch-2 , get the price
+        Get timestamp of previous epoch-1, get the price
+        Compare and submit trueval
+        """
+        self.slot.slot = int(self.slot.slot)
+        initial_ts = self.slot.slot - self.seconds_per_epoch
+        end_ts = self.slot.slot
 
-        end_ts = (self.epoch - 1) * seconds_per_epoch
-
-        slot = (self.epoch - 1) * seconds_per_epoch
-
-        (true_val, float_value, cancel_round) = get_true_val(
-            self.topic, initial_ts, end_ts
-        )
-        print(
-            f"Contract:{self.predictoor_contract.contract_address} - Submiting true_val {true_val} for slot:{slot}"
-        )
-        try:
-            self.predictoor_contract.submit_trueval(
-                true_val, slot, float_value, cancel_round
+        (true_val, error) = get_true_val(self.slot.contract, initial_ts, end_ts)
+        if error:
+            raise Exception(
+                f"Error getting trueval for {self.slot.contract.pair} and slot {self.slot.slot}"
             )
-        except Exception as e:
-            print(e)
-            pass
+
+        # pylint: disable=line-too-long
+        print(
+            f"Contract:{self.predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{self.slot.slot}"
+        )
+
+        tx = self.predictoor_contract.submit_trueval(
+            true_val, self.slot.slot, False, True
+        )
+
+        return tx
 
 
-def process_block(block):
-    global topics
-    """ Process each contract and see if we need to submit """
-    if not topics:
-        topics = get_all_interesting_prediction_contracts(
+def process_slot(slot: Slot, web3_config: Web3Config) -> dict:
+    contract_address = slot.contract.address
+    if contract_address in contract_cache:
+        predictoor_contract, seconds_per_epoch = contract_cache[contract_address]
+    else:
+        predictoor_contract = PredictoorContract(web3_config, contract_address)
+        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+        contract_cache[contract_address] = (
+            predictoor_contract,
+            seconds_per_epoch,
+        )
+    trueval = NewTrueVal(slot, predictoor_contract, seconds_per_epoch)
+    return trueval.run()
+
+
+def main(testing=False):
+    rpc_url = getenv_or_exit("RPC_URL")
+    subgraph_url = getenv_or_exit("SUBGRAPH_URL")
+    private_key = getenv_or_exit("PRIVATE_KEY")
+    pair_filter = getenv("PAIR_FILTER")
+    timeframe_filter = getenv("TIMEFRAME_FILTER")
+    source_filter = getenv("SOURCE_FILTER")
+    owner_addresses = getenv("OWNER_ADDRS")
+    sleep_time = int(getenv("SLEEP_TIME", "30"))
+    batch_size = int(getenv("BATCH_SIZE", "50"))
+
+    web3_config = Web3Config(rpc_url, private_key)
+
+    while True:
+        timestamp = web3_config.w3.eth.get_block("latest")["timestamp"]
+        pending_slots = get_pending_slots(
             subgraph_url,
-            pair_filters,
+            timestamp,
+            owner_addresses,
+            pair_filter,
             timeframe_filter,
             source_filter,
-            owner_addresses,
         )
-    print(f"Got new block: {block['number']} with {len(topics)} topics")
-    threads = []
-    for address in topics:
-        topic = topics[address]
-        predictoor_contract = PredictoorContract(web3_config, address)
-        epoch = predictoor_contract.get_current_epoch()
-        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-        seconds_till_epoch_end = (
-            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
-        )
-        print(
-            f"\t{topic['name']} (at address {topic['address']} is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}, seconds_till_epoch_end: {seconds_till_epoch_end}"
-        )
-        if epoch > topic["last_submited_epoch"] and epoch > 1:
-            """Let's make a prediction & claim rewards"""
-            thr = NewTrueVal(topic, predictoor_contract, block["timestamp"], epoch)
-            thr.run()
-            address = thr.values["contract_address"].lower()
-            new_epoch = thr.values["last_submited_epoch"]
-            topics[address]["last_submited_epoch"] = new_epoch
+        print(f"Found {len(pending_slots)} pending slots, processing {batch_size}")
+        pending_slots = pending_slots[:batch_size]
 
+        if len(pending_slots) == 0:
+            print(f"No pending slots, sleeping for {sleep_time} seconds...")
+            time.sleep(sleep_time)
+            continue
 
-def main():
-    print("Starting main loop...")
-    lastblock = 0
-    while True:
-        block = web3_config.w3.eth.block_number
-        if block > lastblock:
-            lastblock = block
-            process_block(web3_config.w3.eth.get_block(block, full_transactions=False))
-        else:
-            time.sleep(1)
+        for slot in pending_slots:
+            print("-" * 30)
+            print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
+            try:
+                process_slot(slot, web3_config)
+            except Exception as e:
+                print("An error occured", e)
+        if testing:
+            break
+        print(f"Done processing, sleeping for {sleep_time} seconds...")
+        time.sleep(sleep_time)
 
 
 if __name__ == "__main__":

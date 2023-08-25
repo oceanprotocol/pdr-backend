@@ -1,5 +1,5 @@
-import random
 import pytest
+
 from pdr_backend.dfbuyer.main import numbers_with_sum
 
 

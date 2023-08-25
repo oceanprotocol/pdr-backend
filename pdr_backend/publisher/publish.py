@@ -2,11 +2,9 @@ import os
 
 from eth_account import Account
 
-from pdr_backend.utils.contract import (
-    DataNft,
-    ERC721Factory,
-    get_address,
-)
+from pdr_backend.models.data_nft import DataNft
+from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.util.contract import get_address
 
 MAX_UINT256 = 2**256 - 1
 
@@ -16,7 +14,8 @@ def fund_dev_accounts(accounts_to_fund, owner, token):
         if env_key in os.environ:
             account = Account.from_key(os.getenv(env_key))
             print(
-                f"Sending OCEAN to account defined by envvar key {env_key}, with address {account.address}"
+                f"Sending OCEAN to account defined by envvar key {env_key}"
+                f", with address {account.address}"
             )
             token.transfer(account.address, amount * 1e18, owner)
 

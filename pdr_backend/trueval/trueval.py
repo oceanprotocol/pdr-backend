@@ -1,6 +1,6 @@
 """
 Flow
-  - reads from subgraph list of template3 contracts, this gets list of all template3 deployed contracts
+  - reads from subgraph list of dt3 contracts, to get all deployed contracts
   - for every contract, monitors when epoch is changing
   - once an epoch is ended, calculate the true_val and submit.
 
@@ -19,9 +19,10 @@ Notes on customization:
 """
 
 import ccxt
+from pdr_backend.models.contract_data import ContractData
 
 
-def get_true_val(topic, initial_timestamp, end_timestamp):
+def get_true_val(topic: ContractData, initial_timestamp, end_timestamp):
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp
     Topic object looks like:
 
@@ -31,7 +32,6 @@ def get_true_val(topic, initial_timestamp, end_timestamp):
         "symbol":"ETH-USDT",
         "blocks_per_epoch":"60",
         "blocks_per_subscription":"86400",
-        "last_submited_epoch":0,
         "pair":"eth-usdt",
         "base":"eth",
         "quote":"usdt",
@@ -40,15 +40,20 @@ def get_true_val(topic, initial_timestamp, end_timestamp):
     }
 
     """
+    symbol = topic.pair
+    if topic.source == "binance" or topic.source == "kraken":
+        symbol = symbol.replace("-", "/")
+        symbol = symbol.upper()
     try:
-        exchange_class = getattr(ccxt, topic["source"])
+        exchange_class = getattr(ccxt, topic.source)
         exchange_ccxt = exchange_class()
         price_initial = exchange_ccxt.fetch_ohlcv(
-            topic["pair"], "1m", since=initial_timestamp, limit=1
+            symbol, "1m", since=initial_timestamp, limit=1
         )
         price_end = exchange_ccxt.fetch_ohlcv(
-            topic["pair"], "1m", since=end_timestamp, limit=1
+            symbol, "1m", since=end_timestamp, limit=1
         )
-        return (price_end[0][1] >= price_initial[0][1], price_end[0][1], False)
+        return (price_end[0][1] >= price_initial[0][1], False)
     except Exception as e:
-        return (False, 0, True)
+        print(f"Error getting trueval for {symbol} {e}")
+        return (False, True)
