@@ -23,7 +23,6 @@ owner_addresses = getenv("OWNER_ADDRS")
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
-
 def process_block(block):
     """
     Process each contract.
@@ -40,57 +39,69 @@ def process_block(block):
         )
     print(f"Got new block: {block['number']} with {len(topics)} topics")
     for address in topics:
-        topic = topics[address]
-        if contract_map.get(address) is None:
-            contract_map[address] = PredictoorContract(web3_config, address)
-        predictoor_contract = contract_map[address]
-        epoch = predictoor_contract.get_current_epoch()
-        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-        seconds_till_epoch_end = (
-            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
-        )
+        process_topic(address, block["timestamp"])
+        
+def process_topic(address, timestamp):
+    topic = topics[address]
+
+    if contract_map.get(address) is None:
+        contract_map[address] = PredictoorContract(web3_config, address)
+
+    predictoor_contract = contract_map[address]
+    epoch = predictoor_contract.get_current_epoch()
+    seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+    seconds_till_epoch_end = (
+        epoch * seconds_per_epoch + seconds_per_epoch - timestamp
+    )
+
+    print(
+        f"\t{topic['name']} (at address {topic['address']} is at epoch "
+        f'{epoch}, seconds_per_epoch: {seconds_per_epoch}, '
+        f'seconds_till_epoch_end: {seconds_till_epoch_end}'
+    )
+
+    if epoch > topic["last_submited_epoch"] > 0:
+        # let's get the payout for previous epoch.  We don't care if it fails
+        slot = epoch * seconds_per_epoch - seconds_per_epoch
         print(
-            f"\t{topic['name']} (at address {topic['address']} "
-            f"is at epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
-            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
+            f'Contract:{predictoor_contract.contract_address} - '
+            f'Claiming revenue for slot:{slot}'
         )
+        predictoor_contract.payout(slot, False)
 
-        if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
-            # let's get the payout for previous epoch.  We don't care if it fails...
-            slot = epoch * seconds_per_epoch - seconds_per_epoch
-            print(
-                f"Contract:{predictoor_contract.contract_address} - "
-                f"Claiming revenue for slot:{slot}"
-            )
-            predictoor_contract.payout(slot, False)
+    if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
+        """Timestamp of prediction"""
+        if do_prediction(topic, epoch, predictoor_contract):
+            topics[address]["last_submited_epoch"] = epoch
 
-        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", "60")):
-            # Timestamp of prediction
-            target_time = (epoch + 2) * seconds_per_epoch
 
-            # Fetch the prediction
-            (predicted_value, predicted_confidence) = predict_function(
-                topic, target_time
-            )
-            if predicted_value is not None and predicted_confidence > 0:
-                # We have a prediction, let's submit it
-                stake_amount = (
-                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
-                )  # TO DO have a customizable function to handle this
-                print(
-                    f"Contract:{predictoor_contract.contract_address} - "
-                    f"Submitting prediction for slot:{target_time}"
-                )
-                predictoor_contract.submit_prediction(
-                    predicted_value, stake_amount, target_time, True
-                )
-                topics[address]["last_submited_epoch"] = epoch
-            else:
-                print(
-                    "We do not submit, prediction function returned "
-                    f"({predicted_value}, {predicted_confidence})"
-                )
+def do_prediction(topic, epoch, predictoor_contract):
+    """Let's fetch the prediction """
+    target_time = (epoch + 2) * predictoor_contract.get_secondsPerEpoch()
+    predicted_value, predicted_confidence = predict_function(topic, target_time)
 
+    if predicted_value is None or predicted_confidence <= 0:
+        print(
+            f'We do not submit, prediction function returned '
+            f'({predicted_value}, {predicted_confidence})'
+        )
+        return False
+
+    """We have a prediction, let's submit it"""
+    stake_amount = (
+        os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
+    )  # TODO have a customizable function to handle this
+
+    print(
+        f'Contract:{predictoor_contract.contract_address} - '
+        f'Submiting prediction for slot:{target_time}'
+    )
+
+    predictoor_contract.submit_prediction(
+        predicted_value, stake_amount, target_time, True
+    )
+
+    return True
 
 def log_loop(blockno):
     global last_block_time
