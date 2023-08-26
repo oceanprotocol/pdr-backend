@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 from enforce_typing import enforce_types
 from eth_keys import KeyAPI
@@ -215,6 +216,20 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
             return nom / denom
         except Exception as e:
             print("Failed to call getAggPredval")
+            print(e)
+            return None
+
+    def payout_multiple(self, slots: List[int], wait_for_receipt=True):
+        """Claims the payout for given slots"""
+        gasPrice = self.config.w3.eth.gas_price
+        try:
+            tx = self.contract_instance.functions.payoutMultiple(
+                slots, self.config.owner
+            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+            if not wait_for_receipt:
+                return tx
+            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+        except Exception as e:
             print(e)
             return None
 
