@@ -233,7 +233,7 @@ def test_get_pending_slots(monkeypatch):
 
     call_count = 0
 
-    def mock_query_subgraph(subgraph_url, query):
+    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
         nonlocal call_count
         call_count += 1
         if call_count > 2:

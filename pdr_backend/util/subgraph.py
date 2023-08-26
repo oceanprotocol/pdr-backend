@@ -55,16 +55,12 @@ query {
  }
 """
 
-import os
-import requests
 from typing import Optional, Dict, List
 
-import requests
 from enforce_typing import enforce_types
 import requests
 from web3 import Web3
 
-from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.models.contract_data import ContractData
 from pdr_backend.models.slot import Slot
 

@@ -1,12 +1,14 @@
+from unittest.mock import patch, Mock
+
 import pytest
+
+from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.approach1.main import (  # pylint: disable=unused-import
     process_block,
     log_loop,
     process_topic,
 )
-import pdr_backend.predictoor.approach1.main as main
-from unittest.mock import patch, Mock
-from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.predictoor.approach1 import main
 
 
 @pytest.mark.skip(reason="Incomplete, skip")

@@ -1,3 +1,4 @@
+import os
 from os import getenv
 import time
 from typing import Dict
@@ -69,7 +70,7 @@ def process_topic(address, timestamp):
         )
         predictoor_contract.payout(slot, False)
 
-    if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", 60)):
+    if seconds_till_epoch_end <= int(os.getenv("SECONDS_TILL_EPOCH_END", "60")):
         # Timestamp of prediction
         if do_prediction(topic, epoch, predictoor_contract):
             topics[address]["last_submited_epoch"] = epoch
@@ -89,8 +90,8 @@ def do_prediction(topic, epoch, predictoor_contract):
 
     # We have a prediction, let's submit it
     stake_amount = (
-        os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
-    )  # TODO have a customizable function to handle this
+        int(os.getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+    )  # TO DO have a customizable function to handle this
 
     print(
         f"Contract:{predictoor_contract.contract_address} - "
