@@ -74,6 +74,7 @@ def process_topic(address, timestamp):
         if do_prediction(topic, epoch, predictoor_contract):
             topics[address]["last_submited_epoch"] = epoch
 
+
 def do_prediction(topic, epoch, predictoor_contract):
     """Let's fetch the prediction"""
     target_time = (epoch + 2) * predictoor_contract.get_secondsPerEpoch()
@@ -86,7 +87,7 @@ def do_prediction(topic, epoch, predictoor_contract):
         )
         return False
 
-    """We have a prediction, let's submit it"""
+    # We have a prediction, let's submit it
     stake_amount = (
         os.getenv("STAKE_AMOUNT", 1) * predicted_confidence / 100
     )  # TODO have a customizable function to handle this
