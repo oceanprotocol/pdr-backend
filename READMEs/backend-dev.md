@@ -66,7 +66,7 @@ In work console, run linting checks:
 mypy ./
 
 #run linting on code style
-pylint *
+pylint pdr_backend/*
 
 #auto-fix some pylint complaints
 black ./
