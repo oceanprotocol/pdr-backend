@@ -1,5 +1,6 @@
-from pdr_backend.publisher.publish import fund_dev_accounts
 from unittest.mock import Mock, call
+
+from pdr_backend.publisher.publish import fund_dev_accounts
 
 
 def test_fund_dev_accounts(monkeypatch):
