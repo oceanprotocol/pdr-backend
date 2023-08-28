@@ -54,9 +54,7 @@ def test_set_ddo():
         [ocean_address, owner.address, feeCollector, owner.address],
         [18, 18, rate, cut, 1],
     )
-    logs_nft, _ = factory.createNftWithErc20WithFixedRate(
-        nft_data, erc_data, fre_data
-    )
+    logs_nft, _ = factory.createNftWithErc20WithFixedRate(nft_data, erc_data, fre_data)
     data_nft_address = logs_nft["newTokenAddress"]
     print(f"Deployed NFT: {data_nft_address}")
     data_nft = DataNft(web3_config, data_nft_address)
