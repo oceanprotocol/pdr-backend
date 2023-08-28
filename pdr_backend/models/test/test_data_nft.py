@@ -23,7 +23,9 @@ def test_set_ddo():
         ddo = json.loads(content)
 
     private_key = os.getenv("PRIVATE_KEY")
-    owner = Account.from_key(os.getenv("PRIVATE_KEY"))
+    owner = Account.from_key(  # pylint:disable=no-value-for-parameter
+        private_key=private_key
+    )
     rpc_url = os.getenv("RPC_URL")
     web3_config = Web3Config(rpc_url, private_key)
     factory = ERC721Factory(web3_config)
