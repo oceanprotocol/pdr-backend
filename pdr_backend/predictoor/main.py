@@ -18,27 +18,26 @@ def _do_main():
     if len(sys.argv) <= 1:
         _do_help()
 
-    approach = sys.argv[1]
-    match approach:
-        case "1":
-            from pdr_backend.predictoor.approach1.main import (  # pylint: disable=import-outside-toplevel,line-too-long
-                main,
-            )
+    arg1 = sys.argv[1]
+    if arg1 == "1":
+        from pdr_backend.predictoor.approach1.main import (  # pylint: disable=import-outside-toplevel,line-too-long
+            main,
+        )
 
-            main()
+        main()
 
-        case "2":
-            from pdr_backend.predictoor.approach2.main import (  # pylint: disable=import-outside-toplevel,line-too-long
-                main,
-            )
+    elif arg1 == "2":
+        from pdr_backend.predictoor.approach2.main import (  # pylint: disable=import-outside-toplevel,line-too-long
+            main,
+        )
 
-            main()
+        main()
 
-        case "help":
-            _do_help()
+    elif arg1 == "help":
+        _do_help()
 
-        case _:
-            _do_help()
+    else:
+        _do_help()
 
 
 if __name__ == "__main__":
