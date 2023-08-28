@@ -25,9 +25,10 @@ class Token:
         tx = self.contract_instance.functions.transfer(to, int(amount)).transact(
             {"from": sender, "gasPrice": gasPrice}
         )
-        if wait_for_receipt:
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
-        return tx
+
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def approve(self, spender, amount, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price

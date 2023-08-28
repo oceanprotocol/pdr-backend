@@ -49,7 +49,6 @@ class DataNft:
         return tx
 
     def set_ddo(self, ddo, wait_for_receipt=True):
-        #        gasPrice = self.config.w3.eth.gas_price
         call_params = {
             "from": self.config.owner,
             "gasPrice": 100000000000,
