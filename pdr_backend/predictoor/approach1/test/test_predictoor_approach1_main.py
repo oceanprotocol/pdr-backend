@@ -3,9 +3,8 @@ from unittest.mock import patch, Mock
 import pytest
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.predictoor.approach1.main import (  # pylint: disable=unused-import
+from pdr_backend.predictoor.approach1.main import (
     process_block,
-    log_loop,
     process_topic,
 )
 from pdr_backend.predictoor.approach1 import main
