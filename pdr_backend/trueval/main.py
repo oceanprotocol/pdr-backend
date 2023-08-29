@@ -64,7 +64,9 @@ class TruevalAgent:
         self, contract_address: str
     ) -> Tuple[PredictoorContract, int]:
         if contract_address in self.contract_cache:
-            predictoor_contract, seconds_per_epoch = self.contract_cache[contract_address]
+            predictoor_contract, seconds_per_epoch = self.contract_cache[
+                contract_address
+            ]
         else:
             predictoor_contract = PredictoorContract(
                 self.config.web3_config, contract_address

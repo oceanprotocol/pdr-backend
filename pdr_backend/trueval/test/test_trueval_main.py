@@ -8,6 +8,7 @@ from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.env import parse_filters
 
+
 def test_new_config():
     config = TruevalConfig()
     assert config.rpc_url == os.getenv("RPC_URL")
@@ -46,7 +47,9 @@ def test_get_contract_info_caching(agent, predictoor_contract):
 
 def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract):
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_down):
-        result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract.return_value, 60
+        )
         assert result == {"tx": "0x123"}
         predictoor_contract.return_value.submit_trueval.assert_called_once_with(
             False, 1692943200, False, True
@@ -55,7 +58,9 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract):
 
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract):
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_up):
-        result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract.return_value, 60
+        )
         assert result == {"tx": "0x123"}
         predictoor_contract.return_value.submit_trueval.assert_called_once_with(
             True, 1692943200, False, True
@@ -70,7 +75,9 @@ def test_take_step(slot, agent):
 
     mocked_web3_config = MagicMock()
 
-    with patch.dict("os.environ", mocked_env), patch.object(agent.config, 'web3_config', new=mocked_web3_config), patch("time.sleep"), patch.object(
+    with patch.dict("os.environ", mocked_env), patch.object(
+        agent.config, "web3_config", new=mocked_web3_config
+    ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgent, "process_slot"
@@ -88,7 +95,9 @@ def test_run(slot, agent):
 
     mocked_web3_config = MagicMock()
 
-    with patch.dict("os.environ", mocked_env), patch.object(agent.config, 'web3_config', new=mocked_web3_config), patch("time.sleep"), patch.object(
+    with patch.dict("os.environ", mocked_env), patch.object(
+        agent.config, "web3_config", new=mocked_web3_config
+    ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgent, "process_slot"
@@ -161,6 +170,17 @@ def predictoor_contract():
         yield mock_predictoor_contract
 
 
+@pytest.fixture(autouse=True)
+def set_env_vars():
+    original_value = os.environ.get("OWNER_ADDRS", None)
+    os.environ["OWNER_ADDRS"] = "0xBE5449a6A97aD46c8558A3356267Ee5D2731ab5e"
+    yield
+    if original_value is not None:
+        os.environ["OWNER_ADDRS"] = original_value
+    else:
+        os.environ.pop("OWNER_ADDRS", None)
+
+
 # ------------------------------------------------------------
 ### Mocks
 
@@ -181,6 +201,7 @@ def mock_fetch_ohlcv_down(*args, **kwargs):
         return [[None, 100]]
     else:
         raise ValueError("Invalid timestamp")
+
 
 def mock_fetch_ohlcv_up(*args, **kwargs):
     since = kwargs.get("since")

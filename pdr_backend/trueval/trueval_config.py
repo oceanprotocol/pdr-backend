@@ -9,6 +9,7 @@ from pdr_backend.util.env import getenv_or_exit, parse_filters
 from pdr_backend.util.subgraph import get_pending_slots
 from pdr_backend.util.web3_config import Web3Config
 
+
 class TruevalConfig(ABC):
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")
