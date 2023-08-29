@@ -11,6 +11,8 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 class TruevalConfig(ABC):
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")
@@ -22,7 +24,7 @@ class TruevalConfig(ABC):
         self.source_filter: Optional[List[str]] = filters[2]
 
         owner_addresses_var = filters[3]
-        if owner_addresses_var == None:
+        if owner_addresses_var is None:
             raise Exception("Owner addresses are required.")
         self.owner_addresses: List[str] = owner_addresses_var
 

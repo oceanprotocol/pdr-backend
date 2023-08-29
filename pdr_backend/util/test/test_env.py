@@ -1,6 +1,5 @@
-import pytest
-
 from unittest.mock import patch
+import pytest
 from pdr_backend.util.env import getenv_or_exit, parse_filters
 
 
