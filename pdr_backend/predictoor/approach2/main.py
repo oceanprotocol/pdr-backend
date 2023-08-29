@@ -1,7 +1,5 @@
 import csv
 import os
-from os import getenv
-import sys
 import time
 from typing import List
 
@@ -9,259 +7,287 @@ import ccxt
 import numpy as np
 import pandas as pd
 
-from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.predictoor.approach2.predict import predict_function
-from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContracts
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.predictoor.approach2.predict import get_prediction
 
-# set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
-# then, the pickled trained models live in $MODELDIR/trained_models/
-# and, OceanModel module lives in $MODELDIR/model.py
-model_dir: str = getenv_or_exit("MODELDIR")
-trained_models_dir = os.path.join(model_dir, "trained_models")
-sys.path.append(model_dir)
-from model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
+@enforce_types
+class PredictoorApproach2Config(PredictoorConfig):
+    def __init__(self):
+        super().__init()
+                
+        self.get_prediction = get_prediction # set prediction function
 
-rpc_url = getenv_or_exit("RPC_URL")
-subgraph_url = getenv_or_exit("SUBGRAPH_URL")
-private_key = getenv_or_exit("PRIVATE_KEY")
-pair_filters = getenv("PAIR_FILTER")
-timeframe_filter = getenv("TIMEFRAME_FILTER")
-source_filter = getenv("SOURCE_FILTER")
-owner_addresses = getenv("OWNER_ADDRS")
+        # example: directory from git clone of oceanprotocol/pdr-model-simple
+        model_dir: str = getenv_or_exit("MODELDIR")
+        
+        # OceanModel module lives in $MODELDIR/model.py
+        sys.path.append(model_dir)
+        from model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
 
-exchange_id = "binance"
-pair = "BTC/USDT"
-timeframe = "5m"
+        # pickled trained models live in $MODELDIR/trained_models/
+        self.trained_models_dir = os.path.join(model_dir, "trained_models")
 
-# ===================
-# done imports and constants. Now start running...
-
-last_block_time = 0
-topics: List[dict] = []
-
-exchange_class = getattr(ccxt, exchange_id)
-exchange_ccxt = exchange_class({"timeout": 30000})
-
-web3_config = Web3Config(rpc_url, private_key)
-owner = web3_config.owner
-
-models = [
-    OceanModel(exchange_id, pair, timeframe),
-]
+        # results csvs live in $self.results_dir/
+        self.results_dir = "results"
+        if not os.path.exists(self.results_dir):
+            os.makedirs(self.results_dir)
 
 
-def process_block(block, model, main_pd):
-    """
-    Process each contract.
-    If needed, get a prediction, submit it and claim revenue for past epoch
-    """
-    global topics
-    if not topics:
-        topics = query_predictContracts(
-            subgraph_url,
-            pair_filters,
-            timeframe_filter,
-            source_filter,
-            owner_addresses,
-        )
+@enforce_types
+class PredictoorApproach2:
+    
+    def __init__(self):
+        super().__init()
+        self.config = PredictoorApproach1Config()
+        self._initialize_models()
+        self._initialize_csvs()
+        self._initialize_exchanges()
+        self._initialize_main_dfs()
+        
+        self.prev_block_time: int = 0
+        self.prev_block_number: int = 0
+        self.prev_submitted_epochs = {addr : 0 for addr in self.models}
+        
+    def run(self):
+        print("Starting main loop...")
+        while True:
+            self.take_step()
+    
+    def take_step(self):
+        # base data
+        w3 = self.config.web3_config.w3
+        
+        # grab latest data
+        self._update_main_dfs()
 
-    print(f"Got new block: {block['number']} with {len(topics)} topics")
+        # at new block number yet?
+        block_number = w3.eth.block_number
+        if block_number <= self.prev_block_number:
+            time.sleep(1)
+            return
+        self.prev_block_number = block_number
 
-    for address in topics:
-        topic = topics[address]
-        predictoor_contract = PredictoorContract(web3_config, address)
-        epoch = predictoor_contract.get_current_epoch()
-        seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-        seconds_till_epoch_end = (
-            epoch * seconds_per_epoch + seconds_per_epoch - block["timestamp"]
-        )
-        print(
-            f"\t{topic['name']} (at address {topic['address']} is at "
-            f"epoch {epoch}, seconds_per_epoch: {seconds_per_epoch}"
-            f", seconds_till_epoch_end: {seconds_till_epoch_end}"
-        )
+        # is new block ready yet?
+        block = w3.eth.get_block(block_number, full_transactions=False)
+        if not block:
+            return
+        self.prev_block_time = block["timestamp"]
+        print(f"Got new block, with number {block_number}")
 
-        if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
-            # let's get the payout for previous epoch.  We don't care if it fails...
-            slot = epoch * seconds_per_epoch - seconds_per_epoch
+        # do work at new block
+        for addr in self.models:
+            self._process_block_at_feed(addr, block["timestamp"])
+
+    def _process_block_at_feed(self, addr: str, timestamp: str):
+        # if new candle, process it
+        for addr, model in self.models.items():
+            main_df = self.main_dfs[addr]
+            
+            do_write = False
+            predval = main_df.iloc[-2][model.model_name]
+            have_prediction = not
+            if not np.isnan(predval):
+                do_write = True
+            if do_write:
+                self._update_results_csv(addr)
+
+        # get predictions
+        for addr, model in self.models.items():
+            df = self.main_dfs[addr]
+            index = df.index.values[-1]
+            cur_predval = df.iloc[-1][model.model_name]
+            have_prediction = not np.isnan(cur_predval)
+            if have_prediction:
+                continue
+            
+            df.drop(columns_models + ["datetime"], axis=1),
+            predval = self._log_loop(
+                block_number,
+                model,
+                df,
+            )
+            if predval is not None:
+                df.loc[index, [model.model_name]] = float(predval)
+
+        # log
+        for addr in self._ordered_addrs():
+            df = self.main_dfs[addr]
             print(
-                f"Contract:{predictoor_contract.contract_address} - "
-                f"Claiming revenue for slot:{slot}"
-            )
-            predictoor_contract.payout(slot, False)
-
-        if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", "60")):
-            # Timestamp of prediction
-            target_time = (epoch + 2) * seconds_per_epoch
-
-            # Fetch the prediction
-            (predicted_value, predicted_confidence) = predict_function(
-                topic, target_time, model, main_pd
+                main_df.loc[
+                    :, ~self.main_dfs.columns.isin(["volume", "open", "high", "low"])
+                ].tail(15)
             )
 
-            if predicted_value is not None and predicted_confidence > 0:
-                # We have a prediction, let's submit it
-                stake_amount = (
-                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
-                )  # TO DO have a customizable function to handle this
-                print(
-                    f"Contract:{predictoor_contract.contract_address} - "
-                    f"Submitting prediction for slot:{target_time}"
-                )
-                predictoor_contract.submit_prediction(
-                    predicted_value, stake_amount, target_time, True
-                )
-                topics[address]["last_submited_epoch"] = epoch
-                return predicted_value
+    def _initialize_models_and_feeds(self):
+        """load models, whichever ones are available"""
+        self.models = {} # [addr] : model
+        self.feeds = {} # [addr] : feed
+        
+        cand_feeds = self.config.get_feeds() # [addr] : feed
+        for addr, feed in cand_feeds.items():
+            exchange_id = feed["exchange_id"] # eg "binance"
+            pair = feed["pair"]               # eg "BTC/USDT"
+            timeframe = feed["timeframe"]     # eg "5m"
+            
+            model = OceanModel(exchange_id, pair, timeframe)
+            try:
+                model.unpickle_model(self.trained_models_dir)
+            except:
+                model = None
+                
+            if model is None:
+                continue
+            
+            self.models[addr] = model
+            self.feeds[addr] = feed
 
-            print(
-                "We do not submit, prediction function returned "
-                f"({predicted_value}, {predicted_confidence})"
-            )
-    return None
+    def _initialize_csvs(self):
+        assert self.feeds
+        
+        # initialize csv_names
+        self.csv_names = []
+        ts_now = int(time.time())
+        for feed in self.feeds.values():
+            csv_name = \
+                f"./{self.results_dir}/{feed['exchange_id']}_{feed['pair']}" \
+                f"_{feed['timeframe']}_{ts_now}.csv"
+            self.csv_names.append(csv_name)
 
+        # initialize csv files: write headers
+        for csv_name in self.csv_names:
+            if _csv_has_data(csv_name):
+                continue
+            with open(csv_name, "a") as f:
+                writer = csv.writer(f)
+                writer.writerow(self.df_cols)
 
-def log_loop(blockno, model, main_pd):
-    global last_block_time
-    block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
-    if block:
-        last_block_time = block["timestamp"]
-        prediction = process_block(block, model, main_pd)
-        if prediction is not None:
-            return prediction
-    return None
+    def _initialize_exchanges(self):
+        assert self.feeds
+        self.exchanges = {} # [addr] : exchange
+        for addr, feed in self.feeds.items():
+            exchange_class = getattr(ccxt, feed["exchange_id"])
+            exchange = exchange_class({"timeout": 30000})
+            self.exchanges[addr] = exchange
 
+    def _initialize_main_dfs(self):
+        assert self.models and self.exchanges
+        
+        # initialize self.df_cols
+        self.df_cols = \
+            ["datetime", "open", "high", "low", "close", "volume"] + \
+            self._models_cols() # prediction col. 0 or 1
 
-def main():  # pylint: disable=too-many-statements
-    print("Starting main loop...")
+        # fill in self.main_dfs with initial data
+        self.main_dfs = {} # [addr] : DataFrame
+        for addr, feed in self.feeds.items():
+            df = pd.DataFrame(columns=self.df_cols)
+        
+            candles = self.exchange_ccxt.fetch_ohlcv(feed["pair"], "5m")
+            for candle in candles:
+                t,o,h,l,c,v = _tohlcv_tuple(candle)
+                df.loc[ohlc["timestamp"]] = _tohlcv_dict(t,o,h,l,c,v)
+                df["datetime"] = _to_datetime(df.index.values)
 
-    ts_now = int(time.time())
+            self.main_dfs[addr] = df
 
-    results_path = "results"
-    if not os.path.exists(results_path):
-        os.makedirs(results_path)
+    def _models_cols(self) -> List[str]:
+        """Return model cols, with order dictated by ordered_addrs()"""
+        addrs = self._ordered_addrs()
+        return [self.models[addr].model_name for addr in addrs]
+    
+    def _update_results_csv(self, addr: str):
+        csv_name = self.csv_names[addr]
+        model = self.models[addr]
+        
+        with open(csv_name, "a") as f:
+            writer = csv.writer(f)
+            row = [
+                df.index.values[-2],
+                df.iloc[-2]["datetime"],
+                df.iloc[-2]["open"],
+                df.iloc[-2]["high"],
+                df.iloc[-2]["low"],
+                df.iloc[-2]["close"],
+                df.iloc[-2]["volume"],
+            ]
+            row.append(df.iloc[-2][model.model_name])
+            writer.writerow(row)
 
-    results_csv_name = (
-        "./"
-        + results_path
-        + "/"
-        + exchange_id
-        + "_"
-        + models[0].pair
-        + "_"
-        + models[0].timeframe
-        + "_"
-        + str(ts_now)
-        + ".csv"
-    )
+    def _update_main_dfs(self):
+        """Update self.main_dfs with the two most recent candles"""
+        for addr, feed in self.feeds.items():
+            df = self.main_dfs[addr]
+            
+            candles = self.exchange_ccxt.fetch_ohlcv(feed["pair"], "5m")
+            recent_candles = candles[-2:]
 
-    columns_short = ["datetime", "open", "high", "low", "close", "volume"]
+            for ohl in recent_candles:
+                t,o,h,l,c,v = _tohlcv_tuple(candle)
+                df.loc[t, ["timestamp"]] = t
+                df.loc[t, ["open"]] = o
+                df.loc[t, ["high"]] = h
+                df.loc[t, ["low"]] = l
+                df.loc[t, ["close"]] = c
+                df.loc[t, ["volume"]] = v
+                
+                df.loc[t, ["datetime"]] = _to_datetime(t)
 
-    columns_models = []
-    for model in models:
-        model.unpickle_model(trained_models_dir)
-        columns_models.append(model.model_name)  # prediction column.  0 or 1
+    def log_loop(self, block_number, model, main_pd):
+        w3 = self.config.web3_config.w3
+        block = w3.eth.get_block(block_number, full_transactions=False)
+        if block:
+            self.prev_block_time = block["timestamp"]
+            prediction = process_block(block, model, main_pd)
+            if prediction is not None:
+                return prediction
+        return None
+    
+    def _ordered_addrs(self):
+        """Return addresses in an opinionated order."""
+        assert self.feeds
+        return sorted(self.feeds.keys())
+    
 
-    all_columns = columns_short + columns_models
+@enforce_types
+def _to_datetime(ts):
+    return pd.to_datetime(ts, unit="s", utc=True)
 
-    # write csv header for results
+@enforce_types
+def _csv_has_data(filename: str) -> bool:
     size = 0
     try:
         files_stats = os.stat(results_csv_name)
         size = files_stats.st_size
     except:  # pylint: disable=bare-except
         pass
-    if size == 0:
-        with open(results_csv_name, "a") as f:
-            writer = csv.writer(f)
-            writer.writerow(all_columns)
 
-    # read initial set of candles
-    candles = exchange_ccxt.fetch_ohlcv(pair, "5m")
-    # load past data
-    main_pd = pd.DataFrame(columns=all_columns)
-    for ohl in candles:
-        ohlc = {
-            "timestamp": int(ohl[0] / 1000),
-            "open": float(ohl[1]),
-            "close": float(ohl[4]),
-            "low": float(ohl[3]),
-            "high": float(ohl[2]),
-            "volume": float(ohl[5]),
-        }
-        main_pd.loc[ohlc["timestamp"]] = ohlc
-        main_pd["datetime"] = pd.to_datetime(main_pd.index.values, unit="s", utc=True)
+    return (size > 0)
 
-    lastblock = 0
-    last_finalized_timestamp = 0
-    while True:
-        candles = exchange_ccxt.fetch_ohlcv(pair, "5m")
+@enforce_types         
+def _tohlcv_tuple(candle: list) -> tuple:
+    t = int(candle[0] / 100)
+    o = float(candle[1])
+    h = float(candle[2])
+    l = float(candle[3])
+    c = float(candle[4])
+    v = float(candle[5])
+    return t,o,h,l,c,v
 
-        # update last two candles
-        for ohl in candles[-2:]:
-            t = int(ohl[0] / 1000)
-            main_pd.loc[t, ["datetime"]] = pd.to_datetime(t, unit="s", utc=True)
-            main_pd.loc[t, ["open"]] = float(ohl[1])
-            main_pd.loc[t, ["close"]] = float(ohl[4])
-            main_pd.loc[t, ["low"]] = float(ohl[3])
-            main_pd.loc[t, ["high"]] = float(ohl[2])
-            main_pd.loc[t, ["volume"]] = float(ohl[5])
+@enforce_types
+def _tohlcv_dict(t,o,h,l,c,v) -> dict:
+    return {
+        "timestamp": t,
+        "open": o,
+        "high": h,
+        "low": l,
+        "close": c,
+        "volume": v,
+    }
 
-        timestamp = main_pd.index.values[-2]
 
-        block = web3_config.w3.eth.block_number
-        if block > lastblock:
-            lastblock = block
-
-            # #we have a new candle
-            if last_finalized_timestamp < timestamp:
-                last_finalized_timestamp = timestamp
-
-                should_write = False
-                for model in models:
-                    prediction = main_pd.iloc[-2][model.model_name]
-                    if not np.isnan(prediction):
-                        should_write = True
-
-                if should_write:
-                    with open(results_csv_name, "a") as f:
-                        writer = csv.writer(f)
-                        row = [
-                            main_pd.index.values[-2],
-                            main_pd.iloc[-2]["datetime"],
-                            main_pd.iloc[-2]["open"],
-                            main_pd.iloc[-2]["high"],
-                            main_pd.iloc[-2]["low"],
-                            main_pd.iloc[-2]["close"],
-                            main_pd.iloc[-2]["volume"],
-                        ]
-                        for model in models:
-                            row.append(main_pd.iloc[-2][model.model_name])
-                        writer.writerow(row)
-
-            for model in models:
-                index = main_pd.index.values[-1]
-                current_prediction = main_pd.iloc[-1][model.model_name]
-                if np.isnan(current_prediction):
-                    prediction = log_loop(
-                        block,
-                        model,
-                        main_pd.drop(columns_models + ["datetime"], axis=1),
-                    )
-                    if prediction is not None:
-                        main_pd.loc[index, [model.model_name]] = float(prediction)
-
-            print(
-                main_pd.loc[
-                    :, ~main_pd.columns.isin(["volume", "open", "high", "low"])
-                ].tail(15)
-            )
-
-        else:
-            time.sleep(1)
-
+@enforce_types
+def main():
+    p = PredictoorApproach2()
+    p.run()
 
 if __name__ == "__main__":
     main()

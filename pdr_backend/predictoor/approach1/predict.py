@@ -1,117 +1,87 @@
-"""
-Flow
- - Fetches a list of Predictoor contracts from subgraph and filters them based on the filters set.
- - Monitors each contract for epoch changes.
- - When a value can be predicted, the predict_function() here is called.
-Notes on customization:
+def get_prediction(feed: dict, timestamp: str):
+    """
+    @description
+      Given a feed, let's predict for a given timestamp.
 
-## Predict Function
-  The actual prediction code is in *this file*, in predict_function().
+    @arguments
+      feed -- dict -- info about the trading pair. See appendix
+      timestamp -- str -- when to make prediction for
 
-  The function is called with 2 arguments:
+    @return
+      predval -- bool -- if True, it's predicting 'up'. If False, 'down'
+      stake -- float -- amount to stake, in units of ETH (vs wei)
 
-  - topic: Information about the trading pair.
-  - timestamp: Timestamp of the prediction.
+    @notes
+      Below is the defualt implementation, giving random predictions.
+      You need to customize it to implement your own strategy.
 
-  The function should return:
+    @appendix 
+      The feed dict looks like:
+      {
+        "name" : "ETH-USDT", # name of trading pair
+        "address" : "0x54b5ebeed85f4178c6cb98dd185067991d058d55", # DT3 contract
+    
+        "symbol" : "ETH-USDT", # symbol of the trading pair
+        "pair" : "eth-usdt", # (??, see line above)
+        "base" : "eth", # base currency of trading pair
+        "quote" : "usdt", # quote currency of the trading pair (??, see line above)
+        "source" : "kraken", # source exchange or platform
+        "timeframe" : "5m", # timeframe for the trade signal. 5m = 5 minutes
 
-  - predicted_value: Boolean, indicating the prediction direction
-    (True for up, False for down).
-  - predicted_confidence: Integer between 1 and 100. Represents the confidence
-    level in the prediction.
-  - stake_amount: Amount of tokens to stake for the prediction.
+        # you could pass in other info
+        "previous_submitted_epoch" : 0,
+        "blocks_per_epoch" : "60", 
+        "blocks_per_subscription" : "86400",
+      }
 
-  By default, `predict_function` uses random values for predictions. You need
-  to customize it and implement your own strategy.
+    ## About SECONDS_TILL_EPOCH_END
 
-## Topic Object
+    If we want to predict the value for epoch E, we need to do it in epoch E - 2
+    (latest.  Though we could predict for a distant future epoch if desired)
+   
+    And to do so, our tx needs to be confirmed in the last block of epoch
+    (otherwise, it's going to be part of next epoch and our prediction tx
+     will revert)
 
-  The topic object has all the details about the pair:
-
-  - `name` - The name of the trading pair, e.g., "ETH-USDT".
-  - `symbol` - Symbol of the trading pair.
-  - `base` - Base currency of the trading pair.
-  - `quote` - Quote currency of the trading pair.
-  - `source` - Source exchange or platform.
-  - `timeframe` - Timeframe for the trade signal, e.g., "5m" for 5 minutes.
-
-## About SECONDS_TILL_EPOCH_END
-
-  If we want to predict the value for epoch E, we need to do it in epoch E - 2
-  (latest.  Though we could predict for a distant future epoch if desired)
-  And to do so, our tx needs to be confirmed in the last block of epoch
-  (otherwise, it's going to be part of next epoch and our prediction tx
-  will revert)
-
-  But, for every prediction, there are steps involved, each one adding runtime:
-    - the actual prediction code
+    But, for every prediction, there are several steps. Each takes time:
+    - time to compute prediction (e.g. run model inference)
     - time to generate the tx
     - time until your pending tx in mempool is picked by miner
     - time until your tx is confirmed in a block
 
-  Adjust the environment variable `SECONDS_TILL_EPOCH_END` to control how many
-seconds in advance of the epoch ending you want the prediction process to
-start. A predictoor can submit multiple predictions, however, only the final
-submission made before the deadline is considered valid.
+    To help, you can set envvar `SECONDS_TILL_EPOCH_END`. It controls how many
+    seconds in advance of the epoch ending you want the prediction process to
+    start. A predictoor can submit multiple predictions. However, only the final
+    submission made before the deadline is considered valid.
 
-To clarify further: if this value is set to 60, the predictoor will be asked
-to predict in every block during the last 60 seconds before the epoch concludes.
-
-## TO DO
-  - [ ]  - improve payouts collect flow
-  - [ ]  - check for balances
-  - [ ]  - improve approve/allowence flow
-"""
-
-import random
-
-
-def predict_function(topic, timestamp):
-    """Given a topic, let's predict
-    Topic object looks like:
-
-    {
-        "name":"ETH-USDT",
-        "address":"0x54b5ebeed85f4178c6cb98dd185067991d058d55",
-        "symbol":"ETH-USDT",
-        "blocks_per_epoch":"60",
-        "blocks_per_subscription":"86400",
-        "last_submited_epoch":0,
-        "pair":"eth-usdt",
-        "base":"eth",
-        "quote":"usdt",
-        "source":"kraken",
-        "timeframe":"5m"
-    }
-
+    To clarify further: if this value is set to 60, the predictoor will be asked
+    to predict in every block during the last 60 seconds before the epoch
+    concludes.
     """
     print(
-        f" We were asked to predict {topic['name']} "
-        f"(contract: {topic['address']}) value "
+        f" We were asked to predict {feed['name']} "
+        f"(contract: {feed['address']}) value "
         f"at estimated timestamp: {timestamp}"
     )
-    predicted_confidence = None
-    predicted_value = None
 
-    try:
-        predicted_value = bool(random.getrandbits(1))
-        predicted_confidence = random.randint(1, 100)
+    # Pick random prediction & random stake. You need to customize this.
+    import random
+    predval = bool(random.getrandbits(1))
+    stake = random.randint(1, 100)
 
-        # ## Or do something fancy, like:
+    return (predval, stake)
 
-        # exchange_class = getattr(ccxt, topic["source"])
-        # exchange_ccxt = exchange_class()
-        # candles = exchange_ccxt.fetch_ohlcv(topic['pair'], topic['timeframe'])
-        # #if price is not moving, let's not predict anything
-        # if candles[0][1] != candles[1][1]:
-        #     #just follow the trend:
-        #     #   True (up) is last close price > previous close price,
-        #     #   False (down) otherwise
-        #     predicted_confidence = random.randint(1,100)
-        #     predicted_value = True if candles[0][1]>candles[1][1] else False
-        #     print(f"Predicting {predicted_value} with a confidence of {predicted_confidence}")
 
-    except Exception as e:
-        print(e)
+# ## An example of something a bit fancier. See approach2 for fancier yet.
 
-    return (predicted_value, predicted_confidence)
+# exchange_class = getattr(ccxt, feed["source"])
+# exchange_ccxt = exchange_class()
+# candles = exchange_ccxt.fetch_ohlcv(feed['pair'], feed['timeframe'])
+# #if price is not moving, let's not predict anything
+# if candles[0][1] != candles[1][1]:
+#     #just follow the trend:
+#     #   True (up) is last close price > previous close price,
+#     #   False (down) otherwise
+#     stake = random.randint(1,100)
+#     predval = True if candles[0][1]>candles[1][1] else False
+#     print(f"Predicting {predval} with a confidence of {predicted_confidence}")
