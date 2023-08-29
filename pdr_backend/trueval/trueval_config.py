@@ -11,7 +11,6 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 class TruevalConfig(ABC):
-
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")
