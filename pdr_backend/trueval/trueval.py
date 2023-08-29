@@ -18,11 +18,14 @@ Notes on customization:
   You need to change the code to support more complex flows. Now, it's based on ccxt
 """
 
+from typing import Tuple
 import ccxt
 from pdr_backend.models.contract_data import ContractData
 
 
-def get_true_val(topic: ContractData, initial_timestamp, end_timestamp):
+def get_true_val(
+    topic: ContractData, initial_timestamp, end_timestamp
+) -> Tuple[bool, bool]:
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp
     Topic object looks like:
 
