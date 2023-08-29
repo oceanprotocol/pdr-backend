@@ -59,28 +59,25 @@ class PredictoorAgent2(PredictoorAgent):
 
         # special work of this method...
 
-        # maybe update dfs 
-        candles = self.exchanges[addr].fetch_ohlcv(feed["pair"], "5m")
+        # maybe update dfs
+        exchange = self.exchanges[addr]
+        candles = exchange.fetch_ohlcv(feed["pair"], "5m")
         recent_candles = candles[-2:]
         for candle in recent_candles:
             _update_df_at_candle(df, candle)
 
         # maybe update csv
-        model, df = self.models[addr], self.dfs[addr]
-        predval = df.iloc[-2][model.model_name]
-        have_predval = not np.isnan(predval)
-        if have_predval:
-            self._update_results_csv(addr)
+        self._maybe_update_csv(addr)
 
         # get predictions
         index = df.index.values[-1]
-        cur_predval = df.iloc[-1][model.model_name]
+        cur_predval = df.iloc[-1][pred_col]
         have_cur_predval = not np.isnan(cur_predval)
         if not have_cur_predval:
             df.drop(columns_models + ["datetime"], axis=1),
             predval = self._log_loop(addr, block_number)
             if predval is not None:
-                df.loc[index, [model.model_name]] = float(predval)
+                df.loc[index, [pred_col]] = float(predval)
 
         # log
         cols_to_hide = ["volume", "open", "high", "low"]
@@ -177,8 +174,17 @@ class PredictoorAgent2(PredictoorAgent):
             for candle in candles:
                 _update_df_at_candle(self.dfs[addr], candle)
     
-    def _update_results_csv(self, addr: str):
+    def _maybe_update_csv(self, addr: str):
+        model, df = self.models[addr], self.dfs[addr]
+        pred_col = model.model_name
+        predval = df.iloc[-2][pred_col]
+        have_predval = not np.isnan(predval)
+        if have_predval:
+            self._update_results_csv(addr)
+        
+    def _update_csv(self, addr: str):
         model, csv_name = self.models[addr], self.csv_names[addr]
+        pred_col = model.model_name
         
         with open(csv_name, "a") as f:
             writer = csv.writer(f)
@@ -191,7 +197,7 @@ class PredictoorAgent2(PredictoorAgent):
                 df.iloc[-2]["close"],
                 df.iloc[-2]["volume"],
             ]
-            row.append(df.iloc[-2][model.model_name])
+            row.append(df.iloc[-2][pred_col])
             writer.writerow(row)
     
     def _addrs(self) -> List[str]:
