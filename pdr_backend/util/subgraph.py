@@ -298,9 +298,9 @@ def get_pending_slots(
     subgraph_url: str,
     timestamp: int,
     owner_addresses: Optional[List[str]],
-    pair_filter: Optional[str] = None,
-    timeframe_filter: Optional[str] = None,
-    source_filter: Optional[str] = None,
+    pair_filter: Optional[List[str]] = None,
+    timeframe_filter: Optional[List[str]] = None,
+    source_filter: Optional[List[str]] = None,
 ):
     chunk_size = 1000
     offset = 0
