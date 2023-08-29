@@ -38,14 +38,21 @@ class PredictoorApproach2:
     def __init__(self):
         super().__init()
         self.config = PredictoorApproach1Config()
-        self._initialize_models()
-        self._initialize_csvs()
-        self._initialize_exchanges()
-        self._initialize_main_dfs()
+        self.models = {} # [addr] : OceanModel
+        self.feeds = {} # [addr] : feed, where feed is {"pair":..}
+        self.exchanges = {} # [addr] : ccxt exchange
+        self.dfs = {} # [addr] : DataFrame holding tohlcv data & predictions
+        self.csv_names = {} # [addr] : str
         
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
-        self.prev_submitted_epochs = {addr : 0 for addr in self.models}
+        self.prev_submitted_epochs = {addr : 0 for addr in self._addrs()}
+        
+        self._initialize_models_and_feeds()
+        self._initialize_exchanges()
+        self._initialize_dfs()      
+        self._initialize_csvs()     
+        
         
     def run(self):
         print("Starting main loop...")
@@ -57,7 +64,7 @@ class PredictoorApproach2:
         w3 = self.config.web3_config.w3
         
         # grab latest data
-        self._update_main_dfs()
+        self._update_dfs()
 
         # at new block number yet?
         block_number = w3.eth.block_number
@@ -74,48 +81,43 @@ class PredictoorApproach2:
         print(f"Got new block, with number {block_number}")
 
         # do work at new block
-        for addr in self.models:
+        for addr in self._addrs():
             self._process_block_at_feed(addr, block["timestamp"])
 
     def _process_block_at_feed(self, addr: str, timestamp: str):
         # if new candle, process it
-        for addr, model in self.models.items():
-            main_df = self.main_dfs[addr]
-            
-            do_write = False
-            predval = main_df.iloc[-2][model.model_name]
-            have_prediction = not
-            if not np.isnan(predval):
-                do_write = True
-            if do_write:
-                self._update_results_csv(addr)
+        model, df = self.models[addr], self.dfs[addr]
+
+        do_write = False
+        predval = df.iloc[-2][model.model_name]
+        if not np.isnan(predval):
+            do_write = True
+        if do_write:
+            self._update_results_csv(addr)
 
         # get predictions
-        for addr, model in self.models.items():
-            df = self.main_dfs[addr]
-            index = df.index.values[-1]
-            cur_predval = df.iloc[-1][model.model_name]
-            have_prediction = not np.isnan(cur_predval)
-            if have_prediction:
-                continue
-            
-            df.drop(columns_models + ["datetime"], axis=1),
-            predval = self._log_loop(
-                block_number,
-                model,
-                df,
-            )
-            if predval is not None:
-                df.loc[index, [model.model_name]] = float(predval)
+        index = df.index.values[-1]
+        cur_predval = df.iloc[-1][model.model_name]
+        have_prediction = not np.isnan(cur_predval)
+        if have_prediction:
+            continue
+
+        df.drop(columns_models + ["datetime"], axis=1),
+        predval = self._log_loop(
+            block_number,
+            model,
+            df,
+        )
+        if predval is not None:
+            df.loc[index, [model.model_name]] = float(predval)
 
         # log
-        for addr in self._ordered_addrs():
-            df = self.main_dfs[addr]
-            print(
-                main_df.loc[
-                    :, ~self.main_dfs.columns.isin(["volume", "open", "high", "low"])
-                ].tail(15)
-            )
+        df = self.dfs[addr]
+        print(
+            df.loc[
+                :, ~self.dfs.columns.isin(["volume", "open", "high", "low"])
+            ].tail(15)
+        )
 
     def _initialize_models_and_feeds(self):
         """load models, whichever ones are available"""
@@ -146,14 +148,16 @@ class PredictoorApproach2:
         # initialize csv_names
         self.csv_names = []
         ts_now = int(time.time())
-        for feed in self.feeds.values():
+        for addr in self._addrs():
+            feed = self.feeds[addr]
             csv_name = \
                 f"./{self.results_dir}/{feed['exchange_id']}_{feed['pair']}" \
                 f"_{feed['timeframe']}_{ts_now}.csv"
             self.csv_names.append(csv_name)
 
         # initialize csv files: write headers
-        for csv_name in self.csv_names:
+        for addr in self._addrs():
+            csv_name = self.csv_names[addr]
             if _csv_has_data(csv_name):
                 continue
             with open(csv_name, "a") as f:
@@ -163,12 +167,13 @@ class PredictoorApproach2:
     def _initialize_exchanges(self):
         assert self.feeds
         self.exchanges = {} # [addr] : exchange
-        for addr, feed in self.feeds.items():
+        for addr in self._addrs():
+            feed = self.feeds[addr]
             exchange_class = getattr(ccxt, feed["exchange_id"])
             exchange = exchange_class({"timeout": 30000})
             self.exchanges[addr] = exchange
 
-    def _initialize_main_dfs(self):
+    def _initialize_dfs(self):
         assert self.models and self.exchanges
         
         # initialize self.df_cols
@@ -176,9 +181,10 @@ class PredictoorApproach2:
             ["datetime", "open", "high", "low", "close", "volume"] + \
             self._models_cols() # prediction col. 0 or 1
 
-        # fill in self.main_dfs with initial data
-        self.main_dfs = {} # [addr] : DataFrame
-        for addr, feed in self.feeds.items():
+        # fill in self.dfs with initial data
+        self.dfs = {} # [addr] : DataFrame
+        for addr in self._addrs():
+            feed = self.feeds[addr]
             df = pd.DataFrame(columns=self.df_cols)
         
             candles = self.exchange_ccxt.fetch_ohlcv(feed["pair"], "5m")
@@ -187,12 +193,10 @@ class PredictoorApproach2:
                 df.loc[ohlc["timestamp"]] = _tohlcv_dict(t,o,h,l,c,v)
                 df["datetime"] = _to_datetime(df.index.values)
 
-            self.main_dfs[addr] = df
+            self.dfs[addr] = df
 
     def _models_cols(self) -> List[str]:
-        """Return model cols, with order dictated by ordered_addrs()"""
-        addrs = self._ordered_addrs()
-        return [self.models[addr].model_name for addr in addrs]
+        return [self.models[addr].model_name for addr in self._addrs()]
     
     def _update_results_csv(self, addr: str):
         csv_name = self.csv_names[addr]
@@ -212,10 +216,10 @@ class PredictoorApproach2:
             row.append(df.iloc[-2][model.model_name])
             writer.writerow(row)
 
-    def _update_main_dfs(self):
-        """Update self.main_dfs with the two most recent candles"""
-        for addr, feed in self.feeds.items():
-            df = self.main_dfs[addr]
+    def _update_dfs(self):
+        """Update self.dfs with the two most recent candles"""
+        for addr in self._addrs():
+            feed, df = self.feeds[addr], self.dfs[addr]
             
             candles = self.exchange_ccxt.fetch_ohlcv(feed["pair"], "5m")
             recent_candles = candles[-2:]
@@ -241,11 +245,11 @@ class PredictoorApproach2:
                 return prediction
         return None
     
-    def _ordered_addrs(self):
-        """Return addresses in an opinionated order."""
+    def _addrs(self) -> List[str]:
+        """Return addresses in a deterministic order."""
         assert self.feeds
         return sorted(self.feeds.keys())
-    
+     
 
 @enforce_types
 def _to_datetime(ts):
