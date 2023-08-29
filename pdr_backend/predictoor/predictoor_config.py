@@ -1,6 +1,6 @@
+from abc import ABC
 import os
 from os import getenv
-import time
 
 from enforce_typing import enforce_types
 
@@ -8,7 +8,7 @@ from pdr_backend.util.env import getenv_or_exit
 
 
 @enforce_types
-class PredictoorConfig:
+class PredictoorConfig(ABC):
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")
@@ -43,3 +43,4 @@ class PredictoorConfig:
         for address in feed_addrs:
             contracts[address] = PredictoorContract(
                 self.web3_config, address)
+            
