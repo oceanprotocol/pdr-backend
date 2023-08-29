@@ -29,7 +29,7 @@ class PredictoorApproach1:
 
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
-        self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
+        self.prev_submitted_epochs = {addr : 0 for addr in self._addrs()}
         
     def run(self):
         print("Starting main loop...")
@@ -55,16 +55,16 @@ class PredictoorApproach1:
         print(f"Got new block, with number {block_number} ")
 
         # do work at new block
-        for addr in self.feeds:
+        for addr in self._addrs():
             self._process_block_at_feed(addr, block["timestamp"])
     
     def _process_block_at_feed(self, addr: str, timestamp: str):
         #base data
-        feed: dict = self.feeds[addr]
+        feed = self.feeds[addr]
         contract = self.contracts[addr]
-        epoch: int = contract.get_current_epoch()
-        s_per_epoch: int = contract.get_secondsPerEpoch()
-        s_remaining_in_epoch:int = epoch * s_per_epoch + s_per_epoch - timestamp
+        epoch = contract.get_current_epoch()
+        s_per_epoch = contract.get_secondsPerEpoch()
+        s_remaining_in_epoch = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
         print(
@@ -128,6 +128,11 @@ class PredictoorApproach1:
         )
 
         return True
+    
+    def _addrs(self) -> List[str]:
+        """Return addresses in a deterministic order."""
+        assert self.feeds
+        return sorted(self.feeds.keys())
             
 
 @enforce_types
