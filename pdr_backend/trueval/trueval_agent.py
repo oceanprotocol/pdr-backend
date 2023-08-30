@@ -114,7 +114,7 @@ def get_trueval(
 ) -> Tuple[bool, bool]:
     """
     @description
-        Checks if the price has risen between two given timestamps. 
+        Checks if the price has risen between two given timestamps.
         If an error occurs, the second value in the returned tuple is set to True.
 
     @arguments
