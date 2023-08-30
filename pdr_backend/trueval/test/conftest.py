@@ -1,5 +1,6 @@
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 
+
 @pytest.fixture()
 def slot():
     contract_data = ContractData(
@@ -19,6 +20,7 @@ def slot():
         contract=contract_data,
         slot=1692943200,
     )
+
 
 @pytest.fixture(autouse=True)
 def set_env_vars():

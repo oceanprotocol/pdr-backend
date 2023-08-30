@@ -3,6 +3,7 @@ from pdr_backend.models.contract_data import ContractData
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 
+
 def get_true_val(
     topic: ContractData, initial_timestamp, end_timestamp
 ) -> Tuple[bool, bool]:
@@ -40,6 +41,7 @@ def get_true_val(
     except Exception as e:
         print(f"Error getting trueval for {symbol} {e}")
         return (False, True)
+
 
 def main(testing=False):
     config = TruevalConfig()

@@ -7,6 +7,7 @@ from pdr_backend.trueval.main import TruevalAgent, main
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
+
 def test_main(slot):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -25,5 +26,3 @@ def test_main(slot):
         main(True)
 
     ps_mock.assert_called_once_with(slot)
-
-
