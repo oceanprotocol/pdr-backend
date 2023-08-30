@@ -25,22 +25,22 @@ def test_submit_truevals(
     epochs = [i for i in range(current_epoch, end_epoch, SECONDS_PER_EPOCH)]
     truevals = [True] * len(epochs)
     cancels = [False] * len(epochs)
-    truevals = [
+    truevals_before = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
         for i in epochs
     ]
-    for trueval in truevals:
+    for trueval in truevals_before:
         assert trueval == False
 
     predictoor_helper.submit_truevals(
         predictoor_contract.contract_address, epochs, truevals, cancels
     )
 
-    truevals = [
+    truevals_after = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
         for i in epochs
     ]
-    for trueval in truevals:
+    for trueval in truevals_after:
         assert trueval == True
 
 
