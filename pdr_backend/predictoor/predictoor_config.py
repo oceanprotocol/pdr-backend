@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.subgraph import query_predictContracts
 from pdr_backend.util.web3_config import Web3Config
 
 
