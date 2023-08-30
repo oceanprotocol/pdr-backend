@@ -1,10 +1,10 @@
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent import TruevalAgent, get_true_val
+from pdr_backend.trueval.trueval_agent import TruevalAgent, get_trueval
 
 
 def main(testing=False):
     config = TruevalConfig()
-    t = TruevalAgent(config, get_true_val)
+    t = TruevalAgent(config, get_trueval)
     t.run(testing)
 
 

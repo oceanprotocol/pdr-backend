@@ -2,18 +2,18 @@
 Flow
   - reads from subgraph list of dt3 contracts, to get all deployed contracts
   - for every contract, monitors when epoch is changing
-  - once an epoch is ended, calculate the true_val and submit.
+  - once an epoch is ended, calculate the trueval and submit.
 
 Notes on customization:
 
-  The actual true_val is fetched by calling function get_true_val()
+  The actual trueval is fetched by calling function get_trueval()
 
-  We call get_true_val() with 4 args:
+  We call get_trueval() with 4 args:
    - topic: this is pair object
    - initial_timestamp:   blocktime for begining of epoch - 2
    - end_timestamp:   blocktime for begining of epoch -1
 
-  Then it returns true_val, which gets submitted to contract
+  Then it returns trueval, which gets submitted to contract
 
   You need to change the code to support more complex flows. Now, it's based on ccxt
 """
@@ -23,7 +23,7 @@ import ccxt
 from pdr_backend.models.contract_data import ContractData
 
 
-def get_true_val(
+def get_trueval(
     topic: ContractData, initial_timestamp, end_timestamp
 ) -> Tuple[bool, bool]:
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp

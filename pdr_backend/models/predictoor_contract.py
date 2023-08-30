@@ -336,10 +336,10 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
             slot, address, auth_signature
         ).call({"from": self.config.owner})
 
-    def submit_trueval(self, true_val, timestamp, cancel_round, wait_for_receipt=True):
+    def submit_trueval(self, trueval, timestamp, cancel_round, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.submitTrueVal(
-            timestamp, true_val, cancel_round
+            timestamp, trueval, cancel_round
         ).transact({"from": self.config.owner, "gasPrice": gasPrice})
         print(f"Submitted trueval, txhash: {tx.hex()}")
         if not wait_for_receipt:

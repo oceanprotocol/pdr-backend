@@ -14,10 +14,10 @@ class TruevalAgent:
     def __init__(
         self,
         trueval_config: TruevalConfig,
-        _get_true_val: Callable[[ContractData, int, int], Tuple[bool, bool]],
+        _get_trueval: Callable[[ContractData, int, int], Tuple[bool, bool]],
     ):
         self.config = trueval_config
-        self.get_true_val = _get_true_val
+        self.get_trueval = _get_trueval
         self.contract_cache: Dict[str, tuple] = {}
 
     @enforce_types
@@ -93,7 +93,7 @@ class TruevalAgent:
         initial_ts = slot.slot - seconds_per_epoch
         end_ts = slot.slot
 
-        (true_val, error) = self.get_true_val(slot.contract, initial_ts, end_ts)
+        (trueval, error) = self.get_trueval(slot.contract, initial_ts, end_ts)
         if error:
             raise Exception(
                 f"Error getting trueval for {slot.contract.pair} and slot {slot.slot}"
@@ -101,15 +101,15 @@ class TruevalAgent:
 
         # pylint: disable=line-too-long
         print(
-            f"Contract:{predictoor_contract.contract_address} - Submitting true_val {true_val} and slot:{slot.slot}"
+            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot}"
         )
 
-        tx = predictoor_contract.submit_trueval(true_val, slot.slot, False, True)
+        tx = predictoor_contract.submit_trueval(trueval, slot.slot, False, True)
 
         return tx
 
 
-def get_true_val(
+def get_trueval(
     topic: ContractData, initial_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp

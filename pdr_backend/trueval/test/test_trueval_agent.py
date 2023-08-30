@@ -2,11 +2,11 @@ from unittest.mock import patch, Mock, MagicMock
 import pytest
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent import get_true_val
+from pdr_backend.trueval.trueval_agent import get_trueval
 
 
 def test_new_agent(trueval_config):
-    agent = TruevalAgent(trueval_config, get_true_val)
+    agent = TruevalAgent(trueval_config, get_trueval)
     assert agent.config == trueval_config
 
 
@@ -99,7 +99,7 @@ def trueval_config():
 
 @pytest.fixture()
 def agent(trueval_config):
-    return TruevalAgent(trueval_config, get_true_val)
+    return TruevalAgent(trueval_config, get_trueval)
 
 
 @pytest.fixture()
