@@ -19,17 +19,17 @@ class PredictoorConfig2(PredictoorConfig):
                 
         self.get_prediction = get_prediction # set prediction function
 
-        # example: directory from git clone of oceanprotocol/pdr-model-simple
+        # e.g. oceanprotocol/pdr-model-simple
         model_dir: str = getenv_or_exit("MODELDIR")
         
-        # OceanModel module lives in $MODELDIR/model.py
+        # $MODELDIR/model.py holds OceanModel
         sys.path.append(model_dir)
         from model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
 
-        # pickled trained models live in $MODELDIR/trained_models/
+        # $MODELDIR/trained_models/ holds pickled trained models
         self.trained_models_dir = os.path.join(model_dir, "trained_models")
 
-        # results csvs live in $self.results_dir/
+        # $self.results_dir/ holds results csvs
         self.results_dir = "results"
         if not os.path.exists(self.results_dir):
             os.makedirs(self.results_dir)
@@ -41,9 +41,9 @@ class PredictoorAgent2(PredictoorAgent):
     def __init__(self, config):
         super().__init(config)
         
-        self.models = {} # [addr] : OceanModel
+        self.models = {}    # [addr] : OceanModel
         self.exchanges = {} # [addr] : ccxt exchange
-        self.dfs = {} # [addr] : DataFrame holding tohlcv data & predictions
+        self.dfs = {}       # [addr] : DataFrame, has tohlcv data & predictions
         self.csv_names = {} # [addr] : str
           
         self._initialize_models()
@@ -54,28 +54,31 @@ class PredictoorAgent2(PredictoorAgent):
     def _process_block_at_feed(self, addr: str, timestamp: str):
         # parent does:
         # - maybe get payout for previous block
-        # - maybe submit prediction; will update self.prev_submitted_epochs
-        super()._process_block_at_feed(addr, timestamp)
-
+        # - maybe submit prediction & update self.prev_submitted_epochs[addr]
+        (predval, stake, submitted) = \
+            super()._process_block_at_feed(addr, timestamp)
+        
         # special work of this method...
+        model, df, exchange = \
+            self.models[addr], self.dfs[addr], self.exchanges[addr]
+        pred_col = model.model_name
 
         # maybe update dfs
-        exchange = self.exchanges[addr]
         candles = exchange.fetch_ohlcv(feed["pair"], "5m")
         recent_candles = candles[-2:]
         for candle in recent_candles:
             _update_df_at_candle(df, candle)
 
         # maybe update csv
-        self._maybe_update_csv(addr)
+        prev_predval = df.iloc[-2][pred_col]
+        if not np.isnan(prev_predval):
+            row = _row_for_csv(df, -2)
+            _add_row_to_csv(row, self.csv_names[addr])
 
         # get predictions
         index = df.index.values[-1]
         cur_predval = df.iloc[-1][pred_col]
-        have_cur_predval = not np.isnan(cur_predval)
-        if not have_cur_predval:
-            df.drop(columns_models + ["datetime"], axis=1),
-            predval = self._log_loop(addr, block_number)
+        if not np.isnan(cur_predval):
             if predval is not None:
                 df.loc[index, [pred_col]] = float(predval)
 
@@ -83,18 +86,17 @@ class PredictoorAgent2(PredictoorAgent):
         cols_to_hide = ["volume", "open", "high", "low"]
         print(df.loc[:, ~df.columns.isin(cols_to_hide)].tail(15))
     
-    def get_prediction(self, feed: dict, timestamp: str) -> Tuple[bool, int]:
+    def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
         """Model-based prediction"""
-        addr = feed["address"]        
-        print(
-            f" We were asked to predict {feed['name']} "
-            f"(contract: {addr}) value "
-            f"at estimated timestamp: {timestamp}"
-        )
+        feed_name = self.feeds[addr]["name"]
+        print(f"Predict {feed_name} (addr={addr}) at timestamp {timestamp}")
 
-        df = self.models[addr]
-        predval, stake = model.predict(df)
-        predval = bool(predval)
+        model, df = self.models[addr], self.dfs[addr]
+        df = df.drop(columns_models + ["datetime"], axis=1)
+        predval, conf = model.predict(df) # calls OceanModel.predict()
+        
+        predval = bool(predval) if predval is not None
+        stake = conf # FIXME - do better than this
         
         print(f"Predicted {predval} with stake {stake}")
         return (predval, stake)
@@ -181,25 +183,7 @@ class PredictoorAgent2(PredictoorAgent):
         have_predval = not np.isnan(predval)
         if have_predval:
             self._update_results_csv(addr)
-        
-    def _update_csv(self, addr: str):
-        model, csv_name = self.models[addr], self.csv_names[addr]
-        pred_col = model.model_name
-        
-        with open(csv_name, "a") as f:
-            writer = csv.writer(f)
-            row = [
-                df.index.values[-2],
-                df.iloc[-2]["datetime"],
-                df.iloc[-2]["open"],
-                df.iloc[-2]["high"],
-                df.iloc[-2]["low"],
-                df.iloc[-2]["close"],
-                df.iloc[-2]["volume"],
-            ]
-            row.append(df.iloc[-2][pred_col])
-            writer.writerow(row)
-    
+
     def _addrs(self) -> List[str]:
         """Return addresses in a deterministic order."""
         assert self.models
@@ -208,6 +192,25 @@ class PredictoorAgent2(PredictoorAgent):
     def _models_cols(self) -> List[str]:
         return [self.models[addr].model_name for addr in self.active_addrs]
 
+@enforce_types
+def _row_for_csv(df, row_index, pred_cols) -> list:
+    row = [
+        df.index.values[row_index],
+        df.iloc[row_index]["datetime"],
+        df.iloc[row_index]["open"],
+        df.iloc[row_index]["high"],
+        df.iloc[row_index]["low"],
+        df.iloc[row_index]["close"],
+        df.iloc[row_index]["volume"],
+    ]
+    for pred_col in pred_cols:
+        row.append(df.iloc[row_index][pred_col])
+    
+@enforce_types
+def _add_row_to_csv(row:list, csv_name:str):        
+    with open(csv_name, "a") as f:
+        writer = csv.writer(f)
+        writer.writerow(row)
 
 @enforce_types
 def _csv_has_data(filename: str) -> bool:

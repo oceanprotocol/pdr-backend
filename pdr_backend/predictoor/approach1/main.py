@@ -13,14 +13,10 @@ class PredictoorConfig1(PredictoorConfig):
 @enforce_types
 class PredictoorAgent1(PredictoorAgent):
     
-    def get_prediction(self, feed: dict, timestamp: str) -> Tuple[bool, int]:
+    def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
         """Random prediction"""
-        addr = feed["address"]        
-        print(
-            f" We were asked to predict {feed['name']} "
-            f"(contract: {addr}) value "
-            f"at estimated timestamp: {timestamp}"
-        )
+        feed_name = self.feeds[addr]["name"]
+        print(f"Predict {feed_name} (addr={addr}) at timestamp {timestamp}")
 
         # Pick random prediction & random stake. You need to customize this.
         import random
