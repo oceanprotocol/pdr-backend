@@ -1,7 +1,5 @@
 from unittest.mock import Mock, call
 
-from eth_account import Account
-
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import fund_dev_accounts
 
