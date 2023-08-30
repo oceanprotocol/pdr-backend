@@ -6,7 +6,7 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 
 
 def get_true_val(
-    topic: ContractData, initial_timestamp, end_timestamp
+    topic: ContractData, initial_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
     """Given a topic, Returns the true val between end_timestamp and initial_timestamp
     Topic object looks like:
