@@ -110,31 +110,27 @@ class TruevalAgent:
 
 
 def get_trueval(
-    topic: ContractData, initial_timestamp: int, end_timestamp: int
+    feed: ContractData, initial_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
-    """Given a topic, Returns the true val between end_timestamp and initial_timestamp
-    Topic object looks like:
-
-    {
-        "name":"ETH-USDT",
-        "address":"0x54b5ebeed85f4178c6cb98dd185067991d058d55",
-        "symbol":"ETH-USDT",
-        "blocks_per_epoch":"60",
-        "blocks_per_subscription":"86400",
-        "pair":"eth-usdt",
-        "base":"eth",
-        "quote":"usdt",
-        "source":"kraken",
-        "timeframe":"5m"
-    }
-
     """
-    symbol = topic.pair
-    if topic.source == "binance" or topic.source == "kraken":
+    @description
+        Checks if the price has risen between two given timestamps. 
+        If an error occurs, the second value in the returned tuple is set to True.
+
+    @arguments
+        feed -- ContractData -- The feed object containing pair details
+        initial_timestamp -- int -- The starting timestamp.
+        end_timestamp -- int -- The ending timestamp.
+
+    @return
+        Tuple[bool, bool] -- The trueval and a boolean indicating if an error occured.
+    """
+    symbol = feed.pair
+    if feed.source == "binance" or feed.source == "kraken":
         symbol = symbol.replace("-", "/")
         symbol = symbol.upper()
     try:
-        exchange_class = getattr(ccxt, topic.source)
+        exchange_class = getattr(ccxt, feed.source)
         exchange_ccxt = exchange_class()
         price_initial = exchange_ccxt.fetch_ohlcv(
             symbol, "1m", since=initial_timestamp, limit=1
