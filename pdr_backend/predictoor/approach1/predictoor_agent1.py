@@ -1,14 +1,6 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
-from pdr_backend.predictoor.predictoor_config import PredictoorConfig
-
-
-@enforce_types
-class PredictoorConfig1(PredictoorConfig):
-    def __init__(self):
-        super().__init__()
-        self.get_prediction = get_prediction
 
 @enforce_types
 class PredictoorAgent1(PredictoorAgent):
@@ -26,12 +18,3 @@ class PredictoorAgent1(PredictoorAgent):
         print(f"Predicted {predval} with stake {stake}")
         return (predval, stake)
 
-
-@enforce_types
-def main():
-    config = PredictoorConfig1()
-    p = PredictoorAgent1(config)
-    p.run()
-
-if __name__ == "__main__":
-    main()
