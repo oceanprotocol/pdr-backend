@@ -31,7 +31,16 @@ def test_submit_truevals(
     for trueval in truevals:
         assert trueval == False
 
-    predictoor_helper.submit_truevals(predictoor_contract.contract_address, epochs, truevals, cancels)
+    predictoor_helper.submit_truevals(
+        predictoor_contract.contract_address, epochs, truevals, cancels
+    )
+
+    truevals = [
+        predictoor_contract.contract_instance.functions.trueValues(i).call()
+        for i in epochs
+    ]
+    for trueval in truevals:
+        assert trueval == True
 
 
 def test_submit_truevals_contracts():
