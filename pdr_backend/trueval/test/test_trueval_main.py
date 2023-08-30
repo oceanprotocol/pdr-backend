@@ -1,10 +1,5 @@
-import os
-import pytest
-from unittest.mock import patch, Mock, MagicMock
-from pdr_backend.models.contract_data import ContractData
-from pdr_backend.models.slot import Slot
+from unittest.mock import patch, MagicMock
 from pdr_backend.trueval.main import TruevalAgent, main
-from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 

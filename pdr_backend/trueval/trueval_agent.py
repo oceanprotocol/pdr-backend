@@ -13,7 +13,7 @@ class TruevalAgent:
     def __init__(
         self,
         trueval_config: TruevalConfig,
-        get_true_val: Callable[[ContractData, int, int], [Tuple[bool, bool]]],
+        get_true_val,
     ):
         self.config = trueval_config
         self.get_true_val = get_true_val

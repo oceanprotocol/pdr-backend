@@ -1,19 +1,16 @@
-import os
-import pytest
 from unittest.mock import patch, Mock, MagicMock
-from pdr_backend.models.contract_data import ContractData
-from pdr_backend.models.slot import Slot
-from pdr_backend.trueval.main import TruevalAgent, main
-from pdr_backend.util.web3_config import Web3Config
+import pytest
+from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
+from pdr_backend.trueval.main import get_true_val
 
 
 def test_new_agent(trueval_config):
-    agent = TruevalAgent(trueval_config)
+    agent = TruevalAgent(trueval_config, get_true_val)
     assert agent.config == trueval_config
 
 
-def test_process_slot(agent, slot, predictoor_contract):
+def test_process_slot(agent, slot):
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
     ) as mock_submit:
@@ -102,13 +99,14 @@ def trueval_config():
 
 @pytest.fixture()
 def agent(trueval_config):
-    return TruevalAgent(trueval_config)
+    return TruevalAgent(trueval_config, get_true_val)
 
 
 @pytest.fixture()
 def predictoor_contract():
     with patch(
-        "pdr_backend.trueval.main.PredictoorContract", return_value=mock_contract()
+        "pdr_backend.trueval.trueval_agent.PredictoorContract",
+        return_value=mock_contract(),
     ) as mock_predictoor_contract:
         yield mock_predictoor_contract
 

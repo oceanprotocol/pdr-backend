@@ -1,3 +1,4 @@
+from typing import Tuple
 import ccxt
 from pdr_backend.models.contract_data import ContractData
 from pdr_backend.trueval.trueval_config import TruevalConfig

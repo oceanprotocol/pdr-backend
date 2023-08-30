@@ -1,4 +1,7 @@
+import os
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
+from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.slot import Slot
 
 
 @pytest.fixture()
