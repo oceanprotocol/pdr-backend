@@ -1,10 +1,13 @@
 from abc import ABC
 import os
 from os import getenv
+from typing import Dict, List
 
 from enforce_typing import enforce_types
 
+from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
