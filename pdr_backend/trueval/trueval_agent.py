@@ -14,10 +14,10 @@ class TruevalAgent:
     def __init__(
         self,
         trueval_config: TruevalConfig,
-        get_true_val: Callable[[ContractData, int, int], Tuple[bool, bool]],
+        _get_true_val: Callable[[ContractData, int, int], Tuple[bool, bool]],
     ):
         self.config = trueval_config
-        self.get_true_val = get_true_val
+        self.get_true_val = _get_true_val
         self.contract_cache: Dict[str, tuple] = {}
 
     @enforce_types
