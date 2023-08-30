@@ -44,7 +44,7 @@ class PredictoorConfig(ABC):
             -> Dict[str, PredictoorContract]:
         """Return dict of [feed_addr] : PredictoorContract}"""
         contracts = {}
-        for address in feed_addrs:
-            contracts[address] = PredictoorContract(
-                self.web3_config, address)
+        for addr in feed_addrs:
+            contracts[addr] = PredictoorContract(self.web3_config, addr)
+        return contracts
             
