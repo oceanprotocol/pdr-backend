@@ -23,7 +23,8 @@ accounts_to_fund = [
     ("PDR_MM_USER", 10000.0),
 ]
 
-fund_dev_accounts(accounts_to_fund, web3_config.owner, OCEAN)
+if web3_config.w3.eth.chain_id == 8996:
+    fund_dev_accounts(accounts_to_fund, web3_config.owner, OCEAN)
 
 publish(
     s_per_epoch=300,
