@@ -1,4 +1,3 @@
-from abc import ABC
 from os import getenv
 from typing import Optional, List
 
@@ -10,7 +9,7 @@ from pdr_backend.util.subgraph import get_pending_slots
 from pdr_backend.util.web3_config import Web3Config
 
 
-class TruevalConfig(ABC):
+class TruevalConfig:
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")
