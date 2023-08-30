@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from pdr_backend.trueval.trueval import get_true_val
+from pdr_backend.trueval.main import get_true_val
 from pdr_backend.models.contract_data import ContractData
 
 
