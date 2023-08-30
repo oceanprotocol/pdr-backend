@@ -10,7 +10,7 @@ def test_new_agent(trueval_config):
     assert agent.config == trueval_config
 
 
-def test_process_slot(agent, slot):
+def test_process_slot(agent, slot, predictoor_contract):
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
     ) as mock_submit:
