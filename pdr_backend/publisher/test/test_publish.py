@@ -12,7 +12,7 @@ def test_fund_dev_accounts(monkeypatch):
     monkeypatch.setenv("PREDICTOOR2_PRIVATE_KEY", pk)
 
     mock_token = Mock(spec=Token)
-    mock_account = Mock(spec=Account)
+    mock_account = Mock(spec=str)
 
     accounts_to_fund = [
         ("PREDICTOOR_PRIVATE_KEY", 2000),
