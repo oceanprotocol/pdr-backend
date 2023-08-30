@@ -2,10 +2,11 @@ from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.predictoor_helper import PredictoorHelper
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.web3_config import Web3Config
 
 
 def test_submit_truevals(
-    predictoor_contract: PredictoorContract, web3_config, chain_id
+    predictoor_contract: PredictoorContract, web3_config: Web3Config, chain_id: int
 ):
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
