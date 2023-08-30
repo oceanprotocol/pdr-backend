@@ -2,7 +2,7 @@ from unittest.mock import patch, Mock, MagicMock
 import pytest
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.main import get_true_val
+from pdr_backend.trueval.trueval_agent import get_true_val
 
 
 def test_new_agent(trueval_config):

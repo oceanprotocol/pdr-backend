@@ -1,6 +1,7 @@
 import time
 from typing import Dict, Tuple, Callable
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.models.slot import Slot
@@ -106,3 +107,42 @@ class TruevalAgent:
         tx = predictoor_contract.submit_trueval(true_val, slot.slot, False, True)
 
         return tx
+
+
+def get_true_val(
+    topic: ContractData, initial_timestamp: int, end_timestamp: int
+) -> Tuple[bool, bool]:
+    """Given a topic, Returns the true val between end_timestamp and initial_timestamp
+    Topic object looks like:
+
+    {
+        "name":"ETH-USDT",
+        "address":"0x54b5ebeed85f4178c6cb98dd185067991d058d55",
+        "symbol":"ETH-USDT",
+        "blocks_per_epoch":"60",
+        "blocks_per_subscription":"86400",
+        "pair":"eth-usdt",
+        "base":"eth",
+        "quote":"usdt",
+        "source":"kraken",
+        "timeframe":"5m"
+    }
+
+    """
+    symbol = topic.pair
+    if topic.source == "binance" or topic.source == "kraken":
+        symbol = symbol.replace("-", "/")
+        symbol = symbol.upper()
+    try:
+        exchange_class = getattr(ccxt, topic.source)
+        exchange_ccxt = exchange_class()
+        price_initial = exchange_ccxt.fetch_ohlcv(
+            symbol, "1m", since=initial_timestamp, limit=1
+        )
+        price_end = exchange_ccxt.fetch_ohlcv(
+            symbol, "1m", since=end_timestamp, limit=1
+        )
+        return (price_end[0][1] >= price_initial[0][1], False)
+    except Exception as e:
+        print(f"Error getting trueval for {symbol} {e}")
+        return (False, True)
