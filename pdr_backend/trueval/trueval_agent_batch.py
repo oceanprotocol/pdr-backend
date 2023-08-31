@@ -1,0 +1,105 @@
+from collections import defaultdict
+import time
+from typing import Any, Dict, List, Tuple, Callable, TypedDict, Union
+from hexbytes import HexBytes
+from web3.datastructures import AttributeDict
+
+from web3.types import TxReceipt
+from pdr_backend.models.feed import Feed
+from pdr_backend.models.predictoor_batcher import PredictoorBatcher
+from pdr_backend.models.slot import Slot
+from pdr_backend.trueval.trueval_agent import TruevalAgent
+from pdr_backend.trueval.trueval_config import TruevalConfig
+
+
+class TruevalSlot(Slot):
+    def __init__(self, slot_number: int, feed: Feed):
+        super().__init__(slot_number, feed)
+        self.trueval = None
+        self.cancel = False
+
+    def set_trueval(self, trueval: bool):
+        self.trueval = trueval
+
+    def set_cancel(self, cancel: bool):
+        self.cancel = cancel
+
+
+class TruevalAgentBatch(TruevalAgent):
+    def __init__(
+        self,
+        trueval_config: TruevalConfig,
+        _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
+        predictoor_batcher_addr: str,
+    ):
+        super().__init__(trueval_config, _get_trueval)
+        self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
+            self.config.web3_config, predictoor_batcher_addr
+        )
+
+    def take_step(self):
+        pending_slots = self.get_batch()
+
+        if len(pending_slots) == 0:
+            print(f"No pending slots, sleeping for {self.config.sleep_time} seconds...")
+            time.sleep(self.config.sleep_time)
+            return
+
+        # convert slots to TruevalSlot
+        trueval_slots = [
+            TruevalSlot(slot.slot_number, slot.feed) for slot in pending_slots
+        ]
+
+        # get the trueval for each slot
+        for slot in trueval_slots:
+            self.process_trueval_slot(slot)
+            print(".", end="", flush=True)
+        print()  # new line
+
+        print("Submitting transaction...")
+
+        tx_hash = self.batch_submit_truevals(trueval_slots)
+        print(f"Tx sent: {tx_hash}, sleeping for {self.config.sleep_time} seconds...")
+
+        time.sleep(self.config.sleep_time)
+
+    def batch_submit_truevals(self, slots: List[TruevalSlot]) -> str:
+        contracts = defaultdict(
+            lambda: {"epoch_starts": [], "trueVals": [], "cancelRounds": []}
+        )
+
+        for slot in slots:
+            if slot.trueval is not None:  # Only consider slots with non-None truevals
+                data = contracts[
+                    self.config.web3_config.w3.to_checksum_address(slot.feed.address)
+                ]
+                data["epoch_starts"].append(slot.slot_number)
+                data["trueVals"].append(slot.trueval)
+                data["cancelRounds"].append(slot.cancel)
+
+        contract_addrs = list(contracts.keys())
+        epoch_starts = [data["epoch_starts"] for data in contracts.values()]
+        trueVals = [data["trueVals"] for data in contracts.values()]
+        cancelRounds = [data["cancelRounds"] for data in contracts.values()]
+
+        tx = self.predictoor_batcher.submit_truevals_contracts(
+            contract_addrs, epoch_starts, trueVals, cancelRounds, True
+        )
+        return tx["transactionHash"].hex()
+
+    def process_trueval_slot(self, slot: TruevalSlot):
+        _, seconds_per_epoch = self.get_contract_info(slot.feed.address)
+        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
+        try:
+            (trueval, error) = self.get_trueval(slot.feed, init_ts, end_ts)
+            slot.set_trueval(trueval)
+            if error:
+                slot.set_cancel(True)
+        except Exception as e:
+            if "Too many requests" in str(e):
+                print("Too many requests, waiting for a minute")
+                time.sleep(60)
+                return self.process_trueval_slot(slot)
+            print(
+                f"An error occured: {e}, while getting slot: {slot.feed.address} {slot.feed.pair} {slot.slot_number}"
+            )
