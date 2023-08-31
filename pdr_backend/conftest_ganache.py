@@ -1,4 +1,5 @@
 import os
+from pdr_backend.models.predictoor_helper import PredictoorHelper
 
 import pytest
 
@@ -82,3 +83,30 @@ def predictoor_contract():
     )
     dt_addr = logs["newTokenAddress"]
     return PredictoorContract(config, dt_addr)
+
+
+@pytest.fixture(scope="module")
+def predictoor_contract2():
+    config = Web3Config(_rpc_url(), _private_key())
+    _, _, _, _, logs = publish(
+        s_per_epoch=SECONDS_PER_EPOCH,
+        s_per_subscription=SECONDS_PER_EPOCH * 24,
+        base="ETH",
+        quote="USDT",
+        source="kraken",
+        timeframe="5m",
+        trueval_submitter_addr=config.owner,
+        feeCollector_addr=config.owner,
+        rate=3,
+        cut=0.2,
+        web3_config=config,
+    )
+    dt_addr = logs["newTokenAddress"]
+    return PredictoorContract(config, dt_addr)
+
+
+@pytest.fixture(scope="module")
+def predictoor_helper():
+    predictoor_helper_addr = get_address(_chain_id(), "PredictoorHelper")
+    predictoor_helper = PredictoorHelper(_web3_config(), predictoor_helper_addr)
+    return predictoor_helper
