@@ -336,19 +336,15 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
             slot, address, auth_signature
         ).call({"from": self.config.owner})
 
-    def submit_trueval(self, true_val, timestamp, cancel_round, wait_for_receipt=True):
+    def submit_trueval(self, trueval, timestamp, cancel_round, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
-        try:
-            tx = self.contract_instance.functions.submitTrueVal(
-                timestamp, true_val, cancel_round
-            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
-            print(f"Submitted trueval, txhash: {tx.hex()}")
-            if not wait_for_receipt:
-                return tx
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
-        except Exception as e:
-            print(e)
-            return None
+        tx = self.contract_instance.functions.submitTrueVal(
+            timestamp, trueval, cancel_round
+        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+        print(f"Submitted trueval, txhash: {tx.hex()}")
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
