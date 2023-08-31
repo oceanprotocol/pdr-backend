@@ -1,9 +1,8 @@
 import os
-from pdr_backend.models.predictoor_helper import PredictoorHelper
-
 import pytest
 
 from pdr_backend.models.token import Token
+from pdr_backend.models.predictoor_helper import PredictoorHelper
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address

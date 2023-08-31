@@ -3,7 +3,6 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.predictoor_helper import PredictoorHelper
 from pdr_backend.models.erc721 import ERC721
 from pdr_backend.models.token import Token
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -23,7 +22,7 @@ def test_submit_truevals(
     end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs = [i for i in range(current_epoch, end_epoch, SECONDS_PER_EPOCH)]
+    epochs = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
     truevals = [True] * len(epochs)
     cancels = [False] * len(epochs)
 
@@ -68,13 +67,10 @@ def test_submit_truevals_contracts(
     end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs1 = [i for i in range(current_epoch, end_epoch, SECONDS_PER_EPOCH)]
-    epochs2 = [
-        i
-        for i in range(
-            current_epoch + SECONDS_PER_EPOCH * 2, end_epoch, SECONDS_PER_EPOCH
-        )
-    ]
+    epochs1 = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
+    epochs2 = list(
+        range(current_epoch + SECONDS_PER_EPOCH * 2, end_epoch, SECONDS_PER_EPOCH)
+    )
     epochs = [epochs1, epochs2]
     truevals = [[True] * len(epochs1), [True] * len(epochs2)]
     cancels = [[False] * len(epochs1), [False] * len(epochs2)]
