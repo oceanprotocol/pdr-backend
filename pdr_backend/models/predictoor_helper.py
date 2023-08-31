@@ -1,5 +1,6 @@
 from typing import List
 from enforce_typing import enforce_types
+from eth_typing import ChecksumAddress
 from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
@@ -17,7 +18,7 @@ class PredictoorHelper:
 
     def consume_multiple(
         self,
-        addresses: List[str],
+        addresses: List[ChecksumAddress],
         times: List[int],
         token_addr: str,
         wait_for_receipt=True,
@@ -32,7 +33,7 @@ class PredictoorHelper:
 
     def submit_truevals_contracts(
         self,
-        contract_addrs: List[str],
+        contract_addrs: List[ChecksumAddress],
         epoch_starts: List[List[int]],
         trueVals: List[List[bool]],
         cancelRounds: List[List[bool]],
@@ -48,7 +49,7 @@ class PredictoorHelper:
 
     def submit_truevals(
         self,
-        contract_addr: str,
+        contract_addr: ChecksumAddress,
         epoch_starts: List[int],
         trueVals: List[bool],
         cancelRounds: List[bool],

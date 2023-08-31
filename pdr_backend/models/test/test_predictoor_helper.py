@@ -1,3 +1,4 @@
+from web3.types import RPCEndpoint
 from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.predictoor_helper import PredictoorHelper
@@ -15,9 +16,9 @@ def test_submit_truevals(
 
     # fast forward time
     predictoor_contract.config.w3.provider.make_request(
-        "evm_increaseTime", [SECONDS_PER_EPOCH * 10]
+        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
     )
-    predictoor_contract.config.w3.provider.make_request("evm_mine", [])
+    predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
     end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
@@ -60,9 +61,9 @@ def test_submit_truevals_contracts(
 
     # fast forward time
     predictoor_contract.config.w3.provider.make_request(
-        "evm_increaseTime", [SECONDS_PER_EPOCH * 10]
+        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
     )
-    predictoor_contract.config.w3.provider.make_request("evm_mine", [])
+    predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
     end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
