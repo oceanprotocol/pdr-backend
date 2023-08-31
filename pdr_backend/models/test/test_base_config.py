@@ -58,15 +58,13 @@ def test_base_config_feeds_contracts(monkeypatch):
     c = BaseConfig()
 
     # test get_feeds()
-    def _mock_query_predictContracts(
-        *args, **kwargs
-    ):  # pylint: disable=unused-argument
+    def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
         feeds_dict = {ADDR: "a mock_contract"}
         return feeds_dict
 
     with patch(
-        "pdr_backend.models.base_config.query_predictContracts",
-        _mock_query_predictContracts,
+        "pdr_backend.models.base_config.query_feed_contracts",
+        _mock_query_feed_contracts,
     ):
         feeds = c.get_feeds()
     feed_addrs = list(feeds.keys())
