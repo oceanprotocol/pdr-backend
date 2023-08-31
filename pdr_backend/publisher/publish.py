@@ -13,7 +13,7 @@ MAX_UINT256 = 2**256 - 1
 
 
 @enforce_types
-def fund_dev_accounts(accounts_to_fund: List[tuple], owner: Account, token: Token):
+def fund_dev_accounts(accounts_to_fund: List[tuple], owner, token: Token):
     for private_key_name, amount in accounts_to_fund:
         if private_key_name in os.environ:
             private_key = os.getenv(private_key_name)
