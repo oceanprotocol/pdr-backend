@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 import pytest
 from web3 import Web3
 
+from pdr_backend.models.slot import Slot
 from pdr_backend.util.subgraph import (
     key_to_725,
     value_to_725,
@@ -242,7 +243,7 @@ def test_get_pending_slots(monkeypatch):
 
     monkeypatch.setattr("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph)
 
-    result = get_pending_slots(
+    slots = get_pending_slots(
         subgraph_url="foo",
         timestamp=2000,
         owner_addresses=None,
@@ -251,6 +252,8 @@ def test_get_pending_slots(monkeypatch):
         source_filter=None,
     )
 
-    assert len(result) == 2
-    assert result[0].slot == 1000
-    assert result[0].contract.name == "ether"
+    assert len(slots) == 2
+    slot0 = slots[0]
+    assert isinstance(slot0, Slot)
+    assert slot0.slot_number == 1000
+    assert slot0.feed.name == "ether"

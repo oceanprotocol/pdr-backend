@@ -1,7 +1,7 @@
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 
 
 class Slot:
-    def __init__(self, slot: int, contract: ContractData):
-        self.slot = slot
-        self.contract = contract
+    def __init__(self, slot_number: int, feed: Feed):
+        self.slot_number = slot_number
+        self.feed = feed
