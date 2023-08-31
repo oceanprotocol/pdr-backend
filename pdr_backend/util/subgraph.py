@@ -167,7 +167,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
 
 
 @enforce_types
-def query_predictContracts(  # pylint: disable=too-many-statements
+def query_feed_contracts(  # pylint: disable=too-many-statements
     subgraph_url: str,
     pairs_string: Optional[str] = None,
     timeframes_string: Optional[str] = None,
