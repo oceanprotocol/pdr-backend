@@ -107,8 +107,6 @@ def test_submit_truevals_contracts(
     for trueval in truevals_before_2:
         assert trueval == False
 
-    print(truevals, epochs, cancels)
-
     predictoor_helper.submit_truevals_contracts(addresses, epochs, truevals, cancels)
 
     truevals_after_1 = [
