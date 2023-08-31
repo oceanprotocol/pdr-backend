@@ -1,7 +1,7 @@
 from web3.types import RPCEndpoint
 from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.models.predictoor_helper import PredictoorHelper
+from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.erc721 import ERC721
 from pdr_backend.models.token import Token
 from pdr_backend.util.web3_config import Web3Config
@@ -10,7 +10,7 @@ from pdr_backend.util.web3_config import Web3Config
 def test_submit_truevals(
     predictoor_contract: PredictoorContract,
     web3_config: Web3Config,
-    predictoor_helper: PredictoorHelper,
+    predictoor_batcher: PredictoorBatcher,
 ):
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
@@ -30,7 +30,7 @@ def test_submit_truevals(
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
     erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_helper.contract_address)
+    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
@@ -39,7 +39,7 @@ def test_submit_truevals(
     for trueval in truevals_before:
         assert trueval is False
 
-    predictoor_helper.submit_truevals(
+    predictoor_batcher.submit_truevals(
         predictoor_contract.contract_address, epochs, truevals, cancels
     )
 
@@ -55,7 +55,7 @@ def test_submit_truevals_contracts(
     predictoor_contract: PredictoorContract,
     predictoor_contract2: PredictoorContract,
     web3_config: Web3Config,
-    predictoor_helper: PredictoorHelper,
+    predictoor_batcher: PredictoorBatcher,
 ):
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
@@ -83,10 +83,10 @@ def test_submit_truevals_contracts(
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
     erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_helper.contract_address)
+    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
     erc721addr = predictoor_contract2.erc721_addr()
     erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_helper.contract_address)
+    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before_1 = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
@@ -104,7 +104,7 @@ def test_submit_truevals_contracts(
     for trueval in truevals_before_2:
         assert trueval is False
 
-    predictoor_helper.submit_truevals_contracts(addresses, epochs, truevals, cancels)
+    predictoor_batcher.submit_truevals_contracts(addresses, epochs, truevals, cancels)
 
     truevals_after_1 = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
@@ -129,7 +129,7 @@ def test_submit_truevals_contracts(
 def test_consume_multiple(
     predictoor_contract: PredictoorContract,
     ocean_token: Token,
-    predictoor_helper: PredictoorHelper,
+    predictoor_batcher: PredictoorBatcher,
 ):
     owner = ocean_token.config.owner
 
@@ -139,10 +139,10 @@ def test_consume_multiple(
     times = 10
     cost = times * price
 
-    ocean_token.approve(predictoor_helper.contract_address, cost)
+    ocean_token.approve(predictoor_batcher.contract_address, cost)
     balance_before = ocean_token.balanceOf(owner)
 
-    predictoor_helper.consume_multiple(
+    predictoor_batcher.consume_multiple(
         [predictoor_contract.contract_address], [times], ocean_token.contract_address
     )
 

@@ -2,7 +2,7 @@ import os
 import pytest
 
 from pdr_backend.models.token import Token
-from pdr_backend.models.predictoor_helper import PredictoorHelper
+from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
@@ -106,6 +106,6 @@ def predictoor_contract2():
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
-def predictoor_helper():
-    predictoor_helper_addr = get_address(_chain_id(), "PredictoorHelper")
-    return PredictoorHelper(_web3_config(), predictoor_helper_addr)
+def predictoor_batcher():
+    predictoor_batcher_addr = get_address(_chain_id(), "PredictoorHelper")
+    return PredictoorBatcher(_web3_config(), predictoor_batcher_addr)

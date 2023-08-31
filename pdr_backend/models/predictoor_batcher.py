@@ -6,7 +6,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
-class PredictoorHelper:
+class PredictoorBatcher:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
         self.contract_address = config.w3.to_checksum_address(address)
