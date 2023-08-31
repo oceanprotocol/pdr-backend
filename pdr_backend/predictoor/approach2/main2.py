@@ -12,7 +12,7 @@ import pandas as pd
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.approach2.predict import predict_function
 from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContracts
+from pdr_backend.util.subgraph import query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 # set envvar model MODELDIR before calling main.py. eg ~/code/pdr-model-simple/
@@ -59,7 +59,7 @@ def process_block(block, model, main_pd):
     """
     global topics
     if not topics:
-        topics = query_predictContracts(
+        topics = query_feed_contracts(
             subgraph_url,
             pair_filters,
             timeframe_filter,
