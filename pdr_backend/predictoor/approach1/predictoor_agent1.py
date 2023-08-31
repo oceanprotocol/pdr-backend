@@ -30,11 +30,11 @@ class PredictoorAgent1:
         self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
 
 
-        print("\n" + "-"*35)
+        print("\n" + "="*100)
         print("Feeds:")
-        for feed in self.feeds.values():
-            print("  " + feed.shortstr())
-        print("-"*35)
+        for addr, feed in self.feeds.items():
+            print(f"  {feed}, full addr is {addr}")
+        print()
             
     def run(self):
         print("Starting main loop...")
@@ -66,37 +66,43 @@ class PredictoorAgent1:
         #base data
         feed, contract = self.feeds[addr], self.contracts[addr]
         epoch = contract.get_current_epoch()
-        s_per_epoch = contract.get_secondsPerEpoch()
+        s_per_epoch = feed.seconds_per_epoch
         s_remaining_in_epoch = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
-        print(
-            f"{feed.name} at address {addr} is at epoch {epoch}"
-            f". s_per_epoch: {s_per_epoch}, "
-            f"s_remaining_in_epoch: {s_remaining_in_epoch}"
-        )
+        print("\n" + "="*100) 
+        print("Begin processing block for {feed}, timestamp={timestamp}")
+        print(f"  epoch={epoch}")
+        print(f"  s_per_epoch={s_per_epoch}")
+        print(f"  s_remaining_in_epoch={s_remaining_in_epoch}")
+        print(f"  prev submitted epoch={self.prev_submitted_epochs[addr]}")
 
         # maybe get payout for previous epoch
         if epoch > self.prev_submitted_epochs[addr] > 0:
             slot = epoch * s_per_epoch - s_per_epoch
-            print(f"Contract:{addr} - Claiming revenue for slot:{slot}")
+            print(f"  Claim $ for previous epoch at timestamp=slot:{slot}")
             contract.payout(slot, False)
 
         # within the time window to submit prediction?
         if s_remaining_in_epoch > self.config.s_until_epoch_end:
+            print("  Quit processing block: not in time window to submit")
             return (None, None, False)
 
         # compute prediction; exit if no good
         target_time = (epoch + 2) * contract.get_secondsPerEpoch()
+        print(f"  We'll make a prediction for target_time=slot={target_time}")
+        
         predval, stake = self.get_prediction(addr, target_time)
+        print(f"  Predicted: predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
-            print("Don't submit, because predval={predval}, stake={stake}")
+            print("  Quit processing block: We can't use this predval/stake.")
             return (None, None, False)
 
         # submit prediction to chain
-        print(f"Submitted prediction. addr={addr}, slot={target_time}")
+        print("  We can use this prediction. Let's submit to chain..")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
+        print("  Done processing block. Successfully submitted predval/stake.")
         return (predval, stake, True)
 
     def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
@@ -116,14 +122,12 @@ class PredictoorAgent1:
           Below is the default implementation, giving random predictions.
           You need to customize it to implement your own strategy.
         """
-        feed_name = self.feeds[addr].name
-        print(f"Predict {feed_name} (addr={addr}) at timestamp {timestamp}")
+        feed = self.feeds[addr]
 
         # Pick random prediction & random stake. You need to customize this.
         import random
         predval = bool(random.getrandbits(1))
         stake = random.randint(10, 1000)
 
-        print(f"Predicted {predval} with stake {stake}")
         return (predval, stake)
 
