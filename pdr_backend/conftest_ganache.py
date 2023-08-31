@@ -104,6 +104,7 @@ def predictoor_contract2():
     return PredictoorContract(config, dt_addr)
 
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def predictoor_helper():
     predictoor_helper_addr = get_address(_chain_id(), "PredictoorHelper")
