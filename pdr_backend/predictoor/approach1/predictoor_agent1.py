@@ -1,9 +1,11 @@
 import time
-from typing import Dict
+from typing import Dict, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.predictoor_config import PredictoorConfig
+from pdr_backend.models.feed import Feed
+from pdr_backend.predictoor.approach1.predictoor_config1 import \
+    PredictoorConfig1
 
 
 @enforce_types
@@ -15,10 +17,13 @@ class PredictoorAgent1:
     - When a value can be predicted, call predict.py::predict_function()
     """
     
-    def __init__(self, config: PredictoorConfig):
-        self.config = config 
-        self.feeds = self.config.get_feeds() # [addr] : feed
-        self.contracts = self.config.get_contracts() # [addr] : contract
+    def __init__(self, config: PredictoorConfig1):
+        self.config = config
+        
+        self.feeds: Dict[str,Feed] = self.config.get_feeds() # [addr] : Feed
+        
+        feed_addrs = list(self.feeds.keys())
+        self.contracts = self.config.get_contracts(feed_addrs) # [addr] : contract
 
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
