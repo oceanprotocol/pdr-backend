@@ -21,7 +21,7 @@ def slot():
 
     return Slot(
         feed=feed,
-        slot=1692943200,
+        slot_number=1692943200,
     )
 
 

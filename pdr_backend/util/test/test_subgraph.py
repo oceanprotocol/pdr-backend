@@ -255,5 +255,5 @@ def test_get_pending_slots(monkeypatch):
     assert len(slots) == 2
     slot0 = slots[0]
     assert isinstance(slot0, Slot)
-    assert slot0.slot == 1000
+    assert slot0.slot_number == 1000
     assert slot0.feed.name == "ether"

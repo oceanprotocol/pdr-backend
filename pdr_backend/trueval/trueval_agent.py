@@ -49,7 +49,9 @@ class TruevalAgent:
 
         for slot in pending_slots:
             print("-" * 30)
-            print(f"Processing slot {slot.slot} for contract {slot.feed.address}")
+            print(
+                f"Processing slot {slot.slot_number} for contract {slot.feed.address}"
+            )
             try:
                 self.process_slot(slot)
             except Exception as e:
@@ -89,22 +91,22 @@ class TruevalAgent:
         predictoor_contract: PredictoorContract,
         seconds_per_epoch: int,
     ) -> dict:
-        slot.slot = int(slot.slot)
-        initial_ts = slot.slot - seconds_per_epoch
-        end_ts = slot.slot
+        slot.slot_number = int(slot.slot_number)
+        initial_ts = slot.slot_number - seconds_per_epoch
+        end_ts = slot.slot_number
 
         (trueval, error) = self.get_trueval(slot.feed, initial_ts, end_ts)
         if error:
             raise Exception(
-                f"Error getting trueval for {slot.feed.pair} and slot {slot.slot}"
+                f"Error getting trueval for {slot.feed.pair} and slot {slot.slot_number}"
             )
 
         # pylint: disable=line-too-long
         print(
-            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot}"
+            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
         )
 
-        tx = predictoor_contract.submit_trueval(trueval, slot.slot, False, True)
+        tx = predictoor_contract.submit_trueval(trueval, slot.slot_number, False, True)
 
         return tx
 

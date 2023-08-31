@@ -19,6 +19,6 @@ def test_slot_initialization():
     slot_number = 5
     slot = Slot(slot_number, feed)
 
-    assert slot.slot == slot_number
+    assert slot.slot_number == slot_number
     assert slot.feed == feed
     assert isinstance(slot.feed, Feed)
