@@ -29,27 +29,49 @@ def test_predictoor_agent1(monkeypatch):
     _setenvs(monkeypatch)
 
     # mock query_feed_contracts()
-    def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
+    def mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
         feed_dicts = {ADDR: FEED_DICT}
         return feed_dicts
     monkeypatch.setattr(
         "pdr_backend.models.base_config.query_feed_contracts",
-        _mock_query_feed_contracts,
+        mock_query_feed_contracts,
     )
 
     # mock PredictoorContract
-    def _mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
+    def mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
         m = Mock()
         m.contract_address = ADDR
         return m
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.PredictoorContract",
-        _mock_contract
+        "pdr_backend.models.base_config.PredictoorContract", mock_contract
     )
-
-    # now do work
+    
+    # initialize
     c = PredictoorConfig1()
     agent = PredictoorAgent1(c)
+
+    # mock w3.block_number, w3.get_block(), and time.sleep()
+    class MockEth:
+        def __init__(self):
+            self.timestamp = 0
+            self.block_number = 0
+        def get_block(self, block_number, full_transactions):
+            mock_block = {"timestamp": self.timestamp}
+            return mock_block
+        def advance_a_block(self):
+            self.timestamp += 10
+            self.block_number += 1
+    mock_w3 = Mock()
+    mock_w3.eth = MockEth()
+    
+    agent.config.web3_config.w3 = mock_w3
+    monkeypatch.setattr(
+        "time.sleep", mock_w3.advance_a_block
+    )
+
+    # mimic running
+    for i in range(500):
+        agent.take_step()
 
 
 def _setenvs(monkeypatch):
