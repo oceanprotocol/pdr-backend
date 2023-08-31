@@ -108,5 +108,4 @@ def predictoor_contract2():
 @pytest.fixture(scope="module")
 def predictoor_helper():
     predictoor_helper_addr = get_address(_chain_id(), "PredictoorHelper")
-    predictoor_helper = PredictoorHelper(_web3_config(), predictoor_helper_addr)
-    return predictoor_helper
+    return PredictoorHelper(_web3_config(), predictoor_helper_addr)
