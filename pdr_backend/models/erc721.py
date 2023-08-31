@@ -13,7 +13,9 @@ class ERC721:
             abi=get_contract_abi("IERC721Template"),
         )
 
-    def add_to_create_erc20_list(self, addr: str, wait_for_receipt=True) -> Union[HexBytes, TxReceipt]:
+    def add_to_create_erc20_list(
+        self, addr: str, wait_for_receipt=True
+    ) -> Union[HexBytes, TxReceipt]:
         gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
             {"from": self.config.owner, "gasPrice": gasPrice}
