@@ -17,7 +17,7 @@ class DataNft:
         self.contract_address = config.w3.to_checksum_address(address)
         self.contract_instance = config.w3.eth.contract(
             address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("IERC721Template"),
+            abi=get_contract_abi("ERC721Template"),
         )
         self.config = config
 
