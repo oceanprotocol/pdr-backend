@@ -24,7 +24,7 @@ FEED_DICT = {  # info inside a predictoor contract
     "timeframe": "1h",
     "source": "binance",
 }
-
+INIT_EPOCH = 6
 
 def test_predictoor_agent1(monkeypatch):
     _setenvs(monkeypatch)
@@ -42,15 +42,16 @@ def test_predictoor_agent1(monkeypatch):
     class MockContract:
         def __init__(self):
             self.contract_address = ADDR
-            self.current_epoch = 0
+            self._current_epoch = INIT_EPOCH
+            self._did_payout = False
         def get_current_epoch(self):
-            return self.current_epoch
+            return self._current_epoch
         def get_secondsPerEpoch(self):
             return S_PER_EPOCH
         def submit_prediction(self, predval, stake, timestamp, wait=True):
             pass
         def payout(self, slot, wait=False):
-            pass
+            self._did_payout = True
     mock_contract = MockContract()
     def mock_contract_func(*args, **kwargs):
         return mock_contract
@@ -61,7 +62,7 @@ def test_predictoor_agent1(monkeypatch):
     # mock w3.eth.block_number, w3.eth.get_block()
     class MockEth:
         def __init__(self):
-            self.timestamp = 0
+            self.timestamp = INIT_EPOCH * S_PER_EPOCH
             self.block_number = 0
         def get_block(self, block_number, full_transactions):
             mock_block = {"timestamp": self.timestamp}
@@ -76,7 +77,7 @@ def test_predictoor_agent1(monkeypatch):
         mock_w3.eth.timestamp += 10
         mock_w3.eth.block_number += 1
         if mock_w3.eth.timestamp % 100 == 0:
-            mock_contract.current_epoch += 1
+            mock_contract._current_epoch += 1
         
     monkeypatch.setattr("time.sleep", advance_func)
     
@@ -88,8 +89,10 @@ def test_predictoor_agent1(monkeypatch):
     agent.config.web3_config.w3 = mock_w3
     
     # main iterations
-    for i in range(2000):
+    for i in range(1000):
         agent.take_step()
+
+    assert mock_contract._did_payout, "if False, make sure enough steps are run"
 
 
 def _setenvs(monkeypatch):

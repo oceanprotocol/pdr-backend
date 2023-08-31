@@ -33,8 +33,8 @@ class PredictoorAgent1:
         print("\n" + "="*100)
         print("Feeds:")
         for addr, feed in self.feeds.items():
-            print(f"  {feed}, full addr is {addr}")
-        print()
+            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch")
+        print("\n" + "="*100)
             
     def run(self):
         print("Starting main loop...")
@@ -42,20 +42,26 @@ class PredictoorAgent1:
             self.take_step()
     
     def take_step(self):
+        print("\n" + "="*100)
+        print("Take_step() begin")
+        
         # at new block number yet?
         w3 = self.config.web3_config.w3
         block_number = w3.eth.block_number
+        print(f"  block_number={block_number}, prev={self.prev_block_number}")
         if block_number <= self.prev_block_number:
+            print("  block_number hasn't advanced yet, so sleep")
             time.sleep(1)
             return
+        print("  block_number _has_ advanced")
         self.prev_block_number = block_number
 
         # is new block ready yet?
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
+            print("  Couldn't retrieve new block")
             return
         self.prev_block_time = block["timestamp"]
-        print(f"Got new block, with number {block_number} ")
 
         # do work at new block
         for addr in self.feeds:
@@ -67,42 +73,41 @@ class PredictoorAgent1:
         feed, contract = self.feeds[addr], self.contracts[addr]
         epoch = contract.get_current_epoch()
         s_per_epoch = feed.seconds_per_epoch
-        s_remaining_in_epoch = epoch * s_per_epoch + s_per_epoch - timestamp
+        epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
-        print("\n" + "="*100) 
-        print("Begin processing block for {feed}, timestamp={timestamp}")
-        print(f"  epoch={epoch}")
-        print(f"  s_per_epoch={s_per_epoch}")
-        print(f"  s_remaining_in_epoch={s_remaining_in_epoch}")
-        print(f"  prev submitted epoch={self.prev_submitted_epochs[addr]}")
+        print(f"  Let's process the block for {feed}")
+        print(f"    At timestamp={timestamp}")
+        print(f"    At epoch={epoch}. It has {epoch_s_left} s left")
 
         # maybe get payout for previous epoch
         if epoch > self.prev_submitted_epochs[addr] > 0:
             slot = epoch * s_per_epoch - s_per_epoch
-            print(f"  Claim $ for previous epoch at timestamp=slot:{slot}")
+            print(f"    Claim $ for previous epoch at timestamp=slot:{slot}")
             contract.payout(slot, False)
 
         # within the time window to submit prediction?
-        if s_remaining_in_epoch > self.config.s_until_epoch_end:
-            print("  Quit processing block: not in time window to submit")
+        print(f"    (Submit when <= {self.config.s_until_epoch_end} s left)")
+        s_early = epoch_s_left - self.config.s_until_epoch_end
+        if s_early > 0:
+            print(f"    {s_early} s too early to submit. Quit processing block")
             return (None, None, False)
 
         # compute prediction; exit if no good
-        target_time = (epoch + 2) * contract.get_secondsPerEpoch()
-        print(f"  We'll make a prediction for target_time=slot={target_time}")
+        target_time = (epoch + 2) * s_per_epoch
+        print(f"    We'll make a prediction for target_time=slot={target_time}")
         
         predval, stake = self.get_prediction(addr, target_time)
-        print(f"  Predicted: predval={predval}, stake={stake}")
+        print(f"    Predicted predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
-            print("  Quit processing block: We can't use this predval/stake.")
+            print("    We can't use this predval/stake. Quit processing block")
             return (None, None, False)
 
         # submit prediction to chain
-        print("  We can use this prediction. Let's submit to chain..")
+        print("    We can use this prediction. Let's submit to chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
-        print("  Done processing block. Successfully submitted predval/stake.")
+        print("    Successful submit. Done processing block.")
         return (predval, stake, True)
 
     def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
