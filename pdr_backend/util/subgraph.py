@@ -61,7 +61,7 @@ from enforce_typing import enforce_types
 import requests
 from web3 import Web3
 
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 
 _N_ERRORS = {}  # exception_str : num_occurrences
@@ -376,7 +376,7 @@ def get_pending_slots(
                 if source_filter and (info["source"] not in source_filter):
                     continue
 
-                contract_object = ContractData(
+                feed = Feed(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
@@ -389,7 +389,9 @@ def get_pending_slots(
                     source=info["source"],
                 )
 
-                slots.append(Slot(int(slot["slot"]), contract_object))
+                slot_number = int(slot["slot"])
+                slot = Slot(slot_number, feed)
+                slots.append(slot)
 
         except Exception as e:
             print(e)

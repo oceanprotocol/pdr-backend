@@ -1,12 +1,12 @@
 import os
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 
 
 @pytest.fixture()
 def slot():
-    contract_data = ContractData(
+    feed = Feed(
         name="ETH-USDT",
         address="0xBE5449a6A97aD46c8558A3356267Ee5D2731ab5e",
         symbol="ETH-USDT",
@@ -20,7 +20,7 @@ def slot():
     )
 
     return Slot(
-        contract=contract_data,
+        feed=feed,
         slot=1692943200,
     )
 
