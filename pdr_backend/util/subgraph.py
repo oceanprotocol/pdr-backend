@@ -167,7 +167,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
 
 
 @enforce_types
-def query_predictContracts(  # pylint: disable=too-many-statements
+def query_feed_contracts(  # pylint: disable=too-many-statements
     subgraph_url: str,
     pairs_string: Optional[str] = None,
     timeframes_string: Optional[str] = None,
@@ -176,7 +176,7 @@ def query_predictContracts(  # pylint: disable=too-many-statements
 ) -> Dict[str, dict]:
     """
     @description
-      Query the chain for prediction contracts, then filter down
+      Query the chain for prediction feed contracts, then filter down
       according to pairs, timeframes, sources, or owners.
 
     @arguments
@@ -206,7 +206,7 @@ def query_predictContracts(  # pylint: disable=too-many-statements
 
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    contracts = {}
+    feed_dicts = {}
 
     while True:
         query = """
@@ -264,7 +264,8 @@ def query_predictContracts(  # pylint: disable=too-many-statements
                     continue
 
                 # ok, add this one
-                contracts[contract["id"]] = {
+                addr = contract["id"]
+                feed_dict = {
                     "name": contract["token"]["name"],
                     "address": contract["id"],
                     "symbol": contract["token"]["symbol"],
@@ -272,7 +273,8 @@ def query_predictContracts(  # pylint: disable=too-many-statements
                     "seconds_per_subscription": contract["secondsPerSubscription"],
                     "last_submited_epoch": 0,
                 }
-                contracts[contract["id"]].update(info)
+                feed_dict.update(info)
+                feed_dicts[addr] = feed_dict
 
         except Exception as e:
             e_str = str(e)
@@ -291,7 +293,7 @@ def query_predictContracts(  # pylint: disable=too-many-statements
                 print("Future errors like this will be hidden")
             return {}
 
-    return contracts
+    return feed_dicts
 
 
 def get_pending_slots(
@@ -362,6 +364,9 @@ def get_pending_slots(
                 contract = slot["predictContract"]
                 info725 = contract["token"]["nft"]["nftData"]
                 info = info_from_725(info725)
+                assert info["pair"], "need a pair"
+                assert info["timeframe"], "need a timeframe"
+                assert info["source"], "need a source"
 
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):

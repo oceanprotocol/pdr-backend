@@ -4,8 +4,22 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.base_config import BaseConfig
 
-ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
 PRIV_KEY = "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+
+ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
+
+FEED_DICT = {  # info inside a predictoor contract
+    "name": "Contract Name",
+    "address": ADDR,
+    "symbol": "test",
+    "seconds_per_epoch": 300,
+    "seconds_per_subscription": 60,
+    "trueval_submit_timeout": 15,
+    "owner": "0xowner",
+    "pair": "BTC-ETH",
+    "timeframe": "1h",
+    "source": "binance",
+}
 
 
 @enforce_types
@@ -17,12 +31,12 @@ def test_base_config_with_filters(monkeypatch):
     assert c.subgraph_url == "http://bar"
     assert c.private_key == PRIV_KEY
 
-    assert c.web3_config is not None
-
     assert c.pair_filters == ["BTC/USDT", "ETH/USDT"]
     assert c.timeframe_filter == ["5m", "15m"]
     assert c.source_filter == ["binance", "kraken"]
     assert c.owner_addresses == ["0x123", "0x124"]
+
+    assert c.web3_config is not None
 
 
 @enforce_types
@@ -58,15 +72,13 @@ def test_base_config_feeds_contracts(monkeypatch):
     c = BaseConfig()
 
     # test get_feeds()
-    def _mock_query_predictContracts(
-        *args, **kwargs
-    ):  # pylint: disable=unused-argument
-        feeds_dict = {ADDR: "a mock_contract"}
-        return feeds_dict
+    def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
+        feed_dicts = {ADDR: FEED_DICT}
+        return feed_dicts
 
     with patch(
-        "pdr_backend.models.base_config.query_predictContracts",
-        _mock_query_predictContracts,
+        "pdr_backend.models.base_config.query_feed_contracts",
+        _mock_query_feed_contracts,
     ):
         feeds = c.get_feeds()
     feed_addrs = list(feeds.keys())

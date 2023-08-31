@@ -1,8 +1,11 @@
+from typing import Union
+
 import hashlib
 import json
 
 from enforce_typing import enforce_types
 from web3 import Web3
+from web3.types import TxReceipt, HexBytes
 
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.contract import get_contract_abi
@@ -67,3 +70,14 @@ class DataNft:
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
+
+    def add_to_create_erc20_list(
+        self, addr: str, wait_for_receipt=True
+    ) -> Union[HexBytes, TxReceipt]:
+        gasPrice = self.config.w3.eth.gas_price
+        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
+            {"from": self.config.owner, "gasPrice": gasPrice}
+        )
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
