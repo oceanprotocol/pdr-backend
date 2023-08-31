@@ -45,10 +45,6 @@ def test_predictoor_agent1(monkeypatch):
     monkeypatch.setattr(
         "pdr_backend.models.base_config.PredictoorContract", mock_contract
     )
-    
-    # initialize
-    c = PredictoorConfig1()
-    agent = PredictoorAgent1(c)
 
     # mock w3.block_number, w3.get_block(), and time.sleep()
     class MockEth:
@@ -58,19 +54,25 @@ def test_predictoor_agent1(monkeypatch):
         def get_block(self, block_number, full_transactions):
             mock_block = {"timestamp": self.timestamp}
             return mock_block
-        def advance_a_block(self):
+        def advance_a_block(self, *args, **kwargs):
+            print("ya ya")
             self.timestamp += 10
             self.block_number += 1
     mock_w3 = Mock()
     mock_w3.eth = MockEth()
-    
-    agent.config.web3_config.w3 = mock_w3
     monkeypatch.setattr(
-        "time.sleep", mock_w3.advance_a_block
+        "time.sleep", mock_w3.eth.advance_a_block
     )
+    
+    # initialize
+    c = PredictoorConfig1()
+    agent = PredictoorAgent1(c)
 
-    # mimic running
-    for i in range(500):
+    # last bit of mocking
+    agent.config.web3_config.w3 = mock_w3
+    
+    # main iterations
+    for i in range(5):
         agent.take_step()
 
 
