@@ -1,4 +1,3 @@
-from os import getenv
 from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
@@ -12,19 +11,22 @@ from pdr_backend.util.web3_config import Web3Config
 
 @enforce_types
 class BaseConfig:
-
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")  # type: ignore
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")  # type: ignore
         self.private_key: str = getenv_or_exit("PRIVATE_KEY")  # type: ignore
 
-        (pair_filter, timeframe_filter, source_filter, owner_addresses) = \
-            parse_filters()
-        self.pair_filters: Optional[List[str]] = pair_filter
-        self.timeframe_filter: Optional[List[str]] = timeframe_filter
-        self.source_filter: Optional[List[str]] = source_filter
-        self.owner_addresses: Optional[List[str]] = owner_addresses
+        (
+            pair_filter,
+            timeframe_filter,
+            source_filter,
+            owner_addresses,
+        ) = parse_filters()
+        self.pair_filters: Optional[List[str]] = pair_filter  # type: ignore
+        self.timeframe_filter: Optional[List[str]] = timeframe_filter  # type: ignore
+        self.source_filter: Optional[List[str]] = source_filter  # type: ignore
+        self.owner_addresses: Optional[List[str]] = owner_addresses  # type: ignore
 
         self.web3_config = Web3Config(self.rpc_url, self.private_key)
 
@@ -49,8 +51,7 @@ class BaseConfig:
         )
         return feeds_dict
 
-    def get_contracts(self, feed_addrs: List[str]) \
-            -> Dict[str, PredictoorContract]:
+    def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
         """Return dict of [feed_addr] : PredictoorContract}"""
         contracts = {}
         for addr in feed_addrs:

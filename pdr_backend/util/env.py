@@ -4,6 +4,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def getenv_or_exit(envvar_name: str) -> Union[None, str]:
     value = getenv(envvar_name)
@@ -12,8 +13,9 @@ def getenv_or_exit(envvar_name: str) -> Union[None, str]:
         sys.exit(1)
     return value
 
+
 @enforce_types
-def parse_filters() -> List[Union[List[str],None]]:
+def parse_filters() -> List[Union[List[str], None]]:
     """
     @description
       Grabs envvar values for each of the filters (PAIR_FILTER, etc).
@@ -29,15 +31,8 @@ def parse_filters() -> List[Union[List[str],None]]:
         1. parsed TIMEFRAME_FILTER -- ""
         ...
     """
-    filter_names = [
-        "PAIR_FILTER",
-        "TIMEFRAME_FILTER",
-        "SOURCE_FILTER",
-        "OWNER_ADDRS"
-    ]
+    filter_names = ["PAIR_FILTER", "TIMEFRAME_FILTER", "SOURCE_FILTER", "OWNER_ADDRS"]
     filter_values = [
-        getenv(name).split(",")
-        if getenv(name) else None
-        for name in filter_names
+        getenv(name).split(",") if getenv(name) else None for name in filter_names  # type: ignore[union-attr] # pylint: disable=line-too-long
     ]
     return filter_values
