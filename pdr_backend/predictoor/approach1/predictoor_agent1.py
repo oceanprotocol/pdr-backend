@@ -35,6 +35,8 @@ class PredictoorAgent1:
             self.take_step()
     
     def take_step(self):
+        import pdb; pdb.set_trace()
+        
         # at new block number yet?
         w3 = self.config.web3_config.w3
         block_number = w3.eth.block_number
