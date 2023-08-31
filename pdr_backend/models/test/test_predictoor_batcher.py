@@ -2,7 +2,7 @@ from web3.types import RPCEndpoint
 from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
-from pdr_backend.models.erc721 import ERC721
+from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.token import Token
 from pdr_backend.util.web3_config import Web3Config
 
@@ -29,8 +29,8 @@ def test_submit_truevals(
 
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
-    erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
+    datanft = DataNft(web3_config, erc721addr)
+    datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()
@@ -82,11 +82,11 @@ def test_submit_truevals_contracts(
 
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
-    erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
+    datanft = DataNft(web3_config, erc721addr)
+    datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
     erc721addr = predictoor_contract2.erc721_addr()
-    erc721 = ERC721(web3_config, erc721addr)
-    erc721.add_to_create_erc20_list(predictoor_batcher.contract_address)
+    datanft = DataNft(web3_config, erc721addr)
+    datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before_1 = [
         predictoor_contract.contract_instance.functions.trueValues(i).call()

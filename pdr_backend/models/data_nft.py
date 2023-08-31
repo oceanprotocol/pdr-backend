@@ -14,7 +14,7 @@ class DataNft:
         self.contract_address = config.w3.to_checksum_address(address)
         self.contract_instance = config.w3.eth.contract(
             address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC721Template"),
+            abi=get_contract_abi("IERC721Template"),
         )
         self.config = config
 
@@ -67,3 +67,14 @@ class DataNft:
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
+
+    def add_to_create_erc20_list(
+        self, addr: str, wait_for_receipt=True
+    ) -> Union[HexBytes, TxReceipt]:
+        gasPrice = self.config.w3.eth.gas_price
+        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
+            {"from": self.config.owner, "gasPrice": gasPrice}
+        )
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
