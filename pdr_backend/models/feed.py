@@ -1,4 +1,4 @@
-class ContractData:  # pylint: disable=too-many-instance-attributes
+class Feed:  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         name: str,

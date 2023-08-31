@@ -1,7 +1,5 @@
 from unittest.mock import Mock, call
 
-from eth_account import Account
-
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import fund_dev_accounts
 
@@ -12,7 +10,7 @@ def test_fund_dev_accounts(monkeypatch):
     monkeypatch.setenv("PREDICTOOR2_PRIVATE_KEY", pk)
 
     mock_token = Mock(spec=Token)
-    mock_account = Mock(spec=Account)
+    mock_account = Mock(spec=str)
 
     accounts_to_fund = [
         ("PREDICTOOR_PRIVATE_KEY", 2000),

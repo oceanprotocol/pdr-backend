@@ -3,7 +3,7 @@ from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.env import parse_filters
 
 
-def test_new_config():
+def test_trueval_config():
     config = TruevalConfig()
     assert config.rpc_url == os.getenv("RPC_URL")
     assert config.subgraph_url == os.getenv("SUBGRAPH_URL")
