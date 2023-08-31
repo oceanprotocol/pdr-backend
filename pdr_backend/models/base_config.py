@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
-from pdr_backend.util.subgraph import get_pending_slots, query_predictContracts
+from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -42,7 +42,7 @@ class BaseConfig:
 
     def get_feeds(self) -> Dict[str, dict]:
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
-        feeds_dict = query_predictContracts(
+        feeds_dict = query_feed_contracts(
             self.subgraph_url,
             self.pair_filters,
             self.timeframe_filter,
