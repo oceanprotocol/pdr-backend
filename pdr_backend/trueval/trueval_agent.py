@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.slot import Slot
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
@@ -14,7 +14,7 @@ class TruevalAgent:
     def __init__(
         self,
         trueval_config: TruevalConfig,
-        _get_trueval: Callable[[ContractData, int, int], Tuple[bool, bool]],
+        _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
     ):
         self.config = trueval_config
         self.get_trueval = _get_trueval
@@ -49,7 +49,9 @@ class TruevalAgent:
 
         for slot in pending_slots:
             print("-" * 30)
-            print(f"Processing slot {slot.slot} for contract {slot.contract.address}")
+            print(
+                f"Processing slot {slot.slot_number} for contract {slot.feed.address}"
+            )
             try:
                 self.process_slot(slot)
             except Exception as e:
@@ -60,7 +62,7 @@ class TruevalAgent:
     @enforce_types
     def process_slot(self, slot: Slot) -> dict:
         predictoor_contract, seconds_per_epoch = self.get_contract_info(
-            slot.contract.address
+            slot.feed.address
         )
         return self.get_and_submit_trueval(slot, predictoor_contract, seconds_per_epoch)
 
@@ -89,28 +91,28 @@ class TruevalAgent:
         predictoor_contract: PredictoorContract,
         seconds_per_epoch: int,
     ) -> dict:
-        slot.slot = int(slot.slot)
-        initial_ts = slot.slot - seconds_per_epoch
-        end_ts = slot.slot
+        slot.slot_number = int(slot.slot_number)
+        initial_ts = slot.slot_number - seconds_per_epoch
+        end_ts = slot.slot_number
 
-        (trueval, error) = self.get_trueval(slot.contract, initial_ts, end_ts)
+        (trueval, error) = self.get_trueval(slot.feed, initial_ts, end_ts)
         if error:
             raise Exception(
-                f"Error getting trueval for {slot.contract.pair} and slot {slot.slot}"
+                f"Error getting trueval for {slot.feed.pair} and slot {slot.slot_number}"
             )
 
         # pylint: disable=line-too-long
         print(
-            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot}"
+            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
         )
 
-        tx = predictoor_contract.submit_trueval(trueval, slot.slot, False, True)
+        tx = predictoor_contract.submit_trueval(trueval, slot.slot_number, False, True)
 
         return tx
 
 
 def get_trueval(
-    feed: ContractData, initial_timestamp: int, end_timestamp: int
+    feed: Feed, initial_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
     """
     @description
@@ -118,7 +120,7 @@ def get_trueval(
         If an error occurs, the second value in the returned tuple is set to True.
 
     @arguments
-        feed -- ContractData -- The feed object containing pair details
+        feed -- Feed -- The feed object containing pair details
         initial_timestamp -- int -- The starting timestamp.
         end_timestamp -- int -- The ending timestamp.
 
