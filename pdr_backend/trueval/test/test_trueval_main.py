@@ -3,7 +3,7 @@ from pdr_backend.trueval.main import TruevalAgent, main
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
-def test_main(slot):
+def test_trueval_main(slot):
     mocked_env = {
         "SLEEP_TIME": "1",
         "BATCH_SIZE": "1",
@@ -12,7 +12,7 @@ def test_main(slot):
     mocked_web3_config = MagicMock()
 
     with patch.dict("os.environ", mocked_env), patch(
-        "pdr_backend.trueval.trueval_config.Web3Config", return_value=mocked_web3_config
+        "pdr_backend.models.base_config.Web3Config", return_value=mocked_web3_config
     ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
