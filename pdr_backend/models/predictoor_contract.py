@@ -173,10 +173,10 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
     def get_stake_token(self):
         return self.contract_instance.functions.stakeToken().call()
 
-    def get_price(self):
+    def get_price(self) -> int:
         fixed_rates = self.get_exchanges()
         if not fixed_rates:
-            return None
+            return 0
         (fixed_rate_address, exchange_id) = fixed_rates[0]
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
@@ -362,24 +362,5 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
     def get_block(self, block):
         return self.config.w3.eth.get_block(block)
 
-    def erc721_addr() -> str:
+    def erc721_addr(self) -> str:
         return self.contract_instance.functions.getERC721Address().call()
-
-
-    class ERC721:
-        def __init__(self, config: Web3Config, address: str):
-            self.config = config
-            self.contract_address = config.w3.to_checksum_address(address)
-            self.contract_instance = config.w3.eth.contract(
-                address=config.w3.to_checksum_address(address),
-                abi=get_contract_abi("IERC721Template"),
-            )
-
-    def add_to_create_erc20_list(addr: str, wait_for_receipt=True) -> dict:
-        gasPrice = self.config.w3.eth.gas_price
-        tx = self.contract_instance.functions.addToCreateERC20List().transact({
-            "from": self.config.owner, "gasPrice": gasPrice
-        })
-        if not wait_for_receipt:
-            return tx
-        return self.config.w3.eth.wait_for_transaction_receipt(tx)
