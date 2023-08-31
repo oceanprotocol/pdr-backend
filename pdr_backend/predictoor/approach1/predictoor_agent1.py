@@ -28,6 +28,13 @@ class PredictoorAgent1:
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
         self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
+
+
+        print("\n" + "-"*35)
+        print("Feeds:")
+        for feed in self.feeds.values():
+            print("  " + feed.shortstr())
+        print("-"*35)
             
     def run(self):
         print("Starting main loop...")
