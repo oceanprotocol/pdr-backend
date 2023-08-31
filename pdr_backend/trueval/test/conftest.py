@@ -20,7 +20,7 @@ def slot():
     )
 
     return Slot(
-        contract=feed,
+        feed=feed,
         slot=1692943200,
     )
 
