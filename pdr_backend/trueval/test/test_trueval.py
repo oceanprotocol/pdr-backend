@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from pdr_backend.trueval.main import get_trueval
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 
 
 def mock_fetch_ohlcv(*args, **kwargs):
@@ -18,7 +18,7 @@ def mock_fetch_ohlcv_fail(*args, **kwargs):
 
 
 def test_get_trueval_success():
-    contract = ContractData(
+    feed = Feed(
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
@@ -32,12 +32,12 @@ def test_get_trueval_success():
     )
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv):
-        result = get_trueval(contract, 1, 2)
+        result = get_trueval(feed, 1, 2)
         assert result == (True, False)  # 1st True because 200 > 100
 
 
 def test_get_trueval_live_lowercase_slash():
-    contract = ContractData(
+    feed = Feed(
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
@@ -50,12 +50,12 @@ def test_get_trueval_live_lowercase_slash():
         owner="0xowner",
     )
 
-    result = get_trueval(contract, 1692943200, 1692943500)
+    result = get_trueval(feed, 1692943200, 1692943500)
     assert result == (True, False)
 
 
 def test_get_trueval_live_lowercase_dash():
-    contract = ContractData(
+    feed = Feed(
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
@@ -68,12 +68,12 @@ def test_get_trueval_live_lowercase_dash():
         owner="0xowner",
     )
 
-    result = get_trueval(contract, 1692943200, 1692943500)
+    result = get_trueval(feed, 1692943200, 1692943500)
     assert result == (True, False)
 
 
 def test_get_trueval_fail():
-    contract = ContractData(
+    feed = Feed(
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
@@ -87,5 +87,5 @@ def test_get_trueval_fail():
     )
 
     with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail):
-        result = get_trueval(contract, 1, 2)
+        result = get_trueval(feed, 1, 2)
         assert result == (False, True)  # 2nd True because failed

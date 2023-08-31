@@ -1,9 +1,9 @@
 from pdr_backend.models.slot import Slot
-from pdr_backend.models.contract_data import ContractData
+from pdr_backend.models.feed import Feed
 
 
 def test_slot_initialization():
-    contract = ContractData(
+    feed = Feed(
         "Contract Name",
         "0x12345",
         "test",
@@ -17,8 +17,8 @@ def test_slot_initialization():
     )
 
     slot_number = 5
-    slot = Slot(slot_number, contract)
+    slot = Slot(slot_number, feed)
 
     assert slot.slot == slot_number
-    assert slot.contract == contract
-    assert isinstance(slot.contract, ContractData)
+    assert slot.feed == feed
+    assert isinstance(slot.feed, Feed)
