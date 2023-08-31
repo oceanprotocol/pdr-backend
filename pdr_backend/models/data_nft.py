@@ -1,8 +1,11 @@
+from typing import Union
+
 import hashlib
 import json
 
 from enforce_typing import enforce_types
 from web3 import Web3
+from web3.types import TxReceipt, HexBytes
 
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.contract import get_contract_abi
