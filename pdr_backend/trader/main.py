@@ -23,9 +23,7 @@ class TraderConfig:
 
         self.s_until_epochs_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
 
-        self.web3_config: Web3Config = Web3Config(
-            self.rpc_url, self.private_key
-        )
+        self.web3_config: Web3Config = Web3Config(self.rpc_url, self.private_key)
 
     def get_feeds(self) -> Dict[str, dict]:
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
@@ -38,8 +36,7 @@ class TraderConfig:
         )
         return feeds_dict
 
-    def get_contracts(self, feed_addrs: List[str]) \
-            -> Dict[str, PredictoorContract]:
+    def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
         """Return dict of [feed_addr] : PredictoorContract}"""
         contracts = {}
         for address in feed_addrs:
@@ -102,9 +99,7 @@ class Trader:
         )
 
         if epoch > self.prev_submitted_epochs[addr] > 0:
-            prediction = predictoor_contract.get_agg_predval(
-                epoch * s_per_epoch
-            )
+            prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
             print(f"Got {prediction}.")
             if prediction is not None:
                 trade(feed, prediction)
