@@ -37,7 +37,7 @@ def test_submit_truevals(
         for i in epochs
     ]
     for trueval in truevals_before:
-        assert trueval == False
+        assert trueval is False
 
     predictoor_helper.submit_truevals(
         predictoor_contract.contract_address, epochs, truevals, cancels
@@ -48,7 +48,7 @@ def test_submit_truevals(
         for i in epochs
     ]
     for trueval in truevals_after:
-        assert trueval == True
+        assert trueval is True
 
 
 def test_submit_truevals_contracts(
@@ -102,10 +102,10 @@ def test_submit_truevals_contracts(
     ]
 
     for trueval in truevals_before_1:
-        assert trueval == False
+        assert trueval is False
 
     for trueval in truevals_before_2:
-        assert trueval == False
+        assert trueval is False
 
     predictoor_helper.submit_truevals_contracts(addresses, epochs, truevals, cancels)
 
@@ -120,13 +120,13 @@ def test_submit_truevals_contracts(
     ]
 
     for trueval in truevals_after_1:
-        assert trueval == True
+        assert trueval is True
 
     for trueval in truevals_after_2[:2]:  # did not include first two epochs
-        assert trueval == False
+        assert trueval is False
 
     for trueval in truevals_after_2[2:]:
-        assert trueval == True
+        assert trueval is True
 
 
 def test_consume_multiple(
