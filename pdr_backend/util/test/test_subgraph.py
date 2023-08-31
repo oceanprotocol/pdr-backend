@@ -1,7 +1,8 @@
-import requests
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
 import pytest
+import requests
 from web3 import Web3
 
 from pdr_backend.models.slot import Slot
@@ -199,7 +200,7 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
 
 
 @enforce_types
-def test_get_pending_slots(monkeypatch):
+def test_get_pending_slots():
     sample_slot_data = [
         {
             "id": "slot1",
@@ -222,6 +223,10 @@ def test_get_pending_slots(monkeypatch):
                                 "key": key_to_725("timeframe"),
                                 "value": value_to_725("5m"),
                             },
+                            {
+                                "key": key_to_725("source"),
+                                "value": value_to_725("binance"),
+                            },
                         ],
                     },
                 },
@@ -236,21 +241,19 @@ def test_get_pending_slots(monkeypatch):
 
     def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
         nonlocal call_count
+        slot_data = sample_slot_data if call_count <= 1 else []
         call_count += 1
-        if call_count > 2:
-            return {"data": {"predictSlots": []}}
-        return {"data": {"predictSlots": sample_slot_data}}
+        return {"data": {"predictSlots": slot_data}}
 
-    monkeypatch.setattr("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph)
-
-    slots = get_pending_slots(
-        subgraph_url="foo",
-        timestamp=2000,
-        owner_addresses=None,
-        pair_filter=None,
-        timeframe_filter=None,
-        source_filter=None,
-    )
+    with patch("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph):
+        slots = get_pending_slots(
+            subgraph_url="foo",
+            timestamp=2000,
+            owner_addresses=None,
+            pair_filter=None,
+            timeframe_filter=None,
+            source_filter=None,
+        )
 
     assert len(slots) == 2
     slot0 = slots[0]

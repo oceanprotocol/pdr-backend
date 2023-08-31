@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
+from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
@@ -40,16 +41,17 @@ class BaseConfig:
             self.source_filter,
         )
 
-    def get_feeds(self) -> Dict[str, dict]:
+    def get_feeds(self) -> Dict[str, Feed]:
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
-        feeds_dict = query_feed_contracts(
+        feed_dicts = query_feed_contracts(
             self.subgraph_url,
             self.pair_filters,
             self.timeframe_filter,
             self.source_filter,
             self.owner_addresses,
         )
-        return feeds_dict
+        feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
+        return feeds
 
     def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
         """Return dict of [feed_addr] : PredictoorContract}"""
