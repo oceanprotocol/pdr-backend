@@ -10,8 +10,8 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import \
 PRIV_KEY = "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
-S_PER_EPOCH = 4
-S_PER_SUBSCRIPTION = 20
+S_PER_EPOCH = 100
+S_PER_SUBSCRIPTION = 1000
 FEED_DICT = {  # info inside a predictoor contract
     "name": "BTC-USDT feed",
     "address": ADDR,
@@ -49,13 +49,16 @@ def test_predictoor_agent1(monkeypatch):
             return S_PER_EPOCH
         def submit_prediction(self, predval, stake, timestamp, wait=True):
             pass
-    def mock_contract(*args, **kwargs):
-        return MockContract()
+        def payout(self, slot, wait=False):
+            pass
+    mock_contract = MockContract()
+    def mock_contract_func(*args, **kwargs):
+        return mock_contract
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.PredictoorContract", mock_contract
+        "pdr_backend.models.base_config.PredictoorContract", mock_contract_func
     )
 
-    # mock w3.block_number, w3.get_block(), and time.sleep()
+    # mock w3.eth.block_number, w3.eth.get_block()
     class MockEth:
         def __init__(self):
             self.timestamp = 0
@@ -63,12 +66,19 @@ def test_predictoor_agent1(monkeypatch):
         def get_block(self, block_number, full_transactions):
             mock_block = {"timestamp": self.timestamp}
             return mock_block
-        def advance_a_block(self, *args, **kwargs):
-            self.timestamp += 10
-            self.block_number += 1
     mock_w3 = Mock()
     mock_w3.eth = MockEth()
-    monkeypatch.setattr("time.sleep", mock_w3.eth.advance_a_block)
+
+    # mock time.sleep
+    def advance_func(*args, **kwargs):
+        assert S_PER_EPOCH == 100
+        assert S_PER_SUBSCRIPTION == 1000
+        mock_w3.eth.timestamp += 10
+        mock_w3.eth.block_number += 1
+        if mock_w3.eth.timestamp % 100 == 0:
+            mock_contract.current_epoch += 1
+        
+    monkeypatch.setattr("time.sleep", advance_func)
     
     # initialize
     c = PredictoorConfig1()
@@ -78,7 +88,7 @@ def test_predictoor_agent1(monkeypatch):
     agent.config.web3_config.w3 = mock_w3
     
     # main iterations
-    for i in range(5):
+    for i in range(2000):
         agent.take_step()
 
 

@@ -61,7 +61,7 @@ class PredictoorAgent1:
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
     
-    def _process_block_at_feed(self, addr: str, timestamp: str) -> tuple:
+    def _process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
         """Returns (predval, stake, submitted)"""
         #base data
         feed, contract = self.feeds[addr], self.contracts[addr]
