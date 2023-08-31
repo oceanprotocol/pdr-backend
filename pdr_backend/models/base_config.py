@@ -6,7 +6,7 @@ from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
-from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
+from pdr_backend.util.subgraph import get_pending_slots, query_predictContracts
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -43,7 +43,7 @@ class BaseConfig:
 
     def get_feeds(self) -> Dict[str, Feed]:
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
-        feed_dicts = query_feed_contracts(
+        feed_dicts = query_predictContracts(
             self.subgraph_url,
             self.pair_filters,
             self.timeframe_filter,
