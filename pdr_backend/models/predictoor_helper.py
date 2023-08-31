@@ -1,8 +1,10 @@
 from typing import List
+from enforce_typing import enforce_types
 from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
 
+@enforce_types
 class PredictoorHelper:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
@@ -11,22 +13,24 @@ class PredictoorHelper:
             address=config.w3.to_checksum_address(address),
             abi=get_contract_abi("PredictoorHelper"),
         )
+        self.contract_address = config.w3.to_checksum_address(address)
 
     def consume_multiple(
         self,
         addresses: List[str],
-        times: List[str],
+        times: List[int],
         token_addr: str,
         wait_for_receipt=True,
     ):
+        gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
-        )
+        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
-    def submit_trueval_contracts(
+    def submit_truevals_contracts(
         self,
         contract_addrs: List[str],
         epoch_starts: List[List[int]],
@@ -34,9 +38,10 @@ class PredictoorHelper:
         cancelRounds: List[List[bool]],
         wait_for_receipt=True,
     ):
+        gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.submitTruevalContracts(
             contract_addrs, epoch_starts, trueVals, cancelRounds
-        ).transact()
+        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
@@ -49,9 +54,10 @@ class PredictoorHelper:
         cancelRounds: List[bool],
         wait_for_receipt=True,
     ):
+        gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.submitTruevals(
             contract_addr, epoch_starts, trueVals, cancelRounds
-        ).transact()
+        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
