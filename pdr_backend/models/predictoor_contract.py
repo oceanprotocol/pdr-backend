@@ -173,10 +173,10 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
     def get_stake_token(self):
         return self.contract_instance.functions.stakeToken().call()
 
-    def get_price(self):
+    def get_price(self) -> int:
         fixed_rates = self.get_exchanges()
         if not fixed_rates:
-            return None
+            return 0
         (fixed_rate_address, exchange_id) = fixed_rates[0]
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
@@ -361,3 +361,6 @@ class PredictoorContract:  # pylint: disable=too-many-public-methods
 
     def get_block(self, block):
         return self.config.w3.eth.get_block(block)
+
+    def erc721_addr(self) -> str:
+        return self.contract_instance.functions.getERC721Address().call()
