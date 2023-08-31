@@ -364,6 +364,9 @@ def get_pending_slots(
                 contract = slot["predictContract"]
                 info725 = contract["token"]["nft"]["nftData"]
                 info = info_from_725(info725)
+                assert info["pair"], "need a pair"
+                assert info["timeframe"], "need a timeframe"
+                assert info["source"], "need a source"
 
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
