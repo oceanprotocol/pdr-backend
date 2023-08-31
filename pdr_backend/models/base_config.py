@@ -18,16 +18,11 @@ class BaseConfig:
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")  # type: ignore
         self.private_key: str = getenv_or_exit("PRIVATE_KEY")  # type: ignore
 
-        (
-            pair_filter,
-            timeframe_filter,
-            source_filter,
-            owner_addresses,
-        ) = parse_filters()
-        self.pair_filters: Optional[List[str]] = pair_filter  # type: ignore
-        self.timeframe_filter: Optional[List[str]] = timeframe_filter  # type: ignore
-        self.source_filter: Optional[List[str]] = source_filter  # type: ignore
-        self.owner_addresses: Optional[List[str]] = owner_addresses  # type: ignore
+        filters = parse_filters()
+        self.pair_filters: Optional[List[str]] = filters[0]  # type: ignore
+        self.timeframe_filter: Optional[List[str]] = filters[1]  # type: ignore
+        self.source_filter: Optional[List[str]] = filters[2]  # type: ignore
+        self.owner_addresses: Optional[List[str]] = filters[3]  # type: ignore
 
         self.web3_config = Web3Config(self.rpc_url, self.private_key)
 
