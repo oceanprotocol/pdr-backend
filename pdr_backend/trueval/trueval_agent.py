@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Tuple, Callable
+from typing import Dict, List, Tuple, Callable
 
 import ccxt
 from enforce_typing import enforce_types
@@ -28,19 +28,7 @@ class TruevalAgent:
                 break
 
     def take_step(self):
-        timestamp = self.config.web3_config.w3.eth.get_block("latest")["timestamp"]
-        pending_slots = self.config.get_pending_slots(
-            self.config.subgraph_url,
-            timestamp,
-            self.config.owner_addresses,
-            self.config.pair_filters,
-            self.config.timeframe_filter,
-            self.config.source_filter,
-        )
-        print(
-            f"Found {len(pending_slots)} pending slots, processing {self.config.batch_size}"
-        )
-        pending_slots = pending_slots[: self.config.batch_size]
+        pending_slots = self.get_batch()
 
         if len(pending_slots) == 0:
             print(f"No pending slots, sleeping for {self.config.sleep_time} seconds...")
@@ -58,6 +46,18 @@ class TruevalAgent:
                 print("An error occured", e)
         print(f"Done processing, sleeping for {self.config.sleep_time} seconds...")
         time.sleep(self.config.sleep_time)
+
+    @enforce_types
+    def get_batch(self) -> List[Slot]:
+        timestamp = self.config.web3_config.w3.eth.get_block("latest")["timestamp"]
+        pending_slots = self.config.get_pending_slots(
+            timestamp,
+        )
+        print(
+            f"Found {len(pending_slots)} pending slots, processing {self.config.batch_size}"
+        )
+        pending_slots = pending_slots[: self.config.batch_size]
+        return pending_slots
 
     @enforce_types
     def process_slot(self, slot: Slot) -> dict:
@@ -85,16 +85,18 @@ class TruevalAgent:
             )
         return (predictoor_contract, seconds_per_epoch)
 
+    def get_init_and_ts(self, slot: int, seconds_per_epoch: int) -> Tuple[int, int]:
+        initial_ts = slot - seconds_per_epoch
+        end_ts = slot
+        return initial_ts, end_ts
+
     def get_and_submit_trueval(
         self,
         slot: Slot,
         predictoor_contract: PredictoorContract,
         seconds_per_epoch: int,
     ) -> dict:
-        slot.slot_number = int(slot.slot_number)
-        initial_ts = slot.slot_number - seconds_per_epoch
-        end_ts = slot.slot_number
-
+        initial_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
         (trueval, error) = self.get_trueval(slot.feed, initial_ts, end_ts)
         if error:
             raise Exception(
@@ -117,7 +119,7 @@ def get_trueval(
     """
     @description
         Checks if the price has risen between two given timestamps.
-        If an error occurs, the second value in the returned tuple is set to True.
+        If the round should be canceled, the second value in the returned tuple is set to True.
 
     @arguments
         feed -- Feed -- The feed object containing pair details
@@ -125,22 +127,22 @@ def get_trueval(
         end_timestamp -- int -- The ending timestamp.
 
     @return
-        Tuple[bool, bool] -- The trueval and a boolean indicating if an error occured.
+        Tuple[bool, bool] -- The trueval and a boolean indicating if the round should be canceled.
     """
     symbol = feed.pair
     if feed.source == "binance" or feed.source == "kraken":
         symbol = symbol.replace("-", "/")
         symbol = symbol.upper()
-    try:
-        exchange_class = getattr(ccxt, feed.source)
-        exchange_ccxt = exchange_class()
-        price_initial = exchange_ccxt.fetch_ohlcv(
-            symbol, "1m", since=initial_timestamp, limit=1
-        )
-        price_end = exchange_ccxt.fetch_ohlcv(
-            symbol, "1m", since=end_timestamp, limit=1
-        )
-        return (price_end[0][1] >= price_initial[0][1], False)
-    except Exception as e:
-        print(f"Error getting trueval for {symbol} {e}")
+        if initial_timestamp < 5000000000:
+            initial_timestamp = int(initial_timestamp * 1000)
+            end_timestamp = int(end_timestamp * 1000)
+
+    exchange_class = getattr(ccxt, feed.source)
+    exchange_ccxt = exchange_class()
+    price_initial = exchange_ccxt.fetch_ohlcv(
+        symbol, "5m", since=initial_timestamp, limit=1
+    )
+    price_end = exchange_ccxt.fetch_ohlcv(symbol, "5m", since=end_timestamp, limit=1)
+    if price_end[0][1] == price_initial[0][1]:
         return (False, True)
+    return (price_end[0][1] >= price_initial[0][1], False)
