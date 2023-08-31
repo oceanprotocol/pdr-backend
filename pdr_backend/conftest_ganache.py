@@ -58,7 +58,7 @@ def predictoor_contract():
 
 @pytest.fixture(scope="module")
 def predictoor_contract2():
-    config = Web3Config(_rpc_url(), _private_key())
+    config = Web3Config(os.getenv("RPC_URL"), os.getenv("PRIVATE_KEY"))
     _, _, _, _, logs = publish(
         s_per_epoch=SECONDS_PER_EPOCH,
         s_per_subscription=SECONDS_PER_EPOCH * 24,
