@@ -1,50 +1,14 @@
-from abc import ABC
-import os
 from os import getenv
-from typing import Dict, List
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.subgraph import query_predictContracts
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.models.base_config import BaseConfig
 
 
 @enforce_types
-class PredictoorConfig(ABC):
+class PredictoorConfig(BaseConfig):
     def __init__(self):
-        self.rpc_url: str = getenv_or_exit("RPC_URL")
-        self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")
-        self.private_key: str = getenv_or_exit("PRIVATE_KEY")
-        
-        self.pair_filters: str = getenv("PAIR_FILTER")
-        self.timeframe_filter: str = getenv("TIMEFRAME_FILTER")
-        self.source_filter: str = getenv("SOURCE_FILTER")
-        self.owner_addresses: str = getenv("OWNER_ADDRS")
-        
-        self.s_until_epochs_end = int(os.getenv("SECONDS_TILL_EPOCH_END", "60"))
-        self.stake_amount = int(os.getenv("STAKE_AMOUNT", "1"))
-
-        self.web3_config: Web3Config = Web3Config(self.rpc_url, self.private_key)
+        super().__init__()
+        self.s_until_epochs_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
+        self.stake_amount = int(getenv("STAKE_AMOUNT", "1"))
         self.get_prediction = None # child needs to set this prediction function
-
-    def get_feeds(self) -> Dict[str, dict]:
-        """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
-        feeds_dict = query_predictContracts(
-            self.subgraph_url,
-            self.pair_filters,
-            self.timeframe_filter,
-            self.source_filter,
-            self.owner_addresses,
-        )
-        return feeds_dict
-
-    def get_contracts(self, feed_addrs: List[str]) \
-            -> Dict[str, PredictoorContract]:
-        """Return dict of [feed_addr] : PredictoorContract}"""
-        contracts = {}
-        for addr in feed_addrs:
-            contracts[addr] = PredictoorContract(self.web3_config, addr)
-        return contracts
-            

@@ -17,12 +17,12 @@ def test_base_config_with_filters(monkeypatch):
     assert c.subgraph_url == "http://bar"
     assert c.private_key == PRIV_KEY
 
-    assert c.web3_config is not None
-
     assert c.pair_filters == ["BTC/USDT", "ETH/USDT"]
     assert c.timeframe_filter == ["5m", "15m"]
     assert c.source_filter == ["binance", "kraken"]
     assert c.owner_addresses == ["0x123", "0x124"]
+
+    assert c.web3_config is not None
 
 
 @enforce_types
