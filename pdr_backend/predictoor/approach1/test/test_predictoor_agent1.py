@@ -10,13 +10,14 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import \
 PRIV_KEY = "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
-
+S_PER_EPOCH = 4
+S_PER_SUBSCRIPTION = 20
 FEED_DICT = {  # info inside a predictoor contract
-    "name": "Contract Name",
+    "name": "BTC-USDT feed",
     "address": ADDR,
     "symbol": "test",
-    "seconds_per_epoch": 300,
-    "seconds_per_subscription": 60,
+    "seconds_per_epoch": S_PER_EPOCH,
+    "seconds_per_subscription": S_PER_SUBSCRIPTION,
     "trueval_submit_timeout": 15,
     "owner": "0xowner",
     "pair": "BTC-ETH",
@@ -38,10 +39,18 @@ def test_predictoor_agent1(monkeypatch):
     )
 
     # mock PredictoorContract
-    def mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
-        m = Mock()
-        m.contract_address = ADDR
-        return m
+    class MockContract:
+        def __init__(self):
+            self.contract_address = ADDR
+            self.current_epoch = 0
+        def get_current_epoch(self):
+            return self.current_epoch
+        def get_secondsPerEpoch(self):
+            return S_PER_EPOCH
+        def submit_prediction(self, predval, stake, timestamp, wait=True):
+            pass
+    def mock_contract(*args, **kwargs):
+        return MockContract()
     monkeypatch.setattr(
         "pdr_backend.models.base_config.PredictoorContract", mock_contract
     )
@@ -55,14 +64,11 @@ def test_predictoor_agent1(monkeypatch):
             mock_block = {"timestamp": self.timestamp}
             return mock_block
         def advance_a_block(self, *args, **kwargs):
-            print("ya ya")
             self.timestamp += 10
             self.block_number += 1
     mock_w3 = Mock()
     mock_w3.eth = MockEth()
-    monkeypatch.setattr(
-        "time.sleep", mock_w3.eth.advance_a_block
-    )
+    monkeypatch.setattr("time.sleep", mock_w3.eth.advance_a_block)
     
     # initialize
     c = PredictoorConfig1()

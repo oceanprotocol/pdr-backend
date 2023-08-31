@@ -35,5 +35,5 @@ from pdr_backend.models.base_config import BaseConfig
 class PredictoorConfig1(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.s_until_epochs_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
+        self.s_until_epoch_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
         self.stake_amount = int(getenv("STAKE_AMOUNT", "1"))

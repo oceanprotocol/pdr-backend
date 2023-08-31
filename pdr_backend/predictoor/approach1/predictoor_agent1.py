@@ -38,9 +38,7 @@ class PredictoorAgent1:
         # at new block number yet?
         w3 = self.config.web3_config.w3
         block_number = w3.eth.block_number
-        print(f"block_number={block_number}, self.prev_block_number={self.prev_block_number}")
         if block_number <= self.prev_block_number:
-            print("foo bah")
             time.sleep(1)
             return
         self.prev_block_number = block_number
@@ -66,7 +64,7 @@ class PredictoorAgent1:
 
         # print status
         print(
-            f"{feed['name']} at address {addr} is at epoch {epoch}"
+            f"{feed.name} at address {addr} is at epoch {epoch}"
             f". s_per_epoch: {s_per_epoch}, "
             f"s_remaining_in_epoch: {s_remaining_in_epoch}"
         )
@@ -111,7 +109,7 @@ class PredictoorAgent1:
           Below is the default implementation, giving random predictions.
           You need to customize it to implement your own strategy.
         """
-        feed_name = self.feeds[addr]["name"]
+        feed_name = self.feeds[addr].name
         print(f"Predict {feed_name} (addr={addr}) at timestamp {timestamp}")
 
         # Pick random prediction & random stake. You need to customize this.

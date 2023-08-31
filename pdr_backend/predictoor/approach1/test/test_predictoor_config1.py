@@ -14,7 +14,7 @@ def test_predictoor_config_basic(monkeypatch):
     c = PredictoorConfig1()
 
     # values handled by PredictoorConfig1
-    assert c.s_until_epochs_end == 60
+    assert c.s_until_epoch_end == 60
     assert c.stake_amount == 30000
 
     # values handled by BaseConfig
