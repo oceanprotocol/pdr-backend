@@ -26,6 +26,9 @@ Then, [install barge](barge.md#install-barge).
 
 In barge console:
 ```console
+# set ganache block time to 5 seconds, try increasing this value if barge is lagging
+export GANACHE_BLOCKTIME=5
+
 #run barge with all agents except predictoor
 ./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 ```
