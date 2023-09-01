@@ -44,12 +44,12 @@ def trueval_config():
 
 
 @pytest.fixture()
-def predictoor_contract():
+def predictoor_contract_mock():
     with patch(
         "pdr_backend.trueval.trueval_agent.PredictoorContract",
         return_value=mock_contract(),
-    ) as mock_predictoor_contract:
-        yield mock_predictoor_contract
+    ) as mock_predictoor_contract_mock:
+        yield mock_predictoor_contract_mock
 
 
 def mock_contract(*args, **kwarg):

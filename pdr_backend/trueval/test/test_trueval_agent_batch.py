@@ -13,7 +13,7 @@ def test_new_agent(trueval_config):
     assert agent.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
-def test_process_trueval_slot_up(agent, slot, predictoor_contract):
+def test_process_trueval_slot_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
@@ -22,7 +22,7 @@ def test_process_trueval_slot_up(agent, slot, predictoor_contract):
         assert slot.trueval == True
 
 
-def test_process_trueval_slot_down(agent, slot, predictoor_contract):
+def test_process_trueval_slot_down(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
@@ -31,7 +31,7 @@ def test_process_trueval_slot_down(agent, slot, predictoor_contract):
         assert slot.trueval == False
 
 
-def test_process_trueval_slot_cancel(agent, slot, predictoor_contract):
+def test_process_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
