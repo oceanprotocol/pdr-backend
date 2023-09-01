@@ -2,6 +2,8 @@ from collections import defaultdict
 import time
 from typing import List, Optional, Tuple, Callable
 
+from enforce_typing import enforce_types
+
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
@@ -9,6 +11,7 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
+@enforce_types
 class TruevalSlot(Slot):
     def __init__(self, slot_number: int, feed: Feed):
         super().__init__(slot_number, feed)
@@ -22,6 +25,7 @@ class TruevalSlot(Slot):
         self.cancel = cancel
 
 
+@enforce_types
 class TruevalAgentBatch(TruevalAgent):
     def __init__(
         self,

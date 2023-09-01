@@ -1,4 +1,6 @@
 import sys
+
+from enforce_typing import enforce_types
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.trueval.trueval_agent import TruevalAgent, get_trueval
@@ -19,6 +21,7 @@ def do_help():
     sys.exit()
 
 
+@enforce_types
 def main(testing=False):
     if len(sys.argv) <= 1:
         do_help()

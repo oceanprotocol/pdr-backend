@@ -10,6 +10,7 @@ from pdr_backend.models.feed import Feed
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
+@enforce_types
 class TruevalAgent:
     def __init__(
         self,
@@ -20,7 +21,6 @@ class TruevalAgent:
         self.get_trueval = _get_trueval
         self.contract_cache: Dict[str, tuple] = {}
 
-    @enforce_types
     def run(self, testing: bool = False):
         while True:
             self.take_step()
@@ -47,7 +47,6 @@ class TruevalAgent:
         print(f"Done processing, sleeping for {self.config.sleep_time} seconds...")
         time.sleep(self.config.sleep_time)
 
-    @enforce_types
     def get_batch(self) -> List[Slot]:
         timestamp = self.config.web3_config.w3.eth.get_block("latest")["timestamp"]
         pending_slots = self.config.get_pending_slots(
@@ -59,12 +58,10 @@ class TruevalAgent:
         pending_slots = pending_slots[: self.config.batch_size]
         return pending_slots
 
-    @enforce_types
     def process_slot(self, slot: Slot) -> dict:
         predictoor_contract, _ = self.get_contract_info(slot.feed.address)
         return self.get_and_submit_trueval(slot, predictoor_contract)
 
-    @enforce_types
     def get_contract_info(
         self, contract_address: str
     ) -> Tuple[PredictoorContract, int]:
@@ -126,6 +123,7 @@ class TruevalAgent:
             ) from e
 
 
+@enforce_types
 def get_trueval(
     feed: Feed, initial_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
