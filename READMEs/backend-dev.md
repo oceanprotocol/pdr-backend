@@ -33,7 +33,7 @@ source venv/bin/activate
 export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export RPC_URL=http://127.0.0.1:8545
 export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
-export PRIVATE_KEY="0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 ```
 
 Each subsection below gives different local usage options.
@@ -51,10 +51,10 @@ In work console, run tests:
 #(ensure envvars set as above)
 
 #run a single test
-pytest pdr_backend/utils/test/test_constants.py::test_constants1
+pytest pdr_backend/util/test/test_constants.py::test_constants1
 
 #run all tests in a file
-pytest pdr_backend/utils/test/test_constants.py
+pytest pdr_backend/util/test/test_constants.py
 
 #run all regular tests; see details on pytest markers to select specific suites
 pytest
