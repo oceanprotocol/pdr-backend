@@ -91,9 +91,9 @@ class TruevalAgentBatch(TruevalAgent):
         _, seconds_per_epoch = self.get_contract_info(slot.feed.address)
         init_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
         try:
-            (trueval, error) = self.get_trueval(slot.feed, init_ts, end_ts)
+            (trueval, cancel) = self.get_trueval(slot.feed, init_ts, end_ts)
             slot.set_trueval(trueval)
-            if error:
+            if cancel:
                 slot.set_cancel(True)
         except Exception as e:
             if "Too many requests" in str(e):
