@@ -53,6 +53,7 @@ def test_predictoor_agent1(monkeypatch):
         def __init__(self):
             self.timestamp = INIT_TIMESTAMP
             self.block_number = INIT_BLOCK_NUMBER
+            self._timestamps_seen : List[int] = [INIT_TIMESTAMP]
         def get_block(self, block_number:int, full_transactions:bool):
             mock_block = {"timestamp": self.timestamp}
             return mock_block
@@ -71,11 +72,11 @@ def test_predictoor_agent1(monkeypatch):
             self.contract_address: str = ADDR
             self._payout_slots: List[int] = []
             self._prediction_slots: List[int] = []
-        def get_current_epoch(self) -> int:
+        def get_current_epoch(self) -> int: # returns an epoch number
             return self.get_current_epoch_ts() // S_PER_EPOCH
-        def get_current_epoch_ts(self) -> int:
-            curEpoch = toEpochStart(self._w3.eth.timestamp)
-            return curEpoch
+        def get_current_epoch_ts(self) -> int: # returns a timestamp
+            curEpoch_ts = toEpochStart(self._w3.eth.timestamp)
+            return curEpoch_ts
         def get_secondsPerEpoch(self) -> int:
             return S_PER_EPOCH
         def submit_prediction(
@@ -101,6 +102,7 @@ def test_predictoor_agent1(monkeypatch):
         if do_advance_block:
             mock_w3.eth.timestamp += random.randint(3, 12)
             mock_w3.eth.block_number += 1
+            mock_w3.eth._timestamps_seen.append(mock_w3.eth.timestamp)
     monkeypatch.setattr("time.sleep", advance_func)
 
     # now we're done the mocking, time for the real work!!
@@ -116,16 +118,22 @@ def test_predictoor_agent1(monkeypatch):
     for i in range(1000):
         agent.take_step()
 
-    print("=" * 100)
+    # log some final results for debubbing / inspection
+    print("\n" + "=" * 80)
     print("Done iterations")
-    print(f"init timestamp = {INIT_TIMESTAMP}, final = {mock_w3.eth.timestamp}")
     print(f"init block_number = {INIT_BLOCK_NUMBER}"
           f", final = {mock_w3.eth.block_number}")
+    print()
+    print(f"init timestamp = {INIT_TIMESTAMP}, final = {mock_w3.eth.timestamp}")
+    print(f"all timestamps seen = {mock_w3.eth._timestamps_seen}")
+    print()
     print("unique prediction_slots = "
           f"{sorted(set(mock_contract._prediction_slots))}")
     print(f"all prediction_slots = {mock_contract._prediction_slots}")
+    print()
     print(f"payout_slots = {mock_contract._payout_slots}")
-    
+
+    # relatively basic sanity tests
     assert mock_contract._prediction_slots
     assert mock_contract._payout_slots
     assert (mock_w3.eth.timestamp + 2*S_PER_EPOCH) \
