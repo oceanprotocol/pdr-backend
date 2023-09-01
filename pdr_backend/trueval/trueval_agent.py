@@ -97,10 +97,7 @@ class TruevalAgent:
         seconds_per_epoch: int,
     ) -> dict:
         try:
-            initial_ts, end_ts = self.get_init_and_ts(
-                slot.slot_number, seconds_per_epoch
-            )
-            (trueval, cancel) = self.get_trueval(slot.feed, initial_ts, end_ts)
+            (trueval, cancel) = self.get_trueval_slot(slot)
 
             # pylint: disable=line-too-long
             print(
@@ -113,6 +110,21 @@ class TruevalAgent:
         except Exception as e:
             print("Error while getting trueval:", e)
         return {}
+
+    def get_trueval_slot(self, slot: Slot):
+        _, seconds_per_epoch = self.get_contract_info(slot.feed.address)
+        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
+        try:
+            (trueval, cancel) = self.get_trueval(slot.feed, init_ts, end_ts)
+            return trueval, cancel
+        except Exception as e:
+            if "Too many requests" in str(e):
+                print("Too many requests, waiting for a minute")
+                time.sleep(60)
+                return self.get_trueval_slot(slot)
+            raise Exception(
+                f"An error occured: {e}, while getting trueval for: {slot.feed.address} {slot.feed.pair} {slot.slot_number}"
+            )
 
 
 def get_trueval(

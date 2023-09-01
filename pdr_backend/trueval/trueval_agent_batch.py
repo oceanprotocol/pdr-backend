@@ -88,18 +88,10 @@ class TruevalAgentBatch(TruevalAgent):
         return tx["transactionHash"].hex()
 
     def process_trueval_slot(self, slot: TruevalSlot):
-        _, seconds_per_epoch = self.get_contract_info(slot.feed.address)
-        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
         try:
-            (trueval, cancel) = self.get_trueval(slot.feed, init_ts, end_ts)
+            (trueval, cancel) = self.get_trueval_slot(slot)
             slot.set_trueval(trueval)
             if cancel:
                 slot.set_cancel(True)
         except Exception as e:
-            if "Too many requests" in str(e):
-                print("Too many requests, waiting for a minute")
-                time.sleep(60)
-                return self.process_trueval_slot(slot)
-            print(
-                f"An error occured: {e}, while getting slot: {slot.feed.address} {slot.feed.pair} {slot.slot_number}"
-            )
+            print("An error occured while getting processing slot:", e)
