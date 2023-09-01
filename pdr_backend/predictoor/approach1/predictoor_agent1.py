@@ -11,6 +11,7 @@ from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig
 
 @enforce_types
 class PredictoorAgent1:
+
     """
     What it does
     - Fetches Predictoor contracts from subgraph, and filters them
