@@ -61,10 +61,8 @@ class TruevalAgent:
 
     @enforce_types
     def process_slot(self, slot: Slot) -> dict:
-        predictoor_contract, seconds_per_epoch = self.get_contract_info(
-            slot.feed.address
-        )
-        return self.get_and_submit_trueval(slot, predictoor_contract, seconds_per_epoch)
+        predictoor_contract, _ = self.get_contract_info(slot.feed.address)
+        return self.get_and_submit_trueval(slot, predictoor_contract)
 
     @enforce_types
     def get_contract_info(
@@ -94,7 +92,6 @@ class TruevalAgent:
         self,
         slot: Slot,
         predictoor_contract: PredictoorContract,
-        seconds_per_epoch: int,
     ) -> dict:
         try:
             (trueval, cancel) = self.get_trueval_slot(slot)
@@ -155,8 +152,6 @@ def get_trueval(
     price_data = exchange.fetch_ohlcv(
         symbol, feed.timeframe, since=initial_timestamp, limit=2
     )
-    print(initial_timestamp, end_timestamp, symbol)
-    print(price_data, feed.timeframe)
     if price_data[0][0] != initial_timestamp or price_data[1][0] != end_timestamp:
         raise Exception("Timestamp mismatch")
 
