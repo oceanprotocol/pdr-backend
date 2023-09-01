@@ -17,11 +17,3 @@ def main(testing=False):
 
 if __name__ == "__main__":
     main()
-
-
-# pk1: 0x46cc668ff7302ad475fefc45716dd73217fdd8b65256d73362597e0f4a9c6c97
-# pk2: other : 0x6fb6d4384a16a0b50afce957faf48582e3ca82f3c6796dd8ec78ad53d73043be
-
-# 0xE02A421dFc549336d47eFEE85699Bd0A3Da7D6FF
-
-# 0x005FD44e007866508f62b04ce9f43dd1d36D0c0c
