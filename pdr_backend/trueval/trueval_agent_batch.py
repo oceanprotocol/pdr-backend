@@ -1,6 +1,6 @@
 from collections import defaultdict
 import time
-from typing import List, Tuple, Callable
+from typing import List, Optional, Tuple, Callable
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
@@ -12,10 +12,10 @@ from pdr_backend.trueval.trueval_config import TruevalConfig
 class TruevalSlot(Slot):
     def __init__(self, slot_number: int, feed: Feed):
         super().__init__(slot_number, feed)
-        self.trueval = None
+        self.trueval: Optional[bool] = None
         self.cancel = False
 
-    def set_trueval(self, trueval: bool):
+    def set_trueval(self, trueval: Optional[bool]):
         self.trueval = trueval
 
     def set_cancel(self, cancel: bool):
@@ -61,7 +61,7 @@ class TruevalAgentBatch(TruevalAgent):
         time.sleep(self.config.sleep_time)
 
     def batch_submit_truevals(self, slots: List[TruevalSlot]) -> str:
-        contracts = defaultdict(
+        contracts: dict = defaultdict(
             lambda: {"epoch_starts": [], "trueVals": [], "cancelRounds": []}
         )
 
