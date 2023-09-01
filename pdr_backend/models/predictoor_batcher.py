@@ -1,6 +1,6 @@
 from typing import List
 from enforce_typing import enforce_types
-from eth_typing import ChecksumAddress
+from eth_typing import ChecksumAddress  # type: ignore
 from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
