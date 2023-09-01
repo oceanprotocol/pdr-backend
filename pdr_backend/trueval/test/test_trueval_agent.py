@@ -38,12 +38,8 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock)
         assert result == {"tx": "0x123"}
         predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
             False, 1692943200, False, True
+        )
 
-    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
-    assert result == {"tx": "0x123"}
-    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
-        False, 1692943200, False, True
-    )
 
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
