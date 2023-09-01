@@ -34,6 +34,7 @@ FEED_DICT = {  # info inside a predictoor contract
 INIT_TIMESTAMP = 107
 INIT_BLOCK_NUMBER = 13
 
+@enforce_types
 def test_predictoor_agent1(monkeypatch):
     _setenvs(monkeypatch)
 
@@ -47,24 +48,29 @@ def test_predictoor_agent1(monkeypatch):
     )
     
     # mock w3.eth.block_number, w3.eth.get_block()
+    @enforce_types
     class MockEth:
         def __init__(self):
             self.timestamp = INIT_TIMESTAMP
             self.block_number = INIT_BLOCK_NUMBER
-        def get_block(self, block_number, full_transactions):
+        def get_block(self, block_number:int, full_transactions:bool):
             mock_block = {"timestamp": self.timestamp}
             return mock_block
     mock_w3 = Mock()
     mock_w3.eth = MockEth()
 
     # mock PredictoorContract
+    @enforce_types
     def toEpochStart(timestamp: int) -> int:
         return timestamp // S_PER_EPOCH * S_PER_EPOCH
+    
+    @enforce_types
     class MockContract:
         def __init__(self, w3):
-            self.contract_address = ADDR
-            self._did_payout = False
             self._w3 = w3
+            self.contract_address: str = ADDR
+            self._payout_slots: List[int] = []
+            self._prediction_timestamps: List[int] = []
         def get_current_epoch(self) -> int:
             return self.get_current_epoch_ts() // S_PER_EPOCH
         def get_current_epoch_ts(self) -> int:
@@ -72,10 +78,14 @@ def test_predictoor_agent1(monkeypatch):
             return curEpoch
         def get_secondsPerEpoch(self) -> int:
             return S_PER_EPOCH
-        def submit_prediction(self, predval, stake, timestamp, wait=True):
-            pass
-        def payout(self, slot, wait=False):
-            self._did_payout = True
+        def submit_prediction(
+                self, predval:bool, stake:int, timestamp:int, wait:bool=True):
+            assert timestamp not in self._prediction_timestamps
+            self._prediction_timestamps.append(timestamp)
+        def payout(self, slot:int, wait:bool=False):
+            assert slot not in self._payout_slots, "already did payout for this slot"
+            self._payout_slots.append(slot)
+            
     mock_contract = MockContract(mock_w3)
     def mock_contract_func(*args, **kwargs):
         return mock_contract
@@ -90,19 +100,21 @@ def test_predictoor_agent1(monkeypatch):
             mock_w3.eth.timestamp += random.randint(3, 12)
             mock_w3.eth.block_number += 1
     monkeypatch.setattr("time.sleep", advance_func)
+
+    # now we're done the mocking, time for the real work!!
     
-    # initialize
+    # real work: initialize
     c = PredictoorConfig1()
     agent = PredictoorAgent1(c)
 
     # last bit of mocking
     agent.config.web3_config.w3 = mock_w3
     
-    # main iterations
+    # real work: main iterations
     for i in range(1000):
         agent.take_step()
 
-    assert mock_contract._did_payout, "if False, make sure enough steps are run"
+    assert mock_contract._payout_slots
 
 
 def _setenvs(monkeypatch):
