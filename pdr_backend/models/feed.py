@@ -2,8 +2,10 @@ from typing import Any, Dict
 
 from enforce_typing import enforce_types
 
+from pdr_backend.util.strutil import StrMixin
 
-class Feed:  # pylint: disable=too-many-instance-attributes
+
+class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,
@@ -36,6 +38,14 @@ class Feed:  # pylint: disable=too-many-instance-attributes
     @property
     def base(self):
         return self.pair.split("-")[0]
+
+    def shortstr(self) -> str:
+        return (
+            f"[Feed {self.address[:7]} {self.pair}" f"|{self.source}|{self.timeframe}]"
+        )
+
+    def __str__(self) -> str:
+        return self.shortstr()
 
 
 @enforce_types
