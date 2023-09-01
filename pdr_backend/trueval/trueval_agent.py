@@ -130,19 +130,22 @@ def get_trueval(
         Tuple[bool, bool] -- The trueval and a boolean indicating if the round should be canceled.
     """
     symbol = feed.pair
-    if feed.source == "binance" or feed.source == "kraken":
-        symbol = symbol.replace("-", "/")
-        symbol = symbol.upper()
-        if initial_timestamp < 5000000000:
-            initial_timestamp = int(initial_timestamp * 1000)
-            end_timestamp = int(end_timestamp * 1000)
+    symbol = symbol.replace("-", "/")
+    symbol = symbol.upper()
+    if initial_timestamp < 5000000000:
+        initial_timestamp = int(initial_timestamp * 1000)
+        end_timestamp = int(end_timestamp * 1000)
 
     exchange_class = getattr(ccxt, feed.source)
-    exchange_ccxt = exchange_class()
-    price_initial = exchange_ccxt.fetch_ohlcv(
-        symbol, "5m", since=initial_timestamp, limit=1
+    exchange = exchange_class()
+    price_data = exchange.fetch_ohlcv(
+        symbol, feed.timeframe, since=initial_timestamp, limit=2
     )
-    price_end = exchange_ccxt.fetch_ohlcv(symbol, "5m", since=end_timestamp, limit=1)
-    if price_end[0][1] == price_initial[0][1]:
+    print(initial_timestamp, end_timestamp, symbol)
+    print(price_data, feed.timeframe)
+    if price_data[0][0] != initial_timestamp or price_data[1][0] != end_timestamp:
+        raise Exception("Timestamp mismatch")
+
+    if price_data[1][1] == price_data[0][1]:
         return (False, True)
-    return (price_end[0][1] >= price_initial[0][1], False)
+    return (price_data[1][1] >= price_data[0][1], False)
