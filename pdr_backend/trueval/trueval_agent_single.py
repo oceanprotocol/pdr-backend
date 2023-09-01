@@ -11,13 +11,6 @@ from pdr_backend.trueval.trueval_config import TruevalConfig
 
 @enforce_types
 class TruevalAgentSingle(TruevalAgentBase):
-    def __init__(
-        self,
-        trueval_config: TruevalConfig,
-        _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
-    ):
-        super().__init__(trueval_config, _get_trueval)
-
     def take_step(self):
         pending_slots = self.get_batch()
 
