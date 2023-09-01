@@ -29,7 +29,7 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
 def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value, 60
+            slot, predictoor_contract_mock.return_value
         )
         assert result == {"tx": "0x123"}
         predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
@@ -40,7 +40,7 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock)
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value, 60
+            slot, predictoor_contract_mock.return_value
         )
         assert result == {"tx": "0x123"}
         predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
@@ -51,7 +51,7 @@ def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
 def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, True)):
         result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value, 60
+            slot, predictoor_contract_mock.return_value
         )
         assert result == {"tx": "0x123"}
         predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
@@ -77,7 +77,9 @@ def test_get_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
         assert result == (True, False)
 
 
-def test_get_trueval_slot_too_many_requests_retry(agent, slot, predictoor_contract_mock):
+def test_get_trueval_slot_too_many_requests_retry(
+    agent, slot, predictoor_contract_mock
+):
     mock_get_trueval = MagicMock(
         side_effect=[Exception("Too many requests"), (True, True)]
     )
