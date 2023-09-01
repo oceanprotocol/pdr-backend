@@ -1,5 +1,4 @@
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.publisher.publish import add_erc20_deployer
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.trueval.trueval_agent import TruevalAgent, get_trueval
