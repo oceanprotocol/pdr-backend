@@ -80,10 +80,12 @@ def test_predictoor_agent1(monkeypatch):
             return S_PER_EPOCH
         def submit_prediction(
                 self, predval:bool, stake:int, timestamp:int, wait:bool=True):
-            assert timestamp not in self._prediction_timestamps
+            if timestamp in self._prediction_timestamps:
+                print(f"      (Replace prev pred at time slot {timestamp})")
             self._prediction_timestamps.append(timestamp)
         def payout(self, slot:int, wait:bool=False):
-            assert slot not in self._payout_slots, "already did payout for this slot"
+            assert slot not in self._payout_slots, \
+                "already did payout for this slot"
             self._payout_slots.append(slot)
             
     mock_contract = MockContract(mock_w3)

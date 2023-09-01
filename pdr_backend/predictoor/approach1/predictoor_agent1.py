@@ -27,7 +27,8 @@ class PredictoorAgent1:
 
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
-        self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
+        self.prev_payout_epochs = {addr : -1 for addr in self.feeds}
+        self.prev_submitted_epochs = {addr : -1 for addr in self.feeds}
 
         print("\n" + "-"*80)
         print("Config:")
@@ -86,10 +87,12 @@ class PredictoorAgent1:
         print(f"    Process {feed} at epoch={epoch}")
 
         # maybe get payout for previous epoch
-        if epoch > self.prev_submitted_epochs[addr] > 0:
+        if epoch > self.prev_submitted_epochs[addr] and \
+           epoch > self.prev_payout_epochs[addr]:
             slot = epoch * s_per_epoch - s_per_epoch
             print(f"      Claim $ for prev epoch at time slot = {slot}")
             contract.payout(slot, False)
+            self.prev_payout_epochs[addr] = epoch
 
         # within the time window to predict?
         print(f"      {epoch_s_left} s left in epoch"
@@ -101,6 +104,7 @@ class PredictoorAgent1:
 
         # compute prediction; exit if no good
         target_time = (epoch + 2) * s_per_epoch
+        print("      " + "="*80)
         print(f"      Predict for time slot = {target_time}...")
         
         predval, stake = self.get_prediction(addr, target_time)
@@ -110,11 +114,11 @@ class PredictoorAgent1:
             return (None, None, False)
         
         # submit prediction to chain
-        print("      Submit tx of predval/stake to chain...")
+        print("      Submit predict tx chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
-        s = "      " + "="*80 + "\n"
-        print(f"{s}      -> Tx result: success.\n{s}")
+        print(f"      -> Submit predict tx result: success.")
+        print("      " + "="*80)
         print("      Done feed: success.")
         return (predval, stake, True)
 
