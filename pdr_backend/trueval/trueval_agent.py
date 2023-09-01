@@ -119,9 +119,11 @@ class TruevalAgent:
                 print("Too many requests, waiting for a minute")
                 time.sleep(60)
                 return self.get_trueval_slot(slot)
+
+            # pylint: disable=line-too-long
             raise Exception(
                 f"An error occured: {e}, while getting trueval for: {slot.feed.address} {slot.feed.pair} {slot.slot_number}"
-            )
+            ) from e
 
 
 def get_trueval(

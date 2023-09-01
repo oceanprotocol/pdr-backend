@@ -1,10 +1,7 @@
 from collections import defaultdict
 import time
-from typing import Any, Dict, List, Tuple, Callable, TypedDict, Union
-from hexbytes import HexBytes
-from web3.datastructures import AttributeDict
+from typing import List, Tuple, Callable
 
-from web3.types import TxReceipt
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
