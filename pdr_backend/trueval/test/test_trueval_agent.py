@@ -59,6 +59,37 @@ def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract):
         )
 
 
+def test_get_trueval_slot_up(agent, slot, predictoor_contract):
+    with patch.object(agent, "get_trueval", return_value=(True, True)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (True, True)
+
+
+def test_get_trueval_slot_down(agent, slot, predictoor_contract):
+    with patch.object(agent, "get_trueval", return_value=(False, True)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (False, True)
+
+
+def test_get_trueval_slot_cancel(agent, slot, predictoor_contract):
+    with patch.object(agent, "get_trueval", return_value=(True, False)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (True, False)
+
+
+def test_get_trueval_slot_too_many_requests_retry(agent, slot, predictoor_contract):
+    mock_get_trueval = MagicMock(
+        side_effect=[Exception("Too many requests"), (True, True)]
+    )
+    with patch.object(agent, "get_trueval", mock_get_trueval), patch(
+        "time.sleep", return_value=None
+    ) as mock_sleep:
+        result = agent.get_trueval_slot(slot)
+        mock_sleep.assert_called_once_with(60)
+        assert result == (True, True)
+        assert mock_get_trueval.call_count == 2
+
+
 def test_take_step(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -104,31 +135,5 @@ def test_run(slot, agent):
 
 
 @pytest.fixture()
-def trueval_config():
-    return TruevalConfig()
-
-
-@pytest.fixture()
 def agent(trueval_config):
     return TruevalAgent(trueval_config, get_trueval)
-
-
-@pytest.fixture()
-def predictoor_contract():
-    with patch(
-        "pdr_backend.trueval.trueval_agent.PredictoorContract",
-        return_value=mock_contract(),
-    ) as mock_predictoor_contract:
-        yield mock_predictoor_contract
-
-
-# ----------------------------------------------
-### Mocks
-
-
-def mock_contract(*args, **kwarg):
-    m = Mock()
-    m.get_secondsPerEpoch.return_value = 60
-    m.submit_trueval.return_value = {"tx": "0x123"}
-    m.contract_address = "0x1"
-    return m
