@@ -5,7 +5,7 @@ from pdr_backend.publisher.publish import fund_dev_accounts
 
 
 def test_fund_dev_accounts(monkeypatch):
-    pk = "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+    pk = "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
     monkeypatch.setenv("PREDICTOOR_PRIVATE_KEY", pk)
     monkeypatch.setenv("PREDICTOOR2_PRIVATE_KEY", pk)
 
