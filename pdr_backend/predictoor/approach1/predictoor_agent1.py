@@ -4,8 +4,7 @@ from typing import Dict, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.predictoor.approach1.predictoor_config1 import \
-    PredictoorConfig1
+from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig1
 
 
 @enforce_types
@@ -16,44 +15,44 @@ class PredictoorAgent1:
     - Monitors each contract for epoch changes.
     - When a value can be predicted, call predict.py::predict_function()
     """
-    
+
     def __init__(self, config: PredictoorConfig1):
         self.config = config
-        
-        self.feeds: Dict[str,Feed] = self.config.get_feeds() # [addr] : Feed
-        
+
+        self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
+
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs) # [addr] : contract
+        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
 
         self.prev_block_time: int = 0
         self.prev_block_number: int = 0
-        self.prev_payout_epochs_per_feed = {addr : [] for addr in self.feeds}
-        self.prev_submit_epochs_per_feed = {addr : [] for addr in self.feeds}
+        self.prev_payout_epochs_per_feed = {addr: [] for addr in self.feeds}
+        self.prev_submit_epochs_per_feed = {addr: [] for addr in self.feeds}
 
-        print("\n" + "-"*80)
+        print("\n" + "-" * 80)
         print("Config:")
         print(self.config)
-        
-        print("\n" + "."*80)
+
+        print("\n" + "." * 80)
         print("Feeds (detailed):")
         for feed in self.feeds.values():
             print(f"  {feed.longstr()}")
 
-        print("\n" + "."*80)
+        print("\n" + "." * 80)
         print("Feeds (succinct):")
         for addr, feed in self.feeds.items():
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
-            
+
     def run(self):
         print("Starting main loop...")
         while True:
             self.take_step()
-    
+
     def take_step(self):
         w3 = self.config.web3_config.w3
-        print("\n" + "-"*80)
+        print("\n" + "-" * 80)
         print(f"Take_step() begin. Chain timestamp={w3.eth.timestamp}")
-        
+
         # at new block number yet?
         block_number = w3.eth.block_number
         print(f"  block_number={block_number}, prev={self.prev_block_number}")
@@ -74,10 +73,10 @@ class PredictoorAgent1:
         print("  Got new block.")
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
-    
+
     def _process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
         """Returns (predval, stake, submitted)"""
-        #base data
+        # base data
         feed, contract = self.feeds[addr], self.contracts[addr]
         epoch = contract.get_current_epoch()
         s_per_epoch = feed.seconds_per_epoch
@@ -89,16 +88,21 @@ class PredictoorAgent1:
         # maybe get payout for previous epoch
         prev_submit_epochs = self.prev_submit_epochs_per_feed[addr]
         prev_payout_epochs = self.prev_payout_epochs_per_feed[addr]
-        if prev_submit_epochs and epoch not in prev_submit_epochs and \
-           (not prev_payout_epochs or epoch not in prev_payout_epochs):
+        if (
+            prev_submit_epochs
+            and epoch not in prev_submit_epochs
+            and (not prev_payout_epochs or epoch not in prev_payout_epochs)
+        ):
             slot = epoch * s_per_epoch - s_per_epoch
             print(f"      Claim $ for prev epoch at time slot = {slot}")
             contract.payout(slot, False)
             self.prev_payout_epochs_per_feed[addr].append(epoch)
 
         # within the time window to predict?
-        print(f"      {epoch_s_left} s left in epoch"
-              f" (predict if <= {self.config.s_until_epoch_end} s left)")
+        print(
+            f"      {epoch_s_left} s left in epoch"
+            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+        )
         too_early = epoch_s_left > self.config.s_until_epoch_end
         if too_early:
             print("      Done feed: too early to predict")
@@ -107,20 +111,20 @@ class PredictoorAgent1:
         # compute prediction; exit if no good
         target_time = (epoch + 2) * s_per_epoch
         print(f"      Predict for time slot = {target_time}...")
-        
+
         predval, stake = self.get_prediction(addr, target_time)
         print(f"      -> Predict result: predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
             print("      Done feed: can't use predval/stake")
             return (None, None, False)
-        
+
         # submit prediction to chain
         print("      Submit predict tx chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submit_epochs_per_feed[addr].append(epoch)
-        print("      " + "="*80)
+        print("      " + "=" * 80)
         print(f"      -> Submit predict tx result: success.")
-        print("      " + "="*80)
+        print("      " + "=" * 80)
         print("      Done feed: success.")
         return (predval, stake, True)
 
@@ -145,8 +149,8 @@ class PredictoorAgent1:
 
         # Pick random prediction & random stake. You need to customize this.
         import random
+
         predval = bool(random.getrandbits(1))
         stake = random.randint(10, 1000)
 
         return (predval, stake)
-

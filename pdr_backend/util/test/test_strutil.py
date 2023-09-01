@@ -32,6 +32,7 @@ def testStrMixin():
     s3 = f.longstr()
     assert s3 == s
 
+
 def testDictStr():
     d = {"a": 3, "b": 4}
     s = dictStr(d)

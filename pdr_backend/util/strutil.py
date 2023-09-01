@@ -48,9 +48,10 @@ class StrMixin:
 
         s += [f"/{class_name}}}"]
         return "".join(s)
-    
+
     def __str__(self) -> str:
         return self.longstr()
+
 
 @enforce_types
 def dictStr(d: dict, newline=False) -> str:
@@ -66,4 +67,3 @@ def dictStr(d: dict, newline=False) -> str:
             s += ["\n"]
     s += ["/dict}"]
     return "".join(s)
-
