@@ -51,10 +51,10 @@ In work console, run tests:
 #(ensure envvars set as above)
 
 #run a single test
-pytest pdr_backend/utils/test/test_constants.py::test_constants1
+pytest pdr_backend/util/test/test_constants.py::test_constants1
 
 #run all tests in a file
-pytest pdr_backend/utils/test/test_constants.py
+pytest pdr_backend/util/test/test_constants.py
 
 #run all regular tests; see details on pytest markers to select specific suites
 pytest
