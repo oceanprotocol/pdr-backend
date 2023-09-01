@@ -1,3 +1,4 @@
+from enforce_typing import enforce_types
 from unittest.mock import patch
 import pytest
 from pdr_backend.trueval.main import get_trueval
