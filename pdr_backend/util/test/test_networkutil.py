@@ -1,4 +1,5 @@
 from unittest.mock import Mock
+import os
 
 from enforce_typing import enforce_types
 import pytest
@@ -24,7 +25,6 @@ def test_is_sapphire_network():
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
     ocean_token,
-    private_key,
     web3_config,
 ):
     # Set up dummy return value for the mocked function
@@ -35,7 +35,7 @@ def test_send_encrypted_tx(
     # Sample inputs for send_encrypted_tx
     function_name = "transfer"
     args = [web3_config.owner, 100]
-    pk = private_key
+    pk = os.getenv("PRIVATE_KEY")
     sender = web3_config.owner
     receiver = web3_config.w3.eth.accounts[1]
     rpc_url = "http://localhost:8545"
