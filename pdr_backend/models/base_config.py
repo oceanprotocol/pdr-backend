@@ -6,12 +6,13 @@ from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
+from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
-class BaseConfig:
+class BaseConfig(StrMixin):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.rpc_url: str = getenv_or_exit("RPC_URL")  # type: ignore

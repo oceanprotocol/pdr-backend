@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 @enforce_types
 class StrMixin:
-    def fullstr(self) -> str:
+    def longstr(self) -> str:
         class_name = self.__class__.__name__
 
         newline = False
@@ -50,7 +50,7 @@ class StrMixin:
         return "".join(s)
     
     def __str__(self) -> str:
-        return self.fullstr()
+        return self.longstr()
 
 @enforce_types
 def dictStr(d: dict, newline=False) -> str:

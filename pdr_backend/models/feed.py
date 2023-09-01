@@ -41,8 +41,8 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     def shortstr(self) -> str:
         return \
-            f"[Feed {self.address[:7]} / {self.pair}" \
-            f" / {self.source} / {self.timeframe}]"
+            f"[Feed {self.address[:7]} {self.pair}" \
+            f"|{self.source}|{self.timeframe}]"
 
     def __str__(self) -> str:
         return self.shortstr()

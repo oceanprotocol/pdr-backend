@@ -29,6 +29,8 @@ def testStrMixin():
     assert "ignoreVal" not in s
     assert "ignoreMethod" not in s
 
+    s3 = f.longstr()
+    assert s3 == s
 
 def testDictStr():
     d = {"a": 3, "b": 4}

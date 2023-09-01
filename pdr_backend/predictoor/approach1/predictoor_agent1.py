@@ -29,12 +29,19 @@ class PredictoorAgent1:
         self.prev_block_number: int = 0
         self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
 
+        print("\n" + "="*120)
+        print("Config:")
+        print(self.config)
+        
+        print("\n" + "-"*120)
+        print("Feeds (detailed):")
+        for feed in self.feeds.values():
+            print(f"  {feed.longstr()}")
 
-        print("\n" + "="*100)
-        print("Feeds:")
+        print("\n" + "-"*120)
+        print("Feeds (succinct):")
         for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch")
-        print("\n" + "="*100)
+            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
             
     def run(self):
         print("Starting main loop...")
@@ -42,28 +49,28 @@ class PredictoorAgent1:
             self.take_step()
     
     def take_step(self):
-        print("\n" + "="*100)
-        print("Take_step() begin")
+        w3 = self.config.web3_config.w3
+        print("\n" + "="*120)
+        print(f"Take_step() begin. Chain timestamp={w3.eth.timestamp}")
         
         # at new block number yet?
-        w3 = self.config.web3_config.w3
         block_number = w3.eth.block_number
         print(f"  block_number={block_number}, prev={self.prev_block_number}")
         if block_number <= self.prev_block_number:
-            print("  block_number hasn't advanced yet, so sleep")
+            print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        print("  block_number _has_ advanced")
         self.prev_block_number = block_number
 
         # is new block ready yet?
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
-            print("  Couldn't retrieve new block")
+            print("  Done step: block not ready yet")
             return
         self.prev_block_time = block["timestamp"]
 
         # do work at new block
+        print("  Got new block.")
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
     
@@ -76,38 +83,38 @@ class PredictoorAgent1:
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
-        print(f"  Let's process the block for {feed}")
-        print(f"    At timestamp={timestamp}")
-        print(f"    At epoch={epoch}. It has {epoch_s_left} s left")
+        print(f"    Process {feed} at epoch={epoch}")
 
         # maybe get payout for previous epoch
         if epoch > self.prev_submitted_epochs[addr] > 0:
             slot = epoch * s_per_epoch - s_per_epoch
-            print(f"    Claim $ for previous epoch at timestamp=slot:{slot}")
+            print(f"      Claim $ for prev epoch at time slot = {slot}")
             contract.payout(slot, False)
 
-        # within the time window to submit prediction?
-        print(f"    (Submit when <= {self.config.s_until_epoch_end} s left)")
-        s_early = epoch_s_left - self.config.s_until_epoch_end
-        if s_early > 0:
-            print(f"    {s_early} s too early to submit. Quit processing block")
+        # within the time window to predict?
+        print(f"      {epoch_s_left} s left in epoch"
+              f" (predict if <= {self.config.s_until_epoch_end} s left)")
+        too_early = epoch_s_left > self.config.s_until_epoch_end
+        if too_early:
+            print("      Done feed: too early to predict")
             return (None, None, False)
 
         # compute prediction; exit if no good
         target_time = (epoch + 2) * s_per_epoch
-        print(f"    We'll make a prediction for target_time=slot={target_time}")
+        print(f"      Predict for time slot = {target_time}...")
         
         predval, stake = self.get_prediction(addr, target_time)
-        print(f"    Predicted predval={predval}, stake={stake}")
+        print(f"      -> Result: predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
-            print("    We can't use this predval/stake. Quit processing block")
+            print("      Done feed: can't use predval/stake")
             return (None, None, False)
 
         # submit prediction to chain
-        print("    We can use this prediction. Let's submit to chain...")
+        print("      Submit predval/stake to chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
-        print("    Successful submit. Done processing block.")
+        print("      -> Result: success.")
+        print("      Done feed: success")
         return (predval, stake, True)
 
     def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
