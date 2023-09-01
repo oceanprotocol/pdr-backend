@@ -96,21 +96,23 @@ class TruevalAgent:
         predictoor_contract: PredictoorContract,
         seconds_per_epoch: int,
     ) -> dict:
-        initial_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
-        (trueval, error) = self.get_trueval(slot.feed, initial_ts, end_ts)
-        if error:
-            raise Exception(
-                f"Error getting trueval for {slot.feed.pair} and slot {slot.slot_number}"
+        try:
+            initial_ts, end_ts = self.get_init_and_ts(
+                slot.slot_number, seconds_per_epoch
             )
+            (trueval, cancel) = self.get_trueval(slot.feed, initial_ts, end_ts)
 
-        # pylint: disable=line-too-long
-        print(
-            f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
-        )
-
-        tx = predictoor_contract.submit_trueval(trueval, slot.slot_number, False, True)
-
-        return tx
+            # pylint: disable=line-too-long
+            print(
+                f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
+            )
+            tx = predictoor_contract.submit_trueval(
+                trueval, slot.slot_number, cancel, True
+            )
+            return tx
+        except Exception as e:
+            print("Error while getting trueval:", e)
+        return {}
 
 
 def get_trueval(
