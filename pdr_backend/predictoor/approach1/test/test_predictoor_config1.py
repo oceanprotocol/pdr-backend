@@ -7,6 +7,7 @@ from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
+
 @enforce_types
 def test_predictoor_config_basic(monkeypatch):
     _setenvs(monkeypatch)
