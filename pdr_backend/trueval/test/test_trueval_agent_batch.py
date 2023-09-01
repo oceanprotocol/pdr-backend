@@ -2,7 +2,7 @@ from copy import deepcopy
 from unittest.mock import patch
 import pytest
 
-from pdr_backend.trueval.trueval_agent import get_trueval
+from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch, TruevalSlot
 from pdr_backend.util.constants import ZERO_ADDRESS
 

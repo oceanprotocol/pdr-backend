@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, Mock, patch
-from pdr_backend.trueval.main import TruevalAgent, main
+from pdr_backend.trueval.main import main
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
+from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.constants import ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
@@ -17,7 +18,7 @@ def test_trueval_main_1(slot):
     ), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
-        TruevalAgent, "process_slot"
+        TruevalAgentSingle, "process_slot"
     ) as ps_mock:
         main(True)
 

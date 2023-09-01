@@ -1,4 +1,5 @@
 import time
+from abc import ABC
 from typing import Dict, List, Tuple, Callable
 
 import ccxt
@@ -11,7 +12,7 @@ from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
 @enforce_types
-class TruevalAgent:
+class TruevalAgentBase(ABC):
     def __init__(
         self,
         trueval_config: TruevalConfig,
@@ -28,24 +29,7 @@ class TruevalAgent:
                 break
 
     def take_step(self):
-        pending_slots = self.get_batch()
-
-        if len(pending_slots) == 0:
-            print(f"No pending slots, sleeping for {self.config.sleep_time} seconds...")
-            time.sleep(self.config.sleep_time)
-            return
-
-        for slot in pending_slots:
-            print("-" * 30)
-            print(
-                f"Processing slot {slot.slot_number} for contract {slot.feed.address}"
-            )
-            try:
-                self.process_slot(slot)
-            except Exception as e:
-                print("An error occured", e)
-        print(f"Done processing, sleeping for {self.config.sleep_time} seconds...")
-        time.sleep(self.config.sleep_time)
+        raise NotImplementedError("Take step is not implemented")
 
     def get_batch(self) -> List[Slot]:
         timestamp = self.config.web3_config.w3.eth.get_block("latest")["timestamp"]
@@ -57,10 +41,6 @@ class TruevalAgent:
         )
         pending_slots = pending_slots[: self.config.batch_size]
         return pending_slots
-
-    def process_slot(self, slot: Slot) -> dict:
-        predictoor_contract, _ = self.get_contract_info(slot.feed.address)
-        return self.get_and_submit_trueval(slot, predictoor_contract)
 
     def get_contract_info(
         self, contract_address: str
@@ -84,26 +64,6 @@ class TruevalAgent:
         initial_ts = slot - seconds_per_epoch
         end_ts = slot
         return initial_ts, end_ts
-
-    def get_and_submit_trueval(
-        self,
-        slot: Slot,
-        predictoor_contract: PredictoorContract,
-    ) -> dict:
-        try:
-            (trueval, cancel) = self.get_trueval_slot(slot)
-
-            # pylint: disable=line-too-long
-            print(
-                f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
-            )
-            tx = predictoor_contract.submit_trueval(
-                trueval, slot.slot_number, cancel, True
-            )
-            return tx
-        except Exception as e:
-            print("Error while getting trueval:", e)
-        return {}
 
     def get_trueval_slot(self, slot: Slot):
         _, seconds_per_epoch = self.get_contract_info(slot.feed.address)

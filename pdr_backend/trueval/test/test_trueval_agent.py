@@ -1,16 +1,16 @@
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.trueval.trueval_agent import TruevalAgent
+from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase, get_trueval
+from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent import get_trueval
 
 
 @enforce_types
 def test_new_agent(trueval_config):
-    agent = TruevalAgent(trueval_config, get_trueval)
+    agent = TruevalAgentSingle(trueval_config, get_trueval)
     assert agent.config == trueval_config
 
 
@@ -109,7 +109,7 @@ def test_take_step(slot, agent):
     ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
-        TruevalAgent, "process_slot"
+        TruevalAgentSingle, "process_slot"
     ) as ps_mock:
         agent.take_step()
 
@@ -130,7 +130,7 @@ def test_run(slot, agent):
     ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
-        TruevalAgent, "process_slot"
+        TruevalAgentSingle, "process_slot"
     ) as ps_mock:
         agent.run(True)
 
@@ -143,4 +143,4 @@ def test_run(slot, agent):
 
 @pytest.fixture()
 def agent(trueval_config):
-    return TruevalAgent(trueval_config, get_trueval)
+    return TruevalAgentSingle(trueval_config, get_trueval)

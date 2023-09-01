@@ -2,8 +2,9 @@ import sys
 
 from enforce_typing import enforce_types
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
+from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent import TruevalAgent, get_trueval
+from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.util.contract import get_address
 
 
@@ -29,7 +30,7 @@ def main(testing=False):
     config = TruevalConfig()
 
     if arg1 == "1":
-        t = TruevalAgent(config, get_trueval)
+        t = TruevalAgentSingle(config, get_trueval)
         t.run(testing)
 
     elif arg1 == "2":

@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
-from pdr_backend.trueval.trueval_agent import TruevalAgent
+from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
 from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
@@ -26,7 +26,7 @@ class TruevalSlot(Slot):
 
 
 @enforce_types
-class TruevalAgentBatch(TruevalAgent):
+class TruevalAgentBatch(TruevalAgentBase):
     def __init__(
         self,
         trueval_config: TruevalConfig,
