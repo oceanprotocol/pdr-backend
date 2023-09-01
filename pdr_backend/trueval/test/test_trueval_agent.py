@@ -27,7 +27,7 @@ def test_get_contract_info_caching(agent, predictoor_contract):
 
 
 def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract):
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_down):
+    with patch.object(agent, "get_trueval", return_value=(False, False)):
         result = agent.get_and_submit_trueval(
             slot, predictoor_contract.return_value, 60
         )
@@ -38,13 +38,24 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract):
 
 
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract):
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_up):
+    with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_and_submit_trueval(
             slot, predictoor_contract.return_value, 60
         )
         assert result == {"tx": "0x123"}
         predictoor_contract.return_value.submit_trueval.assert_called_once_with(
             True, 1692943200, False, True
+        )
+
+
+def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract):
+    with patch.object(agent, "get_trueval", return_value=(True, True)):
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract.return_value, 60
+        )
+        assert result == {"tx": "0x123"}
+        predictoor_contract.return_value.submit_trueval.assert_called_once_with(
+            True, 1692943200, True, True
         )
 
 
@@ -121,23 +132,3 @@ def mock_contract(*args, **kwarg):
     m.submit_trueval.return_value = {"tx": "0x123"}
     m.contract_address = "0x1"
     return m
-
-
-def mock_fetch_ohlcv_down(*args, **kwargs):
-    since = kwargs.get("since")
-    if since == 1692943140:
-        return [[None, 200]]
-    elif since == 1692943200:
-        return [[None, 100]]
-    else:
-        raise ValueError("Invalid timestamp")
-
-
-def mock_fetch_ohlcv_up(*args, **kwargs):
-    since = kwargs.get("since")
-    if since == 1692943140:
-        return [[None, 100]]
-    elif since == 1692943200:
-        return [[None, 200]]
-    else:
-        raise ValueError("Invalid timestamp")
