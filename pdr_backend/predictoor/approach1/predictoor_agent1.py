@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
@@ -31,8 +31,12 @@ class PredictoorAgent1:
 
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
-        self.prev_payout_epochs_per_feed = {addr: [] for addr in self.feeds}
-        self.prev_submit_epochs_per_feed = {addr: [] for addr in self.feeds}
+        self.prev_payout_epochs_per_feed: Dict[str, List[int]] = {
+            addr: [] for addr in self.feeds
+        }
+        self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
+            addr: [] for addr in self.feeds
+        }
 
         print("\n" + "-" * 80)
         print("Config:")
@@ -131,14 +135,14 @@ class PredictoorAgent1:
         print("      Done feed: success.")
         return (predval, stake, True)
 
-    def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
+    def get_prediction(self, addr: str, timestamp: int) -> Tuple[bool, int]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
 
         @arguments
           addr -- str -- address of the trading pair
-          timestamp -- str -- when to make prediction for
+          timestamp -- int -- when to make prediction for (unix time)
 
         @return
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
