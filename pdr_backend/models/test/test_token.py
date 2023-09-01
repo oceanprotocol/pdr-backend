@@ -3,22 +3,20 @@ import time
 from enforce_typing import enforce_types
 
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.models.token import Token
 
 
 @enforce_types
-def test_Token(rpc_url, private_key, chain_id):
-    config = Web3Config(rpc_url, private_key)
+def test_Token(web3_config, chain_id):
     token_address = get_address(chain_id, "Ocean")
-    token = Token(config, token_address)
+    token = Token(web3_config, token_address)
 
-    accounts = config.w3.eth.accounts
-    owner_addr = config.owner
+    accounts = web3_config.w3.eth.accounts
+    owner_addr = web3_config.owner
     alice = accounts[1]
 
     token.contract_instance.functions.mint(owner_addr, 1000000000).transact(
-        {"from": owner_addr, "gasPrice": config.w3.eth.gas_price}
+        {"from": owner_addr, "gasPrice": web3_config.w3.eth.gas_price}
     )
 
     allowance_start = token.allowance(owner_addr, alice)
