@@ -1,10 +1,11 @@
+import os
 from unittest.mock import patch, Mock
 
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_config import BaseConfig
 
-PRIV_KEY = "0xef4b441145c1d0f3b4bc6d61d29f5c6e502359481152f869247c7a4244d45209"
+PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
 
