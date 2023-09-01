@@ -1,5 +1,3 @@
-from unittest.mock import patch, Mock
-
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig1

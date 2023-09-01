@@ -1,5 +1,3 @@
-import random
-
 from pdr_backend.util.strutil import StrMixin, dictStr
 
 

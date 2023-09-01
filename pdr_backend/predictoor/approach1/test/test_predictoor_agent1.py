@@ -1,5 +1,6 @@
 import random
-from unittest.mock import patch, Mock
+from typing import List
+from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
@@ -55,11 +56,13 @@ def test_predictoor_agent1(monkeypatch):
             self.block_number = INIT_BLOCK_NUMBER
             self._timestamps_seen: List[int] = [INIT_TIMESTAMP]
 
-        def get_block(self, block_number: int, full_transactions: bool):
+        def get_block(
+            self, block_number: int, full_transactions: bool
+        ):  # pylint: disable=unused-argument
             mock_block = {"timestamp": self.timestamp}
             return mock_block
 
-    mock_w3 = Mock()
+    mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = MockEth()
 
     # mock PredictoorContract
@@ -87,18 +90,20 @@ def test_predictoor_agent1(monkeypatch):
 
         def submit_prediction(
             self, predval: bool, stake: int, timestamp: int, wait: bool = True
-        ):
+        ):  # pylint: disable=unused-argument
             if timestamp in self._prediction_slots:
                 print(f"      (Replace prev pred at time slot {timestamp})")
             self._prediction_slots.append(timestamp)
 
-        def payout(self, slot: int, wait: bool = False):
+        def payout(
+            self, slot: int, wait: bool = False
+        ):  # pylint: disable=unused-argument
             assert slot not in self._payout_slots, "already did payout for this slot"
             self._payout_slots.append(slot)
 
     mock_contract = MockContract(mock_w3)
 
-    def mock_contract_func(*args, **kwargs):
+    def mock_contract_func(*args, **kwargs):  # pylint: disable=unused-argument
         return mock_contract
 
     monkeypatch.setattr(
@@ -106,7 +111,7 @@ def test_predictoor_agent1(monkeypatch):
     )
 
     # mock time.sleep()
-    def advance_func(*args, **kwargs):
+    def advance_func(*args, **kwargs):  # pylint: disable=unused-argument
         do_advance_block = random.random() < 0.40
         if do_advance_block:
             mock_w3.eth.timestamp += random.randint(3, 12)
@@ -125,7 +130,7 @@ def test_predictoor_agent1(monkeypatch):
     agent.config.web3_config.w3 = mock_w3
 
     # real work: main iterations
-    for i in range(1000):
+    for _ in range(1000):
         agent.take_step()
 
     # log some final results for debubbing / inspection

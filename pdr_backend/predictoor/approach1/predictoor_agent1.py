@@ -1,4 +1,5 @@
 import sys
+import random
 import time
 from typing import Dict, List, Tuple
 
@@ -60,7 +61,7 @@ class PredictoorAgent1:
     def take_step(self):
         w3 = self.config.web3_config.w3
         print("\n" + "-" * 80)
-        print(f"Take_step() begin.")
+        print("Take_step() begin.")
 
         # new block?
         block_number = w3.eth.block_number
@@ -130,18 +131,20 @@ class PredictoorAgent1:
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submit_epochs_per_feed[addr].append(epoch)
         print("      " + "=" * 80)
-        print(f"      -> Submit predict tx result: success.")
+        print("      -> Submit predict tx result: success.")
         print("      " + "=" * 80)
         print("      Done feed: success.")
         return (predval, stake, True)
 
-    def get_prediction(self, addr: str, timestamp: int) -> Tuple[bool, int]:
+    def get_prediction(
+        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+    ) -> Tuple[bool, int]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
 
         @arguments
-          addr -- str -- address of the trading pair
+          addr -- str -- address of the trading pair. Info in self.feeds[addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return
@@ -152,11 +155,7 @@ class PredictoorAgent1:
           Below is the default implementation, giving random predictions.
           You need to customize it to implement your own strategy.
         """
-        feed = self.feeds[addr]
-
         # Pick random prediction & random stake. You need to customize this.
-        import random
-
         predval = bool(random.getrandbits(1))
         stake = random.randint(10, 1000)
 
