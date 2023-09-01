@@ -1,23 +1,11 @@
-from unittest.mock import patch
-from pdr_backend.trueval.main import get_trueval
+from enforce_typing import enforce_types
+
+from pdr_backend.trueval.trueval_agent import get_trueval
 from pdr_backend.models.feed import Feed
 
 
-def mock_fetch_ohlcv(*args, **kwargs):
-    since = kwargs.get("since")
-    if since == 1:
-        return [[None, 100]]
-    elif since == 2:
-        return [[None, 200]]
-    else:
-        raise ValueError("Invalid timestamp")
-
-
-def mock_fetch_ohlcv_fail(*args, **kwargs):
-    return []
-
-
-def test_get_trueval_success():
+@enforce_types
+def test_get_trueval_success(monkeypatch):
     feed = Feed(
         name="ETH-USDT",
         address="0x1",
@@ -31,11 +19,22 @@ def test_get_trueval_success():
         owner="0xowner",
     )
 
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv):
-        result = get_trueval(feed, 1, 2)
-        assert result == (True, False)  # 1st True because 200 > 100
+    def mock_fetch_ohlcv(*args, **kwargs):
+        since = kwargs.get("since")
+        if since == 1:
+            return [[None, 100]]
+        elif since == 2:
+            return [[None, 200]]
+        else:
+            raise ValueError("Invalid timestamp")
+
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
+
+    result = get_trueval(feed, 1, 2)
+    assert result == (True, False)  # 1st True because 200 > 100
 
 
+@enforce_types
 def test_get_trueval_live_lowercase_slash():
     feed = Feed(
         name="ETH-USDT",
@@ -54,6 +53,7 @@ def test_get_trueval_live_lowercase_slash():
     assert result == (True, False)
 
 
+@enforce_types
 def test_get_trueval_live_lowercase_dash():
     feed = Feed(
         name="ETH-USDT",
@@ -72,7 +72,8 @@ def test_get_trueval_live_lowercase_dash():
     assert result == (True, False)
 
 
-def test_get_trueval_fail():
+@enforce_types
+def test_get_trueval_fail(monkeypatch):
     feed = Feed(
         name="ETH-USDT",
         address="0x1",
@@ -86,6 +87,10 @@ def test_get_trueval_fail():
         owner="0xowner",
     )
 
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail):
-        result = get_trueval(feed, 1, 2)
-        assert result == (False, True)  # 2nd True because failed
+    def mock_fetch_ohlcv_fail(*args, **kwargs):
+        return []
+
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail)
+
+    result = get_trueval(feed, 1, 2)
+    assert result == (False, True)  # 2nd True because failed

@@ -1,15 +1,20 @@
 from unittest.mock import patch, Mock, MagicMock
+
+from enforce_typing import enforce_types
 import pytest
+
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.trueval.trueval_agent import get_trueval
 
 
+@enforce_types
 def test_new_agent(trueval_config):
     agent = TruevalAgent(trueval_config, get_trueval)
     assert agent.config == trueval_config
 
 
+@enforce_types
 def test_process_slot(agent, slot, predictoor_contract):
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
@@ -19,6 +24,7 @@ def test_process_slot(agent, slot, predictoor_contract):
         mock_submit.assert_called()
 
 
+@enforce_types
 def test_get_contract_info_caching(agent, predictoor_contract):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
@@ -26,28 +32,31 @@ def test_get_contract_info_caching(agent, predictoor_contract):
     predictoor_contract.assert_called_once_with(agent.config.web3_config, "0x1")
 
 
-def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract):
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_down):
-        result = agent.get_and_submit_trueval(
-            slot, predictoor_contract.return_value, 60
-        )
-        assert result == {"tx": "0x123"}
-        predictoor_contract.return_value.submit_trueval.assert_called_once_with(
-            False, 1692943200, False, True
-        )
+@enforce_types
+def test_submit_trueval_mocked_price_down(
+    agent, slot, predictoor_contract, monkeypatch
+):
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_down)
+
+    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
+    assert result == {"tx": "0x123"}
+    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
+        False, 1692943200, False, True
+    )
 
 
-def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract):
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_up):
-        result = agent.get_and_submit_trueval(
-            slot, predictoor_contract.return_value, 60
-        )
-        assert result == {"tx": "0x123"}
-        predictoor_contract.return_value.submit_trueval.assert_called_once_with(
-            True, 1692943200, False, True
-        )
+@enforce_types
+def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract, monkeypatch):
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_up)
+
+    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
+    assert result == {"tx": "0x123"}
+    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
+        True, 1692943200, False, True
+    )
 
 
+@enforce_types
 def test_take_step(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -68,6 +77,7 @@ def test_take_step(slot, agent):
     ps_mock.assert_called_once_with(slot)
 
 
+@enforce_types
 def test_run(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
