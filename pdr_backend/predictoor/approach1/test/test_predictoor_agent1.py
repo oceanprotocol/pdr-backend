@@ -1,3 +1,4 @@
+import os
 import random
 from typing import List
 from unittest.mock import Mock
@@ -8,7 +9,7 @@ from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.util.constants import S_PER_MIN, S_PER_DAY
 
-PRIV_KEY = "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"
 

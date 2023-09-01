@@ -1,10 +1,11 @@
+import os
+
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig1
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
-PRIV_KEY = "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
-
+PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 @enforce_types
 def test_predictoor_config_basic(monkeypatch):
