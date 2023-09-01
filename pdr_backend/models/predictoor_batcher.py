@@ -1,11 +1,10 @@
 from typing import List
-from enforce_typing import enforce_types
 from eth_typing import ChecksumAddress
 from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
 
-@enforce_types
+# FIX ME - Add enforce_types
 class PredictoorBatcher:
     def __init__(self, config: Web3Config, address: str):
         self.config = config
