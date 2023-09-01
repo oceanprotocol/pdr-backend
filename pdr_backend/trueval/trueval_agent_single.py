@@ -1,12 +1,9 @@
 import time
-from typing import Tuple, Callable
 from enforce_typing import enforce_types
-from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 
 from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
-from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
 @enforce_types
