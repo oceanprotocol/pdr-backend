@@ -134,7 +134,7 @@ def log_loop(blockno, model, main_pd):
     return None
 
 
-def do_main():  # pylint: disable=too-many-statements
+def do_main2():  # pylint: disable=too-many-statements
     print("Starting main loop...")
 
     ts_now = int(time.time())
@@ -264,4 +264,4 @@ def do_main():  # pylint: disable=too-many-statements
 
 
 if __name__ == "__main__":
-    main()
+    do_main2()

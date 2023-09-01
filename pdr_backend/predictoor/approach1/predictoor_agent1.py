@@ -1,3 +1,4 @@
+import sys
 import time
 from typing import Dict, Tuple
 
@@ -21,10 +22,14 @@ class PredictoorAgent1:
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
 
+        if not self.feeds:
+            print("No feeds found. Exiting")
+            sys.exit()
+
         feed_addrs = list(self.feeds.keys())
         self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
 
-        self.prev_block_time: int = 0
+        self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
         self.prev_payout_epochs_per_feed = {addr: [] for addr in self.feeds}
         self.prev_submit_epochs_per_feed = {addr: [] for addr in self.feeds}
@@ -51,26 +56,24 @@ class PredictoorAgent1:
     def take_step(self):
         w3 = self.config.web3_config.w3
         print("\n" + "-" * 80)
-        print(f"Take_step() begin. Chain timestamp={w3.eth.timestamp}")
+        print(f"Take_step() begin.")
 
-        # at new block number yet?
+        # new block?
         block_number = w3.eth.block_number
         print(f"  block_number={block_number}, prev={self.prev_block_number}")
         if block_number <= self.prev_block_number:
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        self.prev_block_number = block_number
-
-        # is new block ready yet?
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
             print("  Done step: block not ready yet")
             return
-        self.prev_block_time = block["timestamp"]
+        self.prev_block_number = block_number
+        self.prev_block_timestamp = block["timestamp"]
 
         # do work at new block
-        print("  Got new block.")
+        print("  Got new block. Timestamp={block['timestamp']}")
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
