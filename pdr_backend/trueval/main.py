@@ -8,10 +8,8 @@ from pdr_backend.util.contract import get_address
 
 def main(testing=False):
     config = TruevalConfig()
-    predictoor_batcher_addr = "0x74b3d397BF809b40E2A686BD6c1116453399A66E"
-
+    predictoor_batcher_addr = get_address("PredictoorHelper")
     t = TruevalAgentBatch(config, get_trueval, predictoor_batcher_addr)
-
     t.run(testing)
 
 
