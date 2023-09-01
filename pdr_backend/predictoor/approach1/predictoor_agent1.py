@@ -104,7 +104,6 @@ class PredictoorAgent1:
 
         # compute prediction; exit if no good
         target_time = (epoch + 2) * s_per_epoch
-        print("      " + "="*80)
         print(f"      Predict for time slot = {target_time}...")
         
         predval, stake = self.get_prediction(addr, target_time)
@@ -117,6 +116,7 @@ class PredictoorAgent1:
         print("      Submit predict tx chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
+        print("      " + "="*80)
         print(f"      -> Submit predict tx result: success.")
         print("      " + "="*80)
         print("      Done feed: success.")

@@ -70,7 +70,7 @@ def test_predictoor_agent1(monkeypatch):
             self._w3 = w3
             self.contract_address: str = ADDR
             self._payout_slots: List[int] = []
-            self._prediction_timestamps: List[int] = []
+            self._prediction_slots: List[int] = []
         def get_current_epoch(self) -> int:
             return self.get_current_epoch_ts() // S_PER_EPOCH
         def get_current_epoch_ts(self) -> int:
@@ -80,9 +80,9 @@ def test_predictoor_agent1(monkeypatch):
             return S_PER_EPOCH
         def submit_prediction(
                 self, predval:bool, stake:int, timestamp:int, wait:bool=True):
-            if timestamp in self._prediction_timestamps:
+            if timestamp in self._prediction_slots:
                 print(f"      (Replace prev pred at time slot {timestamp})")
-            self._prediction_timestamps.append(timestamp)
+            self._prediction_slots.append(timestamp)
         def payout(self, slot:int, wait:bool=False):
             assert slot not in self._payout_slots, \
                 "already did payout for this slot"
@@ -116,7 +116,20 @@ def test_predictoor_agent1(monkeypatch):
     for i in range(1000):
         agent.take_step()
 
+    print("=" * 100)
+    print("Done iterations")
+    print(f"init timestamp = {INIT_TIMESTAMP}, final = {mock_w3.eth.timestamp}")
+    print(f"init block_number = {INIT_BLOCK_NUMBER}"
+          f", final = {mock_w3.eth.block_number}")
+    print("unique prediction_slots = "
+          f"{sorted(set(mock_contract._prediction_slots))}")
+    print(f"all prediction_slots = {mock_contract._prediction_slots}")
+    print(f"payout_slots = {mock_contract._payout_slots}")
+    
+    assert mock_contract._prediction_slots
     assert mock_contract._payout_slots
+    assert (mock_w3.eth.timestamp + 2*S_PER_EPOCH) \
+        >= max(mock_contract._prediction_slots)
 
 
 def _setenvs(monkeypatch):
