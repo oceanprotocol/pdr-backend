@@ -47,13 +47,14 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 
 To get started, let's run a predictoor agent with random predictions.
 
-- The agent runs from [`predictoor/approach1/main.py`](../pdr_backend/predictoor/approach1/main.py)
-- Which predicts according to the `predict()` function in [`predictoor/approach1/predict.py`](../pdr_backend/predictoor/approach1/predict.py) in the same dir.
+- It runs [`predictoor_agent1.py::PredictoorAgent1`](../pdr_backend/predictoor/approach1/predictoor_agent1.py) found in `pdr_backend/predictoor/approach1`
+- It's configured by envvars and [`predictoor_config1.py::PredictoorConfig1`](../pdr_backend/predictoor/approach1/predictoor_config1.py)
+- It predicts according to `PredictoorAgent1:get_prediction()`.
 
 In work console:
 ```console
 # run random predictoor agent
-python pdr_backend/predictoor/approach1/main.py
+python pdr_backend/predictoor/main.py 1
 ```
 
 Observe the agents in action:
@@ -68,6 +69,7 @@ Since random predictions aren't accurate, let's use AI/ML models. Here's an exam
 
 - The agent runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
 - Which imports a model stored in [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo
+
 
 Once you're familiar with this, you'll want to fork it and run your own.
 
@@ -88,7 +90,7 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 pip install scikit-learn ta
 
 #run model-powered predictoor agent
-python pdr_backend/predictoor/approach2/main.py
+python pdr_backend/predictoor/main.py 1
 ```
 
 ## Remote Testnet Usage

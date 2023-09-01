@@ -1,10 +1,14 @@
 from unittest.mock import patch, Mock, MagicMock
+
+from enforce_typing import enforce_types
 import pytest
+
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.trueval.trueval_agent import get_trueval
 
 
+@enforce_types
 def test_new_agent(trueval_config):
     agent = TruevalAgent(trueval_config, get_trueval)
     assert agent.config == trueval_config
@@ -34,8 +38,12 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock)
         assert result == {"tx": "0x123"}
         predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
             False, 1692943200, False, True
-        )
 
+    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
+    assert result == {"tx": "0x123"}
+    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
+        False, 1692943200, False, True
+    )
 
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
@@ -112,6 +120,7 @@ def test_take_step(slot, agent):
     ps_mock.assert_called_once_with(slot)
 
 
+@enforce_types
 def test_run(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",

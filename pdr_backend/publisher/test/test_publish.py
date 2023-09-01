@@ -22,10 +22,10 @@ def test_fund_dev_accounts(monkeypatch):
 
     fund_dev_accounts(accounts_to_fund, mock_account, mock_token)
 
-    address = Account.from_key(private_key=pk).address
+    a = Account.from_key(private_key=pk)  # pylint: disable=no-value-for-parameter
     mock_token.transfer.assert_has_calls(
         [
-            call(address, 2e21, mock_account),
-            call(address, 3e21, mock_account),
+            call(a.address, 2e21, mock_account),
+            call(a.address, 3e21, mock_account),
         ]
     )

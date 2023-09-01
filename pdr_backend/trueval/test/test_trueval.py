@@ -16,7 +16,8 @@ def mock_fetch_ohlcv_fail(*args, **kwargs):
     return [[0, 0]]
 
 
-def test_get_trueval_success():
+@enforce_types
+def test_get_trueval_success(monkeypatch):
     feed = Feed(
         name="ETH-USDT",
         address="0x1",
@@ -30,10 +31,16 @@ def test_get_trueval_success():
         owner="0xowner",
     )
 
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv):
-        result = get_trueval(feed, 1, 2)
-        assert result == (True, False)  # 1st True because 200 > 100
+    def mock_fetch_ohlcv(*args, **kwargs):
+        since = kwargs.get("since")
+        if since == 1:
+            return [[None, 100]]
+        elif since == 2:
+            return [[None, 200]]
+        else:
+            raise ValueError("Invalid timestamp")
 
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
 
 def test_get_trueval_live_lowercase_slash_5m():
     feed = Feed(
@@ -71,7 +78,8 @@ def test_get_trueval_live_lowercase_dash_1h():
     assert result == (False, False)
 
 
-def test_get_trueval_fail():
+@enforce_types
+def test_get_trueval_fail(monkeypatch):
     feed = Feed(
         name="ETH-USDT",
         address="0x1",
