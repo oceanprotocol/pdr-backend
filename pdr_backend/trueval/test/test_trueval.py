@@ -42,6 +42,7 @@ def test_get_trueval_success(monkeypatch):
 
     monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
 
+
 def test_get_trueval_live_lowercase_slash_5m():
     feed = Feed(
         name="ETH-USDT",
