@@ -99,10 +99,10 @@ def test_predictoor_agent1(monkeypatch):
     agent.config.web3_config.w3 = mock_w3
     
     # main iterations
-    for i in range(50):
+    for i in range(1000):
         agent.take_step()
 
-    #assert mock_contract._did_payout, "if False, make sure enough steps are run"
+    assert mock_contract._did_payout, "if False, make sure enough steps are run"
 
 
 def _setenvs(monkeypatch):

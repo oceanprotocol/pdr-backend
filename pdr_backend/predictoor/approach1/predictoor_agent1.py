@@ -29,16 +29,16 @@ class PredictoorAgent1:
         self.prev_block_number: int = 0
         self.prev_submitted_epochs = {addr : 0 for addr in self.feeds}
 
-        print("\n" + "="*120)
+        print("\n" + "-"*80)
         print("Config:")
         print(self.config)
         
-        print("\n" + "-"*120)
+        print("\n" + "."*80)
         print("Feeds (detailed):")
         for feed in self.feeds.values():
             print(f"  {feed.longstr()}")
 
-        print("\n" + "-"*120)
+        print("\n" + "."*80)
         print("Feeds (succinct):")
         for addr, feed in self.feeds.items():
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
@@ -50,7 +50,7 @@ class PredictoorAgent1:
     
     def take_step(self):
         w3 = self.config.web3_config.w3
-        print("\n" + "="*120)
+        print("\n" + "-"*80)
         print(f"Take_step() begin. Chain timestamp={w3.eth.timestamp}")
         
         # at new block number yet?
@@ -104,17 +104,18 @@ class PredictoorAgent1:
         print(f"      Predict for time slot = {target_time}...")
         
         predval, stake = self.get_prediction(addr, target_time)
-        print(f"      -> Result: predval={predval}, stake={stake}")
+        print(f"      -> Predict result: predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
             print("      Done feed: can't use predval/stake")
             return (None, None, False)
-
+        
         # submit prediction to chain
-        print("      Submit predval/stake to chain...")
+        print("      Submit tx of predval/stake to chain...")
         contract.submit_prediction(predval, stake, target_time, True)
         self.prev_submitted_epochs[addr] = epoch
-        print("      -> Result: success.")
-        print("      Done feed: success")
+        s = "      " + "="*80 + "\n"
+        print(f"{s}      -> Tx result: success.\n{s}")
+        print("      Done feed: success.")
         return (predval, stake, True)
 
     def get_prediction(self, addr: str, timestamp: str) -> Tuple[bool, int]:
