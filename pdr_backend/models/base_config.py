@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
+from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
@@ -17,16 +18,11 @@ class BaseConfig:
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")  # type: ignore
         self.private_key: str = getenv_or_exit("PRIVATE_KEY")  # type: ignore
 
-        (
-            pair_filter,
-            timeframe_filter,
-            source_filter,
-            owner_addresses,
-        ) = parse_filters()
-        self.pair_filters: Optional[List[str]] = pair_filter  # type: ignore
-        self.timeframe_filter: Optional[List[str]] = timeframe_filter  # type: ignore
-        self.source_filter: Optional[List[str]] = source_filter  # type: ignore
-        self.owner_addresses: Optional[List[str]] = owner_addresses  # type: ignore
+        filters = parse_filters()
+        self.pair_filters: Optional[List[str]] = filters[0]  # type: ignore
+        self.timeframe_filter: Optional[List[str]] = filters[1]  # type: ignore
+        self.source_filter: Optional[List[str]] = filters[2]  # type: ignore
+        self.owner_addresses: Optional[List[str]] = filters[3]  # type: ignore
 
         self.web3_config = Web3Config(self.rpc_url, self.private_key)
 
@@ -40,16 +36,17 @@ class BaseConfig:
             self.source_filter,
         )
 
-    def get_feeds(self) -> Dict[str, dict]:
+    def get_feeds(self) -> Dict[str, Feed]:
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
-        feeds_dict = query_feed_contracts(
+        feed_dicts = query_feed_contracts(
             self.subgraph_url,
             self.pair_filters,
             self.timeframe_filter,
             self.source_filter,
             self.owner_addresses,
         )
-        return feeds_dict
+        feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
+        return feeds
 
     def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
         """Return dict of [feed_addr] : PredictoorContract}"""
