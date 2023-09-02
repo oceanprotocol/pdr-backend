@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from enforce_typing import enforce_types
 
@@ -19,11 +19,11 @@ class BaseConfig(StrMixin):
         self.subgraph_url: str = getenv_or_exit("SUBGRAPH_URL")  # type: ignore
         self.private_key: str = getenv_or_exit("PRIVATE_KEY")  # type: ignore
 
-        filters = parse_filters()
-        self.pair_filters: Optional[List[str]] = filters[0]  # type: ignore
-        self.timeframe_filter: Optional[List[str]] = filters[1]  # type: ignore
-        self.source_filter: Optional[List[str]] = filters[2]  # type: ignore
-        self.owner_addresses: Optional[List[str]] = filters[3]  # type: ignore
+        (f0, f1, f2, f3) = parse_filters()
+        self.pair_filters: [List[str]] = f0
+        self.timeframe_filter: [List[str]] = f1
+        self.source_filter: [List[str]] = f2
+        self.owner_addresses: [List[str]] = f3
 
         self.web3_config = Web3Config(self.rpc_url, self.private_key)
 
@@ -41,10 +41,10 @@ class BaseConfig(StrMixin):
         """Return dict of [feed_addr] : {"name":.., "pair":.., ..}"""
         feed_dicts = query_feed_contracts(
             self.subgraph_url,
-            self.pair_filters,
-            self.timeframe_filter,
-            self.source_filter,
-            self.owner_addresses,
+            ",".join(self.pair_filters),
+            ",".join(self.timeframe_filter),
+            ",".join(self.source_filter),
+            ",".join(self.owner_addresses),
         )
         feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
         return feeds

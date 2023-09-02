@@ -31,11 +31,11 @@ def test_parse_filters():
     with patch("pdr_backend.util.env.getenv", mock_getenv):
         result = parse_filters()
 
-    expected = [
+    expected = (
         ["BTC-USDT", "ETH-USDT"],  # pair
         ["1D", "1H"],  # timeframe
-        None,  # source
+        [],  # source
         ["0x1234", "0x5678"],  # owner_addrs
-    ]
+    )
 
     assert result == expected, f"Expected {expected}, but got {result}"
