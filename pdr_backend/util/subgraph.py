@@ -169,10 +169,10 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
 @enforce_types
 def query_feed_contracts(  # pylint: disable=too-many-statements
     subgraph_url: str,
-    pairs_string: Optional[str] = None,
-    timeframes_string: Optional[str] = None,
-    sources_string: Optional[str] = None,
-    owners_string: Optional[str] = None,
+    pairs: Optional[List[str]] = None,
+    timeframes: Optional[List[str]] = None,
+    sources: Optional[List[str]] = None,
+    owners: Optional[List[str]] = None,
 ) -> Dict[str, dict]:
     """
     @description
@@ -190,20 +190,6 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
       contracts -- dict of [contract_id] : contract_info
         where contract_info is a dict with fields name, address, symbol, ..
     """
-    pairs = None
-    timeframes = None
-    sources = None
-    owners = None
-
-    if pairs_string is not None:
-        pairs = pairs_string.split(",")
-    if timeframes_string is not None:
-        timeframes = timeframes_string.split(",")
-    if sources_string is not None:
-        sources = sources_string.split(",")
-    if owners_string is not None:
-        owners = owners_string.lower().split(",")
-
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     feed_dicts = {}
