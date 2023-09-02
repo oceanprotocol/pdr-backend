@@ -166,7 +166,6 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
     return timestamps
 
 
-@enforce_types
 def query_feed_contracts(  # pylint: disable=too-many-statements
     subgraph_url: str,
     pairs: Optional[List[str]] = None,
