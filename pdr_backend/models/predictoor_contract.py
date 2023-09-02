@@ -9,7 +9,6 @@ from pdr_backend.models.fixed_rate import FixedRate
 from pdr_backend.models.token import Token
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
-from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.networkutil import is_sapphire_network, send_encrypted_tx
 from pdr_backend.util.web3_config import Web3Config
 

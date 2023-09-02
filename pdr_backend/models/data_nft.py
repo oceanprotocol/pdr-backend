@@ -9,7 +9,6 @@ from web3.types import TxReceipt, HexBytes
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.util.contract import get_contract_abi
 
 
 @enforce_types

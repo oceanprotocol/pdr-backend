@@ -1,7 +1,6 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
-from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.web3_config import Web3Config
 
 
