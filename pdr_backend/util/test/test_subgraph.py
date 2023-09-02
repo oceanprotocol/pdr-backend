@@ -96,7 +96,7 @@ def test_get_contracts_emptychain(monkeypatch):
 
 
 @enforce_types
-def test_get_contracts_fullchain(monkeypatch):
+def test_query_feed_contracts_fullchain(monkeypatch):
     # This test is a simple-as-possible happy path. Start here.
     # Then follow up with test_filter() below, which is complex but thorough
     info725_list = [
@@ -112,7 +112,7 @@ def test_get_contracts_fullchain(monkeypatch):
             "symbol": "ETH",
             "nft": {
                 "owner": {
-                    "id": "owner1",
+                    "id": "0xowner",
                 },
                 "nftData": info725_list,
             },
@@ -123,21 +123,23 @@ def test_get_contracts_fullchain(monkeypatch):
     }
     contract_list = [contract1]
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_feed_contracts(subgraph_url="foo")
-    assert contracts == {
-        "contract1": {
-            "name": "ether",
-            "address": "contract1",
-            "symbol": "ETH",
-            "seconds_per_epoch": 7,
-            "seconds_per_subscription": 700,
-            "last_submited_epoch": 0,
-            "pair": "ETH/USDT",
-            "base": None,
-            "quote": None,
-            "source": None,
-            "timeframe": "5m",
-        }
+    feed_dicts = query_feed_contracts(subgraph_url="foo")
+    assert list(feed_dicts.keys()) == ["contract1"]
+    feed_dict = feed_dicts["contract1"]
+    assert feed_dict == {
+        "name": "ether",
+        "address": "contract1",
+        "symbol": "ETH",
+        "seconds_per_epoch": 7,
+        "seconds_per_subscription": 700,
+        "trueval_submit_timeout": 5,
+        "owner": "0xowner",
+        "last_submited_epoch": 0,
+        "pair": "ETH/USDT",
+        "base": None,
+        "quote": None,
+        "source": None,
+        "timeframe": "5m",
     }
 
 
@@ -146,8 +148,8 @@ def test_get_contracts_fullchain(monkeypatch):
     "expect_result, pairs, timeframes, sources, owners",
     [
         (True, None, None, None, None),
-        (True, "ETH/USDT", "5m", "binance", "owner1"),
-        (True, "ETH/USDT,BTC/USDT", "5m,15m", "binance,kraken", "owner1,o2"),
+        (True, "ETH/USDT", "5m", "binance", "0xowner1"),
+        (True, "ETH/USDT,BTC/USDT", "5m,15m", "binance,kraken", "0xowner1,o2"),
         (True, "ETH/USDT", None, None, None),
         (False, "BTC/USDT", None, None, None),
         (True, "ETH/USDT,BTC/USDT", None, None, None),
@@ -157,12 +159,12 @@ def test_get_contracts_fullchain(monkeypatch):
         (True, None, None, "binance", None),
         (False, None, None, "kraken", None),
         (True, None, None, "binance,kraken", None),
-        (True, None, None, None, "owner1"),
+        (True, None, None, None, "0xowner1"),
         (False, None, None, None, "owner2"),
-        (True, None, None, None, "owner1,owner2"),
+        (True, None, None, None, "0xowner1,owner2"),
         (True, None, None, None, ""),
         (True, "", "", "", ""),
-        (True, None, None, "", "owner1,owner2"),
+        (True, None, None, "", "0xowner1,owner2"),
     ],
 )
 def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
@@ -184,7 +186,7 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
             "symbol": "ETH",
             "nft": {
                 "owner": {
-                    "id": "owner1",
+                    "id": "0xowner1",
                 },
                 "nftData": info725_list,
             },
@@ -197,9 +199,9 @@ def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
     contract_list = [contract1]
 
     monkeypatch.setattr(requests, "post", MockPost(contract_list))
-    contracts = query_feed_contracts("foo", pairs, timeframes, sources, owners)
+    feed_dicts = query_feed_contracts("foo", pairs, timeframes, sources, owners)
 
-    assert bool(contracts) == bool(expect_result)
+    assert bool(feed_dicts) == bool(expect_result)
 
 
 @enforce_types
@@ -216,7 +218,7 @@ def test_get_pending_slots():
                     "name": "ether",
                     "symbol": "ETH",
                     "nft": {
-                        "owner": {"id": "owner1"},
+                        "owner": {"id": "0xowner1"},
                         "nftData": [
                             {
                                 "key": key_to_725("pair"),
