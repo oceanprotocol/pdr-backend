@@ -94,7 +94,7 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 pip install scikit-learn ta
 
 #run model-powered predictoor agent
-python pdr_backend/predictoor/main.py 1
+python pdr_backend/predictoor/main.py 2
 ```
 
 ## Remote Testnet Usage
