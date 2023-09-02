@@ -18,9 +18,7 @@ class TruevalAgentSingle(TruevalAgentBase):
 
         for slot in pending_slots:
             print("-" * 30)
-            print(
-                f"Processing slot {slot.slot_number} for contract {slot.feed.address}"
-            )
+            print(f"Processing slot {slot.slot_number} for feed {slot.feed}")
             try:
                 self.process_slot(slot)
             except Exception as e:

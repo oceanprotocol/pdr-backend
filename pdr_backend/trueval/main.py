@@ -1,10 +1,11 @@
 import sys
 
 from enforce_typing import enforce_types
+
+from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.util.contract import get_address
 
 
