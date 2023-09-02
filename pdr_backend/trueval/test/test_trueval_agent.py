@@ -1,21 +1,20 @@
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.trueval.trueval_agent import TruevalAgent
+from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase, get_trueval
+from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
-from pdr_backend.trueval.trueval_agent import get_trueval
 
 
 @enforce_types
 def test_new_agent(trueval_config):
-    agent = TruevalAgent(trueval_config, get_trueval)
+    agent = TruevalAgentSingle(trueval_config, get_trueval)
     assert agent.config == trueval_config
 
 
-@enforce_types
-def test_process_slot(agent, slot, predictoor_contract):
+def test_process_slot(agent, slot, predictoor_contract_mock):
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
     ) as mock_submit:
@@ -24,39 +23,79 @@ def test_process_slot(agent, slot, predictoor_contract):
         mock_submit.assert_called()
 
 
-@enforce_types
-def test_get_contract_info_caching(agent, predictoor_contract):
+def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
-    assert predictoor_contract.call_count == 1
-    predictoor_contract.assert_called_once_with(agent.config.web3_config, "0x1")
+    assert predictoor_contract_mock.call_count == 1
+    predictoor_contract_mock.assert_called_once_with(agent.config.web3_config, "0x1")
 
 
-@enforce_types
-def test_submit_trueval_mocked_price_down(
-    agent, slot, predictoor_contract, monkeypatch
+def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(False, False)):
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract_mock.return_value
+        )
+        assert result == {"tx": "0x123"}
+        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
+            False, 1692943200, False, True
+        )
+
+
+def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(True, False)):
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract_mock.return_value
+        )
+        assert result == {"tx": "0x123"}
+        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
+            True, 1692943200, False, True
+        )
+
+
+def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(True, True)):
+        result = agent.get_and_submit_trueval(
+            slot, predictoor_contract_mock.return_value
+        )
+        assert result == {"tx": "0x123"}
+        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
+            True, 1692943200, True, True
+        )
+
+
+def test_get_trueval_slot_up(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(True, True)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (True, True)
+
+
+def test_get_trueval_slot_down(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(False, True)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (False, True)
+
+
+def test_get_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
+    with patch.object(agent, "get_trueval", return_value=(True, False)):
+        result = agent.get_trueval_slot(slot)
+        assert result == (True, False)
+
+
+def test_get_trueval_slot_too_many_requests_retry(
+    agent, slot, predictoor_contract_mock
 ):
-    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_down)
-
-    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
-    assert result == {"tx": "0x123"}
-    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
-        False, 1692943200, False, True
+    mock_get_trueval = MagicMock(
+        side_effect=[Exception("Too many requests"), (True, True)]
     )
+    with patch.object(agent, "get_trueval", mock_get_trueval), patch(
+        "time.sleep", return_value=None
+    ) as mock_sleep:
+        result = agent.get_trueval_slot(slot)
+        mock_sleep.assert_called_once_with(60)
+        assert result == (True, True)
+        assert mock_get_trueval.call_count == 2
 
 
-@enforce_types
-def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract, monkeypatch):
-    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_up)
-
-    result = agent.get_and_submit_trueval(slot, predictoor_contract.return_value, 60)
-    assert result == {"tx": "0x123"}
-    predictoor_contract.return_value.submit_trueval.assert_called_once_with(
-        True, 1692943200, False, True
-    )
-
-
-@enforce_types
 def test_take_step(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -70,7 +109,7 @@ def test_take_step(slot, agent):
     ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
-        TruevalAgent, "process_slot"
+        TruevalAgentSingle, "process_slot"
     ) as ps_mock:
         agent.take_step()
 
@@ -91,7 +130,7 @@ def test_run(slot, agent):
     ), patch("time.sleep"), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
-        TruevalAgent, "process_slot"
+        TruevalAgentSingle, "process_slot"
     ) as ps_mock:
         agent.run(True)
 
@@ -103,51 +142,5 @@ def test_run(slot, agent):
 
 
 @pytest.fixture()
-def trueval_config():
-    return TruevalConfig()
-
-
-@pytest.fixture()
 def agent(trueval_config):
-    return TruevalAgent(trueval_config, get_trueval)
-
-
-@pytest.fixture()
-def predictoor_contract():
-    with patch(
-        "pdr_backend.trueval.trueval_agent.PredictoorContract",
-        return_value=mock_contract(),
-    ) as mock_predictoor_contract:
-        yield mock_predictoor_contract
-
-
-# ----------------------------------------------
-### Mocks
-
-
-def mock_contract(*args, **kwarg):
-    m = Mock()
-    m.get_secondsPerEpoch.return_value = 60
-    m.submit_trueval.return_value = {"tx": "0x123"}
-    m.contract_address = "0x1"
-    return m
-
-
-def mock_fetch_ohlcv_down(*args, **kwargs):
-    since = kwargs.get("since")
-    if since == 1692943140:
-        return [[None, 200]]
-    elif since == 1692943200:
-        return [[None, 100]]
-    else:
-        raise ValueError("Invalid timestamp")
-
-
-def mock_fetch_ohlcv_up(*args, **kwargs):
-    since = kwargs.get("since")
-    if since == 1692943140:
-        return [[None, 100]]
-    elif since == 1692943200:
-        return [[None, 200]]
-    else:
-        raise ValueError("Invalid timestamp")
+    return TruevalAgentSingle(trueval_config, get_trueval)

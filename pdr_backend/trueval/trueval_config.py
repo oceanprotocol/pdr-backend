@@ -11,7 +11,7 @@ class TruevalConfig(BaseConfig):
         super().__init__()
 
         if self.owner_addresses is None:
-            raise Exception("Owner addresses are required.")
+            raise Exception("env var OWNER_ADDRS must be set")
 
         self.sleep_time = int(getenv("SLEEP_TIME", "30"))
         self.batch_size = int(getenv("BATCH_SIZE", "30"))
