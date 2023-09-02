@@ -4,14 +4,13 @@ from pdr_backend.models.feed import dictToFeed, Feed
 
 
 @enforce_types
-def test_feed1():
+def test_feed__construct_directly():
     feed = Feed(
         "Contract Name",
         "0x12345",
-        "test",
+        "SYM:TEST",
         300,
         60,
-        15,
         "0xowner",
         "BTC-ETH",
         "1h",
@@ -23,7 +22,6 @@ def test_feed1():
     assert feed.symbol == "test"
     assert feed.seconds_per_epoch == 300
     assert feed.seconds_per_subscription == 60
-    assert feed.trueval_submit_timeout == 15
     assert feed.owner == "0xowner"
     assert feed.pair == "BTC-ETH"
     assert feed.timeframe == "1h"
@@ -33,14 +31,13 @@ def test_feed1():
 
 
 @enforce_types
-def test_feed2():
+def test_feed__construct_via_dictToFeed():
     feed_dict = {
         "name": "Contract Name",
         "address": "0x12345",
         "symbol": "test",
         "seconds_per_epoch": 300,
         "seconds_per_subscription": 60,
-        "trueval_submit_timeout": 15,
         "owner": "0xowner",
         "pair": "BTC-ETH",
         "timeframe": "1h",
@@ -54,7 +51,6 @@ def test_feed2():
     assert feed.symbol == "test"
     assert feed.seconds_per_epoch == 300
     assert feed.seconds_per_subscription == 60
-    assert feed.trueval_submit_timeout == 15
     assert feed.owner == "0xowner"
     assert feed.pair == "BTC-ETH"
     assert feed.timeframe == "1h"

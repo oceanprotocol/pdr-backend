@@ -14,7 +14,6 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
         symbol: str,
         seconds_per_epoch: int,
         seconds_per_subscription: int,
-        trueval_submit_timeout: int,
         owner: str,
         pair: str,
         timeframe: str,
@@ -25,7 +24,6 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
         self.symbol = symbol
         self.seconds_per_epoch = seconds_per_epoch
         self.seconds_per_subscription = seconds_per_subscription
-        self.trueval_submit_timeout = trueval_submit_timeout
         self.owner = owner
         self.pair = pair
         self.timeframe = timeframe
@@ -65,9 +63,8 @@ def dictToFeed(feed_dict: Dict[str, Any]):
         name=d["name"],
         address=d["address"],
         symbol=d["symbol"],
-        seconds_per_epoch=d["seconds_per_epoch"],
-        seconds_per_subscription=d["seconds_per_subscription"],
-        trueval_submit_timeout=d["trueval_submit_timeout"],
+        seconds_per_epoch=int(d["seconds_per_epoch"]),
+        seconds_per_subscription=int(d["seconds_per_subscription"]),
         owner=d["owner"],
         pair=d["pair"],
         timeframe=d["timeframe"],
