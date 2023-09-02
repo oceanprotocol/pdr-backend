@@ -181,10 +181,10 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
 
     @arguments
       subgraph_url -- e.g.
-      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None, allow all
-      timeframes -- E.g. filter to "5m,15m". If None, allow all
-      sources -- E.g. filter to "binance,kraken". If None, allow all
-      owners -- E.g. filter to "0x123,0x124". If None, allow all
+      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None/"", allow all
+      timeframes -- E.g. filter to "5m,15m". If None/"", allow all
+      sources -- E.g. filter to "binance,kraken". If None/"", allow all
+      owners -- E.g. filter to "0x123,0x124". If None/"", allow all
 
     @return
       contracts -- dict of [contract_id] : contract_info
@@ -195,13 +195,13 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
     sources = None
     owners = None
 
-    if pairs_string is not None:
+    if pairs_string:
         pairs = pairs_string.split(",")
-    if timeframes_string is not None:
+    if timeframes_string:
         timeframes = timeframes_string.split(",")
-    if sources_string is not None:
+    if sources_string:
         sources = sources_string.split(",")
-    if owners_string is not None:
+    if owners_string:
         owners = owners_string.lower().split(",")
 
     chunk_size = 1000  # max for subgraph = 1000

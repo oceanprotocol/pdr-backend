@@ -160,6 +160,9 @@ def test_get_contracts_fullchain(monkeypatch):
         (True, None, None, None, "owner1"),
         (False, None, None, None, "owner2"),
         (True, None, None, None, "owner1,owner2"),
+        (True, None, None, None, ""),
+        (True, "", "", "", ""),
+        (True, None, None, "", "owner1,owner2"),
     ],
 )
 def test_filter(monkeypatch, expect_result, pairs, timeframes, sources, owners):
