@@ -313,7 +313,7 @@ def get_pending_slots(
     while True:
         query = """
         {
-            predictSlots(where: {slot_lte: %s}, skip:%s, first:%s, where: { truevalSubmitted: false }){
+            predictSlots(where: {slot_lte: %s}, skip:%s, first:%s, where: { status: "Pending" }){
                 id
                 slot
                 trueValues {
@@ -385,9 +385,9 @@ def get_pending_slots(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
-                    seconds_per_epoch=contract["secondsPerEpoch"],
-                    seconds_per_subscription=contract["secondsPerSubscription"],
-                    trueval_submit_timeout=contract["truevalSubmitTimeout"],
+                    seconds_per_epoch=int(contract["secondsPerEpoch"]),
+                    seconds_per_subscription=int(contract["secondsPerSubscription"]),
+                    trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
                     owner=contract["token"]["nft"]["owner"]["id"],
                     pair=info["pair"],
                     timeframe=info["timeframe"],
