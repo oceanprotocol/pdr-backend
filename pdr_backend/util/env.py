@@ -1,6 +1,6 @@
 from os import getenv
 import sys
-from typing import List, Union
+from typing import List, Tuple, Union
 
 from enforce_typing import enforce_types
 
@@ -15,7 +15,7 @@ def getenv_or_exit(envvar_name: str) -> Union[None, str]:
 
 
 @enforce_types
-def parse_filters() -> List[Union[List[str], None]]:
+def parse_filters() -> Tuple[List[str]]:
     """
     @description
       Grabs envvar values for each of the filters (PAIR_FILTER, etc).
@@ -26,13 +26,22 @@ def parse_filters() -> List[Union[List[str], None]]:
       <nothing, but it grabs from env>
 
     @return
-      filter_values -- list with one item per filter:
-        0. parsed PAIR_FILTER -- either [pair1_str, pair2_str, ..] or None
-        1. parsed TIMEFRAME_FILTER -- ""
-        ...
+      parsed_pair_filter -- e.g. [] or ["ETH-USDT", "BTC-USDT"]
+      parsed_timeframe_filter -- e.g. ["5m"]
+      parsed_source_filter -- e.g. ["binance"]
+      parsed_owner_addrs -- e.g. ["0x123.."]
+
+    @notes
+      if envvar is None, the parsed filter is [], *not* None
     """
-    filter_names = ["PAIR_FILTER", "TIMEFRAME_FILTER", "SOURCE_FILTER", "OWNER_ADDRS"]
-    filter_values = [
-        getenv(name).split(",") if getenv(name) else None for name in filter_names  # type: ignore[union-attr] # pylint: disable=line-too-long
-    ]
-    return filter_values
+    def _parse1(envvar) -> List[str]:
+        envval = getenv(envvar)
+        if envval is None:
+            return []
+        return envval.split(",")
+    
+    return (_parse1("PAIR_FILTER"),
+            _parse1("TIMEFRAME_FILTER"),
+            _parse1("SOURCE_FILTER"),
+            _parse1("OWNER_ADDRS"),
+            )
