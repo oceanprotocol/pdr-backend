@@ -1,6 +1,8 @@
 from enforce_typing import enforce_types
 from unittest.mock import patch
+
 import pytest
+
 from pdr_backend.trueval.main import get_trueval
 from pdr_backend.models.feed import Feed
 
@@ -44,6 +46,7 @@ def test_get_trueval_success(monkeypatch):
     monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
 
 
+@enforce_types
 def test_get_trueval_live_lowercase_slash_5m():
     feed = Feed(
         name="ETH-USDT",
@@ -62,6 +65,7 @@ def test_get_trueval_live_lowercase_slash_5m():
     assert result == (False, False)
 
 
+@enforce_types
 def test_get_trueval_live_lowercase_dash_1h():
     feed = Feed(
         name="ETH-USDT",
@@ -95,7 +99,8 @@ def test_get_trueval_fail(monkeypatch):
         owner="0xowner",
     )
 
-    with patch("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail):
-        with pytest.raises(Exception):
-            result = get_trueval(feed, 1, 2)
-            assert result == (False, True)  # 2nd True because failed
+    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail)
+
+    with pytest.raises(Exception):
+        result = get_trueval(feed, 1, 2)
+        assert result == (False, True)  # 2nd True because failed
