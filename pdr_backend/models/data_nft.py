@@ -7,19 +7,14 @@ from enforce_typing import enforce_types
 from web3 import Web3
 from web3.types import TxReceipt, HexBytes
 
+from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.util.contract import get_contract_abi
 
 
 @enforce_types
-class DataNft:
+class DataNft(BaseContract):
     def __init__(self, config: Web3Config, address: str):
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC721Template"),
-        )
-        self.config = config
+        super().__init__(config, address, "ERC721Template")
 
     def set_data(self, field_label, field_value, wait_for_receipt=True):
         """Set key/value data via ERC725, with strings for key/value"""
