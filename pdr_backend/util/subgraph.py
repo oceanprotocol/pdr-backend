@@ -271,6 +271,7 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
                     "symbol": contract["token"]["symbol"],
                     "seconds_per_epoch": contract["secondsPerEpoch"],
                     "seconds_per_subscription": contract["secondsPerSubscription"],
+                    "owner": owner_id,
                     "last_submited_epoch": 0,
                 }
                 feed_dict.update(info)
