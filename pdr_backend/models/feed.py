@@ -41,7 +41,7 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @enforce_types
     def _splitpair(self) -> List[str]:
-        pair = self.pair.replace("/","-")
+        pair = self.pair.replace("/", "-")
         return pair.split("-")
 
     @enforce_types

@@ -15,7 +15,7 @@ def getenv_or_exit(envvar_name: str) -> Union[None, str]:
 
 
 @enforce_types
-def parse_filters() -> Tuple[List[str]]:
+def parse_filters() -> Tuple[List[str], List[str], List[str], List[str]]:
     """
     @description
       Grabs envvar values for each of the filters (PAIR_FILTER, etc).
@@ -34,14 +34,16 @@ def parse_filters() -> Tuple[List[str]]:
     @notes
       if envvar is None, the parsed filter is [], *not* None
     """
+
     def _parse1(envvar) -> List[str]:
         envval = getenv(envvar)
         if envval is None:
             return []
         return envval.split(",")
-    
-    return (_parse1("PAIR_FILTER"),
-            _parse1("TIMEFRAME_FILTER"),
-            _parse1("SOURCE_FILTER"),
-            _parse1("OWNER_ADDRS"),
-            )
+
+    return (
+        _parse1("PAIR_FILTER"),
+        _parse1("TIMEFRAME_FILTER"),
+        _parse1("SOURCE_FILTER"),
+        _parse1("OWNER_ADDRS"),
+    )

@@ -69,11 +69,13 @@ def test_feed__construct_via_dictToFeed():
     assert feed.quote == "USDT"
 
     # test where ints are int, not str (should work for either)
-    feed_dict.update({
-        "seconds_per_epoch": 301,
-        "seconds_per_subscription": 61,
-        "trueval_submit_timeout": 16,
-    })
+    feed_dict.update(
+        {
+            "seconds_per_epoch": 301,
+            "seconds_per_subscription": 61,
+            "trueval_submit_timeout": 16,
+        }
+    )
     feed = dictToFeed(feed_dict)
     assert feed.seconds_per_epoch == 301
     assert feed.seconds_per_subscription == 61
