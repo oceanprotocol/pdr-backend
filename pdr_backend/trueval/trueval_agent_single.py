@@ -18,7 +18,7 @@ class TruevalAgentSingle(TruevalAgentBase):
 
         for slot in pending_slots:
             print("-" * 30)
-            print(f"Processing slot {slot.slot_number} for feed {slot.feed}")
+            print(f"Processing slot {slot.slot_number} for {slot.feed}")
             try:
                 self.process_slot(slot)
             except Exception as e:
@@ -40,7 +40,7 @@ class TruevalAgentSingle(TruevalAgentBase):
 
             # pylint: disable=line-too-long
             print(
-                f"Contract:{predictoor_contract.contract_address} - Submitting trueval {trueval} and slot:{slot.slot_number}"
+                f"{slot.feed} - Submitting trueval {trueval} and slot:{slot.slot_number}"
             )
             tx = predictoor_contract.submit_trueval(
                 trueval, slot.slot_number, cancel, True
