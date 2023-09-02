@@ -44,10 +44,10 @@ def test_base_config_with_filters(monkeypatch):
 def test_base_config_no_filters(monkeypatch):
     _setenvs(monkeypatch, have_filters=False)
     c = BaseConfig()
-    assert c.pair_filters is None
-    assert c.timeframe_filter is None
-    assert c.source_filter is None
-    assert c.owner_addresses is None
+    assert c.pair_filters == []
+    assert c.timeframe_filter == []
+    assert c.source_filter == []
+    assert c.owner_addresses == []
 
 
 @enforce_types
