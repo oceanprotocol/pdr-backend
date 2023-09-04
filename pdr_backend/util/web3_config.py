@@ -37,7 +37,7 @@ class Web3Config:
             block_data = self.w3.eth.get_block(block)
             return block_data
         except Exception as e:
-            print(f"An error occured while gettin block: {block}, error: {e}")
+            print(f"An error occured while getting block, error: {e}")
             if tries < WEB3_MAX_TRIES:
                 print("Tryin again...")
                 return self.get_block(block, full_transactions, tries + 1)
