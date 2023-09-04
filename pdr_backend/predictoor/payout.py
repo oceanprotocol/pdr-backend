@@ -1,23 +1,38 @@
-from typing import List
+import os
+from typing import Any, List
+from enforce_typing import enforce_types
+from pdr_backend.models.base_config import BaseConfig
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.subgraph import query_pending_payouts
 
 
-def request_payout(predictoor_contract: PredictoorContract, timestamps: List[int]):
-    predictoor_contract.payout_multiple(timestamps, True)
-
-
-def batchify(data, batch_size):
+@enforce_types
+def batchify(data: List[Any], batch_size: int):
     return [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
 
 
-def claim_pending_payouts(
-    subgraph_url: str, predictoor_contract: PredictoorContract, batch_size: int
+@enforce_types
+def request_payout_batches(
+    predictoor_contract: PredictoorContract, batch_size: int, timestamps: List[int]
 ):
-    addr = predictoor_contract.config.owner
-    pending = query_pending_payouts(subgraph_url, addr)
-    batches = batchify(pending, batch_size)
-
+    batches = batchify(timestamps, batch_size)
     for batch in batches:
-        request_payout(predictoor_contract, batch)
+        predictoor_contract.payout_multiple(batch, True)
+        print(".", end="", flush=True)
+    print("\nBatch completed")
+
+
+def do_payout():
+    config = BaseConfig()
+    owner = config.web3_config.owner
+    BATCH_SIZE = int(os.getenv("BATCH_SIZE", "10"))
+
+    pending_payouts = query_pending_payouts(config.subgraph_url, owner)
+    total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
+    print(f"Found {total_timestamps} slots")
+
+    for contract_address in pending_payouts:
+        print(f"Claiming payouts for {contract_address} contract")
+        contract = PredictoorContract(config.web3_config, contract_address)
+        request_payout_batches(contract, BATCH_SIZE, pending_payouts[contract_address])

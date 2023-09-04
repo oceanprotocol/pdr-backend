@@ -76,7 +76,6 @@ def test_predictoor_agent1(monkeypatch):
         def __init__(self, w3):
             self._w3 = w3
             self.contract_address: str = ADDR
-            self._payout_slots: List[int] = []
             self._prediction_slots: List[int] = []
 
         def get_current_epoch(self) -> int:  # returns an epoch number
@@ -95,12 +94,6 @@ def test_predictoor_agent1(monkeypatch):
             if timestamp in self._prediction_slots:
                 print(f"      (Replace prev pred at time slot {timestamp})")
             self._prediction_slots.append(timestamp)
-
-        def payout(
-            self, slot: int, wait: bool = False
-        ):  # pylint: disable=unused-argument
-            assert slot not in self._payout_slots, "already did payout for this slot"
-            self._payout_slots.append(slot)
 
     mock_contract = MockContract(mock_w3)
 
@@ -149,12 +142,9 @@ def test_predictoor_agent1(monkeypatch):
         "unique prediction_slots = " f"{sorted(set(mock_contract._prediction_slots))}"
     )
     print(f"all prediction_slots = {mock_contract._prediction_slots}")
-    print()
-    print(f"payout_slots = {mock_contract._payout_slots}")
 
     # relatively basic sanity tests
     assert mock_contract._prediction_slots
-    assert mock_contract._payout_slots
     assert (mock_w3.eth.timestamp + 2 * S_PER_EPOCH) >= max(
         mock_contract._prediction_slots
     )
