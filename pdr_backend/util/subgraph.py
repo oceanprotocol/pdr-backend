@@ -55,7 +55,7 @@ query {
  }
 """
 
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List
 
 from enforce_typing import enforce_types
 import requests
