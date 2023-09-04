@@ -33,9 +33,6 @@ class PredictoorAgent1:
 
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
-        self.prev_payout_epochs_per_feed: Dict[str, List[int]] = {
-            addr: [] for addr in self.feeds
-        }
         self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
