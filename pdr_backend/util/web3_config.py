@@ -2,8 +2,10 @@ from typing import Optional, Union
 
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
+from eth_typing import BlockIdentifier
 from web3 import Web3
 from web3.middleware import construct_sign_and_send_raw_middleware
+from web3.types import BlockData
 
 from pdr_backend.util.constants import WEB3_MAX_TRIES
 
@@ -30,10 +32,10 @@ class Web3Config:
 
     def get_block(
         self, block: Union[str, int], full_transactions: bool = False, tries: int = 0
-    ):
+    ) -> BlockData:
         try:
-            block = self.w3.eth.get_block(block)
-            return block
+            block_data = self.w3.eth.get_block(block)
+            return block_data
         except Exception as e:
             print(f"An error occured while gettin block: {block}, error: {e}")
             if tries < WEB3_MAX_TRIES:
