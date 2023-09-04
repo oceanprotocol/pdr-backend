@@ -141,6 +141,7 @@ class PredictoorAgent1:
           You need to customize it to implement your own strategy.
         """
         # Pick random prediction & random stake. You need to customize this.
+        # Stake is in ETH
         predval = bool(random.getrandbits(1))
         stake = random.randint(1, 10) / 1000
 
