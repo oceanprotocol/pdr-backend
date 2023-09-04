@@ -136,7 +136,7 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
 def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
-    pending_slots: Dict[str, List[int]] = []
+    pending_slots: Dict[str, List[int]] = {}
 
     while True:
         query = """
