@@ -55,7 +55,7 @@ query {
  }
 """
 
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 
 from enforce_typing import enforce_types
 import requests
@@ -132,10 +132,11 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
     return result
 
 
-def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
+@enforce_types
+def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
-    timestamps: List[int] = []
+    pending_slots: Dict[str, List[int]] = []
 
     while True:
         query = """
@@ -145,6 +146,12 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
                 ) {
                     id
                     timestamp
+                    slot {
+                        id
+                        predictContract {
+                            id
+                        }
+                    }
                 }
         }
         """ % (
@@ -158,12 +165,14 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
                 print("No data in result")
                 break
             predict_predictions = result["data"]["predictPredictions"]
-            timestamps_query = [i["timestamp"] for i in predict_predictions]
-            timestamps.extend(timestamps_query)
+            for prediction in predict_predictions:
+                contract_address = prediction["slot"]["predictContract"]["id"]
+                timestamp = prediction["timestamp"]
+                pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             print("An error occured", e)
 
-    return timestamps
+    return pending_slots
 
 
 @enforce_types
