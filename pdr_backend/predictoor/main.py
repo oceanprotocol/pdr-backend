@@ -6,8 +6,9 @@ HELP = """Predictoor runner.
 
 Usage: python pdr_backend/predictoor/main.py APPROACH
 
-       where APPROACH=1 does random predictions
-             APPROACH=2 uses a model to predict. Needs MODELDIR specified.
+       where APPROACH=1 - does random predictions
+             APPROACH=2 - uses a model to predict. Needs MODELDIR specified.
+             APPROACH=payout - claim all unclaimed payouts.
 """
 
 
