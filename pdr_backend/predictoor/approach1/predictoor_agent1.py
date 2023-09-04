@@ -94,19 +94,6 @@ class PredictoorAgent1:
         # print status
         print(f"    Process {feed} at epoch={epoch}")
 
-        # maybe get payout for previous epoch
-        prev_submit_epochs = self.prev_submit_epochs_per_feed[addr]
-        prev_payout_epochs = self.prev_payout_epochs_per_feed[addr]
-        if (
-            prev_submit_epochs
-            and epoch not in prev_submit_epochs
-            and (not prev_payout_epochs or epoch not in prev_payout_epochs)
-        ):
-            slot = epoch * s_per_epoch - s_per_epoch
-            print(f"      Claim $ for prev epoch at time slot = {slot}")
-            contract.payout(slot, False)
-            self.prev_payout_epochs_per_feed[addr].append(epoch)
-
         # within the time window to predict?
         print(
             f"      {epoch_s_left} s left in epoch"
