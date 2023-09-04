@@ -142,6 +142,6 @@ class PredictoorAgent1:
         """
         # Pick random prediction & random stake. You need to customize this.
         predval = bool(random.getrandbits(1))
-        stake = random.randint(10, 1000)
+        stake = random.randint(1, 10) / 1000
 
         return (predval, stake)
