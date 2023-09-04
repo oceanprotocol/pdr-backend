@@ -31,7 +31,7 @@ class Web3Config:
             )
 
     def get_block(
-        self, block: Union[str, int], full_transactions: bool = False, tries: int = 0
+        self, block: BlockIdentifier, full_transactions: bool = False, tries: int = 0
     ) -> BlockData:
         try:
             block_data = self.w3.eth.get_block(block)
