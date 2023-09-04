@@ -11,8 +11,8 @@ def test_trueval_config():
     assert config.sleep_time == int(os.getenv("SLEEP_TIME", "30"))
     assert config.batch_size == int(os.getenv("BATCH_SIZE", "30"))
 
-    filters = parse_filters()
-    assert config.pair_filters == filters[0]
-    assert config.timeframe_filter == filters[1]
-    assert config.source_filter == filters[2]
-    assert config.owner_addresses == filters[3]
+    (f0, f1, f2, f3) = parse_filters()
+    assert config.pair_filters == f0
+    assert config.timeframe_filter == f1
+    assert config.source_filter == f2
+    assert config.owner_addresses == f3

@@ -7,8 +7,8 @@ from eth_keys.backends import NativeECCBackend
 
 from pdr_backend.models.fixed_rate import FixedRate
 from pdr_backend.models.token import Token
+from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
-from pdr_backend.util.contract import get_contract_abi
 from pdr_backend.util.networkutil import is_sapphire_network, send_encrypted_tx
 from pdr_backend.util.web3_config import Web3Config
 
@@ -16,14 +16,9 @@ _KEYS = KeyAPI(NativeECCBackend)
 
 
 @enforce_types
-class PredictoorContract:  # pylint: disable=too-many-public-methods
+class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, config: Web3Config, address: str):
-        self.config = config
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
-            address=config.w3.to_checksum_address(address),
-            abi=get_contract_abi("ERC20Template3"),
-        )
+        super().__init__(config, address, "ERC20Template3")
         stake_token = self.get_stake_token()
         self.token = Token(config, stake_token)
         self.last_allowance = 0

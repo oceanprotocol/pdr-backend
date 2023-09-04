@@ -132,10 +132,11 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
     return result
 
 
-def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
+@enforce_types
+def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
-    timestamps: List[int] = []
+    pending_slots: Dict[str, List[int]] = {}
 
     while True:
         query = """
@@ -145,6 +146,12 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
                 ) {
                     id
                     timestamp
+                    slot {
+                        id
+                        predictContract {
+                            id
+                        }
+                    }
                 }
         }
         """ % (
@@ -158,12 +165,14 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> List[int]:
                 print("No data in result")
                 break
             predict_predictions = result["data"]["predictPredictions"]
-            timestamps_query = [i["timestamp"] for i in predict_predictions]
-            timestamps.extend(timestamps_query)
+            for prediction in predict_predictions:
+                contract_address = prediction["slot"]["predictContract"]["id"]
+                timestamp = prediction["timestamp"]
+                pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             print("An error occured", e)
 
-    return timestamps
+    return pending_slots
 
 
 @enforce_types
@@ -181,27 +190,27 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
 
     @arguments
       subgraph_url -- e.g.
-      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None, allow all
-      timeframes -- E.g. filter to "5m,15m". If None, allow all
-      sources -- E.g. filter to "binance,kraken". If None, allow all
-      owners -- E.g. filter to "0x123,0x124". If None, allow all
+      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None/"", allow all
+      timeframes -- E.g. filter to "5m,15m". If None/"", allow all
+      sources -- E.g. filter to "binance,kraken". If None/"", allow all
+      owners -- E.g. filter to "0x123,0x124". If None/"", allow all
 
     @return
-      contracts -- dict of [contract_id] : contract_info
-        where contract_info is a dict with fields name, address, symbol, ..
+      feed_dicts -- dict of [contract_id] : feed_dict
+        where feed_dict is a dict with fields name, address, symbol, ..
     """
     pairs = None
     timeframes = None
     sources = None
     owners = None
 
-    if pairs_string is not None:
+    if pairs_string:
         pairs = pairs_string.split(",")
-    if timeframes_string is not None:
+    if timeframes_string:
         timeframes = timeframes_string.split(",")
-    if sources_string is not None:
+    if sources_string:
         sources = sources_string.split(",")
-    if owners_string is not None:
+    if owners_string:
         owners = owners_string.lower().split(",")
 
     chunk_size = 1000  # max for subgraph = 1000
@@ -269,8 +278,10 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
                     "name": contract["token"]["name"],
                     "address": contract["id"],
                     "symbol": contract["token"]["symbol"],
-                    "seconds_per_epoch": contract["secondsPerEpoch"],
-                    "seconds_per_subscription": contract["secondsPerSubscription"],
+                    "seconds_per_epoch": int(contract["secondsPerEpoch"]),
+                    "seconds_per_subscription": int(contract["secondsPerSubscription"]),
+                    "trueval_submit_timeout": int(contract["truevalSubmitTimeout"]),
+                    "owner": owner_id,
                     "last_submited_epoch": 0,
                 }
                 feed_dict.update(info)
@@ -313,7 +324,7 @@ def get_pending_slots(
     while True:
         query = """
         {
-            predictSlots(where: {slot_lte: %s}, skip:%s, first:%s, where: { truevalSubmitted: false }){
+            predictSlots(where: {slot_lte: %s}, skip:%s, first:%s, where: { status: "Pending" }){
                 id
                 slot
                 trueValues {
@@ -385,9 +396,9 @@ def get_pending_slots(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
-                    seconds_per_epoch=contract["secondsPerEpoch"],
-                    seconds_per_subscription=contract["secondsPerSubscription"],
-                    trueval_submit_timeout=contract["truevalSubmitTimeout"],
+                    seconds_per_epoch=int(contract["secondsPerEpoch"]),
+                    seconds_per_subscription=int(contract["secondsPerSubscription"]),
+                    trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
                     owner=contract["token"]["nft"]["owner"]["id"],
                     pair=info["pair"],
                     timeframe=info["timeframe"],

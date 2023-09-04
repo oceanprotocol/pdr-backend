@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from enforce_typing import enforce_types
 
@@ -32,18 +32,25 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
         self.source = source
 
     @property
-    def quote(self):
-        return self.pair.split("-")[1]
+    def base(self):
+        return self._splitpair()[0]
 
     @property
-    def base(self):
-        return self.pair.split("-")[0]
+    def quote(self):
+        return self._splitpair()[1]
 
+    @enforce_types
+    def _splitpair(self) -> List[str]:
+        pair = self.pair.replace("/", "-")
+        return pair.split("-")
+
+    @enforce_types
     def shortstr(self) -> str:
         return (
             f"[Feed {self.address[:7]} {self.pair}" f"|{self.source}|{self.timeframe}]"
         )
 
+    @enforce_types
     def __str__(self) -> str:
         return self.shortstr()
 

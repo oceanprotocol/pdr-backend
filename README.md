@@ -27,7 +27,8 @@ Each agent has a directory:
 - `dfbuyer` - agent that buys aggregate predictions on behalf of Data Farming
 
 Other directories:
-- `utils` - tools for use by any agent
+- `util` - tools for use by any agent
+- `models` - classes that wrap Predictoor contracts; for setup (BaseConfig); and for data feeds (Feed)
 - `publisher` - used for publishing
 
 The `predictoor` and `trader` agents are meant to be customized by predictoor and trader stakeholders, respectively.

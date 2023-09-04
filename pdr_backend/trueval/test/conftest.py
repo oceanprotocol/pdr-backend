@@ -1,7 +1,9 @@
 import os
+from unittest.mock import Mock, patch
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
+from pdr_backend.trueval.trueval_config import TruevalConfig
 
 
 @pytest.fixture()
@@ -34,3 +36,25 @@ def set_env_vars():
         os.environ["OWNER_ADDRS"] = original_value
     else:
         os.environ.pop("OWNER_ADDRS", None)
+
+
+@pytest.fixture()
+def trueval_config():
+    return TruevalConfig()
+
+
+@pytest.fixture()
+def predictoor_contract_mock():
+    with patch(
+        "pdr_backend.trueval.trueval_agent_base.PredictoorContract",
+        return_value=mock_contract(),
+    ) as mock_predictoor_contract_mock:
+        yield mock_predictoor_contract_mock
+
+
+def mock_contract(*args, **kwarg):
+    m = Mock()
+    m.get_secondsPerEpoch.return_value = 60
+    m.submit_trueval.return_value = {"tx": "0x123"}
+    m.contract_address = "0x1"
+    return m
