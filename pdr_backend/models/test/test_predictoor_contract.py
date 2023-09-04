@@ -32,7 +32,7 @@ def test_max_gas_limit(predictoor_contract):
     max_gas_limit = predictoor_contract.get_max_gas()
     # You'll have access to the config object if required, using predictoor_contract.config
     expected_limit = int(
-        predictoor_contract.config.w3.eth.get_block("latest").gasLimit * 0.99
+        predictoor_contract.config.get_block("latest").gasLimit * 0.99
     )
     assert max_gas_limit == expected_limit
 
@@ -73,13 +73,13 @@ def test_get_price(predictoor_contract):
 @enforce_types
 def test_get_current_epoch(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch()
-    now = predictoor_contract.config.w3.eth.get_block("latest").timestamp
+    now = predictoor_contract.config.get_block("latest").timestamp
     assert current_epoch == int(now // SECONDS_PER_EPOCH)
 
 
 def test_get_current_epoch_ts(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
-    now = predictoor_contract.config.w3.eth.get_block("latest").timestamp
+    now = predictoor_contract.config.get_block("latest").timestamp
     assert current_epoch == int(now // SECONDS_PER_EPOCH) * SECONDS_PER_EPOCH
 
 

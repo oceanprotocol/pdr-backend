@@ -116,7 +116,7 @@ def process_block(block, model, main_pd):
 
 def log_loop(blockno, model, main_pd):
     global last_block_time
-    block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
+    block = web3_config.get_block(blockno, full_transactions=False)
     if block:
         last_block_time = block["timestamp"]
         prediction = process_block(block, model, main_pd)
