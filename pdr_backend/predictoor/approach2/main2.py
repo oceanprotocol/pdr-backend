@@ -83,15 +83,6 @@ def process_block(block, model, main_pd):
             f", seconds_till_epoch_end: {seconds_till_epoch_end}"
         )
 
-        if epoch > topic["last_submited_epoch"] and topic["last_submited_epoch"] > 0:
-            # let's get the payout for previous epoch.  We don't care if it fails...
-            slot = epoch * seconds_per_epoch - seconds_per_epoch
-            print(
-                f"Contract:{predictoor_contract.contract_address} - "
-                f"Claiming revenue for slot:{slot}"
-            )
-            predictoor_contract.payout(slot, False)
-
         if seconds_till_epoch_end <= int(getenv("SECONDS_TILL_EPOCH_END", "60")):
             # Timestamp of prediction
             target_time = (epoch + 2) * seconds_per_epoch
