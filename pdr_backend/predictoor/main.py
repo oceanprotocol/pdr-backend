@@ -38,6 +38,7 @@ def do_main():
         do_main2()
 
     elif arg1 == "payout":
+        # pylint: disable=import-outside-toplevel
         from pdr_backend.predictoor.payout import do_payout
 
         do_payout()
