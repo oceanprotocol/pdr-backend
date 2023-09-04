@@ -28,7 +28,9 @@ class Web3Config:
                 construct_sign_and_send_raw_middleware(self.account)
             )
 
-    def get_block(self, block: Union[str, int], tries: int = 0):
+    def get_block(
+        self, block: Union[str, int], full_transactions: bool = False, tries: int = 0
+    ):
         try:
             block = self.w3.eth.get_block(block)
             return block
@@ -36,5 +38,5 @@ class Web3Config:
             print(f"An error occured while gettin block: {block}, error: {e}")
             if tries < WEB3_MAX_TRIES:
                 print("Tryin again...")
-                return self.get_block(block, tries + 1)
+                return self.get_block(block, full_transactions, tries + 1)
             raise Exception("Couldn't get block") from e
