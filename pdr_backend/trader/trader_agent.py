@@ -1,5 +1,5 @@
-import time
 import sys
+import time
 from typing import Callable, Dict, List
 
 from enforce_typing import enforce_types
@@ -54,6 +54,7 @@ class TraderAgent:
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
             return
+
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
         print(f"Got new block, with number {block_number} ")
@@ -83,9 +84,7 @@ class TraderAgent:
             f"s_remaining_in_epoch: {s_remaining_in_epoch}"
         )
 
-        prediction = predictoor_contract.get_agg_predval(
-            epoch * s_per_epoch
-        )
+        prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
         print(f"Got {prediction}.")
         if prediction is not None:
             trade_result = self.get_trader(feed, prediction)
@@ -93,9 +92,7 @@ class TraderAgent:
             return trade_result
 
 
-def get_trader(
-    feed: Feed, direction: int
-):
+def get_trader(feed: Feed, direction: int):
     print(
         f" {feed.name} (contract {feed.address}) "
         f"has a new prediction: {direction}.  Let's buy or sell"

@@ -1,13 +1,21 @@
-from unittest.mock import patch
-from pdr_backend.trader.trader_agent import TraderAgent
+from unittest.mock import Mock, patch
+
+import pytest
+
+from pdr_backend.trader.trader_agent import TraderAgent, get_trader
 from pdr_backend.trader.trader_config import TraderConfig
-from pdr_backend.trader.trader_agent import get_trader
 
 
 def test_new_agent():
     trader_config = TraderConfig()
     agent = TraderAgent(trader_config, get_trader)
     assert agent.config == trader_config
+
+    no_feeds_config = Mock(spec=TraderConfig)
+    no_feeds_config.get_feeds.return_value = {}
+
+    with pytest.raises(SystemExit):
+        TraderAgent(no_feeds_config, get_trader)
 
 
 def test_run():
