@@ -31,9 +31,7 @@ def test_auth_signature(predictoor_contract):
 def test_max_gas_limit(predictoor_contract):
     max_gas_limit = predictoor_contract.get_max_gas()
     # You'll have access to the config object if required, using predictoor_contract.config
-    expected_limit = int(
-        predictoor_contract.config.get_block("latest").gasLimit * 0.99
-    )
+    expected_limit = int(predictoor_contract.config.get_block("latest").gasLimit * 0.99)
     assert max_gas_limit == expected_limit
 
 
