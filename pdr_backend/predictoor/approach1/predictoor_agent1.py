@@ -123,7 +123,7 @@ class PredictoorAgent1:
 
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
-    ) -> Tuple[bool, int]:
+    ) -> Tuple[bool, float]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
