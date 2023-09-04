@@ -32,7 +32,7 @@ def do_payout():
     total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
     print(f"Found {total_timestamps} slots")
 
-    for contract_address in pending_payouts.keys():
+    for contract_address in pending_payouts:
         print(f"Claiming payouts for {contract_address} contract")
         contract = PredictoorContract(config.web3_config, contract_address)
         request_payout_batches(contract, BATCH_SIZE, pending_payouts[contract_address])
