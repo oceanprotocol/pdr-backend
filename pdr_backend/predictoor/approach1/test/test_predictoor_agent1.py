@@ -58,7 +58,7 @@ def test_predictoor_agent1(monkeypatch):
             self._timestamps_seen: List[int] = [INIT_TIMESTAMP]
 
         def get_block(
-            self, block_number: int, full_transactions: bool
+            self, block_number: int, full_transactions: bool = False
         ):  # pylint: disable=unused-argument
             mock_block = {"timestamp": self.timestamp}
             return mock_block

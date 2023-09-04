@@ -66,7 +66,7 @@ def main():
         block = web3_config.w3.eth.block_number
         if block > lastblock:
             lastblock = block
-            process_block(web3_config.w3.eth.get_block(block, full_transactions=False))
+            process_block(web3_config.get_block(block, full_transactions=False))
         else:
             time.sleep(1)
 

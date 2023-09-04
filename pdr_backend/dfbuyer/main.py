@@ -111,7 +111,7 @@ def process_block(block):
 
 def log_loop(blockno):
     global last_block_time
-    block = web3_config.w3.eth.get_block(blockno, full_transactions=False)
+    block = web3_config.get_block(blockno, full_transactions=False)
     if block:
         last_block_time = block["timestamp"]
         process_block(block)

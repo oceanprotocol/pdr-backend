@@ -32,7 +32,7 @@ class TruevalAgentBase(ABC):
         raise NotImplementedError("Take step is not implemented")
 
     def get_batch(self) -> List[Slot]:
-        timestamp = self.config.web3_config.w3.eth.get_block("latest")["timestamp"]
+        timestamp = self.config.web3_config.get_block("latest")["timestamp"]
         pending_slots = self.config.get_pending_slots(
             timestamp,
         )

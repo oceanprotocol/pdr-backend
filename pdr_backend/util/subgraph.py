@@ -61,6 +61,7 @@ from enforce_typing import enforce_types
 import requests
 from web3 import Web3
 
+from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 
@@ -113,7 +114,7 @@ def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
 
 
 @enforce_types
-def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
+def query_subgraph(subgraph_url: str, query: str, tries: int = 0) -> Dict[str, dict]:
     """
     @arguments
       subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql # pylint: disable=line-too-long
@@ -125,6 +126,8 @@ def query_subgraph(subgraph_url: str, query: str) -> Dict[str, dict]:
     request = requests.post(subgraph_url, "", json={"query": query}, timeout=1.5)
     if request.status_code != 200:
         # pylint: disable=broad-exception-raised
+        if tries < SUBGRAPH_MAX_TRIES:
+            return query_subgraph(subgraph_url, query, tries + 1)
         raise Exception(
             f"Query failed. Url: {subgraph_url}. Return code is {request.status_code}\n{query}"
         )

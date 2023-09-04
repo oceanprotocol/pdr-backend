@@ -9,6 +9,8 @@ from pdr_backend.util.web3_config import Web3Config
 
 def test_trueval_main_1(slot):
     mocked_web3_config = Mock(spec=Web3Config)
+    mocked_web3_config.get_block = Mock()
+    mocked_web3_config.get_block.return_value = {"timestamp": 0}
     mocked_web3_config.w3 = MagicMock()
 
     with patch(
@@ -27,6 +29,8 @@ def test_trueval_main_1(slot):
 
 def test_trueval_main_2():
     mocked_web3_config = Mock(spec=Web3Config)
+    mocked_web3_config.get_block = Mock()
+    mocked_web3_config.get_block.return_value = {"timestamp": 0}
     mocked_web3_config.w3 = MagicMock()
 
     with patch(

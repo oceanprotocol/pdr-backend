@@ -2,8 +2,12 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
+from eth_typing import BlockIdentifier
 from web3 import Web3
 from web3.middleware import construct_sign_and_send_raw_middleware
+from web3.types import BlockData
+
+from pdr_backend.util.constants import WEB3_MAX_TRIES
 
 
 @enforce_types
@@ -25,3 +29,16 @@ class Web3Config:
             self.w3.middleware_onion.add(
                 construct_sign_and_send_raw_middleware(self.account)
             )
+
+    def get_block(
+        self, block: BlockIdentifier, full_transactions: bool = False, tries: int = 0
+    ) -> BlockData:
+        try:
+            block_data = self.w3.eth.get_block(block)
+            return block_data
+        except Exception as e:
+            print(f"An error occured while getting block, error: {e}")
+            if tries < WEB3_MAX_TRIES:
+                print("Tryin again...")
+                return self.get_block(block, full_transactions, tries + 1)
+            raise Exception("Couldn't get block") from e
