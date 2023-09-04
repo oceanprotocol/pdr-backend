@@ -59,9 +59,9 @@ from typing import Optional, Dict, List
 
 from enforce_typing import enforce_types
 import requests
-from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 from web3 import Web3
 
+from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 
