@@ -37,6 +37,11 @@ def do_main():
 
         do_main2()
 
+    elif arg1 == "payout":
+        from pdr_backend.predictoor.payout import do_payout
+
+        do_payout()
+
     elif arg1 == "help":
         do_help()
 
