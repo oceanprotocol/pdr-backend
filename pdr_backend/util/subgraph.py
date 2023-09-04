@@ -128,10 +128,9 @@ def query_subgraph(subgraph_url: str, query: str, tries: int = 0) -> Dict[str, d
         # pylint: disable=broad-exception-raised
         if tries < SUBGRAPH_MAX_TRIES:
             return query_subgraph(subgraph_url, query, tries + 1)
-        else:
-            raise Exception(
-                f"Query failed. Url: {subgraph_url}. Return code is {request.status_code}\n{query}"
-            )
+        raise Exception(
+            f"Query failed. Url: {subgraph_url}. Return code is {request.status_code}\n{query}"
+        )
     result = request.json()
     return result
 
