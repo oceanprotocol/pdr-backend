@@ -1,11 +1,9 @@
 import time
-from typing import Callable
+import sys
+from typing import Callable, Dict, List
 
 from enforce_typing import enforce_types
-from pdr_backend.trader.trade import trade
 
-from pdr_backend.models.slot import Slot
-from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_config import TraderConfig
 
@@ -18,6 +16,22 @@ class TraderAgent:
     ):
         self.config = trader_config
         self.get_trader = _get_trader
+
+        self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
+
+        if not self.feeds:
+            print("No feeds found. Exiting")
+            sys.exit()
+
+        feed_addrs = list(self.feeds.keys())
+        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
+
+        self.prev_block_timestamp: int = 0
+        self.prev_block_number: int = 0
+
+        self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
+            addr: [] for addr in self.feeds
+        }
 
     @enforce_types
     def run(self, testing: bool = False):
@@ -40,11 +54,12 @@ class TraderAgent:
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
             return
-        self.prev_block_time = block["timestamp"]
+        self.prev_block_number = block_number
+        self.prev_block_timestamp = block["timestamp"]
         print(f"Got new block, with number {block_number} ")
 
         # do work at new block
-        for addr in self._addrs:
+        for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
     def _process_block_at_feed(self, addr: str, timestamp: str):
@@ -62,7 +77,7 @@ class TraderAgent:
             f"s_remaining_in_epoch: {s_remaining_in_epoch}"
         )
 
-        if epoch > self.prev_submitted_epochs[addr] > 0:
+        if epoch > self.prev_submit_epochs_per_feed[addr] > 0:
             prediction = predictoor_contract.get_agg_predval(
                 epoch * s_per_epoch
             )
