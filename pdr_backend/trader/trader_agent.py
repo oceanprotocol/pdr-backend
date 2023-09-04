@@ -29,7 +29,7 @@ class TraderAgent:
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
 
-        self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
+        self.prev_traded_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
 
@@ -68,6 +68,12 @@ class TraderAgent:
         epoch = predictoor_contract.get_current_epoch()
         s_per_epoch = feed.seconds_per_epoch
         s_remaining_in_epoch = epoch * s_per_epoch + s_per_epoch - timestamp
+        epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
+
+        too_early = epoch_s_left > self.config.s_until_epoch_end
+        if too_early:
+            print("      Done feed: too early to trade")
+            return
 
         # print status
         print(
@@ -77,13 +83,14 @@ class TraderAgent:
             f"s_remaining_in_epoch: {s_remaining_in_epoch}"
         )
 
-        if epoch > self.prev_submit_epochs_per_feed[addr] > 0:
-            prediction = predictoor_contract.get_agg_predval(
-                epoch * s_per_epoch
-            )
-            print(f"Got {prediction}.")
-            if prediction is not None:
-                self.get_trader(feed, prediction)
+        prediction = predictoor_contract.get_agg_predval(
+            epoch * s_per_epoch
+        )
+        print(f"Got {prediction}.")
+        if prediction is not None:
+            trade_result = self.get_trader(feed, prediction)
+            self.prev_traded_epochs_per_feed[addr].append(epoch)
+            return trade_result
 
 
 def get_trader(
