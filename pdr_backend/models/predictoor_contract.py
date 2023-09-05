@@ -248,7 +248,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def submit_prediction(
         self,
         predicted_value: bool,
-        stake_amount: int,
+        stake_amount: float,
         prediction_ts: int,
         wait_for_receipt=True,
     ):
