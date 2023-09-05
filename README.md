@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# pdr-backend: Predictoor Backend
+# pdr-backend: Predictoor Backend & Python SDK
 
 ## Quickstart, per Stakeholder
 
