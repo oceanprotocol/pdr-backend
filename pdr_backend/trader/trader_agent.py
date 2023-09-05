@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from enforce_typing import enforce_types
 
@@ -12,10 +12,10 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _get_trader: Callable[[Feed], Any],
+        _get_trader: Optional[Callable[[Feed], Any]] = None,
     ):
         self.config = trader_config
-        self.get_trader = _get_trader
+        self._get_trader = _get_trader if _get_trader else get_trader
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
 
@@ -63,7 +63,7 @@ class TraderAgent:
         for addr in self.feeds:
             return self._process_block_at_feed(addr, block["timestamp"])
 
-    def _process_block_at_feed(self, addr: str, timestamp: int):
+    def _process_block_at_feed(self, addr: str, timestamp: int) -> Any:
         # base data
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
         epoch = predictoor_contract.get_current_epoch()
@@ -86,12 +86,14 @@ class TraderAgent:
         prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
         print(f"Got {prediction}.")
         if prediction is not None:
-            trade_result = self.get_trader(feed, prediction)
+            trade_result = self._get_trader(feed, prediction)
             self.prev_traded_epochs_per_feed[addr].append(epoch)
             return trade_result
 
+        return None
 
-def get_trader(feed: Feed, direction: int):
+
+def get_trader(feed: Feed, direction: int) -> Any:
     print(
         f" {feed.name} (contract {feed.address}) "
         f"has a new prediction: {direction}.  Let's buy or sell"
