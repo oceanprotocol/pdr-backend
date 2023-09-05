@@ -51,7 +51,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         return bytes(myBytes32, "utf-8")
 
     def get_auth_signature(self):
-        valid_until = self.config.w3.eth.get_block("latest").timestamp + 3600
+        valid_until = self.config.get_block("latest").timestamp + 3600
         message_hash = self.config.w3.solidity_keccak(
             ["address", "uint256"],
             [self.config.owner, valid_until],
@@ -81,7 +81,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def get_max_gas(self):
         """Returns max block gas"""
-        block = self.config.w3.eth.get_block(
+        block = self.config.get_block(
             self.config.w3.eth.block_number, full_transactions=False
         )
         return int(block["gasLimit"] * 0.99)
@@ -355,7 +355,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             return None
 
     def get_block(self, block):
-        return self.config.w3.eth.get_block(block)
+        return self.config.get_block(block)
 
     def erc721_addr(self) -> str:
         return self.contract_instance.functions.getERC721Address().call()

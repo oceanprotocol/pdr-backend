@@ -48,3 +48,23 @@ def test_Web3Config_happy_havePrivateKey_withKeywords():
     assert c.account
     assert c.owner == c.account.address
     assert c.private_key == private_key
+
+
+@enforce_types
+def test_Web3Config_get_block_latest():
+    private_key = os.getenv("PRIVATE_KEY")
+    rpc_url = os.getenv("RPC_URL")
+    c = Web3Config(rpc_url=rpc_url, private_key=private_key)
+    block = c.get_block("latest")
+    assert block
+    assert block["timestamp"] > 0
+
+
+@enforce_types
+def test_Web3Config_get_block_0():
+    private_key = os.getenv("PRIVATE_KEY")
+    rpc_url = os.getenv("RPC_URL")
+    c = Web3Config(rpc_url=rpc_url, private_key=private_key)
+    block = c.get_block(0)
+    assert block
+    assert block["timestamp"] > 0

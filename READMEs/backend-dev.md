@@ -128,12 +128,8 @@ while True:
     trueval_block = web3_config.w3.eth.block_number
     if block > lastblock:
         trueval_lastblock = trueval_block
-        trueval_process_block(web3_config.w3.eth.get_block(trueval_block, full_transactions=False))
+        trueval_process_block(web3_config.get_block(trueval_block, full_transactions=False))
     else:
         time.sleep(1)
     # FIXME: add similar for predictoor, trader, etc
 ```
-
-
-
-

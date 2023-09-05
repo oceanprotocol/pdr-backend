@@ -68,7 +68,7 @@ class PredictoorAgent1:
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = w3.eth.get_block(block_number, full_transactions=False)
+        block = self.config.web3_config.get_block(block_number, full_transactions=False)
         if not block:
             print("  Done step: block not ready yet")
             return
