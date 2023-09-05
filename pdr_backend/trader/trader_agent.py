@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import Callable, Dict, List
+from typing import Any, Callable, Dict, List
 
 from enforce_typing import enforce_types
 
@@ -12,7 +12,7 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _get_trader: Callable[Feed, int],
+        _get_trader: Callable[[Feed], Any],
     ):
         self.config = trader_config
         self.get_trader = _get_trader
@@ -47,13 +47,13 @@ class TraderAgent:
         block_number = w3.eth.block_number
         if block_number <= self.prev_block_number:
             time.sleep(1)
-            return
+            return None
         self.prev_block_number = block_number
 
         # is new block ready yet?
         block = w3.eth.get_block(block_number, full_transactions=False)
         if not block:
-            return
+            return None
 
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
@@ -63,7 +63,7 @@ class TraderAgent:
         for addr in self.feeds:
             return self._process_block_at_feed(addr, block["timestamp"])
 
-    def _process_block_at_feed(self, addr: str, timestamp: str):
+    def _process_block_at_feed(self, addr: str, timestamp: int):
         # base data
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
         epoch = predictoor_contract.get_current_epoch()
@@ -73,7 +73,7 @@ class TraderAgent:
         too_early = epoch_s_left > self.config.s_until_epoch_end
         if too_early:
             print("      Done feed: too early to trade")
-            return
+            return None
 
         # print status
         print(
