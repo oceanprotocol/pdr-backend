@@ -51,7 +51,7 @@ class TraderAgent:
         self.prev_block_number = block_number
 
         # is new block ready yet?
-        block = w3.eth.get_block(block_number, full_transactions=False)
+        block = self.config.web3_config.get_block(block_number, full_transactions=False)
         if not block:
             return None
 
