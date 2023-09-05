@@ -61,14 +61,13 @@ class TraderAgent:
 
         # do work at new block
         for addr in self.feeds:
-            self._process_block_at_feed(addr, block["timestamp"])
+            return self._process_block_at_feed(addr, block["timestamp"])
 
     def _process_block_at_feed(self, addr: str, timestamp: str):
         # base data
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
         epoch = predictoor_contract.get_current_epoch()
         s_per_epoch = feed.seconds_per_epoch
-        s_remaining_in_epoch = epoch * s_per_epoch + s_per_epoch - timestamp
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
         too_early = epoch_s_left > self.config.s_until_epoch_end
@@ -81,7 +80,7 @@ class TraderAgent:
             f"{feed.name} at address {addr}"
             f" is at epoch {epoch}"
             f". s_per_epoch: {s_per_epoch}, "
-            f"s_remaining_in_epoch: {s_remaining_in_epoch}"
+            f"s_remaining_in_epoch: {epoch_s_left}"
         )
 
         prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
