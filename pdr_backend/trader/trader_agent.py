@@ -12,7 +12,7 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _get_trader: Optional[Callable[[Feed], Any]] = None,
+        _get_trader: Optional[Callable[[Feed, int], Any]] = None,
     ):
         self.config = trader_config
         self._get_trader = _get_trader if _get_trader else get_trader
@@ -93,10 +93,12 @@ class TraderAgent:
         return None
 
 
-def get_trader(feed: Feed, direction: int) -> Any:
+def get_trader(feed: Feed, direction: int) -> Optional[Any]:
     print(
         f" {feed.name} (contract {feed.address}) "
         f"has a new prediction: {direction}.  Let's buy or sell"
     )
     # Do your things here
     # ...
+    # return anything, as needed ...
+    return feed
