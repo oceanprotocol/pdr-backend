@@ -33,3 +33,12 @@ Other directories:
 
 The `predictoor` and `trader` agents are meant to be customized by predictoor and trader stakeholders, respectively.
 
+## Atomic READMEs
+
+The following READMEs are used as building blocks within different flows.
+- [Install pdr-backend](READMEs/install.md)
+- [Install & use Barge](READMEs/install-barge.md)
+- [Using Predictoor subgraph](READMEs/subgraph.md)
+- [Getting testnet tokens](READMEs/testnet-faucet.md) - fake ROSE & OCEAN
+- [Azure container deployment](READMEs/azure-container-deployment.md)
+- [Release process](READMEs/release-process.md)
