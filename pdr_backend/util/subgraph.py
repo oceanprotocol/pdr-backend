@@ -1,58 +1,6 @@
 """
-From this ref...
-https://github.com/oceanprotocol/ocean-subgraph/pull/678 "Predictoor support")
-... here's an example query:
-
-query {
-  predictContracts{
-    id	
-    token{
-      name
-    }
-    secondsPerEpoch
-    secondsPerSubscription
-    truevalSubmitTimeout
-    block
-    eventIndex
-    slots{
-      id
-      predictions{
-        id
-        user {
-          id
-        }
-        stake
-        payout {
-          id
-          predictedValue
-          trueValue
-          payout
-        }
-      }
-      trueValues{
-        trueValue
-        txId
-      }
-      revenue
-      revenues{
-        
-        amount
-        txId
-      }
-      
-      
-    }
-    subscriptions{
-      
-      user {
-        id
-      }
-      expireTime
-      txId
-    }
-    }
-    
- }
+- READMEs/subgraph.md describes usage of Predictoor subgraph, with an example query
+- the functions below provide other specific examples, that are used by agents of pdr-backend
 """
 
 from typing import Optional, Dict, List
@@ -327,9 +275,10 @@ def get_pending_slots(
     while True:
         query = """
         {
-            predictSlots(where: {slot_lte: %s}, skip:%s, first:%s, where: { status: "Pending" }){
+            predictSlots(where: {slot_lte: %s, status: "Pending"}, skip:%s, first:%s){
                 id
                 slot
+                status
                 trueValues {
                     id
                 }

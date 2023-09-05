@@ -123,7 +123,7 @@ class PredictoorAgent1:
 
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
-    ) -> Tuple[bool, int]:
+    ) -> Tuple[bool, float]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
@@ -134,7 +134,7 @@ class PredictoorAgent1:
 
         @return
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
-          stake -- int -- amount to stake, in units of wei
+          stake -- int -- amount to stake, in units of Eth
 
         @notes
           Below is the default implementation, giving random predictions.
@@ -142,6 +142,8 @@ class PredictoorAgent1:
         """
         # Pick random prediction & random stake. You need to customize this.
         predval = bool(random.getrandbits(1))
-        stake = random.randint(10, 1000)
+
+        # Stake amount is in ETH
+        stake = random.randint(1, 10) / 1000
 
         return (predval, stake)
