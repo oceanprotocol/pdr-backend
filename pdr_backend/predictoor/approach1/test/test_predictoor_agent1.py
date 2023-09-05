@@ -91,6 +91,7 @@ def test_predictoor_agent1(monkeypatch):
         def submit_prediction(
             self, predval: bool, stake: float, timestamp: int, wait: bool = True
         ):  # pylint: disable=unused-argument
+            assert stake < 1
             if timestamp in self._prediction_slots:
                 print(f"      (Replace prev pred at time slot {timestamp})")
             self._prediction_slots.append(timestamp)
