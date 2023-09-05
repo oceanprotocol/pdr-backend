@@ -1,58 +1,6 @@
 """
-From this ref...
-https://github.com/oceanprotocol/ocean-subgraph/pull/678 "Predictoor support")
-... here's an example query:
-
-query {
-  predictContracts{
-    id	
-    token{
-      name
-    }
-    secondsPerEpoch
-    secondsPerSubscription
-    truevalSubmitTimeout
-    block
-    eventIndex
-    slots{
-      id
-      predictions{
-        id
-        user {
-          id
-        }
-        stake
-        payout {
-          id
-          predictedValue
-          trueValue
-          payout
-        }
-      }
-      trueValues{
-        trueValue
-        txId
-      }
-      revenue
-      revenues{
-        
-        amount
-        txId
-      }
-      
-      
-    }
-    subscriptions{
-      
-      user {
-        id
-      }
-      expireTime
-      txId
-    }
-    }
-    
- }
+- READMEs/subgraph.md describes usage of Predictoor subgraph, with an example query
+- the functions below provide other specific examples, that are used by agents of pdr-backend
 """
 
 from typing import Optional, Dict, List
