@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
@@ -85,7 +85,7 @@ class TraderAgent:
 
         prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
         print(f"Got {prediction}.")
-        if prediction is not None:
+        if prediction[0] is not None and prediction[1] is not None:
             trade_result = self._get_trader(feed, prediction)
             self.prev_traded_epochs_per_feed[addr].append(epoch)
             return trade_result
@@ -93,10 +93,11 @@ class TraderAgent:
         return None
 
 
-def get_trader(feed: Feed, direction: int) -> Optional[Any]:
+def get_trader(feed: Feed, prediction: Tuple) -> Optional[Any]:
+    pred_nom, pred_denom = prediction
     print(
         f" {feed.name} (contract {feed.address}) "
-        f"has a new prediction: {direction}.  Let's buy or sell"
+        f"has a new prediction: {pred_nom} / {pred_denom}.  Let's buy or sell"
     )
     # Do your things here
     # ...

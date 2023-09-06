@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 from eth_keys import KeyAPI
@@ -193,7 +193,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def get_secondsPerEpoch(self) -> int:
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp):
+    def get_agg_predval(self, timestamp) -> Tuple[int, int]:
         """check subscription"""
         if not self.is_valid_subscription():
             print("Buying a new subscription...")
@@ -208,11 +208,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             print(f" Got {nom} and {denom}")
             if denom == 0:
                 return 0
-            return nom / denom
+            return nom, denom
         except Exception as e:
             print("Failed to call getAggPredval")
             print(e)
-            return None
+            return None, None
 
     def payout_multiple(self, slots: List[int], wait_for_receipt=True):
         """Claims the payout for given slots"""

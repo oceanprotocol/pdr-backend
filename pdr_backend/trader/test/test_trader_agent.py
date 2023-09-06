@@ -41,7 +41,7 @@ def test_take_step():
 
 
 def custom_trader(feed, prediction):
-    return 13
+    return (feed, prediction)
 
 
 def test_process_block_at_feed():
@@ -53,6 +53,7 @@ def test_process_block_at_feed():
     feed.seconds_per_epoch = 60
     predictoor_contract = Mock(spec=PredictoorContract)
     predictoor_contract.get_current_epoch.return_value = 1
+    predictoor_contract.get_agg_predval.return_value = (1, 2)
 
     trader_config.s_until_epoch_end = 10
     trader_config.get_feeds.return_value = {"0x123": feed}
@@ -69,4 +70,4 @@ def test_process_block_at_feed():
     # epoch_s_left = 19, so we should trade
     result = agent._process_block_at_feed("0x123", 1)
     assert predictoor_contract.get_agg_predval.call_count == 1
-    assert result == 13
+    assert result == (feed, (1, 2))
