@@ -193,7 +193,9 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def get_secondsPerEpoch(self) -> int:
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp) -> Union[Tuple[int, int], Tuple[None, None]]:
+    def get_agg_predval(
+        self, timestamp
+    ) -> Union[Tuple[float, float], Tuple[None, None]]:
         """check subscription"""
         if not self.is_valid_subscription():
             print("Buying a new subscription...")
