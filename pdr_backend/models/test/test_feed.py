@@ -90,9 +90,9 @@ def test_feed__construct_via_dictToFeed_empty_explicit():
         "symbol": "SYM:TEST",
         "seconds_per_epoch": "300",
         "seconds_per_subscription": "60",
+        "pair": "BTC-USDT",
         "trueval_submit_timeout": None,
         "owner": None,
-        "pair": None,
         "timeframe": None,
         "source": None,
     }
@@ -105,12 +105,12 @@ def test_feed__construct_via_dictToFeed_empty_explicit():
     assert feed.seconds_per_epoch == 300
     assert feed.seconds_per_subscription == 60
     assert feed.trueval_submit_timeout == 100
+    assert feed.pair == "BTC-USDT"
     assert feed.owner == ""
-    assert feed.pair == ""
     assert feed.timeframe == ""
     assert feed.source == ""
-    assert feed.base == ""
-    assert feed.quote == ""
+    assert feed.base == "BTC"
+    assert feed.quote == "USDT"
 
 
 @enforce_types
@@ -121,9 +121,9 @@ def test_feed__construct_via_dictToFeed_empty_implicit():
         "symbol": "SYM:TEST",
         "seconds_per_epoch": "300",
         "seconds_per_subscription": "60",
+        "pair": "BTC-USDT",
         # trueval_submit_timeout is missing
         # owner is missing
-        # pair is missing
         # timeframe is missing
         # source is missing
     }
@@ -137,8 +137,8 @@ def test_feed__construct_via_dictToFeed_empty_implicit():
     assert feed.seconds_per_subscription == 60
     assert feed.trueval_submit_timeout == 100
     assert feed.owner == ""
-    assert feed.pair == ""
+    assert feed.pair == "BTC-USDT"
     assert feed.timeframe == ""
     assert feed.source == ""
-    assert feed.base == ""
-    assert feed.quote == ""
+    assert feed.base == "BTC"
+    assert feed.quote == "USDT"

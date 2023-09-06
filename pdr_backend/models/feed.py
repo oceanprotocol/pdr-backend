@@ -33,16 +33,10 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @property
     def base(self):
-        if not self.pair:
-            return ""
-
         return self._splitpair()[0]
 
     @property
     def quote(self):
-        if not self.pair:
-            return ""
-
         return self._splitpair()[1]
 
     @enforce_types
