@@ -320,7 +320,6 @@ def get_pending_slots(
             if slot_list == []:
                 break
             for slot in slot_list:
-                timestamp = slot["slot"]
                 if slot["trueValues"] != []:
                     continue
 
