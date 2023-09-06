@@ -71,3 +71,8 @@ def test_process_block_at_feed():
     result = agent._process_block_at_feed("0x123", 1)
     assert predictoor_contract.get_agg_predval.call_count == 1
     assert result == (feed, (1, 2))
+
+    agent = TraderAgent(trader_config)  # use default trader
+    result = agent._process_block_at_feed("0x123", 1)
+    assert predictoor_contract.get_agg_predval.call_count == 2
+    assert result == feed
