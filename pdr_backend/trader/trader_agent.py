@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -70,11 +71,6 @@ class TraderAgent:
         s_per_epoch = feed.seconds_per_epoch
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
-        too_early = epoch_s_left > self.config.s_until_epoch_end
-        if too_early:
-            print("      Done feed: too early to trade")
-            return None
-
         # print status
         print(
             f"{feed.name} at address {addr}"
@@ -83,14 +79,27 @@ class TraderAgent:
             f"s_remaining_in_epoch: {epoch_s_left}"
         )
 
-        prediction = predictoor_contract.get_agg_predval(epoch * s_per_epoch)
-        print(f"Got {prediction}.")
-        if prediction[0] is not None and prediction[1] is not None:
-            trade_result = self._get_trader(feed, prediction)
-            self.prev_traded_epochs_per_feed[addr].append(epoch)
-            return trade_result
+        prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
 
-        return None
+        if epoch_s_left < int(os.getenv("TRADER_MIN_BUFFER", "60")):
+            print("      Done feed: not enough time left in epoch")
+            return None
+
+        if prediction[0] is None or prediction[1] is None:
+            print("      Done feed: no prediction yet")
+            return None
+
+        print(f"Got {prediction}.")
+        if (
+            self.prev_traded_epochs_per_feed.get(addr)
+            and epoch == self.prev_traded_epochs_per_feed[addr][-1]
+        ):
+            print("      Done feed: already traded this epoch")
+            return None
+
+        trade_result = self._get_trader(feed, prediction)
+        self.prev_traded_epochs_per_feed[addr].append(epoch)
+        return trade_result
 
 
 def get_trader(feed: Feed, prediction: Tuple) -> Optional[Any]:

@@ -61,18 +61,35 @@ def test_process_block_at_feed():
 
     agent = TraderAgent(trader_config, custom_trader)
 
-    # epoch_s_left = 60 + 60 - 10 = 110, so we should not trade
-    agent._process_block_at_feed("0x123", 1)
-    assert predictoor_contract.get_agg_predval.call_count == 0
+    # epoch_s_left = 60 + 60 - 100 = 20, so we should not trade
+    # because it's too close to the epoch end
+    agent._process_block_at_feed("0x123", 100)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
 
-    feed.seconds_per_epoch = 10
-    trader_config.s_until_epoch_end = 20
-    # epoch_s_left = 19, so we should trade
-    result = agent._process_block_at_feed("0x123", 1)
-    assert predictoor_contract.get_agg_predval.call_count == 1
+    # epoch_s_left = 60 + 60 - 20 = 10, so we should trade
+    result = agent._process_block_at_feed("0x123", 20)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert result == (feed, (1, 2))
 
-    agent = TraderAgent(trader_config)  # use default trader
-    result = agent._process_block_at_feed("0x123", 1)
-    assert predictoor_contract.get_agg_predval.call_count == 2
-    assert result == feed
+    # but not again, because we've already traded this epoch
+    agent._process_block_at_feed("0x123", 20)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+
+    # but we should trade again in the next epoch
+    predictoor_contract.get_current_epoch.return_value = 2
+    result = agent._process_block_at_feed("0x123", 20)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
+    assert result == (feed, (1, 2))
+
+    # prediction is empty, so no trading
+    predictoor_contract.get_current_epoch.return_value = 3
+    predictoor_contract.get_agg_predval.return_value = (None, None)
+    agent._process_block_at_feed("0x123", 20)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
+
+    # default trader
+    agent = TraderAgent(trader_config)
+    predictoor_contract.get_agg_predval.return_value = (1, 3)
+    result = agent._process_block_at_feed("0x123", 20)
+    assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+    assert result == (feed)
