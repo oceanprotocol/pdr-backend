@@ -33,10 +33,16 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @property
     def base(self):
+        if not self.pair:
+            return ""
+
         return self._splitpair()[0]
 
     @property
     def quote(self):
+        if not self.pair:
+            return ""
+
         return self._splitpair()[1]
 
     @enforce_types
@@ -74,10 +80,10 @@ def dictToFeed(feed_dict: Dict[str, Any]):
         symbol=d["symbol"],
         seconds_per_epoch=int(d["seconds_per_epoch"]),
         seconds_per_subscription=int(d["seconds_per_subscription"]),
-        trueval_submit_timeout=int(d.get("trueval_submit_timeout", 0)),
-        owner=d.get("owner", ""),
+        trueval_submit_timeout=int(d.get("trueval_submit_timeout", "100") or 100),
+        owner=d.get("owner", "") or "",
         pair=d.get("pair", "") or "",
-        timeframe=d["timeframe"] or "",
-        source=d["source"] or "",
+        timeframe=d.get("timeframe") or "",
+        source=d.get("source") or "",
     )
     return feed
