@@ -12,7 +12,7 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _get_trader: Optional[Callable[[Feed, int], Any]] = None,
+        _get_trader: Optional[Callable[[Feed, Tuple], Any]] = None,
     ):
         self.config = trader_config
         self._get_trader = _get_trader if _get_trader else get_trader
