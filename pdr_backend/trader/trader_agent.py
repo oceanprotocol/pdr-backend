@@ -62,7 +62,7 @@ class TraderAgent:
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
-    def _process_block_at_feed(self, addr: str, timestamp: int) -> Any:
+    def _process_block_at_feed(self, addr: str, timestamp: int):
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
 
         s_per_epoch = feed.seconds_per_epoch
@@ -96,12 +96,11 @@ class TraderAgent:
 
         print(f"Got {prediction}.")
 
-        trade_result = self._get_trader(feed, prediction)
+        self._get_trader(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
-        return trade_result
 
 
-def get_trader(feed: Feed, prediction: Tuple[float, float]) -> Any:
+def get_trader(feed: Feed, prediction: Tuple[float, float]):
     """
     @params
         feed : Feed
@@ -125,5 +124,3 @@ def get_trader(feed: Feed, prediction: Tuple[float, float]) -> Any:
     )
     # Trade here
     # ...
-
-    return None
