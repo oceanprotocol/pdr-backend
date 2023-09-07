@@ -46,6 +46,7 @@ def custom_trader(feed, prediction):
 
 def test_process_block_at_feed():
     trader_config = Mock(spec=TraderConfig)
+    trader_config.trader_min_buffer = 60
     feed = Mock(spec=Feed)
     feed.name = "test feed"
     feed.address = "0x123"
