@@ -80,7 +80,7 @@ class TraderAgent:
         )
 
 
-        if epoch_s_left < int(os.getenv("TRADER_MIN_BUFFER", "60")):
+        if epoch_s_left < self.config.trader_min_buffer:
             print("      Done feed: not enough time left in epoch")
             return None
 
