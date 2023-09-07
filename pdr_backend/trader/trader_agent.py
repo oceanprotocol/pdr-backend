@@ -47,13 +47,13 @@ class TraderAgent:
         block_number = w3.eth.block_number
         if block_number <= self.prev_block_number:
             time.sleep(1)
-            return None
+            return
         self.prev_block_number = block_number
 
         # is new block ready yet?
         block = self.config.web3_config.get_block(block_number, full_transactions=False)
         if not block:
-            return None
+            return
 
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
