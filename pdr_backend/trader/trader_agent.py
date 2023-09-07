@@ -79,7 +79,6 @@ class TraderAgent:
             f"s_remaining_in_epoch: {epoch_s_left}"
         )
 
-
         if epoch_s_left < self.config.trader_min_buffer:
             print("      Done feed: not enough time left in epoch")
             return None
