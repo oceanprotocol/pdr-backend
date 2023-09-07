@@ -7,6 +7,20 @@ from enforce_typing import enforce_types
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_config import TraderConfig
 
+MAX_TRIES = 5
+
+
+def timer_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"{func.__name__} took {elapsed_time:.2f} seconds to run.")
+        return result
+
+    return wrapper
+
 
 class TraderAgent:
     def __init__(
@@ -62,7 +76,8 @@ class TraderAgent:
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
-    def _process_block_at_feed(self, addr: str, timestamp: int):
+    @timer_decorator
+    def _process_block_at_feed(self, addr: str, timestamp: int, tries: int = 0):
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
 
         s_per_epoch = feed.seconds_per_epoch
@@ -91,7 +106,12 @@ class TraderAgent:
         try:
             prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
         except Exception as e:
-            print("      Done feed: aggpredval not available:", e)
+            if tries < MAX_TRIES:
+                print("     Could not get aggpredval, trying again in a second")
+                time.sleep(1)
+                self._process_block_at_feed(addr, timestamp, tries + 1)
+                return
+            print("      Done feed: aggpredval not available, an error occured:", e)
             return
 
         print(f"Got {prediction}.")
