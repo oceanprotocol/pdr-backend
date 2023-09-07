@@ -17,17 +17,17 @@ class TestCache:
         assert cache_path.exists()
 
     def test_save_load(self):
-        self.cache.save(TEST_KEY, TEST_VALUE)
-        loaded_value = self.cache.load(TEST_KEY)
+        self.cache_instance.save(TEST_KEY, TEST_VALUE)
+        loaded_value = self.cache_instance.load(TEST_KEY)
         assert loaded_value == TEST_VALUE
 
     def test_load_nonexistent(self):
-        result = self.cache.load("nonexistent_key")
+        result = self.cache_instance.load("nonexistent_key")
         assert result is None
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
-        self.cache = Cache(cache_dir=TEST_CACHE_DIR)
+        self.cache_instance = Cache(cache_dir=TEST_CACHE_DIR)
         yield
         cache_dir_path = (
             Path(os.path.dirname(os.path.abspath(__file__))).parent / TEST_CACHE_DIR
