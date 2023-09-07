@@ -107,3 +107,37 @@ def test_process_block_at_feed():
     predictoor_contract.get_agg_predval.side_effect = None
     agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+
+
+def test_save_and_load_cache():
+    trader_config = Mock(spec=TraderConfig)
+    trader_config.trader_min_buffer = 20
+    feed = Mock(spec=Feed)
+    feed.name = "test feed"
+    feed.seconds_per_epoch = 60
+    predictoor_contract = Mock(spec=PredictoorContract)
+    predictoor_contract.get_agg_predval.return_value = (1, 2)
+
+    trader_config.get_feeds.return_value = {"0x1": feed, "0x2": feed, "0x3": feed}
+    trader_config.get_contracts.return_value = {
+        "0x1": predictoor_contract,
+        "0x2": predictoor_contract,
+        "0x3": predictoor_contract,
+    }
+
+    agent = TraderAgent(trader_config, custom_trader, cache_dir=".test_cache")
+
+    agent.prev_traded_epochs_per_feed = {
+        "0x1": [1, 2, 3],
+        "0x2": [4, 5, 6],
+        "0x3": [1, 24, 66],
+    }
+
+    print(agent.prev_traded_epochs_per_feed)
+    agent.save_previous_epochs()
+
+    agent_new = TraderAgent(trader_config, custom_trader, cache_dir=".test_cache")
+    print(agent_new.prev_traded_epochs_per_feed)
+    assert agent_new.prev_traded_epochs_per_feed["0x1"] == [3]
+    assert agent_new.prev_traded_epochs_per_feed["0x2"] == [6]
+    assert agent_new.prev_traded_epochs_per_feed["0x3"] == [66]
