@@ -82,17 +82,17 @@ class TraderAgent:
             and epoch == self.prev_traded_epochs_per_feed[addr][-1]
         ):
             print("      Done feed: already traded this epoch")
-            return None
+            return
 
         if epoch_s_left < self.config.trader_min_buffer:
             print("      Done feed: not enough time left in epoch")
-            return None
+            return
 
         try:
             prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
         except Exception as e:
             print("      Done feed: aggpredval not available:", e)
-            return None
+            return
 
         print(f"Got {prediction}.")
 
