@@ -12,6 +12,7 @@ from pdr_backend.util.cache import Cache
 MAX_TRIES = 5
 
 
+# pylint: disable=too-many-instance-attributes
 class TraderAgent:
     def __init__(
         self,
