@@ -10,18 +10,6 @@ from pdr_backend.trader.trader_config import TraderConfig
 MAX_TRIES = 5
 
 
-def timer_decorator(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"{func.__name__} took {elapsed_time:.2f} seconds to run.")
-        return result
-
-    return wrapper
-
-
 class TraderAgent:
     def __init__(
         self,
@@ -76,7 +64,6 @@ class TraderAgent:
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
-    @timer_decorator
     def _process_block_at_feed(self, addr: str, timestamp: int, tries: int = 0):
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
 
