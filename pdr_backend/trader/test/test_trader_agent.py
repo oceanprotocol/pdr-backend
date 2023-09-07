@@ -8,8 +8,12 @@ from pdr_backend.trader.trader_agent import TraderAgent, get_trader
 from pdr_backend.trader.trader_config import TraderConfig
 
 
-def test_new_agent():
+def test_new_agent(predictoor_contract):
     trader_config = TraderConfig()
+    trader_config.get_feeds = Mock()
+    trader_config.get_feeds.return_value = {"0x0000000000000000000000000000000000000000":""}
+    trader_config.get_contracts = Mock()
+    trader_config.get_contracts.return_value = {"0x0000000000000000000000000000000000000000":predictoor_contract}
     agent = TraderAgent(trader_config, get_trader)
     assert agent.config == trader_config
 
@@ -21,7 +25,8 @@ def test_new_agent():
 
 
 def test_run():
-    trader_config = TraderConfig()
+    trader_config = Mock(spec=TraderConfig)
+    trader_config.get_feeds.return_value = {"0x0000000000000000000000000000000000000000":""}
     agent = TraderAgent(trader_config, get_trader)
 
     with patch.object(agent, "take_step") as ts_mock:
@@ -30,8 +35,10 @@ def test_run():
     ts_mock.assert_called_once()
 
 
-def test_take_step():
-    trader_config = TraderConfig()
+def test_take_step(web3_config):
+    trader_config = Mock(spec=TraderConfig)
+    trader_config.get_feeds.return_value = {"0x0000000000000000000000000000000000000000":""}
+    trader_config.web3_config = web3_config
     agent = TraderAgent(trader_config, get_trader)
 
     with patch.object(agent, "_process_block_at_feed") as ts_mock:
@@ -83,13 +90,14 @@ def test_process_block_at_feed():
 
     # prediction is empty, so no trading
     predictoor_contract.get_current_epoch.return_value = 3
-    predictoor_contract.get_agg_predval.return_value = (None, None)
+    predictoor_contract.get_agg_predval.side_effect = Exception("An error occurred while getting agg_predval.")
     agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
 
     # default trader
     agent = TraderAgent(trader_config)
     predictoor_contract.get_agg_predval.return_value = (1, 3)
+    predictoor_contract.get_agg_predval.side_effect = None
     result = agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert result == (feed)
