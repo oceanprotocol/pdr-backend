@@ -79,14 +79,15 @@ class TraderAgent:
             f"s_remaining_in_epoch: {epoch_s_left}"
         )
 
-        prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
 
         if epoch_s_left < int(os.getenv("TRADER_MIN_BUFFER", "60")):
             print("      Done feed: not enough time left in epoch")
             return None
 
-        if prediction[0] is None or prediction[1] is None:
-            print("      Done feed: no prediction yet")
+        try:
+            prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
+        except Exception as e:
+            print("      Done feed: aggpredval not available:", e)
             return None
 
         print(f"Got {prediction}.")

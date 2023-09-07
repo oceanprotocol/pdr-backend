@@ -195,26 +195,22 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def get_agg_predval(
         self, timestamp
-    ) -> Union[Tuple[float, float], Tuple[None, None]]:
+    ) -> Tuple[float, float]:
         """check subscription"""
         if not self.is_valid_subscription():
             print("Buying a new subscription...")
             self.buy_and_start_subscription(None, True)
             time.sleep(1)
-        try:
-            print("Reading contract values...")
-            auth = self.get_auth_signature()
-            (nom, denom) = self.contract_instance.functions.getAggPredval(
-                timestamp, auth
-            ).call({"from": self.config.owner})
-            print(f" Got {nom} and {denom}")
-            if denom == 0:
-                return 0, 0
-            return nom, denom
-        except Exception as e:
-            print("Failed to call getAggPredval")
-            print(e)
-            return None, None
+
+        print("Reading contract values...")
+        auth = self.get_auth_signature()
+        (nom, denom) = self.contract_instance.functions.getAggPredval(
+            timestamp, auth
+        ).call({"from": self.config.owner})
+        print(f" Got {nom} and {denom}")
+        if denom == 0:
+            return 0, 0
+        return nom, denom
 
     def payout_multiple(self, slots: List[int], wait_for_receipt=True):
         """Claims the payout for given slots"""
