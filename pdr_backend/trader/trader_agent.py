@@ -6,15 +6,19 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_config import TraderConfig
+from pdr_backend.util.cache import Cache
+
 
 MAX_TRIES = 5
 
 
+# pylint: disable=too-many-instance-attributes
 class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
         _get_trader: Optional[Callable[[Feed, Tuple], Any]] = None,
+        cache_dir=".cache",
     ):
         self.config = trader_config
         self._get_trader = _get_trader if _get_trader else get_trader
@@ -34,6 +38,23 @@ class TraderAgent:
         self.prev_traded_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
+
+        self.cache = Cache(cache_dir=cache_dir)
+        self.load_cached_epochs()
+
+    def save_previous_epochs(self):
+        for feed, epochs in self.prev_traded_epochs_per_feed.items():
+            if epochs:
+                last_epoch = epochs[-1]
+                print("Saving", last_epoch, feed)
+                self.cache.save(f"trader_last_trade_{feed}", last_epoch)
+
+    def load_cached_epochs(self):
+        for feed in self.feeds:
+            print("Getting feed for", feed)
+            last_epoch = self.cache.load(f"trader_last_trade_{feed}")
+            if last_epoch is not None:
+                self.prev_traded_epochs_per_feed[feed].append(last_epoch)
 
     @enforce_types
     def run(self, testing: bool = False):
@@ -105,6 +126,7 @@ class TraderAgent:
 
         self._get_trader(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
+        self.save_previous_epochs()
 
 
 def get_trader(feed: Feed, prediction: Tuple[float, float]):
