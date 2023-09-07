@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 from eth_keys import KeyAPI
@@ -193,26 +193,22 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def get_secondsPerEpoch(self) -> int:
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp):
+    def get_agg_predval(self, timestamp) -> Tuple[float, float]:
         """check subscription"""
         if not self.is_valid_subscription():
             print("Buying a new subscription...")
             self.buy_and_start_subscription(None, True)
             time.sleep(1)
-        try:
-            print("Reading contract values...")
-            auth = self.get_auth_signature()
-            (nom, denom) = self.contract_instance.functions.getAggPredval(
-                timestamp, auth
-            ).call({"from": self.config.owner})
-            print(f" Got {nom} and {denom}")
-            if denom == 0:
-                return 0
-            return nom / denom
-        except Exception as e:
-            print("Failed to call getAggPredval")
-            print(e)
-            return None
+
+        print("Reading contract values...")
+        auth = self.get_auth_signature()
+        (nom_wei, denom_wei) = self.contract_instance.functions.getAggPredval(
+            timestamp, auth
+        ).call({"from": self.config.owner})
+        nom = float(self.config.w3.from_wei(nom_wei, "ether"))
+        denom = float(self.config.w3.from_wei(denom_wei, "ether"))
+        print(f" Got {nom} and {denom}")
+        return nom, denom
 
     def payout_multiple(self, slots: List[int], wait_for_receipt=True):
         """Claims the payout for given slots"""
