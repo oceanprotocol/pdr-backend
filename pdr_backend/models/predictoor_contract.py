@@ -202,9 +202,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
         print("Reading contract values...")
         auth = self.get_auth_signature()
-        (nom, denom) = self.contract_instance.functions.getAggPredval(
+        (nom_wei, denom_wei) = self.contract_instance.functions.getAggPredval(
             timestamp, auth
         ).call({"from": self.config.owner})
+        nom = self.config.w3.from_wei(nom_wei, "ether")
+        denom = self.config.w3.from_wei(denom_wei, "ether")
         print(f" Got {nom} and {denom}")
         if denom == 0:
             return 0, 0
