@@ -27,6 +27,7 @@ class TestCache:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
+        # pylint: disable=attribute-defined-outside-init
         self.cache_instance = Cache(cache_dir=TEST_CACHE_DIR)
         yield
         cache_dir_path = (
