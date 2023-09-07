@@ -63,10 +63,10 @@ class TraderAgent:
             self._process_block_at_feed(addr, block["timestamp"])
 
     def _process_block_at_feed(self, addr: str, timestamp: int) -> Any:
-        # base data
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
-        epoch = predictoor_contract.get_current_epoch()
+
         s_per_epoch = feed.seconds_per_epoch
+        epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
