@@ -11,8 +11,6 @@ def test_trader_config(monkeypatch):
 
     config = TraderConfig()
 
-    assert config.s_until_epoch_end == 60
-
     # values handled by BaseConfig
     assert config.rpc_url == os.getenv("RPC_URL")
     assert config.subgraph_url == os.getenv("SUBGRAPH_URL")

@@ -56,7 +56,6 @@ def test_process_block_at_feed():
     predictoor_contract.get_current_epoch.return_value = 1
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
-    trader_config.s_until_epoch_end = 10
     trader_config.get_feeds.return_value = {"0x123": feed}
     trader_config.get_contracts.return_value = {"0x123": predictoor_contract}
 
