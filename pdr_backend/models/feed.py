@@ -74,10 +74,10 @@ def dictToFeed(feed_dict: Dict[str, Any]):
         symbol=d["symbol"],
         seconds_per_epoch=int(d["seconds_per_epoch"]),
         seconds_per_subscription=int(d["seconds_per_subscription"]),
-        trueval_submit_timeout=int(d.get("trueval_submit_timeout", "100") or 100),
-        owner=d.get("owner", "") or "",
-        pair=d.get("pair", "") or "",
-        timeframe=d.get("timeframe") or "",
-        source=d.get("source") or "",
+        trueval_submit_timeout=int(d["trueval_submit_timeout"]),
+        owner=d["owner"],
+        pair=d["pair"],
+        timeframe=d["timeframe"],
+        source=d["source"],
     )
     return feed
