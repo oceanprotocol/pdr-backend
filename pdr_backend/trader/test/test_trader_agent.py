@@ -133,11 +133,9 @@ def test_save_and_load_cache():
         "0x3": [1, 24, 66],
     }
 
-    print(agent.prev_traded_epochs_per_feed)
     agent.save_previous_epochs()
 
     agent_new = TraderAgent(trader_config, custom_trader, cache_dir=".test_cache")
-    print(agent_new.prev_traded_epochs_per_feed)
     assert agent_new.prev_traded_epochs_per_feed["0x1"] == [3]
     assert agent_new.prev_traded_epochs_per_feed["0x2"] == [6]
     assert agent_new.prev_traded_epochs_per_feed["0x3"] == [66]
