@@ -208,8 +208,6 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         nom = float(self.config.w3.from_wei(nom_wei, "ether"))
         denom = float(self.config.w3.from_wei(denom_wei, "ether"))
         print(f" Got {nom} and {denom}")
-        if denom == 0:
-            return 0, 0
         return nom, denom
 
     def payout_multiple(self, slots: List[int], wait_for_receipt=True):
