@@ -57,11 +57,10 @@ class TraderAgent:
 
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
-        print(f"Got new block, with number {block_number} ")
 
         # do work at new block
         for addr in self.feeds:
-            return self._process_block_at_feed(addr, block["timestamp"])
+            self._process_block_at_feed(addr, block["timestamp"])
 
     def _process_block_at_feed(self, addr: str, timestamp: int) -> Any:
         # base data
@@ -78,6 +77,13 @@ class TraderAgent:
             f"s_remaining_in_epoch: {epoch_s_left}"
         )
 
+        if (
+            self.prev_traded_epochs_per_feed.get(addr)
+            and epoch == self.prev_traded_epochs_per_feed[addr][-1]
+        ):
+            print("      Done feed: already traded this epoch")
+            return None
+
         if epoch_s_left < self.config.trader_min_buffer:
             print("      Done feed: not enough time left in epoch")
             return None
@@ -89,25 +95,35 @@ class TraderAgent:
             return None
 
         print(f"Got {prediction}.")
-        if (
-            self.prev_traded_epochs_per_feed.get(addr)
-            and epoch == self.prev_traded_epochs_per_feed[addr][-1]
-        ):
-            print("      Done feed: already traded this epoch")
-            return None
 
         trade_result = self._get_trader(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
         return trade_result
 
 
-def get_trader(feed: Feed, prediction: Tuple) -> Optional[Any]:
+def get_trader(feed: Feed, prediction: Tuple[float, float]) -> Any:
+    """
+    @params
+        feed : Feed
+            An instance of the Feed object.
+
+        prediction : Tuple[float, float]
+            A tuple containing two float values, the unit is ETH:
+            - prediction[0]: Amount staked for the price going up.
+            - prediction[1]: Total stake amount.
+    @note
+        The probability of the price going up is determined by dividing
+    prediction[0] by prediction[1]. The magnitude of stake amounts indicates
+    the confidence of the prediction. Ensure stake amounts
+    are sufficiently large to be considered meaningful.
+
+    """
     pred_nom, pred_denom = prediction
     print(
         f" {feed.name} (contract {feed.address}) "
         f"has a new prediction: {pred_nom} / {pred_denom}.  Let's buy or sell"
     )
-    # Do your things here
+    # Trade here
     # ...
-    # return anything, as needed ...
-    return feed
+
+    return None
