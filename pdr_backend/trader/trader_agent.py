@@ -42,6 +42,10 @@ class TraderAgent:
         self.cache = Cache(cache_dir=cache_dir)
         self.load_cached_epochs()
 
+        print("\n" + "-" * 80)
+        print("Config:")
+        print(self.trader_config)
+
     def save_previous_epochs(self):
         for feed, epochs in self.prev_traded_epochs_per_feed.items():
             if epochs:
@@ -87,24 +91,25 @@ class TraderAgent:
 
     def _process_block_at_feed(self, addr: str, timestamp: int, tries: int = 0):
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
-
+        print(
+            "-" * 80
+            "Processing feed:"
+            f"  {feed.longstr()}"
+            f"  is at epoch {epoch}"
+            f"  seconds remaining in epoch: {epoch_s_left}"
+        )
         s_per_epoch = feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
         # print status
-        print(
-            f"{feed.name} at address {addr}"
-            f" is at epoch {epoch}"
-            f". s_per_epoch: {s_per_epoch}, "
-            f"s_remaining_in_epoch: {epoch_s_left}"
-        )
+ 
 
         if (
             self.prev_traded_epochs_per_feed.get(addr)
             and epoch == self.prev_traded_epochs_per_feed[addr][-1]
         ):
-            print("      Done feed: already traded this epoch")
+            print("xDone feed: already traded this epoch")
             return
 
         if epoch_s_left < self.config.trader_min_buffer:
