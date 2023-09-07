@@ -18,20 +18,6 @@ Follow the instructions from [install pdr-backend](./install.md)
 
 Set the following environment variables:
 
-- PRIVATE_KEY: Set it to the private key of the wallet you're going to use.
-- PAIR_FILTER: List of pairs to filter (separated by comma), if empty the app will fetch all available pairs.
-- TIMEFRAME_FILTER: Timeframes to filter (separated by comma), if empty the app will fetch all available timeframes.
-- SOURCE_FILTER: Price sources filter (separated by comma), if empty the app will fetch all available sources.
-- RPC_URL: The RPC URL of the network.
-- SUBGRAPH_URL: The Ocean subgraph url.
-
-For predictoor agent, you also need to set the `STAKE_TOKEN`:
-
-- STAKE_TOKEN: List of Token contract addresses to be used to stake, if empty the app will try to stake with any token.
-
-
-Set the following environment variables:
-
 ```
 export PRIVATE_KEY=PK_HERE
 export PAIR_FILTER=BTC/TUSD
