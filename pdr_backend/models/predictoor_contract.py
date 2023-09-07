@@ -1,5 +1,5 @@
 import time
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 from eth_keys import KeyAPI
