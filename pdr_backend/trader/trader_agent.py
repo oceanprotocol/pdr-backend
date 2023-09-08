@@ -9,7 +9,6 @@ from pdr_backend.trader.trader_config import TraderConfig
 from pdr_backend.util.cache import Cache
 
 
-
 # pylint: disable=too-many-instance-attributes
 class TraderAgent:
     def __init__(
