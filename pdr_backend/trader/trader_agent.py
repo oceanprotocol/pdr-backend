@@ -94,6 +94,14 @@ class TraderAgent:
         time.sleep(sleep_time)
 
     def _process_block_at_feed(self, addr: str, timestamp: int, tries: int = 0) -> int:
+        """
+        @param:
+            addr - contract address of the feed
+            timestamp - timestamp/epoch to process
+            [tries] - number of attempts made in case of an error, 0 by default
+        @return:
+            epoch_s_left - number of seconds left till the epoch end
+        """
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
 
         s_per_epoch = feed.seconds_per_epoch
