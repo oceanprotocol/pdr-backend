@@ -46,7 +46,6 @@ def test_run():
     trader_config.max_tries = 10
     agent = TraderAgent(trader_config, do_trade)
 
-
     with patch.object(agent, "take_step") as ts_mock:
         agent.run(True)
 
