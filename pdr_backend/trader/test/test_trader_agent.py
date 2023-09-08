@@ -10,11 +10,18 @@ from pdr_backend.trader.trader_agent import TraderAgent, do_trade
 from pdr_backend.trader.trader_config import TraderConfig
 
 
+def mock_feed():
+    feed = Mock(spec=Feed)
+    feed.name = "test feed"
+    feed.seconds_per_epoch = 60
+    return feed
+
+
 def test_new_agent(predictoor_contract):
     trader_config = TraderConfig()
     trader_config.get_feeds = Mock()
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.get_contracts = Mock()
     trader_config.get_contracts.return_value = {
@@ -33,7 +40,7 @@ def test_new_agent(predictoor_contract):
 def test_run():
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     agent = TraderAgent(trader_config, do_trade)
 
@@ -46,7 +53,7 @@ def test_run():
 def test_take_step(web3_config):
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.web3_config = web3_config
     agent = TraderAgent(trader_config, do_trade)
@@ -64,11 +71,7 @@ def custom_trader(feed, prediction):
 def test_process_block_at_feed():
     trader_config = Mock(spec=TraderConfig)
     trader_config.trader_min_buffer = 20
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.address = "0x123"
-
-    feed.seconds_per_epoch = 60
+    feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
@@ -124,9 +127,7 @@ def test_process_block_at_feed():
 def test_save_and_load_cache():
     trader_config = Mock(spec=TraderConfig)
     trader_config.trader_min_buffer = 20
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.seconds_per_epoch = 60
+    feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
