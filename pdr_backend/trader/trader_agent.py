@@ -149,7 +149,7 @@ def do_trade(feed: Feed, prediction: Tuple[float, float]):
     """
     @description
         This function is called each time there's a new prediction available.
-        By default, it prints the signal. 
+        By default, it prints the signal.
         The user should implement their trading algorithm here.
     @params
         feed : Feed
