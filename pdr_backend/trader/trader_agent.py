@@ -44,13 +44,12 @@ class TraderAgent:
 
         print("\n" + "-" * 80)
         print("Config:")
-        print(self.trader_config)
+        print(self.config)
 
     def save_previous_epochs(self):
         for feed, epochs in self.prev_traded_epochs_per_feed.items():
             if epochs:
                 last_epoch = epochs[-1]
-                print("Saving", last_epoch, feed)
                 self.cache.save(f"trader_last_trade_{feed}", last_epoch)
 
     def load_cached_epochs(self):
@@ -91,25 +90,21 @@ class TraderAgent:
 
     def _process_block_at_feed(self, addr: str, timestamp: int, tries: int = 0):
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
-        print(
-            "-" * 80
-            "Processing feed:"
-            f"  {feed.longstr()}"
-            f"  is at epoch {epoch}"
-            f"  seconds remaining in epoch: {epoch_s_left}"
-        )
         s_per_epoch = feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
-
-        # print status
- 
+        print(
+            "-" * 40,
+            f"  Processing {feed} ",
+            "-" * 40,
+            f"\nEpoch {epoch}" f"\nSeconds remaining in epoch: {epoch_s_left}",
+        )  # print status
 
         if (
             self.prev_traded_epochs_per_feed.get(addr)
             and epoch == self.prev_traded_epochs_per_feed[addr][-1]
         ):
-            print("xDone feed: already traded this epoch")
+            print("      Done feed: already traded this epoch")
             return
 
         if epoch_s_left < self.config.trader_min_buffer:
@@ -120,14 +115,12 @@ class TraderAgent:
             prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
         except Exception as e:
             if tries < MAX_TRIES:
-                print("     Could not get aggpredval, trying again in a second")
+                print("      Could not get aggpredval, trying again in a second")
                 time.sleep(1)
                 self._process_block_at_feed(addr, timestamp, tries + 1)
                 return
             print("      Done feed: aggpredval not available, an error occured:", e)
             return
-
-        print(f"Got {prediction}.")
 
         self._get_trader(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
@@ -152,9 +145,6 @@ def get_trader(feed: Feed, prediction: Tuple[float, float]):
 
     """
     pred_nom, pred_denom = prediction
-    print(
-        f" {feed.name} (contract {feed.address}) "
-        f"has a new prediction: {pred_nom} / {pred_denom}.  Let's buy or sell"
-    )
+    print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
     # Trade here
     # ...
