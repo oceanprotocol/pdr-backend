@@ -9,9 +9,6 @@ from pdr_backend.trader.trader_config import TraderConfig
 from pdr_backend.util.cache import Cache
 
 
-MAX_TRIES = 10
-
-
 # pylint: disable=too-many-instance-attributes
 class TraderAgent:
     def __init__(
@@ -140,7 +137,7 @@ class TraderAgent:
         try:
             prediction = predictoor_contract.get_agg_predval((epoch + 1) * s_per_epoch)
         except Exception as e:
-            if tries < MAX_TRIES:
+            if tries < self.config.max_tries:
                 print("      Could not get aggpredval, trying again in a second")
                 time.sleep(1)
                 return self._process_block_at_feed(addr, timestamp, tries + 1)
