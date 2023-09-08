@@ -32,6 +32,7 @@ def test_new_agent(predictoor_contract):
 
     no_feeds_config = Mock(spec=TraderConfig)
     no_feeds_config.get_feeds.return_value = {}
+    no_feeds_config.max_tries = 10
 
     with pytest.raises(SystemExit):
         TraderAgent(no_feeds_config, do_trade)
@@ -42,6 +43,7 @@ def test_run():
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
+    trader_config.max_tries = 10
     agent = TraderAgent(trader_config, do_trade)
 
     with patch.object(agent, "take_step") as ts_mock:
@@ -55,6 +57,7 @@ def test_take_step(web3_config):
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
+    trader_config.max_tries = 10
     trader_config.web3_config = web3_config
     agent = TraderAgent(trader_config, do_trade)
 
@@ -70,6 +73,7 @@ def custom_trader(feed, prediction):
 
 def test_process_block_at_feed():
     trader_config = Mock(spec=TraderConfig)
+    trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
     feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
@@ -126,6 +130,7 @@ def test_process_block_at_feed():
 
 def test_save_and_load_cache():
     trader_config = Mock(spec=TraderConfig)
+    trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
     feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
