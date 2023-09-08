@@ -6,21 +6,28 @@ import pytest
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.trader_agent import TraderAgent, get_trader
+from pdr_backend.trader.trader_agent import TraderAgent, do_trade
 from pdr_backend.trader.trader_config import TraderConfig
+
+
+def mock_feed():
+    feed = Mock(spec=Feed)
+    feed.name = "test feed"
+    feed.seconds_per_epoch = 60
+    return feed
 
 
 def test_new_agent(predictoor_contract):
     trader_config = TraderConfig()
     trader_config.get_feeds = Mock()
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.get_contracts = Mock()
     trader_config.get_contracts.return_value = {
         "0x0000000000000000000000000000000000000000": predictoor_contract
     }
-    agent = TraderAgent(trader_config, get_trader)
+    agent = TraderAgent(trader_config, do_trade)
     assert agent.config == trader_config
 
     no_feeds_config = Mock(spec=TraderConfig)
@@ -28,16 +35,17 @@ def test_new_agent(predictoor_contract):
     no_feeds_config.max_tries = 10
 
     with pytest.raises(SystemExit):
-        TraderAgent(no_feeds_config, get_trader)
+        TraderAgent(no_feeds_config, do_trade)
 
 
 def test_run():
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.max_tries = 10
-    agent = TraderAgent(trader_config, get_trader)
+    agent = TraderAgent(trader_config, do_trade)
+
 
     with patch.object(agent, "take_step") as ts_mock:
         agent.run(True)
@@ -48,11 +56,11 @@ def test_run():
 def test_take_step(web3_config):
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": ""
+        "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.max_tries = 10
     trader_config.web3_config = web3_config
-    agent = TraderAgent(trader_config, get_trader)
+    agent = TraderAgent(trader_config, do_trade)
 
     with patch.object(agent, "_process_block_at_feed") as ts_mock:
         agent.take_step()
@@ -68,11 +76,7 @@ def test_process_block_at_feed():
     trader_config = Mock(spec=TraderConfig)
     trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.address = "0x123"
-
-    feed.seconds_per_epoch = 60
+    feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
@@ -129,9 +133,7 @@ def test_save_and_load_cache():
     trader_config = Mock(spec=TraderConfig)
     trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.seconds_per_epoch = 60
+    feed = mock_feed()
     predictoor_contract = Mock(spec=PredictoorContract)
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
