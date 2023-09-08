@@ -10,4 +10,5 @@ class TraderConfig(BaseConfig):
     def __init__(self):
         super().__init__()
 
-        self.trader_min_buffer = int(getenv("TRADER_MIN_BUFFER", "60 "))
+        self.trader_min_buffer = int(getenv("TRADER_MIN_BUFFER", "60"))
+        self.max_tries = int(getenv("TRADER_MAX_TRIES", "10"))
