@@ -17,11 +17,11 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _get_trader: Optional[Callable[[Feed, Tuple], Any]] = None,
+        _do_trade: Optional[Callable[[Feed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
         self.config = trader_config
-        self._get_trader = _get_trader if _get_trader else get_trader
+        self._do_trade = _do_trade if _do_trade else do_trade
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
 
@@ -147,14 +147,18 @@ class TraderAgent:
             print("      Done feed: aggpredval not available, an error occured:", e)
             return epoch_s_left
 
-        self._get_trader(feed, prediction)
+        self._do_trade(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
         self.save_previous_epochs()
         return epoch_s_left
 
 
-def get_trader(feed: Feed, prediction: Tuple[float, float]):
+def do_trade(feed: Feed, prediction: Tuple[float, float]):
     """
+    @description
+        This function is called each time there's a new prediction available.
+        By default, it prints the signal.
+        The user should implement their trading algorithm here.
     @params
         feed : Feed
             An instance of the Feed object.
@@ -165,10 +169,9 @@ def get_trader(feed: Feed, prediction: Tuple[float, float]):
             - prediction[1]: Total stake amount.
     @note
         The probability of the price going up is determined by dividing
-    prediction[0] by prediction[1]. The magnitude of stake amounts indicates
-    the confidence of the prediction. Ensure stake amounts
-    are sufficiently large to be considered meaningful.
-
+        prediction[0] by prediction[1]. The magnitude of stake amounts indicates
+        the confidence of the prediction. Ensure stake amounts
+        are sufficiently large to be considered meaningful.
     """
     pred_nom, pred_denom = prediction
     print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
