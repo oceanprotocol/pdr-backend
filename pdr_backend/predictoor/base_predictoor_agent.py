@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
 import sys
 import time
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
@@ -9,7 +10,7 @@ from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 
 
 @enforce_types
-class BasePredictoorAgent:
+class BasePredictoorAgent(ABC):
 
     """
     What it does
@@ -119,3 +120,9 @@ class BasePredictoorAgent:
         print("      " + "=" * 80)
         print("      Done feed: success.")
         return (predval, stake, True)
+
+    @abstractmethod
+    def get_prediction(
+        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+    ) -> Tuple[bool, float]:
+        pass

@@ -24,6 +24,7 @@ to predict in every block during the last 60 seconds before the epoch
 concludes.
 """
 
+from abc import ABC
 from os import getenv
 
 from enforce_typing import enforce_types
@@ -32,7 +33,7 @@ from pdr_backend.models.base_config import BaseConfig
 
 
 @enforce_types
-class BasePredictoorConfig(BaseConfig):
+class BasePredictoorConfig(BaseConfig, ABC):
     def __init__(self):
         super().__init__()
         self.s_until_epoch_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
