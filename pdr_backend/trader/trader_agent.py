@@ -46,6 +46,16 @@ class TraderAgent:
         print("Config:")
         print(self.config)
 
+        print("\n" + "." * 80)
+        print("Feeds (detailed):")
+        for feed in self.feeds.values():
+            print(f"  {feed.longstr()}")
+
+        print("\n" + "." * 80)
+        print("Feeds (succinct):")
+        for addr, feed in self.feeds.items():
+            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
+
     def save_previous_epochs(self):
         for feed, epochs in self.prev_traded_epochs_per_feed.items():
             if epochs:
