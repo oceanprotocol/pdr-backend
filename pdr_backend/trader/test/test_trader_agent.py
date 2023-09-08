@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -74,39 +76,49 @@ def test_process_block_at_feed():
     trader_config.get_contracts.return_value = {"0x123": predictoor_contract}
 
     agent = TraderAgent(trader_config, custom_trader)
+    agent.prev_traded_epochs_per_feed.clear()
+    agent.prev_traded_epochs_per_feed["0x123"] = []
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    agent._process_block_at_feed("0x123", 55)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 55)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
+    assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should not trade
-    agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+    assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+    assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     predictoor_contract.get_current_epoch.return_value = 2
-    agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 140)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
+    assert s_till_epoch_end == 40
 
     # prediction is empty, so no trading
     predictoor_contract.get_current_epoch.return_value = 3
     predictoor_contract.get_agg_predval.side_effect = Exception(
         "An error occurred while getting agg_predval."
     )
-    agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
+    assert s_till_epoch_end == 40
 
     # default trader
     agent = TraderAgent(trader_config)
+    agent.prev_traded_epochs_per_feed.clear()
+    agent.prev_traded_epochs_per_feed["0x123"] = []
     predictoor_contract.get_agg_predval.return_value = (1, 3)
     predictoor_contract.get_agg_predval.side_effect = None
-    agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end = agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
+    assert s_till_epoch_end == 40
 
 
 def test_save_and_load_cache():
@@ -139,3 +151,10 @@ def test_save_and_load_cache():
     assert agent_new.prev_traded_epochs_per_feed["0x1"] == [3]
     assert agent_new.prev_traded_epochs_per_feed["0x2"] == [6]
     assert agent_new.prev_traded_epochs_per_feed["0x3"] == [66]
+    cache_dir_path = (
+        Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
+        / "util/.test_cache"
+    )
+    for item in cache_dir_path.iterdir():
+        item.unlink()
+    cache_dir_path.rmdir()
