@@ -39,6 +39,6 @@ class Web3Config:
         except Exception as e:
             print(f"An error occured while getting block, error: {e}")
             if tries < WEB3_MAX_TRIES:
-                print("Tryin again...")
+                print("Trying again...")
                 return self.get_block(block, full_transactions, tries + 1)
             raise Exception("Couldn't get block") from e
