@@ -17,11 +17,11 @@ class TraderAgent:
     def __init__(
         self,
         trader_config: TraderConfig,
-        _trade: Optional[Callable[[Feed, Tuple], Any]] = None,
+        _get_trader: Optional[Callable[[Feed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
         self.config = trader_config
-        self._trade = _trade if _trade else trade
+        self._get_trader = _get_trader if _get_trader else get_trader
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
 
@@ -124,12 +124,12 @@ class TraderAgent:
 
         print(f"Got {prediction}.")
 
-        self._trade(feed, prediction)
+        self._get_trader(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
         self.save_previous_epochs()
 
 
-def trade(feed: Feed, prediction: Tuple[float, float]):
+def get_trader(feed: Feed, prediction: Tuple[float, float]):
     """
     @params
         feed : Feed

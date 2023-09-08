@@ -4,7 +4,7 @@ import pytest
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.trader_agent import TraderAgent, trade
+from pdr_backend.trader.trader_agent import TraderAgent, get_trader
 from pdr_backend.trader.trader_config import TraderConfig
 
 
@@ -18,14 +18,14 @@ def test_new_agent(predictoor_contract):
     trader_config.get_contracts.return_value = {
         "0x0000000000000000000000000000000000000000": predictoor_contract
     }
-    agent = TraderAgent(trader_config, trade)
+    agent = TraderAgent(trader_config, get_trader)
     assert agent.config == trader_config
 
     no_feeds_config = Mock(spec=TraderConfig)
     no_feeds_config.get_feeds.return_value = {}
 
     with pytest.raises(SystemExit):
-        TraderAgent(no_feeds_config, trade)
+        TraderAgent(no_feeds_config, get_trader)
 
 
 def test_run():
@@ -33,7 +33,7 @@ def test_run():
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": ""
     }
-    agent = TraderAgent(trader_config, trade)
+    agent = TraderAgent(trader_config, get_trader)
 
     with patch.object(agent, "take_step") as ts_mock:
         agent.run(True)
@@ -47,7 +47,7 @@ def test_take_step(web3_config):
         "0x0000000000000000000000000000000000000000": ""
     }
     trader_config.web3_config = web3_config
-    agent = TraderAgent(trader_config, trade)
+    agent = TraderAgent(trader_config, get_trader)
 
     with patch.object(agent, "_process_block_at_feed") as ts_mock:
         agent.take_step()
