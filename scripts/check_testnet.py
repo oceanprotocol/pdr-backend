@@ -120,5 +120,4 @@ if __name__ == "__main__":
         print(native_line)
         if native_warning:
             print(native_warning)
-        print("-" * len(header))
         print()
