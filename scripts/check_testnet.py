@@ -82,7 +82,6 @@ if __name__ == "__main__":
     else:
         print(f"Number of Predictoor contracts: {no_of_contracts} - FAILED")
 
-    print(f"{'Pair':<10} | {'Type':<18} | {'Total':<14} | {'Status'}")
     print("-" * 60)
     # check number of predictions
     print("Predictions:")
