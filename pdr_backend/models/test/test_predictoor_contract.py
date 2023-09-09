@@ -91,7 +91,7 @@ def test_get_seconds_per_epoch(predictoor_contract):
 def test_get_aggpredval(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     aggpredval = predictoor_contract.get_agg_predval(current_epoch)
-    assert aggpredval == 0
+    assert aggpredval == (0, 0)
 
 
 @enforce_types
