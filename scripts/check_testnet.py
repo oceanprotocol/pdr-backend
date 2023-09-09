@@ -6,12 +6,12 @@ from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import query_subgraph
 
 
-def print_stats(contract, field_name, threshold=0.9):
-    count = sum(1 for _ in contract["slots"])
-    with_field = sum(1 for slot in contract["slots"] if len(slot[field_name]) > 0)
+def print_stats(contract_dict, field_name, threshold=0.9):
+    count = sum(1 for _ in contract_dict["slots"])
+    with_field = sum(1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0)
 
     status = "OK" if with_field / count > threshold else "FAIL"
-    token_name = contract["token"]["name"]
+    token_name = contract_dict["token"]["name"]
 
     print(f"{token_name}: {with_field}/{count} - {status}")
 
