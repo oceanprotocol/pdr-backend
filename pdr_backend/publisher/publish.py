@@ -42,7 +42,7 @@ def publish(
     web3_config,
 ):
     pair = base + "/" + quote
-    trueval_timeout = 4 * 12 * s_per_epoch
+    trueval_timeout = 60 * 60 * 24 * 3
     owner = web3_config.owner
     ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
     fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
