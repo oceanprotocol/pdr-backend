@@ -62,7 +62,9 @@ def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
 
 
 @enforce_types
-def query_subgraph(subgraph_url: str, query: str, tries: int = 0) -> Dict[str, dict]:
+def query_subgraph(
+    subgraph_url: str, query: str, tries: int = 0, timeout: float = 1.5
+) -> Dict[str, dict]:
     """
     @arguments
       subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql # pylint: disable=line-too-long
@@ -71,7 +73,7 @@ def query_subgraph(subgraph_url: str, query: str, tries: int = 0) -> Dict[str, d
     @return
       result -- e.g. {"data" : {"predictContracts": ..}}
     """
-    request = requests.post(subgraph_url, "", json={"query": query}, timeout=1.5)
+    request = requests.post(subgraph_url, "", json={"query": query}, timeout=timeout)
     if request.status_code != 200:
         # pylint: disable=broad-exception-raised
         if tries < SUBGRAPH_MAX_TRIES:
