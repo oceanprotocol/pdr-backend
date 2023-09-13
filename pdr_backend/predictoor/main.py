@@ -1,3 +1,4 @@
+import importlib
 import sys
 
 from enforce_typing import enforce_types
@@ -24,14 +25,16 @@ def do_main():
         do_help()
 
     arg1 = sys.argv[1]
-    if arg1 == "1":
-        from pdr_backend.predictoor.approach1.main1 import (  # pylint: disable=import-outside-toplevel,line-too-long
-            do_main1,
+    if arg1 in ["1"]:
+        agent_class = importlib.import_module(
+            f"pdr_backend.predictoor.approach{arg1}.predictoor_agent{arg1}"
         )
-
-        do_main1()
-
+        agent_class = getattr(agent_class, f"PredictoorAgent{arg1}")
+        config = agent_class.predictoor_config_class()
+        agent = agent_class(config)
+        agent.run()
     elif arg1 == "2":
+        # to be integrated similarly to approach 1
         from pdr_backend.predictoor.approach2.main2 import (  # pylint: disable=import-outside-toplevel,line-too-long
             do_main2,
         )

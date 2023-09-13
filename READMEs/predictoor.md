@@ -3,9 +3,9 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Usage for Predictoors
+# Run a Predictoor Bot
 
-This is for predictoors - people who are running `predictoor` agents to submit individual predictions.
+This README describes how to run a predictoor bot (agent), to submit predictions and earn $.
 
 ## Contents
 
@@ -29,7 +29,7 @@ In barge console:
 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
 export GANACHE_BLOCKTIME=5
 
-#run barge with all agents except predictoor
+#run barge with all bots (agents) except predictoor
 ./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
@@ -51,7 +51,7 @@ There are other environment variables that you might want to set, such as the ow
 
 ### Local Usage: Random (Approach 1)
 
-To get started, let's run a predictoor agent with random predictions.
+To get started, let's run a predictoor bot (agent) with random predictions.
 
 - It runs [`predictoor_agent1.py::PredictoorAgent1`](../pdr_backend/predictoor/approach1/predictoor_agent1.py) found in `pdr_backend/predictoor/approach1`
 - It's configured by envvars and [`predictoor_config1.py::PredictoorConfig1`](../pdr_backend/predictoor/approach1/predictoor_config1.py)
@@ -59,7 +59,7 @@ To get started, let's run a predictoor agent with random predictions.
 
 In work console:
 ```console
-# run random predictoor agent
+# run random predictoor bot (agent)
 python pdr_backend/predictoor/main.py 1
 ```
 
@@ -73,7 +73,7 @@ You can query predictoor subgraph for detailed run info. [`subgraph.md`](subgrap
 
 Since random predictions aren't accurate, let's use AI/ML models. Here's an example flow that loads pre-learned models ("approach2"):
 
-- The agent runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
+- The bot (agent) runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
 - Which imports a model stored in [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo
 
 
@@ -95,7 +95,7 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 #pip install anything that pdr-model-simple/model.py needs
 pip install scikit-learn ta
 
-#run model-powered predictoor agent
+#run model-powered predictoor bot (agent)
 python pdr_backend/predictoor/main.py 2
 ```
 
