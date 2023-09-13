@@ -70,8 +70,7 @@ if web3_config.w3.eth.chain_id == 8996:
 if web3_config.w3.eth.chain_id == 23295:
     rate = 3 / (1 + 0.2 + 0.001)
     pair_list = ["BTC", "ETH", "BNB", "XRP", "ADA", "DOGE", "SOL", "LTC", "TRX", "DOT"]
-    # helper_contract = get_address(23295, "PredictoorHelper")
-    helper_contract = "0xAfFe796636430DA742B82FF4d937F18e3a8Cef1a"
+    helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
 
     for pair in pair_list:
         publish(
