@@ -85,3 +85,5 @@ In your working console:
 export REMOTE_TEST_PRIVATE_KEY1=<your REMOTE_TEST_PRIVATE_KEY1>
 export REMOTE_TEST_PRIVATE_KEY2=<your REMOTE_TEST_PRIVATE_KEY2>
 ```
+
+Check out the [environment variables documentation](./envvars.md) to learn more about the environment variables that could be set.

@@ -44,3 +44,4 @@ The following READMEs are used as building blocks within different flows.
 - [Getting testnet tokens](READMEs/testnet-faucet.md) - faucets for fake ROSE & OCEAN
 - [Azure container deployment](READMEs/azure-container-deployment.md)
 - [Release process](READMEs/release-process.md)
+- [Environment variables](READMEs/envvars.md)

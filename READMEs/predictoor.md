@@ -47,6 +47,8 @@ export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-su
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 ```
 
+There are other environment variables that you might want to set, such as the owner addresses. To get more information about them check out the [environment variables documentation](./envvars.md).
+
 ### Local Usage: Random (Approach 1)
 
 To get started, let's run a predictoor bot (agent) with random predictions.

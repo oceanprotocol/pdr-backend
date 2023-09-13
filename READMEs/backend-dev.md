@@ -37,6 +37,8 @@ export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-su
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 ```
 
+Check out the [environment variables documentation](./envvars.md) to learn more about the environment variables that could be set.
+
 Each subsection below gives different local usage options.
 
 ### Local Usage: Testing & linting

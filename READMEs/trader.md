@@ -46,6 +46,8 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 python pdr_backend/trader/main.py
 ```
 
+There are other environment variables that you might want to set, such as the owner addresses. To get more information about them check out the [environment variables documentation](./envvars.md).
+
 Relax & watch as the predictoor bot submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
 
 You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
@@ -54,7 +56,7 @@ The bot trades according to the `trade()` function in [`pdr_backend/trader/trade
 
 ## Remote Testnet Usage
 
-To run predictoor as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+To run trader as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
 
 To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
