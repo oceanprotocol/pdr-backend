@@ -59,12 +59,7 @@ Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](
 - They call to a subgraph, at a given url, with a particular query
 - and they may filter further
 
-**Filters**. You can set these envvars to filter query results for agents.
-
-- PAIR_FILTER = if we do want to act upon only same pair, like  "BTC/USDT,ETH/USDT"
-- TIMEFRAME_FILTER = if we do want to act upon only same timeframes, like  "5m,15m"
-- SOURCE_FILTER = if we do want to act upon only same sources, like  "binance,kraken"
-- OWNER_ADDRS = if we do want to act upon only same publishers, like  "0x123,0x124"
+**Filters**, You can set some envvars to filter query results for agents. Check out the [envvar documentation](./envvars.md#filters) to learn more about these filters and how to set them.
 
 ### Appendix
 
