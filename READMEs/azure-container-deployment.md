@@ -1,6 +1,6 @@
 # Setting up and Running pdr-backend locally and on Azure
 
-This guide explains the process of setting up and running any agent locally and on Azure Container Instance for continuous execution. This example uses Sapphire testnet. However, by modifying the environment variables, you can seamlessly run the agent on the mainnet.
+This guide explains the process of setting up and running any bot (agent) locally and on Azure Container Instance for continuous execution. This example uses Sapphire testnet. However, by modifying the environment variables, you can seamlessly run the bot (agent) on the mainnet.
 
 ## Initial Setup
 
@@ -28,16 +28,16 @@ export SUBGRAPH_URL=https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com
 export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB
 ```
 
-### Configure the Agent
+### Configure the Bot (Agent)
 
-Configure the agent by following the instructions from the agent's readme that you're going to deploy:
+Configure the bot (agent) by following the instructions from the agent's readme that you're going to deploy:
 
 [Predictoor README](READMEs/predictoor.md)
 [Trader README](READMEs/trader.md)
 
 ## Running locally on any machine with pm2
 
-Firstly, run the agent to make sure there are no errors and the agent is working as expected:
+Firstly, run the bot (agent) to make sure there are no errors and the agent is working as expected:
 
 ```bash
 python pdr_backend/<agent>/main.py
@@ -77,7 +77,7 @@ docker build -t pdr-backend-<agentname>:latest .
 podman build -t pdr-backend-<agentname>:latest .
 ```
 
-Replace `agentname` with the name of the agent you're going to run. This command builds the container image using the Dockerfile in the current directory and tags it as `pdr-backend-<agentname>:latest`. You can use any tag you'd like.
+Replace `agentname` with the name of the bot (agent) you're going to run. This command builds the container image using the Dockerfile in the current directory and tags it as `pdr-backend-<agentname>:latest`. You can use any tag you'd like.
 
 There are many options available for deploying the container image. Some of them include:
 - [Heroku - Container Registry & Runtime (Docker Deploys)](https://devcenter.heroku.com/articles/container-registry-and-runtime)
@@ -92,7 +92,7 @@ The following example demonstrates deploying the agent as a container on Azure.
 > **Warning**
 > The information provided in this documentation is up to date as of August 2023. If you encounter any issues or need the latest instructions, please refer to [Azure's official documentation](https://learn.microsoft.com/en-us/azure/app-service/tutorial-custom-container?tabs=azure-cli&pivots=container-linux) on running containers.
 
-In order to run the the agent on Azure, you will have to build a container, upload it to Azure Container Registry, and finally run it using Azure Container Instances.
+In order to run the the bot (agent) on Azure, you will have to build a container, upload it to Azure Container Registry, and finally run it using Azure Container Instances.
 
 ### Install Azure CLI
 
