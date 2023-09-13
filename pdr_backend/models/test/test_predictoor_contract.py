@@ -104,7 +104,7 @@ def test_soonest_timestamp_to_predict(predictoor_contract):
 @enforce_types
 def test_get_trueValSubmitTimeout(predictoor_contract):
     trueValSubmitTimeout = predictoor_contract.get_trueValSubmitTimeout()
-    assert trueValSubmitTimeout == 4 * 12 * SECONDS_PER_EPOCH
+    assert trueValSubmitTimeout == 3 * 24 * 60 * 60
 
 
 @enforce_types
