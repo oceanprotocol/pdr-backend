@@ -18,16 +18,15 @@ Follow the instructions from [install pdr-backend](./install.md)
 
 Set the following environment variables:
 
-- PRIVATE_KEY: Set it to the private key of the wallet you're going to use.
-- PAIR_FILTER: List of pairs to filter (separated by comma), if empty the app will fetch all available pairs. For this example, set it to `"BTC/TUSD"`.
-- TIMEFRAME_FILTER: Timeframes to filter (separated by comma), if empty the app will fetch all available timeframes. For this example, set it to `5m`.
-- SOURCE_FILTER: Price sources filter (separated by comma), if empty the app will fetch all available sources. For this example, set it to `binance`
-- RPC_URL: The RPC URL of the network, set this to Sapphire testnet Websocket RPC URL: `https://testnet.sapphire.oasis.dev`
-- SUBGRAPH_URL: The Ocean subgraph url, set this to Sapphire testnet subgraph URL: `https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql`
-
-If you plan to run a predictoor bot, you need to set `STAKE_TOKEN`:
-
-- STAKE_TOKEN: List of Token contract addresses to be used to stake, if empty the app will try to stake with any token. Set this to testOCEAN token address: `"["0x973e69303259B0c2543a38665122b773D28405fB"]"`
+```
+export PRIVATE_KEY=PK_HERE
+export PAIR_FILTER=BTC/TUSD
+export TIMEFRAME_FILTER=5m
+export SOURCE_FILTER=binance
+export RPC_URL=https://testnet.sapphire.oasis.dev
+export SUBGRAPH_URL=https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB
+```
 
 ### Configure the Bot (Agent)
 
