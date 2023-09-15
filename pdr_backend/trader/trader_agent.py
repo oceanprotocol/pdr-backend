@@ -101,7 +101,7 @@ class TraderAgent:
 
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
-
+        print("before:", time.time())
         tasks = [
             self._process_block_at_feed(addr, block["timestamp"]) for addr in self.feeds
         ]
@@ -111,6 +111,7 @@ class TraderAgent:
             for log in logs:
                 print(log)
 
+        print("after:", time.time())
         if -1 in s_till_epoch_ends:
             # -1 means subscription expired for one of the assets
             self.check_subscriptions_and_subscribe()
@@ -131,7 +132,7 @@ class TraderAgent:
             [tries] - number of attempts made in case of an error, 0 by default
         @return:
             epoch_s_left - number of seconds left till the epoch end
-            logs - list of strings, run logs
+            logs - list of strings of function logs
         """
         logs = []
         feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
@@ -167,7 +168,10 @@ class TraderAgent:
                 ):
                     revert_reason = e.args[0]["message"]
                     if revert_reason == "reverted: No subscription":
-                        return -1, logs
+                        return (
+                            -1,
+                            logs,
+                        )  # -1 means the subscription has expired for this pair
                 logs.append("      Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)
                 return await self._process_block_at_feed(addr, timestamp, tries + 1)
@@ -176,7 +180,7 @@ class TraderAgent:
             )
             return epoch_s_left, logs
 
-        self._do_trade(feed, prediction)
+        await self._do_trade(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
         self.save_previous_epochs()
         return epoch_s_left, logs
