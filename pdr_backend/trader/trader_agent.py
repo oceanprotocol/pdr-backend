@@ -102,12 +102,10 @@ class TraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
 
-        print("before", time.time())
         tasks = [
             self._process_block_at_feed(addr, block["timestamp"]) for addr in self.feeds
         ]
         s_till_epoch_ends, log_list = zip(*await asyncio.gather(*tasks))
-        print("after", time.time())
 
         for logs in log_list:
             for log in logs:
@@ -141,8 +139,9 @@ class TraderAgent:
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
         logs.append(
-            f"{'-'*40} Processing {feed} {'-'*40}\nEpoch {epoch}\nSeconds remaining in epoch: {epoch_s_left}"
+            f"{'-'*40} Processing {feed} {'-'*40}\nEpoch {epoch}"
         )
+        logs.append("Seconds remaining in epoch: {epoch_s_left}")
 
         if (
             self.prev_traded_epochs_per_feed.get(addr)
