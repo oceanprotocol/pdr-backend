@@ -1,4 +1,5 @@
 import sys
+import time
 import asyncio
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -137,9 +138,7 @@ class TraderAgent:
         s_per_epoch = feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
-        logs.append(
-            f"{'-'*40} Processing {feed} {'-'*40}\nEpoch {epoch}"
-        )
+        logs.append(f"{'-'*40} Processing {feed} {'-'*40}\nEpoch {epoch}")
         logs.append("Seconds remaining in epoch: {epoch_s_left}")
 
         if (
