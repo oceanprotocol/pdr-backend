@@ -1,4 +1,3 @@
-import time
 from typing import List, Tuple
 
 from enforce_typing import enforce_types
