@@ -1,4 +1,3 @@
-import time
 from typing import List, Tuple
 
 from enforce_typing import enforce_types
@@ -194,12 +193,6 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         return self.contract_instance.functions.secondsPerEpoch().call()
 
     def get_agg_predval(self, timestamp) -> Tuple[float, float]:
-        """check subscription"""
-        if not self.is_valid_subscription():
-            print("Buying a new subscription...")
-            self.buy_and_start_subscription(None, True)
-            time.sleep(1)
-
         auth = self.get_auth_signature()
         (nom_wei, denom_wei) = self.contract_instance.functions.getAggPredval(
             timestamp, auth
