@@ -58,18 +58,7 @@ class DFBuyerAgent:
     def take_step(self, ts: int):
         print("Taking step for timestamp:", ts)
 
-        actual_consumes = self._get_consume_so_far(ts)
-        expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
-
-        print(actual_consumes, expected_consume_per_feed)
-
-        missing_consumes_amt: Dict[str, float] = {}
-
-        for address in self.feeds:
-            missing = expected_consume_per_feed - actual_consumes[address]
-            if missing > 0:
-                missing_consumes_amt[address] = missing
-
+        missing_consumes_amt = self._get_missing_consumes(ts)
         print("Missing consume amounts:", missing_consumes_amt)
 
         # get price for contracts with missing consume
@@ -95,6 +84,19 @@ class DFBuyerAgent:
             f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
         )
         time.sleep(seconds_left)
+
+    def _get_missing_consumes(self, ts: int) -> Dict[str, float]:
+        actual_consumes = self._get_consume_so_far(ts)
+        expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
+
+        missing_consumes_amt: Dict[str, float] = {}
+
+        for address in self.feeds:
+            missing = expected_consume_per_feed - actual_consumes[address]
+            if missing > 0:
+                missing_consumes_amt[address] = missing
+
+        return missing_consumes_amt
 
     def _prepare_batches(self, consume_times: Dict[str, int]):
         batches = []
