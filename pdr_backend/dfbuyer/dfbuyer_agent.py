@@ -63,11 +63,9 @@ class DFBuyerAgent:
 
         # get price for contracts with missing consume
         prices: Dict[str, float] = self._get_prices(list(missing_consumes_amt.keys()))
-
-        missing_consumes_times: Dict[str, int] = {
-            address: math.ceil(missing_consumes_amt[address] / prices[address])
-            for address in missing_consumes_amt
-        }
+        missing_consumes_times = self._get_missing_consume_times(
+            missing_consumes_amt, prices
+        )
         print("Missing consume times:", missing_consumes_times)
 
         # batch txs
@@ -84,6 +82,14 @@ class DFBuyerAgent:
             f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
         )
         time.sleep(seconds_left)
+
+    def _get_missing_consume_times(
+        self, missing_consumes: Dict[str, float], prices: Dict[str, float]
+    ) -> Dict[str, int]:
+        return {
+            address: math.ceil(missing_consumes[address] / prices[address])
+            for address in missing_consumes
+        }
 
     def _get_missing_consumes(self, ts: int) -> Dict[str, float]:
         actual_consumes = self._get_consume_so_far(ts)
