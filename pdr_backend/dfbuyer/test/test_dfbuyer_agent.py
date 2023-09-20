@@ -27,20 +27,14 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
 
 def test_get_expected_amount_per_feed(dfbuyer_agent):
     ts = 1695211135
-
     amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
         dfbuyer_agent.feeds
     )
     week_start = (math.floor(ts / WEEK)) * WEEK
-
     time_passed = ts - week_start
-
     n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds)
-
     assert n_intervals == 3119
-
     expected_result = n_intervals * amount_per_feed_per_interval
-
     result = dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result == expected_result
 
@@ -83,3 +77,31 @@ def test_prepare_batches(dfbuyer_agent):
         ([addresses[4], addresses[5]], [2, 8]),
     ]
     assert result == expected_result
+
+
+@patch.object(DFBuyerAgent, "_get_consume_so_far")
+@patch.object(DFBuyerAgent, "_get_expected_amount_per_feed")
+def test_get_missing_consumes(
+    mock_get_expected_amount_per_feed, mock_get_consume_so_far, dfbuyer_agent
+):
+    ts = 0
+    addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
+    consume_amts = {
+        addresses[0]: 10,
+        addresses[1]: 11,
+        addresses[2]: 32,
+        addresses[3]: 24,
+        addresses[4]: 41,
+        addresses[5]: 0,
+    }
+    mock_get_consume_so_far.return_value = consume_amts
+    mock_get_expected_amount_per_feed.return_value = 15
+    result = dfbuyer_agent._get_missing_consumes(ts)
+    expected_consume = dfbuyer_agent._get_expected_amount_per_feed(ts)
+    expected_result = {
+        address: expected_consume - consume_amts[address]
+        for address in addresses
+        if expected_consume - consume_amts[address] >= 0
+    }
+    assert result == expected_result
+    mock_get_consume_so_far.assert_called_once_with(ts)
