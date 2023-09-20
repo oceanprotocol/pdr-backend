@@ -3,6 +3,8 @@ from os import getenv
 import math
 import random
 from typing import Dict, List
+from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 
 from pdr_backend.dfbuyer.subgraph import get_consume_so_far
 from pdr_backend.models.predictoor_contract import PredictoorContract
@@ -109,24 +111,12 @@ def process_block(block):
         cnt = cnt + 1
 
 
-def log_loop(blockno):
-    global last_block_time
-    block = web3_config.get_block(blockno, full_transactions=False)
-    if block:
-        last_block_time = block["timestamp"]
-        process_block(block)
-
-
 def main():
     print("Starting main loop...")
-    lastblock = 0
-    while True:
-        block = web3_config.w3.eth.block_number
-        if block > lastblock:
-            lastblock = block
-            log_loop(block)
-        else:
-            time.sleep(1)
+    config = DFBuyerConfig()
+    agent = DFBuyerAgent(config)
+
+    agent.run()
 
 
 if __name__ == "__main__":
