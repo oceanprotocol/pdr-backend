@@ -105,3 +105,11 @@ def test_get_missing_consumes(
     }
     assert result == expected_result
     mock_get_consume_so_far.assert_called_once_with(ts)
+
+
+def test_get_missing_consume_times(dfbuyer_agent):
+    missing_consumes = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
+    prices = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
+    result = dfbuyer_agent._get_missing_consume_times(missing_consumes, prices)
+    expected_result = {"0x1": 5, "0x2": 7, "0x3": 7}
+    assert result == expected_result
