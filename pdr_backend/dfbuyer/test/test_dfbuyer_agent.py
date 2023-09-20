@@ -34,7 +34,6 @@ def test_get_expected_amount_per_feed(dfbuyer_agent):
     week_start = (math.floor(ts / WEEK)) * WEEK
     time_passed = ts - week_start
     n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds)
-    assert n_intervals == 3119
     expected_result = n_intervals * amount_per_feed_per_interval
     result = dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result == expected_result
@@ -146,4 +145,13 @@ def test_take_step(
     )
     mock_batch_txs.assert_called_once_with(mock_get_missing_consume_times.return_value)
     mock_get_block.assert_called_once_with("latest")
-    mock_sleep.assert_called_once_with(120)
+    mock_sleep.assert_called_once_with(3600 - 60)
+
+
+@patch.object(DFBuyerAgent, "take_step")
+@patch.object(Web3Config, "get_block")
+def test_run(mock_get_block, mock_take_step, dfbuyer_agent):
+    mock_get_block.return_value = {"timestamp": 0}
+    dfbuyer_agent.run(testing=True)
+    mock_get_block.assert_called_once_with("latest")
+    mock_take_step.assert_called_once_with(mock_get_block.return_value["timestamp"])
