@@ -369,6 +369,7 @@ def get_pending_slots(
 
     return slots
 
+
 def get_consume_so_far_per_contract(
     subgraph_url: str,
     user_address: str,
@@ -429,4 +430,3 @@ def get_consume_so_far_per_contract(
                 for buy in contract["token"]["orders"]:
                     consume_so_far[contract_address] += float(buy["lastPriceValue"])
     return consume_so_far
-
