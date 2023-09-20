@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, call, patch
 from ccxt.base.exchange import math
 from pdr_backend.dfbuyer.dfbuyer_agent import WEEK, DFBuyerAgent
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
+from pdr_backend.util.web3_config import Web3Config
 
 
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.Token")
@@ -113,3 +114,36 @@ def test_get_missing_consume_times(dfbuyer_agent):
     result = dfbuyer_agent._get_missing_consume_times(missing_consumes, prices)
     expected_result = {"0x1": 5, "0x2": 7, "0x3": 7}
     assert result == expected_result
+
+
+@patch("time.sleep", return_value=None)
+@patch.object(DFBuyerAgent, "_get_missing_consumes")
+@patch.object(DFBuyerAgent, "_get_prices")
+@patch.object(DFBuyerAgent, "_get_missing_consume_times")
+@patch.object(DFBuyerAgent, "_batch_txs")
+@patch.object(Web3Config, "get_block")
+def test_take_step(
+    mock_get_block,
+    mock_batch_txs,
+    mock_get_missing_consume_times,
+    mock_get_prices,
+    mock_get_missing_consumes,
+    mock_sleep,
+    dfbuyer_agent,
+):
+    ts = 0
+    mock_get_missing_consumes.return_value = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
+    mock_get_prices.return_value = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
+    mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
+    mock_get_block.return_value = {"timestamp": 60}
+    dfbuyer_agent.take_step(ts)
+    mock_get_missing_consumes.assert_called_once_with(ts)
+    mock_get_prices.assert_called_once_with(
+        list(mock_get_missing_consumes.return_value.keys())
+    )
+    mock_get_missing_consume_times.assert_called_once_with(
+        mock_get_missing_consumes.return_value, mock_get_prices.return_value
+    )
+    mock_batch_txs.assert_called_once_with(mock_get_missing_consume_times.return_value)
+    mock_get_block.assert_called_once_with("latest")
+    mock_sleep.assert_called_once_with(120)
