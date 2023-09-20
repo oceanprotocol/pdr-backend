@@ -1,6 +1,8 @@
 import math
 import time
 from typing import Dict, List
+
+from enforce_typing import enforce_types
 from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
@@ -12,6 +14,7 @@ from pdr_backend.util.subgraph import get_consume_so_far_per_contract
 WEEK = 7 * 86400
 
 
+@enforce_types
 class DFBuyerAgent:
     def __init__(self, config: DFBuyerConfig):
         self.config: DFBuyerConfig = config
@@ -93,7 +96,8 @@ class DFBuyerAgent:
         )
         time.sleep(seconds_left)
 
-    def _batch_txs(self, consume_times: Dict[str, int]):
+    def _prepare_batches(self, consume_times: Dict[str, int]):
+        batches = []
         addresses_to_consume = []
         times_to_consume = []
         for address, times in consume_times.items():
@@ -111,28 +115,35 @@ class DFBuyerAgent:
                     sum(times_to_consume) == self.config.batch_size
                     or address == list(consume_times.keys())[-1]
                 ):
-                    print(
-                        f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
-                    )
-                    for i in range(self.config.max_request_tries):
-                        try:
-                            tx = self.predictoor_batcher.consume_multiple(
-                                addresses_to_consume,
-                                times_to_consume,
-                                self.token_addr,
-                                True,
-                            )
-                            print("     Tx sent:", tx["transactionHash"].hex())
-                            break
-                        except Exception as e:
-                            print(f"     Attempt {i+1} failed with error: {e}")
-                            if i == 4:
-                                print(
-                                    "     Failed to consume contracts after 5 attempts."
-                                )
-                                raise
+                    batches.append((addresses_to_consume, times_to_consume))
                     addresses_to_consume = []
                     times_to_consume = []
+        return batches
+
+    def _consume_batch(self, addresses_to_consume, times_to_consume):
+        print(
+            f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
+        )
+        for i in range(self.config.max_request_tries):
+            try:
+                tx = self.predictoor_batcher.consume_multiple(
+                    addresses_to_consume,
+                    times_to_consume,
+                    self.token_addr,
+                    True,
+                )
+                print("     Tx sent:", tx["transactionHash"].hex())
+                break
+            except Exception as e:
+                print(f"     Attempt {i+1} failed with error: {e}")
+                if i == 4:
+                    print("     Failed to consume contracts after 5 attempts.")
+                    raise
+
+    def _batch_txs(self, consume_times: Dict[str, int]):
+        batches = self._prepare_batches(consume_times)
+        for addresses_to_consume, times_to_consume in batches:
+            self._consume_batch(addresses_to_consume, times_to_consume)
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         prices: Dict[str, float] = {}
