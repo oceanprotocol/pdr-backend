@@ -18,9 +18,8 @@ def mock_feed():
 def dfbuyer_config():
     config = DFBuyerConfig()
     config.get_feeds = Mock()
-    config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
+    addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
+    config.get_feeds.return_value = {address: mock_feed() for address in addresses}
     return config
 
 
