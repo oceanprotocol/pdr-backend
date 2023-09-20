@@ -9,7 +9,7 @@ from pdr_backend.models.base_config import BaseConfig
 class DFBuyerConfig(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.weekly_spending_limit = int(getenv("WEEKLY_SPENDING_LIMIT", "0"))
+        self.weekly_spending_limit = int(getenv("WEEKLY_SPENDING_LIMIT", "100"))
         self.consume_interval_seconds = int(getenv("CONSUME_INTERVAL_SECONDS", "3600"))
 
         # number of consumes to execute in a single transaction
