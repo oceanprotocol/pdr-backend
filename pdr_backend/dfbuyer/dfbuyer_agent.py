@@ -4,6 +4,8 @@ from typing import Dict, List
 from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.models.token import Token
+from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import get_consume_so_far_per_contract
 
@@ -35,6 +37,13 @@ class DFBuyerAgent:
         for addr, feed in self.feeds.items():
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
 
+        token = Token(self.config.web3_config, self.token_addr)
+        print("Approving tokens for predictoor_batcher")
+        tx = token.approve(
+            self.predictoor_batcher.contract_address, int(MAX_UINT), True
+        )
+        print(f"Done: {tx['transactionHash'].hex()}")
+
     def run(self, testing: bool = False):
         while True:
             ts = self.config.web3_config.get_block("latest")["timestamp"]
@@ -47,7 +56,9 @@ class DFBuyerAgent:
         print("Taking step for timestamp:", ts)
 
         actual_consumes = self._get_consume_so_far(ts)
-        expected_consume_per_feed = self._get_amount_per_feed(ts)
+        expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
+
+        print(actual_consumes, expected_consume_per_feed)
 
         missing_consumes_amt: Dict[str, float] = {}
 
@@ -56,7 +67,7 @@ class DFBuyerAgent:
             if missing > 0:
                 missing_consumes_amt[address] = missing
 
-        print("Missing consumes amounts:", missing_consumes_amt)
+        print("Missing consume amounts:", missing_consumes_amt)
 
         # get price for contracts with missing consume
         prices: Dict[str, float] = self._get_prices(list(missing_consumes_amt.keys()))
@@ -65,18 +76,21 @@ class DFBuyerAgent:
             address: math.ceil(missing_consumes_amt[address] / prices[address])
             for address in missing_consumes_amt
         }
-        print("Missing consumes times:", missing_consumes_times)
+        print("Missing consume times:", missing_consumes_times)
 
         # batch txs
         self._batch_txs(missing_consumes_times)
 
         # sleep until next consume interval
+        ts = self.config.web3_config.get_block("latest")["timestamp"]
         interval_start = (
             int(ts / self.config.consume_interval_seconds)
             * self.config.consume_interval_seconds
         )
         seconds_left = (interval_start + self.config.consume_interval_seconds) - ts
-        print(f"Sleeping for {seconds_left} seconds until next consume interval...")
+        print(
+            f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
+        )
         time.sleep(seconds_left)
 
     def _batch_txs(self, consume_times: Dict[str, int]):
@@ -95,17 +109,28 @@ class DFBuyerAgent:
                     times -= current_times_to_consume
                 if (
                     sum(times_to_consume) == self.config.batch_size
-                    or address == list(missing_consumes_times.keys())[-1]
+                    or address == list(consume_times.keys())[-1]
                 ):
                     print(
                         f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
                     )
-                    self.predictoor_batcher.consume_multiple(
-                        addresses_to_consume,
-                        times_to_consume,
-                        self.token_addr,
-                        True,
-                    )
+                    for i in range(self.config.max_request_tries):
+                        try:
+                            tx = self.predictoor_batcher.consume_multiple(
+                                addresses_to_consume,
+                                times_to_consume,
+                                self.token_addr,
+                                True,
+                            )
+                            print("     Tx sent:", tx["transactionHash"].hex())
+                            break
+                        except Exception as e:
+                            print(f"     Attempt {i+1} failed with error: {e}")
+                            if i == 4:
+                                print(
+                                    "     Failed to consume contracts after 5 attempts."
+                                )
+                                raise
                     addresses_to_consume = []
                     times_to_consume = []
 
@@ -126,10 +151,9 @@ class DFBuyerAgent:
             week_start,
             list(self.feeds.keys()),
         )
-        print("Consume so far:", consume_so_far)
         return consume_so_far
 
-    def _get_amount_per_feed(self, ts: int):
+    def _get_expected_amount_per_feed(self, ts: int):
         amount_per_feed_per_interval = self.config.amount_per_interval / len(self.feeds)
         week_start = (math.floor(ts / WEEK)) * WEEK
         time_passed = ts - week_start
