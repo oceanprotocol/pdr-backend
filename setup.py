@@ -15,6 +15,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account",
     "eth-keys",
+    "ffx",
     "pandas",
     "pathlib",
     "pylint",
@@ -23,6 +24,7 @@ install_requirements = [
     "requests",
     "web3",
     "sapphire.py",
+    "scikit-learn",
     "ocean-contracts==2.0.0a13",  # install this last
 ]
 
