@@ -430,5 +430,7 @@ def get_consume_so_far_per_contract(
                 for buy in contract["token"]["orders"]:
                     # 1.2 20% fee
                     # 0.001 community swap fee
-                    consume_so_far[contract_address] += float(buy["lastPriceValue"]) * 1.2 * 1.001
+                    consume_so_far[contract_address] += (
+                        float(buy["lastPriceValue"]) * 1.2 * 1.001
+                    )
     return consume_so_far
