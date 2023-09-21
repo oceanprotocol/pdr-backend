@@ -265,3 +265,80 @@ def test_get_pending_slots():
     assert isinstance(slot0, Slot)
     assert slot0.slot_number == 1000
     assert slot0.feed.name == "ether"
+
+
+@enforce_types
+def test_get_consume_so_far_per_contract():
+        sample_contract_data = [
+        {
+                "id": "contract1",
+                "token": {
+                    "id": "token1",
+                    "name": "ether",
+                    "symbol": "ETH",
+                    "orders": [
+                        {
+                            "createdTimestamp": 1695288424,
+                            "consumer": {
+                                "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
+                            },
+                            "lastPriceValue": "2.4979184013322233"
+                        },
+                        {
+                            "createdTimestamp": 1695288724,
+                            "consumer": {
+                                "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
+                            },
+                            "lastPriceValue": "2.4979184013322233"
+                        },
+                        {
+                            "createdTimestamp": 1695288430,
+                            "consumer": {
+                                "id": "0x0"
+                            },
+                            "lastPriceValue": "2.4979184013322233"
+                        }
+                    ],
+                    "nft": {
+                        "owner": {"id": "0xowner1"},
+                        "nftData": [
+                            {
+                                "key": key_to_725("pair"),
+                                "value": value_to_725("ETH/USDT"),
+                            },
+                            {
+                                "key": key_to_725("timeframe"),
+                                "value": value_to_725("5m"),
+                            },
+                            {
+                                "key": key_to_725("source"),
+                                "value": value_to_725("binance"),
+                            },
+                        ],
+                    },
+                },
+                "secondsPerEpoch": 7,
+                "secondsPerSubscription": 700,
+                "truevalSubmitTimeout": 5,
+        }
+    ]
+
+    call_count = 0
+
+    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
+        nonlocal call_count
+        slot_data = sample_slot_data if call_count <= 1 else []
+        call_count += 1
+        return {"data": {"predictContracts": slot_data}}
+
+    with patch("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph):
+        consumes = get_consume_so_far_per_contract(
+            subgraph_url="foo",
+            user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
+            since_timestamp=2000,
+            contract_addresses=["token1"]
+        )
+
+    assert len(consumes) == 2
+    assert consumes["token1"] == 3
+
