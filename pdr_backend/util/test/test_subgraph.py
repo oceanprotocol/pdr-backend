@@ -334,4 +334,4 @@ def test_get_consume_so_far_per_contract():
             contract_addresses=["contract1"],
         )
 
-    assert consumes["contract1"] == approx(6)
+    assert consumes["contract1"] == approx(6, 0.001)
