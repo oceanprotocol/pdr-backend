@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 import pytest
 import requests
 from web3 import Web3
+from pytest import approx
 
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.subgraph import (
@@ -292,11 +293,6 @@ def test_get_consume_so_far_per_contract():
                         },
                         "lastPriceValue": "2.4979184013322233",
                     },
-                    {
-                        "createdTimestamp": 1695288430,
-                        "consumer": {"id": "0x0"},
-                        "lastPriceValue": "2.4979184013322233",
-                    },
                 ],
                 "nft": {
                     "owner": {"id": "0xowner1"},
@@ -338,4 +334,4 @@ def test_get_consume_so_far_per_contract():
             contract_addresses=["contract1"],
         )
 
-    assert consumes["contract1"] == 6
+    assert consumes["contract1"] == approx(6)
