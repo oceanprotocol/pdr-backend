@@ -29,3 +29,8 @@
 
 ### Predictoor
 - **SECONDS_TILL_EPOCH_END**: Determines how soon to start predicting.
+
+### DFBuyer
+- CONSUME_BATCH_SIZE: Max number of consumes to process in a single transaction.
+- WEEKLY_SPENDING_LIMIT: The target amount of tokens to be spent on consumes per week. Should be set to amount of Predictoor DF rewards for that week.
+- CONSUME_INTERVAL_SECONDS: The frequency of consumes - in seconds. Ideally set it to 3600 (1 day).
