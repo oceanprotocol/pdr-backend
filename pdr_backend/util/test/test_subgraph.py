@@ -335,7 +335,7 @@ def test_get_consume_so_far_per_contract():
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
             since_timestamp=2000,
-            contract_addresses=["token1"],
+            contract_addresses=["contract1"],
         )
 
     assert consumes["token1"] == 6
