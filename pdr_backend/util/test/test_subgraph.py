@@ -322,7 +322,7 @@ def test_get_consume_so_far_per_contract():
 
     def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
         nonlocal call_count
-        slot_data = sample_contract_data if call_count <= 1 else []
+        slot_data = sample_contract_data if call_count < 1 else []
         call_count += 1
         return {"data": {"predictContracts": slot_data}}
 
