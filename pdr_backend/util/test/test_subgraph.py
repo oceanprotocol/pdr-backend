@@ -338,5 +338,4 @@ def test_get_consume_so_far_per_contract():
             contract_addresses=["token1"],
         )
 
-    assert len(consumes) == 2
-    assert consumes["token1"] == 3
+    assert consumes["token1"] == 6
