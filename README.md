@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
 - **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
 
-# OPF bots
+## OPF bots
 
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - distribution of Predictoor DF rewards
 
