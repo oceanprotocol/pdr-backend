@@ -426,11 +426,10 @@ def get_consume_so_far_per_contract(
             contract_address = contract["id"]
             if contract_address not in contract_addresses:
                 continue
-            if len(contract["token"]["orders"]) > 0:
-                for buy in contract["token"]["orders"]:
-                    # 1.2 20% fee
-                    # 0.001 community swap fee
-                    consume_so_far[contract_address] += (
-                        float(buy["lastPriceValue"]) * 1.2 * 1.001
-                    )
+            for buy in contract["token"]["orders"]:
+                # 1.2 20% fee
+                # 0.001 0.01% community swap fee
+                consume_so_far[contract_address] += (
+                    float(buy["lastPriceValue"]) * 1.2 * 1.001
+                )
     return consume_so_far
