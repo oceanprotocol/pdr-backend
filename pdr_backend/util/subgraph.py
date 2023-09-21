@@ -375,7 +375,7 @@ def get_consume_so_far_per_contract(
     user_address: str,
     since_timestamp: int,
     contract_addresses: List[str],
-):
+) -> Dict[str, float]:
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
@@ -428,5 +428,7 @@ def get_consume_so_far_per_contract(
                 continue
             if len(contract["token"]["orders"]) > 0:
                 for buy in contract["token"]["orders"]:
-                    consume_so_far[contract_address] += float(buy["lastPriceValue"])
+                    # 1.2 20% fee
+                    # 0.001 community swap fee
+                    consume_so_far[contract_address] += float(buy["lastPriceValue"]) * 1.2 * 1.001
     return consume_so_far
