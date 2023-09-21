@@ -50,6 +50,8 @@ There are other environment variables that you might want to set, such as the **
 
 The bot will consume "WEEKLY_SPENDING_LIMIT" worth of assets each week. This amount is distributed equally among all DF eligible assets.
 
+![flow](https://user-images.githubusercontent.com/25263018/269256707-566b9f5d-7e97-4549-b483-2a6700826769.png)
+
 ## Remote Testnet Usage
 
 To run dfbuyer as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
