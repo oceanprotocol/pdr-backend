@@ -105,6 +105,7 @@ class DFBuyerAgent:
         return missing_consumes_amt
 
     def _prepare_batches(self, consume_times: Dict[str, int]):
+        max_no_of_addresses_in_batch = 3  # to avoid gas issues
         batches = []
         addresses_to_consume = []
         times_to_consume = []
@@ -122,6 +123,7 @@ class DFBuyerAgent:
                 if (
                     sum(times_to_consume) == self.config.batch_size
                     or address == list(consume_times.keys())[-1]
+                    or len(addresses_to_consume) == max_no_of_addresses_in_batch
                 ):
                     batches.append((addresses_to_consume, times_to_consume))
                     addresses_to_consume = []
@@ -129,6 +131,7 @@ class DFBuyerAgent:
         return batches
 
     def _consume_batch(self, addresses_to_consume, times_to_consume):
+        print("-" * 40)
         print(
             f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
         )
@@ -140,10 +143,14 @@ class DFBuyerAgent:
                     self.token_addr,
                     True,
                 )
-                print("     Tx sent:", tx["transactionHash"].hex())
+                tx_hash = tx["transactionHash"].hex()
+                if tx["status"] != 1:
+                    raise Exception(f"     Tx reverted: {tx_hash}")
+                print(f"     Tx sent: {tx_hash}")
                 break
             except Exception as e:
                 print(f"     Attempt {i+1} failed with error: {e}")
+                time.sleep(1)
                 if i == 4:
                     print("     Failed to consume contracts after 5 attempts.")
                     raise
