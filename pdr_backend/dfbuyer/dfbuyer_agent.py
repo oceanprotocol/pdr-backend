@@ -1,6 +1,6 @@
 import math
 import time
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
@@ -104,11 +104,13 @@ class DFBuyerAgent:
 
         return missing_consumes_amt
 
-    def _prepare_batches(self, consume_times: Dict[str, int]):
+    def _prepare_batches(
+        self, consume_times: Dict[str, int]
+    ) -> List[Tuple[List[str], List[int]]]:
         max_no_of_addresses_in_batch = 3  # to avoid gas issues
-        batches = []
-        addresses_to_consume = []
-        times_to_consume = []
+        batches: List[Tuple[List[str], List[int]]] = []
+        addresses_to_consume: List[str] = []
+        times_to_consume: List[int] = []
         for address, times in consume_times.items():
             while times > 0:
                 current_times_to_consume = min(

@@ -13,7 +13,7 @@ class DFBuyerConfig(BaseConfig):
         self.consume_interval_seconds = int(getenv("CONSUME_INTERVAL_SECONDS", "3600"))
 
         # number of consumes to execute in a single transaction
-        self.batch_size = int(getenv("CONSUME_BATCH_SIZE", "5"))
+        self.batch_size = int(getenv("CONSUME_BATCH_SIZE", "20"))
 
         self.amount_per_interval = float(
             self.weekly_spending_limit / (7 * 24 * 3600) * self.consume_interval_seconds

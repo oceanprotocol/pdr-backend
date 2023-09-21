@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.dfbuyer.main import main
 
 
