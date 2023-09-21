@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 import pytest
-from pdr_backend.conftest_ganache import *
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.models.feed import Feed
@@ -36,6 +35,7 @@ def mock_token():
         yield mock
 
 
+# pylint: disable=redefined-outer-name, unused-argument
 @pytest.fixture
 def dfbuyer_agent(mock_get_address, mock_token, dfbuyer_config):
     return DFBuyerAgent(dfbuyer_config)

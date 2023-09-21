@@ -64,9 +64,7 @@ def test_prepare_batches(dfbuyer_agent):
     dfbuyer_agent.config.batch_size = 10
 
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    consume_times = {
-        address: times for address, times in zip(addresses, [5, 15, 7, 3, 12, 8])
-    }
+    consume_times = dict(zip(addresses, [5, 15, 7, 3, 12, 8]))
     result = dfbuyer_agent._prepare_batches(consume_times)
 
     expected_result = [

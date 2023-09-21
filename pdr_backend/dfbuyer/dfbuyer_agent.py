@@ -169,7 +169,6 @@ class DFBuyerAgent:
         return prices
 
     def _get_consume_so_far(self, ts: int) -> Dict[str, float]:
-        # TODO Update me to consider other dfbuyer instances
         week_start = (math.floor(ts / WEEK)) * WEEK
         consume_so_far = get_consume_so_far_per_contract(
             self.config.subgraph_url,
