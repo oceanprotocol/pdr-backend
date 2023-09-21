@@ -3,6 +3,7 @@
 - the functions below provide other specific examples, that are used by agents of pdr-backend
 """
 
+from collections import defaultdict
 from typing import Optional, Dict, List
 
 from enforce_typing import enforce_types
@@ -367,3 +368,68 @@ def get_pending_slots(
             break
 
     return slots
+
+
+def get_consume_so_far_per_contract(
+    subgraph_url: str,
+    user_address: str,
+    since_timestamp: int,
+    contract_addresses: List[str],
+) -> Dict[str, float]:
+    chunk_size = 1000  # max for subgraph = 1000
+    offset = 0
+    consume_so_far: Dict[str, float] = defaultdict(float)
+    while True:  # pylint: disable=too-many-nested-blocks
+        query = """
+        {
+            predictContracts(skip:%s, first:%s, where: {id_in: %s}){
+                id	
+                token{
+                    id
+                    name
+                    symbol
+                    nft {
+                        owner {
+                            id
+                        }
+                        nftData {
+                            key
+                            value
+                        }
+                    }
+                    orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}){
+        		        createdTimestamp
+                        consumer {
+                            id
+                        }
+                        lastPriceValue
+                    }
+                }
+                secondsPerEpoch
+                secondsPerSubscription
+                truevalSubmitTimeout
+            }
+        }
+        """ % (
+            offset,
+            chunk_size,
+            str(contract_addresses).replace("'", '"'),
+            since_timestamp,
+            user_address.lower(),
+        )
+        offset += chunk_size
+        result = query_subgraph(subgraph_url, query)
+        contracts = result["data"]["predictContracts"]
+        if contracts == []:
+            break
+        for contract in contracts:
+            contract_address = contract["id"]
+            if contract_address not in contract_addresses:
+                continue
+            for buy in contract["token"]["orders"]:
+                # 1.2 20% fee
+                # 0.001 0.01% community swap fee
+                consume_so_far[contract_address] += (
+                    float(buy["lastPriceValue"]) * 1.2 * 1.001
+                )
+    return consume_so_far
