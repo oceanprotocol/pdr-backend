@@ -20,7 +20,7 @@ class PredictoorBatcher(BaseContract):
         gasPrice = self.config.w3.eth.gas_price
         tx = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
-        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+        ).transact({"from": self.config.owner, "gasPrice": gasPrice, "gas": 14_000_000})
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
