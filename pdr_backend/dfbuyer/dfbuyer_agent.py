@@ -132,11 +132,7 @@ class DFBuyerAgent:
                     times_to_consume = []
         return batches
 
-    def _consume_batch(self, addresses_to_consume, times_to_consume):
-        print("-" * 40)
-        print(
-            f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
-        )
+    def _consume(self, addresses_to_consume, times_to_consume):
         for i in range(self.config.max_request_tries):
             try:
                 tx = self.predictoor_batcher.consume_multiple(
@@ -147,9 +143,10 @@ class DFBuyerAgent:
                 )
                 tx_hash = tx["transactionHash"].hex()
                 if tx["status"] != 1:
-                    raise Exception(f"     Tx reverted: {tx_hash}")
+                    print(f"     Tx reverted: {tx_hash}")
+                    return False
                 print(f"     Tx sent: {tx_hash}")
-                break
+                return True
             except Exception as e:
                 print(f"     Attempt {i+1} failed with error: {e}")
                 time.sleep(1)
@@ -157,8 +154,41 @@ class DFBuyerAgent:
                     print("     Failed to consume contracts after 5 attempts.")
                     raise
 
+    def _consume_batch(self, addresses_to_consume, times_to_consume):
+        print("-" * 40)
+        print(
+            f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
+        )
+        success = self._consume(addresses_to_consume, times_to_consume)
+        if success:
+            return
+
+        # If batch consumption fails due to transaction revert, fall back to consuming one by one
+        print("     Transaction reverted, consuming one by one...")
+        for address, time in zip(addresses_to_consume, times_to_consume):
+            success = False
+            if len(addresses_to_consume) != 1:
+                print(f"          Consuming {address} for {time} times")
+                success = self._consume([address], [time])
+                if not success:
+                    print(
+                        "     Transaction reverted again, splitting consumption into two parts..."
+                    )
+            if success:
+                continue
+
+            # If individual consumption fails or there's only one address, split the consumption into two parts
+            half_time = time // 2
+            print(f"          Consuming {address} for {half_time} times")
+            if not self._consume([address], [half_time]):
+                print("Transaction reverted again, please adjust batch size")
+            print(f"          Consuming {address} for {half_time + time % 2} times")
+            if not self._consume([address], [half_time + time % 2]):
+                print("Transaction reverted again, please adjust batch size")
+
     def _batch_txs(self, consume_times: Dict[str, int]):
         batches = self._prepare_batches(consume_times)
+        print(f"Processing {len(batches)} batches...")
         for addresses_to_consume, times_to_consume in batches:
             self._consume_batch(addresses_to_consume, times_to_consume)
 
