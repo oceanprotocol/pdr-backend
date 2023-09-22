@@ -153,6 +153,7 @@ class DFBuyerAgent:
                 if i == 4:
                     print("     Failed to consume contracts after 5 attempts.")
                     raise
+        return False
 
     def _consume_batch(self, addresses_to_consume, times_to_consume):
         print("-" * 40)
@@ -165,11 +166,11 @@ class DFBuyerAgent:
 
         # If batch consumption fails due to transaction revert, fall back to consuming one by one
         print("     Transaction reverted, consuming one by one...")
-        for address, time in zip(addresses_to_consume, times_to_consume):
+        for address, times in zip(addresses_to_consume, times_to_consume):
             success = False
             if len(addresses_to_consume) != 1:
-                print(f"          Consuming {address} for {time} times")
-                success = self._consume([address], [time])
+                print(f"          Consuming {address} for {times} times")
+                success = self._consume([address], [times])
                 if not success:
                     print(
                         "     Transaction reverted again, splitting consumption into two parts..."
@@ -177,13 +178,14 @@ class DFBuyerAgent:
             if success:
                 continue
 
-            # If individual consumption fails or there's only one address, split the consumption into two parts
-            half_time = time // 2
+            # If individual consumption fails or there's only one address
+            # split the consumption into two parts
+            half_time = times // 2
             print(f"          Consuming {address} for {half_time} times")
             if not self._consume([address], [half_time]):
                 print("Transaction reverted again, please adjust batch size")
-            print(f"          Consuming {address} for {half_time + time % 2} times")
-            if not self._consume([address], [half_time + time % 2]):
+            print(f"          Consuming {address} for {half_time + times % 2} times")
+            if not self._consume([address], [half_time + times % 2]):
                 print("Transaction reverted again, please adjust batch size")
 
     def _batch_txs(self, consume_times: Dict[str, int]):
