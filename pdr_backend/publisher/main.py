@@ -87,6 +87,19 @@ def main():
                 cut=0.2,
                 web3_config=web3_config,
             )
+            publish(
+                s_per_epoch=3600,
+                s_per_subscription=60 * 60 * 24,
+                base=pair,
+                quote="USDT",
+                source="binance",
+                timeframe="1h",
+                trueval_submitter_addr=helper_contract,
+                feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
+                rate=rate,
+                cut=0.2,
+                web3_config=web3_config,
+            )
 
     if web3_config.w3.eth.chain_id == 23294:
         raise NotImplementedError("Mainnet deployment configuration is missing")
