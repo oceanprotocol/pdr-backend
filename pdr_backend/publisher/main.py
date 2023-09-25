@@ -1,3 +1,5 @@
+from os import getenv
+
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
@@ -7,6 +9,7 @@ from pdr_backend.util.web3_config import Web3Config
 def main():
     rpc_url = getenv_or_exit("RPC_URL")
     private_key = getenv_or_exit("PRIVATE_KEY")
+    fee_collector = getenv("FEE_COLLECTOR")
 
     web3_config = Web3Config(rpc_url, private_key)
     ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
@@ -102,7 +105,36 @@ def main():
             )
 
     if web3_config.w3.eth.chain_id == 23294:
-        raise NotImplementedError("Mainnet deployment configuration is missing")
+        rate = 3 / (1 + 0.2 + 0.001)
+        pair_list = ["BTC", "ETH", "BNB", "XRP", "ADA", "DOGE", "SOL", "LTC", "TRX", "DOT"]
+        helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
+        for pair in pair_list:
+            publish(
+                s_per_epoch=300,
+                s_per_subscription=60 * 60 * 24,
+                base=pair,
+                quote="USDT",
+                source="binance",
+                timeframe="5m",
+                trueval_submitter_addr=helper_contract,
+                feeCollector_addr=fee_collector,
+                rate=rate,
+                cut=0.2,
+                web3_config=web3_config,
+            )
+            publish(
+                s_per_epoch=3600,
+                s_per_subscription=60 * 60 * 24,
+                base=pair,
+                quote="USDT",
+                source="binance",
+                timeframe="1h",
+                trueval_submitter_addr=helper_contract,
+                feeCollector_addr=fee_collector,
+                rate=rate,
+                cut=0.2,
+                web3_config=web3_config,
+            )
 
 if __name__ == "__main__":
     main()
