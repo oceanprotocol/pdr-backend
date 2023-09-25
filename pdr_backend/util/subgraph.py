@@ -382,7 +382,7 @@ def get_consume_so_far_per_contract(
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
-            predictContracts(skip:%s, first:%s, where: {id_in: %s}){
+            predictContracts(first:1000, where: {id_in: %s}){
                 id	
                 token{
                     id
@@ -397,7 +397,7 @@ def get_consume_so_far_per_contract(
                             value
                         }
                     }
-                    orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}){
+                    orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}, first: %s, skip: %s){
         		        createdTimestamp
                         consumer {
                             id
@@ -411,25 +411,31 @@ def get_consume_so_far_per_contract(
             }
         }
         """ % (
-            offset,
-            chunk_size,
             str(contract_addresses).replace("'", '"'),
             since_timestamp,
             user_address.lower(),
+            chunk_size,
+            offset,
         )
         offset += chunk_size
         result = query_subgraph(subgraph_url, query)
         contracts = result["data"]["predictContracts"]
         if contracts == []:
             break
+        no_of_zeroes = 0
         for contract in contracts:
             contract_address = contract["id"]
             if contract_address not in contract_addresses:
                 continue
+            order_count = len(contract["token"]["orders"])
+            if order_count == 0:
+                no_of_zeroes += 1
             for buy in contract["token"]["orders"]:
                 # 1.2 20% fee
                 # 0.001 0.01% community swap fee
                 consume_so_far[contract_address] += (
                     float(buy["lastPriceValue"]) * 1.2 * 1.001
                 )
+        if no_of_zeroes == len(contracts):
+            break
     return consume_so_far
