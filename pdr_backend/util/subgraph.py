@@ -369,6 +369,7 @@ def get_pending_slots(
 
     return slots
 
+
 def get_consume_so_far_per_contract(
     subgraph_url: str,
     user_address: str,
@@ -414,7 +415,7 @@ def get_consume_so_far_per_contract(
             since_timestamp,
             user_address.lower(),
             chunk_size,
-            offset
+            offset,
         )
         offset += chunk_size
         result = query_subgraph(subgraph_url, query)
@@ -426,7 +427,7 @@ def get_consume_so_far_per_contract(
             contract_address = contract["id"]
             if contract_address not in contract_addresses:
                 continue
-            order_count = (len(contract["token"]["orders"]))
+            order_count = len(contract["token"]["orders"])
             if order_count == 0:
                 no_of_zeroes += 1
             for buy in contract["token"]["orders"]:
