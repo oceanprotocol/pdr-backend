@@ -9,14 +9,14 @@ from pdr_backend.models.feed import Feed
 
 def mock_fetch_ohlcv(*args, **kwargs):
     since = kwargs.get("since")
-    if since == 1000:
-        return [[1000, 100], [2000, 200]]
+    if since == 0:
+        return [[0, 0, 0, 0, 100], [60000, 0, 0, 0, 200]]
     else:
         raise ValueError("Invalid timestamp")
 
 
 def mock_fetch_ohlcv_fail(*args, **kwargs):
-    return [[0, 0]]
+    return [[0, 0, 0, 0, 0]]
 
 
 @enforce_types
@@ -34,16 +34,10 @@ def test_get_trueval_success(monkeypatch):
         owner="0xowner",
     )
 
-    def mock_fetch_ohlcv(*args, **kwargs):
-        since = kwargs.get("since")
-        if since == 1:
-            return [[None, 100]]
-        elif since == 2:
-            return [[None, 200]]
-        else:
-            raise ValueError("Invalid timestamp")
-
     monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
+
+    result = get_trueval(feed, 60, 120)
+    assert result == (True, False)
 
 
 @enforce_types
@@ -52,7 +46,7 @@ def test_get_trueval_live_lowercase_slash_5m():
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
-        seconds_per_epoch=60,
+        seconds_per_epoch=300,
         seconds_per_subscription=500,
         pair="btc/usdt",
         source="kucoin",
@@ -71,7 +65,7 @@ def test_get_trueval_live_lowercase_dash_1h():
         name="ETH-USDT",
         address="0x1",
         symbol="ETH-USDT",
-        seconds_per_epoch=60,
+        seconds_per_epoch=3600,
         seconds_per_subscription=500,
         pair="btc-usdt",
         source="kucoin",
