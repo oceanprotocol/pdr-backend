@@ -1,8 +1,6 @@
-from collections import defaultdict
 import math
 import sys
 import time
-from typing import Dict
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token
 from pdr_backend.util.contract import get_address
@@ -21,52 +19,30 @@ def print_stats(contract_dict, field_name, threshold=0.9):
     print(f"{token_name}: {with_field}/{count} - {status}")
 
 
-def get_expected_consume(ts: int):
+def check_dfbuyer(dfbuyer_addr, contract_query_result):
+    ts_now = time.time()
+    ts_start_time = int((ts_now // WEEK) * WEEK)
+    sofar = get_consume_so_far_per_contract(
+        config.subgraph_url,
+        dfbuyer_addr,
+        ts_start_time,
+        [i["id"] for i in contract_query_result["data"]["predictContracts"]],
+    )
+    expected = get_expected_consume(int(ts_now))
+    print(
+        f"Checking consume amounts (dfbuyer), expecting {expected} consume per contract"
+    )
+    for addr, x in sofar.items():
+        log_text = "PASS" if x >= expected else "FAIL"
+        print(f"    {log_text}... got: {x} for contract: {addr}")
+
+
+def get_expected_consume(for_ts: int):
     amount_per_feed_per_interval = 37000 / 7 / 20
-    week_start = (math.floor(ts / WEEK)) * WEEK
-    time_passed = ts - week_start
+    week_start = (math.floor(for_ts / WEEK)) * WEEK
+    time_passed = for_ts - week_start
     n_intervals = int(time_passed / 86400)
     return n_intervals * amount_per_feed_per_interval
-
-
-def check_consume_dfbuyer(address: str):
-    chunk_size = 1000
-    offset = 0
-    consume_per_contract: Dict[str, float] = defaultdict(float)
-    ts = time.time()
-    ts_start = int((ts // WEEK) * WEEK)
-    while True:
-        query = """
-        {
-            predictSubscriptions(where: {user_: {id: "%s"}, timestamp_gt: %s}, first: 1000, skip: %s) {
-                id
-                predictContract {
-                    id
-                }
-                user {
-                    id
-                }
-            }
-        }
-        """ % (
-            address,
-            ts_start,
-            offset,
-        )
-        result = query_subgraph(config.subgraph_url, query, timeout=10.0)
-        data = result["data"]["predictSubscriptions"]
-        offset += chunk_size
-
-        if len(data) == 0:
-            break
-
-        for subscription in data:
-            contract_address = subscription["predictContract"]["id"]
-            consume_per_contract[contract_address] += 3.0
-
-    print(consume_per_contract)
-
-    return consume_per_contract
 
 
 if __name__ == "__main__":
@@ -176,22 +152,6 @@ if __name__ == "__main__":
             print(native_warning)
         print()
 
-
     # ---------------- dfbuyer ----------------
 
-    ts = time.time()
-    ts_start = int((ts // WEEK) * WEEK)
-    sofar = get_consume_so_far_per_contract(
-        config.subgraph_url,
-        addresses["dfbuyer"].lower(),
-        ts_start,
-        [i["id"] for i in result["data"]["predictContracts"]],
-    )
-    expected = get_expected_consume(int(ts))
-    i = 0
-    print(
-        f"Checking consume amounts (dfbuyer), expecting {expected} consume per contract"
-    )
-    for addr, x in sofar.items():
-        result = "PASS" if x >= expected else "FAIL"
-        print(f"    {result}... got: {x} for contract: {addr}")
+    check_dfbuyer(addresses["dfbuyer"].lower(), result)
