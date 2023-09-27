@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Installation
 - [Install Barge](#install-barge)
+- [Run Docker](#run-docker)
 
 Reference: how to run barge with...
 - [No agents](#barge-basic) - just ganache chain & predictoor contracts
@@ -35,6 +36,16 @@ docker system prune -a --volumes
 ```
 
 The sections below describe different ways to run barge. They're for reference only; DO NOT run them right now. Each README will describe what to do.
+
+## Run Docker
+
+To run barge, you need the Docker engine running. 
+
+If you're on Linux: you're good, there's nothing extra to do.
+
+If MacOS: 
+- via console: `open -a Docker`
+- or, via app: open Finder app, find Docker, click it
 
 ## Barge Basic
 
