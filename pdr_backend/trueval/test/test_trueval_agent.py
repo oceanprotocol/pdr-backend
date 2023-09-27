@@ -137,6 +137,16 @@ def test_run(slot, agent):
     ps_mock.assert_called_once_with(slot)
 
 
+@enforce_types
+def test_get_init_and_ts(agent):
+    ts = 2000
+    seconds_per_epoch = 300
+
+    (initial_ts, end_ts) = agent.get_init_and_ts(ts, seconds_per_epoch)
+    assert initial_ts == ts - 300
+    assert end_ts == ts
+
+
 # ----------------------------------------------
 # Fixtures
 
