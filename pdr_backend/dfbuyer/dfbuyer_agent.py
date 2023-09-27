@@ -77,7 +77,7 @@ class DFBuyerAgent:
             int(ts / self.config.consume_interval_seconds)
             * self.config.consume_interval_seconds
         )
-        seconds_left = (interval_start + self.config.consume_interval_seconds) - ts
+        seconds_left = (interval_start + self.config.consume_interval_seconds) - ts + 60
         print(
             f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
         )
