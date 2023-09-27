@@ -144,7 +144,7 @@ def test_take_step(
     )
     mock_batch_txs.assert_called_once_with(mock_get_missing_consume_times.return_value)
     mock_get_block.assert_called_once_with("latest")
-    mock_sleep.assert_called_once_with(3600 - 60)
+    mock_sleep.assert_called_once_with(3600)
 
 
 @patch.object(DFBuyerAgent, "take_step")
