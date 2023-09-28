@@ -58,7 +58,7 @@ def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
         result2 * len(dfbuyer_agent.feeds) == 37000
     )  # last day, should distribute all
 
-    result3 = dfbuyer_agent._get_expected_amount_per_feed(end)
+    result3 = dfbuyer_agent._get_expected_amount_per_feed(just_before_new_week)
     assert result3 == amount_per_feed_per_interval * 7
     assert result3 * len(dfbuyer_agent.feeds) == 37000  # still last day
 
