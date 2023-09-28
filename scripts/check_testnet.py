@@ -41,7 +41,7 @@ def get_expected_consume(for_ts: int):
     amount_per_feed_per_interval = 37000 / 7 / 20
     week_start = (math.floor(for_ts / WEEK)) * WEEK
     time_passed = for_ts - week_start
-    n_intervals = int(time_passed / 86400)
+    n_intervals = int(time_passed / 86400) + 1
     return n_intervals * amount_per_feed_per_interval
 
 
