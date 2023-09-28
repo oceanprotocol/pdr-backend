@@ -218,6 +218,6 @@ class DFBuyerAgent:
         time_passed = ts - week_start
 
         # find out how many intervals has passed
-        n_intervals = int(time_passed / self.config.consume_interval_seconds)
+        n_intervals = int(time_passed / self.config.consume_interval_seconds) + 1
 
         return n_intervals * amount_per_feed_per_interval
