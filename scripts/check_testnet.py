@@ -149,6 +149,7 @@ if __name__ == "__main__":
         ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 100 else " OK "
         native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 50 else " OK "
 
+        # pylint: disable=line-too-long
         print(
             f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}, Native: {native_bal:.2f}{native_warning}"
         )
