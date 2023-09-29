@@ -1,0 +1,45 @@
+name: Run Script and Notify Slack
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements
+
+      - name: Run Check Script and Filter Output
+        id: script
+        env:
+          RPC_URL: "https://testnet.sapphire.oasis.dev"
+          SUBGRAPH_URL: "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+          PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
+        run: |
+          output=$(python your_script.py | grep -E 'FAIL|WARNING')
+          echo "::set-output name=output::$output"
+
+      - name: Get Joke from API
+        id: joke
+        run: |
+          joke=$(curl -s https://official-joke-api.appspot.com/jokes/general/random | jq -r '.[0].setup, .[0].punchline')
+          echo "::set-output name=joke::$joke"
+
+      - name: Notify Slack
+        if: steps.script.outputs.output != ''
+        run: |
+          message="Check script failed: \n${{ steps.script.outputs.output }}\nHere's a funny joke to make your day: ${{ steps.joke.outputs.joke }}"
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL }}
