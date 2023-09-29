@@ -42,7 +42,7 @@ def check_dfbuyer(dfbuyer_addr, contract_query_result):
     )
     for addr, x in sofar.items():
         log_text = "PASS" if x >= expected else "FAIL"
-        print(f"    {log_text}... got: {x} for contract: {addr}")
+        print(f"    {log_text}... got {x} consume for contract: {addr}, expected {expected}")
 
 
 def get_expected_consume(for_ts: int):
