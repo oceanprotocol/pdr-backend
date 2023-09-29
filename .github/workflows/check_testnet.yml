@@ -42,4 +42,4 @@ jobs:
         if: steps.script.outputs.output != ''
         run: |
           message="Check script failed: \n${{ steps.script.outputs.output }}\nHere's a funny joke to make your day: ${{ steps.joke.outputs.joke }}"
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL }}
