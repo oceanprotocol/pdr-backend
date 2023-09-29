@@ -9,14 +9,22 @@ from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_sub
 WEEK = 86400 * 7
 
 
+def seconds_to_text(seconds: int) -> str:
+    if seconds == 300:
+        return "5m"
+    if seconds == 3600:
+        return "1h"
+    return ""
+
+
 def print_stats(contract_dict, field_name, threshold=0.9):
     count = sum(1 for _ in contract_dict["slots"])
     with_field = sum(1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0)
 
-    status = "OK" if with_field / count > threshold else "FAIL"
+    status = "PASS" if with_field / count > threshold else "FAIL"
     token_name = contract_dict["token"]["name"]
-
-    print(f"{token_name}: {with_field}/{count} - {status}")
+    timeframe = seconds_to_text(int(contract_dict["secondsPerEpoch"]))
+    print(f"{token_name} {timeframe}: {with_field}/{count} {field_name} - {status}")
 
 
 def check_dfbuyer(dfbuyer_addr, contract_query_result):
@@ -98,6 +106,7 @@ if __name__ == "__main__":
                             trueValue
                         }
                     }
+                    secondsPerEpoch
                 } 
             }
             """ % (
@@ -134,23 +143,13 @@ if __name__ == "__main__":
 
         ocean_bal = ocean_bal_wei / 1e18
         native_bal = native_bal_wei / 1e18
-        header = f"{'-' * 10} {name}'s Wallet {'-' * 10}"
-        address_line = f"Address: {value}"
-        ocean_line = f"OCEAN Balance: {ocean_bal:.2f}"
-        native_line = f"Native Balance: {native_bal:.2f}"
 
-        ocean_warning = "WARNING: Low OCEAN balance!" if ocean_bal < 10 else ""
-        native_warning = "WARNING: Low Native balance!" if native_bal < 10 else ""
+        ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 100 else " OK "
+        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 50 else " OK "
 
-        print(header)
-        print(address_line)
-        print(ocean_line)
-        if ocean_warning:
-            print(ocean_warning)
-        print(native_line)
-        if native_warning:
-            print(native_warning)
-        print()
+        print(
+            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}, Native: {native_bal:.2f}{native_warning}"
+        )
 
     # ---------------- dfbuyer ----------------
 
