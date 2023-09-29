@@ -10,10 +10,10 @@ def test_trueval_config():
     assert config.private_key == os.getenv("PRIVATE_KEY")
     assert config.batch_size == int(os.getenv("CONSUME_BATCH_SIZE", "20"))
     assert config.weekly_spending_limit == int(
-        os.getenv("WEEKLY_SPENDING_LIMIT", "100")
+        os.getenv("WEEKLY_SPENDING_LIMIT", "37000")
     )
     assert config.consume_interval_seconds == int(
-        os.getenv("CONSUME_INTERVAL_SECONDS", "3600")
+        os.getenv("CONSUME_INTERVAL_SECONDS", "86400")
     )
 
     (f0, f1, f2, f3) = parse_filters()
