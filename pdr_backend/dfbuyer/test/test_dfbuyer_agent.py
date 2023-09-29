@@ -34,10 +34,33 @@ def test_get_expected_amount_per_feed(dfbuyer_agent):
     )
     week_start = (math.floor(ts / WEEK)) * WEEK
     time_passed = ts - week_start
-    n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds)
+    n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds) + 1
     expected_result = n_intervals * amount_per_feed_per_interval
     result = dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result == expected_result
+
+
+def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
+    ts = 16958592000
+    end = ts + WEEK - 86400  # last day
+    just_before_new_week = ts + WEEK - 1  # 1 second before next week
+
+    amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
+        dfbuyer_agent.feeds
+    )
+    result1 = dfbuyer_agent._get_expected_amount_per_feed(ts)
+    assert result1 == amount_per_feed_per_interval
+    assert result1 * len(dfbuyer_agent.feeds) == 37000 / 7  # first day
+
+    result2 = dfbuyer_agent._get_expected_amount_per_feed(end)
+    assert result2 == amount_per_feed_per_interval * 7
+    assert (
+        result2 * len(dfbuyer_agent.feeds) == 37000
+    )  # last day, should distribute all
+
+    result3 = dfbuyer_agent._get_expected_amount_per_feed(just_before_new_week)
+    assert result3 == amount_per_feed_per_interval * 7
+    assert result3 * len(dfbuyer_agent.feeds) == 37000  # still last day
 
 
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract")
@@ -133,7 +156,7 @@ def test_take_step(
     mock_get_missing_consumes.return_value = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
     mock_get_prices.return_value = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
     mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
-    mock_get_block.return_value = {"timestamp": 60}
+    mock_get_block.return_value = {"timestamp": 120}
     dfbuyer_agent.take_step(ts)
     mock_get_missing_consumes.assert_called_once_with(ts)
     mock_get_prices.assert_called_once_with(
@@ -144,7 +167,7 @@ def test_take_step(
     )
     mock_batch_txs.assert_called_once_with(mock_get_missing_consume_times.return_value)
     mock_get_block.assert_called_once_with("latest")
-    mock_sleep.assert_called_once_with(3600)
+    mock_sleep.assert_called_once_with(86400 - 60)
 
 
 @patch.object(DFBuyerAgent, "take_step")
