@@ -1,6 +1,6 @@
 # Get OCEAN tokens on Sapphire Mainnet
 
-## Get OCEAN tokens on mainnet
+## Get OCEAN tokens on Ethereum Mainnet
 
 ### Create a Wallet
 
