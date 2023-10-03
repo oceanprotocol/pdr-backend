@@ -27,7 +27,7 @@ def print_stats(contract_dict, field_name, threshold=0.9):
     print(f"{token_name} {timeframe}: {with_field}/{count} {field_name} - {status}")
 
 
-def check_dfbuyer(dfbuyer_addr, contract_query_result):
+def check_dfbuyer(dfbuyer_addr, contract_query_result, config):
     ts_now = time.time()
     ts_start_time = int((ts_now // WEEK) * WEEK)
     sofar = get_consume_so_far_per_contract(
@@ -156,4 +156,4 @@ if __name__ == "__main__":
 
     # ---------------- dfbuyer ----------------
 
-    check_dfbuyer(addresses["dfbuyer"].lower(), result)
+    check_dfbuyer(addresses["dfbuyer"].lower(), result, config)
