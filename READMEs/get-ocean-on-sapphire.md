@@ -1,4 +1,4 @@
-# Getting OCEAN tokens on Sapphire Mainnet
+# Get OCEAN tokens on Sapphire Mainnet
 
 ## Get OCEAN tokens on mainnet
 
