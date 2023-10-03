@@ -4,7 +4,7 @@
 
 ### Create a Wallet
 
-To begin, ensure you have a web3 wallet that supports OCEAN tokens. Examples include MetaMask, TrustWallet, and MyEtherWallet.
+For optimal support and the ability to transfer ROSE tokens between paratimes, it's recommended to use the Oasis Wallet extension for Chrome. Follow the detailed instructions provided in the official [Oasis Wallet extension documentation](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) to install and setup your wallet.
 
 ### Purchase OCEAN Tokens
 
