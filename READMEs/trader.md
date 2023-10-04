@@ -46,7 +46,7 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 python pdr_backend/trader/main.py
 ```
 
-There are other environment variables that you might want to set, such as the owner addresses. To get more information about them check out the [environment variables documentation](./envvars.md).
+There are other envvars that you might want to set, such as the owner addresses. The [envvars README](./envvars.md) has more info.
 
 Relax & watch as the predictoor bot submits random predictions, trueval submits random true_vals for each epoch and trader signals trades.
 
