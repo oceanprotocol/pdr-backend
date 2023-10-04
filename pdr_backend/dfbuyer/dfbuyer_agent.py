@@ -9,7 +9,10 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.token import Token
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.subgraph import get_consume_so_far_per_contract
+from pdr_backend.util.subgraph import (
+    get_consume_so_far_per_contract,
+    wait_till_subgraph_syncs,
+)
 
 WEEK = 7 * 86400
 
@@ -57,7 +60,7 @@ class DFBuyerAgent:
 
     def take_step(self, ts: int):
         print("Taking step for timestamp:", ts)
-
+        wait_till_subgraph_syncs(self.config.web3_config, self.config.subgraph_url)
         missing_consumes_amt = self._get_missing_consumes(ts)
         print("Missing consume amounts:", missing_consumes_amt)
 
