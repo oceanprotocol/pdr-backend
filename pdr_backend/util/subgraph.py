@@ -417,6 +417,7 @@ def get_consume_so_far_per_contract(
             chunk_size,
             offset,
         )
+        print(query)
         offset += chunk_size
         result = query_subgraph(subgraph_url, query)
         contracts = result["data"]["predictContracts"]
@@ -439,3 +440,20 @@ def get_consume_so_far_per_contract(
         if no_of_zeroes == len(contracts):
             break
     return consume_so_far
+
+
+def is_block_number_synced(subgraph_url: str, block_number: int) -> bool:
+    query = """
+        {
+            predictContracts(block:{number:%s}){
+                id
+            }
+        }
+    """ % (
+        block_number
+    )
+
+    result = query_subgraph(subgraph_url, query)
+    if "errors" in result:
+        return False
+    return True

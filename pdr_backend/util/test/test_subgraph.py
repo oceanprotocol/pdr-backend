@@ -8,6 +8,7 @@ from pytest import approx
 
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.subgraph import (
+    is_block_number_synced,
     key_to_725,
     value_to_725,
     value_from_725,
@@ -339,3 +340,22 @@ def test_get_consume_so_far_per_contract():
         )
 
     assert consumes["contract1"] == approx(6, 0.001)
+
+
+def test_is_block_number_synced():
+    def mock_response(url: str, query: str):
+        if "number:50" in query:
+            return {
+                "errors": [
+                    {
+                        "message": "Failed to decode `block.number` value: `subgraph QmaGAi4jQw5L8J2xjnofAJb1PX5LLqRvGjsWbVehBELAUx only has data starting at block number 499 and data for block number 500 is therefore not available`"
+                    }
+                ]
+            }
+        else:
+            return {"data": {"predictContracts": [{"id": "sample_id"}]}}
+
+    with patch("pdr_backend.util.subgraph.query_subgraph", side_effect=mock_response):
+        assert is_block_number_synced("foo", 499) == True
+        assert is_block_number_synced("foo", 500) == False
+        assert is_block_number_synced("foo", 501) == False
