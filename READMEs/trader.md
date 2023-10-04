@@ -62,7 +62,11 @@ To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
 ## Remote Mainnet Usage
 
-FIXME
+To run trader as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+
+To get ROSE tokens on Sapphire Mainnet: see [get-rose-on-sapphire.md](get-rose-on-sapphire.md)
+
+To get OCEAN tokens on Sapphire Mainnet: see [get-ocean-on-sapphire.md](get-ocean-on-sapphire.md)
 
 ## Final note
 
