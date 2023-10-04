@@ -4,11 +4,13 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 
 from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
 class TruevalAgentSingle(TruevalAgentBase):
     def take_step(self):
+        wait_till_subgraph_syncs(self.config.web3_config, self.config.subgraph_url)
         pending_slots = self.get_batch()
 
         if len(pending_slots) == 0:
