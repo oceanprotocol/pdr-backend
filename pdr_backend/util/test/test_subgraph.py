@@ -343,19 +343,20 @@ def test_get_consume_so_far_per_contract():
 
 
 def test_is_block_number_synced():
-    def mock_response(url: str, query: str):
+    def mock_response(url: str, query: str):  # pylint:disable=unused-argument
         if "number:50" in query:
             return {
                 "errors": [
                     {
+                        # pylint: disable=line-too-long
                         "message": "Failed to decode `block.number` value: `subgraph QmaGAi4jQw5L8J2xjnofAJb1PX5LLqRvGjsWbVehBELAUx only has data starting at block number 499 and data for block number 500 is therefore not available`"
                     }
                 ]
             }
-        else:
-            return {"data": {"predictContracts": [{"id": "sample_id"}]}}
+
+        return {"data": {"predictContracts": [{"id": "sample_id"}]}}
 
     with patch("pdr_backend.util.subgraph.query_subgraph", side_effect=mock_response):
-        assert is_block_number_synced("foo", 499) == True
-        assert is_block_number_synced("foo", 500) == False
-        assert is_block_number_synced("foo", 501) == False
+        assert is_block_number_synced("foo", 499) is True
+        assert is_block_number_synced("foo", 500) is False
+        assert is_block_number_synced("foo", 501) is False
