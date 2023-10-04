@@ -2,7 +2,7 @@
 - READMEs/subgraph.md describes usage of Predictoor subgraph, with an example query
 - the functions below provide other specific examples, that are used by agents of pdr-backend
 """
-
+import time
 from collections import defaultdict
 from typing import Optional, Dict, List
 
@@ -13,6 +13,7 @@ from web3 import Web3
 from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
+from pdr_backend.util.web3_config import Web3Config
 
 _N_ERRORS = {}  # exception_str : num_occurrences
 _N_THR = 3
@@ -452,8 +453,17 @@ def is_block_number_synced(subgraph_url: str, block_number: int) -> bool:
     """ % (
         block_number
     )
-
-    result = query_subgraph(subgraph_url, query)
-    if "errors" in result:
+    try:
+        result = query_subgraph(subgraph_url, query)
+        if "errors" in result:
+            return False
+    except Exception as _:
         return False
     return True
+
+
+def wait_till_subgraph_syncs(web3_config: Web3Config, subgraph_url: str):
+    block_number = web3_config.w3.eth.block_number - 2
+    while is_block_number_synced(subgraph_url, block_number) is not True:
+        print("Subgraph is out of sync, trying again in 5 seconds")
+        time.sleep(5)
