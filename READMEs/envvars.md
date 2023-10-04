@@ -1,6 +1,8 @@
-# Environment Variables
+# Environment Variables (Envvars)
 
-## Core Environment Variables
+This page describes core envvars that are used by all agents, then envvars that are specific to each agent.
+
+## Core Envvars
 
 ### Network Configuration
 
@@ -20,23 +22,25 @@
   - **TESTNET**: `0xe02a421dfc549336d47efee85699bd0a3da7d6ff`
   - **MAINNET**: Not deployed yet.
 
-## Agent-Specific Environment Variables
+## Agent-Specific Envvars
 
-### Trueval
+These are envvars that are specific to a given agent.
 
-- **SLEEP_TIME**: The pause duration (in seconds) between batch processing.
-- **BATCH_SIZE**: Maximum number of truevals to handle in a batch.
+### Trueval Agent
 
-### Trader
+- **SLEEP_TIME**: The pause duration (in seconds) between batch processing. Example: `5`
+- **BATCH_SIZE**: Maximum number of truevals to handle in a batch. Example: `3`
 
-- **TRADER_MIN_BUFFER**: Sets a threshold (in seconds) for trade decisions. For example, if set to 180 and there's 179 seconds left, no trade. If 181, then trade.
+### Trader Agent
 
-### Predictoor
+- **TRADER_MIN_BUFFER**: Sets a threshold (in seconds) for trade decisions. Example: if value is `180` and there's 179 seconds left, no trade. If 181 seconds left, then trade.
 
-- **SECONDS_TILL_EPOCH_END**: Determines how soon to start predicting.
+### Predictoor Agent
 
-### DFBuyer
+- **SECONDS_TILL_EPOCH_END**: Determines how soon to start predicting. Example: if value is `60` then it will start submitting predictions 60 seconds before. It will continue to periodically submit predictions until there's no time left.
 
-- **CONSUME_BATCH_SIZE**: Max number of consumes to process in a single transaction.
-- **WEEKLY_SPENDING_LIMIT**: The target amount of tokens to be spent on consumes per week. Should be set to amount of Predictoor DF rewards for that week.
-- **CONSUME_INTERVAL_SECONDS**: The frequency of consumes - in seconds. Ideally set it to 86400 (1 day).
+### DFBuyer Agent
+
+- **CONSUME_BATCH_SIZE**: Max number of consumes to process in a single transaction. Example: `10`
+- **WEEKLY_SPENDING_LIMIT**: The target amount of tokens to be spent on consumes per week. Should be set to amount of Predictoor DF rewards for that week. Denominated in OCEAN. Example: `37000`
+- **CONSUME_INTERVAL_SECONDS**: Time interval between each "buy", denominated in seconds. Example: `86400` (1 day) for it to consume daily. Daily is a good frequency, balancing tx cost with liveness.

@@ -28,7 +28,6 @@ In a new console:
 git clone https://github.com/oceanprotocol/barge
 cd barge
 git checkout predictoor
-export GANACHE_BLOCKTIME=5 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
 
 # (optional) Clean up previous Ocean-related containers
 ./cleanup.sh
