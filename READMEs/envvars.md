@@ -1,5 +1,7 @@
 # Environment Variables (Envvars)
 
+This page describes core envvars that are used by all agents, then envvars that are specific to each agent.
+
 ## Core Envvars
 
 ### Network Configuration
