@@ -138,6 +138,7 @@ def test_get_missing_consume_times(dfbuyer_agent):
 
 
 @patch("time.sleep", return_value=None)
+@patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_till_subgraph_syncs")
 @patch.object(DFBuyerAgent, "_get_missing_consumes")
 @patch.object(DFBuyerAgent, "_get_prices")
 @patch.object(DFBuyerAgent, "_get_missing_consume_times")
