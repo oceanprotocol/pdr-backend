@@ -442,6 +442,7 @@ def get_consume_so_far_per_contract(
             break
     return consume_so_far
 
+
 @enforce_types
 def is_block_number_synced(subgraph_url: str, block_number: int) -> bool:
     query = """
@@ -460,6 +461,7 @@ def is_block_number_synced(subgraph_url: str, block_number: int) -> bool:
     except Exception as _:
         return False
     return True
+
 
 @enforce_types
 def wait_till_subgraph_syncs(web3_config: Web3Config, subgraph_url: str):
