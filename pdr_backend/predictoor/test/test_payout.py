@@ -2,6 +2,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.payout import batchify, do_payout, request_payout_batches
+from pdr_backend.util.web3_config import Web3Config
 
 
 def test_batchify():
@@ -35,7 +36,9 @@ def test_request_payout_batches():
 
 def test_do_payout():
     mock_config = Mock()
-    mock_config.web3_config = Mock(return_value=Mock(owner="mock_owner"))
+    mock_config.subgraph_url = ""
+    mock_config.web3_config = Mock(spec=Web3Config)
+    mock_config.web3_config.owner = "mock_owner"
 
     mock_batch_size = "5"
 
@@ -49,7 +52,9 @@ def test_do_payout():
 
     with patch(
         "pdr_backend.predictoor.payout.BaseConfig", return_value=mock_config
-    ), patch("os.getenv", return_value=mock_batch_size), patch(
+    ), patch("pdr_backend.predictoor.payout.wait_until_subgraph_syncs"), patch(
+        "os.getenv", return_value=mock_batch_size
+    ), patch(
         "pdr_backend.predictoor.payout.query_pending_payouts",
         return_value=mock_pending_payouts,
     ), patch(
