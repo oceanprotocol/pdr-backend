@@ -2,7 +2,7 @@
 
 ## 0. Steps
 
-- [1. Get OCEAN on Ethereum Mainnet](#1-get-ocean-on-ethereum-mainnet)
+- [1. Get OCEAN on Eth Mainnet](#1-get-ocean-on-Eth-mainnet)
         - [1. Create a Wallet](#1-create-a-wallet)
         - [2. Purchase OCEAN](#2-purchase-ocean)
 - [2. Transfer OCEAN to Sapphire Mainnet using Celer Bridge](#2-transfer-ocean-to-sapphire-mainnet-using-celer-bridge)
@@ -13,7 +13,7 @@
         - [5. Verify Your Tokens on Sapphire Mainnet](#5-verify-your-tokens-on-sapphire-mainnet)
 - [Conclusion](#conclusion)
 
-## 1. Get OCEAN on Ethereum Mainnet
+## 1. Get OCEAN on Eth Mainnet
 
 ### 1. Create a Wallet
 
