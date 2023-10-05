@@ -52,7 +52,7 @@ def test_do_payout():
 
     with patch(
         "pdr_backend.predictoor.payout.BaseConfig", return_value=mock_config
-    ), patch("pdr_backend.predictoor.payout.wait_till_subgraph_syncs"), patch(
+    ), patch("pdr_backend.predictoor.payout.wait_until_subgraph_syncs"), patch(
         "os.getenv", return_value=mock_batch_size
     ), patch(
         "pdr_backend.predictoor.payout.query_pending_payouts",

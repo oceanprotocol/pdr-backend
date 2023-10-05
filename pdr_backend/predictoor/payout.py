@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.base_config import BaseConfig
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.util.subgraph import query_pending_payouts, wait_till_subgraph_syncs
+from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
 
 
 @enforce_types
@@ -27,7 +27,7 @@ def do_payout():
     config = BaseConfig()
     owner = config.web3_config.owner
     BATCH_SIZE = int(os.getenv("BATCH_SIZE", "10"))
-    wait_till_subgraph_syncs(config.web3_config, config.subgraph_url)
+    wait_until_subgraph_syncs(config.web3_config, config.subgraph_url)
     pending_payouts = query_pending_payouts(config.subgraph_url, owner)
     total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
     print(f"Found {total_timestamps} slots")

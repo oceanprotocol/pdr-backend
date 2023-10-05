@@ -16,7 +16,7 @@ def test_trueval_main_1(slot):
     with patch(
         "pdr_backend.models.base_config.Web3Config", return_value=mocked_web3_config
     ), patch(
-        "pdr_backend.trueval.trueval_agent_single.wait_till_subgraph_syncs"
+        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
     ), patch(
         "time.sleep"
     ), patch(

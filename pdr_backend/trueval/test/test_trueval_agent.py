@@ -108,7 +108,7 @@ def test_take_step(slot, agent):
     with patch.dict("os.environ", mocked_env), patch.object(
         agent.config, "web3_config", new=mocked_web3_config
     ), patch(
-        "pdr_backend.trueval.trueval_agent_single.wait_till_subgraph_syncs"
+        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
     ), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch(
@@ -135,7 +135,7 @@ def test_run(slot, agent):
     with patch.dict("os.environ", mocked_env), patch.object(
         agent.config, "web3_config", new=mocked_web3_config
     ), patch(
-        "pdr_backend.trueval.trueval_agent_single.wait_till_subgraph_syncs"
+        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
     ), patch(
         "time.sleep"
     ), patch.object(
