@@ -137,6 +137,7 @@ def test_get_missing_consume_times(dfbuyer_agent):
     assert result == expected_result
 
 
+@patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs")
 @patch("time.sleep", return_value=None)
 @patch.object(DFBuyerAgent, "_get_missing_consumes")
 @patch.object(DFBuyerAgent, "_get_prices")
@@ -150,6 +151,7 @@ def test_take_step(
     mock_get_prices,
     mock_get_missing_consumes,
     mock_sleep,
+    mock_subgraph_sync,  # pylint: disable=unused-argument
     dfbuyer_agent,
 ):
     ts = 0

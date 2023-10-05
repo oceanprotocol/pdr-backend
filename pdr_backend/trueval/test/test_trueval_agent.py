@@ -6,6 +6,7 @@ import pytest
 from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase, get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
@@ -102,11 +103,17 @@ def test_take_step(slot, agent):
         "BATCH_SIZE": "1",
     }
 
-    mocked_web3_config = MagicMock()
+    mocked_web3_config = MagicMock(spec=Web3Config)
 
     with patch.dict("os.environ", mocked_env), patch.object(
         agent.config, "web3_config", new=mocked_web3_config
-    ), patch("time.sleep"), patch.object(
+    ), patch(
+        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
+    ), patch.object(
+        TruevalConfig, "get_pending_slots", return_value=[slot]
+    ), patch(
+        "time.sleep"
+    ), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgentSingle, "process_slot"
@@ -123,11 +130,15 @@ def test_run(slot, agent):
         "BATCH_SIZE": "1",
     }
 
-    mocked_web3_config = MagicMock()
+    mocked_web3_config = MagicMock(spec=Web3Config)
 
     with patch.dict("os.environ", mocked_env), patch.object(
         agent.config, "web3_config", new=mocked_web3_config
-    ), patch("time.sleep"), patch.object(
+    ), patch(
+        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
+    ), patch(
+        "time.sleep"
+    ), patch.object(
         TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgentSingle, "process_slot"
