@@ -6,18 +6,12 @@ This guide explains the process of setting up and running any bot (agent) locall
 
 ### Getting Tokens
 
-The Sapphire network is EVM (Ethereum Virtual Machine) compatible, you'll need to fund your EVM compatible wallet from the faucet in order to submit predictions to the smart contract.
+Sapphire accounts and wallets follow EVM standard.
 
-#### Getting test tokens on Sapphire test network
+Your wallet account on Sapphire needs both ROSE (for gas) and OCEAN (for using Predictoor).
 
-Follow the [faucet guide](./testnet-faucet.md) to fund your wallet with test ROSE and OCEAN.
-
-#### Getting OCEAN and ROSE on Sapphire Mainnet
-
-The Sapphire network is EVM (Ethereum Virtual Machine) compatible, you'll need to fund your EVM compatible wallet from the faucet in order to submit predictions to the smart contract.
-
-- Check out the [Get ROSE on Sapphire Mainnet](./get-rose-on-sapphire.md) guide to get ROSE on mainnet.
-- Check out the [Get OCEAN on Sapphire Mainnet](./get-ocean-on-sapphire.md) guide to get OCEAN on mainnet.
+- On Sapphire testnet, get (fake) [ROSE & OCEAN via the faucet guide](./testnet-faucet.md).
+- On Sapphire mainnet, get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide].(get-ocean-on-sapphire.md)
 
 ### Repository and Environment Variables
 
