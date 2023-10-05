@@ -5,7 +5,7 @@
 - [1. Get OCEAN on Eth Mainnet](#1-get-ocean-on-eth-mainnet)
         - [1. Create a Wallet](#1-create-a-wallet)
         - [2. Purchase OCEAN](#2-purchase-ocean)
-- [2. Transfer OCEAN to Sapphire Mainnet using Celer Bridge](#2-transfer-ocean-to-sapphire-mainnet-using-celer-bridge)
+- [2. Transfer OCEAN to Sapphire Mainnet via Celer Bridge](#2-transfer-ocean-to-sapphire-mainnet-via-celer-bridge)
         - [1. Navigate to Celer bridge](#1-navigate-to-celer-bridge)
         - [2. Connect Your Wallet](#2-connect-your-wallet)
         - [3. Configure Transfer Settings](#3-configure-transfer-settings)
@@ -23,7 +23,7 @@ For optimal support and the ability to transfer ROSE tokens between paratimes, i
 
 Acquire OCEAN from various exchanges like Binance, Kraken, Uniswap, or Coinbase. Once obtained, ensure to withdraw the amount of OCEAN you'd like to utilize to your web3 wallet. **Always double-check the receiving address before initiating the withdrawal to secure your assets.**
 
-## 2. Transfer OCEAN to Sapphire Mainnet using Celer Bridge
+## 2. Transfer OCEAN to Sapphire Mainnet via Celer Bridge
 
 ### 1. Navigate to Celer bridge
 
