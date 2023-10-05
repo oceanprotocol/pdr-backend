@@ -10,7 +10,7 @@
         - [2. Connect Your Wallet](#2-connect-your-wallet)
         - [3. Configure Transfer Settings](#3-configure-transfer-settings)
         - [4. Execute the Transfer](#4-execute-the-transfer)
-        - [5. Verify Your Tokens on Sapphire Mainnet](#5-verify-your-tokens-on-sapphire-mainnet)
+- [3. Verify Your Tokens on Sapphire Mainnet](#3-verify-your-tokens-on-sapphire-mainnet)
 - [Conclusion](#conclusion)
 
 ## 1. Get OCEAN on Eth Mainnet
@@ -46,7 +46,7 @@ Begin by visiting the [Celer bridge](https://cbridge.celer.network/1/23294/OCEAN
 - Review the transaction details.
 - Confirm the transaction from your wallet.
 
-### 5. Verify Your Tokens on Sapphire Mainnet
+## 3. Verify Your Tokens on Sapphire Mainnet
 
 Please note that the bridging may require several minutes to complete. Your OCEAN will be sent to the address you executed the transaction from.
 
