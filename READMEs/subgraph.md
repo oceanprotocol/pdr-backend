@@ -55,7 +55,7 @@ query{
 
 ### Queries in pdr-backend agents
 
-Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](https://github.com/oceanprotocol/pdr-backend/edit/main/pdr_backend/util/subgraph.py).
+Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](https://github.com/oceanprotocol/pdr-backend/blob/main/pdr_backend/util/subgraph.py).
 - They call to a subgraph, at a given url, with a particular query
 - and they may filter further
 
