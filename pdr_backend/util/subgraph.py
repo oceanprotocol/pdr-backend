@@ -92,17 +92,19 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
     pending_slots: Dict[str, List[int]] = {}
+    addr = addr.lower()
 
     while True:
         query = """
         {
                 predictPredictions(
-                    where: {user: "%s", payout: null}
+                    where: {user: "%s", payout: null}, first: %s, skip: %s
                 ) {
                     id
                     timestamp
                     slot {
                         id
+                        slot
                         predictContract {
                             id
                         }
@@ -110,23 +112,28 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
                 }
         }
         """ % (
-            addr
+            addr,
+            chunk_size,
+            offset,
         )
-
         offset += chunk_size
+        print(".", end="", flush=True)
         try:
             result = query_subgraph(subgraph_url, query)
-            if not "data" in result:
+            if not "data" in result or len(result["data"]) == 0:
                 print("No data in result")
                 break
             predict_predictions = result["data"]["predictPredictions"]
+            if len(predict_predictions) == 0:
+                break
             for prediction in predict_predictions:
                 contract_address = prediction["slot"]["predictContract"]["id"]
-                timestamp = prediction["timestamp"]
+                timestamp = prediction["slot"]["slot"]
                 pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             print("An error occured", e)
 
+    print()  # print new line
     return pending_slots
 
 
