@@ -76,7 +76,7 @@ class BasePredictoorAgent(ABC):
         self.prev_block_timestamp = block["timestamp"]
 
         # do work at new block
-        print("  Got new block. Timestamp={block['timestamp']}")
+        print(f"  Got new block. Timestamp={block['timestamp']}")
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
