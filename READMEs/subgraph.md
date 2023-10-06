@@ -15,7 +15,7 @@ Local (= `"$SUBGRAPH_URL + /graphql"`):
 
 Remote:
 - Sapphire testnet, at https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-- Sapphire mainnet, at (TBD)
+- Sapphire mainnet, at https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
 
 ### Typical query
 
@@ -70,4 +70,3 @@ Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](
 
 - [ocean-subgraph repo](https://github.com/oceanprotocol/ocean-subgraph)
 - [ocean-subgraph PR#678](https://github.com/oceanprotocol/ocean-subgraph/pull/678) lists full entities. (Things may have changed a bit since then)
-
