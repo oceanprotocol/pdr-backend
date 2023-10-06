@@ -27,9 +27,7 @@ def request_payout_batches(
                 predictoor_contract.payout_multiple(batch, True)
                 print(".", end="", flush=True)
                 success = True
-            except (
-                Exception
-            ) as e:  # capture and handle the specific exception that indicates a failure
+            except Exception as e:
                 retries += 1
                 print(f"Error: {e}. Retrying... {retries}/5", flush=True)
                 time.sleep(1)
