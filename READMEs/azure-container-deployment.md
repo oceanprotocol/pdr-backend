@@ -1,75 +1,8 @@
-# Setting up and Running pdr-backend locally and on Azure
+# Running pdr-backend as a container on Azure
 
-This guide explains the process of setting up and running any bot (agent) locally and on Azure Container Instance for continuous execution. This example uses Sapphire testnet. However, by modifying the environment variables, you can seamlessly run the bot (agent) on the mainnet.
+This guide explains the process running any bot (agent) on Azure Container Instance for continuous execution. This example uses Sapphire testnet. However, by modifying the environment variables, you can seamlessly run the bot (agent) on the mainnet.
 
-## Initial Setup
-
-### Getting Tokens
-
-Sapphire accounts and wallets follow EVM standard.
-
-Your wallet account on Sapphire needs both ROSE (for gas) and OCEAN (for using Predictoor).
-
-- On Sapphire testnet, get (fake) [ROSE & OCEAN via the faucet guide](./testnet-faucet.md).
-- On Sapphire mainnet, get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide].(get-ocean-on-sapphire.md)
-
-### Repository and Environment Variables
-
-#### Install pdr-backend
-
-Follow the instructions from [install pdr-backend](./install.md)
-
-#### Configure Environment variables
-
-Set the following environment variables:
-
-```
-export PRIVATE_KEY=PK_HERE
-export PAIR_FILTER=BTC/TUSD
-export TIMEFRAME_FILTER=5m
-export SOURCE_FILTER=binance
-export RPC_URL=https://testnet.sapphire.oasis.dev
-export SUBGRAPH_URL=https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB
-```
-
-### Configure the Bot (Agent)
-
-Configure the bot (agent) by following the instructions from the agent's readme that you're going to deploy:
-
-[Predictoor README](READMEs/predictoor.md)
-[Trader README](READMEs/trader.md)
-
-## Running locally on any machine with pm2
-
-Firstly, run the bot (agent) to make sure there are no errors and the agent is working as expected:
-
-```bash
-python pdr_backend/<agent>/main.py
-```
-
-Use `pm2` or other solutions to continously keep `main.py` running. Here's how you can do it with `pm2`:
-
-Install `pm2` globally via `npm`.
-
-```bash
-npm install pm2 -g
-```
-
-Then, use `pm2 start` to run the script.
-
-```bash
-pm2 start main.py --name "pdr-backend-<agentname>"
-```
-
-Replace `agentname` with the name of the agent you're going to run.
-
-Other useful commands:
-
-- `pm2 ls` - lists running processes
-- `pm2 logs` - display the logs of all the running processes
-
-You can find more [on pm2's official website](https://pm2.keymetrics.io/docs/usage/quick-start/)
+Please check out the [Setting up and Running pdr-backend agents](./setting-up-and-running-agents.md) to learn more about configuring agents.
 
 ## Build a container image
 
@@ -85,6 +18,7 @@ podman build -t pdr-backend-<agentname>:latest .
 Replace `agentname` with the name of the bot (agent) you're going to run. This command builds the container image using the Dockerfile in the current directory and tags it as `pdr-backend-<agentname>:latest`. You can use any tag you'd like.
 
 There are many options available for deploying the container image. Some of them include:
+
 - [Heroku - Container Registry & Runtime (Docker Deploys)](https://devcenter.heroku.com/articles/container-registry-and-runtime)
 - [AWS -  Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
 - [Google Cloud - Deploying to Cloud Run](https://cloud.google.com/run/docs/deploying)
