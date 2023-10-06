@@ -29,7 +29,8 @@ git clone https://github.com/oceanprotocol/barge
 cd barge
 git checkout predictoor
 
-# (optional) Clean up previous Ocean-related containers
+# (optional) Clean up previous Ocean-related dirs & containers
+rm -f ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
