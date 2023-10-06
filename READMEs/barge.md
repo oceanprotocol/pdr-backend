@@ -30,7 +30,7 @@ cd barge
 git checkout predictoor
 
 # (optional) Clean up previous Ocean-related dirs & containers
-rm -f ~/.ocean
+rm -rf ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
