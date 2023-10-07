@@ -103,9 +103,15 @@ def get_trueval(
     symbol = feed.pair
     symbol = symbol.replace("-", "/")
     symbol = symbol.upper()
-    if initial_timestamp < 5000000000:
-        initial_timestamp = int(initial_timestamp * 1000)
-        end_timestamp = int(end_timestamp * 1000)
+
+    # since we will get close price
+    # we need to go back 1 candle
+    initial_timestamp -= feed.seconds_per_epoch
+    end_timestamp -= feed.seconds_per_epoch
+
+    # convert seconds to ms
+    initial_timestamp = int(initial_timestamp * 1000)
+    end_timestamp = int(end_timestamp * 1000)
 
     exchange_class = getattr(ccxt, feed.source)
     exchange = exchange_class()
@@ -114,7 +120,6 @@ def get_trueval(
     )
     if price_data[0][0] != initial_timestamp or price_data[1][0] != end_timestamp:
         raise Exception("Timestamp mismatch")
-
-    if price_data[1][1] == price_data[0][1]:
+    if price_data[1][4] == price_data[0][4]:
         return (False, True)
-    return (price_data[1][1] >= price_data[0][1], False)
+    return (price_data[1][4] >= price_data[0][4], False)

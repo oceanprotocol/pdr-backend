@@ -2,7 +2,8 @@
 - READMEs/subgraph.md describes usage of Predictoor subgraph, with an example query
 - the functions below provide other specific examples, that are used by agents of pdr-backend
 """
-
+import time
+from collections import defaultdict
 from typing import Optional, Dict, List
 
 from enforce_typing import enforce_types
@@ -12,6 +13,7 @@ from web3 import Web3
 from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
+from pdr_backend.util.web3_config import Web3Config
 
 _N_ERRORS = {}  # exception_str : num_occurrences
 _N_THR = 3
@@ -90,17 +92,19 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
     pending_slots: Dict[str, List[int]] = {}
+    addr = addr.lower()
 
     while True:
         query = """
         {
                 predictPredictions(
-                    where: {user: "%s", payout: null}
+                    where: {user: "%s", payout: null}, first: %s, skip: %s
                 ) {
                     id
                     timestamp
                     slot {
                         id
+                        slot
                         predictContract {
                             id
                         }
@@ -108,23 +112,28 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
                 }
         }
         """ % (
-            addr
+            addr,
+            chunk_size,
+            offset,
         )
-
         offset += chunk_size
+        print(".", end="", flush=True)
         try:
             result = query_subgraph(subgraph_url, query)
-            if not "data" in result:
+            if not "data" in result or len(result["data"]) == 0:
                 print("No data in result")
                 break
             predict_predictions = result["data"]["predictPredictions"]
+            if len(predict_predictions) == 0:
+                break
             for prediction in predict_predictions:
                 contract_address = prediction["slot"]["predictContract"]["id"]
-                timestamp = prediction["timestamp"]
+                timestamp = prediction["slot"]["slot"]
                 pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             print("An error occured", e)
 
+    print()  # print new line
     return pending_slots
 
 
@@ -367,3 +376,103 @@ def get_pending_slots(
             break
 
     return slots
+
+
+def get_consume_so_far_per_contract(
+    subgraph_url: str,
+    user_address: str,
+    since_timestamp: int,
+    contract_addresses: List[str],
+) -> Dict[str, float]:
+    chunk_size = 1000  # max for subgraph = 1000
+    offset = 0
+    consume_so_far: Dict[str, float] = defaultdict(float)
+    while True:  # pylint: disable=too-many-nested-blocks
+        query = """
+        {
+            predictContracts(first:1000, where: {id_in: %s}){
+                id	
+                token{
+                    id
+                    name
+                    symbol
+                    nft {
+                        owner {
+                            id
+                        }
+                        nftData {
+                            key
+                            value
+                        }
+                    }
+                    orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}, first: %s, skip: %s){
+        		        createdTimestamp
+                        consumer {
+                            id
+                        }
+                        lastPriceValue
+                    }
+                }
+                secondsPerEpoch
+                secondsPerSubscription
+                truevalSubmitTimeout
+            }
+        }
+        """ % (
+            str(contract_addresses).replace("'", '"'),
+            since_timestamp,
+            user_address.lower(),
+            chunk_size,
+            offset,
+        )
+        print(query)
+        offset += chunk_size
+        result = query_subgraph(subgraph_url, query)
+        contracts = result["data"]["predictContracts"]
+        if contracts == []:
+            break
+        no_of_zeroes = 0
+        for contract in contracts:
+            contract_address = contract["id"]
+            if contract_address not in contract_addresses:
+                continue
+            order_count = len(contract["token"]["orders"])
+            if order_count == 0:
+                no_of_zeroes += 1
+            for buy in contract["token"]["orders"]:
+                # 1.2 20% fee
+                # 0.001 0.01% community swap fee
+                consume_so_far[contract_address] += (
+                    float(buy["lastPriceValue"]) * 1.2 * 1.001
+                )
+        if no_of_zeroes == len(contracts):
+            break
+    return consume_so_far
+
+
+@enforce_types
+def block_number_is_synced(subgraph_url: str, block_number: int) -> bool:
+    query = """
+        {
+            predictContracts(block:{number:%s}){
+                id
+            }
+        }
+    """ % (
+        block_number
+    )
+    try:
+        result = query_subgraph(subgraph_url, query)
+        if "errors" in result:
+            return False
+    except Exception as _:
+        return False
+    return True
+
+
+@enforce_types
+def wait_until_subgraph_syncs(web3_config: Web3Config, subgraph_url: str):
+    block_number = web3_config.w3.eth.block_number - 2
+    while block_number_is_synced(subgraph_url, block_number) is not True:
+        print("Subgraph is out of sync, trying again in 5 seconds")
+        time.sleep(5)

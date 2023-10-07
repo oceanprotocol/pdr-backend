@@ -1,19 +1,58 @@
+import math
 import sys
 import time
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.subgraph import query_subgraph
+from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
+
+WEEK = 86400 * 7
+
+
+def seconds_to_text(seconds: int) -> str:
+    if seconds == 300:
+        return "5m"
+    if seconds == 3600:
+        return "1h"
+    return ""
 
 
 def print_stats(contract_dict, field_name, threshold=0.9):
     count = sum(1 for _ in contract_dict["slots"])
     with_field = sum(1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0)
 
-    status = "OK" if with_field / count > threshold else "FAIL"
+    status = "PASS" if with_field / count > threshold else "FAIL"
     token_name = contract_dict["token"]["name"]
+    timeframe = seconds_to_text(int(contract_dict["secondsPerEpoch"]))
+    print(f"{token_name} {timeframe}: {with_field}/{count} {field_name} - {status}")
 
-    print(f"{token_name}: {with_field}/{count} - {status}")
+
+def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url):
+    ts_now = time.time()
+    ts_start_time = int((ts_now // WEEK) * WEEK)
+    sofar = get_consume_so_far_per_contract(
+        subgraph_url,
+        dfbuyer_addr,
+        ts_start_time,
+        [i["id"] for i in contract_query_result["data"]["predictContracts"]],
+    )
+    expected = get_expected_consume(int(ts_now))
+    print(
+        f"Checking consume amounts (dfbuyer), expecting {expected} consume per contract"
+    )
+    for addr, x in sofar.items():
+        log_text = "PASS" if x >= expected else "FAIL"
+        print(
+            f"    {log_text}... got {x} consume for contract: {addr}, expected {expected}"
+        )
+
+
+def get_expected_consume(for_ts: int):
+    amount_per_feed_per_interval = 37000 / 7 / 20
+    week_start = (math.floor(for_ts / WEEK)) * WEEK
+    time_passed = for_ts - week_start
+    n_intervals = int(time_passed / 86400) + 1
+    return n_intervals * amount_per_feed_per_interval
 
 
 if __name__ == "__main__":
@@ -32,6 +71,7 @@ if __name__ == "__main__":
         "predictoor3": "0x005C414442a892077BD2c1d62B1dE2Fc127E5b9B",
         "trueval": "0x005FD44e007866508f62b04ce9f43dd1d36D0c0c",
         "websocket": "0x008d4866C4071AC9d74D6359604762C7B581D390",
+        "dfbuyer": "0xeA24C440eC55917fFa030C324535fc49B42c2fD7",
     }
 
     ts = int(time.time())
@@ -68,6 +108,7 @@ if __name__ == "__main__":
                             trueValue
                         }
                     }
+                    secondsPerEpoch
                 } 
             }
             """ % (
@@ -104,20 +145,15 @@ if __name__ == "__main__":
 
         ocean_bal = ocean_bal_wei / 1e18
         native_bal = native_bal_wei / 1e18
-        header = f"{'-' * 10} {name}'s Wallet {'-' * 10}"
-        address_line = f"Address: {value}"
-        ocean_line = f"OCEAN Balance: {ocean_bal:.2f}"
-        native_line = f"Native Balance: {native_bal:.2f}"
 
-        ocean_warning = "WARNING: Low OCEAN balance!" if ocean_bal < 10 else ""
-        native_warning = "WARNING: Low Native balance!" if native_bal < 10 else ""
+        ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 100 else " OK "
+        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 50 else " OK "
 
-        print(header)
-        print(address_line)
-        print(ocean_line)
-        if ocean_warning:
-            print(ocean_warning)
-        print(native_line)
-        if native_warning:
-            print(native_warning)
-        print()
+        # pylint: disable=line-too-long
+        print(
+            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}, Native: {native_bal:.2f}{native_warning}"
+        )
+
+    # ---------------- dfbuyer ----------------
+
+    check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url)

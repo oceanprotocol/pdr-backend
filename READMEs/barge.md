@@ -7,8 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Contents
 
-Installation
+Main:
 - [Install Barge](#install-barge)
+- [Run Docker](#run-docker)
 
 Reference: how to run barge with...
 - [No agents](#barge-basic) - just ganache chain & predictoor contracts
@@ -26,15 +27,27 @@ In a new console:
 # Grab repo
 git clone https://github.com/oceanprotocol/barge
 cd barge
-git checkout issue374-replace-pdr-components-with-pdr-backend # use this branch for now
-export GANACHE_BLOCKTIME=5 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
+git checkout predictoor
 
-# (optional) Clean up previous Ocean-related containers
+# (optional) Clean up previous Ocean-related dirs & containers
+rm -rf ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
 
 The sections below describe different ways to run barge. They're for reference only; DO NOT run them right now. Each README will describe what to do.
+
+MacOS may give Docker issues; see workarounds [here](macos.md).
+
+## Run Docker
+
+To run barge, you need the Docker engine running. 
+
+If you're on Linux: you're good, there's nothing extra to do.
+
+If MacOS: 
+- via console: `open -a Docker`
+- or, via app: open Finder app, find Docker, click it
 
 ## Barge Basic
 

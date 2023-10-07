@@ -25,7 +25,7 @@ install_requirements = [
     "web3",
     "sapphire.py",
     "scikit-learn",
-    "ocean-contracts==2.0.0a13",  # install this last
+    "ocean-contracts==2.0.0a14",  # install this last
 ]
 
 # Required to run setup.py:

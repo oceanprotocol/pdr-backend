@@ -4,9 +4,11 @@ from enforce_typing import enforce_types
 import pytest
 import requests
 from web3 import Web3
+from pytest import approx
 
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.subgraph import (
+    block_number_is_synced,
     key_to_725,
     value_to_725,
     value_from_725,
@@ -14,6 +16,7 @@ from pdr_backend.util.subgraph import (
     query_subgraph,
     query_feed_contracts,
     get_pending_slots,
+    get_consume_so_far_per_contract,
 )
 
 
@@ -265,3 +268,95 @@ def test_get_pending_slots():
     assert isinstance(slot0, Slot)
     assert slot0.slot_number == 1000
     assert slot0.feed.name == "ether"
+
+
+@enforce_types
+def test_get_consume_so_far_per_contract():
+    sample_contract_data = [
+        {
+            "id": "contract1",
+            "token": {
+                "id": "token1",
+                "name": "ether",
+                "symbol": "ETH",
+                "orders": [
+                    {
+                        "createdTimestamp": 1695288424,
+                        "consumer": {
+                            "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
+                        },
+                        "lastPriceValue": "2.4979184013322233",
+                    },
+                    {
+                        "createdTimestamp": 1695288724,
+                        "consumer": {
+                            "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
+                        },
+                        "lastPriceValue": "2.4979184013322233",
+                    },
+                ],
+                "nft": {
+                    "owner": {"id": "0xowner1"},
+                    "nftData": [
+                        {
+                            "key": key_to_725("pair"),
+                            "value": value_to_725("ETH/USDT"),
+                        },
+                        {
+                            "key": key_to_725("timeframe"),
+                            "value": value_to_725("5m"),
+                        },
+                        {
+                            "key": key_to_725("source"),
+                            "value": value_to_725("binance"),
+                        },
+                    ],
+                },
+            },
+            "secondsPerEpoch": 7,
+            "secondsPerSubscription": 700,
+            "truevalSubmitTimeout": 5,
+        }
+    ]
+
+    call_count = 0
+
+    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
+        nonlocal call_count
+        slot_data = sample_contract_data
+
+        if call_count > 0:
+            slot_data[0]["token"]["orders"] = []
+
+        call_count += 1
+        return {"data": {"predictContracts": slot_data}}
+
+    with patch("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph):
+        consumes = get_consume_so_far_per_contract(
+            subgraph_url="foo",
+            user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
+            since_timestamp=2000,
+            contract_addresses=["contract1"],
+        )
+
+    assert consumes["contract1"] == approx(6, 0.001)
+
+
+def test_block_number_is_synced():
+    def mock_response(url: str, query: str):  # pylint:disable=unused-argument
+        if "number:50" in query:
+            return {
+                "errors": [
+                    {
+                        # pylint: disable=line-too-long
+                        "message": "Failed to decode `block.number` value: `subgraph QmaGAi4jQw5L8J2xjnofAJb1PX5LLqRvGjsWbVehBELAUx only has data starting at block number 499 and data for block number 500 is therefore not available`"
+                    }
+                ]
+            }
+
+        return {"data": {"predictContracts": [{"id": "sample_id"}]}}
+
+    with patch("pdr_backend.util.subgraph.query_subgraph", side_effect=mock_response):
+        assert block_number_is_synced("foo", 499) is True
+        assert block_number_is_synced("foo", 500) is False
+        assert block_number_is_synced("foo", 501) is False
