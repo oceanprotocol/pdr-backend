@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # pdr-backend
 
-## Run bots
+## Run bots (agents)
 
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
 - **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
