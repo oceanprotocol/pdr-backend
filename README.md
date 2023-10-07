@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## OPF bots
 
-- **[Run dfbuyer bot](READMEs/dfbuyer.md)** - distribution of Predictoor DF rewards
+- **[Run dfbuyer bot](READMEs/dfbuyer.md)** - for Predictoor DF rewards
 
 ## Develop predictoor
 
@@ -42,10 +42,20 @@ Other directories:
 ## Atomic READMEs
 
 The following READMEs are used as building blocks within different flows.
+
+Installation:
 - [Install pdr-backend](READMEs/install.md)
 - [Install & use Barge](READMEs/barge.md)
-- [Using Predictoor subgraph](READMEs/subgraph.md)
-- [Getting testnet tokens](READMEs/testnet-faucet.md) - faucets for fake ROSE & OCEAN
-- [Azure container deployment](READMEs/azure-container-deployment.md)
+
+Usage:
+- [Predictoor subgraph](READMEs/subgraph.md)
+- [Azure containers](READMEs/azure-container-deployment.md)
+- [Envvars](READMEs/envvars.md)
+- [MacOS gotchas](READMEs/macos.md)
+
+Get tokens in Sapphire:
+- Testnet: [OCEAN & ROSE](READMEs/testnet-faucet.md) via faucet
+- Mainnet: [OCEAN](READMEs/get-ocean-on-sapphire.md), [ROSE](READMEs/get-rose-on-sapphire.md)
+
+Development:
 - [Release process](READMEs/release-process.md)
-- [Environment variables](READMEs/envvars.md)
