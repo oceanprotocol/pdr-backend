@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0
 
 Main:
 - [Install Barge](#install-barge)
-- [Potential Issues](#potential-issues)
 - [Run Docker](#run-docker)
 
 Reference: how to run barge with...
@@ -38,18 +37,7 @@ docker system prune -a --volumes
 
 The sections below describe different ways to run barge. They're for reference only; DO NOT run them right now. Each README will describe what to do.
 
-## Potential Issues
-
-Issue: MacOS * Docker 
-- On MacOS, Docker may freeze. Fix by reverting to 4.22.1. Details follow.
-- Symptoms: it stops logging; Docker cpu usage is 0%; it hangs when you type `docker ps` in console
-- For us: Docker 4.24.1 (released Sep 28, 2023) freezes, and 4.22.1 (Aug 24, 2023) works. [Docker release notes](https://docs.docker.com/desktop/release-notes).
-- To fix:
-  - In console: `./cleanup.sh; docker system prune -a --volumes`
-  - Download [Docker 4.22.1](https://docs.docker.com/desktop/release-notes/#4221)
-  - Open the download, drag "Docker" to "Applications". Choose "Replace existing" when prompted.
-  - Run Docker Desktop. Confirm the version via "About".
-  - If you have the wrong version, then [fully uninstall Docker](https://www.makeuseof.com/how-to-uninstall-docker-desktop-mac/) and try again.
+MacOS may give Docker issues; see workarounds [here](macos.md).
 
 ## Run Docker
 
