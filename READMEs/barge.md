@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Contents
 
-Installation
+Main:
 - [Install Barge](#install-barge)
 - [Run Docker](#run-docker)
 
@@ -29,12 +29,15 @@ git clone https://github.com/oceanprotocol/barge
 cd barge
 git checkout predictoor
 
-# (optional) Clean up previous Ocean-related containers
+# (optional) Clean up previous Ocean-related dirs & containers
+rm -rf ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
 
 The sections below describe different ways to run barge. They're for reference only; DO NOT run them right now. Each README will describe what to do.
+
+MacOS may give Docker issues; see workarounds [here](macos.md).
 
 ## Run Docker
 
