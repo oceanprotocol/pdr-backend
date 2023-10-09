@@ -33,7 +33,7 @@ Summary:
 - The subgraph container reports a subgraph url like: `http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph`
 - But agents or the browser can't see that directly, because MacOS doesn't support per-container IP addressing
 - Fix for envvars: `export SUBGRAPH_URL=http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph`
-- Fix for browser: open http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+- Fix for browser: open [http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph](http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph)
 
 Symptoms of the issue:
 - If running an agent, we'll see output like: `HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /subgraphs/name/oceanprotocol/ocean-subgraph (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x102148650>: Failed to establish a new connection: [Errno 61] Connection refused'))`
