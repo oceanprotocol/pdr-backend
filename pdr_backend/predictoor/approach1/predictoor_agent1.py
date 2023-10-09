@@ -34,6 +34,6 @@ class PredictoorAgent1(BasePredictoorAgent):
         predval = bool(random.getrandbits(1))
 
         # Stake amount is in ETH
-        stake = random.randint(1, 30) / 10
+        stake = random.randint(1, 30) / 10000
 
         return (predval, stake)
