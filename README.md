@@ -48,14 +48,11 @@ Installation:
 - [Install & use Barge](READMEs/barge.md)
 
 Usage:
-- [Predictoor subgraph](READMEs/subgraph.md)
+- [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
+- [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Azure containers](READMEs/azure-container-deployment.md)
 - [Envvars](READMEs/envvars.md)
 - [MacOS gotchas](READMEs/macos.md)
-
-Get tokens in Sapphire:
-- Testnet: [OCEAN & ROSE](READMEs/testnet-faucet.md) via faucet
-- Mainnet: [OCEAN](READMEs/get-ocean-on-sapphire.md), [ROSE](READMEs/get-rose-on-sapphire.md)
 
 Development:
 - [Release process](READMEs/release-process.md)
