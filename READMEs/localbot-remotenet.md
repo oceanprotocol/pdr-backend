@@ -26,7 +26,7 @@ The predictoor & trader bots run code that lives in `pdr-backend` repo.
 
 [Install pdr-backend](install.md).
 
-### Set Envvars
+## Set Envvars
 
 Set the following:
 
@@ -47,7 +47,7 @@ Set `OWNER_ADDRS` (OFP deployer address):
 
 ([Envvar docs](./envvars.md) have more details.)
 
-### Configure Bot
+## Configure Bot
 
 If you're running a **predictoor** bot: choose between random or model-based and make other configurations with guidance in the [local predictoor README](localpredictoor-localnet.md).
 
