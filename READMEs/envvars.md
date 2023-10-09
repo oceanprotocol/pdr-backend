@@ -20,7 +20,7 @@ This page describes core envvars that are used by all agents, then envvars that 
 - **SOURCE_FILTER**: Price sources to filter (comma-separated). Fetches all available sources if empty. Example: `binance,kraken`
 - **OWNER_ADDRS**: Addresses of contract deployers to filter (comma-separated). **Typically set to the address of the OPF deployer wallet.**
   - **TESTNET**: `0xe02a421dfc549336d47efee85699bd0a3da7d6ff`
-  - **MAINNET**: Not deployed yet.
+  - **MAINNET**: `0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703`
 
 ## Agent-Specific Envvars
 
