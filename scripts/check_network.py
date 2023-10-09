@@ -20,7 +20,8 @@ def seconds_to_text(seconds: int) -> str:
 def print_stats(contract_dict, field_name, threshold=0.9):
     count = sum(1 for _ in contract_dict["slots"])
     with_field = sum(1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0)
-
+    if count == 0:
+        count += 1
     status = "PASS" if with_field / count > threshold else "FAIL"
     token_name = contract_dict["token"]["name"]
     timeframe = seconds_to_text(int(contract_dict["secondsPerEpoch"]))
@@ -180,8 +181,8 @@ if __name__ == "__main__":
         ocean_bal = ocean_bal_wei / 1e18
         native_bal = native_bal_wei / 1e18
 
-        ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 100 else " OK "
-        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 50 else " OK "
+        ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 10 else " OK "
+        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 10 else " OK "
 
         # pylint: disable=line-too-long
         print(
