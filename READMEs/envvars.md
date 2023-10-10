@@ -9,8 +9,8 @@ This page describes core envvars that are used by all agents, then envvars that 
 - **RPC_URL**: The RPC URL of the network.
   - Check out the [Sapphire Documentation](https://docs.oasis.io/dapp/sapphire/)
 - **SUBGRAPH_URL**: The Ocean subgraph URL.
-  - **TESTNET**: https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-  - **MAINNET**: https://v4.subgraph.oasis-sapphire.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+  - **TESTNET**: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+  - **MAINNET**: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
 - **PRIVATE_KEY**: Private key of the wallet to use. **Must start with `0x`.**
 
 ### Filters
@@ -20,7 +20,7 @@ This page describes core envvars that are used by all agents, then envvars that 
 - **SOURCE_FILTER**: Price sources to filter (comma-separated). Fetches all available sources if empty. Example: `binance,kraken`
 - **OWNER_ADDRS**: Addresses of contract deployers to filter (comma-separated). **Typically set to the address of the OPF deployer wallet.**
   - **TESTNET**: `0xe02a421dfc549336d47efee85699bd0a3da7d6ff`
-  - **MAINNET**: Not deployed yet.
+  - **MAINNET**: `0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703`
 
 ## Agent-Specific Envvars
 

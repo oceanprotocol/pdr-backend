@@ -1,4 +1,4 @@
-name: Run Script and Notify Slack
+name: Run Mainnet Check and Notify Slack
 
 on:
   schedule:
@@ -24,8 +24,8 @@ jobs:
 
       - name: Notify Slack
         env:
-          RPC_URL: "https://testnet.sapphire.oasis.dev"
-          SUBGRAPH_URL: "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+          RPC_URL: "https://sapphire.oasis.io"
+          SUBGRAPH_URL: "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
           PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
         run: |
           output=$(python scripts/check_network.py 36 | grep -E 'FAIL|WARNING|error' | grep -v "1h" || true)
@@ -33,6 +33,6 @@ jobs:
           if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
           else
-            message="Testnet Check script failed: \n${output}\n\nHere's a funny joke to make your day: ${joke}"
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL }}
+            message="Testnet Check script failed: \n${output}\n\nAnyways here's a funny joke:\n${joke}"
+            curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
           fi
