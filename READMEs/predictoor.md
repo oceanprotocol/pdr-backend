@@ -14,7 +14,7 @@ Start simple, layer in complexity.
 1. [Local predictoor, local network](localpredictoor-localnet.md)
 2. [Local predictoor, remote network](./localbot-remotenet.md) - on testnet
 3. [Remote predictoor, remote network](./remotebot-remotenet.md) - on testnet
-4. Repeat (2) or (3), on mainet
+4. Repeat (2) or (3), on mainnet
 
 ## Warning
 
