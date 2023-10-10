@@ -36,7 +36,7 @@ export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
 export RPC_URL=https://testnet.sapphire.oasis.dev
-export SUBGRAPH_URL=https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+export SUBGRAPH_URL=https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
 export STAKE_TOKEN=ADDRESS_OF_OCEAN_TOKEN
 ```
 

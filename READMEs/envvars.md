@@ -9,8 +9,8 @@ This page describes core envvars that are used by all agents, then envvars that 
 - **RPC_URL**: The RPC URL of the network.
   - Check out the [Sapphire Documentation](https://docs.oasis.io/dapp/sapphire/)
 - **SUBGRAPH_URL**: The Ocean subgraph URL.
-  - **TESTNET**: https://v4.subgraph.oasis-sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-  - **MAINNET**: https://v4.subgraph.oasis-sapphire.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+  - **TESTNET**: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+  - **MAINNET**: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
 - **PRIVATE_KEY**: Private key of the wallet to use. **Must start with `0x`.**
 
 ### Filters

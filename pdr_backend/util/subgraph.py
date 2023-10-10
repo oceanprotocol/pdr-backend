@@ -69,7 +69,7 @@ def query_subgraph(
 ) -> Dict[str, dict]:
     """
     @arguments
-      subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql # pylint: disable=line-too-long
+      subgraph_url -- e.g. http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph # pylint: disable=line-too-long
       query -- e.g. in docstring above
 
     @return

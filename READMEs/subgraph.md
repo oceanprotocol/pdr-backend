@@ -9,13 +9,13 @@ SPDX-License-Identifier: Apache-2.0
 
 You can query an Ocean subgraph at one of the following:
 
-Local (= `"$SUBGRAPH_URL + /graphql"`):
-  - http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-  - OR http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+Local (= `$SUBGRAPH_URL`):
+  - http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+  - OR http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph
 
 Remote:
-- Sapphire testnet, at https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
-- Sapphire mainnet, at https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph/graphql
+- Sapphire testnet, at https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+- Sapphire mainnet, at https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
 
 ### Typical query
 
