@@ -43,7 +43,7 @@ if web3_config.w3.eth.chain_id == 8996:
         s_per_epoch=300,
         s_per_subscription=60 * 60 * 24,
         base="BTC",
-        quote="TUSD",
+        quote="USDT",
         source="binance",
         timeframe="5m",
         trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
