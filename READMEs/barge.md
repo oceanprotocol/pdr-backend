@@ -60,7 +60,7 @@ To run this, go to the barge console and:
 ./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
-When barge runs, it will auto-publish DT3 tokens. Currently this is {`BTC/TUSD`, Binance, 5min}, {`ETH/USDT`, Kraken, 5min} and {`XRP/USDT`, Binance, 5min}.
+When barge runs, it will auto-publish DT3 tokens. Currently this is {`BTC/USDT`, Binance, 5min}, {`ETH/USDT`, Kraken, 5min} and {`XRP/USDT`, Binance, 5min}.
 
 ## Barge One Agent
 
@@ -86,4 +86,3 @@ This will run all of the following at once:
 - trader agent
 - predictoor agent
 - dfbuyer agent
-

@@ -32,7 +32,7 @@ Set the following:
 
 ```console
 export PRIVATE_KEY=PK_HERE
-export PAIR_FILTER=BTC/TUSD
+export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
 export RPC_URL=https://testnet.sapphire.oasis.dev
