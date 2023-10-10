@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Let's run a trader bot (agent), to consume predictions, trade and earn $.
 
-## Steps:
+**Steps:**
 
 Start simple, layer in complexity.
 
