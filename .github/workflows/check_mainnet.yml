@@ -1,4 +1,4 @@
-name: Run Script and Notify Slack
+name: Run Mainnet Check and Notify Slack
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
 
       - name: Notify Slack
         env:
-          RPC_URL: "https://sapphire.oasis.dev"
+          RPC_URL: "https://sapphire.oasis.io"
           SUBGRAPH_URL: "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
           PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
         run: |
