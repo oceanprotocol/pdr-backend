@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach2.constants import (
+from pdr_backend.predictoor.approach3.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_DTYPES,

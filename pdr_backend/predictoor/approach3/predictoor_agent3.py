@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach2.data_factory import DataFactory
-from pdr_backend.predictoor.approach2.data_ss import DataSS
-from pdr_backend.predictoor.approach2.mathutil import nmse
-from pdr_backend.predictoor.approach2.model_factory import ModelFactory
-from pdr_backend.predictoor.approach2.model_ss import ModelSS
-from pdr_backend.predictoor.approach2.predictoor_config2 import PredictoorConfig2
-from pdr_backend.predictoor.approach2.timeutil import (
+from pdr_backend.predictoor.approach3.data_factory import DataFactory
+from pdr_backend.predictoor.approach3.data_ss import DataSS
+from pdr_backend.predictoor.approach3.mathutil import nmse
+from pdr_backend.predictoor.approach3.model_factory import ModelFactory
+from pdr_backend.predictoor.approach3.model_ss import ModelSS
+from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
+from pdr_backend.predictoor.approach3.timeutil import (
     pretty_timestr,
     timestr_to_ut,
 )
@@ -20,8 +20,8 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 
 @enforce_types
-class PredictoorAgent2(BasePredictoorAgent):
-    predictoor_config_class = PredictoorConfig2
+class PredictoorAgent3(BasePredictoorAgent):
+    predictoor_config_class = PredictoorConfig3
 
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
@@ -44,7 +44,7 @@ class PredictoorAgent2(BasePredictoorAgent):
         """
         feed = self.feeds[addr]
         data_ss = DataSS(
-            csv_dir=os.path.abspath("pdr_backend/predictoor/approach2/csvs"),
+            csv_dir=os.path.abspath("pdr_backend/predictoor/approach3/csvs"),
             # 2019-09-13_04:00 earliest
             # TODO: ajust parameters
             st_timestamp=timestr_to_ut("2022-09-13"),

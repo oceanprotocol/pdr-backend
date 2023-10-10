@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach2.predictoor_config2 import PredictoorConfig2
-from pdr_backend.predictoor.approach2.predictoor_agent2 import PredictoorAgent2
+from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
+from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.util.constants import S_PER_MIN, S_PER_DAY
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
@@ -118,8 +118,8 @@ def test_predictoor_agent1(monkeypatch):
     # now we're done the mocking, time for the real work!!
 
     # real work: initialize
-    c = PredictoorConfig2()
-    agent = PredictoorAgent2(c)
+    c = PredictoorConfig3()
+    agent = PredictoorAgent3(c)
 
     # last bit of mocking
     agent.config.web3_config.w3 = mock_w3

@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach2.constants import (
+from pdr_backend.predictoor.approach3.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     get_ms_per_epoch,
 )
-from pdr_backend.predictoor.approach2.data_ss import DataSS
-from pdr_backend.predictoor.approach2.pdutil import (
+from pdr_backend.predictoor.approach3.data_ss import DataSS
+from pdr_backend.predictoor.approach3.pdutil import (
     concat_next_df,
     has_data,
     initialize_df,
@@ -20,7 +20,7 @@ from pdr_backend.predictoor.approach2.pdutil import (
     oldest_ut,
     save_csv,
 )
-from pdr_backend.predictoor.approach2.timeutil import current_ut, pretty_timestr
+from pdr_backend.predictoor.approach3.timeutil import current_ut, pretty_timestr
 
 
 @enforce_types

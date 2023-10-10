@@ -30,5 +30,5 @@ from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 
 
 @enforce_types
-class PredictoorConfig2(BasePredictoorConfig):
+class PredictoorConfig3(BasePredictoorConfig):
     pass

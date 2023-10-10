@@ -2,7 +2,7 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach2.predictoor_config2 import PredictoorConfig2
+from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
 PRIV_KEY = os.getenv("PRIVATE_KEY")
@@ -11,7 +11,7 @@ PRIV_KEY = os.getenv("PRIVATE_KEY")
 @enforce_types
 def test_predictoor_config_basic(monkeypatch):
     _setenvs(monkeypatch)
-    c = PredictoorConfig2()
+    c = PredictoorConfig3()
 
     # values handled by PredictoorConfig1
     assert c.s_until_epoch_end == 60
