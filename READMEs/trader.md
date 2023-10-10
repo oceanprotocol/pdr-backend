@@ -14,7 +14,7 @@ Start simple, layer in complexity.
 1. [Local trader, local network](localtrader-localnet.md)
 2. [Local trader, remote network](./localbot-remotenet.md) - on testnet
 3. [Remote trader, remote network](./remotebot-remotenet.md) - on testnet
-4. Repeat (2) or (3), on mainet
+4. Repeat (2) or (3), on mainnet
 
 ## Warning
 
