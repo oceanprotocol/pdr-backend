@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Let's run a predictoor bot (agent), to submit predictions and earn $.
 
-## Steps:
+**Steps:**
 
 Start simple, layer in complexity.
 
