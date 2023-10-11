@@ -15,10 +15,13 @@ This README describes:
 1. **Setup & run local network**
     - [Install it](#install-local-network)
     - [Run it](#run-local-network)
-2. **Setup & run predictoor bot**
+2. **Setup predictoor bot**
     - [Install it](#install-predictoor-bot)
     - [Set envvars](#set-envvars)
-    - [Run it](#run-predictoor-bot): [random](#run-random-predictoor) then [model-based](#run-model-based-predictoor)
+3. **[Run predictoor bot](#run-predictoor_bot)**
+    - [Random](#run-random-predictoor)
+    - [Static model](#run-static-model-predictoor)
+    - [Dynamic model](#run-dynamic-model-predictoor)
 
 ## Install Local Network
 
@@ -67,10 +70,6 @@ There are other envvars that you might want to set, such as the owner addresses.
 
 Here, we run a bot that makes random predictions.
 
-- It runs [`predictoor_agent1.py::PredictoorAgent1`](../pdr_backend/predictoor/approach1/predictoor_agent1.py) found in `pdr_backend/predictoor/approach1`
-- It's configured by envvars and [`predictoor_config1.py::PredictoorConfig1`](../pdr_backend/predictoor/approach1/predictoor_config1.py)
-- It predicts according to `PredictoorAgent1:get_prediction()`.
-
 In work console:
 ```console
 # run random predictoor bot
@@ -80,19 +79,22 @@ python pdr_backend/predictoor/main.py 1
 Observe the bots in action:
 - In the barge console: trueval bot submitting (mock random) truevals, trader is (mock) trading, etc
 - In your work console: predictoor bot is submitting (mock random) predictions
+- Query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
 
-You can query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
+Code structure:
+- It runs [`predictoor_agent1.py::PredictoorAgent1`](../pdr_backend/predictoor/approach1/predictoor_agent1.py) found in `pdr_backend/predictoor/approach1`
+- It's configured by envvars and [`predictoor_config1.py::PredictoorConfig1`](../pdr_backend/predictoor/approach1/predictoor_config1.py)
+- It predicts according to `PredictoorAgent1:get_prediction()`.
 
+### Run Static Model Predictoor
 
-### Run Model Based Predictoor
+Since random predictions aren't accurate, let's use AI/ML models.
+- Here in "approach2", we load pre-learned models (static)
+- And in "approach3" further below, we learn models on-the-fly (dynamic)
 
-Since random predictions aren't accurate, let's use AI/ML models. Here's an example flow that loads pre-learned models ("approach2"):
-
+Code structure:
 - The bot runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
 - Which imports a model stored in [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo
-
-
-Once you're familiar with this, you'll want to fork it and run your own.
 
 In work console:
 ```console
@@ -113,3 +115,59 @@ pip install scikit-learn ta
 #run model-powered predictoor bot
 python pdr_backend/predictoor/main.py 2
 ```
+
+Once you're familiar with this, you can fork it and run your own.
+
+### Run Dynamic Model Predictoor
+
+Here, we build models on-the-fly, ie dynamic models. It's "approach3".
+
+Whereas approach2 has model development in a different repo, approach3 has it inside this repo.
+
+Accordingly, this flow has two top-level steps:
+1. Develop & backteest models
+2. Run bot in Predictoor context
+
+Let's go through each in turn.
+
+
+** 1. Develop & backtest model**
+
+Here, we develop & backtest the model in a setup optimized for rapid iterations (independent of Barge and Predictoor bots).
+
+In work console:
+```console
+#this dir will hold data fetched from exchanges
+mkdir csvs
+
+#run approach3 unit tests
+pytest pdr_backend/predictoor/approach3
+
+#run approach3 backtest. (Edit the parameters in runtrade.py as desired)
+python pdr_backend/predictoor/approach3/runtrade.py
+```
+
+`runtrade.py` will grab data from exchanges, then simulate one epoch at a time (including building a model, predicting, and trading). When done, it plots accumulated returns vs. time. Besides logging to stdout, it also logs to out*.txt in pwd.
+
+**Run bot in Predictoor context**
+Once you're satisfied with your backtests, you're ready to run the bot in a Predictoor context.
+
+First, get Barge going (see above).
+
+Then, in work console:
+```console
+# run approach3 predictoor bot
+python pdr_backend/predictoor/main.py 3
+```
+
+Observe all bots in action:
+- In the barge console: trueval bot submitting (mock random) truevals, trader is (mock) trading, etc
+- In your work console: predictoor bot is submitting (mock random) predictions
+- Query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
+
+Code structure:
+- It runs [`predictoor_agent3.py::PredictoorAgent3`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) found in `pdr_backend/predictoor/approach3`
+- It's configured by envvars and [`predictoor_config3.py::PredictoorConfig3`](../pdr_backend/predictoor/approach3/predictoor_config3.py)
+- It predicts according to `PredictoorAgent3:get_prediction()`.
+
+Once you're familiar with this, you can fork it and run your own.
