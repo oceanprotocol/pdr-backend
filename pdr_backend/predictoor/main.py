@@ -27,11 +27,12 @@ def do_main():
 
     arg1 = sys.argv[1]
     if arg1 in ["1", "3"]: #approach1, approach3
-        agent_class = importlib.import_module(
+        agent_module = importlib.import_module(
             f"pdr_backend.predictoor.approach{arg1}.predictoor_agent{arg1}"
         )
-        agent_class = getattr(agent_class, f"PredictoorAgent{arg1}")
-        config = agent_class.predictoor_config_class()
+        agent_class = getattr(agent_module, f"PredictoorAgent{arg1}")
+        config_class = agent_class.predictoor_config_class
+        config = config_class()
         agent = agent_class(config)
         agent.run()
         

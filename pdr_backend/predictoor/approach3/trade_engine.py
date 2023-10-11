@@ -33,10 +33,6 @@ class TradeEngine:
 
         self.data_factory = DataFactory(self.data_ss)
 
-        # Problem: this is called in both __init__(), and run()
-        #   Should it be just one of these? Which?
-        self._init_loop_attributes()
-
     @property
     def usdcoin(self) -> str:
         return self.data_ss.usdcoin
