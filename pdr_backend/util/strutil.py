@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 @enforce_types
 class StrMixin:
-    def __str__(self) -> str:
+    def longstr(self) -> str:
         class_name = self.__class__.__name__
 
         newline = False
@@ -48,6 +48,9 @@ class StrMixin:
 
         s += [f"/{class_name}}}"]
         return "".join(s)
+
+    def __str__(self) -> str:
+        return self.longstr()
 
 
 @enforce_types
