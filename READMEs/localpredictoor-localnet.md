@@ -18,7 +18,7 @@ This README describes:
 2. **Setup predictoor bot**
     - [Install it](#install-predictoor-bot)
     - [Set envvars](#set-envvars)
-3. **[Run predictoor bot](#run-predictoor_bot)**
+3. **[Run predictoor bot](#run-predictoor-bot)**
     - [Random](#run-random-predictoor)
     - [Static model](#run-static-model-predictoor)
     - [Dynamic model](#run-dynamic-model-predictoor)
@@ -122,18 +122,15 @@ Once you're familiar with this, you can fork it and run your own.
 
 Here, we build models on-the-fly, ie dynamic models. It's "approach3".
 
-Whereas approach2 has model development in a different repo, approach3 has it inside this repo.
-
-Accordingly, this flow has two top-level steps:
-1. Develop & backteest models
+Whereas approach2 has model development in a different repo, approach3 has it inside this repo. Accordingly, this flow has two top-level steps:
+1. Develop & backtest models
 2. Run bot in Predictoor context
 
 Let's go through each in turn.
 
+**Approach3 - Step 1: Develop & backtest models**
 
-** 1. Develop & backtest model**
-
-Here, we develop & backtest the model in a setup optimized for rapid iterations (independent of Barge and Predictoor bots).
+Here, we develop & backtest the model. The setup is optimized for rapid iterations, by being independent of Barge and Predictoor bots.
 
 In work console:
 ```console
@@ -143,16 +140,18 @@ mkdir csvs
 #run approach3 unit tests
 pytest pdr_backend/predictoor/approach3
 
-#run approach3 backtest. (Edit the parameters in runtrade.py as desired)
+#run approach3 backtest.
+# (Edit the parameters in runtrade.py as desired)
 python pdr_backend/predictoor/approach3/runtrade.py
 ```
 
 `runtrade.py` will grab data from exchanges, then simulate one epoch at a time (including building a model, predicting, and trading). When done, it plots accumulated returns vs. time. Besides logging to stdout, it also logs to out*.txt in pwd.
 
-**Run bot in Predictoor context**
-Once you're satisfied with your backtests, you're ready to run the bot in a Predictoor context.
+**Approach3 - Step 2: Run bot in Predictoor context**
 
-First, get Barge going (see above).
+Once you're satisfied with your backtests, you're ready to run the approach3 bot in a Predictoor context.
+
+First, get Barge & other bots going via "Run local network" instructions above.
 
 Then, in work console:
 ```console
