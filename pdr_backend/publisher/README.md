@@ -1,1 +1,1 @@
-See [READMEs/predictoor.md](../../READMEs/publisher.md).
+See [READMEs/publisher.md](../../READMEs/publisher.md).
