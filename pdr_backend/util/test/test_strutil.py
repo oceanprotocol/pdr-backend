@@ -1,7 +1,8 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import *  # pylint: disable=wildcard-import
+from pdr_backend.util.strutil import \
+    StrMixin, dictStr, prettyBigNum, asCurrency
 
 
 def testStrMixin():
@@ -29,6 +30,9 @@ def testStrMixin():
     assert "Foo}" in s
     assert "ignoreVal" not in s
     assert "ignoreMethod" not in s
+
+    s3 = f.longstr()
+    assert s3 == s
 
 
 def testDictStr():
