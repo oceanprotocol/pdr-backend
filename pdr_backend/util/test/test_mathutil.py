@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 import numpy as np
 import pytest
 
-from util.mathutil import *  # pylint: disable=wildcard-import
+from pdr_backend.util.mathutil import *  # pylint: disable=wildcard-import
 
 
 @enforce_types

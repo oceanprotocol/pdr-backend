@@ -8,7 +8,7 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
-from util.strutil import StrMixin
+from pdr_backend.util.strutil import StrMixin
 
 
 @enforce_types
