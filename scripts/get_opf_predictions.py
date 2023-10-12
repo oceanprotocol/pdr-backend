@@ -103,7 +103,6 @@ def get_all_predictions():
         offset += 1000
 
         if not "data" in result:
-            print(result)
             break
 
         data = result["data"]["predictPredictions"]
@@ -120,12 +119,12 @@ def get_all_predictions():
             timeframe = pair_info["timeframe"]
             timestamp = prediction["slot"]["slot"]
 
-            if not prediction["payout"]:
+            if prediction["payout"] is None:
                 continue
 
             trueval = prediction["payout"]["trueValue"]
 
-            if not trueval:
+            if trueval is None:
                 continue
 
             predictedValue = prediction["payout"]["predictedValue"]
@@ -137,7 +136,6 @@ def get_all_predictions():
             prediction_obj = Prediction(
                 pair_name, timeframe, predictedValue, stake, trueval, timestamp
             )
-
             predictions.append(prediction_obj)
 
     return predictions
