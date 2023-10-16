@@ -6,6 +6,7 @@ from pdr_backend.models.token import Token
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
 from addresses import get_opf_addresses
+
 WEEK = 86400 * 7
 
 
@@ -71,7 +72,6 @@ if __name__ == "__main__":
             print("Please provide a valid integer as the number of epochs to check!")
 
     addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
-   
 
     ts = int(time.time())
     query = """
