@@ -34,3 +34,26 @@ class Token(BaseContract):
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
+    
+class NativeToken():
+    def __init__(self, config: Web3Config):
+        self.config = config
+        
+    def balanceOf(self, account):
+        return self.config.w3.eth.get_balance(account)
+
+    def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
+        gasPrice = self.config.w3.eth.gas_price
+        transaction = {
+                "from": sender,
+                "gas": 25000,
+                "gasPrice": gasPrice,
+                "value": amount,
+                "chainId":self.config.w3.eth.chain_id,
+                "to":self.config.w3.to_checksum_address(to)
+        }
+        tx = self.w3.eth.send_transaction(transaction)
+
+        if not wait_for_receipt:
+            return tx
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
