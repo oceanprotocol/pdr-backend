@@ -1,10 +1,11 @@
 import math
 import sys
 import time
+from addresses import get_opf_addresses
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token, NativeToken
 from pdr_backend.util.contract import get_address
-from addresses import get_opf_addresses
+
 
 
 if __name__ == "__main__":

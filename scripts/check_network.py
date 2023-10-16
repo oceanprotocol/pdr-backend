@@ -1,11 +1,12 @@
 import math
 import sys
 import time
+from addresses import get_opf_addresses
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
-from addresses import get_opf_addresses
+
 
 WEEK = 86400 * 7
 
