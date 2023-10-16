@@ -1,8 +1,9 @@
 from enforce_typing import enforce_types
+from web3.types import TxParams, Wei
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.web3_config import Web3Config
-from web3.types import ( TxParams, Wei)
+
 
 @enforce_types
 class Token(BaseContract):
@@ -49,6 +50,7 @@ class NativeToken:
             "from": sender,
             "gas": 25000,
             "value": Wei(amount),
+            "gasPrice": Wei(gasPrice),
             "to": to,
         }
         tx = self.config.w3.eth.send_transaction(transaction=params)
