@@ -171,7 +171,7 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
     csvdir = str(tmpdir)
 
-    csv_dfs = {"binance": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
+    csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
     ss = DataSS(
         csv_dir=csvdir,
@@ -258,7 +258,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     csvdir = str(tmpdir)
 
     csv_dfs = {
-        "binance": {
+        "coinbase": {
             "BTC": _df_from_raw_data(BINANCE_BTC_DATA),
             "ETH": _df_from_raw_data(BINANCE_ETH_DATA),
         },
