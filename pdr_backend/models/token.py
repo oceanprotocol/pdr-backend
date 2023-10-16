@@ -53,7 +53,7 @@ class NativeToken:
             "chainId": self.config.w3.eth.chain_id,
             "to": self.config.w3.to_checksum_address(to),
         }
-        tx = self.w3.eth.send_transaction(transaction)
+        tx = self.config.w3.eth.send_transaction(transaction)
 
         if not wait_for_receipt:
             return tx
