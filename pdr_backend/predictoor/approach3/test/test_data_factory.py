@@ -93,23 +93,23 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
         timeframe="5m",
         signals=["high"],
         coins=["ETH"],
-        exchange_ids=["binance"],
-        yval_exchange_id="binance",
+        exchange_ids=["coinbase"],
+        yval_exchange_id="coinbase",
         yval_coin="ETH",
         yval_signal="high",
     )
-    ss.exchs_dict["binance"] = exchange
+    ss.exchs_dict["coinbase"] = exchange
 
     # setup: data_factory, filename
     data_factory = DataFactory(ss)
-    filename = data_factory._hist_csv_filename("binance", "ETH/USDT")
+    filename = data_factory._hist_csv_filename("coinbase", "ETH/USDT")
 
     def _uts_in_csv(filename: str) -> list:
         df = load_csv(filename)
         return df.index.values.tolist()
 
     # work 1: new csv
-    data_factory._update_hist_csv_at_exch_and_pair("binance", "ETH/USDT")
+    data_factory._update_hist_csv_at_exch_and_pair("coinbase", "ETH/USDT")
     uts = _uts_in_csv(filename)
     if isinstance(n_uts, int):
         assert len(uts) == n_uts
@@ -120,14 +120,14 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
 
     # work 2: two more epochs at end --> it'll append existing csv
     ss.fin_timestamp = fin_ut + 2 * MS_PER_EPOCH
-    data_factory._update_hist_csv_at_exch_and_pair("binance", "ETH/USDT")
+    data_factory._update_hist_csv_at_exch_and_pair("coinbase", "ETH/USDT")
     uts2 = _uts_in_csv(filename)
     assert uts2 == _uts_in_range(st_ut, fin_ut + 2 * MS_PER_EPOCH)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new csv
     ss.st_timestamp = st_ut - 2 * MS_PER_EPOCH
     ss.fin_timestamp = fin_ut + 4 * MS_PER_EPOCH
-    data_factory._update_hist_csv_at_exch_and_pair("binance", "ETH/USDT")
+    data_factory._update_hist_csv_at_exch_and_pair("coinbase", "ETH/USDT")
     uts3 = _uts_in_csv(filename)
     assert uts3 == _uts_in_range(st_ut - 2 * MS_PER_EPOCH, fin_ut + 4 * MS_PER_EPOCH)
 
@@ -184,8 +184,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         timeframe="5m",
         signals=["high"],
         coins=["ETH"],
-        exchange_ids=["binance"],
-        yval_exchange_id="binance",
+        exchange_ids=["coinbase"],
+        yval_exchange_id="coinbase",
         yval_coin="ETH",
         yval_signal="high",
     )
@@ -205,19 +205,19 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "binance:ETH:high:t-4",
-        "binance:ETH:high:t-3",
-        "binance:ETH:high:t-2",
+        "coinbase:ETH:high:t-4",
+        "coinbase:ETH:high:t-3",
+        "coinbase:ETH:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("binance:ETH:high:t-2") == var_with_prev
-    assert x_df["binance:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert found_cols.index("coinbase:ETH:high:t-2") == var_with_prev
+    assert x_df["coinbase:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
     # =========== now have a different testshift (1 not 0)
     X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=1)
-    _assert_shapes(ss, X, y, var_with_prev, x_df)
+    _assert_shapes(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
     assert X[-2, :].tolist() == [6, 5, 4] and y[-2] == 3
@@ -227,14 +227,14 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "binance:ETH:high:t-4",
-        "binance:ETH:high:t-3",
-        "binance:ETH:high:t-2",
+        "coinbase:ETH:high:t-4",
+        "coinbase:ETH:high:t-3",
+        "coinbase:ETH:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("binance:ETH:high:t-2") == var_with_prev
-    assert x_df["binance:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert found_cols.index("coinbase:ETH:high:t-2") == var_with_prev
+    assert x_df["coinbase:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
     # =========== now have a different max_N_train
@@ -279,8 +279,8 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         timeframe="5m",
         signals=["high", "low"],
         coins=["BTC", "ETH"],
-        exchange_ids=["binance", "kraken"],
-        yval_exchange_id="binance",
+        exchange_ids=["coinbase", "kraken"],
+        yval_exchange_id="coinbase",
         yval_coin="ETH",
         yval_signal="high",
     )
@@ -294,18 +294,18 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "binance:BTC:high:t-4",
-        "binance:BTC:high:t-3",
-        "binance:BTC:high:t-2",
-        "binance:BTC:low:t-4",
-        "binance:BTC:low:t-3",
-        "binance:BTC:low:t-2",
-        "binance:ETH:high:t-4",
-        "binance:ETH:high:t-3",
-        "binance:ETH:high:t-2",
-        "binance:ETH:low:t-4",
-        "binance:ETH:low:t-3",
-        "binance:ETH:low:t-2",
+        "coinbase:BTC:high:t-4",
+        "coinbase:BTC:high:t-3",
+        "coinbase:BTC:high:t-2",
+        "coinbase:BTC:low:t-4",
+        "coinbase:BTC:low:t-3",
+        "coinbase:BTC:low:t-2",
+        "coinbase:ETH:high:t-4",
+        "coinbase:ETH:high:t-3",
+        "coinbase:ETH:high:t-2",
+        "coinbase:ETH:low:t-4",
+        "coinbase:ETH:low:t-3",
+        "coinbase:ETH:low:t-2",
         "kraken:BTC:high:t-4",
         "kraken:BTC:high:t-3",
         "kraken:BTC:high:t-2",
@@ -320,13 +320,13 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         "kraken:ETH:low:t-2",
     ]
     assert found_cols == target_cols
-    assert found_cols.index("binance:ETH:high:t-2") == var_with_prev
+    assert found_cols.index("coinbase:ETH:high:t-2") == var_with_prev
 
-    # test binance:ETH:high like in 1-signal
+    # test coinbase:ETH:high like in 1-signal
     assert target_cols[6:9] == [
-        "binance:ETH:high:t-4",
-        "binance:ETH:high:t-3",
-        "binance:ETH:high:t-2",
+        "coinbase:ETH:high:t-4",
+        "coinbase:ETH:high:t-3",
+        "coinbase:ETH:high:t-2",
     ]
     Xa = X[:, 6:9]
     assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
@@ -337,7 +337,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert x_df.iloc[-2].tolist()[6:9] == [5, 4, 3]
     assert x_df.iloc[0].tolist()[6:9] == [11, 10, 9]
 
-    assert x_df["binance:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df["coinbase:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
 
