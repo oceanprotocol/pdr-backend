@@ -36,7 +36,7 @@ class TradeEngine:
         self.nmses_train: List[float] = []
         self.ys_test: List[float] = []
         self.ys_testhat: List[float] = []
-        self.corrects: List[str] = []
+        self.corrects: List[bool] = []
         self.profit_usds: List[float] = []
         self.tot_profit_usds: List[float] = []
 
