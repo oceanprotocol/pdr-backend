@@ -32,7 +32,9 @@ class DataSS:
         yval_coin: str,  # eg "ETH"
         yval_signal: str,  # eg "c" for closing price
     ):
-        assert os.path.exists(csv_dir)
+        if not os.path.exists(csv_dir):
+            print(f"Could not find csv dir, creating one at: {csv_dir}")
+            os.makedirs(csv_dir)
         assert 0 <= st_timestamp <= fin_timestamp <= np.inf
         assert 0 < max_N_train
         assert 0 < N_test < np.inf
