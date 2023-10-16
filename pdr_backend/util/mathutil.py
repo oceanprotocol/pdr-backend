@@ -1,10 +1,11 @@
-import math
-import numpy as np
-
-from math import log10, floor
 import random
 import re
+
 from typing import Union
+from math import log10, floor
+
+import numpy as np
+
 
 from enforce_typing import enforce_types
 
@@ -91,6 +92,6 @@ def nmse(yhat, y, ymin=None, ymax=None) -> float:
 
     mse_xy = np.sum(np.square(y01 - yhat01))
     mse_x = np.sum(np.square(y01))
-    nmse = mse_xy / mse_x
+    nmse_result = mse_xy / mse_x
 
-    return nmse
+    return nmse_result

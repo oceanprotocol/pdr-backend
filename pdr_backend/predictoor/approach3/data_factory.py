@@ -1,8 +1,5 @@
-import datetime
-from datetime import timezone
 import os
 import sys
-from typing import Dict, List, Tuple, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -12,9 +9,7 @@ from pdr_backend.predictoor.approach3.tradeutil import pairstr
 
 from pdr_backend.predictoor.approach3.constants import (
     OHLCV_COLS,
-    OHLCV_DTYPES,
     TOHLCV_COLS,
-    TOHLCV_DTYPES,
     MS_PER_EPOCH,
 )
 from pdr_backend.predictoor.approach3.data_ss import DataSS
@@ -27,13 +22,9 @@ from pdr_backend.predictoor.approach3.pdutil import (
     oldest_ut,
     newest_ut,
 )
-from pdr_backend.predictoor.approach3.timeblock import timeblock
 from pdr_backend.predictoor.approach3.timeutil import (
     pretty_timestr,
     current_ut,
-    dt_to_ut,
-    ut_to_dt,
-    timestr_to_ut,
 )
 
 
@@ -54,7 +45,7 @@ class DataFactory:
         return hist_df
 
     def _update_csvs(self):
-        print(f"Update csvs.")
+        print("Update csvs.")
         print(f"-User-specified start: {pretty_timestr(self.ss.st_timestamp)}")
         print(f"-User-specified fin: {pretty_timestr(self.ss.fin_timestamp)}")
 
@@ -72,7 +63,7 @@ class DataFactory:
         st_ut = self._calc_start_ut_maybe_delete(filename)
         print(f"  Aim to fetch data from start time: {pretty_timestr(st_ut)}")
         if st_ut > min(current_ut(), self.ss.fin_timestamp):
-            print(f"  Given start time, no data to gather. Exit.")
+            print("  Given start time, no data to gather. Exit.")
             return
 
         # Fill in df
@@ -108,9 +99,9 @@ class DataFactory:
                 break
 
             # prep next iteration
-            newest_ut = int(df.index.values[-1])
-            prev_st_ut = st_ut
-            st_ut = newest_ut + MS_PER_EPOCH
+            newest_ut_value = int(df.index.values[-1])
+            # prev_st_ut = st_ut
+            st_ut = newest_ut_value + MS_PER_EPOCH
 
         # output to csv
         save_csv(filename, df)
@@ -224,7 +215,7 @@ class DataFactory:
                     f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
                     f" (= testshift + Nt = {testshift} + {ss.Nt})"
                 )
-                print(f"To fix: broaden time, shrink testshift, or shrink Nt")
+                print("To fix: broaden time, shrink testshift, or shrink Nt")
                 sys.exit(1)
             for delayshift in range(ss.Nt, 0, -1):  # eg [2, 1, 0]
                 shift = testshift + delayshift

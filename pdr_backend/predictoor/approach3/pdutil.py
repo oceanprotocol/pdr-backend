@@ -11,7 +11,6 @@ import pandas as pd
 
 from pdr_backend.predictoor.approach3.constants import (
     OHLCV_COLS,
-    OHLCV_DTYPES,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
 )
@@ -30,7 +29,9 @@ def initialize_df(cols: List[str]) -> pd.DataFrame:
     }
     df = pd.DataFrame(dtypes)
     df = df.set_index("timestamp")
+    # pylint: disable=unsupported-assignment-operation
     df["datetime"] = pd.to_datetime(df.index.values, unit="ms", utc=True)
+
     return df
 
 
@@ -137,7 +138,7 @@ def load_csv(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
 def has_data(filename: str) -> bool:
     """Returns True if the file has >0 data entries"""
     with open(filename) as f:
-        for i, line in enumerate(f):
+        for i, _ in enumerate(f):
             if i >= 1:
                 return True
     return False
@@ -177,10 +178,10 @@ def newest_ut(filename: str) -> int:
 
 
 @enforce_types
-def _get_last_line(filename) -> str:
+def _get_last_line(filename: str) -> str:
     """Returns the last line in a file, as a string"""
+    line = None
     with open(filename) as f:
         for line in f:
             pass
-    last_line = line
-    return last_line
+    return line if line is not None else ""

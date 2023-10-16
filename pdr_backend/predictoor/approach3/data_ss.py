@@ -13,6 +13,7 @@ CAND_SIGNALS = ["open", "high", "low", "close", "volume"]
 
 
 class DataSS:
+    # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,
@@ -91,26 +92,26 @@ class DataSS:
         s += f"  csv_dir={self.csv_dir}\n"
         s += f"  st_timestamp={pretty_timestr(self.st_timestamp)}\n"
         s += f"  fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
-        s += f"  \n"
+        s += "  \n"
 
         s += f"  max_N_train={self.max_N_train} -- max # pts to train on\n"
         s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
         s += f"  Nt={self.Nt} -- model inputs Nt past pts z[t-1], .., z[t-Nt]\n"
-        s += f"  \n"
+        s += "  \n"
 
         s += f"  usdcoin={self.usdcoin}\n"
         s += f"  timeframe={self.timeframe}\n"
         s += f"  signals={self.signals}\n"
         s += f"  coins={self.coins}\n"
-        s += f"  \n"
+        s += "  \n"
 
         s += f"  exchs_dict={self.exchs_dict}\n"
         s += f"  yval_exchange_id={self.yval_exchange_id}\n"
         s += f"  yval_coin={self.yval_coin}\n"
         s += f"  yval_signal={self.yval_signal}\n"
-        s += f"  \n"
+        s += "  \n"
 
-        s += f"  (then...)\n"
+        s += "  (then...)\n"
         s += f"  n_exchs={self.n_exchs}\n"
         s += f"  exchange_ids={self.exchange_ids}\n"
         s += f"  n_signals={self.n_signals}\n"

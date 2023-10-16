@@ -32,7 +32,7 @@ class PredictoorAgent3(BasePredictoorAgent):
           stake -- int -- amount to stake, in units of Eth
         """
         # Set model_ss
-        self.model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
+        model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
 
         # Controllable data_ss params. Hardcoded; could be moved to envvars
         st_timestamp = timestr_to_ut("2023-01-31")  # 2019-09-13_04:00 earliest
@@ -83,10 +83,10 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Split X/y
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
-        y_train, y_test = y[st:fin], y[fin : fin + 1]
+        y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model
-        model_factory = ModelFactory(self.model_ss)
+        model_factory = ModelFactory(model_ss)
         model = model_factory.build(X_train, y_train)
 
         # Predict

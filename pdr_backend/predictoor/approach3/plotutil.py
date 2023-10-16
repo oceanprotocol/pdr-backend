@@ -10,7 +10,7 @@ def plot_vals_vs_time1(y, yhat, title=""):
     matplotlib.rcParams.update({"font.size": 22})
     assert len(y) == len(yhat)
     N = len(y)
-    x = [h for h in range(0, N)]
+    x = list(range(0, N))
     fig, ax = plt.subplots()
     ax.set_title(title)
     ax.plot(x, y, "g-", label="y")
@@ -28,7 +28,7 @@ def plot_vals_vs_time2(y_train, y_trainhat, y_test, y_testhat, title=""):
     assert len(y_test) == len(y_testhat)
     N_train, N_test = len(y_train), len(y_test)
     N = N_train + N_test
-    x = np.array([h for h in range(0, N)])
+    x = np.array(list(range(0, N)))
     x_train, x_test = x[:N_train], x[N_train:]
     fig, ax = plt.subplots()
     ax.set_title(title)
@@ -73,7 +73,7 @@ def scatter_pred_vs_actual(y, yhat, title=""):
 def plot_any_vs_time(y, ylabel):
     matplotlib.rcParams.update({"font.size": 22})
     N = len(y)
-    x = [h for h in range(0, N)]
+    x = list(range(0, N))
     fig, ax = plt.subplots()
     ax.set_title(ylabel + " vs time")
     ax.plot(x, y, "g-")

@@ -1,4 +1,3 @@
-import datetime
 import os
 
 from enforce_typing import enforce_types
@@ -10,7 +9,6 @@ from pdr_backend.predictoor.approach3.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
-    TOHLCV_DTYPES,
 )
 from pdr_backend.predictoor.approach3.pdutil import (
     initialize_df,

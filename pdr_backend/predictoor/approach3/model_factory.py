@@ -13,7 +13,6 @@ class ModelFactory:
         self.model_ss = model_ss
 
     def build(self, X_train, y_train):
-        a = self.model_ss.model_approach
         # print(f"Build model: start")
         model = self._model()
         model.fit(X_train, y_train)
@@ -25,16 +24,16 @@ class ModelFactory:
         # print(f"model_approach={a}")
         if a == "PREV":
             return prev_model.PrevModel(self.model_ss.var_with_prev)
-        elif a == "LIN":
+        if a == "LIN":
             return linear_model.LinearRegression()
-        elif a == "GPR":
+        if a == "GPR":
             kernel = 1.0 * RBF(length_scale=1e1, length_scale_bounds=(1e-2, 1e3))
             return GaussianProcessRegressor(kernel=kernel, alpha=0.0)
-        elif a == "SVR":
+        if a == "SVR":
             return svm.SVR()
-        elif a == "NuSVR":
+        if a == "NuSVR":
             return svm.NuSVR()
-        elif a == "LinearSVR":
+        if a == "LinearSVR":
             return svm.LinearSVR()
-        else:
-            raise ValueError(model_approach)
+
+        raise ValueError(a)

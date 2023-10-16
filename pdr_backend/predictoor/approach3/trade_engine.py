@@ -15,6 +15,7 @@ from pdr_backend.predictoor.approach3.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
 
 
+# pylint: disable=too-many-instance-attributes
 class TradeEngine:
     @enforce_types
     def __init__(
@@ -30,8 +31,13 @@ class TradeEngine:
         self.trade_ss = trade_ss
 
         self.holdings = self.trade_pp.init_holdings
+        self.tot_profit_usd = 0.0
+        self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
+        self.profit_usds, self.tot_profit_usds = [], []
 
         self.data_factory = DataFactory(self.data_ss)
+
+        self.logfile = ""
 
     @property
     def usdcoin(self) -> str:
@@ -62,7 +68,7 @@ class TradeEngine:
         for test_i in range(self.data_ss.N_test):
             self.run_one_iter(test_i, hist_df)
 
-        log(f"Done all iters.")
+        log("Done all iters.")
 
         nmse_train = np.average(self.nmses_train)
         nmse_test = nmse(self.ys_testhat, self.ys_test)
@@ -74,7 +80,7 @@ class TradeEngine:
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
         testshift = self.data_ss.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        X, y, var_with_prev, x_df = self.data_factory.create_xy(hist_df, testshift)
+        X, y, var_with_prev, _ = self.data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
@@ -122,7 +128,7 @@ class TradeEngine:
         self.profit_usds.append(profit_usd)
         self.tot_profit_usds.append(self.tot_profit_usd)
 
-        err = abs(predprice - trueprice)
+        # err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
         true_dir = "UP" if trueprice > curprice else "DN"
         correct = pred_dir == true_dir

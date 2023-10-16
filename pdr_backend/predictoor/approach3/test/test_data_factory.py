@@ -1,7 +1,6 @@
 import copy
 
 from enforce_typing import enforce_types
-import numpy as np
 import pandas as pd
 
 from pdr_backend.predictoor.approach3.constants import (
@@ -75,6 +74,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
         def __init__(self):
             self.cur_ut = current_ut()  # fixed value, for easier testing
 
+        # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:
             uts = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
@@ -155,7 +155,7 @@ BINANCE_ETH_DATA = [
 def _addval(DATA: list, val: float) -> list:
     DATA2 = copy.deepcopy(DATA)
     for row_i, row in enumerate(DATA2):
-        for col_j, val in enumerate(row):
+        for col_j, _ in enumerate(row):
             if col_j == 0:
                 continue
             DATA2[row_i][col_j] += val
@@ -342,7 +342,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
 
 @enforce_types
-def _assert_shapes(ss, X, y, var_with_prev, x_df):
+def _assert_shapes(ss, X, y, x_df):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_N_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n

@@ -2,7 +2,6 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach3.data_factory import DataFactory
 from pdr_backend.predictoor.approach3.data_ss import DataSS
 from pdr_backend.predictoor.approach3.model_ss import ModelSS
 from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
