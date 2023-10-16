@@ -97,4 +97,4 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Stake what was set via envvar STAKE_AMOUNT
         stake = self.config.stake_amount
 
-        return (predval, stake)
+        return (bool(predval), stake)
