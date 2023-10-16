@@ -35,15 +35,23 @@ export PRIVATE_KEY=PK_HERE
 export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
-export RPC_URL=https://testnet.sapphire.oasis.dev
-export SUBGRAPH_URL=https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB # address of (fake) OCEAN on Sapphire testnet
 ```
 
-Set `OWNER_ADDRS` (OFP deployer address):
-- On Sapphire testnet: `export OWNER_ADDRS=0xe02a421dfc549336d47efee85699bd0a3da7d6ff`
-- On Sapphire mainnet: `export OWNER_ADDRS=0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703`
+If Sapphire testnet:
+```console
+export RPC_URL=https://testnet.sapphire.oasis.dev
+export SUBGRAPH_URL=https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
+export OWNER_ADDRS=0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
+```
 
+If Sapphire mainnet:
+```console
+export RPC_URL=https://sapphire.oasis.io
+export SUBGRAPH_URL=https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+export STAKE_TOKEN=0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520 # OCEAN token address
+export OWNER_ADDRS=0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
+```
 
 ([Envvar docs](./envvars.md) have more details.)
 
