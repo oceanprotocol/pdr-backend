@@ -1,6 +1,12 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach3.tradeutil import pairstr, pairstr_to_coin, pairstr_to_usdcoin, TradeParams, TradeSS
+from pdr_backend.predictoor.approach3.tradeutil import (
+    pairstr,
+    pairstr_to_coin,
+    pairstr_to_usdcoin,
+    TradeParams,
+    TradeSS,
+)
 
 
 @enforce_types
@@ -12,8 +18,8 @@ def test_TradeParams():
     assert pp.fee_percent == 0.01
     assert "TradeParams" in str(pp)
     assert "fee_percent" in str(pp)
-    
-    
+
+
 @enforce_types
 def test_TradeSS(tmpdir):
     ss = TradeSS(
@@ -25,9 +31,9 @@ def test_TradeSS(tmpdir):
     assert "TradeSS" in str(ss)
     assert "buy_amt_usd" in str(ss)
 
-    
+
 @enforce_types
 def test_pairstr():
-    assert pairstr('BTC', 'USDT') == 'BTC/USDT'
-    assert pairstr_to_coin('BTC/USDT') == 'BTC'
-    assert pairstr_to_usdcoin('BTC/USDT') == 'USDT'
+    assert pairstr("BTC", "USDT") == "BTC/USDT"
+    assert pairstr_to_coin("BTC/USDT") == "BTC"
+    assert pairstr_to_usdcoin("BTC/USDT") == "USDT"

@@ -49,6 +49,7 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
     """Return a number with the specified # significant bits"""
     return round(x, sig - int(floor(log10(abs(x)))) - 1)
 
+
 def nmse(yhat, y, ymin=None, ymax=None) -> float:
     """
     @description

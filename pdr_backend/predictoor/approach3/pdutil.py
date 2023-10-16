@@ -23,12 +23,14 @@ def initialize_df(cols: List[str]) -> pd.DataFrame:
     It's ok whether cols has "timestamp" or not. Same for "datetime".
     The return df has "timestamp" for index and "datetime" as col
     """
-    dtypes = {col: pd.Series(dtype=dtype)
-              for col, dtype in zip(TOHLCV_COLS, TOHLCV_DTYPES)
-              if col in cols or col == 'timestamp'}
+    dtypes = {
+        col: pd.Series(dtype=dtype)
+        for col, dtype in zip(TOHLCV_COLS, TOHLCV_DTYPES)
+        if col in cols or col == "timestamp"
+    }
     df = pd.DataFrame(dtypes)
-    df = df.set_index('timestamp')
-    df['datetime'] = pd.to_datetime(df.index.values, unit='ms', utc=True)
+    df = df.set_index("timestamp")
+    df["datetime"] = pd.to_datetime(df.index.values, unit="ms", utc=True)
     return df
 
 
@@ -39,8 +41,8 @@ def concat_next_df(df: pd.DataFrame, next_df: pd.DataFrame) -> pd.DataFrame:
     """
     assert "datetime" in df.columns
     assert "datetime" not in next_df.columns
-    next_df = next_df.set_index('timestamp')
-    next_df['datetime'] = pd.to_datetime(next_df.index.values, unit='ms', utc=True)
+    next_df = next_df.set_index("timestamp")
+    next_df["datetime"] = pd.to_datetime(next_df.index.values, unit="ms", utc=True)
     df = pd.concat([df, next_df])
     return df
 
@@ -50,29 +52,29 @@ def save_csv(filename: str, df: pd.DataFrame):
     """Append to csv file if it exists, otherwise create new one.
     With header=True and index=True, it will set the index_col too
     """
-    #preconditions
+    # preconditions
     assert df.columns.tolist() == OHLCV_COLS + ["datetime"]
 
-    #csv column order: timestamp (index), datetime, O, H, L, C, V
-    columns = ['datetime'] + OHLCV_COLS
-    
-    if os.path.exists(filename): # append existing file
-        df.to_csv(filename, mode='a', header=False, index=True, columns=columns)
-        print(f'  Just appended {df.shape[0]} df rows to file {filename}')
-    else: # write new file
-        df.to_csv(filename, mode='w', header=True, index=True, columns=columns)
-        print(f'  Just saved df with {df.shape[0]} rows to new file {filename}')
+    # csv column order: timestamp (index), datetime, O, H, L, C, V
+    columns = ["datetime"] + OHLCV_COLS
+
+    if os.path.exists(filename):  # append existing file
+        df.to_csv(filename, mode="a", header=False, index=True, columns=columns)
+        print(f"  Just appended {df.shape[0]} df rows to file {filename}")
+    else:  # write new file
+        df.to_csv(filename, mode="w", header=True, index=True, columns=columns)
+        print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
 
 
 @enforce_types
-def load_csv(filename:str, cols=None, st=None, fin=None) -> pd.DataFrame:
-    """Load csv file as a dataframe. 
+def load_csv(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
+    """Load csv file as a dataframe.
 
     Features:
     - Ensure that all dtypes are correct
     - Filter to just the input columns
     - Filter to just the specified start & end times
-    - Memory stays reasonable 
+    - Memory stays reasonable
 
     @arguments
       cols -- what columns to use, eg ["open","high"]. Set to None for all cols.
@@ -98,12 +100,14 @@ def load_csv(filename:str, cols=None, st=None, fin=None) -> pd.DataFrame:
     else:
         df0 = pd.read_csv(filename, usecols=["timestamp"])
         timestamps = df0["timestamp"].tolist()
-        skiprows = [i+1 for i, timestamp in enumerate(timestamps)
-                    if timestamp < st] # "+1" to account for header
+        skiprows = [
+            i + 1 for i, timestamp in enumerate(timestamps) if timestamp < st
+        ]  # "+1" to account for header
         if skiprows == []:
             skiprows = None
-        nrows = sum(1 for row, timestamp in enumerate(timestamps)
-                    if st <= timestamp <= fin)
+        nrows = sum(
+            1 for row, timestamp in enumerate(timestamps) if st <= timestamp <= fin
+        )
 
     # set dtypes
     cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES))
@@ -111,16 +115,20 @@ def load_csv(filename:str, cols=None, st=None, fin=None) -> pd.DataFrame:
 
     # load
     df = pd.read_csv(
-        filename, dtype=dtypes, usecols=cols, skiprows=skiprows, nrows=nrows,
+        filename,
+        dtype=dtypes,
+        usecols=cols,
+        skiprows=skiprows,
+        nrows=nrows,
     )
 
-    #add in datetime column
+    # add in datetime column
     df0 = initialize_df(cols)
     df = concat_next_df(df0, df)
 
-    #postconditions, return
+    # postconditions, return
     assert "timestamp" not in df.columns
-    assert df.index.name == 'timestamp' and df.index.dtype == np.int64
+    assert df.index.name == "timestamp" and df.index.dtype == np.int64
     assert "datetime" in df.columns
     return df
 
@@ -134,7 +142,7 @@ def has_data(filename: str) -> bool:
                 return True
     return False
 
-    
+
 @enforce_types
 def oldest_ut(filename: str) -> int:
     """

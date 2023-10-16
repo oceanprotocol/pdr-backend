@@ -13,33 +13,33 @@ from pdr_backend.predictoor.approach3.trade_engine import TradeEngine
 # params that I change
 
 data_ss = DataSS(
-    csv_dir = os.path.abspath("csvs"),
-    st_timestamp = timestr_to_ut('2022-09-13'), #2019-09-13_04:00 earliest
-    fin_timestamp = timestr_to_ut('2023-06-24'), # 'now','2023-06-21_17:55'
-    max_N_train = 5000, #50000 # if inf, only limited by data available
-    N_test = 200, #50000 . num points to test on, 1 at a time (online)
-    Nt = 10, # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
-    usdcoin = "USDT",
-    timeframe = "5m",
-    signals = ["close"], #["open", "high","low", "close", "volume"],
-    coins = ["ETH", "BTC"],
-    exchange_ids = ["binance"],
-    yval_exchange_id = "binance",
-    yval_coin = "BTC",
-    yval_signal = "close",
+    csv_dir=os.path.abspath("csvs"),
+    st_timestamp=timestr_to_ut("2022-09-13"),  # 2019-09-13_04:00 earliest
+    fin_timestamp=timestr_to_ut("2023-06-24"),  # 'now','2023-06-21_17:55'
+    max_N_train=5000,  # 50000 # if inf, only limited by data available
+    N_test=200,  # 50000 . num points to test on, 1 at a time (online)
+    Nt=10,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
+    usdcoin="USDT",
+    timeframe="5m",
+    signals=["close"],  # ["open", "high","low", "close", "volume"],
+    coins=["ETH", "BTC"],
+    exchange_ids=["binance"],
+    yval_exchange_id="binance",
+    yval_coin="BTC",
+    yval_signal="close",
 )
 
-model_ss = ModelSS("LIN") # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
+model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
 
 trade_pp = TradeParams(
-    fee_percent = 0.0, # Eg 0.001 is 0.1%. Trading fee (simulated)
+    fee_percent=0.0,  # Eg 0.001 is 0.1%. Trading fee (simulated)
     init_holdings={"USDT": 100000.0, "BTC": 0.0},
 )
 
 trade_ss = TradeSS(
-    do_plot = True, # plot at end?
-    logpath = os.path.abspath("./"),
-    buy_amt_usd = 100000.00 # How much to buy at a time. In USD
+    do_plot=True,  # plot at end?
+    logpath=os.path.abspath("./"),
+    buy_amt_usd=100000.00,  # How much to buy at a time. In USD
 )
 
 # ==================================================================

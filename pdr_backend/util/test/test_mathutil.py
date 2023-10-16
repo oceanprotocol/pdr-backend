@@ -130,6 +130,7 @@ def test_round_sig():
     assert round_sig(1.23456e9, 5) == 1.23460e9
     assert round_sig(1.23456e9, 6) == 1.23456e9
 
+
 @enforce_types
 def test_nmse():
     y = np.array([10.0, 12.0, 13.0, 20.0])
@@ -137,4 +138,3 @@ def test_nmse():
     ymin, ymax = 10.0, 20.0
     e = nmse(yhat, y, ymin, ymax)
     assert 0.035 <= e <= 0.036
-    

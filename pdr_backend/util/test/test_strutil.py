@@ -1,8 +1,7 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import \
-    StrMixin, dictStr, prettyBigNum, asCurrency
+from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum, asCurrency
 
 
 def testStrMixin():
@@ -241,7 +240,7 @@ def testPrettyBigNum2_Random_DoRemoveZeroes():
         (4.9e-05, "4.9e-5"),
         (9493000.0, "9.49M"),
     ]
-    for (x, target_s) in x_s_pairs:
+    for x, target_s in x_s_pairs:
         assert prettyBigNum(x) == target_s
 
 
@@ -327,5 +326,5 @@ def testPrettyBigNum3_Random_DontRemoveZeros():
         (4.9e-05, "4.90e-5"),
         (9493000.0, "9.49M"),
     ]
-    for (x, target_s) in x_s_pairs:
+    for x, target_s in x_s_pairs:
         assert prettyBigNum(x, False) == target_s

@@ -18,17 +18,17 @@ from pdr_backend.util.mathutil import nmse
 class TradeEngine:
     @enforce_types
     def __init__(
-            self,
-            data_ss: DataSS,
-            model_ss: ModelSS,
-            trade_pp: TradeParams,
-            trade_ss: TradeSS
+        self,
+        data_ss: DataSS,
+        model_ss: ModelSS,
+        trade_pp: TradeParams,
+        trade_ss: TradeSS,
     ):
         self.data_ss = data_ss
         self.model_ss = model_ss
         self.trade_pp = trade_pp
         self.trade_ss = trade_ss
-        
+
         self.holdings = self.trade_pp.init_holdings
 
         self.data_factory = DataFactory(self.data_ss)
@@ -43,21 +43,20 @@ class TradeEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f'out_{current_ut()}.txt'
+        filebase = f"out_{current_ut()}.txt"
         self.logfile = os.path.join(self.trade_ss.logpath, filebase)
-        with open(self.logfile, 'w') as f:
-            f.write('\n')
-            
+        with open(self.logfile, "w") as f:
+            f.write("\n")
+
         self.tot_profit_usd = 0.0
-        self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = \
-            [], [], [], []
+        self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
         self.profit_usds, self.tot_profit_usds = [], []
 
     @enforce_types
-    def run(self):        
+    def run(self):
         self._init_loop_attributes()
         log = self._log
-        log('Start run')        
+        log("Start run")
         # main loop!
         hist_df = self.data_factory.get_hist_df()
         for test_i in range(self.data_ss.N_test):
@@ -68,27 +67,26 @@ class TradeEngine:
         nmse_train = np.average(self.nmses_train)
         nmse_test = nmse(self.ys_testhat, self.ys_test)
         log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
-        
+
         self._final_plot()
 
     @enforce_types
-    def run_one_iter(self, test_i:int, hist_df:pd.DataFrame):
+    def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
-        testshift = self.data_ss.N_test - test_i -1 # eg [99, 98, .., 2, 1, 0]
-        X, y, var_with_prev, x_df = \
-            self.data_factory.create_xy(hist_df, testshift)
+        testshift = self.data_ss.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        X, y, var_with_prev, x_df = self.data_factory.create_xy(hist_df, testshift)
 
-        st,fin = 0, X.shape[0]-1
-        X_train, X_test = X[st:fin,:], X[fin:fin+1]
-        y_train, y_test = y[st:fin],   y[fin:fin+1]
+        st, fin = 0, X.shape[0] - 1
+        X_train, X_test = X[st:fin, :], X[fin : fin + 1]
+        y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        self.model_ss.var_with_prev = var_with_prev #used for PREV model, that's all
+        self.model_ss.var_with_prev = var_with_prev  # used for PREV model, that's all
         model_factory = ModelFactory(self.model_ss)
-        model = model_factory.build(X_train, y_train) 
+        model = model_factory.build(X_train, y_train)
 
-        y_trainhat = model.predict(X_train) #eg yhat=zhat[y-5]
-        #plotutil.plot_vals_vs_time1(y_train, y_trainhat,"ytr & ytrhat vs time")
-        #plotutil.scatter_pred_vs_actual(y_train, y_trainhat, "ytr vs ytrhat")
+        y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
+        # plotutil.plot_vals_vs_time1(y_train, y_trainhat,"ytr & ytrhat vs time")
+        # plotutil.scatter_pred_vs_actual(y_train, y_trainhat, "ytr vs ytrhat")
 
         nmse_train = nmse(y_train, y_trainhat, min(y), max(y))
         self.nmses_train.append(nmse_train)
@@ -117,32 +115,33 @@ class TradeEngine:
         if tokcoin_amt_sell > 0:
             self._sell(trueprice, tokcoin_amt_sell)
         usdcoin_holdings_after = self.holdings[self.usdcoin]
-        
+
         profit_usd = usdcoin_holdings_after - usdcoin_holdings_before
-    
+
         self.tot_profit_usd += profit_usd
         self.profit_usds.append(profit_usd)
         self.tot_profit_usds.append(self.tot_profit_usd)
 
-        err = abs(predprice-trueprice)
+        err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
         true_dir = "UP" if trueprice > curprice else "DN"
-        correct = (pred_dir == true_dir)
+        correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
-        log(f"Iter #{test_i+1:3}/{self.data_ss.N_test}: "
+        log(
+            f"Iter #{test_i+1:3}/{self.data_ss.N_test}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
-            #f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
+            # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"
             f". Total correct {sum(self.corrects):3}/{len(self.corrects):3}"
             f" ({acc:.1f}%)"
-            #f". Spent ${amt_usdcoin_sell:9.2f}, recd ${amt_usdcoin_recd:9.2f}"
+            # f". Spent ${amt_usdcoin_sell:9.2f}, recd ${amt_usdcoin_recd:9.2f}"
             f", profit ${profit_usd:7.2f}"
             f", tot_profit ${self.tot_profit_usd:9.2f}"
-            )
+        )
 
-    def _do_buy(self, predprice: float, curprice:float) -> True:
+    def _do_buy(self, predprice: float, curprice: float) -> True:
         """
         @arguments
           predprice -- predicted price (5 min from now)
@@ -153,7 +152,7 @@ class TradeEngine:
         """
         return predprice > curprice
 
-    def _buy(self, price:float, usdcoin_amt_spend:float) -> float:
+    def _buy(self, price: float, usdcoin_amt_spend: float) -> float:
         """
         @description
           Buy tokcoin with usdcoin
@@ -162,22 +161,22 @@ class TradeEngine:
           price -- amt of usdcoin per token
           usdcoin_amt_spend -- amount to spend, in usdcoin; spend less if have less
         """
-        #simulate buy
-        usdcoin_amt_sent = min(
-            usdcoin_amt_spend, self.holdings[self.usdcoin]
-        )
+        # simulate buy
+        usdcoin_amt_sent = min(usdcoin_amt_spend, self.holdings[self.usdcoin])
         self.holdings[self.usdcoin] -= usdcoin_amt_sent
 
         p = self.trade_pp.fee_percent
         usdcoin_amt_fee = p * usdcoin_amt_sent
-        tokcoin_amt_recd = (1-p) * usdcoin_amt_sent / price
+        tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
         self.holdings[self.tokcoin] += tokcoin_amt_recd
 
-        self._log(f"  TX: BUY : send {usdcoin_amt_sent:8.2f} {self.usdcoin:4}"
-                  f", receive {tokcoin_amt_recd:8.2f} {self.tokcoin:4}"
-                  f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}")
+        self._log(
+            f"  TX: BUY : send {usdcoin_amt_sent:8.2f} {self.usdcoin:4}"
+            f", receive {tokcoin_amt_recd:8.2f} {self.tokcoin:4}"
+            f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}"
+        )
 
-    def _sell(self, price:float, tokcoin_amt_sell:float) -> float:
+    def _sell(self, price: float, tokcoin_amt_sell: float) -> float:
         """
         @description
           Sell tokcoin for usdcoin
@@ -191,29 +190,30 @@ class TradeEngine:
 
         p = self.trade_pp.fee_percent
         usdcoin_amt_fee = p * tokcoin_amt_sent * price
-        usdcoin_amt_recd = (1-p) * tokcoin_amt_sent * price
+        usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
         self.holdings[self.usdcoin] += usdcoin_amt_recd
 
-        self._log(f"  TX: SELL: send {tokcoin_amt_sent:8.2f} {self.tokcoin:4}"
-                  f", receive {usdcoin_amt_recd:8.2f} {self.usdcoin:4}"
-                  f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}")
-    
+        self._log(
+            f"  TX: SELL: send {tokcoin_amt_sent:8.2f} {self.tokcoin:4}"
+            f", receive {usdcoin_amt_recd:8.2f} {self.usdcoin:4}"
+            f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}"
+        )
+
     @enforce_types
     def _final_plot(self):
         if not self.trade_ss.do_plot:
             return
 
-        #plotutil.plot_vals_vs_time1(
+        # plotutil.plot_vals_vs_time1(
         #    self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time")
-        #plotutil.scatter_pred_vs_actual(
+        # plotutil.scatter_pred_vs_actual(
         #    self.ys_test, self.ys_testhat, "ys_test vs ys_testhat")
         plotutil.plot_any_vs_time(self.profit_usds, "profit")
         plotutil.plot_any_vs_time(self.tot_profit_usds, "tot profit")
-
 
     @enforce_types
     def _log(self, s: str):
         """Log to both stdout and to file"""
         print(s)
-        with open(self.logfile, 'a') as f:
-            f.write(s + '\n')
+        with open(self.logfile, "a") as f:
+            f.write(s + "\n")

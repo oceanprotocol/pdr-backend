@@ -26,7 +26,7 @@ def do_main():
         do_help()
 
     arg1 = sys.argv[1]
-    if arg1 in ["1", "3"]: #approach1, approach3
+    if arg1 in ["1", "3"]:  # approach1, approach3
         agent_module = importlib.import_module(
             f"pdr_backend.predictoor.approach{arg1}.predictoor_agent{arg1}"
         )
@@ -35,8 +35,8 @@ def do_main():
         config = config_class()
         agent = agent_class(config)
         agent.run()
-        
-    elif arg1 == "2": #approach2
+
+    elif arg1 == "2":  # approach2
         # To be integrated similar to "1"
         from pdr_backend.predictoor.approach2.main2 import (  # pylint: disable=import-outside-toplevel,line-too-long
             do_main2,
