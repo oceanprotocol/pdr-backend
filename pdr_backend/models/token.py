@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.web3_config import Web3Config
-
+from web3.types import ( TxParams, Wei)
 
 @enforce_types
 class Token(BaseContract):
@@ -45,15 +45,13 @@ class NativeToken:
 
     def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
         gasPrice = self.config.w3.eth.gas_price
-        transaction = {
+        params: TxParams = {
             "from": sender,
             "gas": 25000,
-            "gasPrice": gasPrice,
-            "value": amount,
-            "chainId": self.config.w3.eth.chain_id,
-            "to": self.config.w3.to_checksum_address(to),
+            "value": Wei(amount),
+            "to": to,
         }
-        tx = self.config.w3.eth.send_transaction(transaction)
+        tx = self.config.w3.eth.send_transaction(transaction=params)
 
         if not wait_for_receipt:
             return tx
