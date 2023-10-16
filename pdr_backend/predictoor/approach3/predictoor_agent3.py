@@ -51,7 +51,6 @@ class PredictoorAgent3(BasePredictoorAgent):
         yval_exchange_id = feed.source
         yval_signal = "close"
 
-
         if yval_coin not in coins:  # eg DOT
             coins.append(yval_coin)
         if yval_exchange_id not in exchange_ids:
@@ -71,7 +70,7 @@ class PredictoorAgent3(BasePredictoorAgent):
             coins=coins,
             exchange_ids=exchange_ids,
             yval_exchange_id=yval_exchange_id,
-            yval_coin=yval_exchange_id,
+            yval_coin=yval_coin,
             yval_signal=yval_signal,
         )
 
