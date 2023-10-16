@@ -31,7 +31,7 @@ The predictoor & trader bots run code that lives in `pdr-backend` repo.
 Set the following:
 
 ```console
-export PRIVATE_KEY=PK_HERE
+export PRIVATE_KEY=<your PRIVATE_KEY>
 export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
