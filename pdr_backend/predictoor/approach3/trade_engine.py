@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -32,8 +33,12 @@ class TradeEngine:
 
         self.holdings = self.trade_pp.init_holdings
         self.tot_profit_usd = 0.0
-        self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
-        self.profit_usds, self.tot_profit_usds = [], []
+        self.nmses_train: List[float] = []
+        self.ys_test: List[float] = []
+        self.ys_testhat: List[float] = []
+        self.corrects: List[str] = []
+        self.profit_usds: List[float] = []
+        self.tot_profit_usds: List[float] = []
 
         self.data_factory = DataFactory(self.data_ss)
 
@@ -147,7 +152,7 @@ class TradeEngine:
             f", tot_profit ${self.tot_profit_usd:9.2f}"
         )
 
-    def _do_buy(self, predprice: float, curprice: float) -> True:
+    def _do_buy(self, predprice: float, curprice: float) -> bool:
         """
         @arguments
           predprice -- predicted price (5 min from now)
@@ -158,7 +163,7 @@ class TradeEngine:
         """
         return predprice > curprice
 
-    def _buy(self, price: float, usdcoin_amt_spend: float) -> float:
+    def _buy(self, price: float, usdcoin_amt_spend: float):
         """
         @description
           Buy tokcoin with usdcoin
@@ -182,7 +187,7 @@ class TradeEngine:
             f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}"
         )
 
-    def _sell(self, price: float, tokcoin_amt_sell: float) -> float:
+    def _sell(self, price: float, tokcoin_amt_sell: float):
         """
         @description
           Sell tokcoin for usdcoin

@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Dict
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -131,7 +132,7 @@ class DataFactory:
         os.remove(filename)
         return self.ss.st_timestamp
 
-    def _load_csvs(self) -> pd.DataFrame:
+    def _load_csvs(self) -> Dict[str, Dict[str, pd.DataFrame]]:
         """
         @return -- csv_dfs -- dict of [exchange_id_str][coin_str] : df
           df has columns=OHLCV_COLS+"datetime", and index=timestamp
@@ -139,7 +140,7 @@ class DataFactory:
         cols = self.ss.signals  # subset of TOHLCV_COLS
         st, fin = self.ss.st_timestamp, self.ss.fin_timestamp
 
-        csv_dfs = {}
+        csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {}
         for exchange_id in self.ss.exchange_ids:
             exch = self.ss.exchs_dict[exchange_id]
             csv_dfs[exchange_id] = {}
