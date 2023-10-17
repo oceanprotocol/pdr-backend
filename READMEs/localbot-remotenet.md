@@ -66,7 +66,8 @@ If you're running a **trader** bot: make other configurations with guidance in t
 First, run the bot _without_ `pm2` to ensure it's working as expected:
 
 ```console
-python pdr_backend/<agent>/main.py
+#example for predictoor approach 1 (change as appropriate)
+python pdr_backend/predictoor/main.py 1
 ```
 
 From here on we'll use the `pm2` tool. It will keep `main.py` running continuously.
@@ -80,10 +81,9 @@ npm install pm2 -g
 Then, use `pm2 start` to run the script.
 
 ```console
-pm2 start main.py --name "pdr-backend-<botname>"
+#example for predictoor approach 1 (change as appropriate)
+pm2 start pdr_backend/predictoor/main.py -- 1
 ```
-
-Replace `botname` with the name of the bot you're going to run.
 
 Other useful commands:
 
