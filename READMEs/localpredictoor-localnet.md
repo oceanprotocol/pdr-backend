@@ -8,7 +8,6 @@ SPDX-License-Identifier: Apache-2.0
 This README describes:
 - Running a *local predictoor* bot (agent)
 - On a *local network*, where other bots are local
-- It doesn't use Docker containers
 
 **Steps:**
 
@@ -113,3 +112,14 @@ pip install scikit-learn ta
 #run model-powered predictoor bot
 python pdr_backend/predictoor/main.py 2
 ```
+
+## Next step
+
+You're now running a local predictoor bot on a local network. Congrats!
+
+The next step is to run a local predictoor bot on a _remote_ network. [Here's the README](./localbot-remotenet.md).
+
+## Other READMEs
+
+- [Parent predictoor README: predictoor.md](./predictoor.md)
+- [Root README](../README.md)

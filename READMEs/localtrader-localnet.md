@@ -77,3 +77,14 @@ python pdr_backend/trader/main.py
 ```
 
 You can query predictoor subgraph for detailed run info. See [subgraph.md](subgraph.md) for details.
+
+## Next step
+
+You're now running a local trader bot on a local network. Congrats!
+
+The next step is to run a local trader bot on a _remote_ network. [Here's the README](./localbot-remotenet.md).
+
+## Other READMEs
+
+- [Parent trader README: trader.md](./trader.md)
+- [Root README](../README.md)
