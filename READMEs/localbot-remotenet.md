@@ -63,31 +63,59 @@ If you're running a **trader** bot: make other configurations with guidance in t
 
 ## Run Bot
 
-First, run the bot _without_ `pm2` to ensure it's working as expected:
+[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online. Getting started with PM2 is straightforward, it is offered as a simple and intuitive CLI, installable via NPM."
+
+This section shows how to use PM2 to run bots. The example is on predictoor approach 1; other bots are nearly identical.
+
+First, run the bot _without_ PM2 to ensure it's working as expected:
 
 ```console
-#example for predictoor approach 1 (change as appropriate)
 python pdr_backend/predictoor/main.py 1
 ```
 
-From here on we'll use the `pm2` tool. It will keep `main.py` running continuously.
+From here on, we'll use PM2. It will keep `main.py` running continuously.
 
-First, install `pm2` globally via `npm`.
+First, install PM2 globally via `npm`.
 
 ```console
 npm install pm2 -g
 ```
 
-Then, use `pm2 start` to run the script.
+Next, use `pm2 start <script> -- <arg1> <arg..>` to run the bot.
 
 ```console
-#example for predictoor approach 1 (change as appropriate)
 pm2 start pdr_backend/predictoor/main.py -- 1
 ```
 
-Other useful commands:
+Next, use `pm2 ls` to list running processes:
 
-- `pm2 ls` - lists running processes
-- `pm2 logs` - display the logs of all the running processes
+```console
+pm2 ls
 
-[The pm2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/) have more details.
+# output looks a bit like:
+# ┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+# │ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+# ├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+# │ 0  │ main    │ default     │ N/A     │ fork    │ 53874    │ 3m     │ 361  │ online    │ 0%       │ 138.0mb  │ trentmc  │ disabled │
+# └────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+```
+
+Next, use `pm2 logs <id>` to see the output log for the main.py. For example:
+```pm logs 0
+
+# output looks a bit like:
+# 0|main  | Take_step() begin.
+# 0|main  |   block_number=3046274, prev=3046274
+# 0|main  |   Done step: block_number hasn't advanced yet. So sleep.
+```
+
+(Press ctrl-c to stop printing logs to stdout.)
+
+Finally, use `pm2 stop <id>` to stop the process.
+```console
+pm2 stop 0
+```
+
+For more details on PM2:
+- use `pm2 help` and `pm2 <command> help`
+- and see [PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)
