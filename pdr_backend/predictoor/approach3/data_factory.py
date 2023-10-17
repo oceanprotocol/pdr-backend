@@ -163,11 +163,15 @@ class DataFactory:
           hist_df -- df w/ cols={exchange_id}:{coin}:{signal}+"datetime",
             and index=timestamp
         """
-        hist_df = pd.DataFrame()
+        hist_df = None
         for exchange_id in csv_dfs.keys():
             for coin, csv_df in csv_dfs[exchange_id].items():
                 assert "datetime" in csv_df.columns
                 assert csv_df.index.name == "timestamp"
+
+                if hist_df is None:
+                    hist_df = pd.DataFrame(index=csv_df.index)
+
                 for csv_col in csv_df.columns:
                     if csv_col == "datetime":
                         if "datetime" in hist_df.columns:
