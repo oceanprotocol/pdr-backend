@@ -16,7 +16,7 @@ from pdr_backend.predictoor.approach3.data_ss import DataSS
 class PredictoorAgent3(BasePredictoorAgent):
     def __init__(self, config: PredictoorConfig3):
         super().__init__(config)
-        self.config = config
+        self.config: PredictoorConfig3 = config
 
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
@@ -42,7 +42,7 @@ class PredictoorAgent3(BasePredictoorAgent):
 
         coins = ["ETH", "BTC"]
         signals = ["close"]  # ["open", "high","low", "close", "volume"]
-        exchange_ids = []  # ["binance", "kraken"]
+        exchange_ids = ["kraken"]  # ["binance", "kraken"]
 
         # Uncontrollable data_ss params
         feed = self.feeds[addr]
