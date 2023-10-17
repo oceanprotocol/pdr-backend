@@ -23,8 +23,8 @@ def test_TradeEngine(tmpdir):
         timeframe="5m",
         signals=["open", "close"],
         coins=["ETH", "BTC"],
-        exchange_ids=["kraken"],
-        yval_exchange_id="kraken",
+        exchange_ids=["binanceus"],
+        yval_exchange_id="binanceus",
         yval_coin="BTC",
         yval_signal="close",
     )
