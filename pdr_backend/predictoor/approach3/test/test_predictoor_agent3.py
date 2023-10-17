@@ -13,7 +13,7 @@ PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"
 
-SOURCE = "kraken"
+SOURCE = "binanceus"
 PAIR = "BTC-USDT"
 TIMEFRAME, S_PER_EPOCH = "5m", 5 * S_PER_MIN  # must change both at once
 SECONDS_TILL_EPOCH_END = 60  # how soon to start making predictions?
