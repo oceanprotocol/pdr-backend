@@ -63,9 +63,9 @@ If you're running a **trader** bot: make other configurations with guidance in t
 
 ## Run Bot
 
-[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online. Getting started with PM2 is straightforward, it is offered as a simple and intuitive CLI, installable via NPM."
+[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online."
 
-This section shows how to use PM2 to run bots. The example is on predictoor approach 1; other bots are nearly identical.
+This section shows how to use PM2 to run bots. It uses predictoor approach 1; other bots are nearly identical.
 
 First, run the bot _without_ PM2 to ensure it's working as expected:
 
