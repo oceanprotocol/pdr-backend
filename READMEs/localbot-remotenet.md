@@ -101,7 +101,8 @@ pm2 ls
 ```
 
 Next, use `pm2 logs <id>` to see the output log for the main.py. For example:
-```pm logs 0
+```console
+pm logs 0
 
 # output looks a bit like:
 # 0|main  | Take_step() begin.
