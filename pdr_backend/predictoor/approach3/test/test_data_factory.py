@@ -184,8 +184,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         timeframe="5m",
         signals=["high"],
         coins=["ETH"],
-        exchange_ids=["coinbase"],
-        yval_exchange_id="coinbase",
+        exchange_ids=["kraken"],
+        yval_exchange_id="kraken",
         yval_coin="ETH",
         yval_signal="high",
     )
@@ -195,7 +195,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     data_factory = DataFactory(ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
     X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
-    _assert_shapes(ss, X, y, var_with_prev, x_df)
+    _assert_shapes(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
     assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
@@ -205,14 +205,14 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "coinbase:ETH:high:t-4",
-        "coinbase:ETH:high:t-3",
-        "coinbase:ETH:high:t-2",
+        "kraken:ETH:high:t-4",
+        "kraken:ETH:high:t-3",
+        "kraken:ETH:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("coinbase:ETH:high:t-2") == var_with_prev
-    assert x_df["coinbase:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert found_cols.index("kraken:ETH:high:t-2") == var_with_prev
+    assert x_df["kraken:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
     # =========== now have a different testshift (1 not 0)
@@ -227,14 +227,14 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "coinbase:ETH:high:t-4",
-        "coinbase:ETH:high:t-3",
-        "coinbase:ETH:high:t-2",
+        "kraken:ETH:high:t-4",
+        "kraken:ETH:high:t-3",
+        "kraken:ETH:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("coinbase:ETH:high:t-2") == var_with_prev
-    assert x_df["coinbase:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert found_cols.index("kraken:ETH:high:t-2") == var_with_prev
+    assert x_df["kraken:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
     # =========== now have a different max_N_train
@@ -242,7 +242,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     # ss.Nt = 2
 
     X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
-    _assert_shapes(ss, X, y, var_with_prev, x_df)
+    _assert_shapes(ss, X, y, x_df)
 
     assert X.shape[0] == 5 + 1  # +1 for one test point
     assert y.shape[0] == 5 + 1
@@ -290,7 +290,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     data_factory = DataFactory(ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
     X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
-    _assert_shapes(ss, X, y, var_with_prev, x_df)
+    _assert_shapes(ss, X, y, x_df)
 
     found_cols = x_df.columns.tolist()
     target_cols = [
