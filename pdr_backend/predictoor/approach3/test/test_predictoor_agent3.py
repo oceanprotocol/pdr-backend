@@ -154,7 +154,7 @@ def test_predictoor_agent3(monkeypatch):
 def _setenvs(monkeypatch):
     # envvars handled by PredictoorConfig3
     monkeypatch.setenv("SECONDS_TILL_EPOCH_END", "60")
-    monkeypatch.setenv("STAKE_AMOUNT", "30000")
+    monkeypatch.setenv("STAKE_AMOUNT", "1")
 
     # envvars handled by BaseConfig
     monkeypatch.setenv("RPC_URL", "http://foo")
