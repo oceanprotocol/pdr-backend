@@ -17,6 +17,10 @@ Start simple, layer in complexity.
 4. Repeat (2) or (3), on mainnet. This will earn $.
 5. [Claim payout](./payout.md)
 
+## Other READMEs
+
+- [Root README](../README.md)
+
 ## Warning
 
 You will lose money as a predictoor if your $ out exceeds your $ in. If you have low accuracy you’ll have your stake slashed a lot. Do account for gas fees, compute costs, and more. Everything you do is your responsibility, at your discretion. None of this repo is financial advice.

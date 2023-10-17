@@ -120,3 +120,17 @@ pm2 stop 0
 For more details on PM2:
 - use `pm2 help` and `pm2 <command> help`
 - and see [PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)
+
+## Next step
+
+You're now running a local bot on a remote network. Congrats!
+
+Your next step is to run a _remote_ bot on a remote testnet. [Here's the README](./remotebot-remotenet.md).
+
+(Note: you could always skip running a remote bot, and instead only run local bots on testnet and mainnet via this README. However, this requires your local machine to be continuously running bots. We recommend running remote bots.)
+
+## Other READMEs
+
+- [Parent predictoor README: predictoor.md](./predictoor.md)
+- [Parent trader README: trader.md](./trader.md)
+- [Root README](../README.md)
