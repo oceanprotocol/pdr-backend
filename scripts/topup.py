@@ -19,10 +19,10 @@ if __name__ == "__main__":
         ocean_bal = ocean_bal_wei / 1e18
         rose_bal = rose_bal_wei / 1e18
 
-        minimum_ocean_bal = 10
-        minimum_rose_bal = 10
-        topup_ocean_bal = 10
-        topup_rose_bal = 20
+        minimum_ocean_bal = 20
+        minimum_rose_bal = 15
+        topup_ocean_bal = 15
+        topup_rose_bal = 25
 
         if name == "trueval":
             minimum_ocean_bal = 0
@@ -41,15 +41,14 @@ if __name__ == "__main__":
                 value,
                 config.web3_config.w3.to_wei(topup_ocean_bal, "ether"),
                 config.web3_config.owner,
-                False,
+                True,
             )
-            time.sleep(20)
+
         if minimum_rose_bal > 0 and rose_bal < minimum_rose_bal:
             print(f"\t Transfering {topup_rose_bal} ROSE to {value}...")
             rose.transfer(
                 value,
                 config.web3_config.w3.to_wei(topup_rose_bal, "ether"),
                 config.web3_config.owner,
-                False,
+                True,
             )
-            time.sleep(20)
