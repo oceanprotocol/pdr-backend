@@ -19,8 +19,7 @@ This README describes:
     - [Set envvars](#set-envvars)
 3. **[Run predictoor bot](#run-predictoor-bot)**
     - [Random](#run-random-predictoor)
-    - [Static model](#run-static-model-predictoor)
-    - [Dynamic model](#run-dynamic-model-predictoor)
+    - [Model-based](#run-model-based-predictoor)
 
 ## Install Local Network
 
@@ -85,90 +84,13 @@ Code structure:
 - It's configured by envvars and [`predictoor_config1.py::PredictoorConfig1`](../pdr_backend/predictoor/approach1/predictoor_config1.py)
 - It predicts according to `PredictoorAgent1:get_prediction()`.
 
-### Run Static Model Predictoor
+### Run Model-Based Predictoor
 
 Since random predictions aren't accurate, let's use AI/ML models.
-- Here in "approach2", we load pre-learned models (static)
-- And in "approach3" further below, we learn models on-the-fly (dynamic)
 
-Code structure:
-- The bot runs from [`predictoor/approach2/main.py`](../pdr_backend/predictoor/approach2/main.py), using `predict.py` in the same dir.
-- Which imports a model stored in [`pdr-model-simple`](https://github.com/oceanprotocol/pdr-model-simple) repo
-
-In work console:
-```console
-# (ctrl-c existing run)
-
-# go to a directory where you'll want to clone to. 
-cd ..
-
-#clone model repo
-git clone https://github.com/oceanprotocol/pdr-model-simple
-
-#the script below needs this envvar, to know where to import model.py from
-export MODELDIR=$(pwd)/pdr-model-simple/
-
-#pip install anything that pdr-model-simple/model.py needs
-pip install scikit-learn ta
-
-#run model-powered predictoor bot
-python pdr_backend/predictoor/main.py 2
-```
-
-Once you're familiar with this, you can fork it and run your own.
-
-### Run Dynamic Model Predictoor
-
-Here, we build models on-the-fly, ie dynamic models. It's "approach3".
-
-Whereas approach2 has model development in a different repo, approach3 has it inside this repo. Accordingly, this flow has two top-level steps:
-1. Develop & backtest models
-2. Run bot in Predictoor context
-
-Let's go through each in turn.
-
-**Approach3 - Step 1: Develop & backtest models**
-
-Here, we develop & backtest the model. The setup is optimized for rapid iterations, by being independent of Barge and Predictoor bots.
-
-In work console:
-```console
-#this dir will hold data fetched from exchanges
-mkdir csvs
-
-#run approach3 unit tests
-pytest pdr_backend/predictoor/approach3
-
-#run approach3 backtest.
-# (Edit the parameters in runtrade.py as desired)
-python pdr_backend/predictoor/approach3/runtrade.py
-```
-
-`runtrade.py` will grab data from exchanges, then simulate one epoch at a time (including building a model, predicting, and trading). When done, it plots accumulated returns vs. time. Besides logging to stdout, it also logs to out*.txt in pwd.
-
-**Approach3 - Step 2: Run bot in Predictoor context**
-
-Once you're satisfied with your backtests, you're ready to run the approach3 bot in a Predictoor context.
-
-First, get Barge & other bots going via "Run local network" instructions above.
-
-Then, in work console:
-```console
-# run approach3 predictoor bot
-python pdr_backend/predictoor/main.py 3
-```
-
-Observe all bots in action:
-- In the barge console: trueval bot submitting (mock random) truevals, trader is (mock) trading, etc
-- In your work console: predictoor bot is submitting (mock random) predictions
-- Query predictoor subgraph for detailed run info. [`subgraph.md`](subgraph.md) has details.
-
-Code structure:
-- It runs [`predictoor_agent3.py::PredictoorAgent3`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) found in `pdr_backend/predictoor/approach3`
-- It's configured by envvars and [`predictoor_config3.py::PredictoorConfig3`](../pdr_backend/predictoor/approach3/predictoor_config3.py)
-- It predicts according to `PredictoorAgent3:get_prediction()`.
-
-Once you're familiar with this, you can fork it and run your own.
+There are two possibilities: dymnamic or static. You can try either or both. We recommend "dynamic" because it's easier to backtest results, and to connect to your predictoor bot. Here are instructions for each:
+- [Dynamic model](./dynamic-model.md) - learn models on-the-fly
+- [Static model](./static-model.md) - load pre-trained models
 
 ## Next step
 
