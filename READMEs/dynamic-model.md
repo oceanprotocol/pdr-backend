@@ -10,8 +10,8 @@ Here, we build models on-the-fly, ie dynamic models. It's `approach3` in `pdr-ba
 Dynamic modeling means we don't need to save a model, manage it separately, or link from a different location; therefore it's easier than static models.
 
 Steps:
-1. [Develop & backtest dynamic models](#develop-and-backtest-models)
-1. [Use model approach in Predictoor bot](#use-model-in-predictoor-bot)
+1. [Develop & backtest models](#develop-and-backtest-models)
+1. [Use model in Predictoor bot](#use-model-in-predictoor-bot)
 
 _Both_ steps are performed using this repo.
 
