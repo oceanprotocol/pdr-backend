@@ -236,7 +236,8 @@ def do_main2():  # pylint: disable=too-many-statements
                 index = main_pd.index.values[-1]
                 current_prediction = main_pd.iloc[-1][model.model_name]
                 if np.isnan(current_prediction):
-                    for attempt in range(5):
+                    max_retries = 5
+                    for attempt in range(max_retries):
                         try:
                             prediction = log_loop(
                                 block,
@@ -248,9 +249,8 @@ def do_main2():  # pylint: disable=too-many-statements
                             if attempt < max_retries - 1:
                                 print(f"Attempt {attempt + 1} failed. Retrying...")
                                 continue
-                            else:
-                                print(f"Attempt {attempt + 1} failed. No more retries.")
-                                raise e
+                            print(f"Attempt {attempt + 1} failed. No more retries.")
+                            raise e
                     if prediction is not None:
                         main_pd.loc[index, [model.model_name]] = float(prediction)
 
