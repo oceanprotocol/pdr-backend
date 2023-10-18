@@ -43,16 +43,17 @@ Other directories:
 
 The following READMEs are used as building blocks within different flows.
 
-Installation:
+Installation & setup:
 - [Install pdr-backend](READMEs/install.md)
 - [Install & use Barge](READMEs/barge.md)
+- [Envvars](READMEs/envvars.md)
+- [MacOS gotchas](READMEs/macos.md)
 
 Usage:
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
-- [Azure containers](READMEs/azure-container-deployment.md)
-- [Envvars](READMEs/envvars.md)
-- [MacOS gotchas](READMEs/macos.md)
+- [Models: dynamic](READMEs/dynamic-model.md), [static](READMEs/static-model.md)
+- [Claim payout](READMEs/payout.md)
 
 Development:
 - [Release process](READMEs/release-process.md)
