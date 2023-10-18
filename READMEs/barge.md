@@ -5,49 +5,49 @@ SPDX-License-Identifier: Apache-2.0
 
 # Barge
 
+Barge is a Docker container to run a local Ganache network having Predictoor contracts and (optionally) local bots. This README describes how to install Barge, and provides reference on running it with various agents.
+
 ## Contents
 
 Main:
 - [Install Barge](#install-barge)
-- [Run Docker](#run-docker)
 
 Reference: how to run barge with...
-- [No agents](#barge-basic) - just ganache chain & predictoor contracts
-- [One agent](#barge-one-agent) - eg trueval agent
-- [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer
+- [No agents](#barge-basic) - just ganache network & Predictoor contracts
+- [One agent](#barge-one-agent) - eg trueval bot
+- [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer bots
 
 
 ## Install Barge
 
-- Pre-requisites: [Docker](https://docs.docker.com/engine/install/), [Docker Compose](https://docs.docker.com/compose/install/), [allowing non-root users](https://www.thegeekdiary.com/run-docker-as-a-non-root-user/)
+**First, ensure pre-requisites:** [Docker](https://docs.docker.com/engine/install/), [Docker Compose](https://docs.docker.com/compose/install/), [allowing non-root users](https://www.thegeekdiary.com/run-docker-as-a-non-root-user/)
 
-In a new console:
+**Then, install barge.** Open a new console and...
 
 ```console
 # Grab repo
 git clone https://github.com/oceanprotocol/barge
 cd barge
+
+# Switch to predictoor branch of barge repo
 git checkout predictoor
 
-# (optional) Clean up previous Ocean-related dirs & containers
+# Clean up previous Ocean-related dirs & containers (optional but recommended) 
 rm -rf ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
 
+**Then, get Docker running.** To run barge, you need the Docker engine running. Here's how:
+- If you're on Linux: you're good, there's nothing extra to do.
+- If you're on MacOS: 
+  - via console: `open -a Docker`
+  - or, via app: open Finder app, find Docker, click to open app. (You don't need to press "play" or anything else. The app being open is enough.)
+  - ⚠️ MacOS may give Docker issues. [Here](macos.md) are workarounds.
+
+Congrats! Barge is installed and ready to be run.
+
 The sections below describe different ways to run barge. They're for reference only; DO NOT run them right now. Each README will describe what to do.
-
-MacOS may give Docker issues; see workarounds [here](macos.md).
-
-## Run Docker
-
-To run barge, you need the Docker engine running. 
-
-If you're on Linux: you're good, there's nothing extra to do.
-
-If MacOS: 
-- via console: `open -a Docker`
-- or, via app: open Finder app, find Docker, click it
 
 ## Barge Basic
 
@@ -86,3 +86,9 @@ This will run all of the following at once:
 - trader agent
 - predictoor agent
 - dfbuyer agent
+
+## Other READMEs
+
+- [Parent predictoor README: predictoor.md](./predictoor.md)
+- [Parent trader README: trader.md](./trader.md)
+- [Root README](../README.md)

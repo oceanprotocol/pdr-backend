@@ -163,3 +163,7 @@ cython_debug/
 #.idea/
 .test_cache/
 .cache/
+
+# predictoor dynamic modeling
+out*.txt
+csvs/
