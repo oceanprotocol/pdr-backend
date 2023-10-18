@@ -35,7 +35,7 @@ In barge console:
 export GANACHE_BLOCKTIME=5
 
 #run barge with all bots except predictoor
-./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 ```
 
 ## Install Predictoor Bot

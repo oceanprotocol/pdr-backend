@@ -46,7 +46,7 @@ Each subsection below gives different local usage options.
 In barge console:
 ```console
 # Run barge with just predictoor contracts, queryable, but no agents
-./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 In work console, run tests:
