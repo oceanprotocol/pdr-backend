@@ -24,7 +24,7 @@ This README describes:
 
 ## Install Local Network
 
-"Barge" is a Docker container that runs a local Ganache network and off-the-shelf agents.
+"Barge" is a Docker container that runs a local Ganache network and off-the-shelf bots.
 
 [Install barge](barge.md#install-barge).
 
