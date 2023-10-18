@@ -237,7 +237,7 @@ def do_main2():  # pylint: disable=too-many-statements
                 current_prediction = main_pd.iloc[-1][model.model_name]
                 if np.isnan(current_prediction):
                     max_retries = 5
-                    for attempt in range(max_retries):
+                    while True:
                         try:
                             prediction = log_loop(
                                 block,
