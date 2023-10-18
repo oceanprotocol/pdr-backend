@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.trader.trade_functions import do_trade
 from pdr_backend.trader.trader_config import TraderConfig
 from pdr_backend.util.cache import Cache
 
@@ -184,29 +185,3 @@ class TraderAgent:
         self.prev_traded_epochs_per_feed[addr].append(epoch)
         self.save_previous_epochs()
         return epoch_s_left, logs
-
-
-async def do_trade(feed: Feed, prediction: Tuple[float, float]):
-    """
-    @description
-        This function is called each time there's a new prediction available.
-        By default, it prints the signal.
-        The user should implement their trading algorithm here.
-    @params
-        feed : Feed
-            An instance of the Feed object.
-
-        prediction : Tuple[float, float]
-            A tuple containing two float values, the unit is ETH:
-            - prediction[0]: Amount staked for the price going up.
-            - prediction[1]: Total stake amount.
-    @note
-        The probability of the price going up is determined by dividing
-        prediction[0] by prediction[1]. The magnitude of stake amounts indicates
-        the confidence of the prediction. Ensure stake amounts
-        are sufficiently large to be considered meaningful.
-    """
-    pred_nom, pred_denom = prediction
-    print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
-    # Trade here
-    # ...
