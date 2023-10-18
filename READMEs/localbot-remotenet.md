@@ -32,6 +32,7 @@ Set the following:
 
 ```console
 export PRIVATE_KEY=<your PRIVATE_KEY>
+export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
@@ -57,9 +58,14 @@ export OWNER_ADDRS=0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer add
 
 ## Configure Bot
 
-If you're running a **predictoor** bot: choose between random or model-based and make other configurations with guidance in the [local predictoor README](localpredictoor-localnet.md).
+If you're running a **predictoor** bot:
+- If random predictions: typically you have nothing else to configure. 
+- If model-based: tune with help of [dynamic model](./dynamic-model.md) or [static model](static-model.md) READMEs.
+- And for further tuning: the [local predictoor README](localpredictoor-localnet.md) has more options.
 
-If you're running a **trader** bot: make other configurations with guidance in the [local trader README](localtrader-localnet.md).
+If you're running a **trader** bot:
+- Typically you have nothing else to configure.
+- And for further tuning: the [local trader README](localtrader-localnet.md) has more options.
 
 ## Run Bot
 
