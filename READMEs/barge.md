@@ -13,9 +13,9 @@ Main:
 - [Install Barge](#install-barge)
 
 Reference: how to run barge with...
-- [No agents](#barge-basic) - just ganache chain & predictoor contracts
-- [One agent](#barge-one-agent) - eg trueval agent
-- [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer
+- [No agents](#barge-basic) - just ganache network & Predictoor contracts
+- [One agent](#barge-one-agent) - eg trueval bot
+- [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer bots
 
 
 ## Install Barge
