@@ -37,4 +37,4 @@ class BasePredictoorConfig(BaseConfig, ABC):
     def __init__(self):
         super().__init__()
         self.s_until_epoch_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))
-        self.stake_amount = int(getenv("STAKE_AMOUNT", "1"))
+        self.stake_amount = float(getenv("STAKE_AMOUNT", "1"))
