@@ -42,7 +42,7 @@ docker system prune -a --volumes
 - If you're on Linux: you're good, there's nothing extra to do.
 - If you're on MacOS: 
   - via console: `open -a Docker`
-  - or, via app: open Finder app, find Docker, click it
+  - or, via app: open Finder app, find Docker, click to open app. (You don't need to press "play" or anything else. The app being open is enough.)
   - ⚠️ MacOS may give Docker issues. [Here](macos.md) are workarounds.
 
 Congrats! Barge is installed and ready to be run.
