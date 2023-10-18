@@ -88,7 +88,7 @@ Code structure:
 
 Since random predictions aren't accurate, let's use AI/ML models.
 
-There are two possibilities: dymnamic or static. You can try either or both. We recommend "dynamic" because it's easier to backtest results, and to connect to your predictoor bot. Here are instructions for each:
+There are two possibilities: dynamic or static. You can try either or both. We recommend "dynamic" because it's easier to backtest results, and to connect to your predictoor bot. Here are instructions for each:
 - [Dynamic model](./dynamic-model.md) - learn models on-the-fly
 - [Static model](./static-model.md) - load pre-trained models
 
