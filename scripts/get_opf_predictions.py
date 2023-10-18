@@ -91,6 +91,7 @@ def get_all_predictions():
             chunk_size,
             str(address_filter).replace("'", '"'),
         )
+        # pylint: disable=line-too-long
         mainnet_subgraph = "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
         result = query_subgraph(
             mainnet_subgraph,
@@ -148,13 +149,13 @@ def write_csv(all_predictions):
         if key not in data:
             data[key] = []
         data[key].append(prediction)
-    for key, all_predictions in data.items():
-        all_predictions.sort(key=lambda x: x.timestamp)
+    for key, prediction in data.items():
+        prediction.sort(key=lambda x: x.timestamp)
         filename = key + ".csv"
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Predicted Value", "True Value", "Timestamp", "Stake"])
-            for prediction in all_predictions:
+            for prediction in prediction:
                 writer.writerow(
                     [
                         prediction.prediction,
