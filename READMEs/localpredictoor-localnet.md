@@ -11,7 +11,7 @@ This README describes:
 
 **Steps:**
 
-1. **Setup & run local network**
+1. **Setup & run local network (Barge)**
     - [Install it](#install-local-network)
     - [Run it](#run-local-network)
 2. **Setup predictoor bot**
