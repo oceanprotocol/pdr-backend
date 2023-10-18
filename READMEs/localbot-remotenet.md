@@ -127,6 +127,38 @@ For more details on PM2:
 - use `pm2 help` and `pm2 <command> help`
 - and see [PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)
 
+## Bot Configuration as Code
+
+Let's bring it all together now.
+
+PM2 supports config files, this helps us more easily manage 1 or 20 agents.
+
+First, create the `remotenet-predictoor.config.js` file inside your root folder.
+```
+module.exports = {
+  apps : [{
+    name   : "remotenet-predictoor-btc-usd-5m-binance",
+    script : "./pdr_backend/predictoor/main.py",
+    args : "1",
+    env: {
+      PAIR_FILTER : "BTC/USDT",
+      TIMEFRAME_FILTER : "5m",
+      SOURCE_FILTER : "binance",
+      PRIVATE_KEY : "<YOUR_PRIVATE_KEY>",
+      ADDRESS_FILE : "${HOME}/.ocean/ocean-contracts/artifacts/address.json",
+      RPC_URL : "https://testnet.sapphire.oasis.dev",
+      SUBGRAPH_URL : "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
+      STAKE_TOKEN : "0x973e69303259B0c2543a38665122b773D28405fB",
+      OWNER_ADDRS : "0xe02a421dfc549336d47efee85699bd0a3da7d6ff"
+    }
+  }]
+}
+```
+
+This will have pm2 run Predictoor `Approach 1`. It utilize the `BTC/USD` pair, the `5m`, along with the private key to submit predictions in Sapphire testnet.
+
+By playing with this example, you should be able to very quickly run and manage multiple agents.
+
 ## Next step
 
 You're now running a local bot on a remote network. Congrats!
