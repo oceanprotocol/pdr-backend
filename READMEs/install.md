@@ -3,9 +3,9 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-## Install
+## Install pdr-backend
 
-Here are instructions to install from source.
+Here are instructions to install this repo from source.
 
 In a new console:
 
