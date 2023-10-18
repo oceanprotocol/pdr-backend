@@ -32,6 +32,7 @@ Set the following:
 
 ```console
 export PRIVATE_KEY=<your PRIVATE_KEY>
+export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
