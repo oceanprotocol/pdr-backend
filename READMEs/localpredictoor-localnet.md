@@ -17,7 +17,7 @@ This README describes:
 2. **Setup predictoor bot**
     - [Install it](#install-predictoor-bot)
     - [Set envvars](#set-envvars)
-3. **[Run predictoor bot](#run-predictoor-bot)**
+3. **Run predictoor bot**
     - [Random](#run-random-predictoor)
     - [Model-based](#run-model-based-predictoor)
 
