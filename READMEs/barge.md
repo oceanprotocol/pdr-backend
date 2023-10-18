@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Barge
 
-Barge is a docker container that makes it easy to run a local network with Predictoor contracts and (optionally) local bots. This README describes how to install Barge, and provides reference on running it with various agents.
+Barge is a Docker container to run a local Ganache network having Predictoor contracts and (optionally) local bots. This README describes how to install Barge, and provides reference on running it with various agents.
 
 ## Contents
 
