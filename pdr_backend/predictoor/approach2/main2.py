@@ -244,6 +244,8 @@ def do_main2():  # pylint: disable=too-many-statements
                                 model,
                                 main_pd.drop(columns_models + ["datetime"], axis=1),
                             )
+                            if prediction is not None:
+                                main_pd.loc[index, [model.model_name]] = float(prediction)
                             break
                         except Exception as e:
                             if attempt < max_retries - 1:
@@ -251,8 +253,7 @@ def do_main2():  # pylint: disable=too-many-statements
                                 continue
                             print(f"Attempt {attempt + 1} failed. No more retries.")
                             raise e
-                    if prediction is not None:
-                        main_pd.loc[index, [model.model_name]] = float(prediction)
+
 
             print(
                 main_pd.loc[
