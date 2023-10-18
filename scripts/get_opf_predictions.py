@@ -91,9 +91,9 @@ def get_all_predictions():
             chunk_size,
             str(address_filter).replace("'", '"'),
         )
-
+        mainnet_subgraph = "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
         result = query_subgraph(
-            "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
+            mainnet_subgraph,
             query,
             timeout=10.0,
         )
@@ -141,20 +141,20 @@ def get_all_predictions():
     return predictions
 
 
-def write_csv(predictions):
+def write_csv(all_predictions):
     data = {}
-    for prediction in predictions:
+    for prediction in all_predictions:
         key = prediction.pair + prediction.timeframe
         if key not in data:
             data[key] = []
         data[key].append(prediction)
-    for key, predictions in data.items():
-        predictions.sort(key=lambda x: x.timestamp)
+    for key, all_predictions in data.items():
+        all_predictions.sort(key=lambda x: x.timestamp)
         filename = key + ".csv"
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Predicted Value", "True Value", "Timestamp", "Stake"])
-            for prediction in predictions:
+            for prediction in all_predictions:
                 writer.writerow(
                     [
                         prediction.prediction,
@@ -167,5 +167,5 @@ def write_csv(predictions):
 
 
 if __name__ == "__main__":
-    predictions = get_all_predictions()
-    write_csv(predictions)
+    _predictions = get_all_predictions()
+    write_csv(_predictions)
