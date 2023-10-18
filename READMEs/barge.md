@@ -29,7 +29,7 @@ Reference: how to run barge with...
 git clone https://github.com/oceanprotocol/barge
 cd barge
 
-# Switch to predictoor branch
+# Switch to predictoor branch of barge repo
 git checkout predictoor
 
 # Clean up previous Ocean-related dirs & containers (optional but recommended) 
