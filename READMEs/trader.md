@@ -154,7 +154,7 @@ Follow the directions of [running predictoor with PM2](predictoor.md), with mild
 
 ## Run Bots Remotely
 
-Follow directions at [remotebot-remotenet.md](remotebot-remotenet.md).
+Follow directions at [remotebot.md](remotebot.md).
 
 
 ## Warning

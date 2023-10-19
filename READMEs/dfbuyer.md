@@ -5,25 +5,17 @@ SPDX-License-Identifier: Apache-2.0
 
 # Run a DFBuyer Bot
 
-This README describes how to run a dfbuyer bot (agent).
+This README describes how to run a dfbuyer bot.
 
-## Contents
+## Install pdr-backend
 
-- [Install](#install)
-- [Local Usage](#local-usage)
-- [Remote Testnet Usage](#remote-testnet-usage)
-- [Remote Mainnet Usage](#remote-mainnet-usage)
-
-
-## Install
-
-First, [install pdr-backend](install.md).
-
-Then, [install barge](barge.md#install-barge).
+Follow directions in [predictoor.md](predictoor.md)
 
 ## Local Usage
 
-In barge console:
+First, [install barge](barge.md#install-barge).
+
+Then, run barge. In barge console:
 ```console
 #run barge with all bots (agents) except dfbuyer
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-trader
@@ -52,14 +44,7 @@ The bot will consume "WEEKLY_SPENDING_LIMIT" worth of assets each week. This amo
 
 ![flow](https://user-images.githubusercontent.com/25263018/269256707-566b9f5d-7e97-4549-b483-2a6700826769.png)
 
-## Remote Testnet Usage
+## Remote Usage
 
-To run dfbuyer as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+Combine local setup above with remote setup envvars like in [predictoor.md](predictoor.md).
 
-To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
-
-## Remote Mainnet Usage
-
-To run dfbuyer as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
-
-Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).

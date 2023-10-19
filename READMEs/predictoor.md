@@ -198,7 +198,7 @@ Other interesting PM2 commands:
 
 ## Run Bots Remotely
 
-Follow directions at [remotebot-remotenet.md](remotebot-remotenet.md).
+Follow directions at [remotebot.md](remotebot.md).
 
 ## Other READMEs
 
