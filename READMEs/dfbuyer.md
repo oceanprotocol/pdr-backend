@@ -5,25 +5,17 @@ SPDX-License-Identifier: Apache-2.0
 
 # Run a DFBuyer Bot
 
-This README describes how to run a dfbuyer bot (agent).
+This README describes how to run a dfbuyer bot.
 
-## Contents
+## Install pdr-backend
 
-- [Install](#install)
-- [Local Usage](#local-usage)
-- [Remote Testnet Usage](#remote-testnet-usage)
-- [Remote Mainnet Usage](#remote-mainnet-usage)
+Follow directions in [predictoor.md](predictoor.md)
 
+## Local Network
 
-## Install
+First, [install barge](barge.md#install-barge).
 
-First, [install pdr-backend](install.md).
-
-Then, [install barge](barge.md#install-barge).
-
-## Local Usage
-
-In barge console:
+Then, run barge. In barge console:
 ```console
 #run barge with all bots (agents) except dfbuyer
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-predictoor --with-pdr-publisher --with-pdr-trader
@@ -36,13 +28,16 @@ cd pdr-backend
 source venv/bin/activate
 
 # Set envvars
+export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+
 export RPC_URL=http://127.0.0.1:8545
 export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph"
 #OR: export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
-export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+```
 
-# run dfbuyer bot (agent)
+Then, run dfbuyer bot. In console:
+```console
 python pdr_backend/dfbuyer/main.py
 ```
 
@@ -52,14 +47,7 @@ The bot will consume "WEEKLY_SPENDING_LIMIT" worth of assets each week. This amo
 
 ![flow](https://user-images.githubusercontent.com/25263018/269256707-566b9f5d-7e97-4549-b483-2a6700826769.png)
 
-## Remote Testnet Usage
+## Remote Usage
 
-To run dfbuyer as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+Combine local setup above with remote setup envvars like in [predictoor.md](predictoor.md).
 
-To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
-
-## Remote Mainnet Usage
-
-To run dfbuyer as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
-
-Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).

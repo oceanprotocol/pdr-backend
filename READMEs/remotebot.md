@@ -164,19 +164,6 @@ Above, we focused on Azure. Here are several deployment options:
 - [AWS -  Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
 - [Google Cloud - Deploying to Cloud Run](https://cloud.google.com/run/docs/deploying)
 
-
-## Next step
-
-You're now running a remote bot on a remote network. Congrats!
-
-If you're running on a _testnet_, your next step is your choice of:
-- Run a local bot on a remote _mainnet_. [Here's the README](./localbot-remotenet.md) using mainnet envvars, OR
-- Run a remote bot on a remote mainnet: _this_ README but using mainnet envvars.
-
-If you're running on a _mainnet_, your next step is up to you! Some ideas:
-- Observe more and learn more, via logs, [subgraph](./subgraph.md) queries, and your own analytics.
-- Fork this repo and optimize your bot further for accuracy or revenue.
-
 ## Other READMEs
 
 - [Parent predictoor README: predictoor.md](./predictoor.md)
