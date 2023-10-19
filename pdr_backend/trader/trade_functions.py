@@ -45,7 +45,7 @@ def execute_action(feed: Feed, confidence: float, action: TradeAction):
     pass
 
 
-async def do_trade(feed: Feed, prediction: Tuple[float, float]):
+async def do_trade(feed: Feed, prediction: Tuple[float, float]) -> Tuple[TradeAction, float]:
     """
     @description
         This function is called each time there's a new prediction available.
