@@ -5,18 +5,18 @@ SPDX-License-Identifier: Apache-2.0
 
 # Run a Predictoor Bot
 
-This README takes you from zero to running a predictoor bot on mainnet, and beyond.
+This README shows how to earn $ by running a predictoor bot on mainnet.
 
-Toward running on mainnet:
 1. **[Install](#install-pdr-backend-repo)**
 1. **[Simulate modeling & trading](#simulate-modeling-and-trading)**
 1. **[Run bot on testnet](#run-predictoor-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#run-predictoor-bot-on-sapphire-mainnet)**
+1. **[Claim payout](#claim-payout)**
 
-Going beyond: (Optional, in any order)
-- **[Optimize model](#optimize-model)**
-- **[Run >1 bots at once](#run-many-bots-at-once)**
-- **[Run bots remotely](#run-bots-remotely)**
+To go beyond: (Optional, in any order)
+- [Optimize model](#optimize-model)
+- [Run >1 bots at once](#run-many-bots-at-once)
+- [Run bots remotely](#run-bots-remotely)
 
 ## Install pdr-backend Repo
 
@@ -104,7 +104,7 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 - It has behavior to maximize accuracy without missing submission deadlines, as follows. 60 seconds before predictions are due, it will build a model then submit a prediction. It will repeat submissions every few seconds until the deadline.
 - It does this for every 5-minute epoch.
 
-(You can track at finer resolution by adding more logs, or [querying Predictoor subgraph`](subgraph.md).)
+(You can track at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).)
 
 
 ## Run Predictoor Bot on Sapphire Mainnet
@@ -115,7 +115,7 @@ First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEA
 
 Then, copy & paste your private key as an envvar. (You can skip this if it's same as testnet.) In console:
 ```console
-export PRIVATE_KEY=<paste your PRIVATE_KEY here>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
 Now, set other envvars. In console:
@@ -141,12 +141,18 @@ Track performance, as in testnet.
 
 The next sections describe how to go beyond this baseline of running a bot on mainnet.
 
+## Claim Payout
+
+When running predictoors on mainnet, you have the potential to earn $.
+
+**[Here](payout.md)** are instructions to claim your earnings.
+
 ## Optimize Model
 
 Once you're familiar with the above, you can make your own model and optimize it for $. Here's how:
-1. Fork `pdr-backend` repo
-1. Change the approach3 modeling code as you wish, while iterating with simulation.
-1. Bring your model as a Predictoor bot to testnet then Mainnet.
+1. Fork `pdr-backend` repo.
+1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
+1. Bring your model as a Predictoor bot to testnet then mainnet.
 
 To help, here's the code structure of the bot:
 - It runs [`predictoor_agent3.py::PredictoorAgent3`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) found in `pdr_backend/predictoor/approach3`
@@ -190,10 +196,14 @@ Other interesting PM2 commands:
 - Help for "start" command: `pm2 help start # (similar for other cmds)`
 - More yet: **[PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)**
 
-### Run bots Remotely
+## Run Bots Remotely
 
 Follow directions at [remotebot-remotenet.md](remotebot-remotenet.md).
 
 ## Other READMEs
 
 - [Root README](../README.md)
+
+## Warning
+
+You will lose money as a predictoor if your $ out exceeds your $ in. If you have low accuracy you’ll have your stake slashed a lot. Do account for gas fees, compute costs, and more. Everything you do is your responsibility, at your discretion. None of this repo is financial advice.
