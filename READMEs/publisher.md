@@ -11,7 +11,7 @@ This is for publishers to publish new prediction feeds as data assets (data NFT 
 
 Follow directions in [predictoor.md](predictoor.md)
 
-## Local Usage
+## Local Network
 
 First, [install barge](barge.md#install-barge)
 
@@ -21,7 +21,7 @@ Then, run barge. In barge console:
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
-Open a new console and:
+Open a new "work" console and:
 ```console
 # Setup virtualenv
 cd pdr-backend
