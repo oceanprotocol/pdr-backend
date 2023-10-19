@@ -219,7 +219,7 @@ class TradeEngine:
         #    self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time")
         # plotutil.scatter_pred_vs_actual(
         #    self.ys_test, self.ys_testhat, "ys_test vs ys_testhat")
-        plotutil.plot_any_vs_time(self.profit_usds, "profit")
+        #plotutil.plot_any_vs_time(self.profit_usds, "profit")
         plotutil.plot_any_vs_time(self.tot_profit_usds, "tot profit")
 
     @enforce_types

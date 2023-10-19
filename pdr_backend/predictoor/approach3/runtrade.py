@@ -14,13 +14,13 @@ from pdr_backend.predictoor.approach3.trade_engine import TradeEngine
 
 data_ss = DataSS(
     csv_dir=os.path.abspath("csvs"),
-    st_timestamp=timestr_to_ut("2022-09-13"),  # 2019-09-13_04:00 earliest
-    fin_timestamp=timestr_to_ut("2023-06-24"),  # 'now','2023-06-21_17:55'
+    st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
+    fin_timestamp=timestr_to_ut("now"),  # 'now','2023-06-21_17:55'
     max_N_train=5000,  # 50000 # if inf, only limited by data available
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
     Nt=10,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
     usdcoin="USDT",
-    timeframe="5m",
+    timeframe="1h",
     signals=["close"],  # ["open", "high","low", "close", "volume"],
     coins=["ETH", "BTC"],
     exchange_ids=["binance"],
@@ -32,7 +32,7 @@ data_ss = DataSS(
 model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
 
 trade_pp = TradeParams(
-    fee_percent=0.0,  # Eg 0.001 is 0.1%. Trading fee (simulated)
+    fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
     init_holdings={"USDT": 100000.0, "BTC": 0.0},
 )
 
