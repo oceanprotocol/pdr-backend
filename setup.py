@@ -15,15 +15,18 @@ install_requirements = [
     "enforce_typing",
     "eth-account",
     "eth-keys",
+    "matplotlib",
+    "numpy",
     "pandas",
     "pathlib",
     "pylint",
     "pytest",
     "pytest-env",
     "requests",
+    "scikit-learn",
     "web3",
     "sapphire.py",
-    "ocean-contracts==2.0.0a13",  # install this last
+    "ocean-contracts==2.0.0a14",  # install this last
 ]
 
 # Required to run setup.py:

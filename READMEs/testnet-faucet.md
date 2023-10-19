@@ -1,14 +1,15 @@
-# Getting Test Tokens on Sapphire testnet
+# Getting (fake) Tokens on Sapphire testnet
 
-## Getting native test tokens
+## Getting (fake) ROSE
 
-- Go to [Oasis testnet faucet](https://faucet.testnet.oasis.dev/).
-- Pick `Sapphire` from the dropdown.
-- Fill in your address and request test tokens.
+1. Go to [ROSE faucet for Oasis testnets](https://faucet.testnet.oasis.dev/).
+2. From the dropdown, pick `Sapphire` testnet.
+3. Fill in your address and request test tokens.
 
-## Getting testOCEAN tokens
+## Getting (fake) OCEAN
 
-- Go to the [testOCEAN faucet](https://faucet.sapphire.oceanprotocol.com/).
-- Fill in your address and click `Get 1000 OCEAN`.
+1. Go to the [OCEAN faucet for Sapphire testnet](https://faucet.sapphire.oceanprotocol.com/).
+2. Fill in your address and click `Get 1000 OCEAN`.
+3. (Optional) in your wallet, add the OCEAN token. If needed, specify the OCEAN address as: 0x973e69303259B0c2543a38665122b773D28405fB
 
 You're all set!

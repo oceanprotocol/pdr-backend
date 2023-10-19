@@ -46,7 +46,7 @@ Each subsection below gives different local usage options.
 In barge console:
 ```console
 # Run barge with just predictoor contracts, queryable, but no agents
-./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 In work console, run tests:
@@ -107,7 +107,9 @@ To get tokens from testnet: see [testnet-faucet.md](testnet-faucet.md)
 
 ## Remote Mainnet Usage
 
-FIXME
+To run predictoor as azure container: see [azure-container-deployment.md](azure-container-deployment.md)
+
+Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).
 
 ## Release Process
 
