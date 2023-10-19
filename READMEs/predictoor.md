@@ -139,13 +139,15 @@ This is where there's real $ at stake. Good luck!
 
 Track performance, as in testnet.
 
-The next sections describe how to go beyond this baseline of running a bot on mainnet.
-
 ## Claim Payout
 
 When running predictoors on mainnet, you have the potential to earn $.
 
 **[Here](payout.md)** are instructions to claim your earnings.
+
+----
+
+The next sections describe how to go beyond this baseline of running a bot on mainnet.
 
 ## Optimize Model
 
