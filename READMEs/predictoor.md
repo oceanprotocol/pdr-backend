@@ -11,12 +11,12 @@ Toward running on mainnet:
 1. **[Install](#install-pdr-backend-repo)**
 1. **[Simulate modeling & trading](#simulate-modeling-and-trading)**
 1. **[Run bot on testnet](#run-predictoor-bot-on-sapphire-testnet)**
-1. **[Run bot on mainnet](##run-predictoor-bot-on-sapphire-mainnet)**
+1. **[Run bot on mainnet](#run-predictoor-bot-on-sapphire-mainnet)**
 
 Going beyond: (Optional, in any order)
 - **[Optimize model](#optimize-model)**
 - **[Run >1 bots at once](#run-many-bots-at-once)**
-- **[Run bots _remotely_](##run-bots-remotely)**
+- **[Run bots remotely](#run-bots-remotely)**
 
 ## Install pdr-backend Repo
 
@@ -75,7 +75,7 @@ First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake an
 
 Then, copy & paste your private key as an envvar. In console:
 ```console
-export PRIVATE_KEY=<paste your PRIVATE_KEY here>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
 Now, set other envvars. In console:
@@ -153,14 +153,46 @@ To help, here's the code structure of the bot:
 - It's configured by envvars and [`predictoor_config3.py::PredictoorConfig3`](../pdr_backend/predictoor/approach3/predictoor_config3.py)
 - It predicts according to `PredictoorAgent3:get_prediction()`.
 
-### Run Many Bots at Once
+## Run Many Bots at Once
 
-(Stay tuned, this is coming:)
+[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online."
+
+This section shows first how to use PM2 to run one bot on testnet. It then shows how to extend this to mainnet, and many bots at once.
+
+First, install PM2: `npm install pm2 -g`
+
+Then, prepare the PM2 config file:
+- Skim over [`pm2-testnet-predictoor.config.js`](../pm2-testnet-predictoor.config.js). It names the script, and sets envvars like we did above, but automatically.
+- Open the local version of this file. It's in the root of your `pdr-backend/` directory. In the file, set `YOUR_PRIVATE_KEY`.
+
+Now, run the bot with PM2. In console:
+```console
+pm2 start pm2-testnet-predictoor.config.js
+```
+
+Your bot's running on testnet again! This time with the help of PM2.
+
+Next, monitor the logs: `pm2 logs pm2-testnet-predictoor` (ctrl-c to stop)
+
+Finally, stop the bot: `pm2 stop pm2-testnet-predictoor`
+
+Congrats! You've used PM2 to start, monitor, and stop a bot on testnet.
+
+To run on _mainnet_: it's a mainnet config file [`pm2-mainnet-predictoor.config.js`](../pm2-mainnet-predictoor.config.js). It's like testnet, with different envvars. Work with the local version of this file.
+
+To run 20 bots: alter the config file as needed. Or, have 20 config files.
+
+Other interesting PM2 commands:
+- List all running processes: `pm2 ls`
+- Stop process with id=0: `pm2 stop 0 # (similar for other cmds)`
+- Stop all processes: `pm2 stop all`
+- Top-level help: `pm2 help`
+- Help for "start" command: `pm2 help start # (similar for other cmds)`
+- More yet: **[PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)**
 
 ### Run bots Remotely
 
-FIXME
-
+Follow directions at [remotebot-remotenet.md](remotebot-remotenet.md).
 
 ## Other READMEs
 

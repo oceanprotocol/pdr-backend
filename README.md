@@ -10,16 +10,12 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
 - **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
 
-## OPF bots
+## For Predictoor core team (OPF)
 
-- **[Run dfbuyer bot](READMEs/dfbuyer.md)** - for Predictoor DF rewards
-
-## Develop predictoor
-
-
-- [Frontend-dev README](READMEs/frontend-dev.md) - for work on predictoor.ai
-- [Backend-dev README](READMEs/backend-dev.md) - for work on pdr-backend
-- [Publisher README](READMEs/publisher.md) - for publishing new feeds
+- [Run dfbuyer bot](READMEs/dfbuyer.md) - runs Predictoor DF rewards
+- [Run publisher](READMEs/publisher.md) - publish new feeds
+- [Frontend-dev README](READMEs/frontend-dev.md) - for predictoor.ai
+- [Backend-dev README](READMEs/backend-dev.md) - for `pdr-backend` itself
 
 
 ## About
