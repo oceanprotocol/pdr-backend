@@ -67,8 +67,9 @@ async def do_trade(feed: Feed, prediction: Tuple[float, float]):
     """
     pred_nom, pred_denom = prediction
     print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
-    # Trade here
-    # ...
-
     strategy = SimpleThresholdStrategy(buy_threshold=0.6, sell_threshold=0.4)
     action, confidence = strategy.determine_action(feed, prediction)
+    amount_to_trade = confidence * portfolio.balance / 100
+    execute_action(amount_to_trade, action)
+
+    return action, amount_to_trade
