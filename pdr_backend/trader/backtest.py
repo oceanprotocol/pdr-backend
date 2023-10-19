@@ -23,10 +23,5 @@ def backtest():
         feed = historical_data_point.feed
         
         action, amount = await do_trade(feed, prediction)
-        
-        if action == TradeAction.BUY:
-            portfolio.buy(current_price, amount)
-        elif action == TradeAction.SELL:
-            portfolio.sell(current_price, amount)
 
     print(f"      Portfolio value after trade: {portfolio.total_value(current_price)}")

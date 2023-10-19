@@ -38,14 +38,17 @@ class SimpleThresholdStrategy(BaseStrategy):
             return TradeAction.HOLD, 0
 
 
-def execute_action(feed: Feed, confidence: float, action: TradeAction):
+def execute_action(portfolio: Portfolio, amount: float, action: TradeAction):
     """
     do trade here
     """
-    pass
+    if action == TradeAction.BUY:
+        portfolio.buy(current_price, amount)
+    elif action == TradeAction.SELL:
+        portfolio.sell(current_price, amount)
 
 
-async def do_trade(feed: Feed, prediction: Tuple[float, float]) -> Tuple[TradeAction, float]:
+async def do_trade(portfolio: Portfolio, feed: Feed, prediction: Tuple[float, float]) -> Tuple[TradeAction, float]:
     """
     @description
         This function is called each time there's a new prediction available.
@@ -70,6 +73,6 @@ async def do_trade(feed: Feed, prediction: Tuple[float, float]) -> Tuple[TradeAc
     strategy = SimpleThresholdStrategy(buy_threshold=0.6, sell_threshold=0.4)
     action, confidence = strategy.determine_action(feed, prediction)
     amount_to_trade = confidence * portfolio.balance / 100
-    execute_action(amount_to_trade, action)
+    execute_action(portfolio, amount_to_trade, action)
 
     return action, amount_to_trade
