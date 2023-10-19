@@ -17,11 +17,12 @@ SPDX-License-Identifier: Apache-2.0
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
 - [Envvars](READMEs/envvars.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
+- [Dynamic model codebase](READMEs/dynamic-model-codebase.md)
 
-Optional, less useful:
-- [Static models in predictoors](READMEs/static-model.md)
+Less common:
 - [Install & run local network (Barge)](READMEs/barge.md)
 - [MacOS gotchas](READMEs/macos.md) wrt Docker & ports
+- [Static models in predictoors](READMEs/static-model.md)
 
 ## Flows for core team
 

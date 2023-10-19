@@ -63,7 +63,7 @@ The baseline settings use a linear model inputting prices of the previous 10 epo
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
-You can plot more things by uncommenting the `plot*` commands at the bottom of [trade_engine.py](../pdr_backend/predictoor/approach3/trade_engine.py)
+([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
 
 ## Run Predictoor Bot on Sapphire Testnet
 
@@ -156,10 +156,9 @@ Once you're familiar with the above, you can make your own model and optimize it
 1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
-To help, here's the code structure of the bot:
-- It runs [`predictoor_agent3.py::PredictoorAgent3`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) found in `pdr_backend/predictoor/approach3`
-- It's configured by envvars and [`predictoor_config3.py::PredictoorConfig3`](../pdr_backend/predictoor/approach3/predictoor_config3.py)
-- It predicts according to `PredictoorAgent3:get_prediction()`.
+
+([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
+
 
 ## Run Many Bots at Once
 

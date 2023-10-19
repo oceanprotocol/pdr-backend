@@ -62,7 +62,7 @@ The baseline settings use a linear model inputting prices of the previous 10 epo
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
-You can plot more things by uncommenting the `plot*` commands at the bottom of [trade_engine.py](../pdr_backend/trader/approach3/trade_engine.py)
+([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
 
 ## Run Trader Bot on Sapphire Testnet
 
