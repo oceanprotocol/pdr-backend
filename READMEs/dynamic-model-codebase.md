@@ -80,9 +80,9 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 
 ## HOWTOs
 
-**HOWTO change parameters for each flow:
-- For running simulation flow: change lines in [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py). Almost every line is changeable, to change training data, model, trade parameters, and trade strategy. Details on each below.
-- For running predictoor bot flow: change [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) solution strategy parameters for the bot
+**HOWTO change parameters for each flow:**
+- **For running simulation flow:** change lines in [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py). Almost every line is changeable, to change training data, model, trade parameters, and trade strategy. Details on each below.
+- **For running predictoor bot flow:** change [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) solution strategy parameters for the bot
 
 **HOWTO change parameters for the predictoor Bot**
 - Almost every line of [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) is changeable :)
