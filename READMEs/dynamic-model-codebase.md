@@ -54,7 +54,7 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 **Do simulation, including modeling & trading:**
 - [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) - top-level file to invoke trade engine
 - [`trade_engine.py`](../pdr_backend/predictoor/approach3/trade_engine.py) - simple, naive trading engine
-- [`tradeutil.py`](../pdr_backend/predictoor/approach3/tradeutil.py) - utilities used by trading
+- [`tradeutil.py`](../pdr_backend/predictoor/approach3/tradeutil.py) - trade engine parameters, trading strategy parameters, and utilities for trading
 - [`plotutil.py`](../pdr_backend/predictoor/approach3/plotutil.py) - utilities for plotting from simulations
 
 **Build & use predictoor bot:**
@@ -68,7 +68,7 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 
 **Build & use data:** (used by model)
 - [`data_factory.py`](../pdr_backend/predictoor/approach3/data_factory.py) - converts historical data -> historical dataframe -> X/y model data
-- [`data_ss.py`](../pdr_backend/predictoor/approach3/data_ss.py) - solution strategy parameters for data_factory
+- [`data_ss.py`](../pdr_backend/predictoor/approach3/data_ss.py) - solution strategy parameters for data_factory, ie sets what data to use
 - [`pdutil.py`](../pdr_backend/predictoor/approach3/pdutil.py) - utilities for (pandas) data frames
 
 **Time utilities:** (used by data)
@@ -81,8 +81,31 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 
 ## HOWTOs
 
-This section describes how to add new data, change modeling algorithm, etc.
+### HOWTOs: Flows
 
-(WIP)
+**HOWTO change parameters for the simulation**
+- Almost every line of [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) is changeable :)
+- You can change training data, model, etc according to the HOWTOs
 
+**HOWTO change parameters for the predictoor Bot**
+- Almost every line of [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) is changeable :)
+- You can change training data, model, etc according to the HOWTOs
+
+### HOWTOs: Specific training data, model, etc
+
+**HOWTO set what training data to use:** 
+- Change arguments to [`data_ss.py:DataSS()`](../pdr_backend/predictoor/approach3/data_ss.py) constructor.
+- Includes: how far to look back historically for training samples, max # training samples, how far to look back when making a single inference.
+
+**HOWTO set what model to use:** 
+- Change argument to [`model_ss.py:ModelSS()`](../pdr_backend/predictoor/approach3/model_ss.py)] constructor.
+- Includes just: the model. "LIN" = linear.
+
+**HOWTO set trade parameters (uncontrollable by trader):** 
+- Change arguments to [`tradeutil.py:TradeParams()`](../pdr_backend/predictoor/approach3/tradeutil.py)] constructor.
+- Includes: % trading fee, and initial trader holdings.
+
+**HOWTO set trade strategy (controllable by trader):** 
+- Change arguments to [`tradeutil.py:TradeSS()`](../pdr_backend/predictoor/approach3/tradeutil.py)] constructor.
+- Includes: how much $ to trade with at each point, where to log, whether to plot
 
