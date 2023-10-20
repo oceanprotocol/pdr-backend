@@ -57,7 +57,8 @@ class PredictoorAgent3(BasePredictoorAgent):
         if yval_coin not in coins:  # eg DOT
             coins.append(yval_coin)
         if yval_exchange_id not in exchange_ids:
-            exchange_ids.append(yval_exchange_id)
+            if yval_exchange_id != "binance":
+                exchange_ids.append(yval_exchange_id)
 
         # Set data_ss
         data_ss = DataSS(
