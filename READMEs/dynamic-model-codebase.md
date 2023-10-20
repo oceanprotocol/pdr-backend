@@ -77,7 +77,7 @@ The code is at [pdr_backend/predictoor/approach3/](../pdr_backend/predictoor/app
 
 **Other utilities:**
 - [`constants.py`](../pdr_backend/predictoor/approach3/constants.py) - basic constants
-- [`test/test*.py`]](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
+- [`test/test*.py`](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
 
 ## HOWTOs
 
