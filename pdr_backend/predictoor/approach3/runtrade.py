@@ -23,8 +23,8 @@ data_ss = DataSS(
     timeframe="1h",
     signals=["close"],  # ["open", "high","low", "close", "volume"],
     coins=["ETH", "BTC"],
-    exchange_ids=["binance"],
-    yval_exchange_id="binance",
+    exchange_ids=["binanceus"],
+    yval_exchange_id="binanceus",
     yval_coin="BTC",
     yval_signal="close",
 )
