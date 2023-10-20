@@ -36,7 +36,6 @@ What `runtrade.py` does:
 When doing simulations:
 - You can plot more things by uncommenting the `plot*` commands at the bottom of [trade_engine.py](../pdr_backend/predictoor/approach3/trade_engine.py)
 
-
 ## Code and predictoor bot
 
 The predictoor bot flow is used by [predictoor.md](predictoor.md).
@@ -81,17 +80,13 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 
 ## HOWTOs
 
-### HOWTOs: Flows
-
-**HOWTO change parameters for the simulation**
-- Almost every line of [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) is changeable :)
-- You can change training data, model, etc according to the HOWTOs
+**HOWTO change parameters for each flow:
+- For running simulation flow: change lines in [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py). Almost every line is changeable, to change training data, model, trade parameters, and trade strategy. Details on each below.
+- For running predictoor bot flow: change [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) solution strategy parameters for the bot
 
 **HOWTO change parameters for the predictoor Bot**
 - Almost every line of [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) is changeable :)
 - You can change training data, model, etc according to the HOWTOs
-
-### HOWTOs: Specific training data, model, etc
 
 **HOWTO set what training data to use:** 
 - Change arguments to [`data_ss.py:DataSS()`](../pdr_backend/predictoor/approach3/data_ss.py) constructor.
