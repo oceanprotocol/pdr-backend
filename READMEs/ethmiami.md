@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 This README provides instructions for the ETHMiami data science competition run by Ocean Protocol, Oct 27-29, 2023.
 
-The goal is to accurately predict whether ETH with rise or fall, every five minutes, over an 8-hour interval.
+The goal is to accurately predict whether ETH will rise or fall, every five minutes, over an 8-hour interval.
 
 Through this README, you're supplied with:
 - A baseline approach to gather data and build an AI/ML prediction model
@@ -24,13 +24,13 @@ Bonus! You can use the outcome from this competition to run [your own predictoor
 
 Criteria / prizes:
 - Accuracy = % correct predictions in the interval
-- 1st place: (FIXME) OCEAN -> highest accuracy
-- 2nd place: (FIXME) OCEAN -> 2nd highest accuracy
-- 3rd place: (FIXME) OCEAN -> 3rd highest accuracy
+- 1st place: $1500 OCEAN -> highest accuracy
+- 2nd place: $1000 OCEAN -> 2nd highest accuracy
+- 3rd place: $500 OCEAN -> 3rd highest accuracy
 
 Timing:
 - Your predictoor must make submissions **every 5 minutes** in the interval from **4:00am to 12:00pm EDT on Sun Oct 29**.
-- It's ok if it predicts before or after too! But those won't be counted
+- It's OK if it predicts before or after too! But those won't be counted
 - For each 5-min slot that it neglects to submit a prediction, that miss is treated as an incorrect prediction (vs being ignored)
 
 ### 0.4 Support
