@@ -12,9 +12,10 @@ Two flows use the code:
 2. Run predictoor bot
 
 Contents of this README:
-- [Code and simulation](#code-and-simulation)
+- [Simulation](#code-and-simulation)
 - [Code and predictoor bot](#code-and-predictoor-bot)
 - [Description of each approach3 file](#description-of-each-approach3-file)
+- [HOWTO](#howtos): add new data, change modeling algorithm, etc
 
 ## Code and Simulation
 
@@ -51,30 +52,37 @@ The bot is invoked by: `python pdr_backend/predictoor/main.py 3`
 The code is at [pdr_backend/predictoor/approach3/](../pdr_backend/predictoor/approach3/).
 
 **Do simulation, including modeling & trading:**
-- `runtrade.py` - top-level file to invoke trade engine
-- `trade_engine.py` - simple, naive trading engine
-- `tradeutil.py` - utilities used by trading
-- `plotutil.py` - utilities for plotting from simulations
+- [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) - top-level file to invoke trade engine
+- [`trade_engine.py`](../pdr_backend/predictoor/approach3/trade_engine.py) - simple, naive trading engine
+- [`tradeutil.py`](../pdr_backend/predictoor/approach3/tradeutil.py) - utilities used by trading
+- [`plotutil.py`](../pdr_backend/predictoor/approach3/plotutil.py) - utilities for plotting from simulations
 
 **Build & use predictoor bot:**
-- `predictoor_agent3.py` - main agent. Builds model
-- `predictoor_config3.py` - solution strategy parameters for the bot
+- [`predictoor_agent3.py`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) - main agent. Builds model
+- [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) - solution strategy parameters for the bot
 
 **Build & use the model:** (used by simulation and bot)
-- `model_factory.py` - converts X/y data --> AI/ML model
-- `model_ss.py` - solution strategy parameters for model_factory
-- `prev_model.py` - a very simple model that predict's "yesterday's weather"
+- [`model_factory.py`](../pdr_backend/predictoor/approach3/model_factory.py) - converts X/y data --> AI/ML model
+- [`model_ss.py`](../pdr_backend/predictoor/approach3/model_ss.py) - solution strategy parameters for model_factory
+- [`prev_model.py`](../pdr_backend/predictoor/approach3/prev_model.py) - a very simple model that predict's "yesterday's weather"
 
 **Build & use data:** (used by model)
-- `data_factory.py` - converts historical data -> historical dataframe -> X/y model data
-- `data_ss.py` - solution strategy parameters for data_factory
-- `pdutil.py` - utilities for (pandas) data frames
+- [`data_factory.py`](../pdr_backend/predictoor/approach3/data_factory.py) - converts historical data -> historical dataframe -> X/y model data
+- [`data_ss.py`](../pdr_backend/predictoor/approach3/data_ss.py) - solution strategy parameters for data_factory
+- [`pdutil.py`](../pdr_backend/predictoor/approach3/pdutil.py) - utilities for (pandas) data frames
 
 **Time utilities:** (used by data)
-- `timeblock.py` - utility to convert a single time-series into a 2d array, to be part of the X input to modeling training inference
-- `timeutil.py` - utilities to convert among different time units
+- [`timeblock.py`](../pdr_backend/predictoor/approach3/timeblock.py) - utility to convert a single time-series into a 2d array, to be part of the X input to modeling training inference
+- [`timeutil.py`](../pdr_backend/predictoor/approach3/timeutil.py) - utilities to convert among different time units
 
 **Other utilities:**
-- `constants.py` - basic constants
-- `test/test*.py` - unit tests for each py file
+- [`constants.py`](../pdr_backend/predictoor/approach3/constants.py) - basic constants
+- [`test/test*.py`]](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
+
+## HOWTOs
+
+This section describes how to add new data, change modeling algorithm, etc.
+
+(WIP)
+
 
