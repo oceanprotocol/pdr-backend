@@ -33,7 +33,7 @@ from eth_account.account import Account
 account = Account.create()
 
 print(f"""
-PRIVATE_KEY={account.key.hex()}, ADDRESS1={account.address}
+PRIVATE_KEY={account.key.hex()}, ADDRESS={account.address}
 """)
 ```
 
