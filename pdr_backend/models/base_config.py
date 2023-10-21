@@ -47,6 +47,7 @@ class BaseConfig(StrMixin):
             ",".join(self.owner_addresses),
         )
         feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
+        print(f"    Feeds found: {feeds}")
         return feeds
 
     def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
