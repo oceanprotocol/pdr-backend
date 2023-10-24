@@ -41,7 +41,7 @@ class TraderAgent1(TraderAgent):
 
         # Generic exchange clss
         exchange_class = getattr(ccxt, self.config.exchange_id)
-        self.exchange = exchange_class({
+        self.exchange:ccxt.Exchange = exchange_class({
             'apiKey': getenv('EXCHANGE_API_KEY'),
             'secret': getenv('EXCHANGE_SECRET_KEY'),
             "timeout": 30000,
@@ -54,19 +54,18 @@ class TraderAgent1(TraderAgent):
         })
 
         # Validate exchange and make it verbose
-        self.exchange.check_required_credentials() 
-        self.exchange.verbose = True
+        # self.exchange.check_required_credentials() 
+        
+        # Let's get all the markets loaded into the cache
+        # self.exchange.load_markets()
 
-        # Print balance
-        print(self.exchange.fetchBalance(params = {}))
-
-        # TODO - Add order tracking
+        # TODO - Add order_tracking (serializable/pickle)
         # Market and order data
-        self.order_id = None
-        self.size = getenv("POSITION_SIZE_USD")
+        self.order = None
+        self.size: float = float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
         
         assert self.exchange != None
-        assert self.size != None
+        assert self.size != None and self.size > 0.0
         
         # Naive parameters
         # Update from hard coded to configurable
@@ -90,40 +89,38 @@ class TraderAgent1(TraderAgent):
         """
         
         ### Close previous order if it exists
-        if self.order_id != None :
+        if self.order != None :
             # To sell, we need to call reduceOnly.
-            close_position = self.exchange.create_order(
-                symbol=self.config.pair,
-                type=self.order_type,
-                side=self.side,
-                amount=self.size,
-                params={"reduceOnly": True}
+            order = self.exchange.create_market_sell_order(
+                self.config.exchange_pair,
+                self.size
             )
 
-            print(f"     [Trade Closed] {self.exchange_id} order {self.order_id}")
-            print(f"     [Trade Results] {close_position}")
+            print(f"     [Trade Closed] {self.exchange}")
+            print(f"     [Previous Order] {self.order}")
+            print(f"     [Closing Order] {order}")
+            
+            # TODO - Calculate PNL (self.order - order)
+            self.order = None
 
         ### Create new order if prediction meets our criteria
         pred_nom, pred_denom = prediction
         print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
         
-        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
+        pred_properties  = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 
         if pred_properties['dir'] == 1 and pred_properties['confidence'] > 0.5 :
-            # Do not need to set price because it's a market order
-            order = self.exchange.create_order(
-                self.config.pair,
-                self.order_type,
-                self.side,
+            order = self.exchange.create_market_buy_order(
+                self.config.exchange_pair,
                 self.size
             )
             
             # If order is successful, we log the order so we can close it
             if order :
-                self.order.id = order.id
-                print(f"     [Trade Opened] {self.exchange_id} order {self.order_id}")
-                print(f"     [Trade Details] {order}")
+                self.order = order
+                print(f"     [Trade Opened] {self.exchange}")
+                print(f"     [Opening Order] {order}")
         else:
             print(f"     [No Trade] prediction does not meet requirements: {pred_properties}")
                 
