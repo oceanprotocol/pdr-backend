@@ -163,3 +163,9 @@ Above, we focused on Azure. Here are several deployment options:
 - [Heroku - Container Registry & Runtime (Docker Deploys)](https://devcenter.heroku.com/articles/container-registry-and-runtime)
 - [AWS -  Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
 - [Google Cloud - Deploying to Cloud Run](https://cloud.google.com/run/docs/deploying)
+
+## Other READMEs
+
+- [Parent predictoor README: predictoor.md](./predictoor.md)
+- [Parent trader README: trader.md](./trader.md)
+- [Root README](../README.md)

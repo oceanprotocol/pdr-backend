@@ -95,7 +95,7 @@ def process_block(block, model, main_pd):
             if predicted_value is not None and predicted_confidence > 0:
                 # We have a prediction, let's submit it
                 stake_amount = (
-                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence
                 )  # TO DO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - "
@@ -236,13 +236,25 @@ def do_main2():  # pylint: disable=too-many-statements
                 index = main_pd.index.values[-1]
                 current_prediction = main_pd.iloc[-1][model.model_name]
                 if np.isnan(current_prediction):
-                    prediction = log_loop(
-                        block,
-                        model,
-                        main_pd.drop(columns_models + ["datetime"], axis=1),
-                    )
-                    if prediction is not None:
-                        main_pd.loc[index, [model.model_name]] = float(prediction)
+                    max_retries = 5
+                    for attempt in range(max_retries):
+                        try:
+                            prediction = log_loop(
+                                block,
+                                model,
+                                main_pd.drop(columns_models + ["datetime"], axis=1),
+                            )
+                            if prediction is not None:
+                                main_pd.loc[index, [model.model_name]] = float(
+                                    prediction
+                                )
+                            break
+                        except Exception as e:
+                            if attempt < max_retries - 1:
+                                print(f"Attempt {attempt + 1} failed. Retrying...")
+                                continue
+                            print(f"Attempt {attempt + 1} failed. No more retries.")
+                            raise e
 
             print(
                 main_pd.loc[

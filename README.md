@@ -10,49 +10,38 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
 - **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
 
-## OPF bots
+(If you're a predictoor or trader, you can safely ignore the rest of this README.)
 
-- **[Run dfbuyer bot](READMEs/dfbuyer.md)** - for Predictoor DF rewards
+## Atomic READMEs
 
-## Develop predictoor
+- [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
+- [Envvars](READMEs/envvars.md)
+- [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
+- [Dynamic model codebase](READMEs/dynamic-model-codebase.md)
 
+Less common:
+- [Install & run local network (Barge)](READMEs/barge.md)
+- [MacOS gotchas](READMEs/macos.md) wrt Docker & ports
+- [Static models in predictoors](READMEs/static-model.md)
 
-- [Frontend-dev README](READMEs/frontend-dev.md) - for work on predictoor.ai
-- [Backend-dev README](READMEs/backend-dev.md) - for work on pdr-backend
-- [Publisher README](READMEs/publisher.md) - for publishing new feeds
+## Flows for core team
 
+- **[Backend-dev README](READMEs/backend-dev.md)** - for `pdr-backend` itself
+  - [Release process](READMEs/release-process.md)
+- **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
+- **[Run publisher](READMEs/publisher.md)** - publish new feeds
+- [ETHMiami competition](READMEs/ethmiami.md) - Oct 27-29, 2023
 
-## About
+## Repo structure
 
-The `pdr-backend` repo implements all of the bots (agents) of the Predictoor ecosystem.
+This repo implements all bots in Predictoor ecosystem.
 
-Each agent has a directory:
-- `predictoor` - bot (agent) that submits individual predictions
-- `trader` - bot (agent) that buys aggregated predictions, then trades
-- `trueval` - agent that reports true values to contract
-- `dfbuyer` - agent that buys aggregate predictions on behalf of Data Farming
-
-The `predictoor` and `trader` agents are meant to be customized by predictoor and trader stakeholders, respectively.
+Each bot has a directory:
+- `predictoor` - submits individual predictions
+- `trader` - buys aggregated predictions, then trades
+- other bots: `trueval` report true values to contract, `dfbuyer` implement Predictoor Data Farming, `publisher` to publish
 
 Other directories:
 - `util` - tools for use by any agent
 - `models` - classes that wrap Predictoor contracts; for setup (BaseConfig); and for data feeds (Feed)
-- `publisher` - used for publishing
 
-## Atomic READMEs
-
-The following READMEs are used as building blocks within different flows.
-
-Installation:
-- [Install pdr-backend](READMEs/install.md)
-- [Install & use Barge](READMEs/barge.md)
-
-Usage:
-- [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
-- [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
-- [Azure containers](READMEs/azure-container-deployment.md)
-- [Envvars](READMEs/envvars.md)
-- [MacOS gotchas](READMEs/macos.md)
-
-Development:
-- [Release process](READMEs/release-process.md)
