@@ -61,7 +61,9 @@ class BasePredictoorAgent(ABC):
                     break
                 except e as Exception:
                     if i < max_tries - 1:
-                        print(f"An error: \"{e}\" occured while executing take_step, trying again...")
+                        print(
+                            f'An error: "{e}" occured while executing take_step, trying again...'
+                        )
                     else:
                         raise e
 
