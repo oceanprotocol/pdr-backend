@@ -44,6 +44,10 @@ Begin by visiting the [Celer bridge](https://cbridge.celer.network/1/23294/OCEAN
 
 Please note that the bridging may require several minutes to complete. Your OCEAN will be sent to the address you executed the transaction from.
 
+You can visually verify the transaction on the [Oasis Explorer](https://explorer.sapphire.oasis.io/address/0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520/transactions).
+
+Another way to visually verify the OCEAN token transfer is by importing the OCEAN token contract address `0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520` in the wallet using symbol `OCEAN` and decimal precision `18`.
+
 ## Conclusion
 
 Congratulations! You have successfully transferred OCEAN to the Sapphire Mainnet. Ensure to store your assets securely and manage private keys with utmost care.
