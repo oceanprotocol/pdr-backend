@@ -1,4 +1,3 @@
-import time
 from addresses import get_opf_addresses
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token, NativeToken
