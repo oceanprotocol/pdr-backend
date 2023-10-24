@@ -59,7 +59,7 @@ class BasePredictoorAgent(ABC):
                 try:
                     self.take_step()
                     break
-                except e as Exception:
+                except Exception as e:
                     if i < max_tries - 1:
                         print(
                             f'An error: "{e}" occured while executing take_step, trying again...'
