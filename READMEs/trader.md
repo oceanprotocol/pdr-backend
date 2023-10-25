@@ -12,10 +12,7 @@ This README takes shows how to earn $ by running a trader bot on mainnet, and be
 1. **[Run bot on testnet](#run-trader-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#run-trader-bot-on-sapphire-mainnet)**
 
-To go beyond: (Optional, in any order)
-- [Optimize trading strategy](#optimize-trading-strategy)
-- [Run >1 bots at once](#run-many-bots-at-once)
-- [Run bots remotely](#run-bots-remotely)
+Then, you can [go beyond](#go-beyond): [optimize trading strategy](#optimize-trading-strategy), and more.
 
 ## Install pdr-backend Repo
 
@@ -135,7 +132,11 @@ This is where there's real $ at stake. Good luck!
 
 Track performance, as in testnet.
 
-The next sections describe how to go beyond this baseline of running a bot on mainnet.
+# Go Beyond
+
+You've gone through all the essential steps to earn $ by running a trader bot on mainnet.
+
+The next sections describe how to go beyond, by optimizing the trading strategy and more.
 
 ## Optimize Trading Strategy
 
@@ -148,14 +149,13 @@ To help, here's the code structure of the bot:
 - It runs [`trader_agent.py::TraderAgent`](../pdr_backend/trader/trader_agent.py) found in `pdr_backend/trader/`
 - It's configured by envvars and [`trader_config.py::TraderConfig`](../pdr_backend/trader/trader_config.py)
 
-## Run Many Bots at Once
-
-Follow the directions of [running predictoor with PM2](predictoor.md), with mild tweaks for trading (vs predicting).
-
 ## Run Bots Remotely
 
-Follow directions at [remotebot.md](remotebot.md).
+To scale up compute or run without tying up your local machine, you can run bots remotely. Get started [here](remotebot.md).
 
+## Run Local Network
+
+To get extra-fast block iterations, you can run a local test network (with local bots). It does take a bit more up-front setup. Get started [here](barge.md).
 
 ## Warning
 

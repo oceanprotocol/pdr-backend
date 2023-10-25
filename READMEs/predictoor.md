@@ -13,10 +13,8 @@ This README shows how to earn $ by running a predictoor bot on mainnet.
 1. **[Run bot on mainnet](#run-predictoor-bot-on-sapphire-mainnet)**
 1. **[Claim payout](#claim-payout)**
 
-To go beyond: (Optional, in any order)
-- [Optimize model](#optimize-model)
-- [Run >1 bots at once](#run-many-bots-at-once)
-- [Run bots remotely](#run-bots-remotely)
+Then, you can [go beyond](#go-beyond): [optimize model](#optimize-model), [run >1 bots](#run-many-bots-at-once), and more.
+
 
 ## Install pdr-backend Repo
 
@@ -145,9 +143,11 @@ When running predictoors on mainnet, you have the potential to earn $.
 
 **[Here](payout.md)** are instructions to claim your earnings.
 
-----
+# Go Beyond
 
-The next sections describe how to go beyond this baseline of running a bot on mainnet.
+You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
+
+The next sections describe how to go beyond, by optimizing the model and more.
 
 ## Optimize Model
 
@@ -199,7 +199,11 @@ Other interesting PM2 commands:
 
 ## Run Bots Remotely
 
-Follow directions at [remotebot.md](remotebot.md).
+To scale up compute or run without tying up your local machine, you can run bots remotely. Get started [here](remotebot.md).
+
+## Run Local Network
+
+To get extra-fast block iterations, you can run a local test network (with local bots). It does take a bit more up-front setup. Get started [here](barge.md).
 
 ## Other READMEs
 
