@@ -21,7 +21,7 @@ if exchanges is None or len(exchanges) == 0:
 if pairs is None or len(pairs) == 0:
     pairs = ["BTC/USDT", "ETH/USDT"]
 
-pairs = [i.split('/', maxsplit=1)[0] for i in pairs]
+pairs = [i.split("/", maxsplit=1)[0] for i in pairs]
 
 timeframe = "1h"
 
