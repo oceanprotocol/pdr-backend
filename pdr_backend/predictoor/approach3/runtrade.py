@@ -28,6 +28,8 @@ timeframe = "1h"
 if timeframes is not None and len(timeframes) > 0:
     timeframe = timeframes[0]
 
+print(f"Config: {pairs} {exchanges} {timeframe}")
+
 data_ss = DataSS(
     csv_dir=os.path.abspath("csvs"),
     st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
