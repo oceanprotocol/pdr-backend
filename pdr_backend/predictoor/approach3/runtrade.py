@@ -15,13 +15,13 @@ from pdr_backend.predictoor.approach3.trade_engine import TradeEngine
 
 (pairs, timeframes, exchanges, _) = parse_filters()
 
-if exchanges is None or len(exchanges) == 0
+if exchanges is None or len(exchanges) == 0:
     exchanges = ["binance"]
 
-if pairs is None or len(pairs) == 0;
-    pairs = ["BTC/USDT","ETH/USDT"]
+if pairs is None or len(pairs) == 0:
+    pairs = ["BTC/USDT", "ETH/USDT"]
 
-pairs = [i.split('/')[0] for i in pairs]
+pairs = [i.split("/")[0] for i in pairs]
 
 timeframe = "1h"
 
