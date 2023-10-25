@@ -52,8 +52,6 @@ class PredictoorAgent3(BasePredictoorAgent):
         yval_coin = feed.base  # eg ETH
         usdcoin = feed.quote  # eg USDT
         yval_exchange_id = feed.source
-        if feed.source == "binance":
-            yval_exchange_id = "binanceus"
         yval_signal = "close"
 
         if yval_coin not in coins:  # eg DOT
