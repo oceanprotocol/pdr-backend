@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 
+from pdr_backend.util.env import parse_filters
 from pdr_backend.predictoor.approach3.data_ss import DataSS
 from pdr_backend.predictoor.approach3.model_ss import ModelSS
 from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
@@ -12,6 +13,21 @@ from pdr_backend.predictoor.approach3.trade_engine import TradeEngine
 # ==================================================================
 # params that I change
 
+(pairs, timeframes, exchanges, _) = parse_filters()
+
+if exchanges is None or len(exchanges) == 0
+    exchanges = ["binance"]
+
+if pairs is None or len(pairs) == 0;
+    pairs = ["BTC/USDT","ETH/USDT"]
+
+pairs = [i.split('/')[0] for i in pairs]
+
+timeframe = "1h"
+
+if timeframes is not None and len(timeframes) > 0:
+    timeframe = timeframes[0]
+
 data_ss = DataSS(
     csv_dir=os.path.abspath("csvs"),
     st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
@@ -22,10 +38,10 @@ data_ss = DataSS(
     usdcoin="USDT",
     timeframe="1h",
     signals=["close"],  # ["open", "high","low", "close", "volume"],
-    coins=["ETH", "BTC"],
-    exchange_ids=["binanceus"],
-    yval_exchange_id="binanceus",
-    yval_coin="BTC",
+    coins=pairs,
+    exchange_ids=exchanges,
+    yval_exchange_id=exchanges[0],
+    yval_coin=pairs[0],
     yval_signal="close",
 )
 
