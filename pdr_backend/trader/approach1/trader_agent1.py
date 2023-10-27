@@ -11,27 +11,29 @@ from pdr_backend.models.feed import Feed
 import ccxt
 from os import getenv
 
-CAND_ORDER_TYPE = ["market", "limit", "margin"]
-CAND_SIDE = ["buy", "sell"]
-
 @enforce_types
 class TraderAgent1(TraderAgent):
     """
     @description
         TraderAgent Naive CCXT
-        
-        This is a naive algorithm. It will simply:
-        1. If open position, close it
-        2. If new prediction up, open long
-        3. If new prediction down, open short
+        - Market order buy-only
+        - Doesn't save client state or manage pending open trades
+        - Only works with MEXC. How to improve:
+            (A) Use Agent2/Order class to add more exchanges
+            (B) Use ccxt.exchange lib to dynamically populate balances/trades/positions/etc...
+        - In MEXC: You can trade BTC/USDC or WBTC/USDT, but not BTC/USDT.
+
+        Naive long-only strategy.
+        1. If existing open position, close it.
+        2. If new long prediction meets criteria, open long.
 
         You can use the ENV_VARS to:
         1. Configure your strategy: pair, timeframe, etc..
         2. Configure your exchange: api_key + secret_key
 
         You can improve this by:
-        1. Improving the type of method to buy/exit (i.e. limit)
-        2. Improving the buy Conditional statement
+        1. Improving how to enter/exit trade w/ orders
+        2. Improving when to buy
         3. Enabling buying and shorting
         4. Using SL and TP
     """    
@@ -53,27 +55,12 @@ class TraderAgent1(TraderAgent):
             },
         })
 
-        # Validate exchange and make it verbose
-        # self.exchange.check_required_credentials() 
-        
-        # Let's get all the markets loaded into the cache
-        # self.exchange.load_markets()
-
-        # TODO - Add order_tracking (serializable/pickle)
         # Market and order data
         self.order = None
         self.size: float = float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
         
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
-        
-        # Naive parameters
-        # Update from hard coded to configurable
-        self.order_type = "market"
-        self.side = "buy"
-
-        assert self.order_type in CAND_ORDER_TYPE
-        assert self.side in CAND_SIDE
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -90,10 +77,9 @@ class TraderAgent1(TraderAgent):
         
         ### Close previous order if it exists
         if self.order != None :
-            # To sell, we need to call reduceOnly.
             order = self.exchange.create_market_sell_order(
                 self.config.exchange_pair,
-                self.size
+                self.order['info']['origQty'] # MEXC order Blob token amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")

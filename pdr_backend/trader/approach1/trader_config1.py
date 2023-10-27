@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 from os import getenv
 from pdr_backend.trader.trader_config import TraderConfig
 
-CAND_EXCHANGE = ["binance", "mexc3", "mexc"]
+CAND_EXCHANGE = ["mexc3", "mexc"]
 CAND_PAIR = [
     "BTC/USDT", 
     "ETH/USDT",
