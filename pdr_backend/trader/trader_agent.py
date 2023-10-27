@@ -203,7 +203,7 @@ class TraderAgent:
             confidence -= 0.5
         else:
             confidence = 0.5 - confidence
-        confidence: float = (confidence / 0.5) * 100
+        confidence = (confidence / 0.5) * 100
 
         return {
             "confidence": confidence,
