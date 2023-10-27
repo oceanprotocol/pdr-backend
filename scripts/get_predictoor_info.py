@@ -8,6 +8,7 @@ from pdr_backend.util.subgraph import info_from_725, query_subgraph
 
 
 class Prediction:
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         pair,
@@ -256,13 +257,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     predictoor_addr = sys.argv[1]
-    start_ts = sys.argv[2]
-    end_ts = sys.argv[3]
+    start_dt = sys.argv[2]
+    end_dt = sys.argv[3]
     network = sys.argv[4]
     csv_output_dir = sys.argv[5]
 
-    start_ts = date_to_unix(start_ts)
-    end_ts = date_to_unix(end_ts)
+    start_ts = date_to_unix(start_dt)
+    end_ts = date_to_unix(end_dt)
 
     _predictions = get_all_predictions(start_ts, end_ts, predictoor_addr, network)
     write_csv(_predictions, csv_output_dir)
