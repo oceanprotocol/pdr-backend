@@ -187,7 +187,7 @@ class TraderAgent:
 
     def get_pred_properties(
         self, pred_nom: float, pred_denom: float
-    ) -> Dict[float, float]:
+    ) -> Dict[str, float]:
         """
         @description
             This function calculates the prediction direction and confidence.
