@@ -1,5 +1,5 @@
 from pdr_backend.models.feed import Feed
-from typing import Dict, List
+from typing import Optional, Dict, List, Any
 from enum import Enum
 import ccxt
 
@@ -68,8 +68,8 @@ class Position:
     def __init__(self, order: Order):
         # TODO - Have N open_orders, have N close_orders
         # TODO - Move from __init__(order) to open(order)
-        self.open_order = order
-        self.close_order = None
+        self.open_order: Order = order
+        self.close_order: Optional[Order] = None
         self.state: OrderState = OrderState.OPEN
 
         print(f"     [Opening Order] {self.open_order}")
@@ -93,8 +93,8 @@ class Sheet:
         Holds N positions for an asset, specified by an addr (key)
     """
 
-    def __init__(self, addr):
-        self.asset = addr
+    def __init__(self, addr: str):
+        self.asset:str = addr
         self.open_positions: List[Position] = []
         self.closed_positions: List[Position] = []
 
@@ -136,3 +136,4 @@ class Portfolio:
         sheet = self.get_sheet(addr)
         if sheet:
             return sheet.close_position(order)
+

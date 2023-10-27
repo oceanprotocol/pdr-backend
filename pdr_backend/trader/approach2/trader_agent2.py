@@ -43,12 +43,12 @@ class TraderAgent2(TraderAgent):
         self.portfolio = None
         self.reset_cache = False
 
-        super().__init__(config, self.do_trade)
+        super().__init__(config)
         self.config: TraderConfig2 = config
 
         # If cache params are empty, instantiate
         if self.portfolio == None:
-            self.portfolio = Portfolio(self.feeds)
+            self.portfolio = Portfolio(list(self.feeds.values()))
 
         # Generic exchange clss
         exchange_class = getattr(ccxt, self.config.exchange_id)
@@ -67,14 +67,15 @@ class TraderAgent2(TraderAgent):
         )
 
         # Market and order data
-        self.size: float = (
-            float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
-        )
+        self.size: float = 0.0
+        position_size = getenv("POSITION_SIZE_USD")
+        if position_size is not None:
+            self.size = float(position_size)
 
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
 
-        self.update_positions(self.feeds)
+        self.update_positions(list(self.feeds.values()))
 
     def update_cache(self):
         super().update_cache()
