@@ -6,7 +6,7 @@ import pytest
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.trader_agent import TraderAgent, do_trade
+from pdr_backend.trader.trader_agent import TraderAgent
 from pdr_backend.trader.trader_config import TraderConfig
 
 
@@ -28,7 +28,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     trader_config.get_contracts.return_value = {
         "0x0000000000000000000000000000000000000000": predictoor_contract
     }
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
     assert agent.config == trader_config
     check_subscriptions_and_subscribe_mock.assert_called_once()
 
@@ -37,7 +37,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     no_feeds_config.max_tries = 10
 
     with pytest.raises(SystemExit):
-        TraderAgent(no_feeds_config, do_trade)
+        TraderAgent(no_feeds_config)
 
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
@@ -47,7 +47,7 @@ def test_run(check_subscriptions_and_subscribe_mock):
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.max_tries = 10
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
 
     with patch.object(agent, "take_step") as ts_mock:
         agent.run(True)
@@ -63,7 +63,7 @@ async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     }
     trader_config.max_tries = 10
     trader_config.web3_config = web3_config
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
 
     with patch.object(agent, "_process_block_at_feed") as ts_mock:
         await agent.take_step()

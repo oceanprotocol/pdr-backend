@@ -95,7 +95,7 @@ def process_block(block, model, main_pd):
             if predicted_value is not None and predicted_confidence > 0:
                 # We have a prediction, let's submit it
                 stake_amount = (
-                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence
                 )  # TO DO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - "

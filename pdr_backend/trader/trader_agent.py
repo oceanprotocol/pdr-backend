@@ -185,31 +185,31 @@ class TraderAgent:
         self.update_cache()
         return epoch_s_left, logs
 
-
-    def get_pred_properties(self, pred_nom: float, pred_denom: float) -> Dict[float, float]:
+    def get_pred_properties(
+        self, pred_nom: float, pred_denom: float
+    ) -> Dict[str, float]:
         """
         @description
             This function calculates the prediction direction and confidence.
         @returns
             A dictionary containing the following:
             - confidence: The confidence of the prediction.
-            - dir: The direction of the prediction.
+            - direction: The direction of the prediction.
             - stake: The stake of the prediction.
         """
-        confidence = pred_nom / pred_denom
-        dir = 1 if confidence >= 0.5 else 0
+        confidence: float = pred_nom / pred_denom
+        direction: float = 1 if confidence >= 0.5 else 0
         if confidence > 0.5:
             confidence -= 0.5
         else:
             confidence = 0.5 - confidence
         confidence = (confidence / 0.5) * 100
-    
+
         return {
             "confidence": confidence,
-            "dir": dir,
+            "dir": direction,
             "stake": pred_denom,
         }
-    
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -238,4 +238,3 @@ class TraderAgent:
         print(f"      {feed} prediction properties: {pred_properties}.")
         # Trade here
         # ...
-        

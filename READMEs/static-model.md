@@ -5,7 +5,11 @@ SPDX-License-Identifier: Apache-2.0
 
 # Run Static Model Predictoor
 
-Here, we use models that were developed and saved in a different repo, ie static models. It's `approach2` in `pdr-backend` repo.
+The default flow for predictoors is approach3: dynamically building models.
+
+_This_ README is for approach2, which uses static models. Static models are developed and saved in a different repo.
+
+NOTE: this approach may be deprecated in the future.
 
 There are two macro steps:
 1. [Develop & backtest static models](#develop-and-backtest-models)
@@ -43,10 +47,9 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 #pip install anything that pdr-model-simple/model.py needs
 pip install scikit-learn ta
 
-#run model-powered predictoor bot
+#run static model predictoor bot
 python pdr_backend/predictoor/main.py 2
 ```
-
 
 ## Your own static model
 

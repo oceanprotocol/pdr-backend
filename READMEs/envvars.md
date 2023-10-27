@@ -38,6 +38,10 @@ These are envvars that are specific to a given agent.
 ### Predictoor Agent
 
 - **SECONDS_TILL_EPOCH_END**: Determines how soon to start predicting. Example: if value is `60` then it will start submitting predictions 60 seconds before. It will continue to periodically submit predictions until there's no time left.
+- **STAKE_AMOUNT**: The amount to stake in units of Eth.
+  - For approach 1 stake amount is randomly determined this has no effect.
+  - For approach 2 stake amount is determined by: `STAKE_AMOUNT * confidence` where confidence is between 0 and 1.
+  - For approach 3 this is the stake amount.
 
 ### DFBuyer Agent
 

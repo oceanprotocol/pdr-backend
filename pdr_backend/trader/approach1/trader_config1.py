@@ -20,7 +20,7 @@ CAND_TIMEFRAME = ["5m", "1h"]
 
 # Mexc3 does not support
 @enforce_types
-class TraderConfig2(TraderConfig):
+class TraderConfig1(TraderConfig):
     def __init__(self):
         super().__init__()
 
@@ -41,11 +41,3 @@ class TraderConfig2(TraderConfig):
         assert self.exchange_id in CAND_EXCHANGE
         assert self.pair in CAND_PAIR
         assert self.timeframe in CAND_TIMEFRAME
-
-    @property
-    def timedelta(self): 
-        delta = {
-            '5m' : 300,
-            '1h' : 3600
-        }
-        return delta[self.timeframe]
