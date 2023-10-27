@@ -66,7 +66,7 @@ class TraderAgent1(TraderAgent):
         position_size = getenv("POSITION_SIZE_USD")
         if position_size is not None:
             self.size = float(position_size)
-        
+
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
 
@@ -87,13 +87,12 @@ class TraderAgent1(TraderAgent):
         if self.order != None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.config.exchange_id in ("mexc","mexc3"):
+            if self.config.exchange_id in ("mexc", "mexc3"):
                 amount = float(self.order["info"]["origQty"])
 
             # close it
             order = self.exchange.create_market_sell_order(
-                self.config.exchange_pair,
-                amount
+                self.config.exchange_pair, amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")
