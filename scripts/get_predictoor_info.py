@@ -251,21 +251,30 @@ def get_statistics(all_predictions):
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
+        # pylint: disable=line-too-long
         print(
             "Usage: python get_predictoor_info.py [predictoor_addr | str] [start_date | yyyy-mm-dd] [end_date | yyyy-mm-dd] [network | mainnet | testnet] [csv_output_dir | str]"
         )
         sys.exit(1)
 
-    predictoor_addr = sys.argv[1]
+    # single address or multiple addresses separated my comma
+    predictoor_addrs = sys.argv[1]
+
+    # yyyy-mm-dd
     start_dt = sys.argv[2]
     end_dt = sys.argv[3]
+
+    # mainnet or tesnet
     network = sys.argv[4]
-    csv_output_dir = sys.argv[5]
 
-    start_ts = date_to_unix(start_dt)
-    end_ts = date_to_unix(end_dt)
+    csv_output_dir_param = sys.argv[5]
 
-    _predictions = get_all_predictions(start_ts, end_ts, predictoor_addr, network)
-    write_csv(_predictions, csv_output_dir)
+    start_ts_param = date_to_unix(start_dt)
+    end_ts_param = date_to_unix(end_dt)
+
+    _predictions = get_all_predictions(
+        start_ts_param, end_ts_param, predictoor_addrs, network
+    )
+    write_csv(_predictions, csv_output_dir_param)
 
     get_statistics(_predictions)
