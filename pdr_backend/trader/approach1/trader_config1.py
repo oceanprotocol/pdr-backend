@@ -4,7 +4,7 @@ from pdr_backend.trader.trader_config import TraderConfig
 
 CAND_EXCHANGE = ["mexc3", "mexc"]
 CAND_PAIR = [
-    "BTC/USDT", 
+    "BTC/USDT",
     "ETH/USDT",
     "ADA/USDT",
     "BNB/USDT",
@@ -17,6 +17,7 @@ CAND_PAIR = [
 ]
 CAND_TIMEFRAME = ["5m", "1h"]
 
+
 # Mexc3 does not support
 @enforce_types
 class TraderConfig1(TraderConfig):
@@ -26,9 +27,13 @@ class TraderConfig1(TraderConfig):
         self.exchange_id = getenv("EXCHANGE_FILTER")
         self.pair = getenv("PAIR_FILTER")
         self.timeframe = getenv("TIMEFRAME_FILTER")
-        
+
         ## Exchange Parameters
-        self.exchange_pair = getenv("EXCHANGE_PAIR_FILTER") if getenv("EXCHANGE_PAIR_FILTER") else self.pair
+        self.exchange_pair = (
+            getenv("EXCHANGE_PAIR_FILTER")
+            if getenv("EXCHANGE_PAIR_FILTER")
+            else self.pair
+        )
 
         ## Position Parameters
         self.size = getenv("POSITION_SIZE")

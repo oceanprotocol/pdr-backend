@@ -11,6 +11,7 @@ from pdr_backend.models.feed import Feed
 import ccxt
 from os import getenv
 
+
 @enforce_types
 class TraderAgent1(TraderAgent):
     """
@@ -36,29 +37,34 @@ class TraderAgent1(TraderAgent):
         2. Improving when to buy
         3. Enabling buying and shorting
         4. Using SL and TP
-    """    
+    """
+
     def __init__(self, config: TraderConfig1):
         super().__init__(config, self.do_trade)
         self.config: TraderConfig1 = config
 
         # Generic exchange clss
         exchange_class = getattr(ccxt, self.config.exchange_id)
-        self.exchange:ccxt.Exchange = exchange_class({
-            'apiKey': getenv('EXCHANGE_API_KEY'),
-            'secret': getenv('EXCHANGE_SECRET_KEY'),
-            "timeout": 30000,
-            'options': {
-                # We're going to enable spot market purchases w/ default price
-                # Disable safety w/ createMarketBuyOrderRequiresPrice
-                'createMarketBuyOrderRequiresPrice': False,
-                'defaultType': 'spot'
-            },
-        })
+        self.exchange: ccxt.Exchange = exchange_class(
+            {
+                "apiKey": getenv("EXCHANGE_API_KEY"),
+                "secret": getenv("EXCHANGE_SECRET_KEY"),
+                "timeout": 30000,
+                "options": {
+                    # We're going to enable spot market purchases w/ default price
+                    # Disable safety w/ createMarketBuyOrderRequiresPrice
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot",
+                },
+            }
+        )
 
         # Market and order data
         self.order = None
-        self.size: float = float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
-        
+        self.size: float = (
+            float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
+        )
+
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
 
@@ -74,39 +80,39 @@ class TraderAgent1(TraderAgent):
             2. In epoch 2, we sell.
             3. In epoch 2, if Condition is true, we buy.
         """
-        
+
         ### Close previous order if it exists
-        if self.order != None :
+        if self.order != None:
             order = self.exchange.create_market_sell_order(
                 self.config.exchange_pair,
-                self.order['info']['origQty'] # MEXC order Blob token amount
+                self.order["info"]["origQty"],  # MEXC order Blob token amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")
             print(f"     [Previous Order] {self.order}")
             print(f"     [Closing Order] {order}")
-            
+
             # TODO - Calculate PNL (self.order - order)
             self.order = None
 
         ### Create new order if prediction meets our criteria
         pred_nom, pred_denom = prediction
         print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
-        
-        pred_properties  = self.get_pred_properties(pred_nom, pred_denom)
+
+        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 
-        if pred_properties['dir'] == 1 and pred_properties['confidence'] > 0.5 :
+        if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.config.exchange_pair,
-                self.size
+                self.config.exchange_pair, self.size
             )
-            
+
             # If order is successful, we log the order so we can close it
-            if order :
+            if order:
                 self.order = order
                 print(f"     [Trade Opened] {self.exchange}")
                 print(f"     [Opening Order] {order}")
         else:
-            print(f"     [No Trade] prediction does not meet requirements: {pred_properties}")
-                
+            print(
+                f"     [No Trade] prediction does not meet requirements: {pred_properties}"
+            )
