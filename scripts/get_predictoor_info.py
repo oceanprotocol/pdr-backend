@@ -265,7 +265,7 @@ if __name__ == "__main__":
     end_dt = sys.argv[3]
 
     # mainnet or tesnet
-    network = sys.argv[4]
+    network_param = sys.argv[4]
 
     csv_output_dir_param = sys.argv[5]
 
@@ -273,7 +273,7 @@ if __name__ == "__main__":
     end_ts_param = date_to_unix(end_dt)
 
     _predictions = get_all_predictions(
-        start_ts_param, end_ts_param, predictoor_addrs, network
+        start_ts_param, end_ts_param, predictoor_addrs, network_param
     )
     write_csv(_predictions, csv_output_dir_param)
 
