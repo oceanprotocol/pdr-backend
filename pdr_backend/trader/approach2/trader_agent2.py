@@ -15,12 +15,13 @@ from os import getenv
 
 from pdr_backend.trader.approach2.portfolio import Portfolio, Order, create_order
 
+
 @enforce_types
 class TraderAgent2(TraderAgent):
     """
     @description
         TraderAgent Naive CCXT
-        
+
         This is a naive algorithm. It will simply:
         1. If open position, close it
         2. If new prediction up, open long
@@ -35,7 +36,8 @@ class TraderAgent2(TraderAgent):
         2. Improving the buy Conditional statement
         3. Enabling buying and shorting
         4. Using SL and TP
-    """    
+    """
+
     def __init__(self, config: TraderConfig2):
         # Initialize cache params
         self.portfolio = None
@@ -45,26 +47,30 @@ class TraderAgent2(TraderAgent):
         self.config: TraderConfig2 = config
 
         # If cache params are empty, instantiate
-        if self.portfolio == None :
+        if self.portfolio == None:
             self.portfolio = Portfolio(self.feeds)
 
         # Generic exchange clss
         exchange_class = getattr(ccxt, self.config.exchange_id)
-        self.exchange:ccxt.Exchange = exchange_class({
-            'apiKey': getenv('EXCHANGE_API_KEY'),
-            'secret': getenv('EXCHANGE_SECRET_KEY'),
-            "timeout": 30000,
-            'options': {
-                # We're going to enable spot market purchases w/ default price
-                # Disable safety w/ createMarketBuyOrderRequiresPrice
-                'createMarketBuyOrderRequiresPrice': False,
-                'defaultType': 'spot'
-            },
-        })
+        self.exchange: ccxt.Exchange = exchange_class(
+            {
+                "apiKey": getenv("EXCHANGE_API_KEY"),
+                "secret": getenv("EXCHANGE_SECRET_KEY"),
+                "timeout": 30000,
+                "options": {
+                    # We're going to enable spot market purchases w/ default price
+                    # Disable safety w/ createMarketBuyOrderRequiresPrice
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot",
+                },
+            }
+        )
 
         # Market and order data
-        self.size: float = float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
-        
+        self.size: float = (
+            float(getenv("POSITION_SIZE_USD")) if getenv("POSITION_SIZE_USD") else 0.0
+        )
+
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
 
@@ -77,7 +83,7 @@ class TraderAgent2(TraderAgent):
     def load_cache(self):
         if self.reset_cache == True:
             return
-        
+
         super().load_cache()
         portfolio = self.cache.load(f"portfolio_{self.__class__}")
         if portfolio is not None:
@@ -95,24 +101,23 @@ class TraderAgent2(TraderAgent):
         order_lapsed = True if now_ts - tx_ts > self.config.timedelta * 1000 else False
         return order_lapsed
 
-    def update_positions(self, feeds: Optional[List[Feed]]=None):
+    def update_positions(self, feeds: Optional[List[Feed]] = None):
         """
         @description
             Cycle through open positions and asses them
-        """        
+        """
         feeds = self.feeds if feeds == None or feeds == [] else feeds
-        for addr in feeds :
+        for addr in feeds:
             sheet = self.portfolio.get_sheet(addr)
             if sheet:
                 open_positions = sheet.open_positions
-                if open_positions :
-                    for position in open_positions :
+                if open_positions:
+                    for position in open_positions:
                         should_close = self.should_close(position.open_order)
-                        if should_close == True :
+                        if should_close == True:
                             print(f"     [Close Position] Requirements met")
                             order = self.exchange.create_market_sell_order(
-                                self.config.exchange_pair,
-                                position.open_order.amount
+                                self.config.exchange_pair, position.open_order.amount
                             )
                             self.portfolio.close_position(addr, order)
                             self.update_cache()
@@ -129,26 +134,27 @@ class TraderAgent2(TraderAgent):
             2. In epoch 2, we sell.
             3. In epoch 2, if Condition is true, we buy.
         """
-        
+
         ### First, update existing orders
         self.update_positions([feed.address])
 
         ### Then, create new order if our criteria is met
         pred_nom, pred_denom = prediction
         print(f"      {feed.address} has a new prediction: {pred_nom} / {pred_denom}.")
-        
-        pred_properties  = self.get_pred_properties(pred_nom, pred_denom)
+
+        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 
-        if pred_properties['dir'] == 1 and pred_properties['confidence'] > 0.5 :
+        if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             print(f"     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
-                symbol=self.config.exchange_pair,
-                amount=self.size
+                symbol=self.config.exchange_pair, amount=self.size
             )
-            if order :
+            if order:
                 order = create_order(order, self.config.exchange_id)
                 self.portfolio.open_position(feed.address, order)
-                self.update_cache()            
+                self.update_cache()
         else:
-            print(f"     [No Trade] prediction does not meet requirements: {pred_properties}")
+            print(
+                f"     [No Trade] prediction does not meet requirements: {pred_properties}"
+            )

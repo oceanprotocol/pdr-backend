@@ -43,9 +43,6 @@ class TraderConfig2(TraderConfig):
         assert self.timeframe in CAND_TIMEFRAME
 
     @property
-    def timedelta(self): 
-        delta = {
-            '5m' : 300,
-            '1h' : 3600
-        }
+    def timedelta(self):
+        delta = {"5m": 300, "1h": 3600}
         return delta[self.timeframe]
