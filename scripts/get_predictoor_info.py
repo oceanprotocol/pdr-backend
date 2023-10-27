@@ -1,3 +1,5 @@
+import os
+import sys
 import csv
 import time
 from datetime import datetime
@@ -78,8 +80,8 @@ def get_all_predictions(start_ts: int, end_ts: int, predictoor_addr: str, networ
             offset,
             chunk_size,
             str(address_filter).replace("'", '"'),
-            end_ts,
             start_ts,
+            end_ts,
         )
 
         # pylint: disable=line-too-long
@@ -139,7 +141,10 @@ def get_all_predictions(start_ts: int, end_ts: int, predictoor_addr: str, networ
     return predictions
 
 
-def write_csv(all_predictions):
+def write_csv(all_predictions, csv_output_dir):
+    if not os.path.exists(csv_output_dir):
+        os.makedirs(csv_output_dir)
+
     data = {}
     for prediction in all_predictions:
         key = (
@@ -148,15 +153,16 @@ def write_csv(all_predictions):
         if key not in data:
             data[key] = []
         data[key].append(prediction)
-    for key, prediction in data.items():
-        prediction.sort(key=lambda x: x.timestamp)
-        filename = key + ".csv"
+
+    for key, predictions in data.items():
+        predictions.sort(key=lambda x: x.timestamp)
+        filename = os.path.join(csv_output_dir, key + ".csv")
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
                 ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"]
             )
-            for prediction in prediction:
+            for prediction in predictions:
                 writer.writerow(
                     [
                         prediction.prediction,
@@ -227,13 +233,15 @@ def get_statistics(all_predictions):
         accuracy = data["correct"] / data["total"] * 100
         print(f"Accuracy for Pair: {pair}, Timeframe: {timeframe}: {accuracy:.2f}%")
         print(f"Total stake: {data['stake']}")
-        print(f"Total payout: {data['payout']}\n")
+        print(f"Total payout: {data['payout']}")
+        print(f"Number of predictions: {data['total']}\n")
 
     for predictoor, data in stats["predictoor"].items():
         accuracy = data["correct"] / data["total"] * 100
         print(f"Accuracy for Predictoor Address: {predictoor}: {accuracy:.2f}%")
         print(f"Stake: {data['stake']}")
         print(f"Payout: {data['payout']}")
+        print(f"Number of predictions: {data['total']}")
         print("Details of Predictions:")
         for detail in data["details"]:
             print(f"Pair: {detail[0]}, Timeframe: {detail[1]}, Source: {detail[2]}")
@@ -241,15 +249,22 @@ def get_statistics(all_predictions):
 
 
 if __name__ == "__main__":
-    PREDICTOOR_ADDR = ""
-    START_TS = "2023-10-20"
-    END_TS = "2023-10-10"
-    NETWORK = "mainnet"
+    if len(sys.argv) != 6:
+        print(
+            "Usage: python get_predictoor_info.py [predictoor_addr | str] [start_date | yyyy-mm-dd] [end_date | yyyy-mm-dd] [network | mainnet | testnet] [csv_output_dir | str]"
+        )
+        sys.exit(1)
 
-    start_ts = date_to_unix(START_TS)
-    end_ts = date_to_unix(END_TS)
+    predictoor_addr = sys.argv[1]
+    start_ts = sys.argv[2]
+    end_ts = sys.argv[3]
+    network = sys.argv[4]
+    csv_output_dir = sys.argv[5]
 
-    _predictions = get_all_predictions(start_ts, end_ts, PREDICTOOR_ADDR, NETWORK)
-    write_csv(_predictions)
+    start_ts = date_to_unix(start_ts)
+    end_ts = date_to_unix(end_ts)
+
+    _predictions = get_all_predictions(start_ts, end_ts, predictoor_addr, network)
+    write_csv(_predictions, csv_output_dir)
 
     get_statistics(_predictions)
