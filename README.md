@@ -30,7 +30,8 @@ Less common:
   - [Release process](READMEs/release-process.md)
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
-- [ETHMiami competition](READMEs/ethmiami.md) - Oct 27-29, 2023
+- **[Scripts](scripts/)** for performance stats, more
+- (obsolete) [ETHMiami competition](READMEs/ethmiami.md) - Oct 27-29, 2023
 
 ## Repo structure
 
