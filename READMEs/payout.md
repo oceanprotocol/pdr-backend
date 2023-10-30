@@ -13,11 +13,11 @@ First, congratulations on your participation and progress in making predictions!
 
 #### 1. Preparation
 
-Ensure you pause or stop any ongoing prediction submissions. This is crucial as active submissions can interfere with the payout process.
+Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C` to stop the predictions. This is crucial as active submissions can interfere with the payout process.
 
 #### 2. Execute Payout
 
-- Running locally: Simply run the python script with the command: `python pdr_backend/predictoor/payout.py`.
+- Running locally: Simply run the python script with the command: `python pdr_backend/predictoor/main.py payout`.
 - Using Container Image: Simply execute the command: `predictoor payout`.
 
 #### 3. Completion
