@@ -13,6 +13,7 @@ def retry_function(times=5, delay=2, allowed_exceptions=()):
                     return func(*args, **kwargs)
                 except allowed_exceptions as e:
                     if _ < times - 1:
+                        print(f" -- An error: {e} occured, trying again in {delay} seconds")
                         time.sleep(delay)
                         continue
                     else:
