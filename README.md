@@ -18,16 +18,18 @@ SPDX-License-Identifier: Apache-2.0
 - [Envvars](READMEs/envvars.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Dynamic model codebase](READMEs/dynamic-model-codebase.md)
-
-Less common:
-- [Install & run local network (Barge)](READMEs/barge.md)
-- [MacOS gotchas](READMEs/macos.md) wrt Docker & ports
 - [Static models in predictoors](READMEs/static-model.md)
+
+
 
 ## Flows for core team
 
-- **[Backend-dev README](READMEs/backend-dev.md)** - for `pdr-backend` itself
+- **Backend dev** - for `pdr-backend` itself
+  - [Main backend-dev README](READMEs/backend-dev.md)
   - [Release process](READMEs/release-process.md)
+  - [Run barge locally](READMEs/barge.md)
+  - [Run barge remotely on VPS](READMEs/vps.md)
+  - [MacOS gotchas](READMEs/macos.md) wrt Docker & ports
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
 - **[Scripts](scripts/)** for performance stats, more
