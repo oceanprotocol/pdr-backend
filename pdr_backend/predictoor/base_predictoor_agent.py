@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
+from pdr_backend.util.decorators import retry_function
 
 
 @enforce_types
@@ -80,6 +81,7 @@ class BasePredictoorAgent(ABC):
         for addr in self.feeds:
             self._process_block_at_feed(addr, block["timestamp"])
 
+    @retry_function(5, 2, disallowed_exceptions=())
     def _process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
         """Returns (predval, stake, submitted)"""
         # base data
