@@ -25,8 +25,8 @@ def retry_function(times=5, delay=2, disallowed_exceptions=()):
                         )
                         time.sleep(delay)
                         continue
-                    else:
-                        raise e
+                    raise e
+            return None
 
         return wrapper
 
