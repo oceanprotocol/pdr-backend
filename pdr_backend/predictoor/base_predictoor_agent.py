@@ -54,18 +54,7 @@ class BasePredictoorAgent(ABC):
     def run(self):
         print("Starting main loop...")
         while True:
-            max_tries = 5
-            for i in range(max_tries):
-                try:
-                    self.take_step()
-                    break
-                except Exception as e:
-                    if i < max_tries - 1:
-                        print(
-                            f'An error: "{e}" occured while executing take_step, trying again...'
-                        )
-                    else:
-                        raise e
+            self.take_step()
 
     def take_step(self):
         w3 = self.config.web3_config.w3
