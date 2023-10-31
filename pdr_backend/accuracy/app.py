@@ -7,7 +7,7 @@ from pdr_backend.util.subgraph_predictions import (
     get_all_contracts,
     FilterMode,
 )
-from utils.get_start_end_params import get_start_end_params
+from pdr_backend.accuracy.utils.get_start_end_params import get_start_end_params
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/predictions_data.json"

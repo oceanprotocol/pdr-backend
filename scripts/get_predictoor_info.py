@@ -1,8 +1,7 @@
 import sys
 from pdr_backend.util.csvs import write_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
-from pdr_backend.util.subgraph_predictions import get_all_predictions
-from pdr_backend.accuracy.utils.filter_mode import FilterMode
+from pdr_backend.util.subgraph_predictions import get_all_predictions, FilterMode
 from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
 
 if __name__ == "__main__":

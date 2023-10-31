@@ -10,7 +10,7 @@ StatisticsResult = Dict[
 
 
 def get_pure_stats(all_predictions: List[Prediction]):
-    stats = {"pair_timeframe": {}, "predictoor": {}}
+    stats: dict[str, dict] = {"pair_timeframe": {}, "predictoor": {}}
     correct_predictions = 0
 
     for prediction in all_predictions:
