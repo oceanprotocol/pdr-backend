@@ -81,8 +81,6 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 ### Install Barge In VPS
 
-This is the usual approach. We repeat for convenience.
-
 In VPS console:
 ```console
 ## install barge remotely
@@ -93,7 +91,10 @@ git checkout predictoor
 
 ## 2. Run Barge in VPS
 
-This is the usual approach. We repeat for convenience.
+(If needed) SSH into VPS console:
+```console
+ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
+```
 
 In VPS console:
 ```console
