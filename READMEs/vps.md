@@ -100,6 +100,7 @@ In VPS console:
 ```console
 ## cleanup past barge
 rm -rf ~/.ocean
+cd ~/code/barge
 ./cleanup.sh
 docker system prune -a --volumes
 
