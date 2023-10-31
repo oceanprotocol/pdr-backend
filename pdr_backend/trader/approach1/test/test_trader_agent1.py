@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 import ccxt
 
+
 def test_ccxt_mexc_pairs():
     exchange = ccxt.mexc3()
     markets = exchange.load_markets()
@@ -23,24 +24,18 @@ def test_ccxt_mexc_pairs():
 
     # print("MEXC unique_settle: ", unique_settle_tokens)
 
+
 class MockBinance:
     def __init__(self):
         self.markets = {
-            'BTC/USDT': {
-                'symbol': 'BTC/USDT',
-                'base': 'BTC',
-                'settle': 'USDT'
-            },
-            'ETH/USDT': {
-                'symbol': 'ETH/USDT',
-                'base': 'ETH',
-                'settle': 'USDT'
-            },
+            "BTC/USDT": {"symbol": "BTC/USDT", "base": "BTC", "settle": "USDT"},
+            "ETH/USDT": {"symbol": "ETH/USDT", "base": "ETH", "settle": "USDT"},
             # Add more market data here as needed
         }
 
     def load_markets(self):
         return self.markets
+
 
 def test_ccxt_binance_pairs():
     exchange = MockBinance()
