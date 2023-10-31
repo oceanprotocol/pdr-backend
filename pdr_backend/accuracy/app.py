@@ -1,6 +1,6 @@
 import threading
 import json
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify
 
 from pdr_backend.util.predictoor_stats import get_endpoint_statistics
 from pdr_backend.util.subgraph_predictions import (
@@ -50,8 +50,9 @@ def serve_predictions_from_file():
             data = json.load(f)
             return jsonify(data)
     except Exception as e:
-        #abort(500, description=str(e))
+        # abort(500, description=str(e))
         return jsonify({"error": "Internal Server Error", "message": str(e)}), 500
+
 
 if __name__ == "__main__":
     # Start the thread to save predictions data to a file every 5 minutes
