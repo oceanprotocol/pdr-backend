@@ -32,12 +32,20 @@ In the Python console:
 from eth_account.account import Account
 account = Account.create()
 
-print(f"""
-PRIVATE_KEY={account.key.hex()}, ADDRESS={account.address}
-""")
+print(f"PRIVATE_KEY={account.key.hex()}, ADDRESS={account.address}")
 ```
 
 Now, you have an EVM account: address & private key. Save the values somewhere safe, like a local file or a password manager.
 
 These accounts will work on Sapphire testnet, Sapphire mainnet, Eth mainnet, or any other EVM-based chain.
 
+## Get address from private key
+
+In the Python console:
+```python
+from eth_account.account import Account
+private_key = <your private key>
+account = Account.from_key(private_key)
+
+print(f"PRIVATE_KEY={account.key.hex()}, ADDRESS={account.address}")
+```
