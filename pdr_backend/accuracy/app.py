@@ -14,7 +14,7 @@ app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/predictions_data.json"
 
 
-def save_predictions_to_file():
+def save_statistics_to_file():
     while True:
         try:
             network_param = "mainnet"  # or 'testnet' depending on your preference
@@ -42,9 +42,8 @@ def save_predictions_to_file():
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
 
-@app.route("/predictions", methods=["GET"])
-def serve_predictions_from_file():
-    print("Serving predictions data from file")
+@app.route("/statistics", methods=["GET"])
+def serve_statistics_from_file():
     try:
         with open(JSON_FILE_PATH, "r") as f:
             data = json.load(f)
@@ -56,7 +55,7 @@ def serve_predictions_from_file():
 
 if __name__ == "__main__":
     # Start the thread to save predictions data to a file every 5 minutes
-    thread = threading.Thread(target=save_predictions_to_file)
+    thread = threading.Thread(target=save_statistics_to_file)
     thread.start()
 
     app.run(debug=True)

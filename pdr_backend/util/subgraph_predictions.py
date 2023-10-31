@@ -86,7 +86,7 @@ def get_all_predictions(
                 }}
             }}"""
 
-        print("Querying subgraph...", query)
+        # print("Querying subgraph...", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
@@ -149,16 +149,16 @@ def get_all_contracts(owner_address: str, network: str) -> List[str]:
     # Define the GraphQL query
     query = (
         """
-    {
-        tokens(where: {
-            nft_: {
-                owner: "%s"
+        {
+            tokens(where: {
+                nft_: {
+                    owner: "%s"
+                }
+            }) {
+                id
             }
-        }) {
-            id
         }
-    }
-    """
+        """
         % owner_address
     )
 
