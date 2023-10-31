@@ -1,12 +1,8 @@
+from unittest.mock import Mock
 import ccxt
-from os import getenv
-
-# ====================================================================
-# test ccxt exchange
-
 
 def test_ccxt_mexc_pairs():
-    exchange = ccxt.mexc({})
+    exchange = ccxt.mexc3()
     markets = exchange.load_markets()
 
     # print(f"MEXC symbols: {[v.get('symbol','') for k,v in exchange.markets.items()]}")
@@ -27,9 +23,27 @@ def test_ccxt_mexc_pairs():
 
     # print("MEXC unique_settle: ", unique_settle_tokens)
 
+class MockBinance:
+    def __init__(self):
+        self.markets = {
+            'BTC/USDT': {
+                'symbol': 'BTC/USDT',
+                'base': 'BTC',
+                'settle': 'USDT'
+            },
+            'ETH/USDT': {
+                'symbol': 'ETH/USDT',
+                'base': 'ETH',
+                'settle': 'USDT'
+            },
+            # Add more market data here as needed
+        }
+
+    def load_markets(self):
+        return self.markets
 
 def test_ccxt_binance_pairs():
-    exchange = ccxt.binance({})
+    exchange = MockBinance()
     markets = exchange.load_markets()
 
     # print(f"BNB symbols: {[v.get('symbol','') for k,v in exchange.markets.items()]}")
