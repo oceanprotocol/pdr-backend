@@ -114,7 +114,7 @@ export GANACHE_BLOCKTIME=5
 
 Wait.
 
-Then, copy VPS' ocean.py to local. In local console:
+Then, copy VPS' `address.json` file to local. In local console:
 ```console
 cd
 scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json .
