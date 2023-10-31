@@ -112,9 +112,7 @@ export GANACHE_BLOCKTIME=5
 
 Wait.
 
-Then, copy VPS' ocean.py to local
-
-In local console:
+Then, copy VPS' ocean.py to local. In local console:
 ```console
 cd
 scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json .
@@ -148,7 +146,7 @@ cd ~/code/pdr-backend
 source venv/bin/activate
 
 # Set envvars
-export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
 export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 
 export RPC_URL=https://4.245.224.119:8545 # from VPS 
@@ -159,10 +157,10 @@ export PAIR_FILTER=BTC/USDT
 export TIMEFRAME_FILTER=5m
 export SOURCE_FILTER=binance
 
-export OWNER_ADDRS=0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address #FIXME is this correct?
+export OWNER_ADDRS=0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 ```
 
-Open address.json, find the "development" : "Ocean" entry, and paste it here. Eexample:
+Open `~/address.json` file, find the "development" : "Ocean" entry, and paste it here. Example:
 ```console
 export STAKE_TOKEN=0x2473f4F7bf40ed9310838edFCA6262C17A59DF64 #OCEAN
 ```
