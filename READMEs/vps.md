@@ -7,18 +7,35 @@ SPDX-License-Identifier: Apache-2.0
 
 This README shows how to run Barge on an Azure Ubuntu VPS (Virtual Private Server). This is for use in backend dev, running predictoor bot, running trader bot.
 
-1. [Setup VPS](#1-setup-vps)
+1. [Install pdr-backend locally](#1-install-pdr-backend-locally)
+2. [Setup VPS](#2-setup-vps)
    - [Create new VPS](#create-new-vps)
    - [Open ports of VPS](#open-ports-of-vps)
    - [Install Docker in VPS](#install-docker-in-vps)
    - [Install Barge in VPS](#install-barge-in-vps)
-2. [Run Barge in VPS](#2-run-barge-in-vps)
-3. [Install pdr-backend locally](#3-install-pdr-backend-locally)
+3. [Run Barge in VPS](#3-run-barge-in-vps)
 4. [Run predictoor bot locally](#4-run-predictoor-bot-locally)
 5. [Run tests locally](#5-run-tests-locally)
 
 
-## 1. Setup VPS
+## 1. Install pdr-backend Locally
+
+In local console:
+```console
+# clone the repo and enter into it
+cd ~/code
+git clone https://github.com/oceanprotocol/pdr-backend
+cd pdr-backend
+
+# Create & activate virtualenv
+python -m venv venv
+source venv/bin/activate
+
+# Install modules in the environment
+pip install -r requirements.txt
+```
+
+## 2. Setup VPS
 
 ### Create new VPS
 
@@ -88,7 +105,7 @@ git clone https://github.com/oceanprotocol/barge
 git checkout predictoor
 ```
 
-## 2. Run Barge in VPS
+## 3. Run Barge in VPS
 
 (If needed) SSH into VPS console:
 ```console
@@ -135,23 +152,6 @@ It should return:
 ```
 
 If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
-
-## 3. Install pdr-backend Locally
-
-In local console:
-```console
-# clone the repo and enter into it
-cd ~/code
-git clone https://github.com/oceanprotocol/pdr-backend
-cd pdr-backend
-
-# Create & activate virtualenv
-python -m venv venv
-source venv/bin/activate
-
-# Install modules in the environment
-pip install -r requirements.txt
-```
 
 ## 4. Run Predictoor Bot Locally
 
