@@ -137,7 +137,7 @@ class TraderAgent2(TraderAgent):
         """
 
         ### First, update existing orders
-        self.update_positions([feed.address])
+        self.update_positions([feed])
 
         ### Then, create new order if our criteria is met
         pred_nom, pred_denom = prediction
@@ -151,7 +151,7 @@ class TraderAgent2(TraderAgent):
             order = self.exchange.create_market_buy_order(
                 symbol=self.config.exchange_pair, amount=self.size
             )
-            if order:
+            if order and self.portfolio:
                 order = create_order(order, self.config.exchange_id)
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()

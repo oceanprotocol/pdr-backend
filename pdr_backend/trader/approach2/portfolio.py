@@ -52,7 +52,7 @@ class MEXCOrder(Order):
         return self.order["timestamp"]
 
 
-def create_order(order: Dict, exchange: ccxt.Exchange):
+def create_order(order: Dict, exchange: ccxt.Exchange) -> Order:
     if exchange in ("mexc", "mexc3"):
         return MEXCOrder(order)
     return Order(order)
@@ -94,7 +94,7 @@ class Sheet:
     """
 
     def __init__(self, addr: str):
-        self.asset:str = addr
+        self.asset: str = addr
         self.open_positions: List[Position] = []
         self.closed_positions: List[Position] = []
 
@@ -104,7 +104,7 @@ class Sheet:
         print(f"     [Position added to Sheet]")
         return position
 
-    def close_position(self, close_order: Order) -> Position:
+    def close_position(self, close_order: Order) -> Optional[Position]:
         position = self.open_positions.pop()
         if position:
             position.close(close_order)
@@ -121,19 +121,22 @@ class Portfolio:
         They map 1:1 to the prediction feeds that we trade against
     """
 
-    def __init__(self, feeds: List[Feed]):
+    def __init__(self, feeds: List[str]):
         self.sheets: Dict[str, Sheet] = {addr: Sheet(addr) for addr in feeds}
 
-    def get_sheet(self, addr: str) -> Sheet:
+    def get_sheet(self, addr: str) -> Optional[Sheet]:
         return self.sheets.get(addr, None)
 
-    def open_position(self, addr: str, order: Order) -> Position:
+    def open_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
         if sheet:
             return sheet.open_position(order)
 
-    def close_position(self, addr: str, order: Order) -> Position:
+        return None
+
+    def close_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
         if sheet:
             return sheet.close_position(order)
 
+        return None
