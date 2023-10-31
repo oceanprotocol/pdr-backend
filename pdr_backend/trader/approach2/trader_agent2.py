@@ -48,7 +48,7 @@ class TraderAgent2(TraderAgent):
 
         # If cache params are empty, instantiate
         if self.portfolio == None:
-            self.portfolio = Portfolio(list(self.feeds.values()))
+            self.portfolio = Portfolio(list(self.feeds.keys()))
 
         # Generic exchange clss
         exchange_class = getattr(ccxt, self.config.exchange_id)
@@ -75,7 +75,7 @@ class TraderAgent2(TraderAgent):
         assert self.exchange != None
         assert self.size != None and self.size > 0.0
 
-        self.update_positions(list(self.feeds.values()))
+        self.update_positions(list(self.feeds.keys()))
 
     def update_cache(self):
         super().update_cache()
@@ -102,26 +102,27 @@ class TraderAgent2(TraderAgent):
         order_lapsed = True if now_ts - tx_ts > self.config.timedelta * 1000 else False
         return order_lapsed
 
-    def update_positions(self, feeds: Optional[List[Feed]] = None):
+    def update_positions(self, feeds: Optional[List[str]] = None):
         """
         @description
             Cycle through open positions and asses them
         """
-        feeds = self.feeds if feeds == None or feeds == [] else feeds
-        for addr in feeds:
-            sheet = self.portfolio.get_sheet(addr)
-            if sheet:
-                open_positions = sheet.open_positions
-                if open_positions:
-                    for position in open_positions:
-                        should_close = self.should_close(position.open_order)
-                        if should_close == True:
-                            print(f"     [Close Position] Requirements met")
-                            order = self.exchange.create_market_sell_order(
-                                self.config.exchange_pair, position.open_order.amount
-                            )
-                            self.portfolio.close_position(addr, order)
-                            self.update_cache()
+        feeds = list(self.feeds.keys()) if feeds == None or feeds == [] else feeds
+        if feeds and self.portfolio:
+            for addr in feeds:
+                sheet = self.portfolio.get_sheet(addr)
+                if sheet:
+                    open_positions = sheet.open_positions
+                    if open_positions:
+                        for position in open_positions:
+                            should_close = self.should_close(position.open_order)
+                            if should_close == True:
+                                print(f"     [Close Position] Requirements met")
+                                order = self.exchange.create_market_sell_order(
+                                    self.config.exchange_pair, position.open_order.amount
+                                )
+                                self.portfolio.close_position(addr, order)
+                                self.update_cache()
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -137,7 +138,7 @@ class TraderAgent2(TraderAgent):
         """
 
         ### First, update existing orders
-        self.update_positions([feed])
+        self.update_positions([feed.address])
 
         ### Then, create new order if our criteria is met
         pred_nom, pred_denom = prediction
