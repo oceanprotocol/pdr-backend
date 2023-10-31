@@ -2,6 +2,7 @@ from typing import List
 from pdr_backend.util.subgraph import query_subgraph
 from models.prediction import Prediction
 from pdr_backend.util.subgraph import info_from_725
+from pdr_backend.accuracy.utils.get_subgraph_url import get_subgraph_url
 
 def get_all_predictions(start_ts: int, end_ts: int, contract_addresses: List[str], network: str):
     if network != "mainnet" and network != "testnet":
@@ -55,10 +56,8 @@ def get_all_predictions(start_ts: int, end_ts: int, contract_addresses: List[str
 
         print("Querying subgraph...", query)
 
-        # pylint: disable=line-too-long
-        mainnet_subgraph = f"https://v4.subgraph.sapphire-{network}.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
         result = query_subgraph(
-            mainnet_subgraph,
+            get_subgraph_url(network),
             query,
             timeout=20.0,
         )

@@ -1,44 +1,47 @@
 from flask import Flask, jsonify, request, abort
+import threading
+import json
 from utils.extract_statistics import extract_statistics
-from utils.get_all_predictions import get_all_predictions 
-from utils.date_to_unix import date_to_unix
+from utils.get_all_predictions import get_all_predictions
+from utils.get_all_contracts import get_all_contracts
+from utils.get_start_end_params import get_start_end_params
 
 app = Flask(__name__)
+JSON_FILE_PATH = "pdr_backend/accuracy/output/predictions_data.json"
 
-@app.route('/predictions', methods=['POST'])
-def get_predictions():
-    data = request.get_json()
+def save_predictions_to_file():
+    while True:
+        try:
+            network_param = 'mainnet'  # or 'testnet' depending on your preference
 
+            start_ts_param, end_ts_param = get_start_end_params()
+            contract_addresses = get_all_contracts("0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param)
+            predictions = get_all_predictions(start_ts_param, end_ts_param, contract_addresses, network_param)
+            statistics = extract_statistics(predictions)
+
+            with open(JSON_FILE_PATH, 'w') as f:
+                json.dump({
+                    'statistics': statistics
+                }, f)
+
+            print("Data saved to JSON")
+        except Exception as e:
+            print("Error:", e)
+
+        threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
+
+@app.route('/predictions', methods=['GET'])
+def serve_predictions_from_file():
     try:
-        contract_addresses = data['contract_addresses']
-        start_dt = data['start_dt']
-        end_dt = data['end_dt']
-        network_param = data['network']
-
-        start_ts_param = date_to_unix(start_dt)
-        end_ts_param = date_to_unix(end_dt)
-
-        # check if contract_addresses is a list
-        if not isinstance(contract_addresses, list):
-            contract_addresses = [contract_addresses]
-
-        predictions = get_all_predictions(
-            start_ts_param, end_ts_param, contract_addresses, network_param
-        )
-
-        # print("Predictions: ", predictions)
-        # Since get_statistics is printing results instead of returning them, we'll need to capture the print outputs.
-        # Here's a modified version of get_statistics that returns the results instead:
-        statistics = extract_statistics(predictions)
-
-        return jsonify({
-            # 'predictions': [vars(p) for p in predictions],
-            'statistics': statistics
-        })
-
-    except KeyError:
-        abort(400, description="Required fields not provided")
-
+        with open(JSON_FILE_PATH, 'r') as f:
+            data = json.load(f)
+            return jsonify(data)
+    except Exception as e:
+        abort(500, description="Error loading predictions data from file")
 
 if __name__ == '__main__':
+    # Start the thread to save predictions data to a file every 5 minutes
+    thread = threading.Thread(target=save_predictions_to_file)
+    thread.start()
+
     app.run(debug=True)
