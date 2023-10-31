@@ -119,7 +119,8 @@ class TraderAgent2(TraderAgent):
                             if should_close == True:
                                 print(f"     [Close Position] Requirements met")
                                 order = self.exchange.create_market_sell_order(
-                                    self.config.exchange_pair, position.open_order.amount
+                                    self.config.exchange_pair,
+                                    position.open_order.amount,
                                 )
                                 self.portfolio.close_position(addr, order)
                                 self.update_cache()
