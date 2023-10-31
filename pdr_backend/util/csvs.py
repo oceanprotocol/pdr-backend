@@ -1,6 +1,7 @@
 import os
 import csv
 
+
 def write_csv(all_predictions, csv_output_dir):
     if not os.path.exists(csv_output_dir):
         os.makedirs(csv_output_dir)

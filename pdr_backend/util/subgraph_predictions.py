@@ -5,9 +5,11 @@ from enum import Enum
 from pdr_backend.util.subgraph import query_subgraph, info_from_725
 from pdr_backend.models.prediction import Prediction
 
+
 class FilterMode(Enum):
     CONTRACT = 1
     PREDICTOOR = 2
+
 
 def get_subgraph_url(network: str) -> str:
     """
@@ -20,12 +22,20 @@ def get_subgraph_url(network: str) -> str:
         str: The subgraph URL for the specified network.
     """
     if network not in ["mainnet", "testnet"]:
-        raise ValueError("Invalid network. Acceptable values are 'mainnet' or 'testnet'.")
+        raise ValueError(
+            "Invalid network. Acceptable values are 'mainnet' or 'testnet'."
+        )
 
     return f"https://v4.subgraph.sapphire-{network}.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
 
 
-def get_all_predictions(start_ts: int, end_ts: int, filters: List[str], network: str, filter_mode: FilterMode):
+def get_all_predictions(
+    start_ts: int,
+    end_ts: int,
+    filters: List[str],
+    network: str,
+    filter_mode: FilterMode,
+):
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
 
@@ -135,7 +145,8 @@ def get_all_contracts(owner_address: str, network: str) -> List[str]:
         raise Exception("Invalid network, pick mainnet or testnet")
 
     # Define the GraphQL query
-    query = """
+    query = (
+        """
     {
         tokens(where: {
             nft_: {
@@ -145,7 +156,9 @@ def get_all_contracts(owner_address: str, network: str) -> List[str]:
             id
         }
     }
-    """ % owner_address
+    """
+        % owner_address
+    )
 
     # Define the subgraph endpoint
     result = query_subgraph(get_subgraph_url(network), query, timeout=20.0)

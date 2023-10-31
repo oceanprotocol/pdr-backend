@@ -4,7 +4,9 @@ from pdr_backend.models.prediction import Prediction
 PredictionDetail = Tuple[str, str, str]
 PredictoorStats = Dict[str, Union[str, float, int, List[PredictionDetail]]]
 PairTimeframeStats = Dict[str, Union[str, float, int]]
-StatisticsResult = Dict[str, Union[float, List[PredictoorStats], List[PairTimeframeStats]]]
+StatisticsResult = Dict[
+    str, Union[float, List[PredictoorStats], List[PairTimeframeStats]]
+]
 
 
 def get_pure_stats(all_predictions: List[Prediction]):
@@ -59,43 +61,49 @@ def get_endpoint_statistics(all_predictions: List[Prediction]) -> StatisticsResu
     total_predictions = len(all_predictions)
     stats, correct_predictions = get_pure_stats(all_predictions)
 
-    overall_accuracy = correct_predictions / total_predictions * 100 if total_predictions else 0
+    overall_accuracy = (
+        correct_predictions / total_predictions * 100 if total_predictions else 0
+    )
 
     results = {
         "overall_accuracy": overall_accuracy,
         "pair_timeframe_stats": [],
-        "predictoor_stats": []
+        "predictoor_stats": [],
     }
 
     for key, data in stats["pair_timeframe"].items():
         pair, timeframe = key
         accuracy = data["correct"] / data["total"] * 100 if data["total"] else 0
-        results["pair_timeframe_stats"].append({
-            "pair": pair,
-            "timeframe": timeframe,
-            "accuracy": accuracy,
-            "stake": data["stake"],
-            "payout": data["payout"],
-            "number_of_predictions": data["total"]
-        })
+        results["pair_timeframe_stats"].append(
+            {
+                "pair": pair,
+                "timeframe": timeframe,
+                "accuracy": accuracy,
+                "stake": data["stake"],
+                "payout": data["payout"],
+                "number_of_predictions": data["total"],
+            }
+        )
 
     for predictoor, data in stats["predictoor"].items():
         accuracy = data["correct"] / data["total"] * 100 if data["total"] else 0
-        results["predictoor_stats"].append({
-            "predictoor_address": predictoor,
-            "accuracy": accuracy,
-            "stake": data["stake"],
-            "payout": data["payout"],
-            "number_of_predictions": data["total"],
-            "details": list(data["details"])
-        })
+        results["predictoor_stats"].append(
+            {
+                "predictoor_address": predictoor,
+                "accuracy": accuracy,
+                "stake": data["stake"],
+                "payout": data["payout"],
+                "number_of_predictions": data["total"],
+                "details": list(data["details"]),
+            }
+        )
 
     return results
 
 
 def get_cli_statistics(all_predictions):
     total_predictions = len(all_predictions)
-    
+
     stats, correct_predictions = get_pure_stats(all_predictions)
     print(f"Overall Accuracy: {correct_predictions/total_predictions*100:.2f}%")
 

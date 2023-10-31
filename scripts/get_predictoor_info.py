@@ -34,7 +34,11 @@ if __name__ == "__main__":
         address_filter = [predictoor_addrs.lower()]
 
     _predictions = get_all_predictions(
-        start_ts_param, end_ts_param, address_filter, network_param, FilterMode.PREDICTOOR
+        start_ts_param,
+        end_ts_param,
+        address_filter,
+        network_param,
+        FilterMode.PREDICTOOR,
     )
 
     write_csv(_predictions, csv_output_dir_param)
