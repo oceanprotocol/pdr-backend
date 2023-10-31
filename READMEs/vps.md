@@ -7,18 +7,35 @@ SPDX-License-Identifier: Apache-2.0
 
 This README shows how to run Barge on an Azure Ubuntu VPS (Virtual Private Server). This is for use in backend dev, running predictoor bot, running trader bot.
 
-1. [Setup VPS](#1-setup-vps)
+1. [Install pdr-backend locally](#1-install-pdr-backend-locally)
+2. [Setup VPS](#2-setup-vps)
    - [Create new VPS](#create-new-vps)
    - [Open ports of VPS](#open-ports-of-vps)
    - [Install Docker in VPS](#install-docker-in-vps)
    - [Install Barge in VPS](#install-barge-in-vps)
-2. [Run Barge in VPS](#2-run-barge-in-vps)
-3. [Install pdr-backend locally](#3-install-pdr-backend-locally)
+3. [Run Barge in VPS](#3-run-barge-in-vps)
 4. [Run predictoor bot locally](#4-run-predictoor-bot-locally)
 5. [Run tests locally](#5-run-tests-locally)
 
 
-## 1. Setup VPS
+## 1. Install pdr-backend Locally
+
+In local console:
+```console
+# clone the repo and enter into it
+cd ~/code
+git clone https://github.com/oceanprotocol/pdr-backend
+cd pdr-backend
+
+# Create & activate virtualenv
+python -m venv venv
+source venv/bin/activate
+
+# Install modules in the environment
+pip install -r requirements.txt
+```
+
+## 2. Setup VPS
 
 ### Create new VPS
 
@@ -35,7 +52,6 @@ Test it: open a new console, and ssh into new VM.
 ```console
 ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
 ```
-
 
 ### Open ports of VPS
 
@@ -81,8 +97,6 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 ### Install Barge In VPS
 
-This is the usual approach. We repeat for convenience.
-
 In VPS console:
 ```console
 ## install barge remotely
@@ -91,14 +105,18 @@ git clone https://github.com/oceanprotocol/barge
 git checkout predictoor
 ```
 
-## 2. Run Barge in VPS
+## 3. Run Barge in VPS
 
-This is the usual approach. We repeat for convenience.
+(If needed) SSH into VPS console:
+```console
+ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
+```
 
 In VPS console:
 ```console
 ## cleanup past barge
 rm -rf ~/.ocean
+cd ~/code/barge
 ./cleanup.sh
 docker system prune -a --volumes
 
@@ -106,36 +124,34 @@ docker system prune -a --volumes
 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
 export GANACHE_BLOCKTIME=5
 
-#run barge with all bots except predictoor
-./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
+#pick just OPTION 1 or 2 below, depending on your goals
+
+#OPTION 1: for predictoor bot: run barge with all bots except predictoor
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
+
+#OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 Wait.
 
-Then, copy VPS' ocean.py to local. In local console:
+Then, copy VPS' `address.json` file to local. In local console:
 ```console
 cd
 scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json .
 ```
 
-## 3. Install pdr-backend Locally
-
-This is the usual approach. We repeat for convenience.
-
-In local console:
+Confirm that `address.json` has a "develpment" entry. In local console:
 ```console
-# clone the repo and enter into it
-cd ~/code
-git clone https://github.com/oceanprotocol/pdr-backend
-cd pdr-backend
-
-# Create & activate virtualenv
-python -m venv venv
-source venv/bin/activate
-
-# Install modules in the environment
-pip install -r requirements.txt
+grep development ~/address.json
 ```
+
+It should return:
+```text
+  "development": {
+```
+
+If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
 
 ## 4. Run Predictoor Bot Locally
 
@@ -152,21 +168,27 @@ export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 export RPC_URL=https://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL="http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph" # from VPS
 
-#for predictoor bot
-export PAIR_FILTER=BTC/USDT
-export TIMEFRAME_FILTER=5m
-export SOURCE_FILTER=binance
+#for predictoor bot. Setting to empty means no filters.
+export PAIR_FILTER=
+export TIMEFRAME_FILTER=
+export SOURCE_FILTER=
 
 export OWNER_ADDRS=0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 ```
 
-Open `~/address.json` file, find the "development" : "Ocean" entry, and paste it here. Example:
-```console
-export STAKE_TOKEN=0x2473f4F7bf40ed9310838edFCA6262C17A59DF64 #OCEAN
-```
-
 ([envvars.md](envvars.md) has details.)
 
+You also need to set the `STAKE_TOKEN` envvar to the OCEAN address in barge. In local console:
+```console
+grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+```
+
+It should return something like the following. Copy that into the prompt and hit enter:
+```console
+export STAKE_TOKEN=0x282d8efCe846A88B159800bd4130ad77443Fa1A1
+```
+
+(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with 'export STAKE_TOKEN=<paste here>`)
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
@@ -181,6 +203,8 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 
 
 ## 5. Run Tests Locally
+
+Re-run barge above, using option 2 (for unit tests)
 
 In work console, run tests:
 ```console
