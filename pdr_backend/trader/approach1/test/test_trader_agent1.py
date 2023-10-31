@@ -30,6 +30,7 @@ class MockBinance:
         self.markets = {
             "BTC/USDT": {"symbol": "BTC/USDT", "base": "BTC", "settle": "USDT"},
             "ETH/USDT": {"symbol": "ETH/USDT", "base": "ETH", "settle": "USDT"},
+            "ETH/USDC": {"symbol": "ETH/USDC", "base": "ETH", "settle": "USDC"},
             # Add more market data here as needed
         }
 
