@@ -124,9 +124,19 @@ cd
 scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json .
 ```
 
-## 3. Install pdr-backend Locally
+Confirm that `address.json` has a "develpment" entry. In local console:
+```console
+grep development ~/address.json
+```
 
-This is the usual approach. We repeat for convenience.
+It should return:
+```text
+  "development": {
+```
+
+If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
+
+## 3. Install pdr-backend Locally
 
 In local console:
 ```console
@@ -158,21 +168,27 @@ export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 export RPC_URL=https://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL="http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph" # from VPS
 
-#for predictoor bot
-export PAIR_FILTER=BTC/USDT
-export TIMEFRAME_FILTER=5m
-export SOURCE_FILTER=binance
+#for predictoor bot. Setting to empty means no filters.
+export PAIR_FILTER=
+export TIMEFRAME_FILTER=
+export SOURCE_FILTER=
 
 export OWNER_ADDRS=0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 ```
 
-Open `~/address.json` file, find the "development" : "Ocean" entry, and paste it here. Example:
-```console
-export STAKE_TOKEN=0x2473f4F7bf40ed9310838edFCA6262C17A59DF64 #OCEAN
-```
-
 ([envvars.md](envvars.md) has details.)
 
+You also need to set the `STAKE_TOKEN` envvar to the OCEAN address in barge. In local console:
+```console
+grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+```
+
+It should return something like the following. Copy that into the prompt and hit enter:
+```console
+export STAKE_TOKEN=0x282d8efCe846A88B159800bd4130ad77443Fa1A1
+```
+
+(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with 'export STAKE_TOKEN=<paste here>`)
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
