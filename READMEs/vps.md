@@ -36,7 +36,6 @@ Test it: open a new console, and ssh into new VM.
 ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
 ```
 
-
 ### Open ports of VPS
 
 Running Barge, the VPS exposes these urls:
@@ -108,8 +107,14 @@ docker system prune -a --volumes
 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
 export GANACHE_BLOCKTIME=5
 
-#run barge with all bots except predictoor
+#pick just OPTION 1 or 2 below, depending on your goals
+
+#OPTION 1: for predictoor bot: run barge with all bots except predictoor
 ./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
+
+#OPTION 2: for unit testing: run barge with all bots except predictoor
+# Run barge with just predictoor contracts, queryable, but no agents
+./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 Wait.
@@ -183,6 +188,8 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 
 
 ## 5. Run Tests Locally
+
+Re-run barge above, using option 2 (for unit tests)
 
 In work console, run tests:
 ```console
