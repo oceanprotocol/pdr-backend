@@ -112,8 +112,7 @@ export GANACHE_BLOCKTIME=5
 #OPTION 1: for predictoor bot: run barge with all bots except predictoor
 ./start_ocean.sh --no-aquarius --no-elasticsearch --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 
-#OPTION 2: for unit testing: run barge with all bots except predictoor
-# Run barge with just predictoor contracts, queryable, but no agents
+#OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
