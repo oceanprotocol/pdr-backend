@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request, abort
 import threading
 import json
+from flask import Flask, jsonify, abort
+
 from pdr_backend.util.predictoor_stats import get_endpoint_statistics
 from pdr_backend.util.subgraph_predictions import (
     get_all_predictions,
@@ -49,7 +50,7 @@ def serve_predictions_from_file():
             data = json.load(f)
             return jsonify(data)
     except Exception as e:
-        abort(500, description="Error loading predictions data from file")
+        abort(500, description=str(e))
 
 
 if __name__ == "__main__":

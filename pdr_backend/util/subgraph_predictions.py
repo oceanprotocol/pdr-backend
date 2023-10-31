@@ -26,6 +26,7 @@ def get_subgraph_url(network: str) -> str:
             "Invalid network. Acceptable values are 'mainnet' or 'testnet'."
         )
 
+    # pylint: disable=line-too-long
     return f"https://v4.subgraph.sapphire-{network}.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
 
 
@@ -46,6 +47,7 @@ def get_all_predictions(
     # Convert filters to lowercase
     filters = [f.lower() for f in filters]
 
+    # pylint: disable=line-too-long
     if filter_mode == FilterMode.CONTRACT:
         where_clause = f"where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.PREDICTOOR:

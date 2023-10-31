@@ -10,7 +10,7 @@ StatisticsResult = Dict[
 
 
 def get_pure_stats(all_predictions: List[Prediction]):
-    stats: dict[str, dict] = {"pair_timeframe": {}, "predictoor": {}}
+    stats: Dict[str, Dict] = {"pair_timeframe": {}, "predictoor": {}}
     correct_predictions = 0
 
     for prediction in all_predictions:
@@ -57,7 +57,8 @@ def get_pure_stats(all_predictions: List[Prediction]):
 
 
 def get_endpoint_statistics(all_predictions: List[Prediction]) -> StatisticsResult:
-    # This is similar to the get_statistics function but returns the results instead of printing them.
+    # This is similar to the get_statistics function
+    # but returns the results instead of printing them.
     total_predictions = len(all_predictions)
     stats, correct_predictions = get_pure_stats(all_predictions)
 
