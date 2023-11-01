@@ -4,7 +4,6 @@ import time
 from addresses import get_opf_addresses
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
 
 
@@ -136,7 +135,12 @@ if __name__ == "__main__":
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "trueValues")
     print("\nChecking account balances")
-    ocean_address = get_address(config.web3_config.w3.eth.chain_id, "Ocean")
+    # pylint: disable=line-too-long
+    ocean_address = (
+        "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
+        if config.web3_config.w3.eth.chain_id == 23294
+        else "0x973e69303259B0c2543a38665122b773D28405fB"
+    )
     ocean_token = Token(config.web3_config, ocean_address)
 
     for name, value in addresses.items():

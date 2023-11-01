@@ -16,6 +16,7 @@ install_requirements = [
     "eth-account",
     "eth-keys",
     "matplotlib",
+    "mypy",
     "numpy",
     "pandas",
     "pathlib",
@@ -24,6 +25,7 @@ install_requirements = [
     "pytest-env",
     "requests",
     "scikit-learn",
+    "types-requests",
     "web3",
     "sapphire.py",
     "ocean-contracts==2.0.0a14",  # install this last
