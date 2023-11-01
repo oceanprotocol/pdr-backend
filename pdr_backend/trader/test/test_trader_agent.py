@@ -157,7 +157,7 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
         "0x3": [1, 24, 66],
     }
 
-    agent.save_previous_epochs()
+    agent.update_cache()
 
     agent_new = TraderAgent(trader_config, custom_trader, cache_dir=".test_cache")
     assert agent_new.prev_traded_epochs_per_feed["0x1"] == [3]
