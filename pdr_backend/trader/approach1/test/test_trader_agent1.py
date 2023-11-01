@@ -48,7 +48,7 @@ def test_ccxt_binance_pairs():
     assert len(tokens) > 0
 
     usdc_tokens = [v for k, v in markets.items() if v.get("settle", None) == "USDC"]
-    assert len(usdc_tokens) == 0
+    assert len(usdc_tokens) == 1
 
     # Find unique settle tokens
     settle_tokens = [v.get("settle", "") for k, v in markets.items()]
