@@ -1,16 +1,10 @@
-import random
-from typing import Any, Dict, Tuple, Optional
-
+import ccxt
 from enforce_typing import enforce_types
-
+from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_agent import TraderAgent
 from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-
-from pdr_backend.models.feed import Feed
-
-import ccxt
 from os import getenv
-
+from typing import Any, Dict, Tuple, Optional
 
 @enforce_types
 class TraderAgent1(TraderAgent):
@@ -67,8 +61,8 @@ class TraderAgent1(TraderAgent):
         if position_size is not None:
             self.size = float(position_size)
 
-        assert self.exchange != None
-        assert self.size != None and self.size > 0.0
+        assert self.exchange != None, "Exchange cannot be None"
+        assert self.size != None and self.size > 0.0, "Position size must be greater than 0.0"
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
