@@ -71,7 +71,6 @@ def get_slots(
         skip,
     )
 
-    print("query", query)
     result = query_subgraph(
         get_subgraph_url(network),
         query,
@@ -125,10 +124,7 @@ def process_single_slot(slot: Slot, end_of_previous_day_timestamp: int):
     correct_predictions_count = slots_evaluated = 0
     # split the id to get the slot timestamp
     timestamp = int(slot["id"].split("-")[1])
-    # print("timestamp", timestamp)
-    # print("end_of_previous_day_timestamp", end_of_previous_day_timestamp)
-    # print("slot", slot)
-    # print("------------------")
+
     if timestamp < end_of_previous_day_timestamp:
         staked_yesterday += float(slot["roundSumStakes"])
     else:

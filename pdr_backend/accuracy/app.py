@@ -37,7 +37,6 @@ def save_statistics_to_file():
 
             output = []
 
-            print("contract_information", len(contract_information))
             for statistic_type in statistic_types:
                 seconds_per_epoch = statistic_type["seconds_per_epoch"]
                 contracts = list(
@@ -53,7 +52,6 @@ def save_statistics_to_file():
                 start_ts_param, end_ts_param = get_start_end_params(seconds_per_epoch)
 
                 contract_ids = [contract["id"] for contract in contracts]
-                print("contract_ids", len(contract_ids))
 
                 # Get statistics for all contracts
                 statistics = calculate_statistics_for_all_assets(
