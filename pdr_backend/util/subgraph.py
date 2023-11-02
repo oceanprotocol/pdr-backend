@@ -425,7 +425,6 @@ def get_consume_so_far_per_contract(
             chunk_size,
             offset,
         )
-        print(query)
         offset += chunk_size
         result = query_subgraph(subgraph_url, query)
         contracts = result["data"]["predictContracts"]
