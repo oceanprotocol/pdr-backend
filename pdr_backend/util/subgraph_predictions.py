@@ -173,3 +173,39 @@ def get_all_contracts(owner_address: str, network: str) -> List[str]:
     contracts = [contract["id"] for contract in contract_data]
 
     return contracts
+
+
+def get_contract_informations(
+    contract_addresses: List[str], network: str
+) -> List[dict]:
+    if network != "mainnet" and network != "testnet":
+        raise Exception("Invalid network, pick mainnet or testnet")
+
+    # Define the GraphQL query
+    query = """
+        {
+            predictContracts(where: {
+                id_in: %s
+            }){
+                id
+                secondsPerEpoch
+            }
+        }
+        """ % json.dumps(
+        contract_addresses
+    )
+
+    # Define the subgraph endpoint
+    result = query_subgraph(get_subgraph_url(network), query, timeout=20.0)
+
+    if not "data" in result:
+        raise Exception("Error fetching contracts: No data returned")
+
+    # Parse the results and construct Contract objects
+    contract_data = result["data"]["predictContracts"]
+    contracts = [
+        {"id": contract["id"], "seconds_per_epoch": contract["secondsPerEpoch"]}
+        for contract in contract_data
+    ]
+
+    return contracts
