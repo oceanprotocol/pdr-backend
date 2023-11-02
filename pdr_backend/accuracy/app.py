@@ -39,11 +39,13 @@ def save_statistics_to_file():
 
             print("contract_information", len(contract_information))
             for statistic_type in statistic_types:
-
                 seconds_per_epoch = statistic_type["seconds_per_epoch"]
                 contracts = list(
                     filter(
-                        lambda item, spe=seconds_per_epoch: int(item["seconds_per_epoch"]) == spe,
+                        lambda item, spe=seconds_per_epoch: int(
+                            item["seconds_per_epoch"]
+                        )
+                        == spe,
                         contract_information,
                     )
                 )
