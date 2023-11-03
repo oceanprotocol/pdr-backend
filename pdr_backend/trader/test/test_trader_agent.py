@@ -82,6 +82,7 @@ def custom_trader(feed, prediction):
     return (feed, prediction)
 
 
+@pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     trader_config = Mock(spec=TraderConfig)
@@ -98,34 +99,38 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed.clear()
     agent.prev_traded_epochs_per_feed["0x123"] = []
 
+    async def _do_trade(feed, prediction):
+        pass
+    agent._do_trade = Mock(side_effect=_do_trade)
+
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 55)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 55)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should not trade
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     predictoor_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 140)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 140)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
     # prediction is empty, so no trading
     predictoor_contract.get_current_epoch.return_value = 3
     predictoor_contract.get_agg_predval.side_effect = Exception(
-        "An error occurred while getting agg_predval."
+        {"message": "An error occurred while getting agg_predval."}
     )
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
@@ -135,7 +140,7 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed["0x123"] = []
     predictoor_contract.get_agg_predval.return_value = (1, 3)
     predictoor_contract.get_agg_predval.side_effect = None
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
