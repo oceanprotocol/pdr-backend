@@ -44,6 +44,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     with pytest.raises(SystemExit):
         TraderAgent1(no_feeds_config)
 
+
 @pytest.mark.asyncio
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
 async def test_do_trade(
@@ -69,11 +70,9 @@ async def test_do_trade(
     agent = TraderAgent1(trader_config)
     assert agent.config == trader_config
     check_subscriptions_and_subscribe_mock.assert_called_once()
-    
+
     agent.exchange = Mock()
-    agent.exchange.create_market_buy_order.return_value = {
-        "info": {"origQty": 1}
-    }
+    agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
 
     agent.get_pred_properties = Mock()
     agent.get_pred_properties.return_value = {

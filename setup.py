@@ -22,7 +22,7 @@ install_requirements = [
     "pathlib",
     "pylint",
     "pytest",
-    "pytest-asyncio",    
+    "pytest-asyncio",
     "pytest-env",
     "requests",
     "scikit-learn",
