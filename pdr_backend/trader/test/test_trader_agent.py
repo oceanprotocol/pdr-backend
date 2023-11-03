@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import MagicMock
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
@@ -71,7 +70,7 @@ async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     async def _process_block_at_feed(addr, timestamp):
         return (-1, [])
 
-    agent._process_block_at_feed = MagicMock(side_effect=_process_block_at_feed)
+    agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
 
     await agent.take_step()
 
