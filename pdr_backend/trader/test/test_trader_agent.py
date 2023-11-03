@@ -182,3 +182,26 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
     for item in cache_dir_path.iterdir():
         item.unlink()
     cache_dir_path.rmdir()
+
+@pytest.mark.asyncio
+@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+async def test_get_pred_properties(check_subscriptions_and_subscribe_mock, web3_config):
+    trader_config = Mock(spec=TraderConfig)
+    trader_config.get_feeds.return_value = {
+        "0x0000000000000000000000000000000000000000": mock_feed()
+    }
+    trader_config.max_tries = 10
+    trader_config.web3_config = web3_config
+    agent = TraderAgent(trader_config)
+    assert agent.config == trader_config
+    check_subscriptions_and_subscribe_mock.assert_called_once()
+
+    agent.get_pred_properties = Mock()
+    agent.get_pred_properties.return_value = {
+        "confidence": 100.0,
+        "dir": 1,
+        "stake": 1,
+    }
+
+    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    assert agent.get_pred_properties.call_count == 1
