@@ -48,7 +48,7 @@ jobs:
               echo "No output, so no message will be sent to Slack"
             else
               echo "${message}" > ./.github/slack-message-cache/last_message.txt
-              curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' $SLACK_WEBHOOK_URL
+              curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
             fi
           else
             echo "Message is the same as the last one sent to Slack. No new message will be sent."
