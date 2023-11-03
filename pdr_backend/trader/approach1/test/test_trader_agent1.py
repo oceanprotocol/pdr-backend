@@ -22,7 +22,7 @@ def mock_feed():
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     trader_config = Mock(spec=TraderConfig1)
     trader_config.exchange_id = "mexc3"
-    trader_config.pair = "BTC/USDT"
+    trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
     trader_config.get_feeds = Mock()
@@ -44,20 +44,16 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     with pytest.raises(SystemExit):
         TraderAgent1(no_feeds_config)
 
-
+@pytest.mark.asyncio
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
-@patch.object(TraderAgent1, "do_trade")
-@patch.object(TraderAgent1, "get_pred_properties")
-async def test_take_step(
+async def test_do_trade(
     check_subscriptions_and_subscribe_mock,
-    do_trade_mock,
-    get_pred_properties_mock,
     predictoor_contract,
     web3_config,
 ):
     trader_config = Mock(spec=TraderConfig1)
     trader_config.exchange_id = "mexc3"
-    trader_config.pair = "BTC/USDT"
+    trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
     trader_config.get_feeds.return_value = {
@@ -70,16 +66,22 @@ async def test_take_step(
     trader_config.max_tries = 10
     trader_config.web3_config = web3_config
 
-    print("trader_config.get_feeds", trader_config.get_feeds())
-    print("trader_config.get_contracts", trader_config.get_contracts())
-
     agent = TraderAgent1(trader_config)
     assert agent.config == trader_config
     check_subscriptions_and_subscribe_mock.assert_called_once()
+    
+    agent.exchange = Mock()
+    agent.exchange.create_market_buy_order.return_value = {
+        "info": {"origQty": 1}
+    }
 
-    with patch.object(agent, "_process_block_at_feed") as ts_mock:
-        await agent.take_step()
+    agent.get_pred_properties = Mock()
+    agent.get_pred_properties.return_value = {
+        "confidence": 100.0,
+        "dir": 1,
+        "stake": 1,
+    }
 
-    assert ts_mock.call_count > 0
-    do_trade_mock.assert_called_once()
-    get_pred_properties_mock.assert_called_once()
+    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    assert agent.get_pred_properties.call_count == 1
+    assert agent.exchange.create_market_buy_order.call_count == 1
