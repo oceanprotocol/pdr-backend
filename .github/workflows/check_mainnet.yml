@@ -43,11 +43,11 @@ jobs:
           message="Testnet Check script failed: \n${output}\n\nAnyways here's a funny joke:\n${joke}"
           last_message=$(cat ./.github/slack-message-cache/last_message.txt)
 
-          if [ "$message" != "$last_message" ]; then
+          if [ "$output" != "$last_message" ]; then
             if [ -z "$output" ]; then
               echo "No output, so no message will be sent to Slack"
             else
-              echo "${message}" > ./.github/slack-message-cache/last_message.txt
+              echo "${output}" > ./.github/slack-message-cache/last_message.txt
               curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
             fi
           else
