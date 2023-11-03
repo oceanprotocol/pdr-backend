@@ -102,6 +102,10 @@ class TraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
         print("before:", time.time())
+
+        params = [(addr, block["timestamp"]) for addr in self.feeds]
+        print("params:", params)
+
         tasks = [
             self._process_block_at_feed(addr, block["timestamp"]) for addr in self.feeds
         ]

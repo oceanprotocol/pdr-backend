@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from unittest.mock import MagicMock
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
@@ -55,6 +56,7 @@ def test_run(check_subscriptions_and_subscribe_mock):
     ts_mock.assert_called_once()
 
 
+@pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     trader_config = Mock(spec=TraderConfig)
@@ -65,10 +67,16 @@ async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     trader_config.web3_config = web3_config
     agent = TraderAgent(trader_config)
 
-    with patch.object(agent, "_process_block_at_feed") as ts_mock:
-        await agent.take_step()
+    # Create async mock fn so we can await asyncio.gather(*tasks)
+    async def _process_block_at_feed(addr, timestamp):
+        return (-1, [])
 
-    assert ts_mock.call_count > 0
+    agent._process_block_at_feed = MagicMock(side_effect=_process_block_at_feed)
+
+    await agent.take_step()
+
+    assert check_subscriptions_and_subscribe_mock.call_count == 2
+    assert agent._process_block_at_feed.call_count == 1
 
 
 def custom_trader(feed, prediction):
