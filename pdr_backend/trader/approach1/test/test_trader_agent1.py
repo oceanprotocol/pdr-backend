@@ -74,13 +74,5 @@ async def test_do_trade(
     agent.exchange = Mock()
     agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
 
-    agent.get_pred_properties = Mock()
-    agent.get_pred_properties.return_value = {
-        "confidence": 100.0,
-        "dir": 1,
-        "stake": 1,
-    }
-
     await agent._do_trade(mock_feed(), (1.0, 1.0))
-    assert agent.get_pred_properties.call_count == 1
     assert agent.exchange.create_market_buy_order.call_count == 1
