@@ -22,17 +22,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Restore Cache
+        id: cache-restore
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./.github/slack-message-cache
+          key: "mainnet-notifier-cache"
+
       - name: Notify Slack
         env:
           RPC_URL: "https://sapphire.oasis.io"
           SUBGRAPH_URL: "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
           PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
         run: |
+          mkdir -p ./.github/slack-message-cache
+          touch ./.github/slack-message-cache/last_message.txt
           output=$(python scripts/check_network.py 36 | grep -E 'FAIL|WARNING|error' || true)
           joke=$(curl -s https://official-joke-api.appspot.com/jokes/general/random | jq -r '.[0].setup, .[0].punchline')
-          if [ -z "$output" ]; then
-            echo "No output, so no message will be sent to Slack"
+          message="Testnet Check script failed: \n${output}\n\nAnyways here's a funny joke:\n${joke}"
+          last_message=$(cat ./.github/slack-message-cache/last_message.txt)
+
+          if [ "$message" != "$last_message" ]; then
+            if [ -z "$output" ]; then
+              echo "No output, so no message will be sent to Slack"
+            else
+              echo "${message}" > ./.github/slack-message-cache/last_message.txt
+              curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' $SLACK_WEBHOOK_URL
+            fi
           else
-            message="Testnet Check script failed: \n${output}\n\nAnyways here's a funny joke:\n${joke}"
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
+            echo "Message is the same as the last one sent to Slack. No new message will be sent."
           fi
+
+      - name: Save Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./.github/slack-message-cache
+          key: "mainnet-notifier-cache"
