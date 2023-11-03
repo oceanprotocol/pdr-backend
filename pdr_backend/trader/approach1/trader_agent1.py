@@ -6,6 +6,7 @@ from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
 from os import getenv
 from typing import Any, Dict, Tuple, Optional
 
+
 @enforce_types
 class TraderAgent1(TraderAgent):
     """
@@ -55,14 +56,7 @@ class TraderAgent1(TraderAgent):
 
         # Market and order data
         self.order: Optional[Dict[str, Any]] = None
-        self.size: float = 0.0
-
-        position_size = getenv("POSITION_SIZE_USD")
-        if position_size is not None:
-            self.size = float(position_size)
-
         assert self.exchange != None, "Exchange cannot be None"
-        assert self.size != None and self.size > 0.0, "Position size must be greater than 0.0"
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
