@@ -101,6 +101,7 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
 
     async def _do_trade(feed, prediction):
         pass
+
     agent._do_trade = Mock(side_effect=_do_trade)
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
@@ -182,6 +183,7 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
     for item in cache_dir_path.iterdir():
         item.unlink()
     cache_dir_path.rmdir()
+
 
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
