@@ -1,15 +1,10 @@
-import random
-from typing import Any, Dict, Tuple, Optional
-
+import ccxt
 from enforce_typing import enforce_types
-
+from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_agent import TraderAgent
 from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-
-from pdr_backend.models.feed import Feed
-
-import ccxt
 from os import getenv
+from typing import Any, Dict, Tuple, Optional
 
 
 @enforce_types
@@ -61,14 +56,7 @@ class TraderAgent1(TraderAgent):
 
         # Market and order data
         self.order: Optional[Dict[str, Any]] = None
-        self.size: float = 0.0
-
-        position_size = getenv("POSITION_SIZE_USD")
-        if position_size is not None:
-            self.size = float(position_size)
-
-        assert self.exchange != None
-        assert self.size != None and self.size > 0.0
+        assert self.exchange != None, "Exchange cannot be None"
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -111,7 +99,7 @@ class TraderAgent1(TraderAgent):
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.config.exchange_pair, self.size
+                self.config.exchange_pair, self.config.size
             )
 
             # If order is successful, we log the order so we can close it

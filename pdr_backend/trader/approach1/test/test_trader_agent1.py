@@ -1,61 +1,86 @@
-from unittest.mock import Mock
-import ccxt
+import os
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+
+from pdr_backend.models.feed import Feed
+from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
+from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
+from pdr_backend.util.contract import get_address
 
 
-def test_ccxt_mexc_pairs():
-    exchange = ccxt.mexc3()
-    markets = exchange.load_markets()
-
-    # print(f"MEXC symbols: {[v.get('symbol','') for k,v in exchange.markets.items()]}")
-
-    tokens = [v.get("base", "") for k, v in markets.items()]
-    assert len(tokens) > 0
-
-    usdc_tokens = [v for k, v in markets.items() if v.get("settle", None) == "USDC"]
-    assert len(usdc_tokens) == 0
-
-    # Find unique settle tokens
-    settle_tokens = [v.get("settle", "") for k, v in markets.items()]
-    unique_settle_tokens = []
-    for token in settle_tokens:
-        if token not in unique_settle_tokens:
-            unique_settle_tokens.append(token)
-    assert len(unique_settle_tokens) > 1
-
-    # print("MEXC unique_settle: ", unique_settle_tokens)
+def mock_feed():
+    feed = Mock(spec=Feed)
+    feed.name = "test feed"
+    feed.seconds_per_epoch = 60
+    return feed
 
 
-class MockBinance:
-    def __init__(self):
-        self.markets = {
-            "BTC/USDT": {"symbol": "BTC/USDT", "base": "BTC", "settle": "USDT"},
-            "ETH/USDT": {"symbol": "ETH/USDT", "base": "ETH", "settle": "USDT"},
-            "ETH/USDC": {"symbol": "ETH/USDC", "base": "ETH", "settle": "USDC"},
-            # Add more market data here as needed
-        }
+@patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
+def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
+    trader_config = Mock(spec=TraderConfig1)
+    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_pair = "BTC/USDT"
+    trader_config.timeframe = "5m"
+    trader_config.size = 10.0
+    trader_config.get_feeds = Mock()
+    trader_config.get_feeds.return_value = {
+        "0x0000000000000000000000000000000000000000": mock_feed()
+    }
+    trader_config.get_contracts = Mock()
+    trader_config.get_contracts.return_value = {
+        "0x0000000000000000000000000000000000000000": predictoor_contract
+    }
+    agent = TraderAgent1(trader_config)
+    assert agent.config == trader_config
+    check_subscriptions_and_subscribe_mock.assert_called_once()
 
-    def load_markets(self):
-        return self.markets
+    no_feeds_config = Mock(spec=TraderConfig1)
+    no_feeds_config.get_feeds.return_value = {}
+    no_feeds_config.max_tries = 10
+
+    with pytest.raises(SystemExit):
+        TraderAgent1(no_feeds_config)
 
 
-def test_ccxt_binance_pairs():
-    exchange = MockBinance()
-    markets = exchange.load_markets()
+@pytest.mark.asyncio
+@patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
+async def test_do_trade(
+    check_subscriptions_and_subscribe_mock,
+    predictoor_contract,
+    web3_config,
+):
+    trader_config = Mock(spec=TraderConfig1)
+    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_pair = "BTC/USDT"
+    trader_config.timeframe = "5m"
+    trader_config.size = 10.0
+    trader_config.get_feeds.return_value = {
+        "0x0000000000000000000000000000000000000000": mock_feed()
+    }
+    trader_config.get_contracts = Mock()
+    trader_config.get_contracts.return_value = {
+        "0x0000000000000000000000000000000000000000": predictoor_contract
+    }
+    trader_config.max_tries = 10
+    trader_config.web3_config = web3_config
 
-    # print(f"BNB symbols: {[v.get('symbol','') for k,v in exchange.markets.items()]}")
+    agent = TraderAgent1(trader_config)
+    assert agent.config == trader_config
+    check_subscriptions_and_subscribe_mock.assert_called_once()
 
-    tokens = [v.get("base", "") for k, v in markets.items()]
-    assert len(tokens) > 0
+    agent.exchange = Mock()
+    agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
 
-    usdc_tokens = [v for k, v in markets.items() if v.get("settle", None) == "USDC"]
-    assert len(usdc_tokens) == 1
+    agent.get_pred_properties = Mock()
+    agent.get_pred_properties.return_value = {
+        "confidence": 100.0,
+        "dir": 1,
+        "stake": 1,
+    }
 
-    # Find unique settle tokens
-    settle_tokens = [v.get("settle", "") for k, v in markets.items()]
-    unique_settle_tokens = []
-    for token in settle_tokens:
-        if token not in unique_settle_tokens:
-            unique_settle_tokens.append(token)
-    assert len(unique_settle_tokens) > 1
-
-    # print("BNB unique_quotes: ", unique_settle_tokens)
+    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    assert agent.get_pred_properties.call_count == 1
+    assert agent.exchange.create_market_buy_order.call_count == 1

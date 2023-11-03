@@ -38,6 +38,9 @@ class TraderConfig1(TraderConfig):
         ## Position Parameters
         self.size = getenv("POSITION_SIZE")
 
-        assert self.exchange_id in CAND_EXCHANGE
-        assert self.pair in CAND_PAIR
-        assert self.timeframe in CAND_TIMEFRAME
+        assert self.exchange_id in CAND_EXCHANGE, "Exchange must be valid"
+        assert self.pair in CAND_PAIR, "Pair must be valid"
+        assert self.timeframe in CAND_TIMEFRAME, "Timeframe must be valid"
+        assert (
+            self.size != None and self.size > 0.0
+        ), "Position size must be greater than 0.0"
