@@ -11,7 +11,14 @@ if __name__ == "__main__":
         False  # if there is not enough balance, exit 1 so we know that script failed
     )
     addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
-    ocean_address = get_address(config.web3_config.w3.eth.chain_id, "Ocean")
+    ocean_address = None
+    if config.web3_config.w3.eth.chain_id == 23294:  #mainnet
+        ocean_address = "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
+    if config.web3_config.w3.eth.chain_id == 23295:  #testnet
+        ocean_address = "0x973e69303259B0c2543a38665122b773D28405fB"
+    if ocean_address is None:
+        print("Unknown network")
+        sys.exit(1)
     ocean_token = Token(config.web3_config, ocean_address)
     rose = NativeToken(config.web3_config)
 
