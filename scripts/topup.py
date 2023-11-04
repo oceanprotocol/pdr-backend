@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     owner_ocean_balance=int(ocean_token.balanceOf(config.web3_config.owner))/1e18
     owner_rose_balance=int(rose.balanceOf(config.web3_config.owner))/1e18
-    print(f"Topup address has : {owner_ocean_balance:.2f} OCEAN and {owner_rose_balance:.2f} ROSE\n\n")
+    print(f"Topup address ({config.web3_config.owner}) has : {owner_ocean_balance:.2f} OCEAN and {owner_rose_balance:.2f} ROSE\n\n")
     total_ocean=0
     total_rose=0
     for name, value in addresses.items():
