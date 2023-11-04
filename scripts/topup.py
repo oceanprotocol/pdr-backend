@@ -67,3 +67,7 @@ if __name__ == "__main__":
             else:
                 failed = True
                 print("Not enough ROSE :(")
+    if failed:
+        exit(1)
+    else:
+        exit(0)
