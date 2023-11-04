@@ -1,7 +1,6 @@
 name: Topup accounts
 
 on:
-  pull_request:
   schedule:
     - cron: "0 */6 * * *"
   
