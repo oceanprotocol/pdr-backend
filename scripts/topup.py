@@ -2,7 +2,6 @@ import sys
 from addresses import get_opf_addresses
 from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.models.token import Token, NativeToken
-from pdr_backend.util.contract import get_address
 
 
 if __name__ == "__main__":
@@ -12,13 +11,14 @@ if __name__ == "__main__":
     )
     addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
     ocean_address = None
-    if config.web3_config.w3.eth.chain_id == 23294:  #mainnet
+    if config.web3_config.w3.eth.chain_id == 23294:  # mainnet
         ocean_address = "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
-    if config.web3_config.w3.eth.chain_id == 23295:  #testnet
+    if config.web3_config.w3.eth.chain_id == 23295:  # testnet
         ocean_address = "0x973e69303259B0c2543a38665122b773D28405fB"
     if ocean_address is None:
         print("Unknown network")
         sys.exit(1)
+
     ocean_token = Token(config.web3_config, ocean_address)
     rose = NativeToken(config.web3_config)
 
