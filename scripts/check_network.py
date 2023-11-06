@@ -64,16 +64,17 @@ def get_expected_consume(for_ts: int, tokens: int):
 if __name__ == "__main__":
     config = BaseConfig()
 
-    no_of_epochs_to_check = 288
+    lookback_hours = 24
     if len(sys.argv) > 1:
         try:
-            no_of_epochs_to_check = int(sys.argv[1])
+            lookback_hours = int(sys.argv[1])
         except ValueError:
             print("Please provide a valid integer as the number of epochs to check!")
 
     addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
 
     ts = int(time.time())
+    ts_start = ts - lookback_hours * 60 * 60
     query = """
             {
                 predictContracts{
@@ -87,7 +88,7 @@ if __name__ == "__main__":
                         }
                         expireTime
                     }
-                    slots(where:{slot_lt:%s} orderBy: slot orderDirection:desc first:%s){
+                    slots(where:{slot_lt:%s, slot_gt:%s} orderBy: slot orderDirection:desc first:1000){
                         slot
                         roundSumStakesUp
                         roundSumStakes
@@ -112,7 +113,7 @@ if __name__ == "__main__":
             }
             """ % (
         ts,
-        no_of_epochs_to_check,
+        ts_start,
     )
     result = query_subgraph(config.subgraph_url, query, timeout=10.0)
     # check no of contracts
