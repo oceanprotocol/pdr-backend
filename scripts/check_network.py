@@ -168,5 +168,5 @@ if __name__ == "__main__":
 
     # ---------------- dfbuyer ----------------
 
-    token_amt = 150 if config.web3_config.w3.eth.chain_id == 23295 else 37000
+    token_amt = 150 if config.web3_config.w3.eth.chain_id == 23294 else 37000
     check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url, token_amt)
