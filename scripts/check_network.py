@@ -29,7 +29,7 @@ def print_stats(contract_dict, field_name, threshold=0.9):
     print(f"{token_name} {timeframe}: {with_field}/{count} {field_name} - {status}")
 
 
-def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url):
+def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
     ts_now = time.time()
     ts_start_time = int((ts_now // WEEK) * WEEK)
     contract_addresses = [
@@ -41,7 +41,7 @@ def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url):
         ts_start_time,
         contract_addresses,
     )
-    expected = get_expected_consume(int(ts_now))
+    expected = get_expected_consume(int(ts_now), tokens)
     print(
         f"Checking consume amounts (dfbuyer), expecting {expected} consume per contract"
     )
@@ -53,8 +53,8 @@ def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url):
         )
 
 
-def get_expected_consume(for_ts: int):
-    amount_per_feed_per_interval = 37000 / 7 / 20
+def get_expected_consume(for_ts: int, tokens: int):
+    amount_per_feed_per_interval = tokens / 7 / 20
     week_start = (math.floor(for_ts / WEEK)) * WEEK
     time_passed = for_ts - week_start
     n_intervals = int(time_passed / 86400) + 1
@@ -64,16 +64,17 @@ def get_expected_consume(for_ts: int):
 if __name__ == "__main__":
     config = BaseConfig()
 
-    no_of_epochs_to_check = 288
+    lookback_hours = 24
     if len(sys.argv) > 1:
         try:
-            no_of_epochs_to_check = int(sys.argv[1])
+            lookback_hours = int(sys.argv[1])
         except ValueError:
             print("Please provide a valid integer as the number of epochs to check!")
 
     addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
 
     ts = int(time.time())
+    ts_start = ts - lookback_hours * 60 * 60
     query = """
             {
                 predictContracts{
@@ -87,7 +88,7 @@ if __name__ == "__main__":
                         }
                         expireTime
                     }
-                    slots(where:{slot_lt:%s} orderBy: slot orderDirection:desc first:%s){
+                    slots(where:{slot_lt:%s, slot_gt:%s} orderBy: slot orderDirection:desc first:1000){
                         slot
                         roundSumStakesUp
                         roundSumStakes
@@ -112,7 +113,7 @@ if __name__ == "__main__":
             }
             """ % (
         ts,
-        no_of_epochs_to_check,
+        ts_start,
     )
     result = query_subgraph(config.subgraph_url, query, timeout=10.0)
     # check no of contracts
@@ -167,6 +168,5 @@ if __name__ == "__main__":
 
     # ---------------- dfbuyer ----------------
 
-    if config.web3_config.w3.eth.chain_id == 23295:
-        # no data farming on mainnet yet
-        check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url)
+    token_amt = 150 if config.web3_config.w3.eth.chain_id == 23294 else 37000
+    check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url, token_amt)
