@@ -40,7 +40,7 @@ if __name__ == "__main__":
         minimum_ocean_bal = 10
         minimum_rose_bal = 10
         topup_ocean_bal = 10
-        topup_rose_bal = 10
+        topup_rose_bal = 30
 
         if name == "trueval":
             minimum_ocean_bal = 0
