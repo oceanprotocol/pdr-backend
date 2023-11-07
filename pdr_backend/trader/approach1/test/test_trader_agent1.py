@@ -1,14 +1,10 @@
-import os
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-from pdr_backend.util.contract import get_address
 
 
 def mock_feed():

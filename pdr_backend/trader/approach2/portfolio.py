@@ -30,6 +30,7 @@ class Order:
     def amount(self):
         return None
 
+    # in ms
     @property
     def timestamp(self):
         return None
@@ -47,6 +48,7 @@ class MEXCOrder(Order):
     def amount(self):
         return self.order["info"]["origQty"]
 
+    # in ms
     @property
     def timestamp(self):
         return self.order["timestamp"]

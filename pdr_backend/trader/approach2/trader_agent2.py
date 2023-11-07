@@ -8,7 +8,7 @@ from pdr_backend.trader.trader_agent import TraderAgent
 from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
 
 from pdr_backend.models.feed import Feed
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import ccxt
 from os import getenv
@@ -66,15 +66,6 @@ class TraderAgent2(TraderAgent):
             }
         )
 
-        # Market and order data
-        self.size: float = 0.0
-        position_size = getenv("POSITION_SIZE_USD")
-        if position_size is not None:
-            self.size = float(position_size)
-
-        assert self.exchange != None
-        assert self.size != None and self.size > 0.0
-
         self.update_positions(list(self.feeds.keys()))
 
     def update_cache(self):
@@ -97,8 +88,6 @@ class TraderAgent2(TraderAgent):
         """
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
-        print(f"now_ts: {now_ts}")
-        print(f"tx_ts: {tx_ts}")
         order_lapsed = True if now_ts - tx_ts > self.config.timedelta * 1000 else False
         return order_lapsed
 
@@ -151,7 +140,7 @@ class TraderAgent2(TraderAgent):
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             print(f"     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
-                symbol=self.config.exchange_pair, amount=self.size
+                symbol=self.config.exchange_pair, amount=self.config.size
             )
             if order and self.portfolio:
                 order = create_order(order, self.config.exchange_id)
