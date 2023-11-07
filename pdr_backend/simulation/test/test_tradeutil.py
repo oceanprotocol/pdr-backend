@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach3.tradeutil import (
+from pdr_backend.simulation.tradeutil import (
     pairstr,
     pairstr_to_coin,
     pairstr_to_usdcoin,

@@ -5,7 +5,7 @@ import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.predictoor.approach3.timeutil import pretty_timestr
+from pdr_backend.simulation.timeutil import pretty_timestr
 
 CAND_USDCOINS = ["USDT", "DAI", "USDC"]  # add more if needed
 CAND_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]

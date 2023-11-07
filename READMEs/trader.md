@@ -42,7 +42,7 @@ Simulation allows us to quickly build intuition, and assess the performance of t
 
 Let's simulate! In console:
 ```console
-python pdr_backend/predictoor/approach3/runtrade.py
+python pdr_backend/simulation/runtrade.py
 ```
 
 What `runtrade.py` does:
@@ -55,7 +55,7 @@ What `runtrade.py` does:
    - (It logs this all to screen, and to `out*.txt`.)
 1. Plot total profit versus time.
 
-The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runtrade.py](../pdr_backend/predictoor/approach3/runtrade.py).
+The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runtrade.py](../pdr_backend/simulation/runtrade.py).
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
