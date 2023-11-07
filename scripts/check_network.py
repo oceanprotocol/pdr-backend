@@ -157,10 +157,6 @@ if __name__ == "__main__":
         if name == "trueval":
             ocean_warning = " OK "
 
-        if name == "dfbuyer" and config.web3_config.w3.eth.chain_id == 23294:
-            ocean_warning = " OK "
-            native_warning = " OK "
-
         # pylint: disable=line-too-long
         print(
             f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}, Native: {native_bal:.2f}{native_warning}"
