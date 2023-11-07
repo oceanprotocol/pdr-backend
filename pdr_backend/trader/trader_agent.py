@@ -39,7 +39,7 @@ class TraderAgent:
         }
 
         self.cache = Cache(cache_dir=cache_dir)
-        self.load_cached_epochs()
+        self.load_cache()
 
         print("-" * 80)
         print("Config:")
@@ -65,13 +65,13 @@ class TraderAgent:
                 contract.buy_and_start_subscription(None, True)
         time.sleep(1)
 
-    def save_previous_epochs(self):
+    def update_cache(self):
         for feed, epochs in self.prev_traded_epochs_per_feed.items():
             if epochs:
                 last_epoch = epochs[-1]
                 self.cache.save(f"trader_last_trade_{feed}", last_epoch)
 
-    def load_cached_epochs(self):
+    def load_cache(self):
         for feed in self.feeds:
             last_epoch = self.cache.load(f"trader_last_trade_{feed}")
             if last_epoch is not None:
@@ -182,7 +182,7 @@ class TraderAgent:
 
         await self._do_trade(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
-        self.save_previous_epochs()
+        self.update_cache()
         return epoch_s_left, logs
 
     def get_pred_properties(
