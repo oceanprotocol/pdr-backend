@@ -37,18 +37,20 @@ if __name__ == "__main__":
         ocean_bal = ocean_bal_wei / 1e18
         rose_bal = rose_bal_wei / 1e18
 
-        minimum_ocean_bal = 10
+        minimum_ocean_bal = 20
         minimum_rose_bal = 10
-        topup_ocean_bal = 10
+        topup_ocean_bal = 20
         topup_rose_bal = 30
 
         if name == "trueval":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
 
-        if name == "dfbuyer" and config.web3_config.w3.eth.chain_id == 23294:
+        if name == "dfbuyer":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
+            minimum_rose_bal = 50
+            topup_rose_bal = 50
 
         # pylint: disable=line-too-long
         print(f"{name}: {ocean_bal:.2f} OCEAN, {rose_bal:.2f} ROSE")
