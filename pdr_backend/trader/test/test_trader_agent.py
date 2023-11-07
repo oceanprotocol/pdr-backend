@@ -6,7 +6,7 @@ import pytest
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.trader_agent import TraderAgent, do_trade
+from pdr_backend.trader.trader_agent import TraderAgent
 from pdr_backend.trader.trader_config import TraderConfig
 
 
@@ -28,7 +28,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     trader_config.get_contracts.return_value = {
         "0x0000000000000000000000000000000000000000": predictoor_contract
     }
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
     assert agent.config == trader_config
     check_subscriptions_and_subscribe_mock.assert_called_once()
 
@@ -37,7 +37,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     no_feeds_config.max_tries = 10
 
     with pytest.raises(SystemExit):
-        TraderAgent(no_feeds_config, do_trade)
+        TraderAgent(no_feeds_config)
 
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
@@ -47,7 +47,7 @@ def test_run(check_subscriptions_and_subscribe_mock):
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
     trader_config.max_tries = 10
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
 
     with patch.object(agent, "take_step") as ts_mock:
         agent.run(True)
@@ -55,6 +55,7 @@ def test_run(check_subscriptions_and_subscribe_mock):
     ts_mock.assert_called_once()
 
 
+@pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     trader_config = Mock(spec=TraderConfig)
@@ -63,18 +64,25 @@ async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     }
     trader_config.max_tries = 10
     trader_config.web3_config = web3_config
-    agent = TraderAgent(trader_config, do_trade)
+    agent = TraderAgent(trader_config)
 
-    with patch.object(agent, "_process_block_at_feed") as ts_mock:
-        await agent.take_step()
+    # Create async mock fn so we can await asyncio.gather(*tasks)
+    async def _process_block_at_feed(addr, timestamp):
+        return (-1, [])
 
-    assert ts_mock.call_count > 0
+    agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
+
+    await agent.take_step()
+
+    assert check_subscriptions_and_subscribe_mock.call_count == 2
+    assert agent._process_block_at_feed.call_count == 1
 
 
 def custom_trader(feed, prediction):
     return (feed, prediction)
 
 
+@pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     trader_config = Mock(spec=TraderConfig)
@@ -91,34 +99,39 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed.clear()
     agent.prev_traded_epochs_per_feed["0x123"] = []
 
+    async def _do_trade(feed, prediction):
+        pass
+
+    agent._do_trade = Mock(side_effect=_do_trade)
+
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 55)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 55)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should not trade
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     predictoor_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 140)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 140)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
     # prediction is empty, so no trading
     predictoor_contract.get_current_epoch.return_value = 3
     predictoor_contract.get_agg_predval.side_effect = Exception(
-        "An error occurred while getting agg_predval."
+        {"message": "An error occurred while getting agg_predval."}
     )
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
@@ -128,7 +141,7 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed["0x123"] = []
     predictoor_contract.get_agg_predval.return_value = (1, 3)
     predictoor_contract.get_agg_predval.side_effect = None
-    s_till_epoch_end = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
@@ -157,7 +170,7 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
         "0x3": [1, 24, 66],
     }
 
-    agent.save_previous_epochs()
+    agent.update_cache()
 
     agent_new = TraderAgent(trader_config, custom_trader, cache_dir=".test_cache")
     assert agent_new.prev_traded_epochs_per_feed["0x1"] == [3]
@@ -170,3 +183,27 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
     for item in cache_dir_path.iterdir():
         item.unlink()
     cache_dir_path.rmdir()
+
+
+@pytest.mark.asyncio
+@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+async def test_get_pred_properties(check_subscriptions_and_subscribe_mock, web3_config):
+    trader_config = Mock(spec=TraderConfig)
+    trader_config.get_feeds.return_value = {
+        "0x0000000000000000000000000000000000000000": mock_feed()
+    }
+    trader_config.max_tries = 10
+    trader_config.web3_config = web3_config
+    agent = TraderAgent(trader_config)
+    assert agent.config == trader_config
+    check_subscriptions_and_subscribe_mock.assert_called_once()
+
+    agent.get_pred_properties = Mock()
+    agent.get_pred_properties.return_value = {
+        "confidence": 100.0,
+        "dir": 1,
+        "stake": 1,
+    }
+
+    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    assert agent.get_pred_properties.call_count == 1
