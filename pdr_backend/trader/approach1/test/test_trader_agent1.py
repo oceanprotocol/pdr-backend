@@ -1,10 +1,8 @@
-from unittest.mock import Mock, patch
-
-import pytest
-
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
+import pytest
+from unittest.mock import Mock, patch
 
 
 def mock_feed():
