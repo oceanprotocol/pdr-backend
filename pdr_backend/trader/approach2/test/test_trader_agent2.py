@@ -8,6 +8,7 @@ from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
 
 from datetime import datetime
 
+
 def mock_feed():
     feed = Mock(spec=Feed)
     feed.name = "test feed"
@@ -156,6 +157,7 @@ def test_update_positions(
     )
     assert agent.update_cache.call_count == 2
 
+
 # Test for TraderAgent2.should_close
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 def test_should_close(
@@ -193,7 +195,7 @@ def test_should_close(
 
     result = agent.should_close(mock_order)
     assert result == True
-    
+
     # Test 2 - Make more order recent, now it should not close
     mock_order.timestamp = datetime.now().timestamp() * 1000
 
