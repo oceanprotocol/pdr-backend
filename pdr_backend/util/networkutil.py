@@ -39,6 +39,7 @@ def send_encrypted_tx(
         nonce,
     )
 
+
 @enforce_types
 def get_subgraph_url(network: str) -> str:
     """

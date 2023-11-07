@@ -9,6 +9,7 @@ StatisticsResult = Dict[
     str, Union[float, List[PredictoorStats], List[PairTimeframeStats]]
 ]
 
+
 class PairTimeframeStat(TypedDict):
     pair: str
     timeframe: str
@@ -16,6 +17,7 @@ class PairTimeframeStat(TypedDict):
     stake: float
     payout: float
     number_of_predictions: int
+
 
 class PredictoorStat(TypedDict):
     predictoor_address: str
@@ -25,9 +27,11 @@ class PredictoorStat(TypedDict):
     number_of_predictions: int
     details: Set[Tuple[str, str, str]]
 
+
 @enforce_types
 def aggregate_prediction_statistics(
-        all_predictions: List[Prediction]) -> Tuple[Dict[str, Dict], int]:
+    all_predictions: List[Prediction],
+) -> Tuple[Dict[str, Dict], int]:
     """
     Aggregates statistics from a list of prediction objects. It organizes statistics
     by currency pair and timeframe and predictor address. For each category, it
@@ -39,7 +43,7 @@ def aggregate_prediction_statistics(
         all_predictions (List[Prediction]): A list of Prediction objects to aggregate.
 
     Returns:
-        Tuple[Dict[str, Dict], int]: A tuple containing a dictionary of aggregated 
+        Tuple[Dict[str, Dict], int]: A tuple containing a dictionary of aggregated
         statistics and the total number of correct predictions.
     """
     stats: Dict[str, Dict] = {"pair_timeframe": {}, "predictor": {}}
@@ -87,14 +91,15 @@ def aggregate_prediction_statistics(
 
     return stats, correct_predictions
 
+
 @enforce_types
 def get_endpoint_statistics(
-        all_predictions: List[Prediction]
-        ) -> Tuple[float, List[PairTimeframeStat], List[PredictoorStat]]:
+    all_predictions: List[Prediction],
+) -> Tuple[float, List[PairTimeframeStat], List[PredictoorStat]]:
     """
     Calculates the overall accuracy of predictions, and aggregates detailed prediction
     statistics by currency pair and timeframe with predictoor.
-    
+
     The function first determines the overall accuracy of all given predictions.
     It then organizes individual prediction statistics into two separate lists:
     one for currency pair and timeframe statistics, and another for predictor statistics.
@@ -118,7 +123,13 @@ def get_endpoint_statistics(
     pair_timeframe_stats: List[PairTimeframeStat] = []
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
         pair, timeframe = key
-        accuracy = stat_pair_timeframe_item["correct"] / stat_pair_timeframe_item["total"] * 100 if stat_pair_timeframe_item["total"] else 0
+        accuracy = (
+            stat_pair_timeframe_item["correct"]
+            / stat_pair_timeframe_item["total"]
+            * 100
+            if stat_pair_timeframe_item["total"]
+            else 0
+        )
         pair_timeframe_stat: PairTimeframeStat = {
             "pair": pair,
             "timeframe": timeframe,
@@ -131,7 +142,11 @@ def get_endpoint_statistics(
 
     predictoor_stats: List[PredictoorStat] = []
     for predictoor_addr, stat_predictoor_item in stats["predictoor"].items():
-        accuracy = stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100 if stat_predictoor_item["total"] else 0
+        accuracy = (
+            stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100
+            if stat_predictoor_item["total"]
+            else 0
+        )
         predictoor_stat: PredictoorStat = {
             "predictoor_address": predictoor_addr,
             "accuracy": accuracy,
@@ -144,19 +159,21 @@ def get_endpoint_statistics(
 
     return overall_accuracy, pair_timeframe_stats, predictoor_stats
 
+
 @enforce_types
-def get_cli_statistics(
-    all_predictions: List[Prediction]
-    ) -> None:
+def get_cli_statistics(all_predictions: List[Prediction]) -> None:
     total_predictions = len(all_predictions)
 
-    stats, correct_predictions = aggregate_prediction_statistics(
-        all_predictions)
+    stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
     print(f"Overall Accuracy: {correct_predictions/total_predictions*100:.2f}%")
 
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
         pair, timeframe = key
-        accuracy = stat_pair_timeframe_item["correct"] / stat_pair_timeframe_item["total"] * 100
+        accuracy = (
+            stat_pair_timeframe_item["correct"]
+            / stat_pair_timeframe_item["total"]
+            * 100
+        )
         print(f"Accuracy for Pair: {pair}, Timeframe: {timeframe}: {accuracy:.2f}%")
         print(f"Total stake: {stat_pair_timeframe_item['stake']}")
         print(f"Total payout: {stat_pair_timeframe_item['payout']}")

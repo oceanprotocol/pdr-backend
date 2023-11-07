@@ -6,12 +6,17 @@ from enforce_typing import enforce_types
 from pdr_backend.util.subgraph import query_subgraph, info_from_725
 from pdr_backend.models.prediction import Prediction
 from pdr_backend.util.networkutil import get_subgraph_url
+
+
 class ContractIdAndSPE(TypedDict):
     id: str
     seconds_per_epoch: int
+
+
 class FilterMode(Enum):
     CONTRACT = 1
     PREDICTOOR = 2
+
 
 @enforce_types
 def fetch_filtered_predictions(
@@ -22,21 +27,21 @@ def fetch_filtered_predictions(
     filter_mode: FilterMode,
 ) -> List[Prediction]:
     """
-    Fetches predictions from a subgraph within a specified time range 
+    Fetches predictions from a subgraph within a specified time range
     and according to given filters.
 
-    This function supports querying predictions based on contract 
-    addresses or predictor addresses, depending on the filter mode. 
+    This function supports querying predictions based on contract
+    addresses or predictor addresses, depending on the filter mode.
     It iteratively queries the subgraph in chunks to retrieve all relevant
     predictions and constructs Prediction objects from the results.
 
     Args:
         start_ts: The starting Unix timestamp for the query range.
         end_ts: The ending Unix timestamp for the query range.
-        filters: A list of strings representing the filter 
+        filters: A list of strings representing the filter
             values (contract addresses or predictor IDs).
         network: A string indicating the blockchain network to query ('mainnet' or 'testnet').
-        filter_mode: An instance of FilterMode indicating whether to filter 
+        filter_mode: An instance of FilterMode indicating whether to filter
             by contract or by predictor.
 
     Returns:
@@ -150,6 +155,7 @@ def fetch_filtered_predictions(
 
     return predictions
 
+
 @enforce_types
 def get_all_contract_ids_by_owner(owner_address: str, network: str) -> List[str]:
     """
@@ -203,6 +209,7 @@ def get_all_contract_ids_by_owner(owner_address: str, network: str) -> List[str]
 
     return contracts
 
+
 @enforce_types
 def fetch_contract_id_and_spe(
     contract_addresses: List[str], network: str
@@ -236,7 +243,9 @@ def fetch_contract_id_and_spe(
                 secondsPerEpoch
             }
         }
-        """ % json.dumps(contract_addresses)
+        """ % json.dumps(
+        contract_addresses
+    )
 
     # Define the subgraph endpoint and query it
     result = query_subgraph(get_subgraph_url(network), query, timeout=20.0)

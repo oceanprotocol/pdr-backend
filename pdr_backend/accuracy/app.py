@@ -20,7 +20,7 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
     5 minutes or 1 hour, respectively. The end time is the current timestamp.
 
     Args:
-        contract_timeframe (str): The contract timeframe, '5m' for 5 minutes or 
+        contract_timeframe (str): The contract timeframe, '5m' for 5 minutes or
                                   other string values for different timeframes.
 
     Returns:
@@ -29,8 +29,10 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
 
     end_ts = int(datetime.utcnow().timestamp())
     time_delta = (
-        timedelta(weeks=2) if contract_timeframe == "5m" else timedelta(weeks=4)
-        #timedelta(days=1) if contract_timeframe == "5m" else timedelta(days=1)
+        timedelta(weeks=2)
+        if contract_timeframe == "5m"
+        else timedelta(weeks=4)
+        # timedelta(days=1) if contract_timeframe == "5m" else timedelta(days=1)
     )
     start_ts = int((datetime.utcnow() - time_delta).timestamp())
 
@@ -42,13 +44,13 @@ def save_statistics_to_file():
     Periodically fetches and saves statistical data to a JSON file.
 
     This function runs an infinite loop that every 5 minutes triggers
-    data fetching for contract statistics. It uses prefetched contract 
-    addresses and timeframes to gather statistics and save them to a file 
+    data fetching for contract statistics. It uses prefetched contract
+    addresses and timeframes to gather statistics and save them to a file
     in JSON format.
-    
+
     If the process encounters an exception, it prints an error message and
     continues after the next interval.
-    
+
     The data includes statistics for each contract based on the 'seconds per epoch'
     value defined for each statistic type.
     """
@@ -70,9 +72,7 @@ def save_statistics_to_file():
         "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
     )
 
-    contract_information = fetch_contract_id_and_spe(
-        contract_addresses, network_param
-    )
+    contract_information = fetch_contract_id_and_spe(contract_addresses, network_param)
 
     while True:
         try:
@@ -90,7 +90,9 @@ def save_statistics_to_file():
                     )
                 )
 
-                start_ts_param, end_ts_param = calculate_timeframe_timestamps(seconds_per_epoch)
+                start_ts_param, end_ts_param = calculate_timeframe_timestamps(
+                    seconds_per_epoch
+                )
 
                 contract_ids = [contract["id"] for contract in contracts]
 
@@ -121,10 +123,10 @@ def serve_statistics_from_file():
     """
     Serves statistical data from a JSON file via a GET request.
 
-    When a GET request is made to the '/statistics' route, 
+    When a GET request is made to the '/statistics' route,
     this function reads the statistical data from the JSON file
-    and returns it as a JSON response. 
-    
+    and returns it as a JSON response.
+
     If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
     """
 

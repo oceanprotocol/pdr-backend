@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.util.subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 
+
 @dataclass
 class PredictSlot:
     id: str
@@ -12,6 +13,7 @@ class PredictSlot:
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
     roundSumStakes: float
+
 
 @enforce_types
 def get_predict_slots_query(
@@ -64,6 +66,7 @@ def get_predict_slots_query(
 
 
 SECONDS_IN_A_DAY = 86400
+
 
 @enforce_types
 def get_slots(
@@ -123,6 +126,7 @@ def get_slots(
         )
     return slots
 
+
 @enforce_types
 def fetch_slots_for_all_assets(
     asset_ids: List[str],
@@ -140,7 +144,8 @@ def fetch_slots_for_all_assets(
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A dictionary mapping asset IDs to lists of PredictSlot TypedDicts containing slot information.
+        A dictionary mapping asset IDs to lists of PredictSlot dataclass
+        containing slot information.
     """
 
     all_slots = get_slots(asset_ids, end_ts_param, start_ts_param, 0, [], network)
@@ -157,6 +162,7 @@ def fetch_slots_for_all_assets(
         slots_by_asset[asset_id].append(slot_instance)
 
     return slots_by_asset
+
 
 @enforce_types
 def calculate_prediction_prediction_result(
@@ -179,9 +185,9 @@ def calculate_prediction_prediction_result(
 @enforce_types
 def process_single_slot(
     slot: PredictSlot, end_of_previous_day_timestamp: int
-    ) -> Optional[Tuple[float, float, int, int]]:
+) -> Optional[Tuple[float, float, int, int]]:
     """
-    Processes a single slot and calculates the staked amounts for yesterday and today, 
+    Processes a single slot and calculates the staked amounts for yesterday and today,
     as well as the count of correct predictions.
 
     Args:
@@ -189,7 +195,7 @@ def process_single_slot(
         end_of_previous_day_timestamp: The Unix timestamp marking the end of the previous day.
 
     Returns:
-        A tuple containing staked amounts for yesterday, today, and the counts of correct 
+        A tuple containing staked amounts for yesterday, today, and the counts of correct
         predictions and slots evaluated, or None if no stakes were made today.
     """
 
@@ -219,16 +225,18 @@ def process_single_slot(
 
 @enforce_types
 def aggregate_statistics(
-    slots: List[PredictSlot], end_of_previous_day_timestamp: int) -> Tuple[float, float, int, int]:
+    slots: List[PredictSlot], end_of_previous_day_timestamp: int
+) -> Tuple[float, float, int, int]:
     """
     Aggregates statistics across all provided slots for an asset.
 
     Args:
-        slots: A list of PredictSlot TypedDicts containing information about multiple prediction slots.
+        slots: A list of PredictSlot TypedDicts containing information 
+            about multiple prediction slots. 
         end_of_previous_day_timestamp: The Unix timestamp marking the end of the previous day.
 
     Returns:
-        A tuple containing the total staked amounts for yesterday, today, 
+        A tuple containing the total staked amounts for yesterday, today,
         and the total counts of correct predictions and slots evaluated.
     """
 
@@ -264,7 +272,7 @@ def calculate_statistics_for_all_assets(
     network: str = "mainnet",
 ) -> Dict[str, Dict[str, Any]]:
     """
-    Calculates statistics for all provided assets based on 
+    Calculates statistics for all provided assets based on
     slot data within a specified time range.
 
     Args:
@@ -274,7 +282,7 @@ def calculate_statistics_for_all_assets(
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A dictionary mapping asset IDs to another dictionary with 
+        A dictionary mapping asset IDs to another dictionary with
         calculated statistics such as average accuracy and total staked amounts.
     """
     slots_by_asset = fetch_slots_for_all_assets(
