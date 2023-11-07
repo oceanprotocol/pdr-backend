@@ -51,52 +51,53 @@ The bot is invoked by: `python pdr_backend/predictoor/main.py 3`
 The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/approach3/).
 
 **Do simulation, including modeling & trading:**
-- [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py) - top-level file to invoke trade engine
-- [`trade_engine.py`](../pdr_backend/predictoor/approach3/trade_engine.py) - simple, naive trading engine
-- [`tradeutil.py`](../pdr_backend/predictoor/approach3/tradeutil.py) - trade engine parameters, trading strategy parameters, and utilities for trading
-- [`plotutil.py`](../pdr_backend/predictoor/approach3/plotutil.py) - utilities for plotting from simulations
+- [`runtrade.py`](../pdr_backend/simulation/runtrade.py) - top-level file to invoke trade engine
+- [`trade_engine.py`](../pdr_backend/simulation/trade_engine.py) - simple, naive trading engine
+- [`tradeutil.py`](../pdr_backend/simulation/tradeutil.py) - trade engine parameters, trading strategy parameters, and utilities for trading
+- [`plotutil.py`](../pdr_backend/simulation/plotutil.py) - utilities for plotting from simulations
 
 **Build & use predictoor bot:**
 - [`predictoor_agent3.py`](../pdr_backend/predictoor/approach3/predictoor_agent3.py) - main agent. Builds model
 - [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) - solution strategy parameters for the bot
 
 **Build & use the model:** (used by simulation and bot)
-- [`model_factory.py`](../pdr_backend/predictoor/approach3/model_factory.py) - converts X/y data --> AI/ML model
-- [`model_ss.py`](../pdr_backend/predictoor/approach3/model_ss.py) - solution strategy parameters for model_factory
-- [`prev_model.py`](../pdr_backend/predictoor/approach3/prev_model.py) - a very simple model that predict's "yesterday's weather"
+- [`model_factory.py`](../pdr_backend/simulation/model_factory.py) - converts X/y data --> AI/ML model
+- [`model_ss.py`](../pdr_backend/simulation/model_ss.py) - solution strategy parameters for model_factory
+- [`prev_model.py`](../pdr_backend/simulation/prev_model.py) - a very simple model that predict's "yesterday's weather"
 
 **Build & use data:** (used by model)
-- [`data_factory.py`](../pdr_backend/predictoor/approach3/data_factory.py) - converts historical data -> historical dataframe -> X/y model data
-- [`data_ss.py`](../pdr_backend/predictoor/approach3/data_ss.py) - solution strategy parameters for data_factory, ie sets what data to use
-- [`pdutil.py`](../pdr_backend/predictoor/approach3/pdutil.py) - utilities for (pandas) data frames
+- [`data_factory.py`](../pdr_backend/simulation/data_factory.py) - converts historical data -> historical dataframe -> X/y model data
+- [`data_ss.py`](../pdr_backend/simulation/data_ss.py) - solution strategy parameters for data_factory, ie sets what data to use
+- [`pdutil.py`](../pdr_backend/simulation/pdutil.py) - utilities for (pandas) data frames
 
 **Time utilities:** (used by data)
-- [`timeblock.py`](../pdr_backend/predictoor/approach3/timeblock.py) - utility to convert a single time-series into a 2d array, to be part of the X input to modeling training inference
-- [`timeutil.py`](../pdr_backend/predictoor/approach3/timeutil.py) - utilities to convert among different time units
+- [`timeblock.py`](../pdr_backend/simulation/timeblock.py) - utility to convert a single time-series into a 2d array, to be part of the X input to modeling training inference
+- [`timeutil.py`](../pdr_backend/simulation/timeutil.py) - utilities to convert among different time units
 
 **Other utilities:**
-- [`constants.py`](../pdr_backend/predictoor/approach3/constants.py) - basic constants
-- [`test/test*.py`](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
+- [`constants.py`](../pdr_backend/simulation/constants.py) - basic constants
+- [`simulation/test*.py`](../pdr_backend/simulation/test/) - unit tests for simulation
+- [`approach3/test/test*.py`](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
 
 ## HOWTOs
 
 **HOWTO change parameters for each flow:**
-- **For running simulation flow:** change lines in [`runtrade.py`](../pdr_backend/predictoor/approach3/runtrade.py). Almost every line is changeable, to change training data, model, trade parameters, and trade strategy. Details on each below.
+- **For running simulation flow:** change lines in [`runtrade.py`](../pdr_backend/simulation/runtrade.py). Almost every line is changeable, to change training data, model, trade parameters, and trade strategy. Details on each below.
 - **For running predictoor bot flow:** change [`predictoor_config3.py`](../pdr_backend/predictoor/approach3/predictoor_config3.py) solution strategy parameters for the bot
 
 **HOWTO set what training data to use:** 
-- Change arguments to [`data_ss.py:DataSS()`](../pdr_backend/predictoor/approach3/data_ss.py) constructor.
+- Change arguments to [`data_ss.py:DataSS()`](../pdr_backend/simulation/data_ss.py) constructor.
 - Includes: how far to look back historically for training samples, max # training samples, how far to look back when making a single inference.
 
 **HOWTO set what model to use:** 
-- Change argument to [`model_ss.py:ModelSS()`](../pdr_backend/predictoor/approach3/model_ss.py)] constructor.
+- Change argument to [`model_ss.py:ModelSS()`](../pdr_backend/simulation/model_ss.py)] constructor.
 - Includes just: the model. "LIN" = linear.
 
 **HOWTO set trade parameters (uncontrollable by trader):** 
-- Change arguments to [`tradeutil.py:TradeParams()`](../pdr_backend/predictoor/approach3/tradeutil.py)] constructor.
+- Change arguments to [`tradeutil.py:TradeParams()`](../pdr_backend/simulation/tradeutil.py)] constructor.
 - Includes: % trading fee, and initial trader holdings.
 
 **HOWTO set trade strategy (controllable by trader):** 
-- Change arguments to [`tradeutil.py:TradeSS()`](../pdr_backend/predictoor/approach3/tradeutil.py)] constructor.
+- Change arguments to [`tradeutil.py:TradeSS()`](../pdr_backend/simulation/tradeutil.py)] constructor.
 - Includes: how much $ to trade with at each point, where to log, whether to plot
 

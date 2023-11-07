@@ -3,8 +3,8 @@ from sklearn import linear_model, svm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from pdr_backend.predictoor.approach3 import prev_model
-from pdr_backend.predictoor.approach3.model_ss import ModelSS
+from pdr_backend.predictoor.simulation import prev_model
+from pdr_backend.predictoor.simulation.model_ss import ModelSS
 
 
 @enforce_types
