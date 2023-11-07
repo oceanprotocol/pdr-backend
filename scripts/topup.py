@@ -46,7 +46,7 @@ if __name__ == "__main__":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
 
-        if name == "dfbuyer" and config.web3_config.w3.eth.chain_id == 23294:
+        if name == "dfbuyer":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
             minimum_rose_bal = 50
