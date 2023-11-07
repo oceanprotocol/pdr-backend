@@ -1,40 +1,81 @@
 import threading
 import json
+from datetime import datetime, timedelta
+from typing import Tuple
 from flask import Flask, jsonify
 
-from pdr_backend.util.subgraph_predictions import get_all_contracts
-from pdr_backend.accuracy.utils.get_start_end_params import get_start_end_params
+from pdr_backend.util.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.subgraph_slot import calculate_statistics_for_all_assets
-from pdr_backend.util.subgraph_predictions import get_contract_informations
+from pdr_backend.util.subgraph_predictions import fetch_contract_id_and_spe
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
 
 
+def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
+    """
+    Calculates and returns a tuple of Unix timestamps for a start and end time
+    based on a given contract timeframe. The start time is determined to be either
+    2 weeks or 4 weeks in the past, depending on whether the contract timeframe is
+    5 minutes or 1 hour, respectively. The end time is the current timestamp.
+
+    Args:
+        contract_timeframe (str): The contract timeframe, '5m' for 5 minutes or 
+                                  other string values for different timeframes.
+
+    Returns:
+        Tuple[int, int]: A tuple containing the start and end Unix timestamps.
+    """
+
+    end_ts = int(datetime.utcnow().timestamp())
+    time_delta = (
+        timedelta(weeks=2) if contract_timeframe == "5m" else timedelta(weeks=4)
+        #timedelta(days=1) if contract_timeframe == "5m" else timedelta(days=1)
+    )
+    start_ts = int((datetime.utcnow() - time_delta).timestamp())
+
+    return start_ts, end_ts
+
+
 def save_statistics_to_file():
+    """
+    Periodically fetches and saves statistical data to a JSON file.
+
+    This function runs an infinite loop that every 5 minutes triggers
+    data fetching for contract statistics. It uses prefetched contract 
+    addresses and timeframes to gather statistics and save them to a file 
+    in JSON format.
+    
+    If the process encounters an exception, it prints an error message and
+    continues after the next interval.
+    
+    The data includes statistics for each contract based on the 'seconds per epoch'
+    value defined for each statistic type.
+    """
+
+    network_param = "mainnet"  # or 'testnet' depending on your preference
+
+    statistic_types = [
+        {
+            "alias": "5m",
+            "seconds_per_epoch": 300,
+        },
+        {
+            "alias": "1h",
+            "seconds_per_epoch": 3600,
+        },
+    ]
+
+    contract_addresses = get_all_contract_ids_by_owner(
+        "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
+    )
+
+    contract_information = fetch_contract_id_and_spe(
+        contract_addresses, network_param
+    )
+
     while True:
         try:
-            network_param = "mainnet"  # or 'testnet' depending on your preference
-
-            contract_addresses = get_all_contracts(
-                "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
-            )
-
-            contract_information = get_contract_informations(
-                contract_addresses, network_param
-            )
-
-            statistic_types = [
-                {
-                    "alias": "5m",
-                    "seconds_per_epoch": 300,
-                },
-                {
-                    "alias": "1h",
-                    "seconds_per_epoch": 3600,
-                },
-            ]
-
             output = []
 
             for statistic_type in statistic_types:
@@ -49,7 +90,7 @@ def save_statistics_to_file():
                     )
                 )
 
-                start_ts_param, end_ts_param = get_start_end_params(seconds_per_epoch)
+                start_ts_param, end_ts_param = calculate_timeframe_timestamps(seconds_per_epoch)
 
                 contract_ids = [contract["id"] for contract in contracts]
 
@@ -77,6 +118,16 @@ def save_statistics_to_file():
 
 @app.route("/statistics", methods=["GET"])
 def serve_statistics_from_file():
+    """
+    Serves statistical data from a JSON file via a GET request.
+
+    When a GET request is made to the '/statistics' route, 
+    this function reads the statistical data from the JSON file
+    and returns it as a JSON response. 
+    
+    If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
+    """
+
     try:
         with open(JSON_FILE_PATH, "r") as f:
             data = json.load(f)

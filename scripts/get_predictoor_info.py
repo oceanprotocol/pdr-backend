@@ -1,7 +1,7 @@
 import sys
-from pdr_backend.util.csvs import write_csv
+from pdr_backend.util.csvs import write_prediction_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
-from pdr_backend.util.subgraph_predictions import get_all_predictions, FilterMode
+from pdr_backend.util.subgraph_predictions import fetch_filtered_predictions, FilterMode
 from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     else:
         address_filter = [predictoor_addrs.lower()]
 
-    _predictions = get_all_predictions(
+    _predictions = fetch_filtered_predictions(
         start_ts_param,
         end_ts_param,
         address_filter,
@@ -40,6 +40,6 @@ if __name__ == "__main__":
         FilterMode.PREDICTOOR,
     )
 
-    write_csv(_predictions, csv_output_dir_param)
+    write_prediction_csv(_predictions, csv_output_dir_param)
 
     get_cli_statistics(_predictions)
