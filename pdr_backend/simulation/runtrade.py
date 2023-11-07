@@ -2,11 +2,11 @@
 import os
 
 from pdr_backend.util.env import parse_filters
-from pdr_backend.predictoor.simulation.data_ss import DataSS
-from pdr_backend.predictoor.simulation.model_ss import ModelSS
-from pdr_backend.predictoor.simulation.timeutil import timestr_to_ut
-from pdr_backend.predictoor.simulation.tradeutil import TradeParams, TradeSS
-from pdr_backend.predictoor.simulation.trade_engine import TradeEngine
+from pdr_backend.simulation.data_ss import DataSS
+from pdr_backend.simulation.model_ss import ModelSS
+from pdr_backend.simulation.timeutil import timestr_to_ut
+from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.simulation.trade_engine import TradeEngine
 
 # Backlog is in backlog.py
 

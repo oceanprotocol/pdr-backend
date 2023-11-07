@@ -5,14 +5,14 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
-from pdr_backend.predictoor.simulation import plotutil
-from pdr_backend.predictoor.simulation.constants import MS_PER_EPOCH
-from pdr_backend.predictoor.simulation.data_factory import DataFactory
-from pdr_backend.predictoor.simulation.data_ss import DataSS
-from pdr_backend.predictoor.simulation.model_factory import ModelFactory
-from pdr_backend.predictoor.simulation.model_ss import ModelSS
-from pdr_backend.predictoor.simulation.timeutil import current_ut, pretty_timestr
-from pdr_backend.predictoor.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.simulation import plotutil
+from pdr_backend.simulation.constants import MS_PER_EPOCH
+from pdr_backend.simulation.data_factory import DataFactory
+from pdr_backend.simulation.data_ss import DataSS
+from pdr_backend.simulation.model_factory import ModelFactory
+from pdr_backend.simulation.model_ss import ModelSS
+from pdr_backend.simulation.timeutil import current_ut, pretty_timestr
+from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
 
 
@@ -216,9 +216,11 @@ class TradeEngine:
             return
 
         plotutil.plot_vals_vs_time1(
-           self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time")
+            self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time"
+        )
         plotutil.scatter_pred_vs_actual(
-           self.ys_test, self.ys_testhat, "ys_test vs ys_testhat")
+            self.ys_test, self.ys_testhat, "ys_test vs ys_testhat"
+        )
         plotutil.plot_any_vs_time(self.profit_usds, "profit")
         plotutil.plot_any_vs_time(self.tot_profit_usds, "tot profit")
 

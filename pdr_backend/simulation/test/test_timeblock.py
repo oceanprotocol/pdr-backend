@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.simulation import timeblock
+from pdr_backend.simulation import timeblock
 
 
 @enforce_types

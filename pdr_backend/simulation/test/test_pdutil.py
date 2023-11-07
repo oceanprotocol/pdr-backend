@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pdr_backend.predictoor.simulation.constants import (
+from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
 )
-from pdr_backend.predictoor.simulation.pdutil import (
+from pdr_backend.simulation.pdutil import (
     initialize_df,
     concat_next_df,
     save_csv,

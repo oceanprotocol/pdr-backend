@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.predictoor.simulation.constants import (
+from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
