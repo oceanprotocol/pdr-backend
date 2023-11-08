@@ -45,6 +45,7 @@ if __name__ == "__main__":
         if name == "trueval":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
+            minimum_rose_bal = 30
 
         if name == "dfbuyer":
             minimum_ocean_bal = 0
