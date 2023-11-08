@@ -28,11 +28,11 @@ jobs:
           SUBGRAPH_URL: "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
           PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
         run: |
-          output=$(python scripts/check_network.py 36 | grep -E 'FAIL|WARNING|error' || true)
-          joke=$(curl -s https://official-joke-api.appspot.com/jokes/general/random | jq -r '.[0].setup, .[0].punchline')
+          output=$(python scripts/check_network.py 1 | grep -E 'FAIL|WARNING|error' || true)
+          fact=$(curl -s https://catfact.ninja/fact | jq -r '.fact')
           if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
           else
-            message="Testnet Check script failed: \n${output}\n\nAnyways here's a funny joke:\n${joke}"
+            message="Mainnet Check script failed: \n${output}\n\n🐱 Anyways here's a random fact about cats 🐱:\n${fact}"
             curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
           fi

@@ -84,7 +84,7 @@ Simulation allows us to quickly build intuition, and assess the performance of t
 
 Let's simulate! In console:
 ```console
-python pdr_backend/predictoor/approach3/runtrade.py
+python pdr_backend/simulation/runtrade.py
 ```
 
 What `runtrade.py` does:
@@ -145,7 +145,7 @@ This is the fun part! The game is to improve model accuracy with the help of the
 The baseline model is linear, inputting prices of the previous 10 epochs as inputs. (There's a reference trading of "buy if predict up; sell 5min later", but note that your focus is accuracy.)
 
 What you'll be doing:
-- Change values in [runtrade.py](../pdr_backend/predictoor/approach3/runtrade.py) and elsewhere to choose: what input data to use, how to process the input data, what modeling approach to use, and more.
+- Change values in [runtrade.py](../pdr_backend/simulation/runtrade.py) and elsewhere to choose: what input data to use, how to process the input data, what modeling approach to use, and more.
 - Run the simulation, and see how well it does
 - Repeat!
 

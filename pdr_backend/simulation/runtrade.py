@@ -2,11 +2,11 @@
 import os
 
 from pdr_backend.util.env import parse_filters
-from pdr_backend.predictoor.approach3.data_ss import DataSS
-from pdr_backend.predictoor.approach3.model_ss import ModelSS
-from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
-from pdr_backend.predictoor.approach3.tradeutil import TradeParams, TradeSS
-from pdr_backend.predictoor.approach3.trade_engine import TradeEngine
+from pdr_backend.simulation.data_ss import DataSS
+from pdr_backend.simulation.model_ss import ModelSS
+from pdr_backend.simulation.timeutil import timestr_to_ut
+from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.simulation.trade_engine import TradeEngine
 
 # Backlog is in backlog.py
 
@@ -36,7 +36,7 @@ data_ss = DataSS(
     fin_timestamp=timestr_to_ut("now"),  # 'now','2023-06-21_17:55'
     max_N_train=5000,  # 50000 # if inf, only limited by data available
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
-    Nt=10,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
+    Nt=20,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
     usdcoin="USDT",
     timeframe=timeframe,
     signals=["close"],  # ["open", "high","low", "close", "volume"],

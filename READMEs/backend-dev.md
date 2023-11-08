@@ -9,7 +9,7 @@ This is for core devs to improve pdr-backend repo itself.
 
 ## Install pdr-backend
 
-Follow directions in [predictoor.md](predictoor.md)
+Follow directions to install pdr-backend in [predictoor.md](predictoor.md)
 
 ## Local Network
 
