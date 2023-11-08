@@ -1,4 +1,5 @@
 from typing import List, Set
+from enforce_typing import enforce_types
 
 from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
@@ -36,6 +37,7 @@ sample_predictions = [
 ]
 
 
+@enforce_types
 def test_aggregate_prediction_statistics():
     stats, correct_predictions = aggregate_prediction_statistics(sample_predictions)
     assert isinstance(stats, dict)
@@ -44,6 +46,7 @@ def test_aggregate_prediction_statistics():
     assert correct_predictions == 1  # Adjust based on your sample data
 
 
+@enforce_types
 def test_get_endpoint_statistics():
     accuracy, pair_timeframe_stats, predictoor_stats = get_endpoint_statistics(
         sample_predictions
@@ -95,6 +98,7 @@ def test_get_endpoint_statistics():
         assert len(predictoor_stat["details"]) == 1
 
 
+@enforce_types
 def test_get_cli_statistics(capsys):
     get_cli_statistics(sample_predictions)
     captured = capsys.readouterr()

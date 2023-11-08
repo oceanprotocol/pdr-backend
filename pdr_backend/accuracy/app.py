@@ -2,6 +2,7 @@ import threading
 import json
 from datetime import datetime, timedelta
 from typing import Tuple
+from enforce_typing import enforce_types
 from flask import Flask, jsonify
 
 from pdr_backend.util.subgraph_predictions import get_all_contract_ids_by_owner
@@ -12,6 +13,7 @@ app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
 
 
+@enforce_types
 def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
     """
     Calculates and returns a tuple of Unix timestamps for a start and end time
@@ -29,18 +31,19 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
 
     end_ts = int(datetime.utcnow().timestamp())
     time_delta = (
-        # timedelta(weeks=2)
-        # if contract_timeframe == "5m"
-        # else timedelta(weeks=4)
-        timedelta(days=1)
+        timedelta(weeks=2)
         if contract_timeframe == "5m"
-        else timedelta(days=1)
+        else timedelta(weeks=4)
+        # timedelta(days=1)
+        # if contract_timeframe == "5m"
+        # else timedelta(days=1)
     )
     start_ts = int((datetime.utcnow() - time_delta).timestamp())
 
     return start_ts, end_ts
 
 
+@enforce_types
 def save_statistics_to_file():
     """
     Periodically fetches and saves statistical data to a JSON file.
@@ -93,7 +96,7 @@ def save_statistics_to_file():
                 )
 
                 start_ts_param, end_ts_param = calculate_timeframe_timestamps(
-                    seconds_per_epoch
+                    statistic_type["alias"]
                 )
 
                 contract_ids = [contract["id"] for contract in contracts]
@@ -120,6 +123,7 @@ def save_statistics_to_file():
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
 
+@enforce_types
 @app.route("/statistics", methods=["GET"])
 def serve_statistics_from_file():
     """

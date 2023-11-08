@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from dataclasses import asdict
 from typing import Dict
+from enforce_typing import enforce_types
 
 from pdr_backend.util.subgraph_slot import (
     get_predict_slots_query,
@@ -23,6 +24,7 @@ SAMPLE_PREDICT_SLOT = PredictSlot(
 )
 
 
+@enforce_types
 def test_get_predict_slots_query():
     # Test the get_predict_slots_query function with expected inputs and outputs
     query = get_predict_slots_query(
@@ -58,6 +60,7 @@ MOCK_QUERY_RESPONSE_SECOND_CALL: Dict[str, Dict[str, list]] = {
 }
 
 
+@enforce_types
 @patch("pdr_backend.util.subgraph_slot.query_subgraph")
 def test_get_slots(mock_query_subgraph):
     # Configure the mock to return a full page of results on the first call,
@@ -88,6 +91,7 @@ def test_get_slots(mock_query_subgraph):
     assert result_slots[0].id == "0xAsset-12345"
 
 
+@enforce_types
 def test_calculate_prediction_prediction_result():
     # Test the calculate_prediction_prediction_result function with expected inputs
     result = calculate_prediction_prediction_result(150.0, 100.0)
@@ -97,6 +101,7 @@ def test_calculate_prediction_prediction_result():
     assert not result["direction"]
 
 
+@enforce_types
 def test_process_single_slot():
     # Test the process_single_slot function
     (
@@ -114,6 +119,7 @@ def test_process_single_slot():
     assert slots_evaluated == 1
 
 
+@enforce_types
 def test_aggregate_statistics():
     # Test the aggregate_statistics function
     (
@@ -130,6 +136,7 @@ def test_aggregate_statistics():
     assert total_slots_evaluated == 1
 
 
+@enforce_types
 @patch("pdr_backend.util.subgraph_slot.fetch_slots_for_all_assets")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Set up the mock to return a predetermined value
@@ -144,6 +151,7 @@ def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     mock_fetch_slots.assert_called_once_with(["0xAsset"], 1000, 2000, "mainnet")
 
 
+@enforce_types
 @patch(
     "pdr_backend.util.subgraph_slot.query_subgraph", return_value=MOCK_QUERY_RESPONSE
 )
