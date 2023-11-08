@@ -2,7 +2,7 @@ import sys
 from pdr_backend.util.csvs import write_prediction_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import fetch_filtered_predictions, FilterMode
-from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut
+from pdr_backend.predictoor.approach3.timeutil import timestr_to_ut, ms_to_seconds
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
     csv_output_dir_param = sys.argv[5]
 
-    start_ts_param = timestr_to_ut(start_dt)
-    end_ts_param = timestr_to_ut(end_dt)
+    start_ts_param = ms_to_seconds(timestr_to_ut(start_dt))
+    end_ts_param = ms_to_seconds(timestr_to_ut(end_dt))
 
     if "," in predictoor_addrs:
         address_filter = predictoor_addrs.lower().split(",")

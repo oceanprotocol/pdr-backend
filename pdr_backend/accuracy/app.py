@@ -29,10 +29,12 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
 
     end_ts = int(datetime.utcnow().timestamp())
     time_delta = (
-        timedelta(weeks=2)
+        # timedelta(weeks=2)
+        # if contract_timeframe == "5m"
+        # else timedelta(weeks=4)
+        timedelta(days=1)
         if contract_timeframe == "5m"
-        else timedelta(weeks=4)
-        # timedelta(days=1) if contract_timeframe == "5m" else timedelta(days=1)
+        else timedelta(days=1)
     )
     start_ts = int((datetime.utcnow() - time_delta).timestamp())
 

@@ -1,13 +1,6 @@
-from typing import List, Dict, Tuple, Union, TypedDict, Set
+from typing import List, Dict, Tuple, TypedDict, Set
 from enforce_typing import enforce_types
 from pdr_backend.models.prediction import Prediction
-
-PredictionDetail = Tuple[str, str, str]
-PredictoorStats = Dict[str, Union[str, float, int, List[PredictionDetail]]]
-PairTimeframeStats = Dict[str, Union[str, float, int]]
-StatisticsResult = Dict[
-    str, Union[float, List[PredictoorStats], List[PairTimeframeStats]]
-]
 
 
 class PairTimeframeStat(TypedDict):
@@ -141,7 +134,7 @@ def get_endpoint_statistics(
         pair_timeframe_stats.append(pair_timeframe_stat)
 
     predictoor_stats: List[PredictoorStat] = []
-    for predictoor_addr, stat_predictoor_item in stats["predictoor"].items():
+    for predictoor_addr, stat_predictoor_item in stats["predictor"].items():
         accuracy = (
             stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100
             if stat_predictoor_item["total"]
@@ -165,6 +158,15 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
     total_predictions = len(all_predictions)
 
     stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
+
+    if total_predictions == 0:
+        print("No predictions found.")
+        return
+
+    if correct_predictions == 0:
+        print("No correct predictions found.")
+        return
+
     print(f"Overall Accuracy: {correct_predictions/total_predictions*100:.2f}%")
 
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
@@ -179,7 +181,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
         print(f"Total payout: {stat_pair_timeframe_item['payout']}")
         print(f"Number of predictions: {stat_pair_timeframe_item['total']}\n")
 
-    for predictoor_addr, stat_predictoor_item in stats["predictoor"].items():
+    for predictoor_addr, stat_predictoor_item in stats["predictor"].items():
         accuracy = stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100
         print(f"Accuracy for Predictoor Address: {predictoor_addr}: {accuracy:.2f}%")
         print(f"Stake: {stat_predictoor_item['stake']}")

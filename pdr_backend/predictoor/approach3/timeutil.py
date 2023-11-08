@@ -61,3 +61,9 @@ def ut_to_dt(ut: int) -> datetime.datetime:
     assert ut2 == ut, (ut, ut2)
 
     return dt
+
+
+@enforce_types
+def ms_to_seconds(ms: int) -> int:
+    """Convert milliseconds to seconds"""
+    return int(ms / 1000)

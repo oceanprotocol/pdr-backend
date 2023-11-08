@@ -110,9 +110,21 @@ def get_slots(
         timeout=20.0,
     )
 
-    # print("result", result)
-
     new_slots = result["data"]["predictSlots"] or []
+
+    # Convert the list of dicts to a list of PredictSlot objects
+    # by passing the dict as keyword arguments
+    # convert roundSumStakesUp and roundSumStakes to float
+    new_slots = [
+        PredictSlot(
+            **{
+                **slot,
+                "roundSumStakesUp": float(slot["roundSumStakesUp"]),
+                "roundSumStakes": float(slot["roundSumStakes"]),
+            }
+        )
+        for slot in new_slots
+    ]
 
     slots.extend(new_slots)
     if len(new_slots) == records_per_page:
@@ -152,21 +164,20 @@ def fetch_slots_for_all_assets(
 
     slots_by_asset: Dict[str, List[PredictSlot]] = {}
     for slot in all_slots:
-        slot_id = slot["id"]
+        slot_id = slot.id
         # split the id to get the asset id
         asset_id = slot_id.split("-")[0]
         if asset_id not in slots_by_asset:
             slots_by_asset[asset_id] = []
 
-        slot_instance = PredictSlot(**slot)
-        slots_by_asset[asset_id].append(slot_instance)
+        slots_by_asset[asset_id].append(slot)
 
     return slots_by_asset
 
 
 @enforce_types
 def calculate_prediction_prediction_result(
-    round_sum_stakes_up: str, round_sum_stakes: str
+    round_sum_stakes_up: float, round_sum_stakes: float
 ) -> Dict[str, bool]:
     """
     Calculates the prediction result based on the sum of stakes.
@@ -179,7 +190,7 @@ def calculate_prediction_prediction_result(
         A dictionary with a boolean indicating the predicted direction.
     """
 
-    return {"direction": float(round_sum_stakes_up) > float(round_sum_stakes)}
+    return {"direction": round_sum_stakes_up > round_sum_stakes}
 
 
 @enforce_types
@@ -231,8 +242,8 @@ def aggregate_statistics(
     Aggregates statistics across all provided slots for an asset.
 
     Args:
-        slots: A list of PredictSlot TypedDicts containing information 
-            about multiple prediction slots. 
+        slots: A list of PredictSlot TypedDicts containing information
+            about multiple prediction slots.
         end_of_previous_day_timestamp: The Unix timestamp marking the end of the previous day.
 
     Returns:
