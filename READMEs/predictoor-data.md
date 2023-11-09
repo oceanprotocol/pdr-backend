@@ -3,11 +3,11 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Get Predictoor bot performance
+# Get Predictoor bot performance data
 
-This README presents how to get some data related to the predictoor bot performance.
+This README presents how to get some data related to the Predictoor bot performance.
 
-Great job on becoming a predictoor. You should be submitting predictions and claiming some rewards by now.
+Great job on becoming a Predictoor. You should be submitting predictions and claiming some rewards by now.
 
 Next you might want now to see exactly how accurate yout bot is and how much you have earned, let's do it!
 
