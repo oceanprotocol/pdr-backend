@@ -21,7 +21,7 @@ from pdr_backend.util.web3_config import Web3Config
 model_dir: str = getenv_or_exit("MODELDIR")
 trained_models_dir = os.path.join(model_dir, "trained_models")
 sys.path.append(model_dir)
-from model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
+from pdr_backend.predictoor.approach2.model import OceanModel  # type: ignore  # fmt: off # pylint: disable=wrong-import-order, wrong-import-position
 
 rpc_url = getenv_or_exit("RPC_URL")
 subgraph_url = getenv_or_exit("SUBGRAPH_URL")
