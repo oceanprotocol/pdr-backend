@@ -8,6 +8,7 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
 from pdr_backend.models.dfrewards import DFRewards
 
+
 @enforce_types
 def batchify(data: List[Any], batch_size: int):
     return [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
@@ -53,6 +54,7 @@ def do_payout():
         print(f"Claiming payouts for {contract_address}")
         contract = PredictoorContract(config.web3_config, contract_address)
         request_payout_batches(contract, BATCH_SIZE, pending_payouts[contract_address])
+
 
 def do_rose_payout():
     address = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
