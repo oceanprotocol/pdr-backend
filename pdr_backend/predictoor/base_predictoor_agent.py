@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
-
+from pdr_backend.util.cache import Cache
 
 @enforce_types
 class BasePredictoorAgent(ABC):
@@ -19,7 +19,11 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, call predict.py::predict_function()
     """
 
-    def __init__(self, config: BasePredictoorConfig):
+    def __init__(
+        self,
+        config: BasePredictoorConfig,
+        cache_dir=".cache",
+    ):
         self.config = config
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
@@ -37,6 +41,10 @@ class BasePredictoorAgent(ABC):
             addr: [] for addr in self.feeds
         }
 
+        self.reset_cache = False
+        self.cache = Cache(cache_dir=cache_dir)
+        self.load_cache()
+
         print("\n" + "-" * 80)
         print("Config:")
         print(self.config)
@@ -50,6 +58,21 @@ class BasePredictoorAgent(ABC):
         print("Feeds (succinct):")
         for addr, feed in self.feeds.items():
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
+
+    def update_cache(self):
+        for feed, epochs in self.prev_submit_epochs_per_feed.items():
+            if epochs:
+                last_epoch = epochs[-1]
+                self.cache.save(f"predictoor_last_prediction_{feed}", last_epoch)
+
+    def load_cache(self):
+        if self.reset_cache == True:
+            return
+        
+        for feed in self.feeds:
+            last_epoch = self.cache.load(f"predictoor_last_prediction_{feed}")
+            if last_epoch is not None:
+                self.prev_submit_epochs_per_feed[feed].append(last_epoch)
 
     def run(self):
         print("Starting main loop...")
@@ -90,6 +113,14 @@ class BasePredictoorAgent(ABC):
 
         # print status
         print(f"    Process {feed} at epoch={epoch}")
+
+        # already predicted for?
+        if (
+            self.prev_submit_epochs_per_feed.get(addr)
+            and epoch == self.prev_submit_epochs_per_feed[addr][-1]
+        ):
+            print("      Done feed: already predicted this epoch")
+            return (None, None, False)
 
         # within the time window to predict?
         print(
