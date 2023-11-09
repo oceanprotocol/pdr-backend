@@ -471,7 +471,7 @@ def block_number_is_synced(subgraph_url: str, block_number: int) -> bool:
 
 @enforce_types
 def wait_until_subgraph_syncs(web3_config: Web3Config, subgraph_url: str):
-    block_number = web3_config.w3.eth.block_number - 2
+    block_number = web3_config.w3.eth.block_number
     while block_number_is_synced(subgraph_url, block_number) is not True:
         print("Subgraph is out of sync, trying again in 5 seconds")
         time.sleep(5)
