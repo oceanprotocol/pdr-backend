@@ -12,6 +12,7 @@ This README shows how to earn $ by running a predictoor bot on mainnet.
 1. **[Run bot on testnet](#run-predictoor-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#run-predictoor-bot-on-sapphire-mainnet)**
 1. **[Claim payout](#claim-payout)**
+1. **[Check performance](#check-performance)**
 
 Then, you can [go beyond](#go-beyond): [optimize model](#optimize-model), [run >1 bots](#run-many-bots-at-once), and more.
 
@@ -142,6 +143,12 @@ Track performance, as in testnet.
 When running predictoors on mainnet, you have the potential to earn $.
 
 **[Here](payout.md)** are instructions to claim your earnings.
+
+## Check Performance
+
+After you run your bot and claimed the payout, you might want to check how your bot is perfoming before you start improving it.
+
+Follow **[this instructions](predictoor-data.md)** to get an overview of your performance so far.
 
 # Go Beyond
 
