@@ -147,10 +147,10 @@ export GANACHE_BLOCKTIME=5
 
 #pick just OPTION 1 or 2 below, depending on your goals
 
-#OPTION 1: for predictoor bot: run barge with all bots except predictoor
+#OPTION 1: for predictoor bot: run barge with all bots except predictoor. (Use this your first time through)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 
-#OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents
+#OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
@@ -187,7 +187,7 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 
 export RPC_URL=http://4.245.224.119:8545 # from VPS 
-export SUBGRAPH_URL="http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph" # from VPS
+export SUBGRAPH_URL=http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
 
 #for predictoor bot. Setting to empty means no filters.
 export PAIR_FILTER=
@@ -225,12 +225,30 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 
 ## 5. Run Tests Locally
 
-Re-run barge above, using option 2 (for unit tests)
+### Set up a second VPS / Barge
+
+In steps 2 & 3 above, we set up a _first_ VPS & Barge, for predictoor bot.
+- Assume its IP address is 4.245.224.119
+
+Now, repeat 2 & 3 above, to up a _second_ VPS & Barge, for local testing. 
+- Give it the same key as the first barge.
+- Assume its IP address is 74.234.16.165
+
+### Set Local Ennvars
+
+To envvars that use the second Barge. In local console:
+```console
+export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+export ADDRESS_FILE="${HOME}/address.json" # from scp to local
+
+export RPC_URL=http://74.234.16.165:8545
+export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+
+export PAIR_FILTER=BTC/USDT,ETH/USDT #optional; reduces # feeds to process
+```
 
 In work console, run tests:
 ```console
-#(ensure envvars set as above)
-
 #run a single test. The "-s" is for more output.
 pytest pdr_backend/util/test/test_constants.py::test_constants1 -s
 
