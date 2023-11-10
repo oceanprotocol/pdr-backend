@@ -243,8 +243,6 @@ export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 
 export RPC_URL=http://74.234.16.165:8545
 export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-
-export PAIR_FILTER=BTC/USDT,ETH/USDT #optional; reduces # feeds to process
 ```
 
 In work console, run tests:
