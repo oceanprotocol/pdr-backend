@@ -2,10 +2,11 @@ import os
 from typing import List
 
 from enforce_typing import enforce_types
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from pdr_backend.simulation import plotutil
 from pdr_backend.simulation.constants import MS_PER_EPOCH
 from pdr_backend.simulation.data_factory import DataFactory
 from pdr_backend.simulation.data_ss import DataSS
@@ -14,6 +15,15 @@ from pdr_backend.simulation.model_ss import ModelSS
 from pdr_backend.simulation.timeutil import current_ut, pretty_timestr
 from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
+
+
+class PlotState:
+    def __init__(self):
+        self.fig, self.ax = plt.subplots()
+
+        matplotlib.rcParams.update({"font.size": 22})
+        plt.ion()
+        plt.show()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -44,6 +54,8 @@ class TradeEngine:
 
         self.logfile = ""
 
+        self.plot_state = PlotState()
+
     @property
     def usdcoin(self) -> str:
         return self.data_ss.usdcoin
@@ -72,14 +84,13 @@ class TradeEngine:
         hist_df = self.data_factory.get_hist_df()
         for test_i in range(self.data_ss.N_test):
             self.run_one_iter(test_i, hist_df)
+            self._plot(test_i, self.data_ss.N_test)
 
         log("Done all iters.")
 
         nmse_train = np.average(self.nmses_train)
         nmse_test = nmse(self.ys_testhat, self.ys_test)
         log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
-
-        self._final_plot()
 
     @enforce_types
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
@@ -96,8 +107,6 @@ class TradeEngine:
         model = model_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
-        # plotutil.plot_vals_vs_time1(y_train, y_trainhat,"ytr & ytrhat vs time")
-        # plotutil.scatter_pred_vs_actual(y_train, y_trainhat, "ytr vs ytrhat")
 
         nmse_train = nmse(y_train, y_trainhat, min(y), max(y))
         self.nmses_train.append(nmse_train)
@@ -211,18 +220,33 @@ class TradeEngine:
         )
 
     @enforce_types
-    def _final_plot(self):
+    def _plot(self, i, N):
         if not self.trade_ss.do_plot:
             return
 
-        plotutil.plot_vals_vs_time1(
-            self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time"
-        )
-        plotutil.scatter_pred_vs_actual(
-            self.ys_test, self.ys_testhat, "ys_test vs ys_testhat"
-        )
-        plotutil.plot_any_vs_time(self.profit_usds, "profit")
-        plotutil.plot_any_vs_time(self.tot_profit_usds, "tot profit")
+        # don't plot first 5 iters -> not interesting
+        # then plot the next 5 -> "stuff's happening!"
+        # then plot every 5th iter, to balance "stuff's happening" w/ speed
+        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        if not do_update:
+            return
+
+        fig, ax = self.plot_state.fig, self.plot_state.ax
+
+        y = self.tot_profit_usds
+        ylabel = "tot profit"
+
+        HEIGHT = 8  # magic number
+        WIDTH = HEIGHT * 2  # magic number
+
+        N = len(y)
+        x = list(range(0, N))
+        ax.set_title(ylabel + " vs time")
+        ax.plot(x, y, "g-")
+        plt.ylabel(ylabel)
+        plt.xlabel("time")
+        fig.set_size_inches(WIDTH, HEIGHT)
+        plt.pause(0.001)
 
     @enforce_types
     def _log(self, s: str):
