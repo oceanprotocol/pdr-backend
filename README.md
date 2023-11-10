@@ -33,7 +33,6 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
 - **[Scripts](scripts/)** for performance stats, more
-- (obsolete) [ETHMiami competition](READMEs/ethmiami.md) - Oct 27-29, 2023
 
 ## Repo structure
 
