@@ -56,7 +56,7 @@ ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
 ### Open ports of VPS
 
 Running Barge, the VPS exposes these urls:
-- RPC is at https://4.245.224.119:8545
+- RPC is at http://4.245.224.119:8545
 - Subgraph is at http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
@@ -165,7 +165,7 @@ source venv/bin/activate
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
 export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 
-export RPC_URL=https://4.245.224.119:8545 # from VPS 
+export RPC_URL=http://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL="http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph" # from VPS
 
 #for predictoor bot. Setting to empty means no filters.
@@ -188,7 +188,7 @@ It should return something like the following. Copy that into the prompt and hit
 export STAKE_TOKEN=0x282d8efCe846A88B159800bd4130ad77443Fa1A1
 ```
 
-(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with 'export STAKE_TOKEN=<paste here>`)
+(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with `export STAKE_TOKEN=<paste here>`)
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
