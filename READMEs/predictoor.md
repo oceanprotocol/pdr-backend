@@ -55,8 +55,8 @@ What `runtrade.py` does:
    - Build a model
    - Predict up/down
    - Trade.
+   - Plot total profit versus time.
    - (It logs this all to screen, and to `out*.txt`.)
-1. Plot total profit versus time.
 
 The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runtrade.py](../pdr_backend/simulation/runtrade.py).
 
