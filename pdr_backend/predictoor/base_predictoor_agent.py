@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import sys
 import time
+from datetime import datetime
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
@@ -86,7 +87,9 @@ class BasePredictoorAgent(ABC):
         feed, contract = self.feeds[addr], self.contracts[addr]
         epoch = contract.get_current_epoch()
         s_per_epoch = feed.seconds_per_epoch
-        epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
+        
+        # we want to subtract from now rather than last_block timestamp so we can account for run time between feeds this agent is serving
+        epoch_s_left = epoch * s_per_epoch + s_per_epoch - datetime.now().timestamp()
 
         # print status
         print(f"    Process {feed} at epoch={epoch}")

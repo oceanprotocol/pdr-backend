@@ -104,8 +104,25 @@ class DataFactory:
             # prev_st_ut = st_ut
             st_ut = newest_ut_value + MS_PER_EPOCH
 
+        # We can get NaNs in the data, which breaks certain models (i.e. LIN)
+        df = self._fix_NaN(df)
+
         # output to csv
         save_csv(filename, df)
+
+    def _fix_NaN(self, df: pd.DataFrame):
+        """
+        @description
+          Let's go through the df and fix any NaNs
+          Except for dates, we're going to simply fill any of the columns with the last valid record
+        """
+        print(">>> Fix NaNs")
+        for col in df.columns:
+            if col == "datetime":
+                continue
+            df[col] = df[col].ffill()
+        return df
+
 
     def _calc_start_ut_maybe_delete(self, filename: str) -> int:
         """Calculate start timestamp, reconciling whether file exists and where

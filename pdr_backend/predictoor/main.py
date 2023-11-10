@@ -10,6 +10,7 @@ Usage: python pdr_backend/predictoor/main.py APPROACH
        where APPROACH=1 - does random predictions
              APPROACH=2 - uses a static model to predict. Needs MODELDIR specified.
              APPROACH=3 - uses a dynamic model to predict
+             APPROACH=4 - build a model every so often and predict
              APPROACH=payout - claim all unclaimed payouts.
 """
 
@@ -26,7 +27,7 @@ def do_main():
         do_help()
 
     arg1 = sys.argv[1]
-    if arg1 in ["1", "3"]:  # approach1, approach3
+    if arg1 in ["1", "3", "4"]:  # approach1, approach3
         agent_module = importlib.import_module(
             f"pdr_backend.predictoor.approach{arg1}.predictoor_agent{arg1}"
         )
