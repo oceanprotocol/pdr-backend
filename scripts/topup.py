@@ -38,7 +38,7 @@ if __name__ == "__main__":
         rose_bal = rose_bal_wei / 1e18
 
         minimum_ocean_bal = 20
-        minimum_rose_bal = 10
+        minimum_rose_bal = 30
         topup_ocean_bal = 20
         topup_rose_bal = 30
 
@@ -49,8 +49,8 @@ if __name__ == "__main__":
         if name == "dfbuyer":
             minimum_ocean_bal = 0
             topup_ocean_bal = 0
-            minimum_rose_bal = 50
-            topup_rose_bal = 50
+            minimum_rose_bal = 250
+            topup_rose_bal = 250
 
         # pylint: disable=line-too-long
         print(f"{name}: {ocean_bal:.2f} OCEAN, {rose_bal:.2f} ROSE")
