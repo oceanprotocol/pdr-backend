@@ -56,14 +56,16 @@ ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
 ### Open ports of VPS
 
 Running Barge, the VPS exposes these urls:
-- RPC is at https://4.245.224.119:8545
+- RPC is at http://4.245.224.119:8545
 - Subgraph is at http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
+- On the bottom right, there's a table with a list of resources ("MyVm", "MyVM-ip", "MyVM-nsg", "MyVM-vnet", ..). In it, click the "-nsgs" resource.
+- Now you're in the "Network Security Group" (nsg) section
 - In the sidebar on left, click on "Inbound security rules"
-- Click the "+ Add" button. A side window will pop up. Keep all fields default except: Protocol = TCP, port = 8545. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
-- Repeat the previous step for port 9000 (Subgraph).
+- Click the "+ Add" button in about center middle. A side window will pop up. Keep all fields default except: "Destination port ranges" = 8545, "Protocol" = TCP, "Priority" = 100. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
+- Repeat the previous step for port 9000 (Subgraph), priority 110.
 
 (Ref: these [instructions](https://learn.microsoft.com/en-us/answers/questions/1190066/how-can-i-open-a-port-in-azure-so-that-a-constant).)
 
@@ -95,13 +97,32 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-compose
 ```
 
+### Enable running docker as non-root user
+
+In VPS console:
+```console
+# Create the docker group if it does not exist
+sudo groupadd docker
+
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+#Log in to the new docker group (to avoid having to log out / log in again; but if not enough, try to reboot):
+newgrp docker
+```
+
+(Ref: https://stackoverflow.com/a/48957722)
+
 ### Install Barge In VPS
 
 In VPS console:
 ```console
 ## install barge remotely
+cd
+mkdir code
 cd code
 git clone https://github.com/oceanprotocol/barge
+cd barge
 git checkout predictoor
 ```
 
@@ -165,7 +186,7 @@ source venv/bin/activate
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
 export ADDRESS_FILE="${HOME}/address.json" # from scp to local
 
-export RPC_URL=https://4.245.224.119:8545 # from VPS 
+export RPC_URL=http://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL="http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph" # from VPS
 
 #for predictoor bot. Setting to empty means no filters.
@@ -188,7 +209,7 @@ It should return something like the following. Copy that into the prompt and hit
 export STAKE_TOKEN=0x282d8efCe846A88B159800bd4130ad77443Fa1A1
 ```
 
-(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with 'export STAKE_TOKEN=<paste here>`)
+(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with `export STAKE_TOKEN=<paste here>`)
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console

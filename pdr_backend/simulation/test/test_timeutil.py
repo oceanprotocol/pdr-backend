@@ -9,6 +9,7 @@ from pdr_backend.simulation.timeutil import (
     dt_to_ut,
     ut_to_dt,
     timestr_to_ut,
+    ms_to_seconds,
 )
 
 
@@ -53,3 +54,9 @@ def test_dt_to_ut_and_back():
 
     dt2 = ut_to_dt(ut)
     assert dt2 == dt
+
+
+@enforce_types
+def test_ms_to_seconds():
+    seconds = ms_to_seconds(1648576500000)
+    assert seconds == 1648576500
