@@ -1,6 +1,8 @@
 from unittest.mock import Mock, call, patch
-from pdr_backend.models.dfrewards import DFRewards
+
 import pytest
+
+from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.predictoor.payout import (
     batchify,
@@ -93,7 +95,6 @@ def test_do_rose_payout():
         "pdr_backend.predictoor.payout.BaseConfig", return_value=mock_config
     ), patch("pdr_backend.predictoor.payout.DFRewards", return_value=mock_contract):
         do_rose_payout()
-        callargs = mock_contract.claim_rewards.call_args_list
         mock_contract.claim_rewards.assert_called_with(
             "mock_owner", "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
