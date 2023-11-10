@@ -10,6 +10,7 @@ from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 from pdr_backend.util.cache import Cache
 
 
+# pylint: disable=too-many-instance-attributes
 @enforce_types
 class BasePredictoorAgent(ABC):
 
@@ -20,7 +21,11 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, qcall predict.py::predict_function()
     """
 
-    def __init__(self, config: BasePredictoorConfig, cache_dir=".cache"):
+    def __init__(
+        self,
+        config: BasePredictoorConfig,
+        cache_dir=".cache"
+    ):
         self.config = config
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
@@ -38,6 +43,7 @@ class BasePredictoorAgent(ABC):
             addr: [] for addr in self.feeds
         }
 
+        self.reset_cache = False
         self.cache = Cache(cache_dir=cache_dir)
         self.load_cache()
 
