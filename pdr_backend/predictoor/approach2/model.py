@@ -1,14 +1,14 @@
+import pickle
+import copy
 import sys
-
-sys.path.append("../")
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import confusion_matrix as cm
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import KFold
-import copy
-import pickle
+
+sys.path.append("../")
 
 
 class OceanModel:
@@ -54,7 +54,7 @@ class OceanModel:
         x, y, r = self.format_train_data(path)
         self.train(x, y, r)
 
-    def train(self, x, y, r):
+    def train(self, x, y, _):
         if self.predictor is None:
             raise Exception("Division by zero is not allowed.")
 
@@ -91,7 +91,6 @@ class OceanModel:
         for i, (ind_train, ind_test) in enumerate(kf.split(x)):
             model.fit(x[ind_train, :], y[ind_train])
             yhat = model.predict(x[ind_test, :])
-            sample_weight_test = np.abs(r[ind_test])
             ACC[i] = model.score(x[ind_test, :], y[ind_test])
             conf_mat += cm(y[ind_test], yhat)
             pred_returns[i] = np.sum(r[ind_test][yhat == 1])
