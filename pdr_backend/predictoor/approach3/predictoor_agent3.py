@@ -11,6 +11,10 @@ from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig
 from pdr_backend.simulation.timeutil import timestr_to_ut
 from pdr_backend.simulation.data_ss import DataSS
 
+import time
+from datetime import datetime
+
+import asyncio
 
 @enforce_types
 class PredictoorAgent3(BasePredictoorAgent):
@@ -19,6 +23,40 @@ class PredictoorAgent3(BasePredictoorAgent):
     def __init__(self, config: PredictoorConfig3):
         super().__init__(config)
         self.config: PredictoorConfig3 = config
+
+    def run(self):
+        print("Starting main loop...")
+        while True:
+            asyncio.run(self._take_step())
+
+    async def _take_step(self):
+        w3 = self.config.web3_config.w3
+        print("\n" + "-" * 80)
+        print("Take_step() begin.")
+
+        # new block?
+        block_number = w3.eth.block_number
+        print(f"  block_number={block_number}, prev={self.prev_block_number}")
+        if block_number <= self.prev_block_number:
+            print("  Done step: block_number hasn't advanced yet. So sleep.")
+            time.sleep(1)
+            return
+        block = self.config.web3_config.get_block(block_number, full_transactions=False)
+        if not block:
+            print("  Done step: block not ready yet")
+            return
+        self.prev_block_number = block_number
+        self.prev_block_timestamp = block["timestamp"]
+
+        # do work at new block
+        print(f"  Got new block. Timestamp={block['timestamp']}")
+        tasks = [
+            self._async_process_block_at_feed(addr, block["timestamp"]) for addr in self.feeds
+        ]
+        predval, stake, success = zip(*await asyncio.gather(*tasks))
+
+        print("  Done step: success.")
+        print(f"  predval={predval}, stake={stake}, success={success}")
 
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
@@ -43,8 +81,8 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Controllable data_ss params. Hardcoded; could be moved to envvars
 
         coins = ["ETH", "BTC"]
-        signals = ["close"]  # ["open", "high","low", "close", "volume"]
-        exchange_ids = ["binanceus"]  # ["binance", "kraken"]
+        signals = self.config.signals
+        exchange_ids = self.config.exchange_ids
 
         # Uncontrollable data_ss params
         feed = self.feeds[addr]
@@ -101,3 +139,46 @@ class PredictoorAgent3(BasePredictoorAgent):
         stake = self.config.stake_amount
 
         return (bool(predval), stake)
+
+    async def _async_process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
+        """Returns (predval, stake, submitted)"""
+        # base data
+        feed, contract = self.feeds[addr], self.contracts[addr]
+        epoch = contract.get_current_epoch()
+        s_per_epoch = feed.seconds_per_epoch
+        
+        # we want to subtract from now rather than last_block timestamp so we can account for run time between feeds this agent is serving
+        epoch_s_left = epoch * s_per_epoch + s_per_epoch - datetime.now().timestamp()
+
+        # print status
+        print(f"    Process {feed} at epoch={epoch}")
+
+        # within the time window to predict?
+        print(
+            f"      {epoch_s_left} s left in epoch"
+            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+        )
+        too_early = epoch_s_left > self.config.s_until_epoch_end
+        if too_early:
+            print("      Done feed: too early to predict")
+            return (None, None, False)
+
+        # compute prediction; exit if no good
+        target_time = (epoch + 2) * s_per_epoch
+        print(f"      Predict for time slot = {target_time}...")
+
+        predval, stake = self.get_prediction(addr, target_time)
+        print(f"      -> Predict result: predval={predval}, stake={stake}")
+        if predval is None or stake <= 0:
+            print("      Done feed: can't use predval/stake")
+            return (None, None, False)
+
+        # submit prediction to chain
+        print("      Submit predict tx chain...")
+        contract.submit_prediction(predval, stake, target_time, True)
+        self.prev_submit_epochs_per_feed[addr].append(epoch)
+        print("      " + "=" * 80)
+        print("      -> Submit predict tx result: success.")
+        print("      " + "=" * 80)
+        print("      Done feed: success.")
+        return (predval, stake, True)
