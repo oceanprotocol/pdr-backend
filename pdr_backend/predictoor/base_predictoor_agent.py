@@ -21,11 +21,7 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, qcall predict.py::predict_function()
     """
 
-    def __init__(
-        self,
-        config: BasePredictoorConfig,
-        cache_dir=".cache"
-    ):
+    def __init__(self, config: BasePredictoorConfig, cache_dir=".cache"):
         self.config = config
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
