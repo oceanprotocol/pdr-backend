@@ -102,6 +102,8 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 In VPS console:
 ```console
 ## install barge remotely
+cd
+mkdir code
 cd code
 git clone https://github.com/oceanprotocol/barge
 git checkout predictoor
