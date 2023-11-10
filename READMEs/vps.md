@@ -61,9 +61,11 @@ Running Barge, the VPS exposes these urls:
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
+- On the bottom right, there's a table with a list of resources ("MyVm", "MyVM-ip", "MyVM-nsg", "MyVM-vnet", ..). In it, click the "-nsgs" resource.
+- Now you're in the "Network Security Group" (nsg) section
 - In the sidebar on left, click on "Inbound security rules"
-- Click the "+ Add" button. A side window will pop up. Keep all fields default except: Protocol = TCP, port = 8545. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
-- Repeat the previous step for port 9000 (Subgraph).
+- Click the "+ Add" button in about center middle. A side window will pop up. Keep all fields default except: "Destination port ranges" = 8545, "Protocol" = TCP, "Priority" = 100. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
+- Repeat the previous step for port 9000 (Subgraph), priority 110.
 
 (Ref: these [instructions](https://learn.microsoft.com/en-us/answers/questions/1190066/how-can-i-open-a-port-in-azure-so-that-a-constant).)
 
