@@ -97,6 +97,22 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-compose
 ```
 
+### Enable running docker as non-root user
+
+In VPS console:
+```console
+# Create the docker group if it does not exist
+sudo groupadd docker
+
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+#Log in to the new docker group (to avoid having to log out / log in again; but if not enough, try to reboot):
+newgrp docker
+```
+
+(Ref: https://stackoverflow.com/a/48957722)
+
 ### Install Barge In VPS
 
 In VPS console:
