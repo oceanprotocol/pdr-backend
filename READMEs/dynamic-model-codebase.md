@@ -5,11 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # About Dynamic Model Codebase
 
-This README describes the structure of the code that does dynamic modeling, and simulation of modeling & trading. It's at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/approach3/).
+Dynamic modeling is used in two places:
 
-Two flows use the code:
-1. Simulation of modeling & trading
-2. Run predictoor bot
+1. Simulation of modeling & trading -> [`pdr_backend/predictoor/simulation/`](../pdr_backend/predictoor/simulation/).
+2. Run predictoor bot - [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/approach3/)
 
 Contents of this README:
 - [Code and Simulation](#code-and-simulation)
@@ -46,9 +45,9 @@ The bot is invoked by: `python pdr_backend/predictoor/main.py 3`
 - It's configured by envvars and [`predictoor_config3.py::PredictoorConfig3`](../pdr_backend/predictoor/approach3/predictoor_config3.py)
 - It predicts according to `PredictoorAgent3:get_prediction()`.
 
-## Description of each approach3 file
+## Description of each file
 
-The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/approach3/).
+The code is at [`pdr_backend/predictoor/simulation/`](../pdr_backend/predictoor/simulation/).
 
 **Do simulation, including modeling & trading:**
 - [`runtrade.py`](../pdr_backend/simulation/runtrade.py) - top-level file to invoke trade engine
@@ -77,7 +76,7 @@ The code is at [`pdr_backend/predictoor/approach3/`](../pdr_backend/predictoor/a
 **Other utilities:**
 - [`constants.py`](../pdr_backend/simulation/constants.py) - basic constants
 - [`simulation/test*.py`](../pdr_backend/simulation/test/) - unit tests for simulation
-- [`approach3/test/test*.py`](../pdr_backend/predictoor/approach3/test/) - unit tests for each py file
+- [`simulation/test/test*.py`](../pdr_backend/predictoor/simulation/test/) - unit tests for each py file
 
 ## HOWTOs
 
