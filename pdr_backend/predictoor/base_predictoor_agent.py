@@ -9,6 +9,7 @@ from pdr_backend.models.feed import Feed
 from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 from pdr_backend.util.cache import Cache
 
+
 @enforce_types
 class BasePredictoorAgent(ABC):
 
@@ -16,14 +17,10 @@ class BasePredictoorAgent(ABC):
     What it does
     - Fetches Predictoor contracts from subgraph, and filters them
     - Monitors each contract for epoch changes.
-    - When a value can be predicted, call predict.py::predict_function()
+    - When a value can be predicted, qcall predict.py::predict_function()
     """
 
-    def __init__(
-        self,
-        config: BasePredictoorConfig,
-        cache_dir=".cache",
-    ):
+    def __init__(self, config: BasePredictoorConfig, cache_dir=".cache"):
         self.config = config
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
@@ -41,7 +38,6 @@ class BasePredictoorAgent(ABC):
             addr: [] for addr in self.feeds
         }
 
-        self.reset_cache = False
         self.cache = Cache(cache_dir=cache_dir)
         self.load_cache()
 
@@ -66,9 +62,9 @@ class BasePredictoorAgent(ABC):
                 self.cache.save(f"predictoor_last_prediction_{feed}", last_epoch)
 
     def load_cache(self):
-        if self.reset_cache == True:
+        if self.reset_cache is True:
             return
-        
+
         for feed in self.feeds:
             last_epoch = self.cache.load(f"predictoor_last_prediction_{feed}")
             if last_epoch is not None:

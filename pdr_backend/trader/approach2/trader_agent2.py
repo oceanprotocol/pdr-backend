@@ -73,7 +73,7 @@ class TraderAgent2(TraderAgent):
         self.cache.save(f"portfolio_{self.__class__}", self.portfolio)
 
     def load_cache(self):
-        if self.reset_cache == True:
+        if self.reset_cache is True:
             return
 
         super().load_cache()
