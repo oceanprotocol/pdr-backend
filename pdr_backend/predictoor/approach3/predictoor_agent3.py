@@ -58,6 +58,49 @@ class PredictoorAgent3(BasePredictoorAgent):
         print("  Done step: success.")
         print(f"  predval={predval}, stake={stake}, success={success}")
 
+    async def _async_process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
+        """Returns (predval, stake, submitted)"""
+        # base data
+        feed, contract = self.feeds[addr], self.contracts[addr]
+        epoch = contract.get_current_epoch()
+        s_per_epoch = feed.seconds_per_epoch
+        
+        # we want to subtract from now rather than last_block timestamp so we can account for run time between feeds this agent is serving
+        epoch_s_left = epoch * s_per_epoch + s_per_epoch - datetime.now().timestamp()
+
+        # print status
+        print(f"    Process {feed} at epoch={epoch}")
+
+        # within the time window to predict?
+        print(
+            f"      {epoch_s_left} s left in epoch"
+            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+        )
+        too_early = epoch_s_left > self.config.s_until_epoch_end
+        if too_early:
+            print("      Done feed: too early to predict")
+            return (None, None, False)
+
+        # compute prediction; exit if no good
+        target_time = (epoch + 2) * s_per_epoch
+        print(f"      Predict for time slot = {target_time}...")
+
+        predval, stake = self.get_prediction(addr, target_time)
+        print(f"      -> Predict result: predval={predval}, stake={stake}")
+        if predval is None or stake <= 0:
+            print("      Done feed: can't use predval/stake")
+            return (None, None, False)
+
+        # submit prediction to chain
+        print("      Submit predict tx chain...")
+        contract.submit_prediction(predval, stake, target_time, True)
+        self.prev_submit_epochs_per_feed[addr].append(epoch)
+        print("      " + "=" * 80)
+        print("      -> Submit predict tx result: success.")
+        print("      " + "=" * 80)
+        print("      Done feed: success.")
+        return (predval, stake, True)
+    
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
@@ -139,46 +182,3 @@ class PredictoorAgent3(BasePredictoorAgent):
         stake = self.config.stake_amount
 
         return (bool(predval), stake)
-
-    async def _async_process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
-        """Returns (predval, stake, submitted)"""
-        # base data
-        feed, contract = self.feeds[addr], self.contracts[addr]
-        epoch = contract.get_current_epoch()
-        s_per_epoch = feed.seconds_per_epoch
-        
-        # we want to subtract from now rather than last_block timestamp so we can account for run time between feeds this agent is serving
-        epoch_s_left = epoch * s_per_epoch + s_per_epoch - datetime.now().timestamp()
-
-        # print status
-        print(f"    Process {feed} at epoch={epoch}")
-
-        # within the time window to predict?
-        print(
-            f"      {epoch_s_left} s left in epoch"
-            f" (predict if <= {self.config.s_until_epoch_end} s left)"
-        )
-        too_early = epoch_s_left > self.config.s_until_epoch_end
-        if too_early:
-            print("      Done feed: too early to predict")
-            return (None, None, False)
-
-        # compute prediction; exit if no good
-        target_time = (epoch + 2) * s_per_epoch
-        print(f"      Predict for time slot = {target_time}...")
-
-        predval, stake = self.get_prediction(addr, target_time)
-        print(f"      -> Predict result: predval={predval}, stake={stake}")
-        if predval is None or stake <= 0:
-            print("      Done feed: can't use predval/stake")
-            return (None, None, False)
-
-        # submit prediction to chain
-        print("      Submit predict tx chain...")
-        contract.submit_prediction(predval, stake, target_time, True)
-        self.prev_submit_epochs_per_feed[addr].append(epoch)
-        print("      " + "=" * 80)
-        print("      -> Submit predict tx result: success.")
-        print("      " + "=" * 80)
-        print("      Done feed: success.")
-        return (predval, stake, True)
