@@ -22,14 +22,14 @@ class PredictoorAgent3(BasePredictoorAgent):
         self.config: PredictoorConfig3 = config
 
     def get_prediction(
-        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+        self, feed_addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
 
         @arguments
-          addr -- str -- address of the trading pair. Info in self.feeds[addr]
+          feed_addr -- str -- address of the trading pair. Info in self.feeds[feed_addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return
@@ -46,7 +46,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         exchange_ids = ["binanceus"]  # ["binance", "kraken"]
 
         # Uncontrollable data_ss params
-        feed = self.feeds[addr]
+        feed = self.feeds[feed_addr]
         timeframe = feed.timeframe  # eg 5m, 1h
         yval_coin = feed.base  # eg ETH
         usdcoin = feed.quote  # eg USDT
