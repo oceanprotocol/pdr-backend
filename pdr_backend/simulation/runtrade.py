@@ -57,7 +57,7 @@ trade_pp = TradeParams(
 )
 
 trade_ss = TradeSS(
-    do_plot=False,  # plot at end?
+    do_plot=True,  # plot at end?
     logpath=os.path.abspath("./"),
     buy_amt_usd=100000.00,  # How much to buy at a time. In USD
 )
