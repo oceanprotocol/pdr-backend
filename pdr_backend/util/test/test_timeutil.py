@@ -3,7 +3,7 @@ from datetime import timezone
 
 from enforce_typing import enforce_types
 
-from pdr_backend.simulation.timeutil import (
+from pdr_backend.util.timeutil import (
     pretty_timestr,
     current_ut,
     dt_to_ut,
