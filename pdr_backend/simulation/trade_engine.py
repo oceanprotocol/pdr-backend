@@ -18,7 +18,7 @@ from pdr_backend.util.mathutil import nmse
 
 class PlotState:
     def __init__(self):
-        self.fig, self.ax = plt.subplots()
+        self.fig, (self.ax0, self.ax1) = plt.subplots(2)
 
         matplotlib.rcParams.update({"font.size": 22})
         plt.ion()
@@ -227,26 +227,32 @@ class TradeEngine:
         # don't plot first 5 iters -> not interesting
         # then plot the next 5 -> "stuff's happening!"
         # then plot every 5th iter, to balance "stuff's happening" w/ speed
-        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        # HACK do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        do_update = (i+1) == N
         if not do_update:
             return
 
-        fig, ax = self.plot_state.fig, self.plot_state.ax
+        fig, ax0, ax1 = \
+            self.plot_state.fig, self.plot_state.ax0, self.plot_state.ax1
 
-        y = self.tot_profit_usds
-        ylabel = "tot profit"
+        y0 = self.tot_profit_usds
+        N = len(y0)
+        x = list(range(0, N))
+        ax0.plot(x, y0, "g-")
+        ax0.set_title("tot trading profit vs time")
+        ax0.set(xlabel="time", ylabel="tot trading profit")
+
+        y1 = y0 #FIXME
+        ax1.plot(x, y1, "b-")
+        ax1.set_title("% correct so far vs time")
+        ax1.set(xlabel="time", ylabel="% correct so far")
 
         HEIGHT = 8  # magic number
         WIDTH = HEIGHT * 2  # magic number
-
-        N = len(y)
-        x = list(range(0, N))
-        ax.set_title(ylabel + " vs time")
-        ax.plot(x, y, "g-")
-        plt.ylabel(ylabel)
-        plt.xlabel("time")
         fig.set_size_inches(WIDTH, HEIGHT)
+        fig.tight_layout(pad=1.0) # add space between plots
         plt.pause(0.001)
+        #import pdb; pdb.set_trace() #HACK
 
     @enforce_types
     def _log(self, s: str):
