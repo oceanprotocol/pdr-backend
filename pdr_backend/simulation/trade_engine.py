@@ -227,8 +227,8 @@ class TradeEngine:
         # don't plot first 5 iters -> not interesting
         # then plot the next 5 -> "stuff's happening!"
         # then plot every 5th iter, to balance "stuff's happening" w/ speed
-        # HACK do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
-        do_update = (i+1) == N
+        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        #do_update = (i+1) == N
         if not do_update:
             return
 
@@ -239,10 +239,10 @@ class TradeEngine:
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
-        ax0.set_title("tot trading profit vs time")
-        ax0.set(xlabel="time", ylabel="tot trading profit")
+        ax0.set_title("Total trading profit vs time")
+        ax0.set(xlabel="time", ylabel="total trading profit (USD)")
 
-        y1 = y0 #FIXME
+        y1 = np.cumsum(self.corrects) / np.arange(1, N+1)
         ax1.plot(x, y1, "b-")
         ax1.set_title("% correct so far vs time")
         ax1.set(xlabel="time", ylabel="% correct so far")
