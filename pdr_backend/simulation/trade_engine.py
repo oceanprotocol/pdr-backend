@@ -54,7 +54,9 @@ class TradeEngine:
 
         self.logfile = ""
 
-        self.plot_state = PlotState()
+        self.plot_state = None
+        if self.trade_ss.do_plot:
+            self.plot_state = PlotState()
 
     @property
     def usdcoin(self) -> str:
