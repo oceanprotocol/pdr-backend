@@ -24,7 +24,6 @@ if pairs is None or len(pairs) == 0:
 pairs = [i.split("/", maxsplit=1)[0] for i in pairs]
 
 timeframe = "1h"
-
 if timeframes is not None and len(timeframes) > 0:
     timeframe = timeframes[0]
 

@@ -9,7 +9,8 @@ import pandas as pd
 from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
-    MS_PER_EPOCH,
+    OHLCV_MULT_MIN,
+    OHLCV_MULT_MAX,
 )
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.pdutil import (
@@ -77,19 +78,25 @@ class DataFactory:
             # C is [sample x signal(TOHLCV)]. Row 0 is oldest
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
             raw_tohlcv_data = exch.fetch_ohlcv(
-                symbol=pair,
-                timeframe=self.ss.timeframe,
-                since=st_ut,
-                limit=1000,
+                symbol=pair,  # eg 'BTC/USDT'
+                timeframe=self.ss.timeframe,  # eg '5m', '1h'
+                since=st_ut,  # timestamp of first candle
+                limit=1000,  # max # candles to retrieve
             )
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
-                diffs = np.array(uts[1:]) - np.array(uts[:-1])
-                mx, mn = max(diffs), min(diffs)
-                diffs_ok = mn == mx == MS_PER_EPOCH
-                if not diffs_ok:
-                    print(f"**WARNING: diffs not ok: mn={mn}, mx={mx}**")
-                # assert mx == mn == MS_PER_EPOCH
+                # Ideally, time between ohclv candles is always 5m or 1h
+                # But exchange data often has gaps. Warn about worst violations
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+                diffs_m = diffs_ms / 1000 / 60  # in minutes
+                mn_thr = self.ss.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.ss.timeframe_m * OHLCV_MULT_MAX
+
+                if min(diffs_m) < mn_thr:
+                    print(f"**WARNING: short candle time: {min(diffs_m)} min")
+                if max(diffs_m) > mx_thr:
+                    print(f"**WARNING: long candle time: {max(diffs_m)} min")
+
             raw_tohlcv_data = [
                 vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
             ]
@@ -101,8 +108,7 @@ class DataFactory:
 
             # prep next iteration
             newest_ut_value = int(df.index.values[-1])
-            # prev_st_ut = st_ut
-            st_ut = newest_ut_value + MS_PER_EPOCH
+            st_ut = newest_ut_value + self.ss.timeframe_ms
 
         # output to csv
         save_csv(filename, df)
@@ -126,7 +132,7 @@ class DataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("  User-specified start >= file start, so append file")
-            return file_utN + MS_PER_EPOCH
+            return file_utN + self.ss.timeframe_ms
 
         print("  User-specified start < file start, so delete file")
         os.remove(filename)

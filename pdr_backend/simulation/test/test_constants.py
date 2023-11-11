@@ -6,6 +6,8 @@ from pdr_backend.simulation.constants import (
     OHLCV_DTYPES,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
+    OHLCV_MULT_MIN,
+    OHLCV_MULT_MAX,
 )
 
 
@@ -23,3 +25,5 @@ def test_constants():
     assert "timestamp" in TOHLCV_COLS
     assert np.float64 in TOHLCV_DTYPES
     assert np.int64 in TOHLCV_DTYPES
+
+    assert 0 < OHLCV_MULT_MIN <= OHLCV_MULT_MAX < np.inf
