@@ -242,7 +242,7 @@ class TradeEngine:
 
         y1 = np.cumsum(self.corrects) / np.arange(1, N + 1)
         ax1.plot(x, y1, "b-")
-        ax1.set_title("% correct so far vs time")
+        ax1.set_title(f"% correct so far vs time. Now = {y1[-1]*100:.2f} %")
         ax1.set(xlabel="time", ylabel="% correct so far")
 
         HEIGHT = 8  # magic number
