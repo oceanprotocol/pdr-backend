@@ -5,12 +5,8 @@ import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
+from pdr_backend.data_eng.constants import CAND_SIGNALS
 from pdr_backend.util.timeutil import pretty_timestr
-
-CAND_USDCOINS = ["USDT", "DAI", "USDC"]  # add more if needed
-CAND_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
-CAND_SIGNALS = ["open", "high", "low", "close", "volume"]
-
 
 class DataSS:
     # pylint: disable=too-many-instance-attributes
@@ -21,51 +17,34 @@ class DataSS:
         st_timestamp: int,  # ut, eg via timestr_to_ut(timestr)
         fin_timestamp: int,  # ""
         max_N_train,  # if inf, only limited by data available
-        N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
-        usdcoin: str,  # e.g. "USDT", for pairs of eg ETH-USDT, BTC-USDT
-        timeframe: str,  # "1m", 5m, 15m, 30m, 1h, 1d, 1w, 1M
         signals: List[str],  # eg ["open","high","low","close","volume"]
         coins: List[str],  # eg ["ETH", "BTC"]
         exchange_ids: List[str],  # eg ["binance", "kraken"]
-        yval_exchange_id: str,  # eg "binance",
-        yval_coin: str,  # eg "ETH"
-        yval_signal: str,  # eg "c" for closing price
     ):
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
         assert 0 <= st_timestamp <= fin_timestamp <= np.inf
         assert 0 < max_N_train
-        assert 0 < N_test < np.inf
         assert 0 < Nt < np.inf
-        assert usdcoin in CAND_USDCOINS
-        assert timeframe in CAND_TIMEFRAMES
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
-        assert yval_signal in CAND_SIGNALS, yval_signal
-
+        
         self.csv_dir = csv_dir
         self.st_timestamp = st_timestamp
         self.fin_timestamp = fin_timestamp
 
         self.max_N_train = max_N_train
-        self.N_test = N_test
         self.Nt = Nt
 
-        self.usdcoin = usdcoin
-        self.timeframe = timeframe
         self.signals = signals
         self.coins = coins
-
+        
         self.exchs_dict = {}  # e.g. {"binance" : ccxt.binance()}
         for exchange_id in exchange_ids:
             exchange_class = getattr(ccxt, exchange_id)
             self.exchs_dict[exchange_id] = exchange_class()
-
-        self.yval_exchange_id = yval_exchange_id
-        self.yval_coin = yval_coin
-        self.yval_signal = yval_signal
 
     @property
     def n(self) -> int:
@@ -87,21 +66,8 @@ class DataSS:
     @property
     def n_coins(self) -> int:
         return len(self.coins)
-
-    @property
-    def timeframe_ms(self) -> int:
-        """Returns timeframe, in ms"""
-        return self.timeframe_m * 60 * 1000
-
-    @property
-    def timeframe_m(self) -> int:
-        """Returns timeframe, in minutes"""
-        if self.timeframe == "5m":
-            return 5
-        if self.timeframe == "1h":
-            return 60
-        raise ValueError("need to support timeframe={self.timeframe}")
-
+    
+    @enforce_types
     def __str__(self) -> str:
         s = "DataSS={\n"
 
@@ -111,20 +77,14 @@ class DataSS:
         s += "  \n"
 
         s += f"  max_N_train={self.max_N_train} -- max # pts to train on\n"
-        s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
         s += f"  Nt={self.Nt} -- model inputs Nt past pts z[t-1], .., z[t-Nt]\n"
         s += "  \n"
 
-        s += f"  usdcoin={self.usdcoin}\n"
-        s += f"  timeframe={self.timeframe}\n"
         s += f"  signals={self.signals}\n"
         s += f"  coins={self.coins}\n"
         s += "  \n"
 
         s += f"  exchs_dict={self.exchs_dict}\n"
-        s += f"  yval_exchange_id={self.yval_exchange_id}\n"
-        s += f"  yval_coin={self.yval_coin}\n"
-        s += f"  yval_signal={self.yval_signal}\n"
         s += "  \n"
 
         s += "  (then...)\n"

@@ -2,6 +2,7 @@
 import os
 
 from pdr_backend.util.env import parse_filters
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_ss import ModelSS
 from pdr_backend.simulation.sim_ss import SimSS
@@ -34,21 +35,24 @@ print(f"Config: {pairs} {exchanges} {timeframe}")
 yval_coin = pairs[0]
 yval_exchange_id = exchanges[0]
 
+data_pp = DataPP( # user-uncontrollable params, at data-eng level
+    timeframe=timeframe,
+    yval_exchange_id=yval_exchange_id,
+    yval_coin=yval_coin,
+    usdcoin="USDT",
+    yval_signal="close",
+    N_test=200,  # 50000 . num points to test on, 1 at a time (online)
+)
+
 data_ss = DataSS(  # user-controllable params, at data-eng level
     csv_dir=os.path.abspath("csvs"),
     st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
     fin_timestamp=timestr_to_ut("now"),  # 'now','2023-06-21_17:55'
     max_N_train=5000,  # 50000 # if inf, only limited by data available
-    N_test=200,  # 50000 . num points to test on, 1 at a time (online)
     Nt=20,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
-    usdcoin="USDT",
-    timeframe=timeframe,
     signals=["close"],  # ["open", "high","low", "close", "volume"],
     coins=pairs,
     exchange_ids=exchanges,
-    yval_exchange_id=yval_exchange_id,
-    yval_coin=yval_coin,
-    yval_signal="close",
 )
 
 model_ss = ModelSS("LIN")  # user-controllable params, at model-eng level
