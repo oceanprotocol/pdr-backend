@@ -55,7 +55,7 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series]) -> bool:
     if type(x) == np.ndarray:
         return np.isnan(np.min(x))
     elif type(x) in [pd.DataFrame, pd.Series]:
-        return x.isnull().values.any()
+        return x.isnull().values.any() # type: ignore[union-attr]
     else:
         raise ValueError(f"Can't handle type {type(x)}")
 
@@ -63,12 +63,12 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series]) -> bool:
 @enforce_types
 def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
     """Interpolate the nans using Linear method.
-    It ignores the index and treat the values as equally spaced. 
+    It ignores the index and treat the values as equally spaced.
 
     Ref: https://www.geeksforgeeks.org/working-with-missing-data-in-pandas/
     """
-    df = df.interpolate(method='linear', limit_direction='forward')
-    df = df.interpolate(method='linear', limit_direction='backward') # entry 0
+    df = df.interpolate(method="linear", limit_direction="forward")
+    df = df.interpolate(method="linear", limit_direction="backward")  # row 0
     return df
 
 
