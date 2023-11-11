@@ -17,12 +17,12 @@ from pdr_backend.simulation.timeutil import current_ut, pretty_timestr
 from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
 
+FONTSIZE = 12
 
 class PlotState:
     def __init__(self):
         self.fig, (self.ax0, self.ax1) = plt.subplots(2)
 
-        matplotlib.rcParams.update({"font.size": 22})
         plt.ion()
         plt.show()
 
@@ -239,8 +239,11 @@ class TradeEngine:
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
-        ax0.set_title("Total trading profit vs time")
-        ax0.set(xlabel="time", ylabel="total trading profit (USD)")
+        ax0.set_title(
+            "Trading profit vs time", fontsize=FONTSIZE, fontweight="bold"
+        )
+        ax0.set_xlabel("time", fontsize=FONTSIZE)
+        ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
         y1_est, y1_l, y1_u = [], [], [] # est, 95% confidence intervals 
         for i in range(N):
@@ -255,8 +258,11 @@ class TradeEngine:
         ax1.plot(x, y1_est, "b")
         ax1.fill_between(x, y1_l, y1_u, color="b", alpha=.15)
         now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
-        ax1.set_title(f"% correct so far vs time. Now = {now_s}")
-        ax1.set(xlabel="time", ylabel="% correct so far")
+        ax1.set_title(
+            f"% correct vs time. {now_s}", fontsize=FONTSIZE, fontweight="bold"
+        )
+        ax1.set_xlabel("time", fontsize=FONTSIZE)
+        ax1.set_ylabel("% correct", fontsize=FONTSIZE)
 
         HEIGHT = 8  # magic number
         WIDTH = HEIGHT * 2  # magic number
