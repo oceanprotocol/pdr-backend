@@ -6,6 +6,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from statsmodels.stats.proportion import proportion_confint
+
 
 from pdr_backend.simulation.data_factory import DataFactory
 from pdr_backend.simulation.data_ss import DataSS
@@ -240,9 +242,18 @@ class TradeEngine:
         ax0.set_title("Total trading profit vs time")
         ax0.set(xlabel="time", ylabel="total trading profit (USD)")
 
-        y1 = np.cumsum(self.corrects) / np.arange(1, N + 1)
-        ax1.plot(x, y1, "b-")
-        ax1.set_title(f"% correct so far vs time. Now = {y1[-1]*100:.2f} %")
+        y1_est, y1_l, y1_u = [], [], [] # est, 95% confidence intervals 
+        for i in range(N):
+            n_correct = sum(self.corrects[:i+1])
+            n_trials = len(self.corrects[:i+1])
+            l, u = proportion_confint(count=n_correct, nobs=n_trials)
+            y1_est.append(n_correct / n_trials * 100)
+            y1_l.append(l * 100)
+            y1_u.append(u * 100)
+        
+        ax1.plot(x, y1_est, "black", x, y1_l, "r", x, y1_u, "r")
+        now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
+        ax1.set_title(f"% correct so far vs time. Now = {now_s}")
         ax1.set(xlabel="time", ylabel="% correct so far")
 
         HEIGHT = 8  # magic number

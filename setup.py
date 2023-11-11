@@ -26,6 +26,7 @@ install_requirements = [
     "pytest-env",
     "requests",
     "scikit-learn",
+    "statsmodels",
     "types-requests",
     "web3",
     "sapphire.py",
