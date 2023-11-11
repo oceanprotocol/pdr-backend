@@ -38,7 +38,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Set model_ss
         model_ss = ModelSS(
             self.config.model_ss
-        )  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
+        )  # LIN, GPR, SVR, NuSVR, LinearSVR
 
         # Controllable data_ss params. Hardcoded; could be moved to envvars
 

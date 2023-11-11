@@ -97,13 +97,12 @@ class TradeEngine:
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
         testshift = self.data_ss.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        X, y, var_with_prev, _ = self.data_factory.create_xy(hist_df, testshift)
+        X, y, _ = self.data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        self.model_ss.var_with_prev = var_with_prev  # used for PREV model, that's all
         model_factory = ModelFactory(self.model_ss)
         model = model_factory.build(X_train, y_train)
 

@@ -206,7 +206,6 @@ class DataFactory:
         @return --
           X -- 2d array of [sample_i, var_i] : value
           y -- 1d array of [sample_i]
-          var_with_prev -- int
           x_df -- df w/ cols={exchange_id}:{coin}:{signal}:t-{x} + "datetime"
             index=0,1,.. (nothing special)
         """
@@ -244,12 +243,6 @@ class DataFactory:
 
         X = x_df.to_numpy()
 
-        x_cols = x_df.columns.tolist()
-        x_col_with_prev = (
-            f"{ss.yval_exchange_id}:{ss.yval_coin}:" f"{ss.yval_signal}:t-2"
-        )
-        var_with_prev = x_cols.index(x_col_with_prev)
-
         # y is set from yval_{exchange_id, coin, signal}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
         hist_col = f"{ss.yval_exchange_id}:{ss.yval_coin}:{ss.yval_signal}"
@@ -262,7 +255,7 @@ class DataFactory:
         assert X.shape[1] == ss.n
 
         # return
-        return X, y, var_with_prev, x_df
+        return X, y, x_df
 
     def _hist_csv_filename(self, exchange_id, pair) -> str:
         """Given exchange_id and pair (and self path), compute csv filename"""

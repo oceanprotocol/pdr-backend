@@ -182,7 +182,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     data_factory = DataFactory(ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
-    X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
@@ -199,12 +199,11 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("kraken:ETH:high:t-2") == var_with_prev
     assert x_df["kraken:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
     # =========== now have a different testshift (1 not 0)
-    X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=1)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=1)
     _assert_shapes(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
@@ -221,7 +220,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     ]
     assert found_cols == target_cols
 
-    assert found_cols.index("kraken:ETH:high:t-2") == var_with_prev
     assert x_df["kraken:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
@@ -229,7 +227,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     ss.max_N_train = 5
     # ss.Nt = 2
 
-    X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
 
     assert X.shape[0] == 5 + 1  # +1 for one test point
@@ -277,7 +275,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     data_factory = DataFactory(ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
-    X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
 
     found_cols = x_df.columns.tolist()
@@ -308,7 +306,6 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         "kraken:ETH:low:t-2",
     ]
     assert found_cols == target_cols
-    assert found_cols.index("binanceus:ETH:high:t-2") == var_with_prev
 
     # test binanceus:ETH:high like in 1-signal
     assert target_cols[6:9] == [
@@ -347,7 +344,7 @@ def test_create_xy__handle_nan(tmpdir):
 
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -355,11 +352,11 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(hist_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 

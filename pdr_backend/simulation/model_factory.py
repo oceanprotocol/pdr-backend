@@ -3,7 +3,6 @@ from sklearn import linear_model, svm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from pdr_backend.simulation import prev_model
 from pdr_backend.simulation.model_ss import ModelSS
 
 
@@ -22,8 +21,6 @@ class ModelFactory:
     def _model(self):
         a = self.model_ss.model_approach
         # print(f"model_approach={a}")
-        if a == "PREV":
-            return prev_model.PrevModel(self.model_ss.var_with_prev)
         if a == "LIN":
             return linear_model.LinearRegression()
         if a == "GPR":
