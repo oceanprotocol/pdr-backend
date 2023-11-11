@@ -30,6 +30,9 @@ if timeframes is not None and len(timeframes) > 0:
 
 print(f"Config: {pairs} {exchanges} {timeframe}")
 
+yval_coin = pairs[0]
+yval_exchange_id = exchanges[0]
+
 data_ss = DataSS(
     csv_dir=os.path.abspath("csvs"),
     st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
@@ -42,8 +45,8 @@ data_ss = DataSS(
     signals=["close"],  # ["open", "high","low", "close", "volume"],
     coins=pairs,
     exchange_ids=exchanges,
-    yval_exchange_id=exchanges[0],
-    yval_coin=pairs[0],
+    yval_exchange_id=yval_exchange_id,
+    yval_coin=yval_coin,
     yval_signal="close",
 )
 
@@ -51,7 +54,7 @@ model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
 
 trade_pp = TradeParams(
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
-    init_holdings={"USDT": 100000.0, "BTC": 0.0},
+    init_holdings={"USDT": 100000.0, yval_coin: 0.0},
 )
 
 trade_ss = TradeSS(
