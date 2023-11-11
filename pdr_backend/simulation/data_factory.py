@@ -78,17 +78,17 @@ class DataFactory:
             # C is [sample x signal(TOHLCV)]. Row 0 is oldest
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
             raw_tohlcv_data = exch.fetch_ohlcv(
-                symbol=pair, # eg 'BTC/USDT'
-                timeframe=self.ss.timeframe, # eg '5m', '1h'
-                since=st_ut, # timestamp of first candle
-                limit=1000, # max # candles to retrieve
+                symbol=pair,  # eg 'BTC/USDT'
+                timeframe=self.ss.timeframe,  # eg '5m', '1h'
+                since=st_ut,  # timestamp of first candle
+                limit=1000,  # max # candles to retrieve
             )
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
                 # Ideally, time between ohclv candles is always 5m or 1h
                 # But exchange data often has gaps. Warn about worst violations
-                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1]) # in ms
-                diffs_m = diffs_ms / 1000 / 60 # in minutes
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+                diffs_m = diffs_ms / 1000 / 60  # in minutes
                 mn_thr = self.ss.timeframe_m * OHLCV_MULT_MIN
                 mx_thr = self.ss.timeframe_m * OHLCV_MULT_MAX
 
@@ -96,15 +96,14 @@ class DataFactory:
                     print(f"**WARNING: short candle time: {min(diffs_m)} min")
                 if max(diffs_m) > mx_thr:
                     print(f"**WARNING: long candle time: {max(diffs_m)} min")
-                    
+
             raw_tohlcv_data = [
-                vec for vec in raw_tohlcv_data
-                if vec[0] <= self.ss.fin_timestamp
+                vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
             ]
             next_df = pd.DataFrame(raw_tohlcv_data, columns=TOHLCV_COLS)
             df = concat_next_df(df, next_df)
 
-            if len(raw_tohlcv_data) < 1000: # no more data, we're at newest time
+            if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
                 break
 
             # prep next iteration

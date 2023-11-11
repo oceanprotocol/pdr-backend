@@ -129,7 +129,9 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
     ss.fin_timestamp = fin_ut + 4 * MS_PER_5M_EPOCH
     data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
     uts3 = _uts_in_csv(filename)
-    assert uts3 == _uts_in_range(st_ut - 2 * MS_PER_5M_EPOCH, fin_ut + 4 * MS_PER_5M_EPOCH)
+    assert uts3 == _uts_in_range(
+        st_ut - 2 * MS_PER_5M_EPOCH, fin_ut + 4 * MS_PER_5M_EPOCH
+    )
 
 
 # ======================================================================

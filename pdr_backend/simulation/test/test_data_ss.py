@@ -1,8 +1,4 @@
-import copy
-
 from enforce_typing import enforce_types
-import numpy as np
-import pandas as pd
 
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.timeutil import timestr_to_ut
@@ -11,7 +7,7 @@ from pdr_backend.simulation.timeutil import timestr_to_ut
 @enforce_types
 def test_data_ss_5m(tmpdir):
     ss = _ss_5m(tmpdir)
-    
+
     # test attributes
     assert ss.csv_dir == str(tmpdir)
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
@@ -23,8 +19,8 @@ def test_data_ss_5m(tmpdir):
 
     assert ss.usdcoin == "USDT"
     assert ss.timeframe == "5m"
-    assert ss.signals == ["high","close"]
-    assert ss.coins == ["ETH","BTC","TRX"]
+    assert ss.signals == ["high", "close"]
+    assert ss.coins == ["ETH", "BTC", "TRX"]
 
     assert sorted(ss.exchs_dict.keys()) == ["binance", "kraken"]
 
@@ -46,11 +42,10 @@ def test_data_ss_5m(tmpdir):
     assert "DataSS=" in str(ss)
 
 
-
 @enforce_types
 def test_data_ss_1h(tmpdir):
     ss = _ss_1h(tmpdir)
-    
+
     assert ss.timeframe == "1h"
     assert ss.timeframe_ms == 60 * 60 * 1000
     assert ss.timeframe_m == 60
@@ -59,7 +54,7 @@ def test_data_ss_1h(tmpdir):
 @enforce_types
 def _ss_1h(tmpdir):
     ss = _ss_5m(tmpdir)
-    ss.timeframe = '1h'
+    ss.timeframe = "1h"
     return ss
 
 
@@ -74,9 +69,9 @@ def _ss_5m(tmpdir):
         N_test=2,
         usdcoin="USDT",
         timeframe="5m",
-        signals=["high","close"],
-        coins=["ETH","BTC","TRX"],
-        exchange_ids=["kraken","binance"],
+        signals=["high", "close"],
+        coins=["ETH", "BTC", "TRX"],
+        exchange_ids=["kraken", "binance"],
         yval_exchange_id="kraken",
         yval_coin="ETH",
         yval_signal="high",

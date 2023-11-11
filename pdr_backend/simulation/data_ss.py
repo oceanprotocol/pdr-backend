@@ -96,12 +96,11 @@ class DataSS:
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        if self.timeframe == '5m':
+        if self.timeframe == "5m":
             return 5
-        elif self.timeframe == '1h':
+        if self.timeframe == "1h":
             return 60
-        else:
-            raise ValueError("need to support timeframe={self.timeframe}")
+        raise ValueError("need to support timeframe={self.timeframe}")
 
     def __str__(self) -> str:
         s = "DataSS={\n"
