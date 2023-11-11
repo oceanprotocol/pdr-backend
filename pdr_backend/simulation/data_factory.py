@@ -9,9 +9,8 @@ import pandas as pd
 from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
-    MS_PER_EPOCH,
-    MS_PER_EPOCH_MN,
-    MS_PER_EPOCH_MX,
+    OHLCV_MULT_MIN,
+    OHLCV_MULT_MAX,
 )
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.pdutil import (
@@ -86,32 +85,31 @@ class DataFactory:
             )
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
-                diffs = np.array(uts[1:]) - np.array(uts[:-1])
-                mn, mx = min(diffs), max(diffs)
-                mn_min, mx_min = float(mn) / 1000 / 60, float(mx) / 1000 / 60
-                def timestr(x_ms) -> str: 
-                    return f"{x_ms} ms ({x_ms / 1000 / 60} min)"
+                # Ideally, time between ohclv candles is always 5m or 1h
+                # But exchange data often has gaps. Warn about worst violations
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1]) # in ms
+                diffs_m = diffs_ms / 1000 / 60 # in minutes
+                mn_thr = self.ss.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.ss.timeframe_m * OHLCV_MULT_MAX
 
-                # Ideally, mn = mx = MS_PER_EPOCH. But exchange data
-                # often has 6-min epochs, gaps, and more. So only warn about
-                # worst violations.
-                if mn <= MS_PER_EPOCH_MN:
-                    print(f"**WARNING: short candle time: {timestr(mn)}")
-                if mx >= MS_PER_EPOCH_MX:
-                    print(f"**WARNING: long candle time: {timestr(mx)}")
+                if min(diffs_m) < mn_thr:
+                    print(f"**WARNING: short candle time: {min(diffs_m)} min")
+                if max(diffs_m) > mx_thr:
+                    print(f"**WARNING: long candle time: {max(diffs_m)} min")
+                    
             raw_tohlcv_data = [
-                vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
+                vec for vec in raw_tohlcv_data
+                if vec[0] <= self.ss.fin_timestamp
             ]
             next_df = pd.DataFrame(raw_tohlcv_data, columns=TOHLCV_COLS)
             df = concat_next_df(df, next_df)
 
-            if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
+            if len(raw_tohlcv_data) < 1000: # no more data, we're at newest time
                 break
 
             # prep next iteration
             newest_ut_value = int(df.index.values[-1])
-            # prev_st_ut = st_ut
-            st_ut = newest_ut_value + MS_PER_EPOCH
+            st_ut = newest_ut_value + self.ss.timeframe_ms
 
         # output to csv
         save_csv(filename, df)
@@ -135,7 +133,7 @@ class DataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("  User-specified start >= file start, so append file")
-            return file_utN + MS_PER_EPOCH
+            return file_utN + self.ss.timeframe_ms
 
         print("  User-specified start < file start, so delete file")
         os.remove(filename)

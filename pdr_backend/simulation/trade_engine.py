@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from pdr_backend.simulation.constants import MS_PER_EPOCH
 from pdr_backend.simulation.data_factory import DataFactory
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.model_factory import ModelFactory
@@ -114,7 +113,7 @@ class TradeEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        ut = int(hist_df.index.values[-1]) - testshift * MS_PER_EPOCH
+        ut = int(hist_df.index.values[-1]) - testshift * self.data_ss.timeframe_ms
 
         # current price
         curprice = y_train[-1]

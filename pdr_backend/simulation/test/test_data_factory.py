@@ -4,10 +4,7 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
-from pdr_backend.simulation.constants import (
-    TOHLCV_COLS,
-    MS_PER_EPOCH,
-)
+from pdr_backend.simulation.constants import TOHLCV_COLS
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.data_factory import DataFactory
 from pdr_backend.simulation.pdutil import (
@@ -21,6 +18,7 @@ from pdr_backend.simulation.timeutil import (
 )
 from pdr_backend.util.mathutil import has_nan, fill_nans
 
+MS_PER_5M_EPOCH = 300000
 
 # ====================================================================
 # test csv updating
@@ -57,7 +55,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
 
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
-        return since + i * MS_PER_EPOCH
+        return since + i * MS_PER_5M_EPOCH
 
     def _uts_in_range(st_ut, fin_ut):
         return [
@@ -121,17 +119,17 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
     assert uts == _uts_in_range(st_ut, fin_ut)
 
     # work 2: two more epochs at end --> it'll append existing csv
-    ss.fin_timestamp = fin_ut + 2 * MS_PER_EPOCH
+    ss.fin_timestamp = fin_ut + 2 * MS_PER_5M_EPOCH
     data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
     uts2 = _uts_in_csv(filename)
-    assert uts2 == _uts_in_range(st_ut, fin_ut + 2 * MS_PER_EPOCH)
+    assert uts2 == _uts_in_range(st_ut, fin_ut + 2 * MS_PER_5M_EPOCH)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new csv
-    ss.st_timestamp = st_ut - 2 * MS_PER_EPOCH
-    ss.fin_timestamp = fin_ut + 4 * MS_PER_EPOCH
+    ss.st_timestamp = st_ut - 2 * MS_PER_5M_EPOCH
+    ss.fin_timestamp = fin_ut + 4 * MS_PER_5M_EPOCH
     data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
     uts3 = _uts_in_csv(filename)
-    assert uts3 == _uts_in_range(st_ut - 2 * MS_PER_EPOCH, fin_ut + 4 * MS_PER_EPOCH)
+    assert uts3 == _uts_in_range(st_ut - 2 * MS_PER_5M_EPOCH, fin_ut + 4 * MS_PER_5M_EPOCH)
 
 
 # ======================================================================

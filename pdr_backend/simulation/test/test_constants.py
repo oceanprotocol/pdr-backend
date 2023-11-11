@@ -6,9 +6,8 @@ from pdr_backend.simulation.constants import (
     OHLCV_DTYPES,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
-    MS_PER_EPOCH,
-    MS_PER_EPOCH_MN,
-    MS_PER_EPOCH_MX,
+    OHLCV_MULT_MIN,
+    OHLCV_MULT_MAX,
 )
 
 
@@ -27,4 +26,4 @@ def test_constants():
     assert np.float64 in TOHLCV_DTYPES
     assert np.int64 in TOHLCV_DTYPES
 
-    assert MS_PER_EPOCH_MX <= MS_PER_EPOCH <= MS_PER_EPOCH_MX
+    assert 0 < OHLCV_MULT_MIN <= OHLCV_MULT_MAX < np.inf

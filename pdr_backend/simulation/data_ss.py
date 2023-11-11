@@ -88,6 +88,21 @@ class DataSS:
     def n_coins(self) -> int:
         return len(self.coins)
 
+    @property
+    def timeframe_ms(self) -> int:
+        """Returns timeframe, in ms"""
+        return self.timeframe_m * 60 * 1000
+
+    @property
+    def timeframe_m(self) -> int:
+        """Returns timeframe, in minutes"""
+        if self.timeframe == '5m':
+            return 5
+        elif self.timeframe == '1h':
+            return 60
+        else:
+            raise ValueError("need to support timeframe={self.timeframe}")
+
     def __str__(self) -> str:
         s = "DataSS={\n"
 
