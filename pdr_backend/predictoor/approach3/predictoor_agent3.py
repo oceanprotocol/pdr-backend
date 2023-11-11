@@ -36,9 +36,7 @@ class PredictoorAgent3(BasePredictoorAgent):
           stake -- int -- amount to stake, in units of Eth
         """
         # Set model_ss
-        model_ss = ModelSS(
-            self.config.model_ss
-        )  # LIN, GPR, SVR, NuSVR, LinearSVR
+        model_ss = ModelSS(self.config.model_ss)  # LIN, GPR, SVR, NuSVR, LinearSVR
 
         # Controllable data_ss params. Hardcoded; could be moved to envvars
 

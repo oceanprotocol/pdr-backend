@@ -2,6 +2,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 
+
 @enforce_types
 class ModelSS(StrMixin):
     def __init__(
