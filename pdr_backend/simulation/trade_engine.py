@@ -11,7 +11,9 @@ from pdr_backend.data_eng.data_factory import DataFactory
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_factory import ModelFactory
 from pdr_backend.model_eng.model_ss import ModelSS
-from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.simulation.sim_ss import SimSS
+from pdr_backend.simulation.trade_ss import TradeSS
+from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
@@ -33,13 +35,23 @@ class TradeEngine:
         self,
         data_ss: DataSS,
         model_ss: ModelSS,
-        trade_pp: TradeParams,
+        trade_pp: TradePP,
         trade_ss: TradeSS,
+        sim_ss: SimSS,
     ):
+        """
+        @arguments
+          data_ss -- user-controllable params, at data level
+          model_ss -- user-controllable params, at model level
+          trade_pp -- user-uncontrollable params, at trading level
+          trade_ss -- user-controllable params, at trading level
+          sim_ss -- user-controllable params, at sim level
+        """
         self.data_ss = data_ss
         self.model_ss = model_ss
         self.trade_pp = trade_pp
         self.trade_ss = trade_ss
+        self.sim_ss = sim_ss
 
         self.holdings = self.trade_pp.init_holdings
         self.tot_profit_usd = 0.0
@@ -55,7 +67,7 @@ class TradeEngine:
         self.logfile = ""
 
         self.plot_state = None
-        if self.trade_ss.do_plot:
+        if self.sim_ss.do_plot:
             self.plot_state = PlotState()
 
     @property
@@ -69,7 +81,7 @@ class TradeEngine:
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{current_ut()}.txt"
-        self.logfile = os.path.join(self.trade_ss.logpath, filebase)
+        self.logfile = os.path.join(self.sim_ss.logpath, filebase)
         with open(self.logfile, "w") as f:
             f.write("\n")
 
@@ -222,7 +234,7 @@ class TradeEngine:
 
     @enforce_types
     def _plot(self, i, N):
-        if not self.trade_ss.do_plot:
+        if not self.sim_ss.do_plot:
             return
 
         # don't plot first 5 iters -> not interesting

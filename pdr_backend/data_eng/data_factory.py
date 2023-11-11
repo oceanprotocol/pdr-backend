@@ -22,12 +22,9 @@ from pdr_backend.data_eng.pdutil import (
     oldest_ut,
     newest_ut,
 )
-from pdr_backend.simulation.tradeutil import pairstr
 from pdr_backend.util.mathutil import has_nan, fill_nans
-from pdr_backend.util.timeutil import (
-    pretty_timestr,
-    current_ut,
-)
+from pdr_backend.util.pairutil import pairstr
+from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 
 @enforce_types
