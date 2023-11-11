@@ -16,7 +16,9 @@ def test_new_agent(trueval_config):
 
 
 @enforce_types
-def test_process_slot(agent, slot):
+def test_process_slot(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
     ) as mock_submit:
@@ -70,28 +72,36 @@ def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
 
 
 @enforce_types
-def test_get_trueval_slot_up(agent, slot):
+def test_get_trueval_slot_up(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(True, True)):
         result = agent.get_trueval_slot(slot)
         assert result == (True, True)
 
 
 @enforce_types
-def test_get_trueval_slot_down(agent, slot):
+def test_get_trueval_slot_down(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         result = agent.get_trueval_slot(slot)
         assert result == (False, True)
 
 
 @enforce_types
-def test_get_trueval_slot_cancel(agent, slot):
+def test_get_trueval_slot_cancel(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_trueval_slot(slot)
         assert result == (True, False)
 
 
 @enforce_types
-def test_get_trueval_slot_too_many_requests_retry(agent, slot):
+def test_get_trueval_slot_too_many_requests_retry(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     mock_get_trueval = MagicMock(
         side_effect=[Exception("Too many requests"), (True, True)]
     )
