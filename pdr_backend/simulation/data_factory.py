@@ -6,8 +6,6 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
-from pdr_backend.simulation.tradeutil import pairstr
-
 from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
@@ -27,6 +25,8 @@ from pdr_backend.simulation.timeutil import (
     pretty_timestr,
     current_ut,
 )
+from pdr_backend.simulation.tradeutil import pairstr
+from pdr_backend.util.mathutil import has_nan, fill_nans
 
 
 @enforce_types
@@ -183,12 +183,19 @@ class DataFactory:
         assert hist_df.index.name == "timestamp"
         return hist_df
 
-    def create_xy(self, hist_df: pd.DataFrame, testshift: int):
+    def create_xy(
+        self,
+        hist_df: pd.DataFrame,
+        testshift: int,
+        do_fill_nans: bool = True,
+    ):
         """
         @arguments
           hist_df -- df w/ cols={exchange_id}:{coin}:{signal}+"datetime",
             and index=timestamp
           testshift -- to simulate across historical test data
+          do_fill_nans -- if any values are nan, fill them? (Via interpolation)
+            If you turn this off and hist_df has nans, then X/y/etc gets nans
 
         @return --
           X -- 2d array of [sample_i, var_i] : value
@@ -197,6 +204,9 @@ class DataFactory:
           x_df -- df w/ cols={exchange_id}:{coin}:{signal}:t-{x} + "datetime"
             index=0,1,.. (nothing special)
         """
+        if do_fill_nans and has_nan(hist_df):
+            hist_df = fill_nans(hist_df)
+
         ss = self.ss
         x_df = pd.DataFrame()
 
@@ -262,6 +272,7 @@ class DataFactory:
         return filename
 
 
+@enforce_types
 def _slice(x: list, st: int, fin: int) -> list:
     """Python list slice returns an empty list on x[st:fin] if st<0 and fin=0
     This overcomes that issue, for cases when st<0"""

@@ -1,6 +1,7 @@
 import copy
 
 from enforce_typing import enforce_types
+import numpy as np
 import pandas as pd
 
 from pdr_backend.simulation.constants import (
@@ -18,6 +19,7 @@ from pdr_backend.simulation.timeutil import (
     current_ut,
     timestr_to_ut,
 )
+from pdr_backend.util.mathutil import has_nan, fill_nans
 
 
 # ====================================================================
@@ -152,6 +154,7 @@ BINANCE_ETH_DATA = [
 ]
 
 
+@enforce_types
 def _addval(DATA: list, val: float) -> list:
     DATA2 = copy.deepcopy(DATA)
     for row_i, row in enumerate(DATA2):
@@ -173,22 +176,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
-    ss = DataSS(
-        csv_dir=csvdir,
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
-        Nt=3,
-        N_test=2,
-        usdcoin="USDT",
-        timeframe="5m",
-        signals=["high"],
-        coins=["ETH"],
-        exchange_ids=["kraken"],
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        yval_signal="high",
-    )
+    ss = _data_ss_1exchange_1coin_1signal(csvdir)
 
     assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * Nt
 
@@ -339,6 +327,61 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     assert x_df["binanceus:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+
+
+@enforce_types
+def test_create_xy__handle_nan(tmpdir):
+    # create hist_df
+    csvdir = str(tmpdir)
+    csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
+    ss = _data_ss_1exchange_1coin_1signal(csvdir)
+    data_factory = DataFactory(ss)
+    hist_df = data_factory._merge_csv_dfs(csv_dfs)
+
+    # corrupt hist_df with nans
+    assert "high" in ss.signals
+    hist_df.at[1686805800000, "kraken:ETH:high"] = np.nan  # first row
+    hist_df.at[1686806700000, "kraken:ETH:high"] = np.nan  # middle row
+    hist_df.at[1686808800000, "kraken:ETH:high"] = np.nan  # last row
+    assert has_nan(hist_df)
+
+    # run create_xy() and force the nans to stick around
+    # -> we want to ensure that we're building X/y with risk of nan
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
+    assert has_nan(X) and has_nan(y) and has_nan(x_df)
+
+    # nan approach 1: fix externally
+    hist_df2 = fill_nans(hist_df)
+    assert not has_nan(hist_df2)
+
+    # nan approach 2: explicitly tell create_xy to fill nans
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
+    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
+
+    # nan approach 3: create_xy fills nans by default (best)
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0)
+    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
+
+
+@enforce_types
+def _data_ss_1exchange_1coin_1signal(csvdir: str):
+    ss = DataSS(
+        csv_dir=csvdir,
+        st_timestamp=timestr_to_ut("2023-06-18"),
+        fin_timestamp=timestr_to_ut("2023-06-21"),
+        max_N_train=7,
+        Nt=3,
+        N_test=2,
+        usdcoin="USDT",
+        timeframe="5m",
+        signals=["high"],
+        coins=["ETH"],
+        exchange_ids=["kraken"],
+        yval_exchange_id="kraken",
+        yval_coin="ETH",
+        yval_signal="high",
+    )
+    return ss
 
 
 @enforce_types
