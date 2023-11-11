@@ -54,10 +54,9 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series]) -> bool:
     """Returns True if any entry in x has a nan"""
     if type(x) == np.ndarray:
         return np.isnan(np.min(x))
-    elif type(x) in [pd.DataFrame, pd.Series]:
+    if type(x) in [pd.DataFrame, pd.Series]:
         return x.isnull().values.any()  # type: ignore[union-attr]
-    else:
-        raise ValueError(f"Can't handle type {type(x)}")
+    raise ValueError(f"Can't handle type {type(x)}")
 
 
 @enforce_types

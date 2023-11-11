@@ -347,9 +347,7 @@ def test_create_xy__handle_nan(tmpdir):
 
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, var_with_prev, x_df = data_factory.create_xy(
-        hist_df, testshift=0, do_fill_nans=False
-    )
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -357,13 +355,11 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(hist_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, var_with_prev, x_df = data_factory.create_xy(
-        hist_df, testshift=0, do_fill_nans=True
-    )
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, var_with_prev, x_df = data_factory.create_xy(hist_df, testshift=0)
+    X, y, _, x_df = data_factory.create_xy(hist_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
