@@ -4,8 +4,10 @@ import os
 from pdr_backend.util.env import parse_filters
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_ss import ModelSS
-from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_engine import TradeEngine
+from pdr_backend.simulation.trade_pp import TradePP
+from pdr_backend.simulation.trade_ss import TradeSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
 # Backlog is in backlog.py
@@ -32,7 +34,7 @@ print(f"Config: {pairs} {exchanges} {timeframe}")
 yval_coin = pairs[0]
 yval_exchange_id = exchanges[0]
 
-data_ss = DataSS(
+data_ss = DataSS(  # user-controllable params, at data-eng level
     csv_dir=os.path.abspath("csvs"),
     st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
     fin_timestamp=timestr_to_ut("now"),  # 'now','2023-06-21_17:55'
@@ -49,17 +51,20 @@ data_ss = DataSS(
     yval_signal="close",
 )
 
-model_ss = ModelSS("LIN")  # LIN, GPR, SVR, NuSVR, LinearSVR
+model_ss = ModelSS("LIN")  # user-controllable params, at model-eng level
 
-trade_pp = TradeParams(
+trade_pp = TradePP(  # user-uncontrollable params, at trading level
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
     init_holdings={"USDT": 100000.0, yval_coin: 0.0},
 )
 
-trade_ss = TradeSS(
+trade_ss = TradeSS(  # user-controllable params, at trading level
+    buy_amt_usd=100000.00,  # How much to buy at a time. In USD
+)
+
+sim_ss = SimSS(  # user-controllable params, at sim level
     do_plot=True,  # plot at end?
     logpath=os.path.abspath("./"),
-    buy_amt_usd=100000.00,  # How much to buy at a time. In USD
 )
 
 # ==================================================================
@@ -68,9 +73,10 @@ print(f"data_ss={data_ss}")
 print(f"model_ss={model_ss}")
 print(f"trade_pp={trade_pp}")
 print(f"trade_ss={trade_ss}")
+print(f"sim_ss={sim_ss}")
 
 # ==================================================================
 # do work
-trade_engine = TradeEngine(data_ss, model_ss, trade_pp, trade_ss)
+trade_engine = TradeEngine(data_ss, model_ss, trade_pp, trade_ss, sim_ss)
 
 trade_engine.run()
