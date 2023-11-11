@@ -13,7 +13,9 @@ def test_new_agent(trueval_config):
     assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
-def test_process_trueval_slot_up(agent, slot):
+def test_process_trueval_slot_up(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
@@ -22,7 +24,9 @@ def test_process_trueval_slot_up(agent, slot):
         assert slot.trueval
 
 
-def test_process_trueval_slot_down(agent, slot):
+def test_process_trueval_slot_down(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
@@ -31,7 +35,9 @@ def test_process_trueval_slot_down(agent, slot):
         assert not slot.trueval
 
 
-def test_process_trueval_slot_cancel(agent, slot):
+def test_process_trueval_slot_cancel(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
