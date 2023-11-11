@@ -18,7 +18,9 @@ def mock_feed():
 
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
+def test_new_agent(
+    check_subscriptions_and_subscribe_mock, predictoor_contract
+):  # pylint: disable=unused-argument
     trader_config = TraderConfig()
     trader_config.get_feeds = Mock()
     trader_config.get_feeds.return_value = {
@@ -41,7 +43,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
 
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-def test_run(check_subscriptions_and_subscribe_mock):
+def test_run(check_subscriptions_and_subscribe_mock):  # pylint: disable=unused-argument
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()
@@ -57,7 +59,9 @@ def test_run(check_subscriptions_and_subscribe_mock):
 
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
+async def test_take_step(
+    check_subscriptions_and_subscribe_mock, web3_config
+):  # pylint: disable=unused-argument
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()
@@ -67,7 +71,9 @@ async def test_take_step(check_subscriptions_and_subscribe_mock, web3_config):
     agent = TraderAgent(trader_config)
 
     # Create async mock fn so we can await asyncio.gather(*tasks)
-    async def _process_block_at_feed(addr, timestamp):
+    async def _process_block_at_feed(
+        addr, timestamp
+    ):  # pylint: disable=unused-argument
         return (-1, [])
 
     agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
@@ -84,7 +90,9 @@ def custom_trader(feed, prediction):
 
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
+async def test_process_block_at_feed(
+    check_subscriptions_and_subscribe_mock,
+):  # pylint: disable=unused-argument
     trader_config = Mock(spec=TraderConfig)
     trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
@@ -99,30 +107,30 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed.clear()
     agent.prev_traded_epochs_per_feed["0x123"] = []
 
-    async def _do_trade(feed, prediction):
+    async def _do_trade(feed, prediction):  # pylint: disable=unused-argument
         pass
 
     agent._do_trade = Mock(side_effect=_do_trade)
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 55)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 55)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should not trade
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 80)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     predictoor_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 140)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 140)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
@@ -131,7 +139,7 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     predictoor_contract.get_agg_predval.side_effect = Exception(
         {"message": "An error occurred while getting agg_predval."}
     )
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 2
     assert s_till_epoch_end == 40
 
@@ -141,13 +149,15 @@ async def test_process_block_at_feed(check_subscriptions_and_subscribe_mock):
     agent.prev_traded_epochs_per_feed["0x123"] = []
     predictoor_contract.get_agg_predval.return_value = (1, 3)
     predictoor_contract.get_agg_predval.side_effect = None
-    s_till_epoch_end, logs = await agent._process_block_at_feed("0x123", 20)
+    s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 20)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
 
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
+def test_save_and_load_cache(
+    check_subscriptions_and_subscribe_mock,
+):  # pylint: disable=unused-argument
     trader_config = Mock(spec=TraderConfig)
     trader_config.max_tries = 10
     trader_config.trader_min_buffer = 20
@@ -187,7 +197,9 @@ def test_save_and_load_cache(check_subscriptions_and_subscribe_mock):
 
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-async def test_get_pred_properties(check_subscriptions_and_subscribe_mock, web3_config):
+async def test_get_pred_properties(
+    check_subscriptions_and_subscribe_mock, web3_config
+):  # pylint: disable=unused-argument
     trader_config = Mock(spec=TraderConfig)
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()

@@ -21,7 +21,6 @@ SPDX-License-Identifier: Apache-2.0
 - [Static models in predictoors](READMEs/static-model.md)
 
 
-
 ## Flows for core team
 
 - **Backend dev** - for `pdr-backend` itself

@@ -1,5 +1,6 @@
 import os
 from unittest.mock import Mock, patch
+
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
@@ -52,7 +53,7 @@ def predictoor_contract_mock():
         yield mock_predictoor_contract_mock
 
 
-def mock_contract(*args, **kwarg):
+def mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
     m = Mock()
     m.get_secondsPerEpoch.return_value = 60
     m.submit_trueval.return_value = {"tx": "0x123"}

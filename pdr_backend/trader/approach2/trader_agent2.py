@@ -1,19 +1,18 @@
-import random
-from typing import Tuple
-
-from enforce_typing import enforce_types
+from datetime import datetime
+from os import getenv
 from typing import List, Optional, Tuple
 
-from pdr_backend.trader.trader_agent import TraderAgent
-from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
+import ccxt
+from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from datetime import datetime
-
-import ccxt
-from os import getenv
-
-from pdr_backend.trader.approach2.portfolio import Portfolio, Order, create_order
+from pdr_backend.trader.approach2.portfolio import (
+    Portfolio,
+    Order,
+    create_order,
+)
+from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
+from pdr_backend.trader.trader_agent import TraderAgent
 
 
 @enforce_types
@@ -47,7 +46,7 @@ class TraderAgent2(TraderAgent):
         self.config: TraderConfig2 = config
 
         # If cache params are empty, instantiate
-        if self.portfolio == None:
+        if self.portfolio is None:
             self.portfolio = Portfolio(list(self.feeds.keys()))
 
         # Generic exchange clss
@@ -73,7 +72,7 @@ class TraderAgent2(TraderAgent):
         self.cache.save(f"portfolio_{self.__class__}", self.portfolio)
 
     def load_cache(self):
-        if self.reset_cache == True:
+        if self.reset_cache:
             return
 
         super().load_cache()
@@ -88,7 +87,7 @@ class TraderAgent2(TraderAgent):
         """
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
-        order_lapsed = True if now_ts - tx_ts > self.config.timedelta * 1000 else False
+        order_lapsed = now_ts - tx_ts > self.config.timedelta * 1000
         return order_lapsed
 
     def update_positions(self, feeds: Optional[List[str]] = None):
@@ -96,23 +95,33 @@ class TraderAgent2(TraderAgent):
         @description
             Cycle through open positions and asses them
         """
-        feeds = list(self.feeds.keys()) if feeds == None or feeds == [] else feeds
-        if feeds and self.portfolio:
-            for addr in feeds:
-                sheet = self.portfolio.get_sheet(addr)
-                if sheet:
-                    open_positions = sheet.open_positions
-                    if open_positions:
-                        for position in open_positions:
-                            should_close = self.should_close(position.open_order)
-                            if should_close == True:
-                                print(f"     [Close Position] Requirements met")
-                                order = self.exchange.create_market_sell_order(
-                                    self.config.exchange_pair,
-                                    position.open_order.amount,
-                                )
-                                self.portfolio.close_position(addr, order)
-                                self.update_cache()
+        feeds = list(self.feeds.keys()) if feeds is None or feeds == [] else feeds
+        if not feeds:
+            return
+        if not self.portfolio:
+            return
+
+        for addr in feeds:
+            sheet = self.portfolio.get_sheet(addr)
+            if not sheet:
+                continue
+
+            open_positions = sheet.open_positions
+            if not open_positions:
+                continue
+
+            for position in open_positions:
+                should_close = self.should_close(position.open_order)
+                if not should_close:
+                    continue
+
+                print("     [Close Position] Requirements met")
+                order = self.exchange.create_market_sell_order(
+                    self.config.exchange_pair,
+                    position.open_order.amount,
+                )
+                self.portfolio.close_position(addr, order)
+                self.update_cache()
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -138,7 +147,7 @@ class TraderAgent2(TraderAgent):
         print(f"      prediction properties are: {pred_properties}")
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
-            print(f"     [Open Position] Requirements met")
+            print("     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
                 symbol=self.config.exchange_pair, amount=self.config.size
             )
