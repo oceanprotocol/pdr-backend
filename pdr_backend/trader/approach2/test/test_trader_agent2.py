@@ -1,14 +1,15 @@
+from datetime import datetime
 from unittest.mock import Mock, patch
 
+from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
 
-from datetime import datetime
 
-
+@enforce_types
 def mock_feed():
     feed = Mock(spec=Feed)
     feed.name = "test feed"
@@ -17,6 +18,7 @@ def mock_feed():
     return feed
 
 
+@enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     # Setting up the mock trader configuration
@@ -48,6 +50,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
         TraderAgent2(no_feeds_config)
 
 
+@enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 async def test_do_trade(
@@ -102,6 +105,7 @@ async def test_do_trade(
 
 
 # Test for TraderAgent2.update_positions
+@enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 def test_update_positions(
     check_subscriptions_and_subscribe_mock,
@@ -114,7 +118,6 @@ def test_update_positions(
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
     trader_config.get_feeds = Mock()
-    trader_config.get_feeds
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
@@ -159,6 +162,7 @@ def test_update_positions(
 
 
 # Test for TraderAgent2.should_close
+@enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 def test_should_close(
     check_subscriptions_and_subscribe_mock,
@@ -194,10 +198,10 @@ def test_should_close(
     mock_order.timestamp = 1
 
     result = agent.should_close(mock_order)
-    assert result == True
+    assert result
 
     # Test 2 - Make more order recent, now it should not close
     mock_order.timestamp = datetime.now().timestamp() * 1000
 
     result = agent.should_close(mock_order)
-    assert result == False
+    assert not result

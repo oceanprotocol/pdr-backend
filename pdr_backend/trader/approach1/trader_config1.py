@@ -1,5 +1,7 @@
-from enforce_typing import enforce_types
 from os import getenv
+
+from enforce_typing import enforce_types
+
 from pdr_backend.trader.trader_config import TraderConfig
 
 CAND_EXCHANGE = ["mexc3", "mexc"]
@@ -42,5 +44,5 @@ class TraderConfig1(TraderConfig):
         assert self.pair in CAND_PAIR, "Pair must be valid"
         assert self.timeframe in CAND_TIMEFRAME, "Timeframe must be valid"
         assert (
-            self.size != None and self.size > 0.0
+            self.size is not None and self.size > 0.0
         ), "Position size must be greater than 0.0"

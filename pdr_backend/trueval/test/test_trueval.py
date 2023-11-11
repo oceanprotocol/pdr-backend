@@ -1,5 +1,4 @@
 from enforce_typing import enforce_types
-from unittest.mock import patch
 
 import pytest
 
@@ -7,15 +6,14 @@ from pdr_backend.trueval.main import get_trueval
 from pdr_backend.models.feed import Feed
 
 
-def mock_fetch_ohlcv(*args, **kwargs):
+def mock_fetch_ohlcv(*args, **kwargs):  # pylint: disable=unused-argument
     since = kwargs.get("since")
     if since == 0:
         return [[0, 0, 0, 0, 100], [60000, 0, 0, 0, 200]]
-    else:
-        raise ValueError("Invalid timestamp")
+    raise ValueError("Invalid timestamp")
 
 
-def mock_fetch_ohlcv_fail(*args, **kwargs):
+def mock_fetch_ohlcv_fail(*args, **kwargs):  # pylint: disable=unused-argument
     return [[0, 0, 0, 0, 0]]
 
 
