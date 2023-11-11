@@ -7,22 +7,21 @@ import numpy as np
 import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
-
-from pdr_backend.simulation.data_factory import DataFactory
-from pdr_backend.simulation.data_ss import DataSS
-from pdr_backend.simulation.model_factory import ModelFactory
-from pdr_backend.simulation.model_ss import ModelSS
-from pdr_backend.simulation.timeutil import current_ut, pretty_timestr
+from pdr_backend.data_eng.data_factory import DataFactory
+from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.model_eng.model_factory import ModelFactory
+from pdr_backend.model_eng.model_ss import ModelSS
 from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 FONTSIZE = 12
 
 
+@enforce_types
 class PlotState:
     def __init__(self):
         self.fig, (self.ax0, self.ax1) = plt.subplots(2)
-
         plt.ion()
         plt.show()
 

@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
-from pdr_backend.simulation.timeutil import timestr_to_ut
 
+from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 
 
