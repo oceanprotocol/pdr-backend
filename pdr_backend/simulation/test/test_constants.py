@@ -6,6 +6,9 @@ from pdr_backend.simulation.constants import (
     OHLCV_DTYPES,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
+    MS_PER_EPOCH,
+    MS_PER_EPOCH_MN,
+    MS_PER_EPOCH_MX,
 )
 
 
@@ -23,3 +26,5 @@ def test_constants():
     assert "timestamp" in TOHLCV_COLS
     assert np.float64 in TOHLCV_DTYPES
     assert np.int64 in TOHLCV_DTYPES
+
+    assert MS_PER_EPOCH_MX <= MS_PER_EPOCH <= MS_PER_EPOCH_MX

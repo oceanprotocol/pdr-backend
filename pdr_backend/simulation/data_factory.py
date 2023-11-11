@@ -10,6 +10,8 @@ from pdr_backend.simulation.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     MS_PER_EPOCH,
+    MS_PER_EPOCH_MN,
+    MS_PER_EPOCH_MX,
 )
 from pdr_backend.simulation.data_ss import DataSS
 from pdr_backend.simulation.pdutil import (
@@ -85,11 +87,18 @@ class DataFactory:
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
                 diffs = np.array(uts[1:]) - np.array(uts[:-1])
-                mx, mn = max(diffs), min(diffs)
-                diffs_ok = mn == mx == MS_PER_EPOCH
-                if not diffs_ok:
-                    print(f"**WARNING: diffs not ok: mn={mn}, mx={mx}**")
-                # assert mx == mn == MS_PER_EPOCH
+                mn, mx = min(diffs), max(diffs)
+                mn_min, mx_min = float(mn) / 1000 / 60, float(mx) / 1000 / 60
+                def timestr(x_ms) -> str: 
+                    return f"{x_ms} ms ({x_ms / 1000 / 60} min)"
+
+                # Ideally, mn = mx = MS_PER_EPOCH. But exchange data
+                # often has 6-min epochs, gaps, and more. So only warn about
+                # worst violations.
+                if mn <= MS_PER_EPOCH_MN:
+                    print(f"**WARNING: short candle time: {timestr(mn)}")
+                if mx >= MS_PER_EPOCH_MX:
+                    print(f"**WARNING: long candle time: {timestr(mx)}")
             raw_tohlcv_data = [
                 vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
             ]
