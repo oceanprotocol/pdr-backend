@@ -79,7 +79,7 @@ class PredictoorAgent3(BasePredictoorAgent):
 
         # Compute X/y
         hist_df = data_factory.get_hist_df()
-        X, y, _, _ = data_factory.create_xy(hist_df, testshift=0)
+        X, y, _ = data_factory.create_xy(hist_df, testshift=0)
 
         # Split X/y
         st, fin = 0, X.shape[0] - 1
