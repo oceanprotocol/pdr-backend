@@ -8,36 +8,36 @@ from pdr_backend.util.constants import ZERO_ADDRESS
 
 
 def test_new_agent(trueval_config):
-    agent = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
-    assert agent.config == trueval_config
-    assert agent.predictoor_batcher.contract_address == ZERO_ADDRESS
+    agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
+    assert agent_.config == trueval_config
+    assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
-def test_process_trueval_slot_up(agent, slot, predictoor_contract_mock):
+def test_process_trueval_slot_up(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == False
-        assert slot.trueval == True
+        assert not slot.cancel
+        assert slot.trueval
 
 
-def test_process_trueval_slot_down(agent, slot, predictoor_contract_mock):
+def test_process_trueval_slot_down(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == False
-        assert slot.trueval == False
+        assert not slot.cancel
+        assert not slot.trueval
 
 
-def test_process_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
+def test_process_trueval_slot_cancel(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == True
-        assert slot.trueval == False
+        assert slot.cancel
+        assert not slot.trueval
 
 
 def test_batch_submit_truevals(agent, slot):
@@ -106,5 +106,5 @@ def test_take_step(agent, slot):
 
 
 @pytest.fixture()
-def agent(trueval_config):
+def _agent(trueval_config):
     return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)

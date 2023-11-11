@@ -1,6 +1,6 @@
-from pdr_backend.models.feed import Feed
-from typing import Optional, Dict, List, Any
 from enum import Enum
+from typing import Dict, List, Optional
+
 import ccxt
 
 
@@ -37,7 +37,7 @@ class Order:
 
 
 class MEXCOrder(Order):
-    def __init__(self, order: Dict):
+    def __init__(self, order: Dict):  # pylint: disable=useless-parent-delegation
         super().__init__(order)
 
     @property
@@ -64,12 +64,12 @@ class Position:
     """
     @description
         Has an open and and a close order minimum
-        TODO - Support many buy/sell orders, balance, etc...
+        TO DO - Support many buy/sell orders, balance, etc...
     """
 
     def __init__(self, order: Order):
-        # TODO - Have N open_orders, have N close_orders
-        # TODO - Move from __init__(order) to open(order)
+        # TO DO - Have N open_orders, have N close_orders
+        # TO DO - Move from __init__(order) to open(order)
         self.open_order: Order = order
         self.close_order: Optional[Order] = None
         self.state: OrderState = OrderState.OPEN
@@ -79,7 +79,7 @@ class Position:
     def __str__(self):
         return f"<{self.open_order}, {self.close_order}, {self.__class__}>"
 
-    # TODO - Only callable by portfolio
+    # TO DO - Only callable by portfolio
     def close(self, order: Order):
         self.close_order = order
         self.state = OrderState.CLOSED
@@ -103,7 +103,7 @@ class Sheet:
     def open_position(self, open_order: Order) -> Position:
         position = Position(open_order)
         self.open_positions.append(position)
-        print(f"     [Position added to Sheet]")
+        print("     [Position added to Sheet]")
         return position
 
     def close_position(self, close_order: Order) -> Optional[Position]:
@@ -111,7 +111,7 @@ class Sheet:
         if position:
             position.close(close_order)
             self.closed_positions.append(position)
-            print(f"     [Position closed in Sheet]")
+            print("     [Position closed in Sheet]")
             return position
         return None
 

@@ -1,10 +1,14 @@
+from unittest.mock import Mock, patch
+
+from enforce_typing import enforce_types
+import pytest
+
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-import pytest
-from unittest.mock import Mock, patch
 
 
+@enforce_types
 def mock_feed():
     feed = Mock(spec=Feed)
     feed.name = "test feed"
@@ -12,6 +16,7 @@ def mock_feed():
     return feed
 
 
+@enforce_types
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     trader_config = Mock(spec=TraderConfig1)
@@ -39,6 +44,7 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
         TraderAgent1(no_feeds_config)
 
 
+@enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
 async def test_do_trade(

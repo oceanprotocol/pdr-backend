@@ -1,10 +1,12 @@
-import ccxt
-from enforce_typing import enforce_types
-from pdr_backend.models.feed import Feed
-from pdr_backend.trader.trader_agent import TraderAgent
-from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
 from os import getenv
 from typing import Any, Dict, Tuple, Optional
+
+import ccxt
+from enforce_typing import enforce_types
+
+from pdr_backend.models.feed import Feed
+from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
+from pdr_backend.trader.trader_agent import TraderAgent
 
 
 @enforce_types
@@ -56,7 +58,7 @@ class TraderAgent1(TraderAgent):
 
         # Market and order data
         self.order: Optional[Dict[str, Any]] = None
-        assert self.exchange != None, "Exchange cannot be None"
+        assert self.exchange is not None, "Exchange cannot be None"
 
     async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
         """
@@ -72,7 +74,7 @@ class TraderAgent1(TraderAgent):
         """
 
         ### Close previous order if it exists
-        if self.order != None and isinstance(self.order, dict):
+        if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
             if self.config.exchange_id in ("mexc", "mexc3"):
@@ -87,7 +89,7 @@ class TraderAgent1(TraderAgent):
             print(f"     [Previous Order] {self.order}")
             print(f"     [Closing Order] {order}")
 
-            # TODO - Calculate PNL (self.order - order)
+            # TO DO - Calculate PNL (self.order - order)
             self.order = None
 
         ### Create new order if prediction meets our criteria
@@ -103,7 +105,7 @@ class TraderAgent1(TraderAgent):
             )
 
             # If order is successful, we log the order so we can close it
-            if order != None and isinstance(order, dict):
+            if order is not None and isinstance(order, dict):
                 self.order = order
                 print(f"     [Trade Opened] {self.exchange}")
                 print(f"     [Opening Order] {order}")

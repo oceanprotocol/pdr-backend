@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase, get_trueval
+from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.web3_config import Web3Config
@@ -11,11 +11,12 @@ from pdr_backend.util.web3_config import Web3Config
 
 @enforce_types
 def test_new_agent(trueval_config):
-    agent = TruevalAgentSingle(trueval_config, get_trueval)
-    assert agent.config == trueval_config
+    agent_ = TruevalAgentSingle(trueval_config, get_trueval)
+    assert agent_.config == trueval_config
 
 
-def test_process_slot(agent, slot, predictoor_contract_mock):
+@enforce_types
+def test_process_slot(agent, slot):
     with patch.object(
         agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
     ) as mock_submit:
@@ -24,6 +25,7 @@ def test_process_slot(agent, slot, predictoor_contract_mock):
         mock_submit.assert_called()
 
 
+@enforce_types
 def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
@@ -31,6 +33,7 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
     predictoor_contract_mock.assert_called_once_with(agent.config.web3_config, "0x1")
 
 
+@enforce_types
 def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         result = agent.get_and_submit_trueval(
@@ -42,6 +45,7 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock)
         )
 
 
+@enforce_types
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_and_submit_trueval(
@@ -53,6 +57,7 @@ def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
         )
 
 
+@enforce_types
 def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, True)):
         result = agent.get_and_submit_trueval(
@@ -64,27 +69,29 @@ def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
         )
 
 
-def test_get_trueval_slot_up(agent, slot, predictoor_contract_mock):
+@enforce_types
+def test_get_trueval_slot_up(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(True, True)):
         result = agent.get_trueval_slot(slot)
         assert result == (True, True)
 
 
-def test_get_trueval_slot_down(agent, slot, predictoor_contract_mock):
+@enforce_types
+def test_get_trueval_slot_down(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         result = agent.get_trueval_slot(slot)
         assert result == (False, True)
 
 
-def test_get_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
+@enforce_types
+def test_get_trueval_slot_cancel(agent, slot):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_trueval_slot(slot)
         assert result == (True, False)
 
 
-def test_get_trueval_slot_too_many_requests_retry(
-    agent, slot, predictoor_contract_mock
-):
+@enforce_types
+def test_get_trueval_slot_too_many_requests_retry(agent, slot):
     mock_get_trueval = MagicMock(
         side_effect=[Exception("Too many requests"), (True, True)]
     )
@@ -97,6 +104,7 @@ def test_get_trueval_slot_too_many_requests_retry(
         assert mock_get_trueval.call_count == 2
 
 
+@enforce_types
 def test_take_step(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -162,6 +170,6 @@ def test_get_init_and_ts(agent):
 # Fixtures
 
 
-@pytest.fixture()
-def agent(trueval_config):
+@pytest.fixture(name="agent")
+def agent_fixture(trueval_config):
     return TruevalAgentSingle(trueval_config, get_trueval)
