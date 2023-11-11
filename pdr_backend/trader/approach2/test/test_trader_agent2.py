@@ -198,7 +198,7 @@ def test_should_close(
     mock_order.timestamp = 1
 
     result = agent.should_close(mock_order)
-    assert not result
+    assert result
 
     # Test 2 - Make more order recent, now it should not close
     mock_order.timestamp = datetime.now().timestamp() * 1000

@@ -1,5 +1,6 @@
 import os
 from unittest.mock import Mock, patch
+
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
