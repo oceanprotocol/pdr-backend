@@ -250,8 +250,10 @@ class TradeEngine:
             y1_est.append(n_correct / n_trials * 100)
             y1_l.append(l * 100)
             y1_u.append(u * 100)
-        
-        ax1.plot(x, y1_est, "black", x, y1_l, "r", x, y1_u, "r")
+
+        ax1.cla()
+        ax1.plot(x, y1_est, "b")
+        ax1.fill_between(x, y1_l, y1_u, color="b", alpha=.15)
         now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
         ax1.set_title(f"% correct so far vs time. Now = {now_s}")
         ax1.set(xlabel="time", ylabel="% correct so far")
