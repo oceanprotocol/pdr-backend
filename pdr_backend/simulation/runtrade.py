@@ -49,7 +49,7 @@ data_ss = DataSS(
     yval_signal="close",
 )
 
-model_ss = ModelSS("LIN")  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
+model_ss = ModelSS("LIN")  # LIN, GPR, SVR, NuSVR, LinearSVR
 
 trade_pp = TradeParams(
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
