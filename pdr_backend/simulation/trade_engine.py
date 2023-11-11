@@ -2,7 +2,6 @@ import os
 from typing import List
 
 from enforce_typing import enforce_types
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -18,6 +17,7 @@ from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
 from pdr_backend.util.mathutil import nmse
 
 FONTSIZE = 12
+
 
 class PlotState:
     def __init__(self):
@@ -239,16 +239,14 @@ class TradeEngine:
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
-        ax0.set_title(
-            "Trading profit vs time", fontsize=FONTSIZE, fontweight="bold"
-        )
+        ax0.set_title("Trading profit vs time", fontsize=FONTSIZE, fontweight="bold")
         ax0.set_xlabel("time", fontsize=FONTSIZE)
         ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
-        y1_est, y1_l, y1_u = [], [], [] # est, 95% confidence intervals 
-        for i in range(N):
-            n_correct = sum(self.corrects[:i+1])
-            n_trials = len(self.corrects[:i+1])
+        y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
+        for i_ in range(N):
+            n_correct = sum(self.corrects[: i_ + 1])
+            n_trials = len(self.corrects[: i_ + 1])
             l, u = proportion_confint(count=n_correct, nobs=n_trials)
             y1_est.append(n_correct / n_trials * 100)
             y1_l.append(l * 100)
@@ -256,7 +254,7 @@ class TradeEngine:
 
         ax1.cla()
         ax1.plot(x, y1_est, "b")
-        ax1.fill_between(x, y1_l, y1_u, color="b", alpha=.15)
+        ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
         now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
         ax1.set_title(
             f"% correct vs time. {now_s}", fontsize=FONTSIZE, fontweight="bold"
