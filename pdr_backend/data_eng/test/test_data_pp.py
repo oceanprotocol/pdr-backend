@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 from pdr_backend.data_eng.constants import CAND_TIMEFRAMES
 from pdr_backend.data_eng.data_pp import DataPP
 
+
 @enforce_types
 def test_data_pp_5m():
     # construct
@@ -15,11 +16,11 @@ def test_data_pp_5m():
     assert pp.usdcoin == "USDT"
     assert pp.yval_signal == "high"
     assert pp.N_test == 2
-    
+
     # test properties
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_m == 5
-    
+
 
 @enforce_types
 def test_data_pp_1h():
@@ -42,4 +43,3 @@ def _test_pp(timeframe: str) -> DataPP:
         N_test=2,
     )
     return pp
-

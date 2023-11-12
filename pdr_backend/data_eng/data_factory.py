@@ -97,8 +97,7 @@ class DataFactory:
                     print(f"**WARNING: long candle time: {max(diffs_m)} min")
 
             raw_tohlcv_data = [
-                vec for vec in raw_tohlcv_data
-                if vec[0] <= self.ss.fin_timestamp
+                vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
             ]
             next_df = pd.DataFrame(raw_tohlcv_data, columns=TOHLCV_COLS)
             df = concat_next_df(df, next_df)
@@ -151,7 +150,7 @@ class DataFactory:
             exch = self.ss.exchs_dict[exchange_id]
             csv_dfs[exchange_id] = {}
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 print(f"Load csv from exchange={exch}, pair={pair}")
                 filename = self._hist_csv_filename(exchange_id, pair)
                 csv_df = load_csv(filename, cols, st, fin)

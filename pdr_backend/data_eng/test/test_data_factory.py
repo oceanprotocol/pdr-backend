@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from pdr_backend.data_eng.constants import TOHLCV_COLS
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.data_factory import DataFactory
 from pdr_backend.data_eng.pdutil import (
@@ -67,8 +68,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
 
     def _uts_from_since(cur_ut, since, limit_N):
         return [
-            _calc_ut(since, i) for i in range(limit_N)
-            if _calc_ut(since, i) <= cur_ut
+            _calc_ut(since, i) for i in range(limit_N) if _calc_ut(since, i) <= cur_ut
         ]
 
     # setup: exchange
@@ -82,9 +82,9 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
     exchange = FakeExchange()
-    
+
     # setup: pp
-    data_pp = DataPP( # user-uncontrollable params
+    pp = DataPP(  # user-uncontrollable params
         timeframe="5m",
         yval_exchange_id="binanceus",
         yval_coin="ETH",
@@ -94,7 +94,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
     )
 
     # setup: ss
-    ss = DataSS( # user-controllable params
+    ss = DataSS(  # user-controllable params
         csv_dir=csvdir,
         st_timestamp=st_ut,
         fin_timestamp=fin_ut,
@@ -107,7 +107,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
     ss.exchs_dict["binanceus"] = exchange
 
     # setup: data_factory, filename
-    data_factory = DataFactory(ss)
+    data_factory = DataFactory(pp, ss)
     filename = data_factory._hist_csv_filename("binanceus", "ETH/USDT")
 
     def _uts_in_csv(filename: str) -> list:
@@ -182,7 +182,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
-    _, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
 
     assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * Nt
 
@@ -267,7 +267,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         usdcoin="USDT",
         yval_signal="high",
         N_test=2,
-    )        
+    )
 
     ss = DataSS(
         csv_dir=csvdir,
@@ -282,7 +282,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * Nt
 
-    data_factory = DataFactory(ss)
+    data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
@@ -353,9 +353,7 @@ def test_create_xy__handle_nan(tmpdir):
 
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = data_factory.create_xy(
-        hist_df, testshift=0, do_fill_nans=False
-    )
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -381,7 +379,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
         yval_signal="high",
         N_test=2,
     )
-        
+
     ss = DataSS(
         csv_dir=csvdir,
         st_timestamp=timestr_to_ut("2023-06-18"),

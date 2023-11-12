@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.data_eng.data_ss import DataSS, _list_with
 from pdr_backend.util.timeutil import timestr_to_ut
 
 
@@ -42,6 +42,7 @@ def test_data_ss_basic(tmpdir):
     # test str
     assert "DataSS=" in str(ss)
 
+
 @enforce_types
 def test_data_ss_copy(tmpdir):
     ss = DataSS(
@@ -55,7 +56,7 @@ def test_data_ss_copy(tmpdir):
         exchange_ids=["kraken"],
     )
 
-    #copy 1: don't need to append lists
+    # copy 1: don't need to append lists
     pp = DataPP(
         timeframe="5m",
         yval_exchange_id="kraken",
@@ -64,12 +65,12 @@ def test_data_ss_copy(tmpdir):
         yval_signal="high",
         N_test=2,
     )
-    ss2 = ss.copy_with_yval(data_pp)
+    ss2 = ss.copy_with_yval(pp)
     assert ss2.signals == ["high"]
     assert ss2.coins == ["ETH", "BTC"]
-    assert ss2.exchange_ids = ["kraken"]
+    assert ss2.exchange_ids == ["kraken"]
 
-    #copy 2: need to append all three lists
+    # copy 2: need to append all three lists
     pp = DataPP(
         timeframe="5m",
         yval_exchange_id="mxc",
@@ -78,8 +79,17 @@ def test_data_ss_copy(tmpdir):
         yval_signal="close",
         N_test=2,
     )
-    ss2 = ss.copy_with_yval(data_pp)
+    ss2 = ss.copy_with_yval(pp)
     assert ss2.signals == ["high", "close"]
     assert ss2.coins == ["ETH", "BTC", "TRX"]
-    assert ss2.exchange_ids = ["kraken", "mxc"]
-    
+    assert ss2.exchange_ids == ["kraken", "mxc"]
+
+
+@enforce_types
+def test_list_with():
+    assert _list_with([], 2) == [2]
+    assert _list_with([1, 2, 10], 2) == [1, 2, 10]
+    assert _list_with([1, 2, 10], 5) == [1, 2, 10, 5]
+
+    assert _list_with([], "foo") == ["foo"]
+    assert _list_with(["a", 3.0, None, 77], "bb") == ["a", 3.0, None, 77, "bb"]

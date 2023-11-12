@@ -1,7 +1,3 @@
-import os
-from typing import List
-
-import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
@@ -10,9 +6,9 @@ from pdr_backend.data_eng.constants import (
     CAND_TIMEFRAMES,
     CAND_SIGNALS,
 )
-    
 
-class DataPP: # user-uncontrollable params, at data-eng level
+
+class DataPP:  # user-uncontrollable params, at data-eng level
     """
     DataPP specifies the output variable (yval), ie what to predict.
 
@@ -33,7 +29,7 @@ class DataPP: # user-uncontrollable params, at data-eng level
         N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
     ):
         assert 0 < N_test < np.inf
-        
+
         assert usdcoin in CAND_USDCOINS
         assert timeframe in CAND_TIMEFRAMES
         assert yval_signal in CAND_SIGNALS, yval_signal
@@ -42,7 +38,7 @@ class DataPP: # user-uncontrollable params, at data-eng level
         self.usdcoin = usdcoin
         self.yval_exchange_id = yval_exchange_id
         self.yval_coin = yval_coin
-        self.yval_signal = yval_signal  
+        self.yval_signal = yval_signal
         self.N_test = N_test
 
     @property
@@ -62,15 +58,13 @@ class DataPP: # user-uncontrollable params, at data-eng level
     @enforce_types
     def __str__(self) -> str:
         s = "DataPP={\n"
-        
+
         s += f"  timeframe={self.timeframe}\n"
         s += f"  yval_exchange_id={self.yval_exchange_id}\n"
         s += f"  yval_coin={self.yval_coin}\n"
         s += f"  usdcoin={self.usdcoin}\n"
         s += f"  yval_signal={self.yval_signal}\n"
         s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
-        
+
         s += "/DataPP}\n"
         return s
-
-

@@ -1,11 +1,9 @@
-import os
 from typing import Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.data_factory import DataFactory
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_factory import ModelFactory
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
@@ -22,34 +20,36 @@ class PredictoorAgent3(BasePredictoorAgent):
         self.config: PredictoorConfig3 = config
 
     def get_prediction(
-        self, feed_addr: str, timestamp: int  # pylint: disable=unused-argument
+        self, addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
           Given a feed, let's predict for a given timestamp.
 
         @arguments
-          feed_addr -- str -- address of the trading pair. Info in self.feeds[feed_addr]
+          addr -- str -- address of the trading pair. Info in self.feeds[addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
           stake -- int -- amount to stake, in units of Eth
         """
+        feed = self.feeds[addr]
+
         # user-uncontrollable params, at data-eng level
         data_pp = DataPP(
-            timeframe=feed.timeframe, # eg "5m"
-            yval_exchange_id=feed.source, # eg "binance"
-            yval_coin=feed.base, # eg "BTC"
-            usdcoin=feed.quote, # eg "USDT"
-            yval_signal="close", # pdr feed setup is always "close"
-            N_test=self.config.N_test,
+            timeframe=feed.timeframe,  # eg "5m"
+            yval_exchange_id=feed.source,  # eg "binance"
+            yval_coin=feed.base,  # eg "BTC"
+            usdcoin=feed.quote,  # eg "USDT"
+            yval_signal="close",  # pdr feed setup is always "close"
+            N_test=1, # N/A for this context
         )
 
         # user-controllable params, at data-eng level
         data_ss = self.config.data_ss.copy_with_yval(data_pp)
         data_ss.fin_timestamp = timestr_to_ut("now")
-        
+
         #  user-controllable params, at model-eng level
         model_ss = self.config.model_ss
 

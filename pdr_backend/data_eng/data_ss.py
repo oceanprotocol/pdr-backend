@@ -9,7 +9,8 @@ from pdr_backend.data_eng.constants import CAND_SIGNALS
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.util.timeutil import pretty_timestr
 
-class DataSS: # user-controllable params, at data-eng level
+
+class DataSS:  # user-controllable params, at data-eng level
     """
     DataPP specifies the output variable (yval), ie what to predict.
 
@@ -21,6 +22,7 @@ class DataSS: # user-controllable params, at data-eng level
       - Input vars: Nt vars for each of {all signals}x{all coins}x{all exch}
       - How much trn data: time range st->fin_timestamp, bound by max_N_trn
     """
+
     # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
@@ -30,9 +32,9 @@ class DataSS: # user-controllable params, at data-eng level
         fin_timestamp: int,  # ut, eg timestr_to_ut("now")
         max_N_train,  # eg 50000. if inf, only limited by data available
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
-        signals: List[str], # for model input vars. eg ["open","high","volume"]
+        signals: List[str],  # for model input vars. eg ["open","high","volume"]
         coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
-        exchange_ids: List[str], # for model input vars. eg ["binance", "mxc"]
+        exchange_ids: List[str],  # for model input vars. eg ["binance", "mxc"]
     ):
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
@@ -42,7 +44,7 @@ class DataSS: # user-controllable params, at data-eng level
         assert 0 < Nt < np.inf
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
-        
+
         self.csv_dir = csv_dir
         self.st_timestamp = st_timestamp
         self.fin_timestamp = fin_timestamp
@@ -52,7 +54,7 @@ class DataSS: # user-controllable params, at data-eng level
 
         self.signals = signals
         self.coins = coins
-        
+
         self.exchs_dict = {}  # e.g. {"binance" : ccxt.binance()}
         for exchange_id in exchange_ids:
             exchange_class = getattr(ccxt, exchange_id)
@@ -78,7 +80,7 @@ class DataSS: # user-controllable params, at data-eng level
     @property
     def n_coins(self) -> int:
         return len(self.coins)
-    
+
     @enforce_types
     def __str__(self) -> str:
         s = "DataSS={\n"
@@ -108,24 +110,25 @@ class DataSS: # user-controllable params, at data-eng level
 
         s += "/DataSS}\n"
         return s
-    
+
     @enforce_types
-    def copy_with_yval(self, data_pp: DataPP) -> DataSS:
+    def copy_with_yval(self, data_pp: DataPP):
         """Copy self, add data_pp's yval to new data_ss' inputs as needed"""
         return DataSS(
             csv_dir=self.csv_dir,
             st_timestamp=self.st_timestamp,
-            fin_timestamp=timestr_to_ut("now"),
+            fin_timestamp=self.fin_timestamp,
             max_N_train=self.max_N_train,
             Nt=self.Nt,
-            signals=_list_with(self.signals, data_pp.yval_signal)
-            coins=_list_with(self.coins, data_pp.yval_coin)
-            exchange_ids=_list_with(self.exchange_ids, data_pp.yval_exchange_id)
+            signals=_list_with(self.signals[:], data_pp.yval_signal),
+            coins=_list_with(self.coins[:], data_pp.yval_coin),
+            exchange_ids=_list_with(self.exchange_ids[:], data_pp.yval_exchange_id),
         )
 
+
 @enforce_types
-def _list_with(l_: list, val) -> list:
-    """If l_ has val, return just l_. Else return l_ + val"""
-    if val in l_:
-        return l_[:]
-    return _l + [val]
+def _list_with(list_: list, item) -> list:
+    """If l_ has item, return just list_. Otherwise, return list_ + item."""
+    if item in list_:
+        return list_
+    return list_ + [item]

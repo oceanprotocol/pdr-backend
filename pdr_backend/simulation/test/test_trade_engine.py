@@ -2,6 +2,7 @@ import os
 
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_ss import ModelSS
 from pdr_backend.simulation.trade_engine import TradeEngine
@@ -22,6 +23,7 @@ def test_TradeEngine(tmpdir):
         usdcoin="USDT",
         yval_signal="close",
         N_test=100,
+    )
 
     data_ss = DataSS(  # user-controllable params, at data level
         csv_dir=os.path.abspath("csvs"),  # use the usual data (worksforme)
@@ -34,8 +36,8 @@ def test_TradeEngine(tmpdir):
         exchange_ids=["binanceus"],
     )
 
-    model_ss = ModelSS( # user-controllable params, at model level
-        "LIN"
+    model_ss = ModelSS(  # user-controllable params, at model level
+        "LIN",
     )
 
     trade_pp = TradePP(  # user-uncontrollable params, at trading level
@@ -49,7 +51,7 @@ def test_TradeEngine(tmpdir):
 
     sim_ss = SimSS(  # user-controllable params, at sim level
         do_plot=False,  # plot at end?
-        logpath=logpath, # where to save logs to
+        logpath=logpath,  # where to save logs to
     )
 
     # ==================================================================
@@ -63,5 +65,5 @@ def test_TradeEngine(tmpdir):
 
     # ==================================================================
     # do work
-    trade_engine = TradeEngine(data_ss, model_ss, trade_pp, trade_ss, sim_ss)
+    trade_engine = TradeEngine(data_pp, data_ss, model_ss, trade_pp, trade_ss, sim_ss)
     trade_engine.run()
