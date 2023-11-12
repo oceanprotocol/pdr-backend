@@ -29,13 +29,13 @@ def test_data_ss_basic(tmpdir):
     assert ss.signals == ["high", "close"]
     assert ss.coins == ["ETH", "BTC", "TRX"]
 
-    assert sorted(ss.exchs_dict.keys()) == ["binance", "kraken"]
+    assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
 
     # test properties
     assert ss.n == 2 * 3 * 2 * 3
     assert ss.n_exchs == 2
     assert len(ss.exchange_ids) == 2
-    assert "binance" in ss.exchange_ids
+    assert "binanceus" in ss.exchange_ids
     assert ss.n_signals == 2
     assert ss.n_coins == 3
 
@@ -73,7 +73,7 @@ def test_data_ss_copy(tmpdir):
     # copy 2: need to append all three lists
     pp = DataPP(
         timeframe="5m",
-        yval_exchange_id="binance",
+        yval_exchange_id="binanceus",
         yval_coin="TRX",
         usdcoin="USDC",
         yval_signal="close",
@@ -82,7 +82,7 @@ def test_data_ss_copy(tmpdir):
     ss3 = ss.copy_with_yval(pp)
     assert sorted(ss3.signals) == sorted(["high", "close"])  # no order guarantee
     assert sorted(ss3.coins) == sorted(["ETH", "BTC", "TRX"])  # ""
-    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binance"])  # ""
+    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binanceus"])  # ""
 
 
 @enforce_types
