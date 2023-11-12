@@ -67,7 +67,7 @@ def test_data_ss_copy(tmpdir):
     )
     ss2 = ss.copy_with_yval(pp)
     assert ss2.signals == ["high"]
-    assert sorted(ss2.coins) == sorted(["ETH", "BTC"]) # no order guarantee
+    assert sorted(ss2.coins) == sorted(["ETH", "BTC"])  # no order guarantee
     assert ss2.exchange_ids == ["kraken"]
 
     # copy 2: need to append all three lists
@@ -80,9 +80,9 @@ def test_data_ss_copy(tmpdir):
         N_test=2,
     )
     ss3 = ss.copy_with_yval(pp)
-    assert sorted(ss3.signals) == sorted(["high", "close"]) # no order guarantee
-    assert sorted(ss3.coins) == sorted(["ETH", "BTC", "TRX"]) # ""
-    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binance"]) # ""
+    assert sorted(ss3.signals) == sorted(["high", "close"])  # no order guarantee
+    assert sorted(ss3.coins) == sorted(["ETH", "BTC", "TRX"])  # ""
+    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binance"])  # ""
 
 
 @enforce_types

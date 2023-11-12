@@ -43,7 +43,7 @@ class PredictoorAgent3(BasePredictoorAgent):
             yval_coin=feed.base,  # eg "BTC"
             usdcoin=feed.quote,  # eg "USDT"
             yval_signal="close",  # pdr feed setup is always "close"
-            N_test=1, # N/A for this context
+            N_test=1,  # N/A for this context
         )
 
         # user-controllable params, at data-eng level
