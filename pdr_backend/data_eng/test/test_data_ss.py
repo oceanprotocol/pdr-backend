@@ -67,22 +67,22 @@ def test_data_ss_copy(tmpdir):
     )
     ss2 = ss.copy_with_yval(pp)
     assert ss2.signals == ["high"]
-    assert ss2.coins == ["ETH", "BTC"]
+    assert sorted(ss2.coins) == sorted(["ETH", "BTC"]) # no order guarantee
     assert ss2.exchange_ids == ["kraken"]
 
     # copy 2: need to append all three lists
     pp = DataPP(
         timeframe="5m",
-        yval_exchange_id="mxc",
+        yval_exchange_id="binance",
         yval_coin="TRX",
         usdcoin="USDC",
         yval_signal="close",
         N_test=2,
     )
-    ss2 = ss.copy_with_yval(pp)
-    assert ss2.signals == ["high", "close"]
-    assert ss2.coins == ["ETH", "BTC", "TRX"]
-    assert ss2.exchange_ids == ["kraken", "mxc"]
+    ss3 = ss.copy_with_yval(pp)
+    assert sorted(ss3.signals) == sorted(["high", "close"]) # no order guarantee
+    assert sorted(ss3.coins) == sorted(["ETH", "BTC", "TRX"]) # ""
+    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binance"]) # ""
 
 
 @enforce_types

@@ -34,7 +34,7 @@ class DataSS:  # user-controllable params, at data-eng level
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
         signals: List[str],  # for model input vars. eg ["open","high","volume"]
         coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
-        exchange_ids: List[str],  # for model input vars. eg ["binance", "mxc"]
+        exchange_ids: List[str],  # for model input vars.eg ["binance","kraken"]
     ):
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
@@ -124,7 +124,6 @@ class DataSS:  # user-controllable params, at data-eng level
             coins=_list_with(self.coins[:], data_pp.yval_coin),
             exchange_ids=_list_with(self.exchange_ids[:], data_pp.yval_exchange_id),
         )
-
 
 @enforce_types
 def _list_with(list_: list, item) -> list:

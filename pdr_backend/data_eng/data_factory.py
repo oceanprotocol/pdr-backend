@@ -52,7 +52,7 @@ class DataFactory:
 
         for exchange_id in self.ss.exchange_ids:
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 self._update_hist_csv_at_exch_and_pair(exchange_id, pair)
 
     def _update_hist_csv_at_exch_and_pair(self, exchange_id, pair):
