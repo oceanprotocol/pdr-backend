@@ -15,7 +15,7 @@ def test_data_ss_basic(tmpdir):
         Nt=3,
         signals=["high", "close"],
         coins=["ETH", "BTC", "TRX"],
-        exchange_ids=["kraken", "binance"],
+        exchange_ids=["kraken", "binanceus"],
     )
 
     # test attributes

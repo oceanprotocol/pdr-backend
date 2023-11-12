@@ -13,7 +13,7 @@ PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"
 
-SOURCE = "binanceus"
+SOURCE = "kraken"
 PAIR = "BTC-USDT"
 TIMEFRAME, S_PER_EPOCH = "5m", 5 * S_PER_MIN  # must change both at once
 SECONDS_TILL_EPOCH_END = 60  # how soon to start making predictions?
@@ -36,6 +36,52 @@ INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
+def toEpochStart(timestamp: int) -> int:
+    return timestamp // S_PER_EPOCH * S_PER_EPOCH
+
+
+@enforce_types
+class MockEth:
+    def __init__(self):
+        self.timestamp = INIT_TIMESTAMP
+        self.block_number = INIT_BLOCK_NUMBER
+        self._timestamps_seen: List[int] = [INIT_TIMESTAMP]
+
+    def get_block(
+        self, block_number: int, full_transactions: bool = False
+    ):  # pylint: disable=unused-argument
+        mock_block = {"timestamp": self.timestamp}
+        return mock_block
+
+
+@enforce_types
+class MockContract:
+    def __init__(self, w3):
+        self._w3 = w3
+        self.contract_address: str = ADDR
+        self._prediction_slots: List[int] = []
+
+    def get_current_epoch(self) -> int:  # returns an epoch number
+        return self.get_current_epoch_ts() // S_PER_EPOCH
+
+    def get_current_epoch_ts(self) -> int:  # returns a timestamp
+        curEpoch_ts = toEpochStart(self._w3.eth.timestamp)
+        return curEpoch_ts
+
+    def get_secondsPerEpoch(self) -> int:
+        return S_PER_EPOCH
+
+    def submit_prediction(
+        self, predval: bool, stake: float, timestamp: int, wait: bool = True
+    ):  # pylint: disable=unused-argument
+        assert stake <= 3
+        if timestamp in self._prediction_slots:
+            print(f"      (Replace prev pred at time slot {timestamp})")
+        self._prediction_slots.append(timestamp)
+
+
+
+@enforce_types
 def test_predictoor_agent3(monkeypatch):
     _setenvs(monkeypatch)
 
@@ -50,52 +96,11 @@ def test_predictoor_agent3(monkeypatch):
     )
 
     # mock w3.eth.block_number, w3.eth.get_block()
-    @enforce_types
-    class MockEth:
-        def __init__(self):
-            self.timestamp = INIT_TIMESTAMP
-            self.block_number = INIT_BLOCK_NUMBER
-            self._timestamps_seen: List[int] = [INIT_TIMESTAMP]
-
-        def get_block(
-            self, block_number: int, full_transactions: bool = False
-        ):  # pylint: disable=unused-argument
-            mock_block = {"timestamp": self.timestamp}
-            return mock_block
 
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = MockEth()
 
     # mock PredictoorContract
-    @enforce_types
-    def toEpochStart(timestamp: int) -> int:
-        return timestamp // S_PER_EPOCH * S_PER_EPOCH
-
-    @enforce_types
-    class MockContract:
-        def __init__(self, w3):
-            self._w3 = w3
-            self.contract_address: str = ADDR
-            self._prediction_slots: List[int] = []
-
-        def get_current_epoch(self) -> int:  # returns an epoch number
-            return self.get_current_epoch_ts() // S_PER_EPOCH
-
-        def get_current_epoch_ts(self) -> int:  # returns a timestamp
-            curEpoch_ts = toEpochStart(self._w3.eth.timestamp)
-            return curEpoch_ts
-
-        def get_secondsPerEpoch(self) -> int:
-            return S_PER_EPOCH
-
-        def submit_prediction(
-            self, predval: bool, stake: float, timestamp: int, wait: bool = True
-        ):  # pylint: disable=unused-argument
-            assert stake <= 3
-            if timestamp in self._prediction_slots:
-                print(f"      (Replace prev pred at time slot {timestamp})")
-            self._prediction_slots.append(timestamp)
-
     mock_contract = MockContract(mock_w3)
 
     def mock_contract_func(*args, **kwargs):  # pylint: disable=unused-argument
