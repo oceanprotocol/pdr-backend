@@ -80,7 +80,6 @@ class MockContract:
         self._prediction_slots.append(timestamp)
 
 
-
 @enforce_types
 def test_predictoor_agent3(monkeypatch):
     _setenvs(monkeypatch)
