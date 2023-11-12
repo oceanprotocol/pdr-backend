@@ -12,7 +12,15 @@ from pdr_backend.data_eng.constants import (
 )
     
 
-class DataPP:
+class DataPP: # user-uncontrollable params, at data-eng level
+    """
+    DataPP specifies the output variable (yval), ie what to predict.
+
+    DataPP is problem definition -> uncontrollable.
+    DataSS is solution strategy -> controllable.
+    For a given problem definition (DataPP), you can try different DataSS vals
+    """
+
     # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(

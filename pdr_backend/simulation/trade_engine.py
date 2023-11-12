@@ -8,6 +8,7 @@ import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.data_eng.data_factory import DataFactory
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_factory import ModelFactory
 from pdr_backend.model_eng.model_ss import ModelSS
@@ -33,6 +34,7 @@ class TradeEngine:
     @enforce_types
     def __init__(
         self,
+        data_pp: DataPP,
         data_ss: DataSS,
         model_ss: ModelSS,
         trade_pp: TradePP,
@@ -41,18 +43,27 @@ class TradeEngine:
     ):
         """
         @arguments
+          data_pp -- user-uncontrollable params, at data level
           data_ss -- user-controllable params, at data level
           model_ss -- user-controllable params, at model level
           trade_pp -- user-uncontrollable params, at trading level
           trade_ss -- user-controllable params, at trading level
           sim_ss -- user-controllable params, at sim level
         """
+        # ensure training data has the target yval
+        assert data_pp.yval_exchange_id in data_ss.exchs_dict
+        assert data_pp.yval_signal in data_ss.signals
+        assert data_pp.yval_coin in data_ss.coins
+
+        # pp & ss values
+        self.data_pp = data_pp
         self.data_ss = data_ss
         self.model_ss = model_ss
         self.trade_pp = trade_pp
         self.trade_ss = trade_ss
         self.sim_ss = sim_ss
 
+        # state
         self.holdings = self.trade_pp.init_holdings
         self.tot_profit_usd = 0.0
         self.nmses_train: List[float] = []
@@ -62,7 +73,7 @@ class TradeEngine:
         self.profit_usds: List[float] = []
         self.tot_profit_usds: List[float] = []
 
-        self.data_factory = DataFactory(self.data_ss)
+        self.data_factory = DataFactory(self.data_pp, self.data_ss)
 
         self.logfile = ""
 
@@ -72,11 +83,11 @@ class TradeEngine:
 
     @property
     def usdcoin(self) -> str:
-        return self.data_ss.usdcoin
+        return self.data_pp.usdcoin
 
     @property
     def tokcoin(self) -> str:
-        return self.data_ss.yval_coin
+        return self.data_pp.yval_coin
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -96,9 +107,9 @@ class TradeEngine:
         log("Start run")
         # main loop!
         hist_df = self.data_factory.get_hist_df()
-        for test_i in range(self.data_ss.N_test):
+        for test_i in range(self.data_pp.N_test):
             self.run_one_iter(test_i, hist_df)
-            self._plot(test_i, self.data_ss.N_test)
+            self._plot(test_i, self.data_pp.N_test)
 
         log("Done all iters.")
 
@@ -109,7 +120,7 @@ class TradeEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
-        testshift = self.data_ss.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        testshift = self.data_pp.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         X, y, _ = self.data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
@@ -125,7 +136,7 @@ class TradeEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        ut = int(hist_df.index.values[-1]) - testshift * self.data_ss.timeframe_ms
+        ut = int(hist_df.index.values[-1]) - testshift * self.data_pp.timeframe_ms
 
         # current price
         curprice = y_train[-1]
@@ -163,7 +174,7 @@ class TradeEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.data_ss.N_test}: "
+            f"Iter #{test_i+1:3}/{self.data_pp.N_test}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"

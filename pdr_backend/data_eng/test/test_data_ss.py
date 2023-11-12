@@ -1,11 +1,12 @@
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
-def test_data_ss_5m(tmpdir):
+def test_data_ss_basic(tmpdir):
     ss = DataSS(
         csv_dir=str(tmpdir),
         st_timestamp=timestr_to_ut("2023-06-18"),
@@ -40,3 +41,45 @@ def test_data_ss_5m(tmpdir):
 
     # test str
     assert "DataSS=" in str(ss)
+
+@enforce_types
+def test_data_ss_copy(tmpdir):
+    ss = DataSS(
+        csv_dir=str(tmpdir),
+        st_timestamp=timestr_to_ut("2023-06-18"),
+        fin_timestamp=timestr_to_ut("now"),
+        max_N_train=7,
+        Nt=3,
+        signals=["high"],
+        coins=["ETH", "BTC"],
+        exchange_ids=["kraken"],
+    )
+
+    #copy 1: don't need to append lists
+    pp = DataPP(
+        timeframe="5m",
+        yval_exchange_id="kraken",
+        yval_coin="ETH",
+        usdcoin="USDT",
+        yval_signal="high",
+        N_test=2,
+    )
+    ss2 = ss.copy_with_yval(data_pp)
+    assert ss2.signals == ["high"]
+    assert ss2.coins == ["ETH", "BTC"]
+    assert ss2.exchange_ids = ["kraken"]
+
+    #copy 2: need to append all three lists
+    pp = DataPP(
+        timeframe="5m",
+        yval_exchange_id="mxc",
+        yval_coin="TRX",
+        usdcoin="USDC",
+        yval_signal="close",
+        N_test=2,
+    )
+    ss2 = ss.copy_with_yval(data_pp)
+    assert ss2.signals == ["high", "close"]
+    assert ss2.coins == ["ETH", "BTC", "TRX"]
+    assert ss2.exchange_ids = ["kraken", "mxc"]
+    

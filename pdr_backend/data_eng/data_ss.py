@@ -6,21 +6,33 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.data_eng.constants import CAND_SIGNALS
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.util.timeutil import pretty_timestr
 
-class DataSS:
+class DataSS: # user-controllable params, at data-eng level
+    """
+    DataPP specifies the output variable (yval), ie what to predict.
+
+    DataPP is problem definition -> uncontrollable.
+    DataSS is solution strategy -> controllable.
+    For a given problem definition (DataPP), you can try different DataSS vals
+
+    DataSS specifies the inputs, and how much training data to get
+      - Input vars: Nt vars for each of {all signals}x{all coins}x{all exch}
+      - How much trn data: time range st->fin_timestamp, bound by max_N_trn
+    """
     # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,
-        csv_dir: str,  # abs or relative location of csvs directory
-        st_timestamp: int,  # ut, eg via timestr_to_ut(timestr)
-        fin_timestamp: int,  # ""
-        max_N_train,  # if inf, only limited by data available
+        csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
+        st_timestamp: int,  # ut, eg timestr_to_ut("2019-09-13_04:00")
+        fin_timestamp: int,  # ut, eg timestr_to_ut("now")
+        max_N_train,  # eg 50000. if inf, only limited by data available
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
-        signals: List[str],  # eg ["open","high","low","close","volume"]
-        coins: List[str],  # eg ["ETH", "BTC"]
-        exchange_ids: List[str],  # eg ["binance", "kraken"]
+        signals: List[str], # for model input vars. eg ["open","high","volume"]
+        coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
+        exchange_ids: List[str], # for model input vars. eg ["binance", "mxc"]
     ):
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
@@ -96,3 +108,24 @@ class DataSS:
 
         s += "/DataSS}\n"
         return s
+    
+    @enforce_types
+    def copy_with_yval(self, data_pp: DataPP) -> DataSS:
+        """Copy self, add data_pp's yval to new data_ss' inputs as needed"""
+        return DataSS(
+            csv_dir=self.csv_dir,
+            st_timestamp=self.st_timestamp,
+            fin_timestamp=timestr_to_ut("now"),
+            max_N_train=self.max_N_train,
+            Nt=self.Nt,
+            signals=_list_with(self.signals, data_pp.yval_signal)
+            coins=_list_with(self.coins, data_pp.yval_coin)
+            exchange_ids=_list_with(self.exchange_ids, data_pp.yval_exchange_id)
+        )
+
+@enforce_types
+def _list_with(l_: list, val) -> list:
+    """If l_ has val, return just l_. Else return l_ + val"""
+    if val in l_:
+        return l_[:]
+    return _l + [val]
