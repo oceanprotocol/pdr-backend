@@ -12,6 +12,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
 )
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
@@ -29,7 +30,8 @@ from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 @enforce_types
 class DataFactory:
-    def __init__(self, ss: DataSS):
+    def __init__(self, pp: DataPP, ss: DataSS):
+        self.pp = pp
         self.ss = ss
 
     def get_hist_df(self) -> pd.DataFrame:
@@ -50,7 +52,7 @@ class DataFactory:
 
         for exchange_id in self.ss.exchange_ids:
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 self._update_hist_csv_at_exch_and_pair(exchange_id, pair)
 
     def _update_hist_csv_at_exch_and_pair(self, exchange_id, pair):
@@ -76,7 +78,7 @@ class DataFactory:
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
             raw_tohlcv_data = exch.fetch_ohlcv(
                 symbol=pair,  # eg 'BTC/USDT'
-                timeframe=self.ss.timeframe,  # eg '5m', '1h'
+                timeframe=self.pp.timeframe,  # eg '5m', '1h'
                 since=st_ut,  # timestamp of first candle
                 limit=1000,  # max # candles to retrieve
             )
@@ -86,8 +88,8 @@ class DataFactory:
                 # But exchange data often has gaps. Warn about worst violations
                 diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
                 diffs_m = diffs_ms / 1000 / 60  # in minutes
-                mn_thr = self.ss.timeframe_m * OHLCV_MULT_MIN
-                mx_thr = self.ss.timeframe_m * OHLCV_MULT_MAX
+                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
 
                 if min(diffs_m) < mn_thr:
                     print(f"**WARNING: short candle time: {min(diffs_m)} min")
@@ -105,7 +107,7 @@ class DataFactory:
 
             # prep next iteration
             newest_ut_value = int(df.index.values[-1])
-            st_ut = newest_ut_value + self.ss.timeframe_ms
+            st_ut = newest_ut_value + self.pp.timeframe_ms
 
         # output to csv
         save_csv(filename, df)
@@ -129,7 +131,7 @@ class DataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("  User-specified start >= file start, so append file")
-            return file_utN + self.ss.timeframe_ms
+            return file_utN + self.pp.timeframe_ms
 
         print("  User-specified start < file start, so delete file")
         os.remove(filename)
@@ -148,7 +150,7 @@ class DataFactory:
             exch = self.ss.exchs_dict[exchange_id]
             csv_dfs[exchange_id] = {}
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 print(f"Load csv from exchange={exch}, pair={pair}")
                 filename = self._hist_csv_filename(exchange_id, pair)
                 csv_df = load_csv(filename, cols, st, fin)
@@ -242,7 +244,8 @@ class DataFactory:
 
         # y is set from yval_{exchange_id, coin, signal}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{ss.yval_exchange_id}:{ss.yval_coin}:{ss.yval_signal}"
+        pp = self.pp
+        hist_col = f"{pp.yval_exchange_id}:{pp.yval_coin}:{pp.yval_signal}"
         z = hist_df[hist_col].tolist()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
@@ -261,7 +264,7 @@ class DataFactory:
             + "_"
             + pair.replace("/", "-")
             + "_"
-            + self.ss.timeframe
+            + self.pp.timeframe
             + ".csv"
         )
         filename = os.path.join(self.ss.csv_dir, basename)

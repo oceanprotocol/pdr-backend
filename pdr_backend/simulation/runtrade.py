@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 
-from pdr_backend.util.env import parse_filters
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_ss import ModelSS
 from pdr_backend.simulation.sim_ss import SimSS
@@ -10,52 +10,39 @@ from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.simulation.trade_ss import TradeSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
-# Backlog is in backlog.py
+# To play with simulation, simply change any of the arguments to any
+# of the constructors below.
+#
+# - It does *not* use envvars PAIR_FILTER, TIMEFRAME_FILTER, or SOURCE_FILTER.
+#   Why: to avoid ambiguity. Eg is PAIR_FILTER for yval_coin, or input data?
 
-# ==================================================================
-# params that I change
-
-(pairs, timeframes, exchanges, _) = parse_filters()
-
-if exchanges is None or len(exchanges) == 0:
-    exchanges = ["binance"]
-
-if pairs is None or len(pairs) == 0:
-    pairs = ["BTC/USDT", "ETH/USDT"]
-
-pairs = [i.split("/", maxsplit=1)[0] for i in pairs]
-
-timeframe = "1h"
-if timeframes is not None and len(timeframes) > 0:
-    timeframe = timeframes[0]
-
-print(f"Config: {pairs} {exchanges} {timeframe}")
-
-yval_coin = pairs[0]
-yval_exchange_id = exchanges[0]
-
-data_ss = DataSS(  # user-controllable params, at data-eng level
-    csv_dir=os.path.abspath("csvs"),
-    st_timestamp=timestr_to_ut("2022-06-30"),  # 2019-09-13_04:00 earliest
-    fin_timestamp=timestr_to_ut("now"),  # 'now','2023-06-21_17:55'
-    max_N_train=5000,  # 50000 # if inf, only limited by data available
+data_pp = DataPP(  # user-uncontrollable params, at data-eng level
+    timeframe="1h",  # "5m" or "1h"
+    yval_exchange_id="binance",  # "binance" or "kraken" or ...
+    yval_coin="BTC",  # "BTC" or "ETH" or "TRX" or ...
+    usdcoin="USDT",  # "USDT" or "USDC" or ..
+    yval_signal="close",  # "close" or "open" or ...
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
-    Nt=20,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
-    usdcoin="USDT",
-    timeframe=timeframe,
-    signals=["close"],  # ["open", "high","low", "close", "volume"],
-    coins=pairs,
-    exchange_ids=exchanges,
-    yval_exchange_id=yval_exchange_id,
-    yval_coin=yval_coin,
-    yval_signal="close",
 )
 
-model_ss = ModelSS("LIN")  # user-controllable params, at model-eng level
+data_ss = DataSS(  # user-controllable params, at data-eng level
+    csv_dir=os.path.abspath("csvs"),  # eg "csvs". abs or rel loc'n of csvs dir
+    st_timestamp=timestr_to_ut("2022-06-30"),  # "2019-09-13_04:00" is earliest
+    fin_timestamp=timestr_to_ut("now"),  # eg 'now','2023-06-21_17:55'
+    max_N_train=5000,  # eg 50000. # if inf, only limited by data available
+    Nt=20,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
+    signals=["close"],  # for model input vars. eg ["open","high","volume"]
+    coins=["BTC", "ETH"],  # for model input vars. eg ["ETH", "BTC"]
+    exchange_ids=["binance"],  # for model input vars. eg ["binance", "mxc"]
+)
+
+model_ss = ModelSS(  # user-controllable params, at model-eng level
+    "LIN"  # eg "LIN", "GPR", "SVR", "NuSVR", or "LinearSVR"
+)
 
 trade_pp = TradePP(  # user-uncontrollable params, at trading level
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
-    init_holdings={"USDT": 100000.0, yval_coin: 0.0},
+    init_holdings={"USDT": 100000.0, data_pp.yval_coin: 0.0},
 )
 
 trade_ss = TradeSS(  # user-controllable params, at trading level
@@ -64,11 +51,12 @@ trade_ss = TradeSS(  # user-controllable params, at trading level
 
 sim_ss = SimSS(  # user-controllable params, at sim level
     do_plot=True,  # plot at end?
-    logpath=os.path.abspath("./"),
+    logpath=os.path.abspath("./"),  # where to save logs to
 )
 
 # ==================================================================
 # print setup
+print(f"data_pp={data_pp}")
 print(f"data_ss={data_ss}")
 print(f"model_ss={model_ss}")
 print(f"trade_pp={trade_pp}")
@@ -77,6 +65,6 @@ print(f"sim_ss={sim_ss}")
 
 # ==================================================================
 # do work
-trade_engine = TradeEngine(data_ss, model_ss, trade_pp, trade_ss, sim_ss)
+trade_engine = TradeEngine(data_pp, data_ss, model_ss, trade_pp, trade_ss, sim_ss)
 
 trade_engine.run()

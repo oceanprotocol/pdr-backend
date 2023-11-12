@@ -2,6 +2,7 @@ import os
 
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.model_eng.model_ss import ModelSS
 from pdr_backend.simulation.trade_engine import TradeEngine
@@ -15,24 +16,29 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_TradeEngine(tmpdir):
     logpath = str(tmpdir)
 
+    data_pp = DataPP(  # user-uncontrollable params, at data level
+        timeframe="5m",
+        yval_exchange_id="binanceus",
+        yval_coin="BTC",
+        usdcoin="USDT",
+        yval_signal="close",
+        N_test=100,
+    )
+
     data_ss = DataSS(  # user-controllable params, at data level
         csv_dir=os.path.abspath("csvs"),  # use the usual data (worksforme)
         st_timestamp=timestr_to_ut("2023-06-22"),
         fin_timestamp=timestr_to_ut("2023-06-24"),
         max_N_train=500,
-        N_test=100,
         Nt=2,
-        usdcoin="USDT",
-        timeframe="5m",
         signals=["open", "close"],
         coins=["ETH", "BTC"],
         exchange_ids=["binanceus"],
-        yval_exchange_id="binanceus",
-        yval_coin="BTC",
-        yval_signal="close",
     )
 
-    model_ss = ModelSS("LIN")  # user-controllable params, at model level
+    model_ss = ModelSS(  # user-controllable params, at model level
+        "LIN",
+    )
 
     trade_pp = TradePP(  # user-uncontrollable params, at trading level
         fee_percent=0.0,  # Eg 0.001 is 0.1%. Trading fee (simulated)
@@ -45,11 +51,12 @@ def test_TradeEngine(tmpdir):
 
     sim_ss = SimSS(  # user-controllable params, at sim level
         do_plot=False,  # plot at end?
-        logpath=logpath,
+        logpath=logpath,  # where to save logs to
     )
 
     # ==================================================================
     # print setup
+    print(f"data_pp={data_pp}")
     print(f"data_ss={data_ss}")
     print(f"model_ss={model_ss}")
     print(f"trade_pp={trade_pp}")
@@ -58,5 +65,5 @@ def test_TradeEngine(tmpdir):
 
     # ==================================================================
     # do work
-    trade_engine = TradeEngine(data_ss, model_ss, trade_pp, trade_ss, sim_ss)
+    trade_engine = TradeEngine(data_pp, data_ss, model_ss, trade_pp, trade_ss, sim_ss)
     trade_engine.run()

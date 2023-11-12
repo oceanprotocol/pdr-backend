@@ -1,10 +1,12 @@
 import copy
+from typing import Tuple
 
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
 from pdr_backend.data_eng.constants import TOHLCV_COLS
+from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.data_factory import DataFactory
 from pdr_backend.data_eng.pdutil import (
@@ -64,9 +66,9 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
             if _calc_ut(st_ut, i) <= fin_ut
         ]
 
-    def _uts_from_since(cur_ut, since, limit):
+    def _uts_from_since(cur_ut, since, limit_N):
         return [
-            _calc_ut(since, i) for i in range(limit) if _calc_ut(since, i) <= cur_ut
+            _calc_ut(since, i) for i in range(limit_N) if _calc_ut(since, i) <= cur_ut
         ]
 
     # setup: exchange
@@ -81,27 +83,31 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
 
     exchange = FakeExchange()
 
+    # setup: pp
+    pp = DataPP(  # user-uncontrollable params
+        timeframe="5m",
+        yval_exchange_id="binanceus",
+        yval_coin="ETH",
+        usdcoin="USDT",
+        yval_signal="high",
+        N_test=2,
+    )
+
     # setup: ss
-    ss = DataSS(
+    ss = DataSS(  # user-controllable params
         csv_dir=csvdir,
         st_timestamp=st_ut,
         fin_timestamp=fin_ut,
         max_N_train=7,
         Nt=3,
-        N_test=2,
-        usdcoin="USDT",
-        timeframe="5m",
         signals=["high"],
         coins=["ETH"],
         exchange_ids=["binanceus"],
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        yval_signal="high",
     )
     ss.exchs_dict["binanceus"] = exchange
 
     # setup: data_factory, filename
-    data_factory = DataFactory(ss)
+    data_factory = DataFactory(pp, ss)
     filename = data_factory._hist_csv_filename("binanceus", "ETH/USDT")
 
     def _uts_in_csv(filename: str) -> list:
@@ -176,11 +182,11 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
-    ss = _data_ss_1exchange_1coin_1signal(csvdir)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
 
     assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * Nt
 
-    data_factory = DataFactory(ss)
+    data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
@@ -254,26 +260,29 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         },
     }
 
+    pp = DataPP(
+        timeframe="5m",
+        yval_exchange_id="binanceus",
+        yval_coin="ETH",
+        usdcoin="USDT",
+        yval_signal="high",
+        N_test=2,
+    )
+
     ss = DataSS(
         csv_dir=csvdir,
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("2023-06-21"),
         max_N_train=7,
         Nt=3,
-        N_test=2,
-        usdcoin="USDT",
-        timeframe="5m",
         signals=["high", "low"],
         coins=["BTC", "ETH"],
         exchange_ids=["binanceus", "kraken"],
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        yval_signal="high",
     )
 
     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * Nt
 
-    data_factory = DataFactory(ss)
+    data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
@@ -331,8 +340,8 @@ def test_create_xy__handle_nan(tmpdir):
     # create hist_df
     csvdir = str(tmpdir)
     csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
-    ss = _data_ss_1exchange_1coin_1signal(csvdir)
-    data_factory = DataFactory(ss)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
 
     # corrupt hist_df with nans
@@ -361,28 +370,31 @@ def test_create_xy__handle_nan(tmpdir):
 
 
 @enforce_types
-def _data_ss_1exchange_1coin_1signal(csvdir: str):
+def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
+    pp = DataPP(
+        timeframe="5m",
+        yval_exchange_id="kraken",
+        yval_coin="ETH",
+        usdcoin="USDT",
+        yval_signal="high",
+        N_test=2,
+    )
+
     ss = DataSS(
         csv_dir=csvdir,
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("2023-06-21"),
         max_N_train=7,
         Nt=3,
-        N_test=2,
-        usdcoin="USDT",
-        timeframe="5m",
-        signals=["high"],
-        coins=["ETH"],
-        exchange_ids=["kraken"],
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        yval_signal="high",
+        signals=[pp.yval_signal],
+        coins=[pp.yval_coin],
+        exchange_ids=[pp.yval_exchange_id],
     )
-    return ss
+    return pp, ss
 
 
 @enforce_types
-def _assert_shapes(ss, X, y, x_df):
+def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_N_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n
@@ -392,7 +404,7 @@ def _assert_shapes(ss, X, y, x_df):
 
 
 @enforce_types
-def _df_from_raw_data(raw_data: list):
+def _df_from_raw_data(raw_data: list) -> pd.DataFrame:
     df = initialize_df(TOHLCV_COLS)
     next_df = pd.DataFrame(raw_data, columns=TOHLCV_COLS)
     df = concat_next_df(df, next_df)
