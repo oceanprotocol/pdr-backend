@@ -33,7 +33,7 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
     time_delta = (
         timedelta(weeks=1)
         if contract_timeframe == "5m"
-        else timedelta(weeks=2)
+        else timedelta(weeks=4)
         # timedelta(days=1)
         # if contract_timeframe == "5m"
         # else timedelta(days=1)

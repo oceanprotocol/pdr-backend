@@ -1,7 +1,10 @@
+from enforce_typing import enforce_types
 import numpy as np
+import pandas as pd
 
 
-def timeblock(z, Nt: int):
+@enforce_types
+def timeblock(z, Nt: int) -> pd.DataFrame:
     """
     Calculate a timeblock for training, from a 1-d time series
 

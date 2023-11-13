@@ -1,7 +1,8 @@
-from unittest.mock import Mock
 import ccxt
+from enforce_typing import enforce_types
 
 
+@enforce_types
 def test_ccxt_mexc_pairs():
     exchange = ccxt.mexc3()
     markets = exchange.load_markets()
@@ -25,6 +26,7 @@ def test_ccxt_mexc_pairs():
     # print("MEXC unique_settle: ", unique_settle_tokens)
 
 
+@enforce_types
 class MockBinance:
     def __init__(self):
         self.markets = {
@@ -38,6 +40,7 @@ class MockBinance:
         return self.markets
 
 
+@enforce_types
 def test_ccxt_binance_pairs():
     exchange = MockBinance()
     markets = exchange.load_markets()

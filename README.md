@@ -20,8 +20,6 @@ SPDX-License-Identifier: Apache-2.0
 - [Dynamic model codebase](READMEs/dynamic-model-codebase.md)
 - [Static models in predictoors](READMEs/static-model.md)
 
-
-
 ## Flows for core team
 
 - **Backend dev** - for `pdr-backend` itself
@@ -33,7 +31,6 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
 - **[Scripts](scripts/)** for performance stats, more
-- (obsolete) [ETHMiami competition](READMEs/ethmiami.md) - Oct 27-29, 2023
 
 ## Repo structure
 

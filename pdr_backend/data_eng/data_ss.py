@@ -5,56 +5,53 @@ import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.simulation.timeutil import pretty_timestr
-
-CAND_USDCOINS = ["USDT", "DAI", "USDC"]  # add more if needed
-CAND_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
-CAND_SIGNALS = ["open", "high", "low", "close", "volume"]
+from pdr_backend.data_eng.constants import CAND_SIGNALS
+from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.util.timeutil import pretty_timestr
 
 
-class DataSS:
+class DataSS:  # user-controllable params, at data-eng level
+    """
+    DataPP specifies the output variable (yval), ie what to predict.
+
+    DataPP is problem definition -> uncontrollable.
+    DataSS is solution strategy -> controllable.
+    For a given problem definition (DataPP), you can try different DataSS vals
+
+    DataSS specifies the inputs, and how much training data to get
+      - Input vars: Nt vars for each of {all signals}x{all coins}x{all exch}
+      - How much trn data: time range st->fin_timestamp, bound by max_N_trn
+    """
+
     # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,
-        csv_dir: str,  # abs or relative location of csvs directory
-        st_timestamp: int,  # ut, eg via timestr_to_ut(timestr)
-        fin_timestamp: int,  # ""
-        max_N_train,  # if inf, only limited by data available
-        N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
+        csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
+        st_timestamp: int,  # ut, eg timestr_to_ut("2019-09-13_04:00")
+        fin_timestamp: int,  # ut, eg timestr_to_ut("now")
+        max_N_train,  # eg 50000. if inf, only limited by data available
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
-        usdcoin: str,  # e.g. "USDT", for pairs of eg ETH-USDT, BTC-USDT
-        timeframe: str,  # "1m", 5m, 15m, 30m, 1h, 1d, 1w, 1M
-        signals: List[str],  # eg ["open","high","low","close","volume"]
-        coins: List[str],  # eg ["ETH", "BTC"]
-        exchange_ids: List[str],  # eg ["binance", "kraken"]
-        yval_exchange_id: str,  # eg "binance",
-        yval_coin: str,  # eg "ETH"
-        yval_signal: str,  # eg "c" for closing price
+        signals: List[str],  # for model input vars. eg ["open","high","volume"]
+        coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
+        exchange_ids: List[str],  # for model input vars.eg ["binance","kraken"]
     ):
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
         assert 0 <= st_timestamp <= fin_timestamp <= np.inf
         assert 0 < max_N_train
-        assert 0 < N_test < np.inf
         assert 0 < Nt < np.inf
-        assert usdcoin in CAND_USDCOINS
-        assert timeframe in CAND_TIMEFRAMES
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
-        assert yval_signal in CAND_SIGNALS, yval_signal
 
         self.csv_dir = csv_dir
         self.st_timestamp = st_timestamp
         self.fin_timestamp = fin_timestamp
 
         self.max_N_train = max_N_train
-        self.N_test = N_test
         self.Nt = Nt
 
-        self.usdcoin = usdcoin
-        self.timeframe = timeframe
         self.signals = signals
         self.coins = coins
 
@@ -62,10 +59,6 @@ class DataSS:
         for exchange_id in exchange_ids:
             exchange_class = getattr(ccxt, exchange_id)
             self.exchs_dict[exchange_id] = exchange_class()
-
-        self.yval_exchange_id = yval_exchange_id
-        self.yval_coin = yval_coin
-        self.yval_signal = yval_signal
 
     @property
     def n(self) -> int:
@@ -88,6 +81,7 @@ class DataSS:
     def n_coins(self) -> int:
         return len(self.coins)
 
+    @enforce_types
     def __str__(self) -> str:
         s = "DataSS={\n"
 
@@ -97,20 +91,14 @@ class DataSS:
         s += "  \n"
 
         s += f"  max_N_train={self.max_N_train} -- max # pts to train on\n"
-        s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
         s += f"  Nt={self.Nt} -- model inputs Nt past pts z[t-1], .., z[t-Nt]\n"
         s += "  \n"
 
-        s += f"  usdcoin={self.usdcoin}\n"
-        s += f"  timeframe={self.timeframe}\n"
         s += f"  signals={self.signals}\n"
         s += f"  coins={self.coins}\n"
         s += "  \n"
 
         s += f"  exchs_dict={self.exchs_dict}\n"
-        s += f"  yval_exchange_id={self.yval_exchange_id}\n"
-        s += f"  yval_coin={self.yval_coin}\n"
-        s += f"  yval_signal={self.yval_signal}\n"
         s += "  \n"
 
         s += "  (then...)\n"
@@ -122,3 +110,25 @@ class DataSS:
 
         s += "/DataSS}\n"
         return s
+
+    @enforce_types
+    def copy_with_yval(self, data_pp: DataPP):
+        """Copy self, add data_pp's yval to new data_ss' inputs as needed"""
+        return DataSS(
+            csv_dir=self.csv_dir,
+            st_timestamp=self.st_timestamp,
+            fin_timestamp=self.fin_timestamp,
+            max_N_train=self.max_N_train,
+            Nt=self.Nt,
+            signals=_list_with(self.signals[:], data_pp.yval_signal),
+            coins=_list_with(self.coins[:], data_pp.yval_coin),
+            exchange_ids=_list_with(self.exchange_ids[:], data_pp.yval_exchange_id),
+        )
+
+
+@enforce_types
+def _list_with(list_: list, item) -> list:
+    """If l_ has item, return just list_. Otherwise, return list_ + item."""
+    if item in list_:
+        return list_
+    return list_ + [item]

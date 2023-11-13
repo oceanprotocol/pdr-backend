@@ -13,7 +13,7 @@ PRIV_KEY = os.getenv("PRIVATE_KEY")
 
 ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"
 
-SOURCE = "binance"
+SOURCE = "kraken"
 PAIR = "BTC-USDT"
 TIMEFRAME, S_PER_EPOCH = "5m", 5 * S_PER_MIN  # must change both at once
 SECONDS_TILL_EPOCH_END = 60  # how soon to start making predictions?
@@ -35,13 +35,11 @@ INIT_TIMESTAMP = 107
 INIT_BLOCK_NUMBER = 13
 
 
-# mock PredictoorContract
 @enforce_types
 def toEpochStart(timestamp: int) -> int:
     return timestamp // S_PER_EPOCH * S_PER_EPOCH
 
 
-# mock w3.eth.block_number, w3.eth.get_block()
 @enforce_types
 class MockEth:
     def __init__(self):

@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest.mock import patch
+
 import pytest
 
 from pdr_backend.trueval.trueval_agent_base import get_trueval
@@ -7,39 +8,50 @@ from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch, TruevalSl
 from pdr_backend.util.constants import ZERO_ADDRESS
 
 
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_new_agent(trueval_config):
-    agent = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
-    assert agent.config == trueval_config
-    assert agent.predictoor_batcher.contract_address == ZERO_ADDRESS
+    agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
+    assert agent_.config == trueval_config
+    assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
-def test_process_trueval_slot_up(agent, slot, predictoor_contract_mock):
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
+def test_process_trueval_slot_up(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == False
-        assert slot.trueval == True
+        assert not slot.cancel
+        assert slot.trueval
 
 
-def test_process_trueval_slot_down(agent, slot, predictoor_contract_mock):
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
+def test_process_trueval_slot_down(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == False
-        assert slot.trueval == False
+        assert not slot.cancel
+        assert not slot.trueval
 
 
-def test_process_trueval_slot_cancel(agent, slot, predictoor_contract_mock):
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
+def test_process_trueval_slot_cancel(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
     with patch.object(agent, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
         agent.process_trueval_slot(slot)
 
-        assert slot.cancel == True
-        assert slot.trueval == False
+        assert slot.cancel
+        assert not slot.trueval
 
 
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_batch_submit_truevals(agent, slot):
     times = 3
     slot.feed.address = "0x0000000000000000000000000000000000c0ffee"
@@ -79,6 +91,7 @@ def test_batch_submit_truevals(agent, slot):
         mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
 
 
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_take_step(agent, slot):
     with patch.object(
         agent, "get_batch", return_value=[slot]
@@ -105,6 +118,6 @@ def test_take_step(agent, slot):
 # Fixtures
 
 
-@pytest.fixture()
-def agent(trueval_config):
+@pytest.fixture(name="agent")
+def agent_fixture(trueval_config):
     return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)

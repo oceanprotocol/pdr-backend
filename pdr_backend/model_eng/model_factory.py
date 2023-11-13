@@ -3,8 +3,7 @@ from sklearn import linear_model, svm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from pdr_backend.simulation import prev_model
-from pdr_backend.simulation.model_ss import ModelSS
+from pdr_backend.model_eng.model_ss import ModelSS
 
 
 @enforce_types
@@ -13,17 +12,12 @@ class ModelFactory:
         self.model_ss = model_ss
 
     def build(self, X_train, y_train):
-        # print(f"Build model: start")
         model = self._model()
         model.fit(X_train, y_train)
-        # print("Build model: done")
         return model
 
     def _model(self):
         a = self.model_ss.model_approach
-        # print(f"model_approach={a}")
-        if a == "PREV":
-            return prev_model.PrevModel(self.model_ss.var_with_prev)
         if a == "LIN":
             return linear_model.LinearRegression()
         if a == "GPR":

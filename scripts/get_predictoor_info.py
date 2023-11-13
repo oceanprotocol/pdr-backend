@@ -2,7 +2,7 @@ import sys
 from pdr_backend.util.csvs import write_prediction_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import fetch_filtered_predictions, FilterMode
-from pdr_backend.simulation.timeutil import ms_to_seconds, timestr_to_ut
+from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:

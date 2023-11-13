@@ -30,10 +30,11 @@ from os import getenv
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_config import BaseConfig
+from pdr_backend.util.strutil import StrMixin
 
 
 @enforce_types
-class BasePredictoorConfig(BaseConfig, ABC):
+class BasePredictoorConfig(BaseConfig, ABC, StrMixin):
     def __init__(self):
         super().__init__()
         self.s_until_epoch_end = int(getenv("SECONDS_TILL_EPOCH_END", "60"))

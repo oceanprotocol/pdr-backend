@@ -6,6 +6,7 @@ from pdr_backend.models.base_config import BaseConfig
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
+from pdr_backend.models.dfrewards import DFRewards
 
 
 @enforce_types
@@ -53,3 +54,23 @@ def do_payout():
         print(f"Claiming payouts for {contract_address}")
         contract = PredictoorContract(config.web3_config, contract_address)
         request_payout_batches(contract, BATCH_SIZE, pending_payouts[contract_address])
+
+
+def do_rose_payout():
+    address = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
+    wrapped_rose = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+    config = BaseConfig()
+    owner = config.web3_config.owner
+    if config.web3_config.eth.chain_id != 23294:
+        raise Exception("Unsupported network")
+    contract = DFRewards(config.web3_config, address)
+    claimable_rewards = contract.get_claimable_rewards(owner, wrapped_rose)
+    print(f"Found {claimable_rewards} ROSE available to claim")
+
+    if claimable_rewards > 0:
+        print("Claiming ROSE rewards...")
+        contract.claim_rewards(owner, wrapped_rose)
+    else:
+        print("No rewards, exiting")
+
+    print("ROSE reward claim done")

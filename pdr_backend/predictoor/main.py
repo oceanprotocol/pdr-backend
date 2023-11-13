@@ -50,6 +50,12 @@ def do_main():
 
         do_payout()
 
+    elif arg1 == "roseclaim":
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.predictoor.payout import do_rose_payout
+
+        do_rose_payout()
+
     elif arg1 == "help":
         do_help()
 

@@ -6,15 +6,15 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
-from pdr_backend.simulation.tradeutil import pairstr
-
-from pdr_backend.simulation.constants import (
+from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
-    MS_PER_EPOCH,
+    OHLCV_MULT_MIN,
+    OHLCV_MULT_MAX,
 )
-from pdr_backend.simulation.data_ss import DataSS
-from pdr_backend.simulation.pdutil import (
+from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.data_eng.pdutil import (
     initialize_df,
     concat_next_df,
     save_csv,
@@ -23,15 +23,15 @@ from pdr_backend.simulation.pdutil import (
     oldest_ut,
     newest_ut,
 )
-from pdr_backend.simulation.timeutil import (
-    pretty_timestr,
-    current_ut,
-)
+from pdr_backend.util.mathutil import has_nan, fill_nans
+from pdr_backend.util.pairutil import pairstr
+from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 
 @enforce_types
 class DataFactory:
-    def __init__(self, ss: DataSS):
+    def __init__(self, pp: DataPP, ss: DataSS):
+        self.pp = pp
         self.ss = ss
 
     def get_hist_df(self) -> pd.DataFrame:
@@ -52,7 +52,7 @@ class DataFactory:
 
         for exchange_id in self.ss.exchange_ids:
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 self._update_hist_csv_at_exch_and_pair(exchange_id, pair)
 
     def _update_hist_csv_at_exch_and_pair(self, exchange_id, pair):
@@ -77,19 +77,25 @@ class DataFactory:
             # C is [sample x signal(TOHLCV)]. Row 0 is oldest
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
             raw_tohlcv_data = exch.fetch_ohlcv(
-                symbol=pair,
-                timeframe=self.ss.timeframe,
-                since=st_ut,
-                limit=1000,
+                symbol=pair,  # eg 'BTC/USDT'
+                timeframe=self.pp.timeframe,  # eg '5m', '1h'
+                since=st_ut,  # timestamp of first candle
+                limit=1000,  # max # candles to retrieve
             )
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
-                diffs = np.array(uts[1:]) - np.array(uts[:-1])
-                mx, mn = max(diffs), min(diffs)
-                diffs_ok = mn == mx == MS_PER_EPOCH
-                if not diffs_ok:
-                    print(f"**WARNING: diffs not ok: mn={mn}, mx={mx}**")
-                # assert mx == mn == MS_PER_EPOCH
+                # Ideally, time between ohclv candles is always 5m or 1h
+                # But exchange data often has gaps. Warn about worst violations
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+                diffs_m = diffs_ms / 1000 / 60  # in minutes
+                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
+
+                if min(diffs_m) < mn_thr:
+                    print(f"**WARNING: short candle time: {min(diffs_m)} min")
+                if max(diffs_m) > mx_thr:
+                    print(f"**WARNING: long candle time: {max(diffs_m)} min")
+
             raw_tohlcv_data = [
                 vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
             ]
@@ -101,8 +107,7 @@ class DataFactory:
 
             # prep next iteration
             newest_ut_value = int(df.index.values[-1])
-            # prev_st_ut = st_ut
-            st_ut = newest_ut_value + MS_PER_EPOCH
+            st_ut = newest_ut_value + self.pp.timeframe_ms
 
         # output to csv
         save_csv(filename, df)
@@ -126,7 +131,7 @@ class DataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("  User-specified start >= file start, so append file")
-            return file_utN + MS_PER_EPOCH
+            return file_utN + self.pp.timeframe_ms
 
         print("  User-specified start < file start, so delete file")
         os.remove(filename)
@@ -145,7 +150,7 @@ class DataFactory:
             exch = self.ss.exchs_dict[exchange_id]
             csv_dfs[exchange_id] = {}
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.ss.usdcoin)
+                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 print(f"Load csv from exchange={exch}, pair={pair}")
                 filename = self._hist_csv_filename(exchange_id, pair)
                 csv_df = load_csv(filename, cols, st, fin)
@@ -183,20 +188,29 @@ class DataFactory:
         assert hist_df.index.name == "timestamp"
         return hist_df
 
-    def create_xy(self, hist_df: pd.DataFrame, testshift: int):
+    def create_xy(
+        self,
+        hist_df: pd.DataFrame,
+        testshift: int,
+        do_fill_nans: bool = True,
+    ):
         """
         @arguments
           hist_df -- df w/ cols={exchange_id}:{coin}:{signal}+"datetime",
             and index=timestamp
           testshift -- to simulate across historical test data
+          do_fill_nans -- if any values are nan, fill them? (Via interpolation)
+            If you turn this off and hist_df has nans, then X/y/etc gets nans
 
         @return --
           X -- 2d array of [sample_i, var_i] : value
           y -- 1d array of [sample_i]
-          var_with_prev -- int
           x_df -- df w/ cols={exchange_id}:{coin}:{signal}:t-{x} + "datetime"
             index=0,1,.. (nothing special)
         """
+        if do_fill_nans and has_nan(hist_df):
+            hist_df = fill_nans(hist_df)
+
         ss = self.ss
         x_df = pd.DataFrame()
 
@@ -228,15 +242,10 @@ class DataFactory:
 
         X = x_df.to_numpy()
 
-        x_cols = x_df.columns.tolist()
-        x_col_with_prev = (
-            f"{ss.yval_exchange_id}:{ss.yval_coin}:" f"{ss.yval_signal}:t-2"
-        )
-        var_with_prev = x_cols.index(x_col_with_prev)
-
         # y is set from yval_{exchange_id, coin, signal}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{ss.yval_exchange_id}:{ss.yval_coin}:{ss.yval_signal}"
+        pp = self.pp
+        hist_col = f"{pp.yval_exchange_id}:{pp.yval_coin}:{pp.yval_signal}"
         z = hist_df[hist_col].tolist()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
@@ -246,7 +255,7 @@ class DataFactory:
         assert X.shape[1] == ss.n
 
         # return
-        return X, y, var_with_prev, x_df
+        return X, y, x_df
 
     def _hist_csv_filename(self, exchange_id, pair) -> str:
         """Given exchange_id and pair (and self path), compute csv filename"""
@@ -255,13 +264,14 @@ class DataFactory:
             + "_"
             + pair.replace("/", "-")
             + "_"
-            + self.ss.timeframe
+            + self.pp.timeframe
             + ".csv"
         )
         filename = os.path.join(self.ss.csv_dir, basename)
         return filename
 
 
+@enforce_types
 def _slice(x: list, st: int, fin: int) -> list:
     """Python list slice returns an empty list on x[st:fin] if st<0 and fin=0
     This overcomes that issue, for cases when st<0"""

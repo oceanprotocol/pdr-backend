@@ -2,18 +2,31 @@ import os
 from typing import List
 
 from enforce_typing import enforce_types
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.simulation import plotutil
-from pdr_backend.simulation.constants import MS_PER_EPOCH
-from pdr_backend.simulation.data_factory import DataFactory
-from pdr_backend.simulation.data_ss import DataSS
-from pdr_backend.simulation.model_factory import ModelFactory
-from pdr_backend.simulation.model_ss import ModelSS
-from pdr_backend.simulation.timeutil import current_ut, pretty_timestr
-from pdr_backend.simulation.tradeutil import TradeParams, TradeSS
+from pdr_backend.data_eng.data_factory import DataFactory
+from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.model_eng.model_factory import ModelFactory
+from pdr_backend.model_eng.model_ss import ModelSS
+from pdr_backend.simulation.sim_ss import SimSS
+from pdr_backend.simulation.trade_ss import TradeSS
+from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.util.mathutil import nmse
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
+
+FONTSIZE = 12
+
+
+@enforce_types
+class PlotState:
+    def __init__(self):
+        self.fig, (self.ax0, self.ax1) = plt.subplots(2)
+        plt.ion()
+        plt.show()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -21,16 +34,36 @@ class TradeEngine:
     @enforce_types
     def __init__(
         self,
+        data_pp: DataPP,
         data_ss: DataSS,
         model_ss: ModelSS,
-        trade_pp: TradeParams,
+        trade_pp: TradePP,
         trade_ss: TradeSS,
+        sim_ss: SimSS,
     ):
+        """
+        @arguments
+          data_pp -- user-uncontrollable params, at data level
+          data_ss -- user-controllable params, at data level
+          model_ss -- user-controllable params, at model level
+          trade_pp -- user-uncontrollable params, at trading level
+          trade_ss -- user-controllable params, at trading level
+          sim_ss -- user-controllable params, at sim level
+        """
+        # ensure training data has the target yval
+        assert data_pp.yval_exchange_id in data_ss.exchs_dict
+        assert data_pp.yval_signal in data_ss.signals
+        assert data_pp.yval_coin in data_ss.coins
+
+        # pp & ss values
+        self.data_pp = data_pp
         self.data_ss = data_ss
         self.model_ss = model_ss
         self.trade_pp = trade_pp
         self.trade_ss = trade_ss
+        self.sim_ss = sim_ss
 
+        # state
         self.holdings = self.trade_pp.init_holdings
         self.tot_profit_usd = 0.0
         self.nmses_train: List[float] = []
@@ -40,22 +73,26 @@ class TradeEngine:
         self.profit_usds: List[float] = []
         self.tot_profit_usds: List[float] = []
 
-        self.data_factory = DataFactory(self.data_ss)
+        self.data_factory = DataFactory(self.data_pp, self.data_ss)
 
         self.logfile = ""
 
+        self.plot_state = None
+        if self.sim_ss.do_plot:
+            self.plot_state = PlotState()
+
     @property
     def usdcoin(self) -> str:
-        return self.data_ss.usdcoin
+        return self.data_pp.usdcoin
 
     @property
     def tokcoin(self) -> str:
-        return self.data_ss.yval_coin
+        return self.data_pp.yval_coin
 
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{current_ut()}.txt"
-        self.logfile = os.path.join(self.trade_ss.logpath, filebase)
+        self.logfile = os.path.join(self.sim_ss.logpath, filebase)
         with open(self.logfile, "w") as f:
             f.write("\n")
 
@@ -70,8 +107,9 @@ class TradeEngine:
         log("Start run")
         # main loop!
         hist_df = self.data_factory.get_hist_df()
-        for test_i in range(self.data_ss.N_test):
+        for test_i in range(self.data_pp.N_test):
             self.run_one_iter(test_i, hist_df)
+            self._plot(test_i, self.data_pp.N_test)
 
         log("Done all iters.")
 
@@ -79,31 +117,26 @@ class TradeEngine:
         nmse_test = nmse(self.ys_testhat, self.ys_test)
         log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
 
-        self._final_plot()
-
     @enforce_types
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
-        testshift = self.data_ss.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        X, y, var_with_prev, _ = self.data_factory.create_xy(hist_df, testshift)
+        testshift = self.data_pp.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        X, y, _ = self.data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        self.model_ss.var_with_prev = var_with_prev  # used for PREV model, that's all
         model_factory = ModelFactory(self.model_ss)
         model = model_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
-        # plotutil.plot_vals_vs_time1(y_train, y_trainhat,"ytr & ytrhat vs time")
-        # plotutil.scatter_pred_vs_actual(y_train, y_trainhat, "ytr vs ytrhat")
 
         nmse_train = nmse(y_train, y_trainhat, min(y), max(y))
         self.nmses_train.append(nmse_train)
 
         # current time
-        ut = int(hist_df.index.values[-1]) - testshift * MS_PER_EPOCH
+        ut = int(hist_df.index.values[-1]) - testshift * self.data_pp.timeframe_ms
 
         # current price
         curprice = y_train[-1]
@@ -141,7 +174,7 @@ class TradeEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.data_ss.N_test}: "
+            f"Iter #{test_i+1:3}/{self.data_pp.N_test}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"
@@ -211,18 +244,51 @@ class TradeEngine:
         )
 
     @enforce_types
-    def _final_plot(self):
-        if not self.trade_ss.do_plot:
+    def _plot(self, i, N):
+        if not self.sim_ss.do_plot:
             return
 
-        plotutil.plot_vals_vs_time1(
-            self.ys_test, self.ys_testhat, "ys_test & ys_testhat vs time"
+        # don't plot first 5 iters -> not interesting
+        # then plot the next 5 -> "stuff's happening!"
+        # then plot every 5th iter, to balance "stuff's happening" w/ speed
+        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        if not do_update:
+            return
+
+        fig, ax0, ax1 = self.plot_state.fig, self.plot_state.ax0, self.plot_state.ax1
+
+        y0 = self.tot_profit_usds
+        N = len(y0)
+        x = list(range(0, N))
+        ax0.plot(x, y0, "g-")
+        ax0.set_title("Trading profit vs time", fontsize=FONTSIZE, fontweight="bold")
+        ax0.set_xlabel("time", fontsize=FONTSIZE)
+        ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
+
+        y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
+        for i_ in range(N):
+            n_correct = sum(self.corrects[: i_ + 1])
+            n_trials = len(self.corrects[: i_ + 1])
+            l, u = proportion_confint(count=n_correct, nobs=n_trials)
+            y1_est.append(n_correct / n_trials * 100)
+            y1_l.append(l * 100)
+            y1_u.append(u * 100)
+
+        ax1.cla()
+        ax1.plot(x, y1_est, "b")
+        ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
+        now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
+        ax1.set_title(
+            f"% correct vs time. {now_s}", fontsize=FONTSIZE, fontweight="bold"
         )
-        plotutil.scatter_pred_vs_actual(
-            self.ys_test, self.ys_testhat, "ys_test vs ys_testhat"
-        )
-        plotutil.plot_any_vs_time(self.profit_usds, "profit")
-        plotutil.plot_any_vs_time(self.tot_profit_usds, "tot profit")
+        ax1.set_xlabel("time", fontsize=FONTSIZE)
+        ax1.set_ylabel("% correct", fontsize=FONTSIZE)
+
+        HEIGHT = 8  # magic number
+        WIDTH = HEIGHT * 2  # magic number
+        fig.set_size_inches(WIDTH, HEIGHT)
+        fig.tight_layout(pad=1.0)  # add space between plots
+        plt.pause(0.001)
 
     @enforce_types
     def _log(self, s: str):

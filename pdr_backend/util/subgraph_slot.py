@@ -280,7 +280,6 @@ def aggregate_statistics(
             total_staked_today += staked_today
             total_correct_predictions += correct_predictions_count
             total_slots_evaluated += slots_evaluated
-
     return (
         total_staked_yesterday,
         total_staked_today,
