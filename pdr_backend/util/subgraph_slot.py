@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
+from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
 
 
 @dataclass
@@ -212,23 +213,35 @@ def process_single_slot(
 
     staked_yesterday = staked_today = 0.0
     correct_predictions_count = slots_evaluated = 0
+
+    if float(slot.roundSumStakes) == 0.0:
+        return None
+
     # split the id to get the slot timestamp
     timestamp = int(slot.id.split("-")[1])  # Using dot notation for attribute access
 
-    if timestamp < end_of_previous_day_timestamp:
+    if (
+        end_of_previous_day_timestamp - SECONDS_IN_A_DAY
+        < timestamp
+        < end_of_previous_day_timestamp
+    ):
         staked_yesterday += float(slot.roundSumStakes)
-    else:
+    elif timestamp > end_of_previous_day_timestamp:
         staked_today += float(slot.roundSumStakes)
-        if float(slot.roundSumStakes) == 0:
-            return None
 
-        prediction_result = calculate_prediction_prediction_result(
-            slot.roundSumStakesUp, slot.roundSumStakes
-        )
-        true_values: List[Dict[str, Any]] = slot.trueValues or []
-        true_value = true_values[0]["trueValue"] if true_values else None
-        if true_values and prediction_result["direction"] == (1 if true_value else 0):
-            correct_predictions_count += 1
+    prediction_result = calculate_prediction_prediction_result(
+        slot.roundSumStakesUp, slot.roundSumStakes
+    )
+
+    true_values: List[Dict[str, Any]] = slot.trueValues or []
+    true_value = true_values[0]["trueValue"] if true_values else None
+
+    if len(true_values) > 0 and prediction_result["direction"] == (
+        1 if true_value else 0
+    ):
+        correct_predictions_count += 1
+
+    if len(true_values) > 0 and true_value is not None:
         slots_evaluated += 1
 
     return staked_yesterday, staked_today, correct_predictions_count, slots_evaluated
@@ -267,6 +280,7 @@ def aggregate_statistics(
             total_staked_today += staked_today
             total_correct_predictions += correct_predictions_count
             total_slots_evaluated += slots_evaluated
+
     return (
         total_staked_yesterday,
         total_staked_today,
@@ -278,6 +292,7 @@ def aggregate_statistics(
 @enforce_types
 def calculate_statistics_for_all_assets(
     asset_ids: List[str],
+    contracts: List[ContractIdAndSPE],
     start_ts_param: int,
     end_ts_param: int,
     network: str = "mainnet",
@@ -313,7 +328,15 @@ def calculate_statistics_for_all_assets(
             if correct_predictions_count == 0
             else (correct_predictions_count / slots_evaluated) * 100
         )
+
+        # filter contracts to get the contract with the current asset id
+        contract = next(
+            (contract for contract in contracts if contract["id"] == asset_id),
+            None,
+        )
+
         overall_stats[asset_id] = {
+            "token_name": contract["name"] if contract else None,
             "average_accuracy": average_accuracy,
             "total_staked_yesterday": staked_yesterday,
             "total_staked_today": staked_today,

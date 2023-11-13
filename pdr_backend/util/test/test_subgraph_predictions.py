@@ -83,8 +83,8 @@ MOCK_CONTRACTS_RESPONSE = {
 MOCK_CONTRACT_DETAILS_RESPONSE = {
     "data": {
         "predictContracts": [
-            {"id": "contract1", "secondsPerEpoch": 300},
-            {"id": "contract2", "secondsPerEpoch": 600},
+            {"id": "contract1", "secondsPerEpoch": 300, "token": {"name": "token1"}},
+            {"id": "contract2", "secondsPerEpoch": 600, "token": {"name": "token2"}},
         ]
     }
 }
@@ -147,6 +147,8 @@ def test_fetch_contract_id_and_spe(
     assert len(contract_details) == 2
     assert contract_details[0]["id"] == "contract1"
     assert contract_details[0]["seconds_per_epoch"] == 300
+    assert contract_details[0]["name"] == "token1"
     assert contract_details[1]["id"] == "contract2"
     assert contract_details[1]["seconds_per_epoch"] == 600
+    assert contract_details[1]["name"] == "token2"
     mock_query_subgraph.assert_called_once()

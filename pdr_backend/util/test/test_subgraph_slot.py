@@ -1,6 +1,6 @@
 from unittest.mock import patch
 from dataclasses import asdict
-from typing import Dict
+from typing import Dict, List
 from enforce_typing import enforce_types
 
 from pdr_backend.util.subgraph_slot import (
@@ -13,6 +13,7 @@ from pdr_backend.util.subgraph_slot import (
     calculate_statistics_for_all_assets,
     PredictSlot,
 )
+from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
@@ -141,9 +142,17 @@ def test_aggregate_statistics():
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Set up the mock to return a predetermined value
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
+    # Contracts List
+    contracts: List[ContractIdAndSPE] = [
+        {"id": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
+    ]
     # Test the calculate_statistics_for_all_assets function
     statistics = calculate_statistics_for_all_assets(
-        asset_ids=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
+        asset_ids=["0xAsset"],
+        contracts=contracts,
+        start_ts_param=1000,
+        end_ts_param=2000,
+        network="mainnet",
     )
     # Verify that the statistics are calculated as expected
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
