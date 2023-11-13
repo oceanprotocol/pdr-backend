@@ -24,83 +24,52 @@ class PredictoorAgent3(BasePredictoorAgent):
         super().__init__(config)
         self.config: PredictoorConfig3 = config
 
-    def run(self):
-        print("Starting main loop...")
-        while True:
-            asyncio.run(self._take_step())
+        self._sync_data()
 
-    async def _take_step(self):
-        w3 = self.config.web3_config.w3
-        print("\n" + "-" * 80)
-        print("Take_step() begin.")
+    def _sync_data(self):
+        for feed in self.feeds.keys():
+            data_factory = self.get_data_factory(feed)
+            data_factory.get_hist_df()
 
-        # new block?
-        block_number = w3.eth.block_number
-        print(f"  block_number={block_number}, prev={self.prev_block_number}")
-        if block_number <= self.prev_block_number:
-            print("  Done step: block_number hasn't advanced yet. So sleep.")
-            time.sleep(1)
-            return
-        block = self.config.web3_config.get_block(block_number, full_transactions=False)
-        if not block:
-            print("  Done step: block not ready yet")
-            return
-        self.prev_block_number = block_number
-        self.prev_block_timestamp = block["timestamp"]
+    def get_data_factory(self, addr: str) -> DataFactory:
+        # Controllable data_ss params. Hardcoded; could be moved to envvars
+        coins = ["ETH", "BTC"]
+        signals = self.config.signals
+        exchange_ids = self.config.exchange_ids
 
-        # do work at new block
-        print(f"  Got new block. Timestamp={block['timestamp']}")
-        tasks = [
-            self._async_process_block_at_feed(addr, block["timestamp"]) for addr in self.feeds
-        ]
-        predval, stake, success = zip(*await asyncio.gather(*tasks))
+        # Uncontrollable data_ss params
+        feed = self.feeds[addr]
+        timeframe = feed.timeframe  # eg 5m, 1h
+        yval_coin = feed.base  # eg ETH
+        usdcoin = feed.quote  # eg USDT
+        yval_exchange_id = feed.source
+        yval_signal = "close"
 
-        print("  Done step: success.")
-        print(f"  predval={predval}, stake={stake}, success={success}")
+        if yval_coin not in coins:  # eg DOT
+            coins.append(yval_coin)
+        if yval_exchange_id not in exchange_ids:
+            exchange_ids.append(yval_exchange_id)
 
-    async def _async_process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
-        """Returns (predval, stake, submitted)"""
-        # base data
-        feed, contract = self.feeds[addr], self.contracts[addr]
-        epoch = contract.get_current_epoch()
-        s_per_epoch = feed.seconds_per_epoch
-        
-        # we want to subtract from now rather than last_block timestamp so we can account for run time between feeds this agent is serving
-        epoch_s_left = epoch * s_per_epoch + s_per_epoch - datetime.now().timestamp()
-
-        # print status
-        print(f"    Process {feed} at epoch={epoch}")
-
-        # within the time window to predict?
-        print(
-            f"      {epoch_s_left} s left in epoch"
-            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+        # Set data_ss
+        data_ss = DataSS(
+            csv_dir=os.path.abspath(self.config.model_csvs),
+            st_timestamp=self.config.st_timestamp,
+            fin_timestamp=timestr_to_ut("now"),
+            max_N_train=self.config.max_N_train,
+            N_test=self.config.N_test,
+            Nt=self.config.Nt,
+            usdcoin=usdcoin,
+            timeframe=timeframe,
+            signals=signals,
+            coins=coins,
+            exchange_ids=exchange_ids,
+            yval_exchange_id=yval_exchange_id,
+            yval_coin=yval_coin,
+            yval_signal=yval_signal,
         )
-        too_early = epoch_s_left > self.config.s_until_epoch_end
-        if too_early:
-            print("      Done feed: too early to predict")
-            return (None, None, False)
 
-        # compute prediction; exit if no good
-        target_time = (epoch + 2) * s_per_epoch
-        print(f"      Predict for time slot = {target_time}...")
+        return DataFactory(data_ss)
 
-        predval, stake = self.get_prediction(addr, target_time)
-        print(f"      -> Predict result: predval={predval}, stake={stake}")
-        if predval is None or stake <= 0:
-            print("      Done feed: can't use predval/stake")
-            return (None, None, False)
-
-        # submit prediction to chain
-        print("      Submit predict tx chain...")
-        contract.submit_prediction(predval, stake, target_time, True)
-        self.prev_submit_epochs_per_feed[addr].append(epoch)
-        print("      " + "=" * 80)
-        print("      -> Submit predict tx result: success.")
-        print("      " + "=" * 80)
-        print("      Done feed: success.")
-        return (predval, stake, True)
-    
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
@@ -121,44 +90,7 @@ class PredictoorAgent3(BasePredictoorAgent):
             self.config.model_ss
         )  # PREV, LIN, GPR, SVR, NuSVR, LinearSVR
 
-        # Controllable data_ss params. Hardcoded; could be moved to envvars
-
-        coins = ["ETH", "BTC"]
-        signals = self.config.signals
-        exchange_ids = self.config.exchange_ids
-
-        # Uncontrollable data_ss params
-        feed = self.feeds[addr]
-        timeframe = feed.timeframe  # eg 5m, 1h
-        yval_coin = feed.base  # eg ETH
-        usdcoin = feed.quote  # eg USDT
-        yval_exchange_id = feed.source
-        yval_signal = "close"
-
-        if yval_coin not in coins:  # eg DOT
-            coins.append(yval_coin)
-        if yval_exchange_id not in exchange_ids:
-            exchange_ids.append(yval_exchange_id)
-
-        # Set data_ss
-        data_ss = DataSS(
-            csv_dir=os.path.abspath("csvs"),
-            st_timestamp=self.config.st_timestamp,
-            fin_timestamp=timestr_to_ut("now"),
-            max_N_train=self.config.max_N_train,
-            N_test=self.config.N_test,
-            Nt=self.config.Nt,
-            usdcoin=usdcoin,
-            timeframe=timeframe,
-            signals=signals,
-            coins=coins,
-            exchange_ids=exchange_ids,
-            yval_exchange_id=yval_exchange_id,
-            yval_coin=yval_coin,
-            yval_signal=yval_signal,
-        )
-
-        data_factory = DataFactory(data_ss)
+        data_factory = self.get_data_factory(addr)
 
         # Compute X/y
         hist_df = data_factory.get_hist_df()

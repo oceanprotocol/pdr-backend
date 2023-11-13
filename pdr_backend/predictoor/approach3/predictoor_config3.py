@@ -35,3 +35,7 @@ class PredictoorConfig3(BasePredictoorConfig):
         exchange_ids = getenv("MODEL_EXCHANGE_IDS")
         self.exchange_ids = exchange_ids.split(",") if exchange_ids else ["binanceus"]
         assert set(self.exchange_ids).issubset(CAND_EXCHANGE_IDS), f"Invalid exchange_ids: {self.exchange_ids}"
+
+        # Configure different volumes on the same instance
+        model_csvs = getenv("MODEL_CSVS")
+        self.model_csvs = model_csvs if model_csvs else "csvs"

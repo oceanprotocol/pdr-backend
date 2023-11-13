@@ -43,3 +43,7 @@ class BasePredictoorConfig(BaseConfig, ABC):
         #   `STAKE_AMOUNT * confidence` where confidence is between 0 and 1.
         # For approach 3 this is the stake amount.
         self.stake_amount = float(getenv("STAKE_AMOUNT", "1"))  # stake amount in eth
+
+        # For any approach, we only want to predict one feed at a time
+        # If you want to predict multiple feeds, run multiple predictoor agents in parallel
+        assert len(self.get_feeds()) == 1, "Only one feed at a time is supported"
