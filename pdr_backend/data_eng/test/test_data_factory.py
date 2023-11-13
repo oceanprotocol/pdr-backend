@@ -365,11 +365,8 @@ def test_create_xy__handle_nan(tmpdir):
 @enforce_types
 def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "kraken h ETH/USDT",
         N_test=2,
     )
 

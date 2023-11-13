@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 
+
 @enforce_types
 def test_data_pp_5m():
     # construct

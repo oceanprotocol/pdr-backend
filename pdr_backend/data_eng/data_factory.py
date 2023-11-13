@@ -14,7 +14,6 @@ from pdr_backend.data_eng.constants import (
 )
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
-from pdr_backend.util.feedstr import pair_str
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
     concat_next_df,
@@ -63,8 +62,9 @@ class DataFactory:
     def _update_csvs(self, fin_ut: int):
         print("  Update csvs.")
         for exchange_id in self.ss.exchange_ids:
-            for coin in self.ss.coins:
-                p = pair_str(coin, self.pp.usdcoin)
+            for base_str in self.ss.coins:  # eg 'BTC'
+                quote_str = self.pp.usdcoin  # eg 'USDT'
+                p = f"{base_str}/{quote_str}"
                 self._update_hist_csv_at_exch_and_pair(exchange_id, p, fin_ut)
 
     def _update_hist_csv_at_exch_and_pair(
@@ -176,9 +176,9 @@ class DataFactory:
             exch = self.ss.exchs_dict[exchange_id]
             csv_dfs[exchange_id] = {}
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
-                print(f"Load csv from exchange={exch}, pair={pair}")
-                filename = self._hist_csv_filename(exchange_id, pair)
+                pair_str = f"{coin}/{self.pp.usdcoin}"
+                print(f"Load csv from exchange={exch}, pair_str={pair_str}")
+                filename = self._hist_csv_filename(exchange_id, pair_str)
                 csv_df = load_csv(filename, cols, st_ut, fin_ut)
                 assert "datetime" in csv_df.columns
                 assert csv_df.index.name == "timestamp"
@@ -286,16 +286,11 @@ class DataFactory:
         # return
         return X, y, x_df
 
-    def _hist_csv_filename(self, exchange_id, pair) -> str:
-        """Given exchange_id and pair (and self path), compute csv filename"""
-        basename = (
-            exchange_id
-            + "_"
-            + pair.replace("/", "-")
-            + "_"
-            + self.pp.timeframe
-            + ".csv"
-        )
+    def _hist_csv_filename(self, exchange_id, pair_str) -> str:
+        """Given exchange_id and pair_str (and self path),
+        compute csv filename"""
+        pair_str = pair_str.replace("/", "-")
+        basename = f"{exchange_id}_{pair_str}_{self.pp.timeframe}.csv"
         filename = os.path.join(self.ss.csv_dir, basename)
         return filename
 

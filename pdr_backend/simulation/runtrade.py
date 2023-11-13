@@ -17,7 +17,7 @@ from pdr_backend.simulation.trade_ss import TradeSS
 
 data_pp = DataPP(  # user-uncontrollable params, at data-eng level
     "1h",  # "5m" or "1h"
-    "binance c BTC/USDT", # c = "close"
+    "binance c BTC/USDT",  # c = "close"
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
 )
 

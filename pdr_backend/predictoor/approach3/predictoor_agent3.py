@@ -38,7 +38,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         # user-uncontrollable params, at data-eng level
         data_pp = DataPP(
             feed.timeframe,  # eg "5m"
-            f"{feed.source} c {feed.base}/{feed.quote}",         
+            f"{feed.source} c {feed.base}/{feed.quote}",
             N_test=1,  # N/A for this context
         )
 

@@ -3,24 +3,6 @@ from typing import List, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import CAND_SIGNALS
-    
-@enforce_types
-def pair_str(base_str: str, quote_str: str) -> str:
-    """
-    @description
-      Merge a base_str and quote_str into a single pair_str.
-    
-      Example: Given e.g. ('BTC','USDT')
-      Return 'BTC/USDT'
-
-    @arguments
-      base_str - e.g. 'BTC'
-      quote_str -- e.g. 'USDT'
-
-    @return
-      pair_str -- e.g. 'BTC/USDT'
-    """
-    return f"{base_str}/{quote_str}"
 
 
 @enforce_types
@@ -28,7 +10,7 @@ def unpack_pair_str(pair_str: str) -> Tuple[str, str]:
     """
     @description
       Unpack the string for a *single* pair, into base_str and quote_str.
-    
+
       Example: Given 'BTC/USDT' or 'BTC-USDT'
       Return ('BTC', 'USDT')
 
@@ -49,7 +31,7 @@ def unpack_pairs_str(pairs_str: str) -> List[str]:
     """
     @description
       Unpack the string for *one or more* pairs, into list of pair_str
-    
+
       Example: Given 'ADA/USDT, BTC/USDT, ETH/USDT'
       Return ['ADA/USDT', 'BTC/USDT', 'ETH/USDT']
 
@@ -59,8 +41,8 @@ def unpack_pairs_str(pairs_str: str) -> List[str]:
     @return
       pairs_list -- List[<pair_str>]
     """
-    pairs_str = pairs_str.replace(', ',',').replace(' ',',')
-    pairs_list = pairs_str.split(',')
+    pairs_str = pairs_str.replace(", ", ",").replace(" ", ",")
+    pairs_list = pairs_str.split(",")
     return pairs_list
 
 
@@ -100,9 +82,10 @@ def unpack_feeds_str(feeds_str: str) -> Tuple[str, List[str], List[str]]:
       pairs -- List[str] - e.g. ['ADA/USDT', 'BTC/USDT']
     """
     exchange_id, chars_str, pairs_str = feeds_str.split(" ", maxsplit=2)
-    signals = [cand_signal #e.g. "c"
-               for cand_signal in CAND_SIGNALS # ["open", "high", ..]
-               if cand_signal[0] in chars_str]
+    signals = [
+        cand_signal  # e.g. "c"
+        for cand_signal in CAND_SIGNALS  # ["open", "high", ..]
+        if cand_signal[0] in chars_str
+    ]
     pairs = unpack_pairs_str(pairs_str)
     return (exchange_id, signals, pairs)
-

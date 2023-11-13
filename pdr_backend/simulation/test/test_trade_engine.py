@@ -16,11 +16,8 @@ def test_TradeEngine(tmpdir):
     logpath = str(tmpdir)
 
     data_pp = DataPP(  # user-uncontrollable params, at data level
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="BTC",
-        usdcoin="USDT",
-        yval_signal="close",
+        "5m",
+        "binanceus c BTC/USDT",
         N_test=100,
     )
 

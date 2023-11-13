@@ -6,6 +6,10 @@ from pdr_backend.util.constants import (
     CAND_TIMEFRAMES,
     CAND_SIGNALS,
 )
+from pdr_backend.util.feedstr import (
+    unpack_pair_str,
+    unpack_feed_str,
+)
 
 
 class DataPP:  # user-uncontrollable params, at data-eng level
@@ -22,15 +26,15 @@ class DataPP:  # user-uncontrollable params, at data-eng level
     def __init__(
         self,
         timeframe: str,  # eg "1m", "1h"
-        predict_feed_str: str, # eg "binance c BTC/USDT", "kraken h BTC/USDT"
+        predict_feed_str: str,  # eg "binance c BTC/USDT", "kraken h BTC/USDT"
         N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
     ):
         # test inputs
         assert timeframe in CAND_TIMEFRAMES
-        
-        (exchange_id, signal, pair_str) = unpack_feed_str(predict_feed_str)
-        assert signal in CAND_SIGNALS, yval_signal
-        (base_str, quote_str) = unpack_pairstr(pair_str) 
+
+        _, signal, pair_str = unpack_feed_str(predict_feed_str)
+        assert signal in CAND_SIGNALS, signal
+        _, quote_str = unpack_pair_str(pair_str)
         assert quote_str in CAND_USDCOINS
 
         assert 0 < N_test < np.inf
@@ -56,27 +60,30 @@ class DataPP:  # user-uncontrollable params, at data-eng level
 
     @property
     def yval_exchange_id(self) -> str:
-        """Return e.g. 'binance' """
-        return unpack_feedstr_1feed(self.predict_feed_str)[0]
+        """Return e.g. 'binance'"""
+        exchange_id, _, _ = unpack_feed_str(self.predict_feed_str)
+        return exchange_id
 
     @property
     def yval_signal(self) -> str:
-        """Return e.g. 'high' """
-        signal = unpack_feedstr_1feed(self.predict_feed_str)[1]
+        """Return e.g. 'high'"""
+        _, signal, _ = unpack_feed_str(self.predict_feed_str)
         assert signal in CAND_SIGNALS
         return signal
 
     @property
     def yval_coin(self) -> str:
-        """Return e.g. 'ETH' """
-        pairstr = unpack_feedstr_1feed(self.predict_feed_str)[2]
-        return unpack_pairstr(pairstr)[0]
+        """Return e.g. 'ETH'"""
+        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
+        base_str, _ = unpack_pair_str(pair_str)
+        return base_str
 
     @property
     def usdcoin(self) -> str:
-        """Return e.g. 'USDT' """
-        pairstr = unpack_feedstr_1feed(self.predict_feed_str)[2]
-        return unpack_pairstr(pairstr)[0]
+        """Return e.g. 'USDT'"""
+        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
+        _, quote_str = unpack_pair_str(pair_str)
+        return quote_str
 
     @enforce_types
     def __str__(self) -> str:

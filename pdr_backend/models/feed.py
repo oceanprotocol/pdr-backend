@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from enforce_typing import enforce_types
 
@@ -39,7 +39,7 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
     @property
     def quote(self):
         return unpack_pair_str(self.pair)[1]
-    
+
     @enforce_types
     def shortstr(self) -> str:
         return (
