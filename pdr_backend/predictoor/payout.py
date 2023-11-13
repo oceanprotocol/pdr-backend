@@ -61,7 +61,7 @@ def do_rose_payout():
     wrapped_rose = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
     config = BaseConfig()
     owner = config.web3_config.owner
-    if config.web3_config.eth.chain_id != 23294:
+    if config.web3_config.w3.eth.chain_id != 23294:
         raise Exception("Unsupported network")
     contract = DFRewards(config.web3_config, address)
     claimable_rewards = contract.get_claimable_rewards(owner, wrapped_rose)
