@@ -36,41 +36,55 @@ class DataFactory:
 
     def get_hist_df(self) -> pd.DataFrame:
         """
+        @description
+          Get historical dataframe, across many exchanges & pairs.
+
         @return
           hist_df -- df w/ cols={exchange_id}:{coin}:{signal}+"datetime",
             and index=timestamp
         """
-        self._update_csvs()
-        csv_dfs = self._load_csvs()
+        print("Get historical data, across many exchanges & pairs: begin.")
+
+        # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
+        # But, we don't want fin_timestamp changing as we gather data here.
+        # To solve, for a given call to this method, we make a constant fin_ut
+        fin_ut = self.ss.fin_timestamp
+
+        print(f"  Data start: {pretty_timestr(self.ss.st_timestamp)}")
+        print(f"  Data fin: {pretty_timestr(fin_ut)}")
+
+        self._update_csvs(fin_ut)
+        csv_dfs = self._load_csvs(fin_ut)
         hist_df = self._merge_csv_dfs(csv_dfs)
+
+        print("Get historical data, across many exchanges & pairs: done.")
         return hist_df
 
-    def _update_csvs(self):
-        print("Update csvs.")
-        print(f"-User-specified start: {pretty_timestr(self.ss.st_timestamp)}")
-        print(f"-User-specified fin: {pretty_timestr(self.ss.fin_timestamp)}")
-
+    def _update_csvs(self, fin_ut: int):
+        print("  Update csvs.")
         for exchange_id in self.ss.exchange_ids:
             for coin in self.ss.coins:
                 pair = pairstr(coin, usdcoin=self.pp.usdcoin)
-                self._update_hist_csv_at_exch_and_pair(exchange_id, pair)
+                self._update_hist_csv_at_exch_and_pair(exchange_id, pair, fin_ut)
 
-    def _update_hist_csv_at_exch_and_pair(self, exchange_id, pair):
-        print(f"Update csv at exchange={exchange_id}, pair={pair}")
+    def _update_hist_csv_at_exch_and_pair(
+        self, exchange_id: str, pair: str, fin_ut: int
+    ):
+        print(f"    Update csv at exchange={exchange_id}, pair={pair}.")
 
         filename = self._hist_csv_filename(exchange_id, pair)
-        print(f"  filename={filename}")
+        print(f"      filename={filename}")
 
         st_ut = self._calc_start_ut_maybe_delete(filename)
-        print(f"  Aim to fetch data from start time: {pretty_timestr(st_ut)}")
-        if st_ut > min(current_ut(), self.ss.fin_timestamp):
-            print("  Given start time, no data to gather. Exit.")
+        print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
+        if st_ut > min(current_ut(), fin_ut):
+            print("      Given start time, no data to gather. Exit.")
             return
 
         # Fill in df
         df = initialize_df(OHLCV_COLS)
         while True:
-            print(f"  Fetch 1000 pts from {pretty_timestr(st_ut)}")
+            print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
 
             exch = self.ss.exchs_dict[exchange_id]
 
@@ -92,13 +106,11 @@ class DataFactory:
                 mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
 
                 if min(diffs_m) < mn_thr:
-                    print(f"**WARNING: short candle time: {min(diffs_m)} min")
+                    print(f"      **WARNING: short candle time: {min(diffs_m)} min")
                 if max(diffs_m) > mx_thr:
-                    print(f"**WARNING: long candle time: {max(diffs_m)} min")
+                    print(f"      **WARNING: long candle time: {max(diffs_m)} min")
 
-            raw_tohlcv_data = [
-                vec for vec in raw_tohlcv_data if vec[0] <= self.ss.fin_timestamp
-            ]
+            raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
             next_df = pd.DataFrame(raw_tohlcv_data, columns=TOHLCV_COLS)
             df = concat_next_df(df, next_df)
 
@@ -113,37 +125,51 @@ class DataFactory:
         save_csv(filename, df)
 
     def _calc_start_ut_maybe_delete(self, filename: str) -> int:
-        """Calculate start timestamp, reconciling whether file exists and where
-        its data starts. Will delete file if it's inconvenient to re-use"""
+        """
+        @description
+        Calculate start timestamp, reconciling whether file exists and where
+        its data starts. Will delete file if it's inconvenient to re-use
+
+        @arguments
+          filename - csv file with data. May or may not exist.
+
+        @return
+          start_ut - timestamp (ut) to start grabbing data for
+        """
         if not os.path.exists(filename):
-            print("  No file exists yet, so will fetch all data")
+            print("      No file exists yet, so will fetch all data")
             return self.ss.st_timestamp
 
-        print("  File already exists")
+        print("      File already exists")
         if not has_data(filename):
-            print("  File has no data, so delete it")
+            print("      File has no data, so delete it")
             os.remove(filename)
             return self.ss.st_timestamp
 
         file_ut0, file_utN = oldest_ut(filename), newest_ut(filename)
-        print(f"  File starts at: {pretty_timestr(file_ut0)}")
-        print(f"  File finishes at: {pretty_timestr(file_utN)}")
+        print(f"      File starts at: {pretty_timestr(file_ut0)}")
+        print(f"      File finishes at: {pretty_timestr(file_utN)}")
 
         if self.ss.st_timestamp >= file_ut0:
-            print("  User-specified start >= file start, so append file")
+            print("      User-specified start >= file start, so append file")
             return file_utN + self.pp.timeframe_ms
 
-        print("  User-specified start < file start, so delete file")
+        print("      User-specified start < file start, so delete file")
         os.remove(filename)
         return self.ss.st_timestamp
 
-    def _load_csvs(self) -> Dict[str, Dict[str, pd.DataFrame]]:
+    def _load_csvs(self, fin_ut: int) -> Dict[str, Dict[str, pd.DataFrame]]:
         """
-        @return -- csv_dfs -- dict of [exchange_id_str][coin_str] : df
-          df has columns=OHLCV_COLS+"datetime", and index=timestamp
+        @arguments
+          fin_ut -- finish timestamp
+
+        @return
+          csv_dfs -- dict of [exchange_id_str][coin_str] : df
+            Where df has columns=OHLCV_COLS+"datetime", and index=timestamp
         """
+        print("  Load csvs.")
         cols = self.ss.signals  # subset of TOHLCV_COLS
-        st, fin = self.ss.st_timestamp, self.ss.fin_timestamp
+        st_ut = self.ss.st_timestamp
 
         csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {}
         for exchange_id in self.ss.exchange_ids:
@@ -153,7 +179,7 @@ class DataFactory:
                 pair = pairstr(coin, usdcoin=self.pp.usdcoin)
                 print(f"Load csv from exchange={exch}, pair={pair}")
                 filename = self._hist_csv_filename(exchange_id, pair)
-                csv_df = load_csv(filename, cols, st, fin)
+                csv_df = load_csv(filename, cols, st_ut, fin_ut)
                 assert "datetime" in csv_df.columns
                 assert csv_df.index.name == "timestamp"
                 csv_dfs[exchange_id][coin] = csv_df
@@ -168,6 +194,7 @@ class DataFactory:
           hist_df -- df w/ cols={exchange_id}:{coin}:{signal}+"datetime",
             and index=timestamp
         """
+        print("  Merge csv DFs.")
         hist_df = pd.DataFrame()
         for exchange_id in csv_dfs.keys():
             for coin, csv_df in csv_dfs[exchange_id].items():

@@ -9,7 +9,6 @@ from pdr_backend.simulation.trade_engine import TradeEngine
 from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.simulation.trade_ss import TradeSS
-from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
@@ -27,8 +26,8 @@ def test_TradeEngine(tmpdir):
 
     data_ss = DataSS(  # user-controllable params, at data level
         csv_dir=os.path.abspath("csvs"),  # use the usual data (worksforme)
-        st_timestamp=timestr_to_ut("2023-06-22"),
-        fin_timestamp=timestr_to_ut("2023-06-24"),
+        st_timestr="2023-06-22",
+        fin_timestr="2023-06-24",
         max_n_train=500,
         autoregressive_n=2,
         signals=["open", "close"],

@@ -8,7 +8,6 @@ from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_engine import TradeEngine
 from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.simulation.trade_ss import TradeSS
-from pdr_backend.util.timeutil import timestr_to_ut
 
 # To play with simulation, simply change any of the arguments to any
 # of the constructors below.
@@ -27,8 +26,8 @@ data_pp = DataPP(  # user-uncontrollable params, at data-eng level
 
 data_ss = DataSS(  # user-controllable params, at data-eng level
     csv_dir=os.path.abspath("csvs"),  # eg "csvs". abs or rel loc'n of csvs dir
-    st_timestamp=timestr_to_ut("2022-06-30"),  # "2019-09-13_04:00" is earliest
-    fin_timestamp=timestr_to_ut("now"),  # eg 'now','2023-06-21_17:55'
+    st_timestr="2022-06-30",  # eg "2019-09-13_04:00" (earliest), "2019-09-13"
+    fin_timestr="now",  # eg "now", "2023-09-23_17:55", "2023-09-23"
     max_n_train=5000,  # eg 50000. # if inf, only limited by data available
     autoregressive_n=20,  # eg 10. model inputs past pts z[t-1], .., z[t-ar_n]
     signals=["close"],  # for model input vars. eg ["open","high","volume"]

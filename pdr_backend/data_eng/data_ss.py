@@ -7,7 +7,7 @@ import numpy as np
 
 from pdr_backend.data_eng.constants import CAND_SIGNALS
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.util.timeutil import pretty_timestr
+from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
 class DataSS:  # user-controllable params, at data-eng level
@@ -28,8 +28,8 @@ class DataSS:  # user-controllable params, at data-eng level
     def __init__(
         self,
         csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
-        st_timestamp: int,  # ut, eg timestr_to_ut("2019-09-13_04:00")
-        fin_timestamp: int,  # ut, eg timestr_to_ut("now")
+        st_timestr: str,  # eg "2019-09-13_04:00" (earliest),  2019-09-13"
+        fin_timestr: str,  # eg "now", "2023-09-23_17:55", "2023-09-23"
         max_n_train,  # eg 50000. if inf, only limited by data available
         autoregressive_n: int,  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
         signals: List[str],  # for model input vars. eg ["open","high","volume"]
@@ -39,15 +39,15 @@ class DataSS:  # user-controllable params, at data-eng level
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
-        assert 0 <= st_timestamp <= fin_timestamp <= np.inf
+        assert 0 <= timestr_to_ut(st_timestr) <= timestr_to_ut(fin_timestr) <= np.inf
         assert 0 < max_n_train
         assert 0 < autoregressive_n < np.inf
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
 
         self.csv_dir = csv_dir
-        self.st_timestamp = st_timestamp
-        self.fin_timestamp = fin_timestamp
+        self.st_timestr = st_timestr
+        self.fin_timestr = fin_timestr
 
         self.max_n_train = max_n_train
         self.autoregressive_n = autoregressive_n
@@ -59,6 +59,24 @@ class DataSS:  # user-controllable params, at data-eng level
         for exchange_id in exchange_ids:
             exchange_class = getattr(ccxt, exchange_id)
             self.exchs_dict[exchange_id] = exchange_class()
+
+    @property
+    def st_timestamp(self) -> int:
+        """
+        Return start timestamp, in ut.
+        Calculated from self.st_timestr.
+        """
+        return timestr_to_ut(self.st_timestr)
+
+    @property
+    def fin_timestamp(self) -> int:
+        """
+        Return fin timestamp, in ut.
+        Calculated from self.fin_timestr.
+
+        ** This value will change dynamically if fin_timestr is "now".
+        """
+        return timestr_to_ut(self.fin_timestr)
 
     @property
     def n(self) -> int:
@@ -86,8 +104,10 @@ class DataSS:  # user-controllable params, at data-eng level
         s = "DataSS={\n"
 
         s += f"  csv_dir={self.csv_dir}\n"
-        s += f"  st_timestamp={pretty_timestr(self.st_timestamp)}\n"
-        s += f"  fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
+        s += f"  st_timestr={self.st_timestr}\n"
+        s += f"  -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
+        s += f"  fin_timestr={self.fin_timestr}\n"
+        s += f"  -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
         s += "  \n"
 
         s += f"  max_n_train={self.max_n_train} -- max # pts to train on\n"
@@ -118,8 +138,8 @@ class DataSS:  # user-controllable params, at data-eng level
         """Copy self, add data_pp's yval to new data_ss' inputs as needed"""
         return DataSS(
             csv_dir=self.csv_dir,
-            st_timestamp=self.st_timestamp,
-            fin_timestamp=self.fin_timestamp,
+            st_timestr=self.st_timestr,
+            fin_timestr=self.fin_timestr,
             max_n_train=self.max_n_train,
             autoregressive_n=self.autoregressive_n,
             signals=_list_with(self.signals[:], data_pp.yval_signal),

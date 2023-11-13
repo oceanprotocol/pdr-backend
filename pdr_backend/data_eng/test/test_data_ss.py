@@ -9,8 +9,8 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_data_ss_basic(tmpdir):
     ss = DataSS(
         csv_dir=str(tmpdir),
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("2023-06-21"),
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
         max_n_train=7,
         autoregressive_n=3,
         signals=["high", "close"],
@@ -20,8 +20,8 @@ def test_data_ss_basic(tmpdir):
 
     # test attributes
     assert ss.csv_dir == str(tmpdir)
-    assert ss.st_timestamp == timestr_to_ut("2023-06-18")
-    assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
+    assert ss.st_timestr == "2023-06-18"
+    assert ss.fin_timestr == "2023-06-21"
 
     assert ss.max_n_train == 7
     assert ss.autoregressive_n == 3
@@ -32,6 +32,8 @@ def test_data_ss_basic(tmpdir):
     assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
 
     # test properties
+    assert ss.st_timestamp == timestr_to_ut("2023-06-18")
+    assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
     assert ss.n == 2 * 3 * 2 * 3
     assert ss.n_exchs == 2
     assert len(ss.exchange_ids) == 2
@@ -44,11 +46,27 @@ def test_data_ss_basic(tmpdir):
 
 
 @enforce_types
+def test_data_ss_now(tmpdir):
+    ss = DataSS(
+        csv_dir=str(tmpdir),
+        st_timestr="2023-06-18",
+        fin_timestr="now",
+        max_n_train=7,
+        autoregressive_n=3,
+        signals=["high"],
+        coins=["ETH"],
+        exchange_ids=["kraken"],
+    )
+    assert ss.fin_timestr == "now"
+    assert ss.fin_timestamp == timestr_to_ut("now")
+
+
+@enforce_types
 def test_data_ss_copy(tmpdir):
     ss = DataSS(
         csv_dir=str(tmpdir),
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("now"),
+        st_timestr="2023-06-18",
+        fin_timestr="now",
         max_n_train=7,
         autoregressive_n=3,
         signals=["high"],
