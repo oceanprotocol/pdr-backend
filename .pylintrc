@@ -12,6 +12,7 @@ fail-under=10.0
 # paths.
 ignore=
   *~,
+  ppss.yaml,
   build,
   venv/,
   build/,

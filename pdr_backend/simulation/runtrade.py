@@ -8,7 +8,6 @@ from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_engine import TradeEngine
 from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.simulation.trade_ss import TradeSS
-from pdr_backend.util.timeutil import timestr_to_ut
 
 # To play with simulation, simply change any of the arguments to any
 # of the constructors below.
@@ -17,20 +16,17 @@ from pdr_backend.util.timeutil import timestr_to_ut
 #   Why: to avoid ambiguity. Eg is PAIR_FILTER for yval_coin, or input data?
 
 data_pp = DataPP(  # user-uncontrollable params, at data-eng level
-    timeframe="1h",  # "5m" or "1h"
-    yval_exchange_id="binance",  # "binance" or "kraken" or ...
-    yval_coin="BTC",  # "BTC" or "ETH" or "TRX" or ...
-    usdcoin="USDT",  # "USDT" or "USDC" or ..
-    yval_signal="close",  # "close" or "open" or ...
+    "1h",  # "5m" or "1h"
+    "binance c BTC/USDT",  # c = "close"
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
 )
 
 data_ss = DataSS(  # user-controllable params, at data-eng level
     csv_dir=os.path.abspath("csvs"),  # eg "csvs". abs or rel loc'n of csvs dir
-    st_timestamp=timestr_to_ut("2022-06-30"),  # "2019-09-13_04:00" is earliest
-    fin_timestamp=timestr_to_ut("now"),  # eg 'now','2023-06-21_17:55'
-    max_N_train=5000,  # eg 50000. # if inf, only limited by data available
-    Nt=20,  # eg 10. model inputs Nt past pts z[t-1], .., z[t-Nt]
+    st_timestr="2022-06-30",  # eg "2019-09-13_04:00" (earliest), "2019-09-13"
+    fin_timestr="now",  # eg "now", "2023-09-23_17:55", "2023-09-23"
+    max_n_train=5000,  # eg 50000. # if inf, only limited by data available
+    autoregressive_n=20,  # eg 10. model inputs past pts z[t-1], .., z[t-ar_n]
     signals=["close"],  # for model input vars. eg ["open","high","volume"]
     coins=["BTC", "ETH"],  # for model input vars. eg ["ETH", "BTC"]
     exchange_ids=["binance"],  # for model input vars. eg ["binance", "mxc"]

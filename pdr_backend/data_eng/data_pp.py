@@ -1,10 +1,14 @@
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.data_eng.constants import (
+from pdr_backend.util.constants import (
     CAND_USDCOINS,
     CAND_TIMEFRAMES,
     CAND_SIGNALS,
+)
+from pdr_backend.util.feedstr import (
+    unpack_pair_str,
+    unpack_feed_str,
 )
 
 
@@ -21,24 +25,23 @@ class DataPP:  # user-uncontrollable params, at data-eng level
     @enforce_types
     def __init__(
         self,
-        timeframe: str,  # "1m", 5m, 15m, 30m, 1h, 1d, 1w, 1M
-        yval_exchange_id: str,  # eg "binance",
-        yval_coin: str,  # eg "ETH"
-        usdcoin: str,  # e.g. "USDT", for pairs of eg ETH-USDT, BTC-USDT
-        yval_signal: str,  # eg "c" for closing price
+        timeframe: str,  # eg "1m", "1h"
+        predict_feed_str: str,  # eg "binance c BTC/USDT", "kraken h BTC/USDT"
         N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
     ):
+        # test inputs
+        assert timeframe in CAND_TIMEFRAMES
+
+        _, signal, pair_str = unpack_feed_str(predict_feed_str)
+        assert signal in CAND_SIGNALS, signal
+        _, quote_str = unpack_pair_str(pair_str)
+        assert quote_str in CAND_USDCOINS
+
         assert 0 < N_test < np.inf
 
-        assert usdcoin in CAND_USDCOINS
-        assert timeframe in CAND_TIMEFRAMES
-        assert yval_signal in CAND_SIGNALS, yval_signal
-
+        # save values
         self.timeframe = timeframe
-        self.usdcoin = usdcoin
-        self.yval_exchange_id = yval_exchange_id
-        self.yval_coin = yval_coin
-        self.yval_signal = yval_signal
+        self.predict_feed_str = predict_feed_str
         self.N_test = N_test
 
     @property
@@ -55,15 +58,39 @@ class DataPP:  # user-uncontrollable params, at data-eng level
             return 60
         raise ValueError("need to support timeframe={self.timeframe}")
 
+    @property
+    def yval_exchange_id(self) -> str:
+        """Return e.g. 'binance'"""
+        exchange_id, _, _ = unpack_feed_str(self.predict_feed_str)
+        return exchange_id
+
+    @property
+    def yval_signal(self) -> str:
+        """Return e.g. 'high'"""
+        _, signal, _ = unpack_feed_str(self.predict_feed_str)
+        assert signal in CAND_SIGNALS
+        return signal
+
+    @property
+    def yval_coin(self) -> str:
+        """Return e.g. 'ETH'"""
+        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
+        base_str, _ = unpack_pair_str(pair_str)
+        return base_str
+
+    @property
+    def usdcoin(self) -> str:
+        """Return e.g. 'USDT'"""
+        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
+        _, quote_str = unpack_pair_str(pair_str)
+        return quote_str
+
     @enforce_types
     def __str__(self) -> str:
         s = "DataPP={\n"
 
         s += f"  timeframe={self.timeframe}\n"
-        s += f"  yval_exchange_id={self.yval_exchange_id}\n"
-        s += f"  yval_coin={self.yval_coin}\n"
-        s += f"  usdcoin={self.usdcoin}\n"
-        s += f"  yval_signal={self.yval_signal}\n"
+        s += f"  predict_feed_str={self.predict_feed_str}\n"
         s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
 
         s += "/DataPP}\n"

@@ -4,17 +4,18 @@ import pandas as pd
 
 
 @enforce_types
-def timeblock(z, Nt: int) -> pd.DataFrame:
+def timeblock(z: np.ndarray, Nt: int) -> pd.DataFrame:
     """
     Calculate a timeblock for training, from a 1-d time series
 
     @arguments
-      z -- 1d array -- timeseries [z(t-Np), z(t-Np+1), ..., z(t-2), z(t-1)]
+      z -- timeseries [z(t-Np), z(t-Np+1), ..., z(t-2), z(t-1)]
         where Np == # points in time series == # points back it goes. Eg 500
         so  z[ 0] == z(t-500) is oldest,
         and z[-1] == t(-1) is youngest
 
-      Nt -- int -- # time steps for each input sample. Eg if Nt == 10 then
+      Nt aka "autoregressive_n" -- # time steps for each input sample.
+        Eg if Nt == 10, then
         at one sample it's   [z(t-13), z(t-12), ..., z(t- 5), z(t- 4)]
         at another sample is [z(t-31), z(t-30), ..., z(t-23), z(t-22)]
 

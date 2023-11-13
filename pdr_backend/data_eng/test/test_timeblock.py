@@ -1,11 +1,13 @@
 from enforce_typing import enforce_types
 
+import numpy as np
+
 from pdr_backend.data_eng import timeblock
 
 
 @enforce_types
 def test_timeblock():
-    z = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    z = np.array([10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
 
     X = timeblock.timeblock(z, 4)
 

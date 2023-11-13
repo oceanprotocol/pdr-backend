@@ -1,7 +1,8 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from enforce_typing import enforce_types
 
+from pdr_backend.util.feedstr import unpack_pair_str
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -33,16 +34,11 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @property
     def base(self):
-        return self._splitpair()[0]
+        return unpack_pair_str(self.pair)[0]
 
     @property
     def quote(self):
-        return self._splitpair()[1]
-
-    @enforce_types
-    def _splitpair(self) -> List[str]:
-        pair = self.pair.replace("/", "-")
-        return pair.split("-")
+        return unpack_pair_str(self.pair)[1]
 
     @enforce_types
     def shortstr(self) -> str:
