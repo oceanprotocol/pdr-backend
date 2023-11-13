@@ -11,7 +11,7 @@ def test_data_ss_basic(tmpdir):
         csv_dir=str(tmpdir),
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
+        max_n_train=7,
         Nt=3,
         signals=["high", "close"],
         coins=["ETH", "BTC", "TRX"],
@@ -23,7 +23,7 @@ def test_data_ss_basic(tmpdir):
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
 
-    assert ss.max_N_train == 7
+    assert ss.max_n_train == 7
     assert ss.Nt == 3
 
     assert ss.signals == ["high", "close"]
@@ -49,7 +49,7 @@ def test_data_ss_copy(tmpdir):
         csv_dir=str(tmpdir),
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("now"),
-        max_N_train=7,
+        max_n_train=7,
         Nt=3,
         signals=["high"],
         coins=["ETH", "BTC"],

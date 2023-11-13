@@ -29,7 +29,7 @@ def test_TradeEngine(tmpdir):
         csv_dir=os.path.abspath("csvs"),  # use the usual data (worksforme)
         st_timestamp=timestr_to_ut("2023-06-22"),
         fin_timestamp=timestr_to_ut("2023-06-24"),
-        max_N_train=500,
+        max_n_train=500,
         Nt=2,
         signals=["open", "close"],
         coins=["ETH", "BTC"],

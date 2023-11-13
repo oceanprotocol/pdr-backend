@@ -225,7 +225,7 @@ class DataFactory:
             assert hist_col in hist_df.columns, "missing a data col"
             z = hist_df[hist_col].tolist()  # [..., z(t-3), z(t-2), z(t-1)]
             maxshift = testshift + ss.Nt
-            N_train = min(ss.max_N_train, len(z) - maxshift - 1)
+            N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
                 print(
                     f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
@@ -251,7 +251,7 @@ class DataFactory:
 
         # postconditions
         assert X.shape[0] == y.shape[0]
-        assert X.shape[0] <= (ss.max_N_train + 1)
+        assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == ss.n
 
         # return

@@ -98,7 +98,7 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
         csv_dir=csvdir,
         st_timestamp=st_ut,
         fin_timestamp=fin_ut,
-        max_N_train=7,
+        max_n_train=7,
         Nt=3,
         signals=["high"],
         coins=["ETH"],
@@ -229,8 +229,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert x_df["kraken:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
-    # =========== now have a different max_N_train
-    ss.max_N_train = 5
+    # =========== now have a different max_n_train
+    ss.max_n_train = 5
     # ss.Nt = 2
 
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
@@ -273,7 +273,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         csv_dir=csvdir,
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
+        max_n_train=7,
         Nt=3,
         signals=["high", "low"],
         coins=["BTC", "ETH"],
@@ -384,7 +384,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
         csv_dir=csvdir,
         st_timestamp=timestr_to_ut("2023-06-18"),
         fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
+        max_n_train=7,
         Nt=3,
         signals=[pp.yval_signal],
         coins=[pp.yval_coin],
@@ -396,7 +396,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
 @enforce_types
 def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
     assert X.shape[0] == y.shape[0]
-    assert X.shape[0] == (ss.max_N_train + 1)  # 1 for test, rest for train
+    assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n
 
     assert len(x_df) == X.shape[0]

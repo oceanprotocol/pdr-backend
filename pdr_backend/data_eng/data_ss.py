@@ -30,7 +30,7 @@ class DataSS:  # user-controllable params, at data-eng level
         csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
         st_timestamp: int,  # ut, eg timestr_to_ut("2019-09-13_04:00")
         fin_timestamp: int,  # ut, eg timestr_to_ut("now")
-        max_N_train,  # eg 50000. if inf, only limited by data available
+        max_n_train,  # eg 50000. if inf, only limited by data available
         Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
         signals: List[str],  # for model input vars. eg ["open","high","volume"]
         coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
@@ -40,7 +40,7 @@ class DataSS:  # user-controllable params, at data-eng level
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
         assert 0 <= st_timestamp <= fin_timestamp <= np.inf
-        assert 0 < max_N_train
+        assert 0 < max_n_train
         assert 0 < Nt < np.inf
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
@@ -49,7 +49,7 @@ class DataSS:  # user-controllable params, at data-eng level
         self.st_timestamp = st_timestamp
         self.fin_timestamp = fin_timestamp
 
-        self.max_N_train = max_N_train
+        self.max_n_train = max_n_train
         self.Nt = Nt
 
         self.signals = signals
@@ -90,7 +90,7 @@ class DataSS:  # user-controllable params, at data-eng level
         s += f"  fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
         s += "  \n"
 
-        s += f"  max_N_train={self.max_N_train} -- max # pts to train on\n"
+        s += f"  max_n_train={self.max_n_train} -- max # pts to train on\n"
         s += f"  Nt={self.Nt} -- model inputs Nt past pts z[t-1], .., z[t-Nt]\n"
         s += "  \n"
 
@@ -118,7 +118,7 @@ class DataSS:  # user-controllable params, at data-eng level
             csv_dir=self.csv_dir,
             st_timestamp=self.st_timestamp,
             fin_timestamp=self.fin_timestamp,
-            max_N_train=self.max_N_train,
+            max_n_train=self.max_n_train,
             Nt=self.Nt,
             signals=_list_with(self.signals[:], data_pp.yval_signal),
             coins=_list_with(self.coins[:], data_pp.yval_coin),
