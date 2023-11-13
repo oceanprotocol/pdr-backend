@@ -30,7 +30,7 @@ def test_TradeEngine(tmpdir):
         st_timestamp=timestr_to_ut("2023-06-22"),
         fin_timestamp=timestr_to_ut("2023-06-24"),
         max_n_train=500,
-        Nt=2,
+        autoregressive_n=2,
         signals=["open", "close"],
         coins=["ETH", "BTC"],
         exchange_ids=["binanceus"],

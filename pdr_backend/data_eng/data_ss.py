@@ -19,7 +19,7 @@ class DataSS:  # user-controllable params, at data-eng level
     For a given problem definition (DataPP), you can try different DataSS vals
 
     DataSS specifies the inputs, and how much training data to get
-      - Input vars: Nt vars for each of {all signals}x{all coins}x{all exch}
+      - Input vars: autoregressive_n vars for each of {all signals}x{all coins}x{all exch}
       - How much trn data: time range st->fin_timestamp, bound by max_N_trn
     """
 
@@ -31,7 +31,7 @@ class DataSS:  # user-controllable params, at data-eng level
         st_timestamp: int,  # ut, eg timestr_to_ut("2019-09-13_04:00")
         fin_timestamp: int,  # ut, eg timestr_to_ut("now")
         max_n_train,  # eg 50000. if inf, only limited by data available
-        Nt: int,  # eg 10. # model inputs Nt past pts z[t-1], .., z[t-Nt]
+        autoregressive_n: int,  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
         signals: List[str],  # for model input vars. eg ["open","high","volume"]
         coins: List[str],  # for model input vars. eg ["ETH", "BTC"]
         exchange_ids: List[str],  # for model input vars.eg ["binance","kraken"]
@@ -41,7 +41,7 @@ class DataSS:  # user-controllable params, at data-eng level
             os.makedirs(csv_dir)
         assert 0 <= st_timestamp <= fin_timestamp <= np.inf
         assert 0 < max_n_train
-        assert 0 < Nt < np.inf
+        assert 0 < autoregressive_n < np.inf
         unknown_signals = set(signals) - set(CAND_SIGNALS)
         assert not unknown_signals, unknown_signals
 
@@ -50,7 +50,7 @@ class DataSS:  # user-controllable params, at data-eng level
         self.fin_timestamp = fin_timestamp
 
         self.max_n_train = max_n_train
-        self.Nt = Nt
+        self.autoregressive_n = autoregressive_n
 
         self.signals = signals
         self.coins = coins
@@ -63,7 +63,7 @@ class DataSS:  # user-controllable params, at data-eng level
     @property
     def n(self) -> int:
         """Number of input dimensions == # columns in X"""
-        return self.n_exchs * self.n_coins * self.n_signals * self.Nt
+        return self.n_exchs * self.n_coins * self.n_signals * self.autoregressive_n
 
     @property
     def n_exchs(self) -> int:
@@ -91,7 +91,9 @@ class DataSS:  # user-controllable params, at data-eng level
         s += "  \n"
 
         s += f"  max_n_train={self.max_n_train} -- max # pts to train on\n"
-        s += f"  Nt={self.Nt} -- model inputs Nt past pts z[t-1], .., z[t-Nt]\n"
+
+        s += f"  autoregressive_n={self.autoregressive_n}"
+        s += " -- model inputs ar_n past pts z[t-1], .., z[t-ar_n]\n"
         s += "  \n"
 
         s += f"  signals={self.signals}\n"
@@ -119,7 +121,7 @@ class DataSS:  # user-controllable params, at data-eng level
             st_timestamp=self.st_timestamp,
             fin_timestamp=self.fin_timestamp,
             max_n_train=self.max_n_train,
-            Nt=self.Nt,
+            autoregressive_n=self.autoregressive_n,
             signals=_list_with(self.signals[:], data_pp.yval_signal),
             coins=_list_with(self.coins[:], data_pp.yval_coin),
             exchange_ids=_list_with(self.exchange_ids[:], data_pp.yval_exchange_id),

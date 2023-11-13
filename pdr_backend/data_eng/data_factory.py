@@ -224,16 +224,18 @@ class DataFactory:
         for hist_col in target_hist_cols:
             assert hist_col in hist_df.columns, "missing a data col"
             z = hist_df[hist_col].tolist()  # [..., z(t-3), z(t-2), z(t-1)]
-            maxshift = testshift + ss.Nt
+            maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
                 print(
                     f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
-                    f" (= testshift + Nt = {testshift} + {ss.Nt})"
+                    " (= testshift + autoregressive_n = "
+                    f"{testshift} + {ss.autoregressive_n})\n"
+                    "To fix: broaden time, shrink testshift, "
+                    "or shrink autoregressive_n"
                 )
-                print("To fix: broaden time, shrink testshift, or shrink Nt")
                 sys.exit(1)
-            for delayshift in range(ss.Nt, 0, -1):  # eg [2, 1, 0]
+            for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
                 shift = testshift + delayshift
                 x_col = hist_col + f":t-{delayshift+1}"
                 assert (shift + N_train + 1) <= len(z)
