@@ -1,8 +1,7 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.constants import CAND_TIMEFRAMES
 from pdr_backend.data_eng.data_pp import DataPP
-
+from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 @enforce_types
 def test_data_pp_5m():
@@ -11,15 +10,16 @@ def test_data_pp_5m():
 
     # test attributes
     assert pp.timeframe == "5m"
-    assert pp.yval_exchange_id == "kraken"
-    assert pp.yval_coin == "ETH"
-    assert pp.usdcoin == "USDT"
-    assert pp.yval_signal == "high"
+    assert pp.predict_feed_str == "kraken h ETH/USDT"
     assert pp.N_test == 2
 
     # test properties
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_m == 5
+    assert pp.yval_exchange_id == "kraken"
+    assert pp.yval_signal == "high"
+    assert pp.yval_coin == "ETH"
+    assert pp.usdcoin == "USDT"
 
 
 @enforce_types
@@ -36,10 +36,7 @@ def _test_pp(timeframe: str) -> DataPP:
     assert timeframe in CAND_TIMEFRAMES
     pp = DataPP(
         timeframe=timeframe,
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        predict_feed_str="kraken h ETH/USDT",
         N_test=2,
     )
     return pp

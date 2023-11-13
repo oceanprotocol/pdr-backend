@@ -76,11 +76,8 @@ def test_data_ss_copy(tmpdir):
 
     # copy 1: don't need to append lists
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "kraken h ETH/USDT",
         N_test=2,
     )
     ss2 = ss.copy_with_yval(pp)
@@ -90,11 +87,8 @@ def test_data_ss_copy(tmpdir):
 
     # copy 2: need to append all three lists
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="TRX",
-        usdcoin="USDC",
-        yval_signal="close",
+        "5m",
+        "binanceus c TRX/USDC",
         N_test=2,
     )
     ss3 = ss.copy_with_yval(pp)

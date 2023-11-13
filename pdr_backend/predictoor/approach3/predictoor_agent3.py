@@ -37,11 +37,8 @@ class PredictoorAgent3(BasePredictoorAgent):
 
         # user-uncontrollable params, at data-eng level
         data_pp = DataPP(
-            timeframe=feed.timeframe,  # eg "5m"
-            yval_exchange_id=feed.source,  # eg "binance"
-            yval_coin=feed.base,  # eg "BTC"
-            usdcoin=feed.quote,  # eg "USDT"
-            yval_signal="close",  # pdr feed setup is always "close"
+            feed.timeframe,  # eg "5m"
+            f"{feed.source} c {feed.base}/{feed.quote}",         
             N_test=1,  # N/A for this context
         )
 

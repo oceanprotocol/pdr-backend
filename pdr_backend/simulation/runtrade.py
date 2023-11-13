@@ -16,11 +16,8 @@ from pdr_backend.simulation.trade_ss import TradeSS
 #   Why: to avoid ambiguity. Eg is PAIR_FILTER for yval_coin, or input data?
 
 data_pp = DataPP(  # user-uncontrollable params, at data-eng level
-    timeframe="1h",  # "5m" or "1h"
-    yval_exchange_id="binance",  # "binance" or "kraken" or ...
-    yval_coin="BTC",  # "BTC" or "ETH" or "TRX" or ...
-    usdcoin="USDT",  # "USDT" or "USDC" or ..
-    yval_signal="close",  # "close" or "open" or ...
+    "1h",  # "5m" or "1h"
+    "binance c BTC/USDT", # c = "close"
     N_test=200,  # 50000 . num points to test on, 1 at a time (online)
 )
 

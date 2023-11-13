@@ -78,11 +78,8 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
     # setup: pp
     pp = DataPP(  # user-uncontrollable params
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "binanceus h ETH/USDT",
         N_test=2,
     )
 
@@ -260,11 +257,8 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     }
 
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "binanceus h ETH/USDT",
         N_test=2,
     )
 

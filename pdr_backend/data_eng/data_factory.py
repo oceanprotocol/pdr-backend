@@ -14,6 +14,7 @@ from pdr_backend.data_eng.constants import (
 )
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.util.feedstr import pair_str
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
     concat_next_df,
@@ -24,7 +25,6 @@ from pdr_backend.data_eng.pdutil import (
     newest_ut,
 )
 from pdr_backend.util.mathutil import has_nan, fill_nans
-from pdr_backend.util.pairutil import pairstr
 from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 
@@ -64,8 +64,8 @@ class DataFactory:
         print("  Update csvs.")
         for exchange_id in self.ss.exchange_ids:
             for coin in self.ss.coins:
-                pair = pairstr(coin, usdcoin=self.pp.usdcoin)
-                self._update_hist_csv_at_exch_and_pair(exchange_id, pair, fin_ut)
+                p = pair_str(coin, self.pp.usdcoin)
+                self._update_hist_csv_at_exch_and_pair(exchange_id, p, fin_ut)
 
     def _update_hist_csv_at_exch_and_pair(
         self, exchange_id: str, pair: str, fin_ut: int
