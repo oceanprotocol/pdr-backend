@@ -138,9 +138,6 @@ def fetch_filtered_predictions(
             stake = float(prediction["stake"])
             predictoor_user = prediction["user"]["id"]
 
-            if stake < 0.01:
-                continue
-
             prediction_obj = Prediction(
                 pair_name,
                 timeframe,
