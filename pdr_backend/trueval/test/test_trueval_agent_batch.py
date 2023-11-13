@@ -1,18 +1,19 @@
 from copy import deepcopy
 from unittest.mock import patch
+
 import pytest
 
 from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch, TruevalSlot
 from pdr_backend.util.constants import ZERO_ADDRESS
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_new_agent(trueval_config):
     agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
     assert agent_.config == trueval_config
     assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_process_trueval_slot_up(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -23,7 +24,7 @@ def test_process_trueval_slot_up(
         assert not slot.cancel
         assert slot.trueval
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_process_trueval_slot_down(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -34,7 +35,7 @@ def test_process_trueval_slot_down(
         assert not slot.cancel
         assert not slot.trueval
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_process_trueval_slot_cancel(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -45,7 +46,7 @@ def test_process_trueval_slot_cancel(
         assert slot.cancel
         assert not slot.trueval
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_batch_submit_truevals(agent, slot):
     times = 3
     slot.feed.address = "0x0000000000000000000000000000000000c0ffee"
@@ -84,7 +85,7 @@ def test_batch_submit_truevals(agent, slot):
         assert tx == "badc0ffeee"
         mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
 
-
+@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_take_step(agent, slot):
     with patch.object(
         agent, "get_batch", return_value=[slot]

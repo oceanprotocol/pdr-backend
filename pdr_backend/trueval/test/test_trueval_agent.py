@@ -10,14 +10,12 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_new_agent(trueval_config):
     agent_ = TruevalAgentSingle(trueval_config, get_trueval)
     assert agent_.config == trueval_config
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_process_slot(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -30,7 +28,6 @@ def test_process_slot(
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
@@ -39,7 +36,6 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(False, False)):
         result = agent.get_and_submit_trueval(
@@ -52,7 +48,6 @@ def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock)
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, False)):
         result = agent.get_and_submit_trueval(
@@ -65,7 +60,6 @@ def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
     with patch.object(agent, "get_trueval", return_value=(True, True)):
         result = agent.get_and_submit_trueval(
@@ -78,7 +72,6 @@ def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_trueval_slot_up(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -88,7 +81,6 @@ def test_get_trueval_slot_up(
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_trueval_slot_down(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -98,7 +90,6 @@ def test_get_trueval_slot_down(
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_trueval_slot_cancel(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -108,7 +99,6 @@ def test_get_trueval_slot_cancel(
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_trueval_slot_too_many_requests_retry(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
@@ -125,7 +115,6 @@ def test_get_trueval_slot_too_many_requests_retry(
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_take_step(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -153,7 +142,6 @@ def test_take_step(slot, agent):
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_run(slot, agent):
     mocked_env = {
         "SLEEP_TIME": "1",
@@ -179,7 +167,6 @@ def test_run(slot, agent):
 
 
 @enforce_types
-@pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_get_init_and_ts(agent):
     ts = 2000
     seconds_per_epoch = 300
