@@ -8,7 +8,6 @@ from pdr_backend.model_eng.model_factory import ModelFactory
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
-from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
