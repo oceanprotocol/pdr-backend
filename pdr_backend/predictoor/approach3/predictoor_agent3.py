@@ -48,7 +48,6 @@ class PredictoorAgent3(BasePredictoorAgent):
 
         # user-controllable params, at data-eng level
         data_ss = self.config.data_ss.copy_with_yval(data_pp)
-        data_ss.fin_timestamp = timestr_to_ut("now")
 
         #  user-controllable params, at model-eng level
         model_ss = self.config.model_ss
