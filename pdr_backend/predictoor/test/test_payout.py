@@ -82,8 +82,8 @@ def test_do_rose_payout():
     mock_config = Mock()
     mock_config.subgraph_url = ""
     mock_config.web3_config = Mock(spec=Web3Config)
-    mock_config.web3_config.eth = Mock()
-    mock_config.web3_config.eth.chain_id = 23294
+    mock_config.web3_config.w3 = Mock()
+    mock_config.web3_config.w3.eth.chain_id = 23294
     mock_config.web3_config.owner = "mock_owner"
 
     mock_contract = Mock(spec=DFRewards)
