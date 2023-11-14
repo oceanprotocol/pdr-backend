@@ -44,11 +44,18 @@ class DFBuyerAgent:
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
 
         token = Token(self.config.web3_config, self.token_addr)
-        print("Approving tokens for predictoor_batcher")
-        tx = token.approve(
-            self.predictoor_batcher.contract_address, int(MAX_UINT), True
+
+        # Check allowance and approve if necessary
+        print("Checking allowance...")
+        allowance = token.allowance(
+            self.config.web3_config.owner, self.predictoor_batcher.contract_address
         )
-        print(f"Done: {tx['transactionHash'].hex()}")
+        if allowance < MAX_UINT - 1e60:
+            print("Approving tokens for predictoor_batcher")
+            tx = token.approve(
+                self.predictoor_batcher.contract_address, int(MAX_UINT), True
+            )
+            print(f"Done: {tx['transactionHash'].hex()}")
 
     def run(self, testing: bool = False):
         while True:
