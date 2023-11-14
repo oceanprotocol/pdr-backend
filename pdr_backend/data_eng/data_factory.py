@@ -89,7 +89,7 @@ class DataFactory:
             # C is [sample x signal(TOHLCV)]. Row 0 is oldest
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
             raw_tohlcv_data = exch.fetch_ohlcv(
-                symbol=pair_str,  # eg "BTC/USDT"
+                symbol=pair_str.replace("-", "/"),  # eg "BTC/USDT"
                 timeframe=self.pp.timeframe,  # eg "5m", "1h"
                 since=st_ut,  # timestamp of first candle
                 limit=1000,  # max # candles to retrieve
