@@ -248,13 +248,13 @@ export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean
 In work console, run tests:
 ```console
 #run a single test. The "-s" is for more output.
-pytest pdr_backend/util/test/test_constants.py::test_constants1 -s
+pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constants -s
 
 #run all tests in a file
-pytest pdr_backend/util/test/test_constants.py -s
+pytest pdr_backend/util/test_noganache/test_util_constants.py -s
 
 #run a single test that flexes network connection
-pytest pdr_backend/util/test/test_contract.py::test_get_contract_filename -s
+pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filename -s
 
 #run all regular tests; see details on pytest markers to select specific suites
 pytest
