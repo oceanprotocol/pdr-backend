@@ -1,3 +1,12 @@
+import os
+from enforce_typing import enforce_types
+
+from pdr_backend.data_eng.ppss import PPSS
+
+@enforce_types
+def test1(tmpdir):
+    # set string
+    ppss_str = """
 data_pp:
   timeframe: 1h
   predict_feed: binance c BTC/USDT
@@ -29,4 +38,19 @@ trade_ss:
 
 sim_ss:
   do_plot: True
- 
+"""
+    # put string to file
+    fname = os.path.join(tmpdir, "ppss.yaml")
+    f = open(fname, "a")
+    f.write(ppss_str)
+    f.close()
+
+    # create PPSS object from file
+    ppss = PPSS(fname)
+
+    assert ppss.data_pp.timeframe == "1h"
+    assert ppss.data_pp.predict_feed_str == "binance c BTC/USDT"
+
+    # FIXME: add the rest
+
+    

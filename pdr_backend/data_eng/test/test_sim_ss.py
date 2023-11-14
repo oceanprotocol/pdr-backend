@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.simulation.sim_ss import SimSS
+from pdr_backend.data_eng.sim_ss import SimSS
 
 
 @enforce_types

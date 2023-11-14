@@ -8,13 +8,8 @@ import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.data_eng.data_factory import DataFactory
-from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.data_eng.ppss import PPSS
 from pdr_backend.data_eng.model_factory import ModelFactory
-from pdr_backend.data_eng.model_ss import ModelSS
-from pdr_backend.simulation.sim_ss import SimSS
-from pdr_backend.simulation.trade_ss import TradeSS
-from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
@@ -32,34 +27,17 @@ class PlotState:
 # pylint: disable=too-many-instance-attributes
 class TradeEngine:
     @enforce_types
-    def __init__(
-        self,
-        data_pp: DataPP,
-        data_ss: DataSS,
-        model_ss: ModelSS,
-        trade_pp: TradePP,
-        trade_ss: TradeSS,
-        sim_ss: SimSS,
-    ):
-        """
-        @arguments
-          data_pp -- user-uncontrollable params, at data level
-          data_ss -- user-controllable params, at data level
-          model_ss -- user-controllable params, at model level
-          trade_pp -- user-uncontrollable params, at trading level
-          trade_ss -- user-controllable params, at trading level
-          sim_ss -- user-controllable params, at sim level
-        """
+    def __init__(self, ppss: PPSS):
         # ensure training data has the target yval
-        assert data_pp.predict_feed_tup in data_ss.input_feed_tups
+        assert ppss.data_pp.predict_feed_tup in data_ss.input_feed_tups
 
         # pp & ss values
-        self.data_pp = data_pp
-        self.data_ss = data_ss
-        self.model_ss = model_ss
-        self.trade_pp = trade_pp
-        self.trade_ss = trade_ss
-        self.sim_ss = sim_ss
+        self.data_pp = ppss.data_pp
+        self.data_ss = ppss.data_ss
+        self.model_ss = ppss.model_ss
+        self.trade_pp = ppss.trade_pp
+        self.trade_ss = ppss.trade_ss
+        self.sim_ss = ppss.sim_ss
 
         # state
         self.holdings = self.trade_pp.init_holdings
