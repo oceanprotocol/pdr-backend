@@ -28,6 +28,7 @@ class DFBuyerAgent:
             get_address(config.web3_config.w3.eth.chain_id, "PredictoorHelper"),
         )
         self.token_addr = get_address(config.web3_config.w3.eth.chain_id, "Ocean")
+        self.fail_counter = 0
 
         print("-" * 80)
         print("Config:")
@@ -79,7 +80,24 @@ class DFBuyerAgent:
         print("Missing consume times:", missing_consumes_times)
 
         # batch txs
-        self._batch_txs(missing_consumes_times)
+        one_or_more_failed = self._batch_txs(missing_consumes_times)
+
+        if one_or_more_failed:
+            print("One or more consumes have failed...")
+            self.fail_counter += 1
+
+            if self.fail_counter > 3 and self.config.batch_size > 2:
+                self.config.batch_size = self.config.batch_size // 2
+                print(
+                    f"Seems like we keep failing, adjusting batch size to: {self.config.batch_size}"
+                )
+                self.fail_counter = 0
+
+            print("Sleeping for a minute and trying again")
+            time.sleep(60)
+            return
+        else:
+            self.fail_counter = 0
 
         # sleep until next consume interval
         ts = self.config.web3_config.get_block("latest")["timestamp"]
