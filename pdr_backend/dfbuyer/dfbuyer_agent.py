@@ -86,8 +86,8 @@ class DFBuyerAgent:
             print("One or more consumes have failed...")
             self.fail_counter += 1
 
-            if self.fail_counter > 3 and self.config.batch_size > 2:
-                self.config.batch_size = self.config.batch_size // 2
+            if self.fail_counter > 3 and self.config.batch_size > 6:
+                self.config.batch_size = self.config.batch_size * 2 // 3
                 print(
                     f"Seems like we keep failing, adjusting batch size to: {self.config.batch_size}"
                 )
