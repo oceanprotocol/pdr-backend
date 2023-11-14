@@ -36,7 +36,7 @@ model_ss = ModelSS(  # user-controllable params, at model-eng level
 
 trade_pp = TradePP(  # user-uncontrollable params, at trading level
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
-    init_holdings={"USDT": 100000.0, data_pp.yval_coin: 0.0},
+    init_holdings={data_pp.base_str: 0.0, data_pp.quote_str: 100000.0},
 )
 
 trade_ss = TradeSS(  # user-controllable params, at trading level

@@ -5,6 +5,7 @@ import numpy as np
 
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 from pdr_backend.util.feedstr import unpack_feed_str, verify_feed_str
+from pdr_backend.util.pairstr import unpack_pair_str
 
 
 class DataPP:  # user-uncontrollable params, at data-eng level
@@ -68,8 +69,18 @@ class DataPP:  # user-uncontrollable params, at data-eng level
 
     @property
     def pair_str(self) -> str:
-        """Return e.g. 'ETH'"""
+        """Return e.g. 'ETH/USDT'"""
         return self.predict_feed_tup[2]
+
+    @property
+    def base_str(self) -> str:
+        """Return e.g. 'ETH'"""
+        return unpack_pair_str(self.predict_feed_tup[2])[0]
+
+    @property
+    def quote_str(self) -> str:
+        """Return e.g. 'USDT'"""
+        return unpack_pair_str(self.predict_feed_tup[2])[1]
 
     @enforce_types
     def __str__(self) -> str:

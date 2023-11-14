@@ -16,7 +16,6 @@ from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_ss import TradeSS
 from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 FONTSIZE = 12
@@ -81,12 +80,14 @@ class TradeEngine:
             self.plot_state = PlotState()
 
     @property
-    def usdcoin(self) -> str:
-        return unpack_pair_str(self.data_pp.pair_str)[1]
+    def tokcoin(self) -> str:
+        """Return e.g. 'ETH'"""
+        return self.data_pp.base_str
 
     @property
-    def tokcoin(self) -> str:
-        return unpack_pair_str(self.data_pp.pair_str)[0]
+    def usdcoin(self) -> str:
+        """Return e.g. 'USDT'"""
+        return self.data_pp.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
