@@ -387,6 +387,7 @@ def get_consume_so_far_per_contract(
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
+    print("Getting consume so far...")
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
@@ -426,7 +427,7 @@ def get_consume_so_far_per_contract(
             offset,
         )
         offset += chunk_size
-        result = query_subgraph(subgraph_url, query)
+        result = query_subgraph(subgraph_url, query, 3, 30.0)
         contracts = result["data"]["predictContracts"]
         if contracts == []:
             break
