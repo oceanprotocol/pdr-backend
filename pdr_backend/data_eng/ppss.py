@@ -54,10 +54,10 @@ class PPSS:
 
     def __str__(self):
         s = ""
-        s += f"data_pp={data_pp}\n"
-        s += f"data_ss={data_ss}\n"
-        s += f"model_ss={model_ss}\n"
-        s += f"trade_pp={trade_pp}\n"
-        s += f"trade_ss={trade_ss}\n"
-        s += f"sim_ss={sim_ss}\n"
+        s += f"data_pp={self.data_pp}\n"
+        s += f"data_ss={self.data_ss}\n"
+        s += f"model_ss={self.model_ss}\n"
+        s += f"trade_pp={self.trade_pp}\n"
+        s += f"trade_ss={self.trade_ss}\n"
+        s += f"sim_ss={self.sim_ss}\n"
         return s

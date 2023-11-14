@@ -69,4 +69,7 @@ sim_ss:
     assert ppss.sim_ss.do_plot
     assert ppss.sim_ss.logpath_in == "./"
 
+    #str
+    print(ppss)
+
     
