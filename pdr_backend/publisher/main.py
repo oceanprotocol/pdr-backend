@@ -6,16 +6,17 @@ from pdr_backend.util.contract import get_address
 from pdr_backend.util.env import getenv_or_exit
 from pdr_backend.util.web3_config import Web3Config
 
+
 def main():
     rpc_url = getenv_or_exit("RPC_URL")
     private_key = getenv_or_exit("PRIVATE_KEY")
 
     # pairs to deploy on testnet and mainnet
     pair_list = ["BTC", "ETH", "BNB", "XRP", "ADA", "DOGE", "SOL", "LTC", "TRX", "DOT"]
-    
+
     # token price
     rate = 3 / (1 + 0.2 + 0.001)
-    
+
     web3_config = Web3Config(rpc_url, private_key)
 
     if web3_config.w3.eth.chain_id == 8996:
@@ -137,6 +138,7 @@ def main():
                 cut=0.2,
                 web3_config=web3_config,
             )
+
 
 if __name__ == "__main__":
     main()
