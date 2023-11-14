@@ -1,5 +1,5 @@
 import copy
-from typing import Tuple
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -9,16 +9,9 @@ from pdr_backend.data_eng.constants import TOHLCV_COLS
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.data_factory import DataFactory
-from pdr_backend.data_eng.pdutil import (
-    initialize_df,
-    concat_next_df,
-    load_csv,
-)
+from pdr_backend.data_eng.pdutil import initialize_df, concat_next_df, load_csv
 from pdr_backend.util.mathutil import has_nan, fill_nans
-from pdr_backend.util.timeutil import (
-    current_ut,
-    timestr_to_ut,
-)
+from pdr_backend.util.timeutil import current_ut, ut_to_timestr
 
 MS_PER_5M_EPOCH = 300000
 
@@ -47,59 +40,56 @@ def test_update_csv5(tmpdir):
 
 
 @enforce_types
-def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
+def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     """n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000"""
 
     # setup: base data
-    st_ut = timestr_to_ut(st_str)
-    fin_ut = timestr_to_ut(fin_str)
     csvdir = str(tmpdir)
 
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
         return since + i * MS_PER_5M_EPOCH
 
-    def _uts_in_range(st_ut, fin_ut):
+    def _uts_in_range(st_ut: int, fin_ut: int) -> List[int]:
         return [
             _calc_ut(st_ut, i)
             for i in range(100000)  # assume <=100K epochs
             if _calc_ut(st_ut, i) <= fin_ut
         ]
 
-    def _uts_from_since(cur_ut, since, limit_N):
+    def _uts_from_since(cur_ut: int, since_ut: int, limit_N: int) -> List[int]:
         return [
-            _calc_ut(since, i) for i in range(limit_N) if _calc_ut(since, i) <= cur_ut
+            _calc_ut(since_ut, i)
+            for i in range(limit_N)
+            if _calc_ut(since_ut, i) <= cur_ut
         ]
 
     # setup: exchange
     class FakeExchange:
         def __init__(self):
-            self.cur_ut = current_ut()  # fixed value, for easier testing
+            self.cur_ut: int = current_ut()  # fixed value, for easier testing
 
         # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:
-            uts = _uts_from_since(self.cur_ut, since, limit)
+            uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
     exchange = FakeExchange()
 
     # setup: pp
     pp = DataPP(  # user-uncontrollable params
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "binanceus h ETH/USDT",
         N_test=2,
     )
 
     # setup: ss
     ss = DataSS(  # user-controllable params
         csv_dir=csvdir,
-        st_timestamp=st_ut,
-        fin_timestamp=fin_ut,
-        max_N_train=7,
-        Nt=3,
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+        max_n_train=7,
+        autoregressive_n=3,
         signals=["high"],
         coins=["ETH"],
         exchange_ids=["binanceus"],
@@ -110,34 +100,40 @@ def _test_update_csv(st_str: str, fin_str: str, tmpdir, n_uts):
     data_factory = DataFactory(pp, ss)
     filename = data_factory._hist_csv_filename("binanceus", "ETH/USDT")
 
-    def _uts_in_csv(filename: str) -> list:
+    def _uts_in_csv(filename: str) -> List[int]:
         df = load_csv(filename)
         return df.index.values.tolist()
 
     # work 1: new csv
-    data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
-    uts = _uts_in_csv(filename)
+    data_factory._update_hist_csv_at_exch_and_pair(
+        "binanceus", "ETH/USDT", ss.fin_timestamp
+    )
+    uts: List[int] = _uts_in_csv(filename)
     if isinstance(n_uts, int):
         assert len(uts) == n_uts
     elif n_uts == ">1K":
         assert len(uts) > 1000
-    assert sorted(uts) == uts and uts[0] == st_ut and uts[-1] == fin_ut
-    assert uts == _uts_in_range(st_ut, fin_ut)
+    assert sorted(uts) == uts
+    assert uts[0] == ss.st_timestamp
+    assert uts[-1] == ss.fin_timestamp
+    assert uts == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 2: two more epochs at end --> it'll append existing csv
-    ss.fin_timestamp = fin_ut + 2 * MS_PER_5M_EPOCH
-    data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
+    ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
+    data_factory._update_hist_csv_at_exch_and_pair(
+        "binanceus", "ETH/USDT", ss.fin_timestamp
+    )
     uts2 = _uts_in_csv(filename)
-    assert uts2 == _uts_in_range(st_ut, fin_ut + 2 * MS_PER_5M_EPOCH)
+    assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new csv
-    ss.st_timestamp = st_ut - 2 * MS_PER_5M_EPOCH
-    ss.fin_timestamp = fin_ut + 4 * MS_PER_5M_EPOCH
-    data_factory._update_hist_csv_at_exch_and_pair("binanceus", "ETH/USDT")
-    uts3 = _uts_in_csv(filename)
-    assert uts3 == _uts_in_range(
-        st_ut - 2 * MS_PER_5M_EPOCH, fin_ut + 4 * MS_PER_5M_EPOCH
+    ss.st_timestr = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
+    ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
+    data_factory._update_hist_csv_at_exch_and_pair(
+        "binanceus", "ETH/USDT", ss.fin_timestamp
     )
+    uts3 = _uts_in_csv(filename)
+    assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
 
 # ======================================================================
@@ -184,7 +180,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
 
-    assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * Nt
+    assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * autoregressive_n
 
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
@@ -229,9 +225,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert x_df["kraken:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
-    # =========== now have a different max_N_train
-    ss.max_N_train = 5
-    # ss.Nt = 2
+    # =========== now have a different max_n_train
+    ss.max_n_train = 5
+    # ss.autoregressive_n = 2
 
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
@@ -261,26 +257,23 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     }
 
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "binanceus h ETH/USDT",
         N_test=2,
     )
 
     ss = DataSS(
         csv_dir=csvdir,
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
-        Nt=3,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
         signals=["high", "low"],
         coins=["BTC", "ETH"],
         exchange_ids=["binanceus", "kraken"],
     )
 
-    assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * Nt
+    assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
 
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
@@ -372,20 +365,17 @@ def test_create_xy__handle_nan(tmpdir):
 @enforce_types
 def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "kraken h ETH/USDT",
         N_test=2,
     )
 
     ss = DataSS(
         csv_dir=csvdir,
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
-        Nt=3,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
         signals=[pp.yval_signal],
         coins=[pp.yval_coin],
         exchange_ids=[pp.yval_exchange_id],
@@ -396,7 +386,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
 @enforce_types
 def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
     assert X.shape[0] == y.shape[0]
-    assert X.shape[0] == (ss.max_N_train + 1)  # 1 for test, rest for train
+    assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n
 
     assert len(x_df) == X.shape[0]

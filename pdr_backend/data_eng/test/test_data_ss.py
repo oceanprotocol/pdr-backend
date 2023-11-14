@@ -9,10 +9,10 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_data_ss_basic(tmpdir):
     ss = DataSS(
         csv_dir=str(tmpdir),
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("2023-06-21"),
-        max_N_train=7,
-        Nt=3,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
         signals=["high", "close"],
         coins=["ETH", "BTC", "TRX"],
         exchange_ids=["kraken", "binanceus"],
@@ -20,11 +20,11 @@ def test_data_ss_basic(tmpdir):
 
     # test attributes
     assert ss.csv_dir == str(tmpdir)
-    assert ss.st_timestamp == timestr_to_ut("2023-06-18")
-    assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
+    assert ss.st_timestr == "2023-06-18"
+    assert ss.fin_timestr == "2023-06-21"
 
-    assert ss.max_N_train == 7
-    assert ss.Nt == 3
+    assert ss.max_n_train == 7
+    assert ss.autoregressive_n == 3
 
     assert ss.signals == ["high", "close"]
     assert ss.coins == ["ETH", "BTC", "TRX"]
@@ -32,6 +32,8 @@ def test_data_ss_basic(tmpdir):
     assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
 
     # test properties
+    assert ss.st_timestamp == timestr_to_ut("2023-06-18")
+    assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
     assert ss.n == 2 * 3 * 2 * 3
     assert ss.n_exchs == 2
     assert len(ss.exchange_ids) == 2
@@ -44,13 +46,29 @@ def test_data_ss_basic(tmpdir):
 
 
 @enforce_types
+def test_data_ss_now(tmpdir):
+    ss = DataSS(
+        csv_dir=str(tmpdir),
+        st_timestr="2023-06-18",
+        fin_timestr="now",
+        max_n_train=7,
+        autoregressive_n=3,
+        signals=["high"],
+        coins=["ETH"],
+        exchange_ids=["kraken"],
+    )
+    assert ss.fin_timestr == "now"
+    assert ss.fin_timestamp == timestr_to_ut("now")
+
+
+@enforce_types
 def test_data_ss_copy(tmpdir):
     ss = DataSS(
         csv_dir=str(tmpdir),
-        st_timestamp=timestr_to_ut("2023-06-18"),
-        fin_timestamp=timestr_to_ut("now"),
-        max_N_train=7,
-        Nt=3,
+        st_timestr="2023-06-18",
+        fin_timestr="now",
+        max_n_train=7,
+        autoregressive_n=3,
         signals=["high"],
         coins=["ETH", "BTC"],
         exchange_ids=["kraken"],
@@ -58,11 +76,8 @@ def test_data_ss_copy(tmpdir):
 
     # copy 1: don't need to append lists
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="kraken",
-        yval_coin="ETH",
-        usdcoin="USDT",
-        yval_signal="high",
+        "5m",
+        "kraken h ETH/USDT",
         N_test=2,
     )
     ss2 = ss.copy_with_yval(pp)
@@ -72,11 +87,8 @@ def test_data_ss_copy(tmpdir):
 
     # copy 2: need to append all three lists
     pp = DataPP(
-        timeframe="5m",
-        yval_exchange_id="binanceus",
-        yval_coin="TRX",
-        usdcoin="USDC",
-        yval_signal="close",
+        "5m",
+        "binanceus c TRX/USDC",
         N_test=2,
     )
     ss3 = ss.copy_with_yval(pp)

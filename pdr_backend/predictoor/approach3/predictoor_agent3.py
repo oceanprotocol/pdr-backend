@@ -8,7 +8,6 @@ from pdr_backend.model_eng.model_factory import ModelFactory
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
-from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
@@ -38,17 +37,13 @@ class PredictoorAgent3(BasePredictoorAgent):
 
         # user-uncontrollable params, at data-eng level
         data_pp = DataPP(
-            timeframe=feed.timeframe,  # eg "5m"
-            yval_exchange_id=feed.source,  # eg "binance"
-            yval_coin=feed.base,  # eg "BTC"
-            usdcoin=feed.quote,  # eg "USDT"
-            yval_signal="close",  # pdr feed setup is always "close"
+            feed.timeframe,  # eg "5m"
+            f"{feed.source} c {feed.base}/{feed.quote}",
             N_test=1,  # N/A for this context
         )
 
         # user-controllable params, at data-eng level
         data_ss = self.config.data_ss.copy_with_yval(data_pp)
-        data_ss.fin_timestamp = timestr_to_ut("now")
 
         #  user-controllable params, at model-eng level
         model_ss = self.config.model_ss
