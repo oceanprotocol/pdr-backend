@@ -22,14 +22,12 @@ data_pp = DataPP(  # user-uncontrollable params, at data-eng level
 )
 
 data_ss = DataSS(  # user-controllable params, at data-eng level
+    ["binance c BTC/USDT,ETH/USDT"],
     csv_dir=os.path.abspath("csvs"),  # eg "csvs". abs or rel loc'n of csvs dir
     st_timestr="2022-06-30",  # eg "2019-09-13_04:00" (earliest), "2019-09-13"
     fin_timestr="now",  # eg "now", "2023-09-23_17:55", "2023-09-23"
     max_n_train=5000,  # eg 50000. # if inf, only limited by data available
     autoregressive_n=20,  # eg 10. model inputs past pts z[t-1], .., z[t-ar_n]
-    signals=["close"],  # for model input vars. eg ["open","high","volume"]
-    coins=["BTC", "ETH"],  # for model input vars. eg ["ETH", "BTC"]
-    exchange_ids=["binance"],  # for model input vars. eg ["binance", "mxc"]
 )
 
 model_ss = ModelSS(  # user-controllable params, at model-eng level
@@ -38,7 +36,7 @@ model_ss = ModelSS(  # user-controllable params, at model-eng level
 
 trade_pp = TradePP(  # user-uncontrollable params, at trading level
     fee_percent=0.00,  # Eg 0.001 is 0.1%. Trading fee (simulated)
-    init_holdings={"USDT": 100000.0, data_pp.yval_coin: 0.0},
+    init_holdings={data_pp.base_str: 0.0, data_pp.quote_str: 100000.0},
 )
 
 trade_ss = TradeSS(  # user-controllable params, at trading level

@@ -41,7 +41,7 @@ class TraderAgent1(TraderAgent):
         self.config: TraderConfig1 = config
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_id)
+        exchange_class = getattr(ccxt, self.config.exchange_str)
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -77,7 +77,7 @@ class TraderAgent1(TraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.config.exchange_id in ("mexc", "mexc3"):
+            if self.config.exchange_str in ("mexc", "mexc3"):
                 amount = float(self.order["info"]["origQty"])
 
             # close it

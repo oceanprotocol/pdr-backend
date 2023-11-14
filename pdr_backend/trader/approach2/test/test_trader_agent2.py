@@ -23,7 +23,7 @@ def mock_feed():
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     # Setting up the mock trader configuration
     trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
@@ -60,7 +60,7 @@ async def test_do_trade(
 ):
     # Mocking the trader configuration
     trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
@@ -113,7 +113,7 @@ def test_update_positions(
     web3_config,
 ):
     trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
@@ -170,7 +170,7 @@ def test_should_close(
     web3_config,
 ):
     trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0

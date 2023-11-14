@@ -50,7 +50,7 @@ class TraderAgent2(TraderAgent):
             self.portfolio = Portfolio(list(self.feeds.keys()))
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_id)
+        exchange_class = getattr(ccxt, self.config.exchange_str)
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -152,7 +152,7 @@ class TraderAgent2(TraderAgent):
                 symbol=self.config.exchange_pair, amount=self.config.size
             )
             if order and self.portfolio:
-                order = create_order(order, self.config.exchange_id)
+                order = create_order(order, self.config.exchange_str)
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()
         else:
