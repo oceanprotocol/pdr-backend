@@ -24,6 +24,7 @@ install_requirements = [
     "pytest",
     "pytest-asyncio",
     "pytest-env",
+    "pyyaml",
     "requests",
     "scikit-learn",
     "statsmodels",
