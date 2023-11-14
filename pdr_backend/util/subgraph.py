@@ -387,6 +387,7 @@ def get_consume_so_far_per_contract(
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
+    print("Getting consume so far...")
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
@@ -426,7 +427,7 @@ def get_consume_so_far_per_contract(
             offset,
         )
         offset += chunk_size
-        result = query_subgraph(subgraph_url, query)
+        result = query_subgraph(subgraph_url, query, 3, 30.0)
         contracts = result["data"]["predictContracts"]
         if contracts == []:
             break
@@ -441,9 +442,8 @@ def get_consume_so_far_per_contract(
             for buy in contract["token"]["orders"]:
                 # 1.2 20% fee
                 # 0.001 0.01% community swap fee
-                consume_so_far[contract_address] += (
-                    float(buy["lastPriceValue"]) * 1.2 * 1.001
-                )
+                consume_amt = float(buy["lastPriceValue"]) * 1.201
+                consume_so_far[contract_address] += consume_amt
         if no_of_zeroes == len(contracts):
             break
     return consume_so_far
