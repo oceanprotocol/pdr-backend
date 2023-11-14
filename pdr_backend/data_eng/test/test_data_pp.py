@@ -12,7 +12,7 @@ def test_data_pp_5m():
     # test attributes
     assert pp.timeframe == "5m"
     assert pp.predict_feed_str == "kraken h ETH/USDT"
-    assert pp.N_test == 2
+    assert pp.test_n == 2
 
     # test properties
     assert pp.timeframe_ms == 5 * 60 * 1000
@@ -40,6 +40,6 @@ def _test_pp(timeframe: str) -> DataPP:
     pp = DataPP(
         timeframe=timeframe,
         predict_feed_str="kraken h ETH/USDT",
-        N_test=2,
+        test_n=2,
     )
     return pp

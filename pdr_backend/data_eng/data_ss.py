@@ -28,13 +28,14 @@ class DataSS:  # user-controllable params, at data-eng level
     def __init__(
         self,
         input_feeds_strs: List[str],  # eg ["binance ohlcv BTC/USDT", " ", ...]
-        csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
+        csv_dir_in: str,  # eg "csvs". abs or rel loc'n of csvs dir
         st_timestr: str,  # eg "2019-09-13_04:00" (earliest),  2019-09-13"
         fin_timestr: str,  # eg "now", "2023-09-23_17:55", "2023-09-23"
         max_n_train,  # eg 50000. if inf, only limited by data available
         autoregressive_n: int,  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
     ):
         # preconditions
+        csv_dir = os.path.abspath(csv_dir_in)
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
@@ -46,7 +47,9 @@ class DataSS:  # user-controllable params, at data-eng level
         # save values
         self.input_feeds_strs: List[str] = input_feeds_strs
 
+        self.csv_dir_in: str = csv_dir_in
         self.csv_dir: str = csv_dir
+        
         self.st_timestr: str = st_timestr
         self.fin_timestr: str = fin_timestr
 

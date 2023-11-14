@@ -80,7 +80,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     pp = DataPP(  # user-uncontrollable params
         "5m",
         "binanceus h ETH/USDT",
-        N_test=2,
+        test_n=2,
     )
 
     # setup: ss
@@ -257,7 +257,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     pp = DataPP(
         "5m",
         "binanceus h ETH/USDT",
-        N_test=2,
+        test_n=2,
     )
 
     ss = DataSS(
@@ -364,7 +364,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
     pp = DataPP(
         "5m",
         "kraken h ETH/USDT",
-        N_test=2,
+        test_n=2,
     )
 
     ss = DataSS(

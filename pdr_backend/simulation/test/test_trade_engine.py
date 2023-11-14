@@ -18,7 +18,7 @@ def test_TradeEngine(tmpdir):
     data_pp = DataPP(  # user-uncontrollable params, at data level
         "5m",
         "binanceus c BTC/USDT",
-        N_test=100,
+        test_n=100,
     )
 
     data_ss = DataSS(  # user-controllable params, at data level

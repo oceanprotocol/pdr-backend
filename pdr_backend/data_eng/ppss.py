@@ -27,7 +27,7 @@ class PPSS:
 
         self.data_ss = DataSS(
             d["data_ss"]["input_feeds"],
-            os.path.abspath(d["data_ss"]["csv_dir"]),
+            d["data_ss"]["csv_dir"],
             d["data_ss"]["st_timestr"],
             d["data_ss"]["fin_timestr"],
             d["data_ss"]["max_n_train"],
@@ -49,7 +49,7 @@ class PPSS:
 
         self.sim_ss = SimSS(  # user-controllable params, at sim level
             d["sim_ss"]["do_plot"],
-            os.path.abspath("./"),
+            logpath_in="./",
         )
 
     def __str__(self):

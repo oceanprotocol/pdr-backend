@@ -82,7 +82,7 @@ def test_data_ss_copy(tmpdir):
     pp = DataPP(
         "5m",
         "kraken h ETH/USDT",
-        N_test=2,
+        test_n=2,
     )
     ss2 = ss.copy_with_yval(pp)
     assert ss2.n_input_feeds == 2
@@ -91,7 +91,7 @@ def test_data_ss_copy(tmpdir):
     pp = DataPP(
         "5m",
         "binanceus c TRX/USDC",
-        N_test=2,
+        test_n=2,
     )
     ss3 = ss.copy_with_yval(pp)
     assert ss3.n_input_feeds == 3

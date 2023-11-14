@@ -85,9 +85,9 @@ class TradeEngine:
         log("Start run")
         # main loop!
         hist_df = self.data_factory.get_hist_df()
-        for test_i in range(self.data_pp.N_test):
+        for test_i in range(self.data_pp.test_n):
             self.run_one_iter(test_i, hist_df)
-            self._plot(test_i, self.data_pp.N_test)
+            self._plot(test_i, self.data_pp.test_n)
 
         log("Done all iters.")
 
@@ -98,7 +98,7 @@ class TradeEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
-        testshift = self.data_pp.N_test - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        testshift = self.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         X, y, _ = self.data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
@@ -152,7 +152,7 @@ class TradeEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.data_pp.N_test}: "
+            f"Iter #{test_i+1:3}/{self.data_pp.test_n}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"

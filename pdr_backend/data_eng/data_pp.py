@@ -23,17 +23,17 @@ class DataPP:  # user-uncontrollable params, at data-eng level
         self,
         timeframe: str,  # eg "1m", "1h"
         predict_feed_str: str,  # eg "binance c BTC/USDT", "kraken h BTC/USDT"
-        N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
+        test_n: int,  # eg 100. num pts to test on, 1 at a time (online)
     ):
         # preconditions
         assert timeframe in CAND_TIMEFRAMES
         verify_feed_str(predict_feed_str)
-        assert 0 < N_test < np.inf
+        assert 0 < test_n < np.inf
 
         # save values
         self.timeframe = timeframe
         self.predict_feed_str = predict_feed_str
-        self.N_test = N_test
+        self.test_n = test_n
 
     @property
     def timeframe_ms(self) -> int:
@@ -88,7 +88,7 @@ class DataPP:  # user-uncontrollable params, at data-eng level
 
         s += f"  timeframe={self.timeframe}\n"
         s += f"  predict_feed_str={self.predict_feed_str}\n"
-        s += f"  N_test={self.N_test} -- # pts to test on, 1 at a time\n"
+        s += f"  test_n={self.test_n} -- # pts to test on, 1 at a time\n"
 
         s += "/DataPP}\n"
         return s
