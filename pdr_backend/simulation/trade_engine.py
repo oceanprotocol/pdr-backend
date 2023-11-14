@@ -53,7 +53,7 @@ class TradeEngine:
         """
         # ensure training data has the target yval
         assert data_pp.predict_feed_tup in data_ss.input_feed_tups
-        
+
         # pp & ss values
         self.data_pp = data_pp
         self.data_ss = data_ss
@@ -83,7 +83,7 @@ class TradeEngine:
     @property
     def usdcoin(self) -> str:
         return unpack_pair_str(self.data_pp.pair_str)[1]
-    
+
     @property
     def tokcoin(self) -> str:
         return unpack_pair_str(self.data_pp.pair_str)[0]

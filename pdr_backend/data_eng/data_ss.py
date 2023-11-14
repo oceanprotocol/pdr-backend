@@ -6,7 +6,6 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.util.constants import CAND_SIGNALS
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
@@ -28,7 +27,7 @@ class DataSS:  # user-controllable params, at data-eng level
     @enforce_types
     def __init__(
         self,
-        input_feeds_strs: List[str], # eg ["binance ohlcv BTC/USDT", " ", ...]
+        input_feeds_strs: List[str],  # eg ["binance ohlcv BTC/USDT", " ", ...]
         csv_dir: str,  # eg "csvs". abs or rel loc'n of csvs dir
         st_timestr: str,  # eg "2019-09-13_04:00" (earliest),  2019-09-13"
         fin_timestr: str,  # eg "now", "2023-09-23_17:55", "2023-09-23"
@@ -39,8 +38,7 @@ class DataSS:  # user-controllable params, at data-eng level
         if not os.path.exists(csv_dir):
             print(f"Could not find csv dir, creating one at: {csv_dir}")
             os.makedirs(csv_dir)
-        assert 0 <= timestr_to_ut(st_timestr) \
-            <= timestr_to_ut(fin_timestr) <= np.inf
+        assert 0 <= timestr_to_ut(st_timestr) <= timestr_to_ut(fin_timestr) <= np.inf
         assert 0 < max_n_train
         assert 0 < autoregressive_n < np.inf
         verify_feeds_strs(input_feeds_strs)
@@ -103,9 +101,10 @@ class DataSS:  # user-controllable params, at data-eng level
 
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
-        """Return set of unique (exchange_str, pair_str) tuples """
-        return set((exch_str, pair_str)
-                   for (exch_str, _, pair_str) in self.input_feed_tups)
+        """Return set of unique (exchange_str, pair_str) tuples"""
+        return set(
+            (exch_str, pair_str) for (exch_str, _, pair_str) in self.input_feed_tups
+        )
 
     @enforce_types
     def __str__(self) -> str:
@@ -114,7 +113,7 @@ class DataSS:  # user-controllable params, at data-eng level
         s += f"  input_feeds_strs={self.input_feeds_strs}"
         s += f"  -> n_inputfeeds={self.n_input_feeds}"
         s += "  \n"
-        
+
         s += f"  csv_dir={self.csv_dir}\n"
         s += f"  st_timestr={self.st_timestr}\n"
         s += f"  -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
@@ -128,7 +127,7 @@ class DataSS:  # user-controllable params, at data-eng level
         s += f"  autoregressive_n={self.autoregressive_n}"
         s += " -- model inputs ar_n past pts z[t-1], .., z[t-ar_n]\n"
         s += "  \n"
-        
+
         s += f"  -> n_input_feeds * ar_n = n = {self.n}"
         s += "-- # input variables to model\n"
         s += "  \n"
@@ -147,7 +146,7 @@ class DataSS:  # user-controllable params, at data-eng level
         input_feeds_strs = self.input_feeds_strs[:]
         if data_pp.predict_feed_tup not in self.input_feed_tups:
             input_feeds_strs.append(data_pp.predict_feed_str)
-            
+
         return DataSS(
             input_feeds_strs=input_feeds_strs,
             csv_dir=self.csv_dir,
@@ -156,4 +155,3 @@ class DataSS:  # user-controllable params, at data-eng level
             max_n_train=self.max_n_train,
             autoregressive_n=self.autoregressive_n,
         )
-

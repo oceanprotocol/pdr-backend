@@ -8,8 +8,7 @@ from pdr_backend.util.timeutil import timestr_to_ut
 @enforce_types
 def test_data_ss_basic(tmpdir):
     ss = DataSS(
-        ["kraken hc ETH/USDT",
-         "binanceus h ETH/USDT,TRX/DAI"],
+        ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"],
         csv_dir=str(tmpdir),
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
@@ -18,8 +17,7 @@ def test_data_ss_basic(tmpdir):
     )
 
     # test attributes
-    assert ss.input_feeds_strs == ["kraken hc ETH/USDT",
-                                   "binanceus h ETH/USDT,TRX/DAI"]
+    assert ss.input_feeds_strs == ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"]
     assert ss.csv_dir == str(tmpdir)
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
@@ -38,11 +36,13 @@ def test_data_ss_basic(tmpdir):
         ("binanceus", "high", "ETH-USDT"),
         ("binanceus", "high", "TRX-DAI"),
     ]
-    assert ss.exchange_pair_tups == set([
-        ("kraken", "ETH-USDT"),
-        ("binanceus", "ETH-USDT"),
-        ("binanceus", "TRX-DAI"),
-    ])
+    assert ss.exchange_pair_tups == set(
+        [
+            ("kraken", "ETH-USDT"),
+            ("binanceus", "ETH-USDT"),
+            ("binanceus", "TRX-DAI"),
+        ]
+    )
     assert len(ss.input_feed_tups) == ss.n_input_feeds == 4
     assert ss.n == 4 * 3 == 12
     assert ss.n_exchs == 2

@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.feedstr import unpack_pair_str
+from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.strutil import StrMixin
 
 

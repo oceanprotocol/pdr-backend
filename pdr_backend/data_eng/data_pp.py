@@ -3,16 +3,8 @@ from typing import Tuple
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.util.constants import (
-    CAND_USDCOINS,
-    CAND_TIMEFRAMES,
-    CAND_SIGNALS,
-)
-from pdr_backend.util.feedstr import (
-    unpack_pair_str,
-    unpack_feed_str,
-    verify_feed_str,
-)
+from pdr_backend.util.constants import CAND_TIMEFRAMES
+from pdr_backend.util.feedstr import unpack_feed_str, verify_feed_str
 
 
 class DataPP:  # user-uncontrollable params, at data-eng level
@@ -68,7 +60,7 @@ class DataPP:  # user-uncontrollable params, at data-eng level
     def exchange_str(self) -> str:
         """Return e.g. 'binance'"""
         return self.predict_feed_tup[0]
-    
+
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'"""

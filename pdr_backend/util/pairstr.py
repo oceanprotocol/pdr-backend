@@ -1,16 +1,17 @@
+import re
 from typing import List, Tuple
 
 from enforce_typing import enforce_types
-import re
 
-from pdr_backend.util.constants import CAND_SIGNALS, CAND_USDCOINS
+from pdr_backend.util.constants import CAND_USDCOINS
 
 
 # ==========================================================================
 # unpack..() functions
 
+
 @enforce_types
-def unpack_pairs_str(pairs_str: str, do_verify:bool=True) -> List[str]:
+def unpack_pairs_str(pairs_str: str, do_verify: bool = True) -> List[str]:
     """
     @description
       Unpack the string for *one or more* pairs, into list of pair_str
@@ -26,10 +27,10 @@ def unpack_pairs_str(pairs_str: str, do_verify:bool=True) -> List[str]:
       pair_str_list -- List[<pair_str>]
     """
     pairs_str = pairs_str.strip()
-    pairs_str = ' '.join(pairs_str.split()) # replace multiple whitespace w/ 1
-    pairs_str = pairs_str.replace(", ", ",").replace(" ,",",")
+    pairs_str = " ".join(pairs_str.split())  # replace multiple whitespace w/ 1
+    pairs_str = pairs_str.replace(", ", ",").replace(" ,", ",")
     pairs_str = pairs_str.replace(" ", ",")
-    pairs_str = pairs_str.replace("/","-") # ETH/USDT -> ETH-USDT. Safer files.
+    pairs_str = pairs_str.replace("/", "-")  # ETH/USDT -> ETH-USDT. Safer files.
     pair_str_list = pairs_str.split(",")
 
     if do_verify:
@@ -38,12 +39,12 @@ def unpack_pairs_str(pairs_str: str, do_verify:bool=True) -> List[str]:
 
         for pair_str in pair_str_list:
             verify_pair_str(pair_str)
-    
+
     return pair_str_list
 
 
 @enforce_types
-def unpack_pair_str(pair_str: str, do_verify:bool=True) -> Tuple[str, str]:
+def unpack_pair_str(pair_str: str, do_verify: bool = True) -> Tuple[str, str]:
     """
     @description
       Unpack the string for a *single* pair, into base_str and quote_str.
@@ -61,21 +62,22 @@ def unpack_pair_str(pair_str: str, do_verify:bool=True) -> Tuple[str, str]:
     """
     if do_verify:
         verify_pair_str(pair_str)
-        
+
     pair_str = pair_str.replace("/", "-")
     base_str, quote_str = pair_str.split("-")
 
     if do_verify:
         verify_base_str(base_str)
         verify_quote_str(quote_str)
-    
+
     return (base_str, quote_str)
 
 
 # ==========================================================================
 # verify..() functions
-        
-#@enforce_types
+
+
+# @enforce_types
 def verify_pairs_str(pairs_str: str):
     """
     @description
@@ -99,14 +101,14 @@ def verify_pair_str(pair_str: str):
       pair_str -- e.g. 'ADA/USDT' or 'ETH-RAI'
     """
     pair_str = pair_str.strip()
-    if not re.match('[A-Z]+[-/][A-Z]+',pair_str):
+    if not re.match("[A-Z]+[-/][A-Z]+", pair_str):
         raise ValueError(pair_str)
-    
+
     base_str, quote_str = unpack_pair_str(pair_str, do_verify=False)
     verify_base_str(base_str)
     verify_quote_str(quote_str)
 
-    
+
 @enforce_types
 def verify_base_str(base_str: str):
     """
@@ -117,7 +119,7 @@ def verify_base_str(base_str: str):
       base_str -- e.g. 'ADA' or '   ETH  '
     """
     base_str = base_str.strip()
-    if not re.match('[A-Z]+$',base_str):
+    if not re.match("[A-Z]+$", base_str):
         raise ValueError(base_str)
 
 
@@ -133,6 +135,3 @@ def verify_quote_str(quote_str: str):
     quote_str = quote_str.strip()
     if quote_str not in CAND_USDCOINS:
         raise ValueError(quote_str)
-    
-    
-

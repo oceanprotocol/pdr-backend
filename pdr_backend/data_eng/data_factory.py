@@ -67,7 +67,7 @@ class DataFactory:
     def _update_hist_csv_at_exch_and_pair(
         self, exch_str: str, pair_str: str, fin_ut: int
     ):
-        pair_str = pair_str.replace("/","-")
+        pair_str = pair_str.replace("/", "-")
         print(f"    Update csv at exchange={exch_str}, pair={pair_str}.")
 
         filename = self._hist_csv_filename(exch_str, pair_str)
@@ -168,16 +168,18 @@ class DataFactory:
         print("  Load csvs.")
         st_ut = self.ss.st_timestamp
 
-        csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {} # [exch][pair] : df
+        csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {}  # [exch][pair] : df
         for exch_str in self.ss.exchange_strs:
             csv_dfs[exch_str] = {}
-            
+
         for exch_str, pair_str in self.ss.exchange_pair_tups:
             print(f"Load csv from exchange={exch_str}, pair={pair_str}")
             filename = self._hist_csv_filename(exch_str, pair_str)
-            cols = [signal_str # cols is a subset of TOHLCV_COLS
-                    for e, signal_str, p in self.ss.input_feed_tups
-                    if e == exch_str and p == pair_str]
+            cols = [
+                signal_str  # cols is a subset of TOHLCV_COLS
+                for e, signal_str, p in self.ss.input_feed_tups
+                if e == exch_str and p == pair_str
+            ]
             csv_df = load_csv(filename, cols, st_ut, fin_ut)
             assert "datetime" in csv_df.columns
             assert csv_df.index.name == "timestamp"

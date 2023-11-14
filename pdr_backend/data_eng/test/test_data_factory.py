@@ -92,7 +92,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
         max_n_train=7,
         autoregressive_n=3,
     )
-    ss.exchs_dict["binanceus"] = exchange # override with fake exchange
+    ss.exchs_dict["binanceus"] = exchange  # override with fake exchange
 
     # setup: data_factory, filename
     data_factory = DataFactory(pp, ss)
@@ -139,18 +139,18 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
 BINANCE_ETH_DATA = [
     # time          #o   #h  #l    #c    #v
-    [1686805500000, 0.5, 12, 0.12, 1.1,  7.0],
-    [1686805800000, 0.5, 11, 0.11, 2.2,  7.0],
-    [1686806100000, 0.5, 10, 0.10, 3.3,  7.0],
-    [1686806400000, 1.1,  9, 0.09, 4.4,  1.4],
-    [1686806700000, 3.5,  8, 0.08, 5.5,  2.8],
-    [1686807000000, 4.7,  7, 0.07, 6.6,  8.1],
-    [1686807300000, 4.5,  6, 0.06, 7.7,  8.1],
-    [1686807600000, 0.6,  5, 0.05, 8.8,  8.1],
-    [1686807900000, 0.9,  4, 0.04, 9.9,  8.1],
-    [1686808200000, 2.7,  3, 0.03, 10.10, 8.1],
-    [1686808500000, 0.7,  2, 0.02, 11.11, 8.1],
-    [1686808800000, 0.7,  1, 0.01, 12.12, 8.3],
+    [1686805500000, 0.5, 12, 0.12, 1.1, 7.0],
+    [1686805800000, 0.5, 11, 0.11, 2.2, 7.0],
+    [1686806100000, 0.5, 10, 0.10, 3.3, 7.0],
+    [1686806400000, 1.1, 9, 0.09, 4.4, 1.4],
+    [1686806700000, 3.5, 8, 0.08, 5.5, 2.8],
+    [1686807000000, 4.7, 7, 0.07, 6.6, 8.1],
+    [1686807300000, 4.5, 6, 0.06, 7.7, 8.1],
+    [1686807600000, 0.6, 5, 0.05, 8.8, 8.1],
+    [1686807900000, 0.9, 4, 0.04, 9.9, 8.1],
+    [1686808200000, 2.7, 3, 0.03, 10.10, 8.1],
+    [1686808500000, 0.7, 2, 0.02, 11.11, 8.1],
+    [1686808800000, 0.7, 1, 0.01, 12.12, 8.3],
 ]
 
 
@@ -261,8 +261,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     )
 
     ss = DataSS(
-        ["binanceus hl BTC/USDT,ETH/USDT",
-         "kraken hl BTC/USDT,ETH/USDT"],
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
         csv_dir=csvdir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",

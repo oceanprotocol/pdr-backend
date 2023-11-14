@@ -9,4 +9,3 @@ TOHLCV_DTYPES = [np.int64] + OHLCV_DTYPES
 # warn if OHLCV_MULT_MIN * timeframe < time-between-data < OHLCV_MULT_MAX * t
 OHLCV_MULT_MIN = 0.5
 OHLCV_MULT_MAX = 2.5
-
