@@ -166,8 +166,11 @@ def verify_feed_str(feed_str: str):
     @argument
       feed_str -- e.g. 'binance o ADA/USDT'
     """
-    feed_tup = unpack_feed_str(feed_str, do_verify=False)
-    verify_feed_tup(feed_tup)
+    feeds_str = feed_str
+    feed_tups = unpack_feeds_str(feeds_str, do_verify=False)
+    if not len(feed_tups) == 1:
+        raise ValueError(feed_str)
+    verify_feed_tup(feed_tups[0])
 
 
 @enforce_types
