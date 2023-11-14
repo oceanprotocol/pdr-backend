@@ -7,12 +7,11 @@ from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
 
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.Token")
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.get_address")
 def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
+    mock_token.return_value.allowance.return_value = 0
     mock_get_address.return_value = ZERO_ADDRESS
-    mock_token_instance = MagicMock()
-    mock_token.return_value = mock_token_instance
+
     agent = DFBuyerAgent(dfbuyer_config)
 
     assert len(mock_get_address.call_args_list) == 2
@@ -22,6 +21,7 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
     assert call2 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "Ocean")
 
     mock_token.assert_called_with(dfbuyer_config.web3_config, agent.token_addr)
+    mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True
     )
@@ -159,6 +159,7 @@ def test_take_step(
     mock_get_prices.return_value = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
     mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
     mock_get_block.return_value = {"timestamp": 120}
+    mock_batch_txs.return_value = False
     dfbuyer_agent.take_step(ts)
     mock_get_missing_consumes.assert_called_once_with(ts)
     mock_get_prices.assert_called_once_with(
