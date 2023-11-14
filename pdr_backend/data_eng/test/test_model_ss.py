@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.model_eng.model_ss import APPROACHES, ModelSS
+from pdr_backend.data_eng.model_ss import APPROACHES, ModelSS
 
 
 @enforce_types

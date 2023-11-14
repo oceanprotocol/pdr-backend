@@ -3,7 +3,7 @@ import os
 
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
-from pdr_backend.model_eng.model_ss import ModelSS
+from pdr_backend.data_eng.model_ss import ModelSS
 from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_engine import TradeEngine
 from pdr_backend.simulation.trade_pp import TradePP

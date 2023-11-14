@@ -3,7 +3,7 @@ from sklearn import linear_model, svm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from pdr_backend.model_eng.model_ss import ModelSS
+from pdr_backend.data_eng.model_ss import ModelSS
 
 
 @enforce_types

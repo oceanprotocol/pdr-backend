@@ -2,7 +2,7 @@ import os
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.data_ss import DataSS
-from pdr_backend.model_eng.model_ss import ModelSS
+from pdr_backend.data_eng.model_ss import ModelSS
 from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
 
 # To try different strategies, simply change any of the arguments to any
