@@ -22,12 +22,12 @@ from pdr_backend.util.feedstr import (
 def test_unpack_feeds_strs():
     # 1 str w 1 feed, 1 feed total
     feed_tups = unpack_feeds_strs(["binance o ADA/USDT"])
-    assert feed_tups == [("binance", "open", "ADA/USDT")]
+    assert feed_tups == [("binance", "open", "ADA-USDT")]
     
     # 1 str w 2 feeds, 2 feeds total
     feed_tups = unpack_feeds_strs(["binance oh ADA/USDT"])
-    assert feed_tups == [("binance", "open", "ADA/USDT"),
-                         ("binance", "high", "ADA/USDT")]
+    assert feed_tups == [("binance", "open", "ADA-USDT"),
+                         ("binance", "high", "ADA-USDT")]
 
     # 2 strs each w 1 feed, 2 feeds total
     feed_tups = unpack_feeds_strs([
@@ -35,8 +35,8 @@ def test_unpack_feeds_strs():
         "kraken h ADA/RAI",
     ])
     assert feed_tups == [
-        ("binance", "open", "ADA/USDT"),
-        ("kraken", "high", "ADA/RAI"),
+        ("binance", "open", "ADA-USDT"),
+        ("kraken", "high", "ADA-RAI"),
     ]
 
     # first str has 4 feeds and second has 1 feed; 5 feeds total
@@ -45,11 +45,11 @@ def test_unpack_feeds_strs():
         "kraken h ADA/RAI",
     ])
     assert sorted(feed_tups) == [
-        ("binance", "close", "ADA/USDT"),
-        ("binance", "close", "BTC/USDT"),
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "BTC/USDT"),
-        ("kraken", "high", "ADA/RAI"),
+        ("binance", "close", "ADA-USDT"),
+        ("binance", "close", "BTC-USDT"),
+        ("binance", "open", "ADA-USDT"),
+        ("binance", "open", "BTC-USDT"),
+        ("kraken", "high", "ADA-RAI"),
     ]
 
     # unhappy paths. Note: verify section has way more
@@ -68,30 +68,30 @@ def test_unpack_feeds_strs():
 def test_unpack_feeds_str():
     # 1 feed        
     feed_tups = unpack_feeds_str("binance o ADA/USDT")
-    assert feed_tups == [("binance", "open", "ADA/USDT")]
+    assert feed_tups == [("binance", "open", "ADA-USDT")]
 
     # >1 signal, so >1 feed
     feed_tups = unpack_feeds_str("binance oc ADA/USDT")
     assert feed_tups == [
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "close", "ADA/USDT"),
+        ("binance", "open", "ADA-USDT"),
+        ("binance", "close", "ADA-USDT"),
     ]
 
     # >1 pair, so >1 feed
     feed_tups = unpack_feeds_str("binance o ADA/USDT ETH/RAI")
     assert feed_tups == [
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "ETH/RAI"),
+        ("binance", "open", "ADA-USDT"),
+        ("binance", "open", "ETH-RAI"),
     ]
 
     # >1 signal and >1 pair, so >1 feed
     feed_tups = unpack_feeds_str("binance oc ADA/USDT,BTC/USDT")
     assert len(feed_tups) == 4
     assert sorted(feed_tups) == [
-        ("binance", "close", "ADA/USDT"),
-        ("binance", "close", "BTC/USDT"),
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "BTC/USDT"),
+        ("binance", "close", "ADA-USDT"),
+        ("binance", "close", "BTC-USDT"),
+        ("binance", "open", "ADA-USDT"),
+        ("binance", "open", "BTC-USDT"),
     ]
 
     # unhappy paths. Note: verify section has way more
@@ -112,13 +112,13 @@ def test_unpack_feeds_str():
         return set(pair for (_, _, pair) in feed_tups)
         
     pairs = _pairs(unpack_feeds_str("binance o ADA/USDT BTC/USDT"))
-    assert pairs == set(["ADA/USDT", "BTC/USDT"])
+    assert pairs == set(["ADA-USDT", "BTC-USDT"])
 
     pairs = _pairs(unpack_feeds_str("binance oc ADA/USDT,BTC/USDT"))
-    assert _pairs(feed_tups) == set(["ADA/USDT", "BTC/USDT"])
+    assert _pairs(feed_tups) == set(["ADA-USDT", "BTC-USDT"])
 
     pairs = _pairs(unpack_feeds_str("binance oc ADA/USDT  BTC/USDT  ,ETH/USDC,    DOT/DAI"))
-    assert pairs == set(["ADA/USDT", "BTC/USDT", "ETH/USDC", "DOT/DAI"])
+    assert pairs == set(["ADA-USDT", "BTC-USDT", "ETH-USDC", "DOT-DAI"])
 
 
 @enforce_types
@@ -127,8 +127,7 @@ def test_unpack_feed_str():
     exchange_str, signal, pair = feed_tup
     assert exchange_str == "binance"
     assert signal == "close"
-    assert pair == "BTC/USDT"
-
+    assert pair == "BTC-USDT"
     
     
 # ==========================================================================

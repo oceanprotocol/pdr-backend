@@ -65,28 +65,19 @@ class DataPP:  # user-uncontrollable params, at data-eng level
         return unpack_feed_str(self.predict_feed_str)
 
     @property
-    def yval_exchange_str(self) -> str:
+    def exchange_str(self) -> str:
         """Return e.g. 'binance'"""
         return self.predict_feed_tup[0]
     
     @property
-    def yval_signal(self) -> str:
+    def signal_str(self) -> str:
         """Return e.g. 'high'"""
         return self.predict_feed_tup[1]
 
     @property
-    def yval_coin(self) -> str:
+    def pair_str(self) -> str:
         """Return e.g. 'ETH'"""
-        pair_str = self.predict_feed_tup[2]
-        base_str, _ = unpack_pair_str(pair_str)
-        return base_str
-
-    @property
-    def usdcoin(self) -> str:
-        """Return e.g. 'USDT'"""
-        pair_str = self.predict_feed_tup[2]
-        _, quote_str = unpack_pair_str(pair_str)
-        return quote_str
+        return self.predict_feed_tup[2]
 
     @enforce_types
     def __str__(self) -> str:

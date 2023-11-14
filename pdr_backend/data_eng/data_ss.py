@@ -1,12 +1,12 @@
 import os
-from typing import List
+from typing import List, Set, Tuple
 
 import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.data_eng.constants import CAND_SIGNALS
 from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.util.constants import CAND_SIGNALS
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
@@ -97,8 +97,15 @@ class DataSS:  # user-controllable params, at data-eng level
         return len(self.input_feed_tups)
 
     @property
-    def input_feed_tups(self) -> List[str]:
+    def input_feed_tups(self) -> List[Tuple[str, str, str]]:
+        """Return list of (exchange_str, signal_str, pair_str)"""
         return unpack_feeds_strs(self.input_feeds_strs)
+
+    @property
+    def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
+        """Return set of unique (exchange_str, pair_str) tuples """
+        return set((exch_str, pair_str)
+                   for (exch_str, _, pair_str) in self.input_feed_tups)
 
     @enforce_types
     def __str__(self) -> str:

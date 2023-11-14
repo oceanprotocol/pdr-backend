@@ -21,11 +21,11 @@ def test_unpack_pair_str():
 
 @enforce_types
 def test_unpack_pairs_str():
-    assert unpack_pairs_str("ADA/USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT BTC/USDT,ETH/USDC, DOT/DAI") \
-        == ["ADA/USDT", "BTC/USDT", "ETH/USDC", "DOT/DAI"]
+    assert unpack_pairs_str("ADA-USDT BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
+    assert unpack_pairs_str("ADA/USDT,BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
+    assert unpack_pairs_str("ADA/USDT, BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
+    assert unpack_pairs_str("ADA/USDT BTC/USDT,ETH-USDC, DOT/DAI") \
+        == ["ADA-USDT", "BTC-USDT", "ETH-USDC", "DOT-DAI"]
 
 # ==========================================================================
 # verify..() functions

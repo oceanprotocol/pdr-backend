@@ -29,14 +29,14 @@ def unpack_feeds_strs(feeds_strs: List[str], do_verify:bool=True) \
     
       Example: Given [
         'binance oc ADA/USDT BTC/USDT',
-        'kraken o BTC/USDT',
+        'kraken o BTC-USDT',
       ]
       Return [
-          ('binance', 'open',  'ADA/USDT'),
-          ('binance', 'close', 'ADA/USDT'),
-          ('binance', 'open',  'BTC/USDT'),
-          ('binance', 'close', 'BTC/USDT'),
-          ('kraken', 'open', 'BTC/USDT'),
+          ('binance', 'open',  'ADA-USDT'),
+          ('binance', 'close', 'ADA-USDT'),
+          ('binance', 'open',  'BTC-USDT'),
+          ('binance', 'close', 'BTC-USDT'),
+          ('kraken', 'open', 'BTC-USDT'),
        ] 
 
     @arguments
@@ -69,10 +69,10 @@ def unpack_feeds_str(feeds_str: str, do_verify:bool=True) \
     
       Example: Given 'binance oc ADA/USDT BTC/USDT'
       Return [
-          ('binance', 'open',  'ADA/USDT'),
-          ('binance', 'close', 'ADA/USDT'),
-          ('binance', 'open',  'BTC/USDT'),
-          ('binance', 'close', 'BTC/USDT'),
+          ('binance', 'open',  'ADA-USDT'),
+          ('binance', 'close', 'ADA-USDT'),
+          ('binance', 'open',  'BTC-USDT'),
+          ('binance', 'close', 'BTC-USDT'),
       ] 
 
     @arguments
@@ -104,7 +104,7 @@ def unpack_feed_str(feed_str: str, do_verify:bool=True) -> Tuple[str, str, str]:
       Unpack the string for a *single* feed: 1 exchange, 1 signal, 1 pair
 
       Example: 'binance o ADA/USDT'
-      Return ('binance', 'open', 'BTC/USDT')
+      Return ('binance', 'open', 'BTC-USDT')
 
     @argument
       feed_str -- eg 'binance o ADA/USDT'; not eg 'binance oc ADA/USDT BTC/DAI'

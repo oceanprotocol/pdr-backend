@@ -15,8 +15,8 @@ def unpack_pairs_str(pairs_str: str, do_verify:bool=True) -> List[str]:
     @description
       Unpack the string for *one or more* pairs, into list of pair_str
 
-      Example: Given 'ADA/USDT, BTC/USDT, ETH/USDT'
-      Return ['ADA/USDT', 'BTC/USDT', 'ETH/USDT']
+      Example: Given 'ADA-USDT, BTC/USDT, ETH/USDT'
+      Return ['ADA-USDT', 'BTC-USDT', 'ETH-USDT']
 
     @argument
       pairs_str - '<base>/<quote>' or 'base-quote'
@@ -29,6 +29,7 @@ def unpack_pairs_str(pairs_str: str, do_verify:bool=True) -> List[str]:
     pairs_str = ' '.join(pairs_str.split()) # replace multiple whitespace w/ 1
     pairs_str = pairs_str.replace(", ", ",").replace(" ,",",")
     pairs_str = pairs_str.replace(" ", ",")
+    pairs_str = pairs_str.replace("/","-") # ETH/USDT -> ETH-USDT. Safer files.
     pair_str_list = pairs_str.split(",")
 
     if do_verify:
