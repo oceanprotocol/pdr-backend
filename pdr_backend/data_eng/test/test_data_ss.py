@@ -1,24 +1,25 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.data_eng.data_ss import DataSS, _list_with
+from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
 def test_data_ss_basic(tmpdir):
     ss = DataSS(
+        ["kraken hc ETH/USDT,BTC/USDT,TRX/USDT",
+         "binanceus h ETH/USDT,TRX/DAI"],
         csv_dir=str(tmpdir),
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,
         autoregressive_n=3,
-        signals=["high", "close"],
-        coins=["ETH", "BTC", "TRX"],
-        exchange_ids=["kraken", "binanceus"],
     )
 
     # test attributes
+    assert ss.input_feeds_strs == ["kraken hc ETH/USDT,BTC/USDT,TRX/USDT",
+                                   "binanceus h ETH/USDT,TRX/DAI"]
     assert ss.csv_dir == str(tmpdir)
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
@@ -26,20 +27,16 @@ def test_data_ss_basic(tmpdir):
     assert ss.max_n_train == 7
     assert ss.autoregressive_n == 3
 
-    assert ss.signals == ["high", "close"]
-    assert ss.coins == ["ETH", "BTC", "TRX"]
-
     assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
 
     # test properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
-    assert ss.n == 2 * 3 * 2 * 3
+    assert len(ss.input_feed_tups) == ss.n_input_feeds == 2 * 3 + 2 == 8
+    assert ss.n == 8 * 3 == 24
     assert ss.n_exchs == 2
-    assert len(ss.exchange_ids) == 2
-    assert "binanceus" in ss.exchange_ids
-    assert ss.n_signals == 2
-    assert ss.n_coins == 3
+    assert len(ss.exchange_strs) == 2
+    assert "binanceus" in ss.exchange_strs
 
     # test str
     assert "DataSS=" in str(ss)
@@ -48,14 +45,12 @@ def test_data_ss_basic(tmpdir):
 @enforce_types
 def test_data_ss_now(tmpdir):
     ss = DataSS(
+        ["kraken h ETH/USDT"],
         csv_dir=str(tmpdir),
         st_timestr="2023-06-18",
         fin_timestr="now",
         max_n_train=7,
         autoregressive_n=3,
-        signals=["high"],
-        coins=["ETH"],
-        exchange_ids=["kraken"],
     )
     assert ss.fin_timestr == "now"
     assert ss.fin_timestamp == timestr_to_ut("now")
@@ -64,44 +59,28 @@ def test_data_ss_now(tmpdir):
 @enforce_types
 def test_data_ss_copy(tmpdir):
     ss = DataSS(
+        ["kraken h ETH/USDT BTC/USDT"],
         csv_dir=str(tmpdir),
         st_timestr="2023-06-18",
         fin_timestr="now",
         max_n_train=7,
         autoregressive_n=3,
-        signals=["high"],
-        coins=["ETH", "BTC"],
-        exchange_ids=["kraken"],
     )
 
-    # copy 1: don't need to append lists
+    # copy 1: don't need to append the new feed
     pp = DataPP(
         "5m",
         "kraken h ETH/USDT",
         N_test=2,
     )
     ss2 = ss.copy_with_yval(pp)
-    assert ss2.signals == ["high"]
-    assert sorted(ss2.coins) == sorted(["ETH", "BTC"])  # no order guarantee
-    assert ss2.exchange_ids == ["kraken"]
+    assert ss2.n_input_feeds == 2
 
-    # copy 2: need to append all three lists
+    # copy 2: do need to append the new feed
     pp = DataPP(
         "5m",
         "binanceus c TRX/USDC",
         N_test=2,
     )
     ss3 = ss.copy_with_yval(pp)
-    assert sorted(ss3.signals) == sorted(["high", "close"])  # no order guarantee
-    assert sorted(ss3.coins) == sorted(["ETH", "BTC", "TRX"])  # ""
-    assert sorted(ss3.exchange_ids) == sorted(["kraken", "binanceus"])  # ""
-
-
-@enforce_types
-def test_list_with():
-    assert _list_with([], 2) == [2]
-    assert _list_with([1, 2, 10], 2) == [1, 2, 10]
-    assert _list_with([1, 2, 10], 5) == [1, 2, 10, 5]
-
-    assert _list_with([], "foo") == ["foo"]
-    assert _list_with(["a", 3.0, None, 77], "bb") == ["a", 3.0, None, 77, "bb"]
+    assert ss3.n_input_feeds == 3

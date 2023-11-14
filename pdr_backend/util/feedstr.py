@@ -1,91 +1,199 @@
 from typing import List, Tuple
 
+import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.util.constants import CAND_SIGNALS
+from pdr_backend.util.pairstr import (
+    unpack_pairs_str,
+    unpack_pair_str,
+    verify_pairs_str,
+    verify_pair_str,
+    verify_base_str,
+    verify_quote_str,
+)
+from pdr_backend.util.signalstr import (
+    unpack_signalchar_str,
+    verify_signalchar_str,
+    verify_signal_str,
+)
 
+# ==========================================================================
+# unpack..() functions
 
 @enforce_types
-def unpack_pair_str(pair_str: str) -> Tuple[str, str]:
+def unpack_feeds_strs(feeds_strs: List[str], do_verify:bool=True) \
+        -> List[Tuple[str, List[str], List[str]]]:
     """
     @description
-      Unpack the string for a *single* pair, into base_str and quote_str.
+      Unpack *one or more* feeds strs.
+    
+      Example: Given [
+        'binance oc ADA/USDT BTC/USDT',
+        'kraken o BTC/USDT',
+      ]
+      Return [
+          ('binance', 'open',  'ADA/USDT'),
+          ('binance', 'close', 'ADA/USDT'),
+          ('binance', 'open',  'BTC/USDT'),
+          ('binance', 'close', 'BTC/USDT'),
+          ('kraken', 'open', 'BTC/USDT'),
+       ] 
 
-      Example: Given 'BTC/USDT' or 'BTC-USDT'
-      Return ('BTC', 'USDT')
-
-    @argument
-      pair_str - '<base>/<quote>' or 'base-quote'
+    @arguments
+      feeds_strs - list of '<exchange_str> <chars subset of "ohclv"> <pairs_str>'
+      do_verify - typically T. Only F to avoid recursion from verify functions
 
     @return
-      base_str -- e.g. 'BTC'
-      quote_str -- e.g. 'USDT'
+      feed_tups - list of (exchange_str, signal_str, pair_str)
     """
-    pairstr = pair_str.replace("/", "-")
-    base_str, quote_str = pairstr.split("-")
-    return (base_str, quote_str)
+    if do_verify:
+        if not feeds_strs:
+            raise ValueError(feeds_strs)
+        
+    feed_tups = []
+    for feeds_str in feeds_strs:
+        feed_tups += unpack_feeds_str(feeds_str, do_verify=False)
+
+    if do_verify:
+        for feed_tup in feed_tups:
+            verify_feed_tup(feed_tup)
+    return feed_tups
 
 
 @enforce_types
-def unpack_pairs_str(pairs_str: str) -> List[str]:
+def unpack_feeds_str(feeds_str: str, do_verify:bool=True) \
+        -> List[Tuple[str, str, str]]:
     """
     @description
-      Unpack the string for *one or more* pairs, into list of pair_str
+      Unpack a *single* feeds str. It can have >1 feeds of course.
+    
+      Example: Given 'binance oc ADA/USDT BTC/USDT'
+      Return [
+          ('binance', 'open',  'ADA/USDT'),
+          ('binance', 'close', 'ADA/USDT'),
+          ('binance', 'open',  'BTC/USDT'),
+          ('binance', 'close', 'BTC/USDT'),
+      ] 
 
-      Example: Given 'ADA/USDT, BTC/USDT, ETH/USDT'
-      Return ['ADA/USDT', 'BTC/USDT', 'ETH/USDT']
-
-    @argument
-      pairs_str - '<base>/<quote>' or 'base-quote'
+    @arguments
+      feeds_str - '<exchange_str> <chars subset of "ohclv"> <pairs_str>'
+      do_verify - typically T. Only F to avoid recursion from verify functions
 
     @return
-      pairs_list -- List[<pair_str>]
+      feed_tups - list of (exchange_str, signal_str, pair_str)
     """
-    pairs_str = pairs_str.replace(", ", ",").replace(" ", ",")
-    pairs_list = pairs_str.split(",")
-    return pairs_list
+    feeds_str = feeds_str.strip()
+    feeds_str = ' '.join(feeds_str.split()) # replace multiple whitespace w/ 1
+    exchange_str, signal_char_str, pairs_str = feeds_str.split(" ", maxsplit=2)
+    signal_str_list = unpack_signalchar_str(signal_char_str)
+    pair_str_list = unpack_pairs_str(pairs_str)
+    feed_tups = [(exchange_str, signal_str, pair_str)
+                 for signal_str in signal_str_list
+                 for pair_str in pair_str_list]
+
+    if do_verify:
+        for feed_tup in feed_tups:
+            verify_feed_tup(feed_tup)
+    return feed_tups
 
 
 @enforce_types
-def unpack_feed_str(feed_str: str) -> Tuple[str, str, str]:
+def unpack_feed_str(feed_str: str, do_verify:bool=True) -> Tuple[str, str, str]:
     """
     @description
       Unpack the string for a *single* feed: 1 exchange, 1 signal, 1 pair
-      Given e.g. 'binance oc ADA/USDT BTC/USDT'
+
+      Example: 'binance o ADA/USDT'
       Return ('binance', 'open', 'BTC/USDT')
 
+    @argument
+      feed_str -- eg 'binance o ADA/USDT'; not eg 'binance oc ADA/USDT BTC/DAI'
+      do_verify - typically T. Only F to avoid recursion from verify functions
+
     @return
-      exchange_id -- str - e.g. 'binance'
-      signal -- str - e.g. 'open'
-      pair_str -- str - e.g. 'BTC/USDT'
+      feed_tup - (exchange_str, signal_str, pair_str)
     """
     feeds_str = feed_str
-    (exchange_id, signals, pairs_str) = unpack_feeds_str(feeds_str)
-    assert len(signals) == 1 and len(pairs_str) == 1
-    signal, pair_str = signals[0], pairs_str[0]
-    return (exchange_id, signal, pair_str)
+    feed_tups = unpack_feeds_str(feeds_str, do_verify=False)
+    if len(feed_tups) != 1:
+        raise ValueError(feed_str)
+    feed_tup = feed_tups[0]
+    return feed_tup
+
+
+# ==========================================================================
+# verify..() functions
+
+@enforce_types
+def verify_feeds_strs(feeds_strs: List[str]):
+    """
+    @description
+      Raise an error if feeds_strs is invalid
+
+    @argument
+      feeds_strs -- eg ['binance oh ADA/USDT BTC/USDT', 'kraken o ADA/DAI']
+    """
+    if not feeds_strs:
+        raise ValueError()
+    for feeds_str in feeds_strs:
+        verify_feeds_str(feeds_str)
+
+        
+@enforce_types
+def verify_feeds_str(feeds_str: str):
+    """
+    @description
+      Raise an error if feeds_str is invalid
+
+    @argument
+      feeds_str -- e.g. 'binance oh ADA/USDT BTC/USDT'
+    """
+    feed_tups = unpack_feeds_str(feeds_str, do_verify=False)
+    if not feed_tups:
+        raise ValueError(feeds_str)
+    for feed_tup in feed_tups:
+        verify_feed_tup(feed_tup)
 
 
 @enforce_types
-def unpack_feeds_str(feeds_str: str) -> Tuple[str, List[str], List[str]]:
+def verify_feed_str(feed_str: str):
     """
     @description
-      Example: Given 'binance oc ADA/USDT BTC/USDT'
-      Return  ('binance', ['open', close'], ['ADA/USDT', 'BTC/USDT'])
+      Raise an error if feed_str is invalid
 
-    @arguments
-      feeds_str - '<exchange_id> <signal chars subset of 'ohclv'> <pairs_str>
-
-    @return
-      exchange_id -- str - e.g. 'binance'
-      signals -- List[str] - e.g. ['open', 'close']
-      pairs -- List[str] - e.g. ['ADA/USDT', 'BTC/USDT']
+    @argument
+      feed_str -- e.g. 'binance o ADA/USDT'
     """
-    exchange_id, chars_str, pairs_str = feeds_str.split(" ", maxsplit=2)
-    signals = [
-        cand_signal  # e.g. "c"
-        for cand_signal in CAND_SIGNALS  # ["open", "high", ..]
-        if cand_signal[0] in chars_str
-    ]
-    pairs = unpack_pairs_str(pairs_str)
-    return (exchange_id, signals, pairs)
+    feed_tup = unpack_feed_str(feed_str, do_verify=False)
+    verify_feed_tup(feed_tup)
+    
+
+@enforce_types
+def verify_feed_tup(feed_tup: Tuple[str, str, str]):
+    """
+    @description
+      Raise an error if feed_tup is invalid.
+
+    @argument
+      feed_tup -- (exchange_str, signal_str, pair_str)
+                  E.g. ('binance', 'open', 'BTC/USDT')
+    """
+    exchange_str, signal_str, pair_str = feed_tup
+    verify_exchange_str(exchange_str)
+    verify_signal_str(signal_str)
+    verify_pair_str(pair_str)
+
+
+@enforce_types
+def verify_exchange_str(exchange_str: str):
+    """
+    @description
+      Raise an error if exchange is invalid.
+
+    @argument
+      exchange_str -- e.g. "binance"
+    """
+    # it's valid if ccxt sees it
+    if not hasattr(ccxt, exchange_str):
+        raise ValueError(exchange_str)
+
