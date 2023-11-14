@@ -92,7 +92,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
         autoregressive_n=3,
         signals=["high"],
         coins=["ETH"],
-        exchange_ids=["binanceus"],
+        exchange_strs=["binanceus"],
     )
     ss.exchs_dict["binanceus"] = exchange
 
@@ -270,7 +270,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         autoregressive_n=3,
         signals=["high", "low"],
         coins=["BTC", "ETH"],
-        exchange_ids=["binanceus", "kraken"],
+        exchange_strs=["binanceus", "kraken"],
     )
 
     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
@@ -378,7 +378,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
         autoregressive_n=3,
         signals=[pp.yval_signal],
         coins=[pp.yval_coin],
-        exchange_ids=[pp.yval_exchange_id],
+        exchange_strs=[pp.yval_exchange_str],
     )
     return pp, ss
 

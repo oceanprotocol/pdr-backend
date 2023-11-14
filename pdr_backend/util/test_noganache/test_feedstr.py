@@ -124,8 +124,8 @@ def test_unpack_feeds_str():
 @enforce_types
 def test_unpack_feed_str():
     feed_tup = unpack_feed_str("binance c BTC/USDT")
-    exchange_id, signal, pair = feed_tup
-    assert exchange_id == "binance"
+    exchange_str, signal, pair = feed_tup
+    assert exchange_str == "binance"
     assert signal == "close"
     assert pair == "BTC/USDT"
 

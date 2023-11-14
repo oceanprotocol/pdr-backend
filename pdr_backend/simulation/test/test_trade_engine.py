@@ -29,7 +29,7 @@ def test_TradeEngine(tmpdir):
         autoregressive_n=2,
         signals=["open", "close"],
         coins=["ETH", "BTC"],
-        exchange_ids=["binanceus"],
+        exchange_strs=["binanceus"],
     )
 
     model_ss = ModelSS(  # user-controllable params, at model level

@@ -104,7 +104,10 @@ class DataSS:  # user-controllable params, at data-eng level
     def __str__(self) -> str:
         s = "DataSS={\n"
 
-        s += f"  input_feeds_strs={sel
+        s += f"  input_feeds_strs={self.input_feeds_strs}"
+        s += f"  -> n_inputfeeds={self.n_input_feeds}"
+        s += "  \n"
+        
         s += f"  csv_dir={self.csv_dir}\n"
         s += f"  st_timestr={self.st_timestr}\n"
         s += f"  -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
@@ -113,24 +116,20 @@ class DataSS:  # user-controllable params, at data-eng level
         s += "  \n"
 
         s += f"  max_n_train={self.max_n_train} -- max # pts to train on\n"
+        s += "  \n"
 
         s += f"  autoregressive_n={self.autoregressive_n}"
         s += " -- model inputs ar_n past pts z[t-1], .., z[t-ar_n]\n"
         s += "  \n"
-
-        s += f"  signals={self.signals}\n"
-        s += f"  coins={self.coins}\n"
+        
+        s += f"  -> n_input_feeds * ar_n = n = {self.n}"
+        s += "-- # input variables to model\n"
         s += "  \n"
 
         s += f"  exchs_dict={self.exchs_dict}\n"
+        s += f"  -> n_exchs={self.n_exchs}\n"
+        s += f"  -> exchange_strs={self.exchange_strs}\n"
         s += "  \n"
-
-        s += "  (then...)\n"
-        s += f"  n_exchs={self.n_exchs}\n"
-        s += f"  exchange_strs={self.exchange_strs}\n"
-        s += f"  n_signals={self.n_signals}\n"
-        s += f"  n_coins={self.n_coins}\n"
-        s += f"  n={self.n} -- # input variables to model\n"
 
         s += "/DataSS}\n"
         return s

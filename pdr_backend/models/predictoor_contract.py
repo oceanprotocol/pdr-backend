@@ -91,11 +91,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         if not fixed_rates:
             return None
 
-        (fixed_rate_address, exchange_id) = fixed_rates[0]
+        (fixed_rate_address, exchange_str) = fixed_rates[0]
 
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
-        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
+        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
 
         # approve
         self.token.approve(self.contract_instance.address, baseTokenAmount)
@@ -121,7 +121,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             )
             freParams = (
                 self.config.w3.to_checksum_address(fixed_rate_address),
-                self.config.w3.to_bytes(exchange_id),
+                self.config.w3.to_bytes(exchange_str),
                 baseTokenAmount,
                 0,
                 ZERO_ADDRESS,
@@ -171,10 +171,10 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         fixed_rates = self.get_exchanges()
         if not fixed_rates:
             return 0
-        (fixed_rate_address, exchange_id) = fixed_rates[0]
+        (fixed_rate_address, exchange_str) = fixed_rates[0]
         # get datatoken price
         exchange = FixedRate(self.config, fixed_rate_address)
-        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
+        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
         return baseTokenAmount
 
     def get_current_epoch(self) -> int:

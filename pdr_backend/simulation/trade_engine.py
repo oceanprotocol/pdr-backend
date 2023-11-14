@@ -51,7 +51,7 @@ class TradeEngine:
           sim_ss -- user-controllable params, at sim level
         """
         # ensure training data has the target yval
-        assert data_pp.yval_exchange_id in data_ss.exchs_dict
+        assert data_pp.yval_exchange_str in data_ss.exchs_dict
         assert data_pp.yval_signal in data_ss.signals
         assert data_pp.yval_coin in data_ss.coins
 

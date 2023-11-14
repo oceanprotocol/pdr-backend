@@ -18,7 +18,7 @@ def test_data_pp_5m():
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_m == 5
     assert pp.predict_feed_tup == ("kraken", "high", "ETH/USDT")
-    assert pp.yval_exchange_id == "kraken"
+    assert pp.yval_exchange_str == "kraken"
     assert pp.yval_signal == "high"
     assert pp.yval_coin == "ETH"
     assert pp.usdcoin == "USDT"

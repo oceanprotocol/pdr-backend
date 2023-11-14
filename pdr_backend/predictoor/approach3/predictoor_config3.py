@@ -29,10 +29,10 @@ class PredictoorConfig3(BasePredictoorConfig):
             autoregressive_n=10,  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
             signals=["close"],  # for model input vars. eg ["open","high","volume"]
             coins=["BTC", "ETH"],  # for model input vars. eg ["ETH", "BTC"]
-            exchange_ids=["binanceus"],  # for model input vars. eg ["binance", "mxc"]
+            exchange_strs=["binanceus"],  # for model input vars. eg ["binance", "mxc"]
         )
 
         # Note: Inside PredictoorAgent3::get_prediction(),
-        #   it's given a yval to predict with {signal, coin, exchange_id}.
+        #   it's given a yval to predict with {signal, coin, exchange_str}.
         #   If that yval isn't in data_ss input vars {signals, coins, exchanges}
         #   then it will update {signals, coins, exchanges} to include it

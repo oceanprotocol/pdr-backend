@@ -29,7 +29,7 @@ data_ss = DataSS(  # user-controllable params, at data-eng level
     autoregressive_n=20,  # eg 10. model inputs past pts z[t-1], .., z[t-ar_n]
     signals=["close"],  # for model input vars. eg ["open","high","volume"]
     coins=["BTC", "ETH"],  # for model input vars. eg ["ETH", "BTC"]
-    exchange_ids=["binance"],  # for model input vars. eg ["binance", "mxc"]
+    exchange_strs=["binance"],  # for model input vars. eg ["binance", "mxc"]
 )
 
 model_ss = ModelSS(  # user-controllable params, at model-eng level
