@@ -199,11 +199,15 @@ class DFBuyerAgent:
                 one_or_more_failed = True
         return one_or_more_failed
 
-    def _batch_txs(self, consume_times: Dict[str, int]) -> int:
+    def _batch_txs(self, consume_times: Dict[str, int]) -> bool:
         batches = self._prepare_batches(consume_times)
         print(f"Processing {len(batches)} batches...")
+        one_or_more_failed = False
         for addresses_to_consume, times_to_consume in batches:
-            self._consume_batch(addresses_to_consume, times_to_consume)
+            failed = self._consume_batch(addresses_to_consume, times_to_consume)
+            if failed:
+                one_or_more_failed = True
+        return one_or_more_failed
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         prices: Dict[str, float] = {}
