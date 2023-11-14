@@ -61,16 +61,16 @@ class DataFactory:
 
     def _update_csvs(self, fin_ut: int):
         print("  Update csvs.")
-        for exchange_str, pair_str in self.ss.exchange_pair_tups:
+        for exch_str, pair_str in self.ss.exchange_pair_tups:
             self._update_hist_csv_at_exch_and_pair(exch_str, pair_str, fin_ut)
 
     def _update_hist_csv_at_exch_and_pair(
-        self, exchange_str: str, pair_str: str, fin_ut: int
+        self, exch_str: str, pair_str: str, fin_ut: int
     ):
         pair_str = pair_str.replace("/","-")
-        print(f"    Update csv at exchange={exchange_str}, pair={pair_str}.")
+        print(f"    Update csv at exchange={exch_str}, pair={pair_str}.")
 
-        filename = self._hist_csv_filename(exchange_str, pair_str)
+        filename = self._hist_csv_filename(exch_str, pair_str)
         print(f"      filename={filename}")
 
         st_ut = self._calc_start_ut_maybe_delete(filename)
@@ -84,7 +84,7 @@ class DataFactory:
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
 
-            exch = self.ss.exchs_dict[exchange_str]
+            exch = self.ss.exchs_dict[exch_str]
 
             # C is [sample x signal(TOHLCV)]. Row 0 is oldest
             # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
@@ -162,33 +162,33 @@ class DataFactory:
           fin_ut -- finish timestamp
 
         @return
-          csv_dfs -- dict of [exchange_str][pair_str] : df
+          csv_dfs -- dict of [exch_str][pair_str] : df
             Where df has columns=OHLCV_COLS+"datetime", and index=timestamp
         """
         print("  Load csvs.")
         st_ut = self.ss.st_timestamp
 
         csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {} # [exch][pair] : df
-        for exchange_str in self.ss.exchange_strs:
-            csv_dfs[exchange_str] = {}
+        for exch_str in self.ss.exchange_strs:
+            csv_dfs[exch_str] = {}
             
-        for exchange_str, pair_str in self.ss.exchange_pair_tups:
-            print(f"Load csv from exchange={exchange_str}, pair={pair_str}")
-            filename = self._hist_csv_filename(exchange_str, pair_str)
+        for exch_str, pair_str in self.ss.exchange_pair_tups:
+            print(f"Load csv from exchange={exch_str}, pair={pair_str}")
+            filename = self._hist_csv_filename(exch_str, pair_str)
             cols = [signal_str # cols is a subset of TOHLCV_COLS
                     for e, signal_str, p in self.ss.input_feed_tups
-                    if e == exchange_str and p == pair_str]
+                    if e == exch_str and p == pair_str]
             csv_df = load_csv(filename, cols, st_ut, fin_ut)
             assert "datetime" in csv_df.columns
             assert csv_df.index.name == "timestamp"
-            csv_dfs[exchange_str][pair_str] = csv_df
+            csv_dfs[exch_str][pair_str] = csv_df
 
         return csv_dfs
 
     def _merge_csv_dfs(self, csv_dfs: dict) -> pd.DataFrame:
         """
         @arguments
-          csv_dfs -- dict [exchange_str][pair_str] : df
+          csv_dfs -- dict [exch_str][pair_str] : df
             where df has cols={signal_str}+"datetime", and index=timestamp
         @return
           hist_df -- df w/ cols={exch_str}:{pair_str}:{signal_str}+"datetime",
@@ -196,8 +196,8 @@ class DataFactory:
         """
         print("  Merge csv DFs.")
         hist_df = pd.DataFrame()
-        for exchange_str in csv_dfs.keys():
-            for pair_str, csv_df in csv_dfs[exchange_str].items():
+        for exch_str in csv_dfs.keys():
+            for pair_str, csv_df in csv_dfs[exch_str].items():
                 assert "-" in pair_str, pair_str
                 assert "datetime" in csv_df.columns
                 assert csv_df.index.name == "timestamp"
@@ -209,7 +209,7 @@ class DataFactory:
                         hist_col = csv_col
                     else:
                         signal_str = csv_col  # eg "close"
-                        hist_col = f"{exchange_str}:{pair_str}:{signal_str}"
+                        hist_col = f"{exch_str}:{pair_str}:{signal_str}"
                     hist_df[hist_col] = csv_df[csv_col]
 
         assert "datetime" in hist_df.columns
@@ -243,8 +243,8 @@ class DataFactory:
         x_df = pd.DataFrame()
 
         target_hist_cols = [
-            f"{exchange_str}:{pair_str}:{signal_str}"
-            for exchange_str, signal_str, pair_str in ss.input_feed_tups
+            f"{exch_str}:{pair_str}:{signal_str}"
+            for exch_str, signal_str, pair_str in ss.input_feed_tups
         ]
 
         for hist_col in target_hist_cols:
@@ -270,7 +270,7 @@ class DataFactory:
 
         X = x_df.to_numpy()
 
-        # y is set from yval_{exchange_str, signal_str, pair_str}
+        # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
         pp = self.pp
         hist_col = f"{pp.exchange_str}:{pp.pair_str}:{pp.signal_str}"
@@ -285,13 +285,13 @@ class DataFactory:
         # return
         return X, y, x_df
 
-    def _hist_csv_filename(self, exchange_str, pair_str) -> str:
+    def _hist_csv_filename(self, exch_str, pair_str) -> str:
         """
-        Given exchange_str and pair_str (and self path),
+        Given exch_str and pair_str (and self path),
         compute csv filename
         """
         pair_str = pair_str.replace("/", "-")
-        basename = f"{exchange_str}_{pair_str}_{self.pp.timeframe}.csv"
+        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.csv"
         filename = os.path.join(self.ss.csv_dir, basename)
         return filename
 

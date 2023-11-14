@@ -16,6 +16,7 @@ from pdr_backend.simulation.sim_ss import SimSS
 from pdr_backend.simulation.trade_ss import TradeSS
 from pdr_backend.simulation.trade_pp import TradePP
 from pdr_backend.util.mathutil import nmse
+from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 FONTSIZE = 12
@@ -51,10 +52,8 @@ class TradeEngine:
           sim_ss -- user-controllable params, at sim level
         """
         # ensure training data has the target yval
-        assert data_pp.yval_exchange_str in data_ss.exchs_dict
-        assert data_pp.yval_signal in data_ss.signals
-        assert data_pp.yval_coin in data_ss.coins
-
+        assert data_pp.predict_feed_tup in data_ss.input_feed_tups
+        
         # pp & ss values
         self.data_pp = data_pp
         self.data_ss = data_ss
@@ -83,11 +82,11 @@ class TradeEngine:
 
     @property
     def usdcoin(self) -> str:
-        return self.data_pp.usdcoin
-
+        return unpack_pair_str(self.data_pp.pair_str)[1]
+    
     @property
     def tokcoin(self) -> str:
-        return self.data_pp.yval_coin
+        return unpack_pair_str(self.data_pp.pair_str)[0]
 
     @enforce_types
     def _init_loop_attributes(self):

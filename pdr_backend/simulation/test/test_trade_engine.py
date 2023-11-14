@@ -22,14 +22,12 @@ def test_TradeEngine(tmpdir):
     )
 
     data_ss = DataSS(  # user-controllable params, at data level
+        ["binanceus oc ETH/USDT,BTC/USDT"],
         csv_dir=os.path.abspath("csvs"),  # use the usual data (worksforme)
         st_timestr="2023-06-22",
         fin_timestr="2023-06-24",
         max_n_train=500,
         autoregressive_n=2,
-        signals=["open", "close"],
-        coins=["ETH", "BTC"],
-        exchange_strs=["binanceus"],
     )
 
     model_ss = ModelSS(  # user-controllable params, at model level
