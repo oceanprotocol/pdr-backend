@@ -321,7 +321,9 @@ def test_get_consume_so_far_per_contract():
 
     call_count = 0
 
-    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
+    def mock_query_subgraph(
+        subgraph_url, query, tries, timeout
+    ):  # pylint:disable=unused-argument
         nonlocal call_count
         slot_data = sample_contract_data
 
