@@ -51,7 +51,7 @@ class DFBuyerAgent:
         allowance = token.allowance(
             self.config.web3_config.owner, self.predictoor_batcher.contract_address
         )
-        if allowance < MAX_UINT - 1e60:
+        if allowance < MAX_UINT - 10**50:
             print("Approving tokens for predictoor_batcher")
             tx = token.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
@@ -96,8 +96,7 @@ class DFBuyerAgent:
             print("Sleeping for a minute and trying again")
             time.sleep(60)
             return
-        else:
-            self.fail_counter = 0
+        self.fail_counter = 0
 
         # sleep until next consume interval
         ts = self.config.web3_config.get_block("latest")["timestamp"]
