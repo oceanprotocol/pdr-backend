@@ -6,10 +6,10 @@ data_pp:
 data_ss:
   input_feeds :
     - binance ohlcv BTC/USDT
-    - binance c ETH/USDT,TRX/USDT,ADA/USDT
+#    - binance c ETH/USDT,TRX/USDT,ADA/USDT
 #    - binance c DOT/USDT
-    - kraken ohlcv BTC/USDT
-  st_timestr: 2019-09-13_04:00
+#    - kraken ohlcv BTC/USDT
+  st_timestr: 2023-06-01_00:00 #earliest is 2019-09-13_04:00
   fin_timestr: now
   max_n_train: 5000
   autoregressive_n : 10

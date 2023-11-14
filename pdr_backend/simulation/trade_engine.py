@@ -29,7 +29,7 @@ class TradeEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # ensure training data has the target yval
-        assert ppss.data_pp.predict_feed_tup in data_ss.input_feed_tups
+        assert ppss.data_pp.predict_feed_tup in ppss.data_ss.input_feed_tups
 
         # pp & ss values
         self.data_pp = ppss.data_pp
