@@ -15,8 +15,8 @@ def test_publisher_publish():
     quote = "USDT"
     source = "kraken"
     timeframe = "5m"
-    seconds_per_epoch = 360
-    seconds_per_subscription = 1000
+    seconds_per_epoch = 300
+    seconds_per_subscription = 60 * 60 * 24
     nft_data, _, _, _, logs_erc = publish(
         s_per_epoch=seconds_per_epoch,
         s_per_subscription=seconds_per_subscription,
