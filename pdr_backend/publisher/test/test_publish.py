@@ -3,6 +3,8 @@
 
 
 import os
+
+from pytest import approx
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
@@ -44,7 +46,7 @@ def test_publisher_publish():
         contract.contract_instance.functions.secondsPerSubscription().call()
         == seconds_per_subscription
     )
-    assert contract.get_price() == 3
+    assert contract.get_price() / 1e18 == approx(3 * (1.201))
 
     ocean_address = get_address(config.w3.eth.chain_id, "Ocean")
     assert contract.get_stake_token() == ocean_address
