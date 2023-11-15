@@ -27,6 +27,9 @@ resource "google_compute_instance" "vm_instance" {
   metadata_startup_script = <<-EOF
     #!/bin/bash
 
+    # Assume user account
+    su ${var.username} >> debug.log
+
     # Create path for ocean-contracts and clone contract address list
     mkdir /home/${var.username}/.ocean/
     mkdir /home/${var.username}/.ocean/ocean-contracts/
@@ -51,6 +54,8 @@ resource "google_compute_instance" "vm_instance" {
     python3 -m venv venv
     source ./venv/bin/activate
     pip install -r requirements.txt
+
+    echo "export PKs" >> debug.log
 
     # export 5m PKs 
     export BTC_5m_PK=${var.BTC_5m_PK}
@@ -77,15 +82,16 @@ resource "google_compute_instance" "vm_instance" {
     export TRX_1h_PK=${var.TRX_1h_PK}
 
     # install pm2
-    sudo apt install npm
-    sudo npm install pm2@latest -g
+    echo "install pm2" >> debug.log
+    sudo apt-get install -y npm >> debug.log
+    sudo npm install pm2@latest -g  >> debug.log
 
     # Run PM2 for all feeds
-    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-5m.config.js
-    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-1h.config.js
-  EOF
-}
+    su ${var.username} -c "pm2 startup systemd -u ${var.username} --hp /home/${var.username}" >> debug.log
+    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-5m.config.js  >> debug.log
+    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-1h.config.js  >> debug.log
 
-output "external_ip" {
-  value = google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip
+    # Save the PM2 processes
+    pm2 save  >> debug.log
+  EOF
 }
