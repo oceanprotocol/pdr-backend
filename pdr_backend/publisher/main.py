@@ -18,6 +18,7 @@ def main():
     web3_config = Web3Config(rpc_url, private_key)
 
     if web3_config.w3.eth.chain_id == 8996:
+        print("Funding dev accounts and publishing pairs on local network...")
         ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
         OCEAN = Token(web3_config, ocean_address)
         accounts_to_fund = [
@@ -74,8 +75,10 @@ def main():
             cut=0.2,
             web3_config=web3_config,
         )
+        print("Publish done")
 
     if web3_config.w3.eth.chain_id == 23295:
+        print("Publishing pairs on testnet")
         helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
         fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
@@ -105,8 +108,10 @@ def main():
                 cut=0.2,
                 web3_config=web3_config,
             )
+        print("Publish done")
 
     if web3_config.w3.eth.chain_id == 23294:
+        print("Publishing pairs on mainnet")
         helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
         fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
@@ -136,7 +141,9 @@ def main():
                 cut=0.2,
                 web3_config=web3_config,
             )
+        print("Publish done")
 
 
 if __name__ == "__main__":
+    print("Publisher start")
     main()
