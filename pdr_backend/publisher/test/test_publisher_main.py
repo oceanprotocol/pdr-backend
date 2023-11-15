@@ -48,6 +48,7 @@ def mock_publish():
         yield mock
 
 
+# pylint: disable=redefined-outer-name
 def test_main(
     mock_getenv_or_exit,
     mock_web3_config,
