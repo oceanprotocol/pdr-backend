@@ -10,7 +10,7 @@ from pdr_backend.data_eng.model_ss import APPROACHES, ModelSS
 @enforce_types
 def test_model_factory():
     for approach in APPROACHES:
-        model_ss = ModelSS(approach)
+        model_ss = ModelSS({"approach" : approach})
         factory = ModelFactory(model_ss)
         assert isinstance(factory.model_ss, ModelSS)
 

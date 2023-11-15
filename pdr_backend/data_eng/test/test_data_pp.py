@@ -71,6 +71,7 @@ def test_data_pp_5m_vs_1h():
     })
     assert pp.timeframe == "5m"
     assert pp.timeframe_ms == 5 * 60 * 1000
+    assert pp.timeframe_s == 5 * 60
     assert pp.timeframe_m == 5
 
     #1h
@@ -81,4 +82,5 @@ def test_data_pp_5m_vs_1h():
     })
     assert pp.timeframe == "1h"
     assert pp.timeframe_ms == 60 * 60 * 1000
+    assert pp.timeframe_s == 60 * 60
     assert pp.timeframe_m == 60

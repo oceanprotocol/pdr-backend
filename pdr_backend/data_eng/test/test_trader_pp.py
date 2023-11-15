@@ -7,7 +7,7 @@ from pdr_backend.data_eng.trader_pp import TraderPP
 def test_trader_pp():
     d = {"sim_only":
          {"fee_percent" : 0.01,
-          "init_holdings_strs" : ['10000.0 USDT', '0 BTC'],
+          "init_holdings" : ['10000.0 USDT', '0 BTC'],
           }
          }
     pp = TraderPP(d)

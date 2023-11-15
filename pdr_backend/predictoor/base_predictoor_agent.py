@@ -43,10 +43,10 @@ class BasePredictoorAgent(ABC):
         if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()    
-        for cand_feed in cand_feeds:
+        for feed in cand_feeds.values():
             feed_tup = (feed.source, "close", feed.pair)
-            if feed_tup in self.ppss.data_pp.predict_feeds_tups:
-                self.feeds[feed.address] = cand_feed
+            if feed_tup in self.ppss.data_pp.predict_feed_tups:
+                self.feeds[feed.address] = feed
 
         if not self.feeds:
             print("No feeds left after filtering. Exiting")

@@ -44,7 +44,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     """n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000"""
 
     # setup: base data
-    csvdir = str(tmpdir)
+    csv_dir = str(tmpdir)
 
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
@@ -74,29 +74,13 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
             uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
-    exchange = FakeExchange()
-
-    # setup: pp
-    pp = DataPP(  # user-uncontrollable params
-        "5m",
-        "binanceus h ETH/USDT",
-        test_n=2,
-    )
-
-    # setup: ss
-    ss = DataSS(  # user-controllable params
-        ["binanceus h ETH/USDT"],
-        csv_dir=csvdir,
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-        max_n_train=7,
-        autoregressive_n=3,
-    )
-    ss.exchs_dict["binanceus"] = exchange  # override with fake exchange
+    pp = _data_pp_1feed()
+    ss = _data_ss(csv_dir, pp.predict_feeds_strs, st_timestr, fin_timestr)
+    ss.exchs_dict["kraken"] = FakeExchange()
 
     # setup: data_factory, filename
     data_factory = DataFactory(pp, ss)
-    filename = data_factory._hist_csv_filename("binanceus", "ETH/USDT")
+    filename = data_factory._hist_csv_filename("kraken", "ETH/USDT")
 
     def _uts_in_csv(filename: str) -> List[int]:
         df = load_csv(filename)
@@ -104,7 +88,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
     # work 1: new csv
     data_factory._update_hist_csv_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
+        "kraken", "ETH/USDT", ss.fin_timestamp
     )
     uts: List[int] = _uts_in_csv(filename)
     if isinstance(n_uts, int):
@@ -117,18 +101,18 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     assert uts == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 2: two more epochs at end --> it'll append existing csv
-    ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
+    ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
     data_factory._update_hist_csv_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
+        "kraken", "ETH/USDT", ss.fin_timestamp
     )
     uts2 = _uts_in_csv(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new csv
-    ss.st_timestr = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
-    ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
+    ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
+    ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
     data_factory._update_hist_csv_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
+        "kraken", "ETH/USDT", ss.fin_timestamp
     )
     uts3 = _uts_in_csv(filename)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
@@ -172,13 +156,14 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    csvdir = str(tmpdir)
+    csv_dir = str(tmpdir)
 
     csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
-    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    pp = _data_pp_1feed()
+    ss = _data_ss(csv_dir, pp.predict_feeds_strs)
 
-    assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * autoregressive_n
+    assert ss.n == 1 * 3
 
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
@@ -224,8 +209,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
     # =========== now have a different max_n_train
-    ss.max_n_train = 5
-    # ss.autoregressive_n = 2
+    ss.d["max_n_train"] = 5
 
     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     _assert_shapes(ss, X, y, x_df)
@@ -241,7 +225,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
 @enforce_types
 def test_create_xy__2exchanges_2coins_2signals(tmpdir):
-    csvdir = str(tmpdir)
+    csv_dir = str(tmpdir)
 
     csv_dfs = {
         "binanceus": {
@@ -254,22 +238,16 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         },
     }
 
-    pp = DataPP(
-        "5m",
-        "binanceus h ETH/USDT",
-        test_n=2,
+    pp = _data_pp_1feed(
+        ["binanceus h ETH/USDT"],
     )
-
-    ss = DataSS(
-        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
-        csv_dir=csvdir,
-        st_timestr="2023-06-18",
-        fin_timestr="2023-06-21",
-        max_n_train=7,
-        autoregressive_n=3,
+    ss = _data_ss(
+        csv_dir,
+        ["binanceus hl BTC/USDT,ETH/USDT",
+         "kraken hl BTC/USDT,ETH/USDT"],
     )
-
-    assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
+    assert ss.autoregressive_n == 3
+    assert ss.n == (4 + 4) * 3
 
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
@@ -327,9 +305,10 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create hist_df
-    csvdir = str(tmpdir)
+    csv_dir = str(tmpdir)
     csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
-    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    pp = _data_pp_1feed()
+    ss = _data_ss(csv_dir, pp.predict_feeds_strs)
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
 
@@ -360,23 +339,23 @@ def test_create_xy__handle_nan(tmpdir):
 
 
 @enforce_types
-def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
-    pp = DataPP(
-        "5m",
-        "kraken h ETH/USDT",
-        test_n=2,
-    )
+def _data_pp_1feed(predict_feeds=None) -> DataPP:
+    return DataPP({
+        "timeframe" : "5m",
+        "predict_feeds" : predict_feeds or ["kraken h ETH/USDT"],
+        "sim_only" : {"test_n" : 2},
+    })
 
-    ss = DataSS(
-        [pp.predict_feed_str],
-        csv_dir=csvdir,
-        st_timestr="2023-06-18",
-        fin_timestr="2023-06-21",
-        max_n_train=7,
-        autoregressive_n=3,
-    )
-    return pp, ss
-
+@enforce_types
+def _data_ss(csv_dir, input_feeds, st_timestr=None, fin_timestr=None):
+    return DataSS({
+        "input_feeds" : input_feeds,
+        "csv_dir" : csv_dir,
+        "st_timestr" : st_timestr or "2023-06-18",
+        "fin_timestr" : fin_timestr or "2023-06-21",
+        "max_n_train" : 7,
+        "autoregressive_n" : 3,
+      })
 
 @enforce_types
 def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):

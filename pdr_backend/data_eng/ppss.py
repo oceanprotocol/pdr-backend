@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import yaml
 
@@ -56,12 +57,13 @@ def fast_test_yaml_str(tmpdir):
     """Use this for testing. It has fast runtime."""
     csv_dir = os.path.join(tmpdir, "csvs")
     log_dir = os.path.join(tmpdir, "logs")
-    return f"""data_pp:
-timeframe: 5m
-predict_feeds:
-  - binance c BTC/USDT
-sim_only:
-  test_n : 100
+    return f"""
+data_pp:
+  timeframe: 5m
+  predict_feeds:
+    - binance c BTC/USDT
+  sim_only:
+    test_n : 100
 
 data_ss:
   input_feeds :

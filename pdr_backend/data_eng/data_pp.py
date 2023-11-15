@@ -41,6 +41,11 @@ class DataPP(StrMixin):
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
         return self.timeframe_m * 60 * 1000
+    
+    @property
+    def timeframe_s(self) -> int:
+        """Returns timeframe, in s"""
+        return self.timeframe_m * 60
 
     @property
     def timeframe_m(self) -> int:

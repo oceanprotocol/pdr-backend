@@ -14,9 +14,9 @@ def test_ppss_from_file(tmpdir):
     _test_ppss(yaml_filename=yaml_filename)
 
 @enforce_types
-def test_ppss_from_str():
+def test_ppss_from_str(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
-    _test_ppss(yaml_str)
+    _test_ppss(yaml_str=yaml_str)
 
 @enforce_types
 def _test_ppss(yaml_filename=None, yaml_str=None):
@@ -27,7 +27,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None):
     assert ppss.data_pp.timeframe in ["5m", "1h"]
     assert isinstance(ppss.data_ss.st_timestr, str)
     assert ppss.model_ss.approach == "LIN"
-    assert 1 <= ppss.predictoor_ss.s_until_epoch_end == 120
+    assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
     assert 0.0 <= ppss.trader_pp.fee_percent <= 0.99
     assert "USD" in ppss.trader_ss.buy_amt_str
     assert isinstance(ppss.sim_ss.do_plot, bool)
