@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
+from pdr_backend.data_eng.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.util.constants import S_PER_MIN, S_PER_DAY
 

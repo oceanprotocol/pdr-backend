@@ -7,8 +7,15 @@ APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
 
 @enforce_types
 class ModelSS(StrMixin):
-    def __init__(self, model_approach: str):
-        if model_approach not in APPROACHES:
-            raise ValueError(model_approach)
+    def __init__(self, d: dict):
+        self.d = d # yaml_dict["model_ss"]
 
-        self.model_approach = model_approach
+        # test inputs
+        if self.approach not in APPROACHES:
+            raise ValueError(self.approach)
+
+    # --------------------------------
+    # yaml properties
+    @property
+    def approach(self) -> str:
+        return self.d["approach"] # eg "LIN"

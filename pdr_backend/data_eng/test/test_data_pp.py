@@ -1,22 +1,27 @@
 from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 
 @enforce_types
-def test_data_pp_5m():
-    # construct
-    pp = _test_pp("5m")
-
-    # test attributes
-    assert pp.timeframe == "5m"
-    assert pp.predict_feed_str == "kraken h ETH/USDT"
+def test_data_pp_1feed():
+    pp = DataPP({
+        "timeframe" : "5m",
+        "predict_feeds" : ["kraken h ETH/USDT"],
+        "sim_only" : {"test_n" : 2},
+    })
+                     
+    # yaml properties
+    assert isinstance(pp.timeframe, str)
+    assert pp.predict_feeds_strs == ["kraken h ETH/USDT"]
     assert pp.test_n == 2
 
-    # test properties
-    assert pp.timeframe_ms == 5 * 60 * 1000
-    assert pp.timeframe_m == 5
+    # derivative properties
+    assert isinstance(pp.timeframe_ms, int) # test more below
+    assert isinstance(pp.timeframe_m, int)  # ""
+    assert pp.predict_feed_tups == [("kraken", "high", "ETH-USDT")]
     assert pp.predict_feed_tup == ("kraken", "high", "ETH-USDT")
     assert pp.exchange_str == "kraken"
     assert pp.signal_str == "high"
@@ -26,20 +31,54 @@ def test_data_pp_5m():
 
 
 @enforce_types
-def test_data_pp_1h():
-    ss = _test_pp("1h")
+def test_data_pp_3feeds():
+    pp = DataPP({
+        "timeframe" : "5m",
+        "predict_feeds" : ["kraken h ETH/USDT", "binance oh BTC/USDT"],
+        "sim_only" : {"test_n" : 2},
+    })
+                     
+    # yaml properties
+    assert pp.timeframe == "5m"
+    assert pp.predict_feeds_strs == ["kraken h ETH/USDT","binance oh BTC/USDT"]
 
-    assert ss.timeframe == "1h"
-    assert ss.timeframe_ms == 60 * 60 * 1000
-    assert ss.timeframe_m == 60
-
+    # derivative properties
+    assert pp.predict_feed_tups == [
+        ("kraken", "high", "ETH-USDT"),
+        ("binance", "open", "BTC-USDT"),
+        ("binance", "high", "BTC-USDT"),
+    ]
+    with pytest.raises(AssertionError):
+        pp.predict_feed_tup
+    with pytest.raises(AssertionError):
+        pp.exchange_str
+    with pytest.raises(AssertionError):
+        pp.signal_str
+    with pytest.raises(AssertionError):
+        pp.pair_str
+    with pytest.raises(AssertionError):
+        pp.base_str
+    with pytest.raises(AssertionError):
+        pp.quote_str
 
 @enforce_types
-def _test_pp(timeframe: str) -> DataPP:
-    assert timeframe in CAND_TIMEFRAMES
-    pp = DataPP(
-        timeframe=timeframe,
-        predict_feed_str="kraken h ETH/USDT",
-        test_n=2,
-    )
-    return pp
+def test_data_pp_5m_vs_1h():
+    #5m
+    pp = DataPP({
+        "timeframe" : "5m",
+        "predict_feeds" : ["kraken h ETH/USDT"],
+        "sim_only" : {"test_n" : 2},
+    })
+    assert pp.timeframe == "5m"
+    assert pp.timeframe_ms == 5 * 60 * 1000
+    assert pp.timeframe_m == 5
+
+    #1h
+    pp = DataPP({
+        "timeframe" : "1h",
+        "predict_feeds" : ["kraken h ETH/USDT"],
+        "sim_only" : {"test_n" : 2},
+    })
+    assert pp.timeframe == "1h"
+    assert pp.timeframe_ms == 60 * 60 * 1000
+    assert pp.timeframe_m == 60

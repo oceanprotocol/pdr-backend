@@ -1,3 +1,4 @@
+import copy
 import os
 from typing import List
 
@@ -25,22 +26,19 @@ class PlotState:
 
 
 # pylint: disable=too-many-instance-attributes
-class TradeEngine:
+class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
-        # ensure training data has the target yval
-        assert ppss.data_pp.predict_feed_tup in ppss.data_ss.input_feed_tups
+        # preconditions
+        assert len(ppss.data_pp.predict_feed_tups) == 1, \
+            "sim engine can only handle 1 prediction feed"
+        assert ppss.data_pp.predict_feed_tups[0] in ppss.data_ss.input_feed_tups
 
         # pp & ss values
-        self.data_pp = ppss.data_pp
-        self.data_ss = ppss.data_ss
-        self.model_ss = ppss.model_ss
-        self.trade_pp = ppss.trade_pp
-        self.trade_ss = ppss.trade_ss
-        self.sim_ss = ppss.sim_ss
-
+        self.ppss = ppss
+        
         # state
-        self.holdings = self.trade_pp.init_holdings
+        self.holdings = copy.copy(self.ppss.trader_pp.init_holdings)
         self.tot_profit_usd = 0.0
         self.nmses_train: List[float] = []
         self.ys_test: List[float] = []
@@ -49,28 +47,26 @@ class TradeEngine:
         self.profit_usds: List[float] = []
         self.tot_profit_usds: List[float] = []
 
-        self.data_factory = DataFactory(self.data_pp, self.data_ss)
-
         self.logfile = ""
 
         self.plot_state = None
-        if self.sim_ss.do_plot:
+        if self.ppss.sim_ss.do_plot:
             self.plot_state = PlotState()
 
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.data_pp.base_str
+        return self.ppss.data_pp.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.data_pp.quote_str
+        return self.ppss.data_pp.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{current_ut()}.txt"
-        self.logfile = os.path.join(self.sim_ss.logpath, filebase)
+        self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
         with open(self.logfile, "w") as f:
             f.write("\n")
 
@@ -83,11 +79,13 @@ class TradeEngine:
         self._init_loop_attributes()
         log = self._log
         log("Start run")
+        
         # main loop!
-        hist_df = self.data_factory.get_hist_df()
-        for test_i in range(self.data_pp.test_n):
+        data_factory = DataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        hist_df = data_factory.get_hist_df()
+        for test_i in range(self.ppss.data_pp.test_n):
             self.run_one_iter(test_i, hist_df)
-            self._plot(test_i, self.data_pp.test_n)
+            self._plot(test_i, self.ppss.data_pp.test_n)
 
         log("Done all iters.")
 
@@ -98,14 +96,15 @@ class TradeEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
         log = self._log
-        testshift = self.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        X, y, _ = self.data_factory.create_xy(hist_df, testshift)
+        testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        data_factory = DataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        X, y, _ = data_factory.create_xy(hist_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        model_factory = ModelFactory(self.model_ss)
+        model_factory = ModelFactory(self.ppss.model_ss)
         model = model_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
@@ -114,7 +113,7 @@ class TradeEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        ut = int(hist_df.index.values[-1]) - testshift * self.data_pp.timeframe_ms
+        ut = int(hist_df.index.values[-1]) - testshift * self.ppss.data_pp.timeframe_ms
 
         # current price
         curprice = y_train[-1]
@@ -126,7 +125,7 @@ class TradeEngine:
         # simulate buy. Buy 'amt_usd' worth of TOK if we think price going up
         usdcoin_holdings_before = self.holdings[self.usdcoin]
         if self._do_buy(predprice, curprice):
-            self._buy(curprice, self.trade_ss.buy_amt_usd)
+            self._buy(curprice, self.ppss.trader_ss.buy_amt_usd)
 
         # observe true price
         trueprice = y_test[0]
@@ -152,7 +151,7 @@ class TradeEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.data_pp.test_n}: "
+            f"Iter #{test_i+1:3}/{self.ppss.data_pp.test_n}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"
@@ -187,7 +186,7 @@ class TradeEngine:
         usdcoin_amt_sent = min(usdcoin_amt_spend, self.holdings[self.usdcoin])
         self.holdings[self.usdcoin] -= usdcoin_amt_sent
 
-        p = self.trade_pp.fee_percent
+        p = self.ppss.trader_pp.fee_percent
         usdcoin_amt_fee = p * usdcoin_amt_sent
         tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
         self.holdings[self.tokcoin] += tokcoin_amt_recd
@@ -210,7 +209,7 @@ class TradeEngine:
         tokcoin_amt_sent = tokcoin_amt_sell
         self.holdings[self.tokcoin] -= tokcoin_amt_sent
 
-        p = self.trade_pp.fee_percent
+        p = self.ppss.trader_pp.fee_percent
         usdcoin_amt_fee = p * tokcoin_amt_sent * price
         usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
         self.holdings[self.usdcoin] += usdcoin_amt_recd
@@ -223,7 +222,7 @@ class TradeEngine:
 
     @enforce_types
     def _plot(self, i, N):
-        if not self.sim_ss.do_plot:
+        if not self.ppss.sim_ss.do_plot:
             return
 
         # don't plot first 5 iters -> not interesting

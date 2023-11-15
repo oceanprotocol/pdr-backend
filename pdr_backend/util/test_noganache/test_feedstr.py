@@ -7,6 +7,7 @@ from pdr_backend.util.feedstr import (
     unpack_feeds_strs,
     unpack_feeds_str,
     unpack_feed_str,
+    pack_feed_str,
     verify_feeds_strs,
     verify_feeds_str,
     verify_feed_str,
@@ -135,6 +136,13 @@ def test_unpack_feed_str():
     assert exchange_str == "binance"
     assert signal == "close"
     assert pair == "BTC-USDT"
+
+
+@enforce_types
+def test_pack_feed_str():
+    feed_tup = ("binance", "open", "BTC-USDT")
+    feed_str = pack_feed_str(feed_tup)
+    assert feed_str == "binance o BTC-USDT"
 
 
 # ==========================================================================

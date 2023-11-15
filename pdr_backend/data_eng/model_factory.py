@@ -17,7 +17,7 @@ class ModelFactory:
         return model
 
     def _model(self):
-        a = self.model_ss.model_approach
+        a = self.model_ss.approach
         if a == "LIN":
             return linear_model.LinearRegression()
         if a == "GPR":

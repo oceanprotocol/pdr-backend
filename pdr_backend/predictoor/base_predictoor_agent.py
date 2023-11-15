@@ -1,13 +1,21 @@
 from abc import ABC, abstractmethod
 import sys
+from os import getenv
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
+from pdr_backend.models.base_config import BaseConfig
+from pdr_backend.data_eng.ppss import PPSS
 
+_UNWANTED_ENVVARS = [
+    "PAIR_FILTER",
+    "TIMEFRAME_FILTER",
+    "SOURCE_FILTER",
+    "STAKE_AMOUNT",
+]
 
 @enforce_types
 class BasePredictoorAgent(ABC):
@@ -16,30 +24,50 @@ class BasePredictoorAgent(ABC):
     What it does
     - Fetches Predictoor contracts from subgraph, and filters them
     - Monitors each contract for epoch changes.
-    - When a value can be predicted, call predict.py::predict_function()
+    - When a value can be predicted, call get_prediction()
     """
 
-    def __init__(self, config: BasePredictoorConfig):
-        self.config = config
+    def __init__(self, config: BaseConfig, ppss:PPSS):
+        # preconditions
+        for envvar in _UNWANTED_ENVVARS:
+            assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
 
-        self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
+        # set config, ppss, and related
+        self.config = config
+        self.ppss = ppss
+
+        # set self.feeds
+        self.feeds: Dict[str, Feed] = {}
+        
+        cand_feeds = self.config.get_feeds()
+        if not cand_feeds:
+            print("No feeds found. Exiting")
+            sys.exit()    
+        for cand_feed in cand_feeds:
+            feed_tup = (feed.source, "close", feed.pair)
+            if feed_tup in self.ppss.data_pp.predict_feeds_tups:
+                self.feeds[feed.address] = cand_feed
 
         if not self.feeds:
-            print("No feeds found. Exiting")
+            print("No feeds left after filtering. Exiting")
             sys.exit()
 
+        # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.config.get_contracts(feed_addrs) # [addr] : contract
 
+        # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
         self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
 
+        # print
         print("\n" + "-" * 80)
         print("Config:")
         print(self.config)
+        print(self.ppss)
 
         print("\n" + "." * 80)
         print("Feeds (detailed):")
@@ -92,11 +120,12 @@ class BasePredictoorAgent(ABC):
         print(f"    Process {feed} at epoch={epoch}")
 
         # within the time window to predict?
+        s_until_epoch_end = self.ppss.predictoor_ss.s_until_epoch_end
         print(
             f"      {epoch_s_left} s left in epoch"
-            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+            f" (predict if <= {s_until_epoch_end} s left)"
         )
-        too_early = epoch_s_left > self.config.s_until_epoch_end
+        too_early = epoch_s_left > s_until_epoch_end
         if too_early:
             print("      Done feed: too early to predict")
             return (None, None, False)

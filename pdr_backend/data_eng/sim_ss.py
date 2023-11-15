@@ -9,10 +9,26 @@ from pdr_backend.util.strutil import StrMixin
 class SimSS(StrMixin):
     """User-controllable strategy params related to the simulation itself"""
 
-    def __init__(self, do_plot: bool, logpath_in: str):
-        logpath = os.path.abspath(logpath_in)
-        assert os.path.exists(logpath)
+    def __init__(self, d: dict):
+        self.d = d # yaml_dict["sim_ss"]
 
-        self.do_plot = do_plot
-        self.logpath_in = logpath_in
-        self.logpath = logpath  # directory, not file
+        # handle log_dir
+        assert self.log_dir == os.path.abspath(self.log_dir)
+        if not os.path.exists(self.log_dir):
+            print(f"Could not find log dir, creating one at: {self.log_dir}")
+            os.makedirs(self.log_dir)
+
+    # --------------------------------
+    # properties direct from yaml dict
+    @property
+    def do_plot(self) -> bool:
+        return self.d["do_plot"]
+    
+    @property
+    def log_dir(self) -> str:
+        s = self.d["log_dir"]
+        if s != os.path.abspath(s): # rel path given; needs an abs path
+            return os.path.abspath(s)
+        # abs path given
+        return s
+    

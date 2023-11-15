@@ -1,7 +1,9 @@
 data_pp:
   timeframe: 1h
-  predict_feed: binance c BTC/USDT
-  test_n : 200 # sim only, not bots
+  predict_feeds:
+    - binance c BTC/USDT,ETH/USDT
+  sim_only:
+    test_n : 200
 
 data_ss:
   input_feeds :
@@ -9,7 +11,7 @@ data_ss:
 #    - binance c ETH/USDT,TRX/USDT,ADA/USDT
 #    - binance c DOT/USDT
 #    - kraken ohlcv BTC/USDT
-  st_timestr: 2023-06-01_00:00 #earliest is 2019-09-13_04:00
+  st_timestr: 2023-06-01_00:00
   fin_timestr: now
   max_n_train: 5000
   autoregressive_n : 10
@@ -17,16 +19,28 @@ data_ss:
 
 model_ss:
   approach: LIN
+  
+predictoor_ss:
+  bot_only:
+    s_until_epoch_end: 60
+    stake_amount: 1 # in OCEAN
+  approach3:
 
-trade_pp: # sim only, not bots
-  fee_percent: 0.0
-  init_holdings:
-    - 100000 USDT
-    - 0 BTC
+trader_pp:
+  sim_only:
+    fee_percent: 0.0
+    init_holdings:
+      - 100000 USDT
+      - 0 BTC
+  bot_only:
 
-trade_ss:
-  buy_amt: 10 USDT
+trader_ss:
+  sim_only:
+    buy_amt: 10 USD
+  bot_only:
+    approach1:
+    approach2:
 
-sim_ss:
+sim_ss: # sim only
   do_plot: True
- 
+  log_dir: logs

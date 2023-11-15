@@ -5,6 +5,26 @@ from enforce_typing import enforce_types
 from pdr_backend.util.constants import CAND_SIGNALS, CHAR_TO_SIGNAL
 
 # ==========================================================================
+# conversions
+@enforce_types
+def char_to_signal(char: str) -> str:
+    """eg given "o", return "open" """
+    if char not in CHAR_TO_SIGNAL:
+        raise ValueError()
+    return CHAR_TO_SIGNAL[char]
+    
+@enforce_types
+def signal_to_char(signal_str: str) -> str:
+    """
+    Example: Given "open"
+    Return "o"
+    """
+    for c, s in CHAR_TO_SIGNAL.items():
+        if s == signal_str:
+            return c
+    raise ValueError(signal_str)
+
+# ==========================================================================
 # unpack..() functions
 
 

@@ -1,3 +1,4 @@
+import copy
 import os
 from typing import List, Set, Tuple
 
@@ -6,62 +7,73 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
+from pdr_backend.util.feedstr import (
+    unpack_feeds_strs,
+    pack_feed_str,
+    verify_feeds_strs,
+)
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
-class DataSS:  # user-controllable params, at data-eng level
-    """
-    DataPP specifies the output variable (yval), ie what to predict.
-
-    DataPP is problem definition -> uncontrollable.
-    DataSS is solution strategy -> controllable.
-    For a given problem definition (DataPP), you can try different DataSS vals
-
-    DataSS specifies the inputs, and how much training data to get
-      - Input vars: autoregressive_n vars for each of {all signals}x{all coins}x{all exch}
-      - How much trn data: time range st->fin_timestamp, bound by max_N_trn
-    """
-
-    # pylint: disable=too-many-instance-attributes
+class DataSS:
+    
     @enforce_types
-    def __init__(
-        self,
-        input_feeds_strs: List[str],  # eg ["binance ohlcv BTC/USDT", " ", ...]
-        csv_dir_in: str,  # eg "csvs". abs or rel loc'n of csvs dir
-        st_timestr: str,  # eg "2019-09-13_04:00" (earliest),  2019-09-13"
-        fin_timestr: str,  # eg "now", "2023-09-23_17:55", "2023-09-23"
-        max_n_train,  # eg 50000. if inf, only limited by data available
-        autoregressive_n: int,  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
-    ):
-        # preconditions
-        csv_dir = os.path.abspath(csv_dir_in)
-        if not os.path.exists(csv_dir):
-            print(f"Could not find csv dir, creating one at: {csv_dir}")
-            os.makedirs(csv_dir)
-        assert 0 <= timestr_to_ut(st_timestr) <= timestr_to_ut(fin_timestr) <= np.inf
-        assert 0 < max_n_train
-        assert 0 < autoregressive_n < np.inf
-        verify_feeds_strs(input_feeds_strs)
+    def __init__(self, d: dict):
+        self.d = d # yaml_dict["data_ss"]
 
-        # save values
-        self.input_feeds_strs: List[str] = input_feeds_strs
+        # handle csv_dir
+        assert self.csv_dir == os.path.abspath(self.csv_dir)
+        if not os.path.exists(self.csv_dir):
+            print(f"Could not find csv dir, creating one at: {self.csv_dir}")
+            os.makedirs(self.csv_dir)
 
-        self.csv_dir_in: str = csv_dir_in
-        self.csv_dir: str = csv_dir
-        
-        self.st_timestr: str = st_timestr
-        self.fin_timestr: str = fin_timestr
+        # test inputs
+        assert 0 <= timestr_to_ut(self.st_timestr) <= \
+            timestr_to_ut(self.fin_timestr) <= np.inf
+        assert 0 < self.max_n_train
+        assert 0 < self.autoregressive_n < np.inf
+        verify_feeds_strs(self.input_feeds_strs)
 
-        self.max_n_train: int = max_n_train
-        self.autoregressive_n: int = autoregressive_n
-
+        # save self.exchs_dict
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
-        feed_tups = unpack_feeds_strs(input_feeds_strs)
+        feed_tups = unpack_feeds_strs(self.input_feeds_strs)
         for exchange_str, _, _ in feed_tups:
             exchange_class = getattr(ccxt, exchange_str)
             self.exchs_dict[exchange_str] = exchange_class()
 
+    # --------------------------------
+    # yaml properties
+    @property
+    def input_feeds_strs(self) -> List[str]:
+        return self.d["input_feeds"] # eg ["binance ohlcv BTC/USDT",..]
+    
+    @property
+    def csv_dir(self) -> str:
+        s = self.d["csv_dir"]
+        if s != os.path.abspath(s): # rel path given; needs an abs path
+            return os.path.abspath(s)
+        # abs path given
+        return s
+    
+    @property
+    def st_timestr(self) -> str:
+        return self.d["st_timestr"] # eg "2019-09-13_04:00" (earliest)
+    
+    @property
+    def fin_timestr(self) -> str:
+        return self.d["fin_timestr"] # eg "now","2023-09-23_17:55","2023-09-23"
+    
+    @property
+    def max_n_train(self) -> int:
+        return self.d["max_n_train"] # eg 50000. S.t. what data is available
+    
+    @property
+    def autoregressive_n(self) -> int:
+        return self.d["autoregressive_n"] # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
+
+
+    # --------------------------------
+    # derivative properties
     @property
     def st_timestamp(self) -> int:
         """
@@ -145,16 +157,13 @@ class DataSS:  # user-controllable params, at data-eng level
 
     @enforce_types
     def copy_with_yval(self, data_pp: DataPP):
-        """Copy self, add data_pp's yval to new data_ss' inputs as needed"""
-        input_feeds_strs = self.input_feeds_strs[:]
-        if data_pp.predict_feed_tup not in self.input_feed_tups:
-            input_feeds_strs.append(data_pp.predict_feed_str)
+        """Copy self, add data_pp's feeds to new data_ss' inputs as needed"""
+        d2 = copy.deepcopy(self.d)
+        
+        for predict_feed_tup in data_pp.predict_feed_tups:
+            if predict_feed_tup in self.input_feed_tups:
+                continue
+            predict_feed_str = pack_feed_str(predict_feed_tup)
+            d2["input_feeds"].append(predict_feed_str)
 
-        return DataSS(
-            input_feeds_strs=input_feeds_strs,
-            csv_dir=self.csv_dir,
-            st_timestr=self.st_timestr,
-            fin_timestr=self.fin_timestr,
-            max_n_train=self.max_n_train,
-            autoregressive_n=self.autoregressive_n,
-        )
+        return DataSS(d2)
