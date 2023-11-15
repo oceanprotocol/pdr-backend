@@ -41,7 +41,7 @@ def main():
             quote="USDT",
             source="binance",
             timeframe="5m",
-            trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # on arge
+            trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",  # on barge
             feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
             rate=rate,
             cut=0.2,
