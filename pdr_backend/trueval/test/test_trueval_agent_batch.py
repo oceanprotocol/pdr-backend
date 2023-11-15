@@ -18,42 +18,42 @@ def test_new_agent(trueval_config):
 
 
 def test_process_trueval_slot_up(
-    agent, slot, predictoor_contract_mock
+    agent_fixture, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
     print(
         "RUNNING TEST_PROCESS_TRUEVAL_SLOT_UP TEST -------------------------------------------------------------------------"
     )
-    with patch.object(agent, "get_trueval", return_value=(True, False)):
+    with patch.object(agent_fixture, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent.process_trueval_slot(slot)
+        agent_fixture.process_trueval_slot(slot)
 
         assert not slot.cancel
         assert slot.trueval
 
 
 def test_process_trueval_slot_down(
-    agent, slot, predictoor_contract_mock
+    agent_fixture, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    with patch.object(agent, "get_trueval", return_value=(False, False)):
+    with patch.object(agent_fixture, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent.process_trueval_slot(slot)
+        agent_fixture.process_trueval_slot(slot)
 
         assert not slot.cancel
         assert not slot.trueval
 
 
 def test_process_trueval_slot_cancel(
-    agent, slot, predictoor_contract_mock
+    agent_fixture, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    with patch.object(agent, "get_trueval", return_value=(False, True)):
+    with patch.object(agent_fixture, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent.process_trueval_slot(slot)
+        agent_fixture.process_trueval_slot(slot)
 
         assert slot.cancel
         assert not slot.trueval
 
 
-def test_batch_submit_truevals(agent, slot):
+def test_batch_submit_truevals(agent_fixture, slot):
     times = 3
     slot.feed.address = "0x0000000000000000000000000000000000c0ffee"
     trueval_slots = [
@@ -83,26 +83,26 @@ def test_batch_submit_truevals(agent, slot):
     cancels = [[False] * times, [False] * times]
 
     with patch.object(
-        agent.predictoor_batcher,
+        agent_fixture.predictoor_batcher,
         "submit_truevals_contracts",
         return_value={"transactionHash": bytes.fromhex("badc0ffeee")},
     ) as mock:
-        tx = agent.batch_submit_truevals(trueval_slots)
+        tx = agent_fixture.batch_submit_truevals(trueval_slots)
         assert tx == "badc0ffeee"
         mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
 
 
-def test_take_step(agent, slot):
+def test_take_step(agent_fixture, slot):
     with patch.object(
-        agent, "get_batch", return_value=[slot]
+        agent_fixture, "get_batch", return_value=[slot]
     ) as mock_get_batch, patch.object(
-        agent, "process_trueval_slot"
+        agent_fixture, "process_trueval_slot"
     ) as mock_process_trueval_slot, patch(
         "time.sleep"
     ), patch.object(
-        agent, "batch_submit_truevals"
+        agent_fixture, "batch_submit_truevals"
     ) as mock_batch_submit_truevals:
-        agent.take_step()
+        agent_fixture.take_step()
 
         mock_get_batch.assert_called_once()
         call_args = mock_process_trueval_slot.call_args[0][0]
@@ -118,5 +118,6 @@ def test_take_step(agent, slot):
 # Fixtures
 
 
+@pytest.fixture()
 def agent_fixture(trueval_config):
     return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
