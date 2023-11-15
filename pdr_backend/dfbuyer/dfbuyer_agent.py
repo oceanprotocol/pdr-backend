@@ -28,6 +28,7 @@ class DFBuyerAgent:
             get_address(config.web3_config.w3.eth.chain_id, "PredictoorHelper"),
         )
         self.token_addr = get_address(config.web3_config.w3.eth.chain_id, "Ocean")
+        self.fail_counter = 0
 
         print("-" * 80)
         print("Config:")
@@ -44,11 +45,18 @@ class DFBuyerAgent:
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
 
         token = Token(self.config.web3_config, self.token_addr)
-        print("Approving tokens for predictoor_batcher")
-        tx = token.approve(
-            self.predictoor_batcher.contract_address, int(MAX_UINT), True
+
+        # Check allowance and approve if necessary
+        print("Checking allowance...")
+        allowance = token.allowance(
+            self.config.web3_config.owner, self.predictoor_batcher.contract_address
         )
-        print(f"Done: {tx['transactionHash'].hex()}")
+        if allowance < MAX_UINT - 10**50:
+            print("Approving tokens for predictoor_batcher")
+            tx = token.approve(
+                self.predictoor_batcher.contract_address, int(MAX_UINT), True
+            )
+            print(f"Done: {tx['transactionHash'].hex()}")
 
     def run(self, testing: bool = False):
         while True:
@@ -72,7 +80,23 @@ class DFBuyerAgent:
         print("Missing consume times:", missing_consumes_times)
 
         # batch txs
-        self._batch_txs(missing_consumes_times)
+        one_or_more_failed = self._batch_txs(missing_consumes_times)
+
+        if one_or_more_failed:
+            print("One or more consumes have failed...")
+            self.fail_counter += 1
+
+            if self.fail_counter > 3 and self.config.batch_size > 6:
+                self.config.batch_size = self.config.batch_size * 2 // 3
+                print(
+                    f"Seems like we keep failing, adjusting batch size to: {self.config.batch_size}"
+                )
+                self.fail_counter = 0
+
+            print("Sleeping for a minute and trying again")
+            time.sleep(60)
+            return
+        self.fail_counter = 0
 
         # sleep until next consume interval
         ts = self.config.web3_config.get_block("latest")["timestamp"]
@@ -158,44 +182,49 @@ class DFBuyerAgent:
                     raise
         return False
 
-    def _consume_batch(self, addresses_to_consume, times_to_consume):
+    def _consume_batch(self, addresses_to_consume, times_to_consume) -> bool:
+        one_or_more_failed = False
         print("-" * 40)
         print(
             f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
         )
-        success = self._consume(addresses_to_consume, times_to_consume)
-        if success:
-            return
 
-        # If batch consumption fails due to transaction revert, fall back to consuming one by one
+        # Try to consume the batch
+        if self._consume(addresses_to_consume, times_to_consume):
+            return False  # If successful, return False (no failures)
+
+        # If batch consumption fails, fall back to consuming one by one
         print("     Transaction reverted, consuming one by one...")
         for address, times in zip(addresses_to_consume, times_to_consume):
-            success = False
-            if len(addresses_to_consume) != 1:
-                print(f"          Consuming {address} for {times} times")
-                success = self._consume([address], [times])
-                if not success:
-                    print(
-                        "     Transaction reverted again, splitting consumption into two parts..."
-                    )
-            if success:
-                continue
-
-            # If individual consumption fails or there's only one address
-            # split the consumption into two parts
+            if self._consume([address], [times]):
+                continue  # If successful, continue to the next address
+            # If individual consumption fails, split the consumption into two parts
             half_time = times // 2
-            print(f"          Consuming {address} for {half_time} times")
-            if not self._consume([address], [half_time]):
-                print("Transaction reverted again, please adjust batch size")
-            print(f"          Consuming {address} for {half_time + times % 2} times")
-            if not self._consume([address], [half_time + times % 2]):
-                print("Transaction reverted again, please adjust batch size")
+            if half_time > 0:
+                print(f"          Consuming {address} for {half_time} times")
+                if not self._consume([address], [half_time]):
+                    print("Transaction reverted again, please adjust batch size")
+                    one_or_more_failed = True
+                remaining_times = times - half_time
+                if remaining_times > 0:
+                    print(f"          Consuming {address} for {remaining_times} times")
+                    if not self._consume([address], [remaining_times]):
+                        print("Transaction reverted again, please adjust batch size")
+                        one_or_more_failed = True
+            else:
+                print(f"          Unable to consume {address} for {times} times")
+                one_or_more_failed = True
+        return one_or_more_failed
 
-    def _batch_txs(self, consume_times: Dict[str, int]):
+    def _batch_txs(self, consume_times: Dict[str, int]) -> bool:
         batches = self._prepare_batches(consume_times)
         print(f"Processing {len(batches)} batches...")
+        one_or_more_failed = False
         for addresses_to_consume, times_to_consume in batches:
-            self._consume_batch(addresses_to_consume, times_to_consume)
+            failed = self._consume_batch(addresses_to_consume, times_to_consume)
+            if failed:
+                one_or_more_failed = True
+        return one_or_more_failed
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         prices: Dict[str, float] = {}

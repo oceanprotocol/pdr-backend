@@ -31,7 +31,7 @@ timeframe_filter = getenv("TIMEFRAME_FILTER")
 source_filter = getenv("SOURCE_FILTER")
 owner_addresses = getenv("OWNER_ADDRS")
 
-exchange_id = "binance"
+exchange_str = "binance"
 pair = "BTC/USDT"
 timeframe = "5m"
 
@@ -41,14 +41,14 @@ timeframe = "5m"
 last_block_time = 0
 topics: List[dict] = []
 
-exchange_class = getattr(ccxt, exchange_id)
+exchange_class = getattr(ccxt, exchange_str)
 exchange_ccxt = exchange_class({"timeout": 30000})
 
 web3_config = Web3Config(rpc_url, private_key)
 owner = web3_config.owner
 
 models = [
-    OceanModel(exchange_id, pair, timeframe),
+    OceanModel(exchange_str, pair, timeframe),
 ]
 
 
@@ -95,7 +95,7 @@ def process_block(block, model, main_pd):
             if predicted_value is not None and predicted_confidence > 0:
                 # We have a prediction, let's submit it
                 stake_amount = (
-                    int(getenv("STAKE_AMOUNT", "1")) * predicted_confidence / 100
+                    float(getenv("STAKE_AMOUNT", "1")) * predicted_confidence
                 )  # TO DO have a customizable function to handle this
                 print(
                     f"Contract:{predictoor_contract.contract_address} - "
@@ -138,7 +138,7 @@ def do_main2():  # pylint: disable=too-many-statements
         "./"
         + results_path
         + "/"
-        + exchange_id
+        + exchange_str
         + "_"
         + models[0].pair
         + "_"

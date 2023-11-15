@@ -1,13 +1,11 @@
+from math import log10, floor
 import random
 import re
-
 from typing import Union
-from math import log10, floor
-
-import numpy as np
-
 
 from enforce_typing import enforce_types
+import numpy as np
+import pandas as pd
 
 from pdr_backend.util.strutil import StrMixin
 
@@ -51,6 +49,29 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
     return round(x, sig - int(floor(log10(abs(x)))) - 1)
 
 
+@enforce_types
+def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series]) -> bool:
+    """Returns True if any entry in x has a nan"""
+    if type(x) == np.ndarray:
+        return np.isnan(np.min(x))
+    if type(x) in [pd.DataFrame, pd.Series]:
+        return x.isnull().values.any()  # type: ignore[union-attr]
+    raise ValueError(f"Can't handle type {type(x)}")
+
+
+@enforce_types
+def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
+    """Interpolate the nans using Linear method.
+    It ignores the index and treat the values as equally spaced.
+
+    Ref: https://www.geeksforgeeks.org/working-with-missing-data-in-pandas/
+    """
+    df = df.interpolate(method="linear", limit_direction="forward")
+    df = df.interpolate(method="linear", limit_direction="backward")  # row 0
+    return df
+
+
+@enforce_types
 def nmse(yhat, y, ymin=None, ymax=None) -> float:
     """
     @description

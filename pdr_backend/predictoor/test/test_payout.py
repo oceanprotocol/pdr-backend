@@ -1,7 +1,15 @@
 from unittest.mock import Mock, call, patch
+
 import pytest
+
+from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.predictoor.payout import batchify, do_payout, request_payout_batches
+from pdr_backend.predictoor.payout import (
+    batchify,
+    do_payout,
+    do_rose_payout,
+    request_payout_batches,
+)
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -68,3 +76,25 @@ def test_do_payout():
         assert call_args[2] == call([9, 10, 11, 12, 13], True)
         assert call_args[3] == call([14, 15], True)
         assert len(call_args) == 4
+
+
+def test_do_rose_payout():
+    mock_config = Mock()
+    mock_config.subgraph_url = ""
+    mock_config.web3_config = Mock(spec=Web3Config)
+    mock_config.web3_config.w3 = Mock()
+    mock_config.web3_config.w3.eth.chain_id = 23294
+    mock_config.web3_config.owner = "mock_owner"
+
+    mock_contract = Mock(spec=DFRewards)
+    mock_contract.get_claimable_rewards = Mock()
+    mock_contract.get_claimable_rewards.return_value = 100
+    mock_contract.claim_rewards = Mock()
+
+    with patch(
+        "pdr_backend.predictoor.payout.BaseConfig", return_value=mock_config
+    ), patch("pdr_backend.predictoor.payout.DFRewards", return_value=mock_contract):
+        do_rose_payout()
+        mock_contract.claim_rewards.assert_called_with(
+            "mock_owner", "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+        )

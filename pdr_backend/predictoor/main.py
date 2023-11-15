@@ -11,6 +11,7 @@ Usage: python pdr_backend/predictoor/main.py APPROACH
              APPROACH=2 - uses a static model to predict. Needs MODELDIR specified.
              APPROACH=3 - uses a dynamic model to predict
              APPROACH=payout - claim all unclaimed payouts.
+             APPROACH=roseclaim - claim ROSE DF rewards.
 """
 
 
@@ -49,6 +50,12 @@ def do_main():
         from pdr_backend.predictoor.payout import do_payout
 
         do_payout()
+
+    elif arg1 == "roseclaim":
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.predictoor.payout import do_rose_payout
+
+        do_rose_payout()
 
     elif arg1 == "help":
         do_help()

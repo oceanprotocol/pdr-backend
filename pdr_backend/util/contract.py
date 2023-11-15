@@ -41,7 +41,7 @@ def get_addresses(chain_id: int):
 
 @enforce_types
 def get_contract_abi(contract_name):
-    """Returns the abi for a contract name."""
+    """Returns the abi dict for a contract name."""
     path = get_contract_filename(contract_name)
 
     if not path.exists():
@@ -54,7 +54,7 @@ def get_contract_abi(contract_name):
 
 @enforce_types
 def get_contract_filename(contract_name: str):
-    """Returns abi for a contract."""
+    """Returns filename for a contract name."""
     contract_basename = f"{contract_name}.json"
 
     # first, try to find locally
@@ -73,6 +73,7 @@ def get_contract_filename(contract_name: str):
                 path.exists()
             ), f"Found path = '{path}' via glob, yet path.exists() is False"
             return path
+
     # didn't find locally, so use use artifacts lib
     path = os.path.join(os.path.dirname(artifacts.__file__), "", contract_basename)
     path = Path(path).expanduser().resolve()

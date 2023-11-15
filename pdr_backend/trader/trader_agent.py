@@ -20,7 +20,7 @@ class TraderAgent:
         cache_dir=".cache",
     ):
         self.config = trader_config
-        self._do_trade = _do_trade if _do_trade else do_trade
+        self._do_trade = _do_trade if _do_trade else self.do_trade
 
         self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
 
@@ -39,7 +39,7 @@ class TraderAgent:
         }
 
         self.cache = Cache(cache_dir=cache_dir)
-        self.load_cached_epochs()
+        self.load_cache()
 
         print("-" * 80)
         print("Config:")
@@ -65,13 +65,13 @@ class TraderAgent:
                 contract.buy_and_start_subscription(None, True)
         time.sleep(1)
 
-    def save_previous_epochs(self):
+    def update_cache(self):
         for feed, epochs in self.prev_traded_epochs_per_feed.items():
             if epochs:
                 last_epoch = epochs[-1]
                 self.cache.save(f"trader_last_trade_{feed}", last_epoch)
 
-    def load_cached_epochs(self):
+    def load_cache(self):
         for feed in self.feeds:
             last_epoch = self.cache.load(f"trader_last_trade_{feed}")
             if last_epoch is not None:
@@ -182,31 +182,59 @@ class TraderAgent:
 
         await self._do_trade(feed, prediction)
         self.prev_traded_epochs_per_feed[addr].append(epoch)
-        self.save_previous_epochs()
+        self.update_cache()
         return epoch_s_left, logs
 
+    def get_pred_properties(
+        self, pred_nom: float, pred_denom: float
+    ) -> Dict[str, float]:
+        """
+        @description
+            This function calculates the prediction direction and confidence.
+        @returns
+            A dictionary containing the following:
+            - confidence: The confidence of the prediction.
+            - direction: The direction of the prediction.
+            - stake: The stake of the prediction.
+        """
+        confidence: float = pred_nom / pred_denom
+        direction: float = 1 if confidence >= 0.5 else 0
+        if confidence > 0.5:
+            confidence -= 0.5
+        else:
+            confidence = 0.5 - confidence
+        confidence = (confidence / 0.5) * 100
 
-async def do_trade(feed: Feed, prediction: Tuple[float, float]):
-    """
-    @description
-        This function is called each time there's a new prediction available.
-        By default, it prints the signal.
-        The user should implement their trading algorithm here.
-    @params
-        feed : Feed
-            An instance of the Feed object.
+        return {
+            "confidence": confidence,
+            "dir": direction,
+            "stake": pred_denom,
+        }
 
-        prediction : Tuple[float, float]
-            A tuple containing two float values, the unit is ETH:
-            - prediction[0]: Amount staked for the price going up.
-            - prediction[1]: Total stake amount.
-    @note
-        The probability of the price going up is determined by dividing
-        prediction[0] by prediction[1]. The magnitude of stake amounts indicates
-        the confidence of the prediction. Ensure stake amounts
-        are sufficiently large to be considered meaningful.
-    """
-    pred_nom, pred_denom = prediction
-    print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
-    # Trade here
-    # ...
+    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+        """
+        @description
+            This function is called each time there's a new prediction available.
+            By default, it prints the signal.
+            The user should implement their trading algorithm here.
+        @params
+            feed : Feed
+                An instance of the Feed object.
+
+            prediction : Tuple[float, float]
+                A tuple containing two float values, the unit is ETH:
+                - prediction[0]: Amount staked for the price going up.
+                - prediction[1]: Total stake amount.
+        @note
+            The probability of the price going up is determined by dividing
+            prediction[0] by prediction[1]. The magnitude of stake amounts indicates
+            the confidence of the prediction. Ensure stake amounts
+            are sufficiently large to be considered meaningful.
+        """
+        pred_nom, pred_denom = prediction
+        print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
+
+        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
+        print(f"      {feed} prediction properties: {pred_properties}.")
+        # Trade here
+        # ...
