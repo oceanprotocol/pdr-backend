@@ -31,7 +31,7 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
 
     end_ts = int(datetime.utcnow().timestamp())
     time_delta = (
-        timedelta(weeks=2)
+        timedelta(weeks=1)
         if contract_timeframe == "5m"
         else timedelta(weeks=4)
         # timedelta(days=1)
@@ -100,10 +100,9 @@ def save_statistics_to_file():
                 )
 
                 contract_ids = [contract["id"] for contract in contracts]
-
                 # Get statistics for all contracts
                 statistics = calculate_statistics_for_all_assets(
-                    contract_ids, start_ts_param, end_ts_param, network_param
+                    contract_ids, contracts, start_ts_param, end_ts_param, network_param
                 )
 
                 output.append(
@@ -139,10 +138,13 @@ def serve_statistics_from_file():
     try:
         with open(JSON_FILE_PATH, "r") as f:
             data = json.load(f)
-            return jsonify(data)
+            response = jsonify(data)
+            response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
+            return response
     except Exception as e:
-        # abort(500, description=str(e))
-        return jsonify({"error": "Internal Server Error", "message": str(e)}), 500
+        response = jsonify({"error": "Internal Server Error", "message": str(e)})
+        response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
+        return response, 500
 
 
 if __name__ == "__main__":
@@ -150,4 +152,4 @@ if __name__ == "__main__":
     thread = threading.Thread(target=save_statistics_to_file)
     thread.start()
 
-    app.run(debug=True)
+    app.run(debug=False)
