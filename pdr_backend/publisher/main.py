@@ -1,5 +1,3 @@
-from os import getenv
-
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
