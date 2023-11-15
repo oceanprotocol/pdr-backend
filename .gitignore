@@ -166,12 +166,15 @@ cython_debug/
 
 # predictoor dynamic modeling
 out*.txt
-csvs/
+*csvs*/
+
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json
-# pm2 configs
-scripts/pm2-config/*private*
 
-# vm config
-address.json
-*csvs*/
+# private files or configs
+*private*
+
+# terraform secrets and build files
+scripts/terraform/terraform.tfvars
+scripts/terraform/.terraform*
+scripts/terraform/terraform.tfstate*

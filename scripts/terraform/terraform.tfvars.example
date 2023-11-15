@@ -1,0 +1,31 @@
+# Predictoor Variables
+predictoor_branch = "main"
+
+# Cloud Variables
+username = "Your account username"
+credentials_path = "Path to your credentials file"
+project_id = "Your GCP project ID"
+
+# Predictoor 5m Variables
+BTC_5m_PK = "Your BTC 5m private key"
+ETH_5m_PK = "Your ETH 5m private key"
+ADA_5m_PK = "Your ADA 5m private key"
+BNB_5m_PK = "Your BNB 5m private key"
+SOL_5m_PK = "Your SOL 5m private key"
+XRP_5m_PK = "Your XRP 5m private key"
+DOT_5m_PK = "Your DOT 5m private key"
+LTC_5m_PK = "Your LTC 5m private key"
+DOGE_5m_PK = "Your DOGE 5m private key"
+TRX_5m_PK = "Your TRX 5m private key"
+
+# Predictoor 1h Variables
+BTC_1h_PK = "Your BTC 1h private key"
+ETH_1h_PK = "Your ETH 1h private key"
+ADA_1h_PK = "Your ADA 1h private key"
+BNB_1h_PK = "Your BNB 1h private key"
+SOL_1h_PK = "Your SOL 1h private key"
+XRP_1h_PK = "Your XRP 1h private key"
+DOT_1h_PK = "Your DOT 1h private key"
+LTC_1h_PK = "Your LTC 1h private key"
+DOGE_1h_PK = "Your DOGE 1h private key"
+TRX_1h_PK = "Your TRX 1h private key"
