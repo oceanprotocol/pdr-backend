@@ -76,6 +76,10 @@ resource "google_compute_instance" "vm_instance" {
     export DOGE_1h_PK=${var.DOGE_1h_PK}
     export TRX_1h_PK=${var.TRX_1h_PK}
 
+    # install pm2
+    sudo apt install npm
+    sudo npm install pm2@latest -g
+
     # Run PM2 for all feeds
     pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-5m.config.js
     pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-1h.config.js
