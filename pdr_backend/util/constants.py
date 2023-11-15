@@ -12,6 +12,7 @@ S_PER_DAY = 86400
 SUBGRAPH_MAX_TRIES = 5
 WEB3_MAX_TRIES = 5
 
-CAND_USDCOINS = ["USDT", "DAI", "USDC"]  # add more if needed
+CAND_USDCOINS = ["USDT", "USDC", "DAI", "RAI"]  # add more if needed
 CAND_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
 CAND_SIGNALS = ["open", "high", "low", "close", "volume"]
+CHAR_TO_SIGNAL = {"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}

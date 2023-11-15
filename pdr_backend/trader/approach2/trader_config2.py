@@ -26,7 +26,7 @@ class TraderConfig2(TraderConfig):
     def __init__(self):
         super().__init__()
 
-        self.exchange_id = getenv("EXCHANGE_FILTER")
+        self.exchange_str = getenv("EXCHANGE_FILTER")
         self.pair = getenv("PAIR_FILTER")
         self.timeframe = getenv("TIMEFRAME_FILTER")
 
@@ -40,7 +40,7 @@ class TraderConfig2(TraderConfig):
         ## Position Parameters
         self.size = getenv("POSITION_SIZE")
 
-        assert self.exchange_id in CAND_EXCHANGE, "Exchange must be valid"
+        assert self.exchange_str in CAND_EXCHANGE, "Exchange must be valid"
         assert self.pair in CAND_PAIR, "Pair must be valid"
         assert self.timeframe in CAND_TIMEFRAME, "Timeframe must be valid"
         assert (

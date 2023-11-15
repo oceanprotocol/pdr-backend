@@ -1,9 +1,12 @@
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 import pytest
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.models.feed import Feed
-from pdr_backend.util.constants import ZERO_ADDRESS  # pylint: disable=wildcard-import
+from pdr_backend.util.constants import (
+    MAX_UINT,
+    ZERO_ADDRESS,
+)  # pylint: disable=wildcard-import
 
 
 def mock_feed():
@@ -11,6 +14,15 @@ def mock_feed():
     feed.name = "test feed"
     feed.seconds_per_epoch = 60
     return feed
+
+
+@pytest.fixture()
+def mock_token():
+    with patch("pdr_backend.dfbuyer.dfbuyer_agent.Token") as mock_token_class:
+        mock_token_instance = MagicMock()
+        mock_token_instance.allowance.return_value = MAX_UINT
+        mock_token_class.return_value = mock_token_instance
+        yield mock_token_class
 
 
 @pytest.fixture
@@ -26,12 +38,6 @@ def dfbuyer_config():
 def mock_get_address():
     with patch("pdr_backend.dfbuyer.dfbuyer_agent.get_address") as mock:
         mock.return_value = ZERO_ADDRESS
-        yield mock
-
-
-@pytest.fixture
-def mock_token():
-    with patch("pdr_backend.dfbuyer.dfbuyer_agent.Token") as mock:
         yield mock
 
 

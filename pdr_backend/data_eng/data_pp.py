@@ -1,15 +1,11 @@
+from typing import Tuple
+
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.util.constants import (
-    CAND_USDCOINS,
-    CAND_TIMEFRAMES,
-    CAND_SIGNALS,
-)
-from pdr_backend.util.feedstr import (
-    unpack_pair_str,
-    unpack_feed_str,
-)
+from pdr_backend.util.constants import CAND_TIMEFRAMES
+from pdr_backend.util.feedstr import unpack_feed_str, verify_feed_str
+from pdr_backend.util.pairstr import unpack_pair_str
 
 
 class DataPP:  # user-uncontrollable params, at data-eng level
@@ -29,14 +25,9 @@ class DataPP:  # user-uncontrollable params, at data-eng level
         predict_feed_str: str,  # eg "binance c BTC/USDT", "kraken h BTC/USDT"
         N_test: int,  # eg 100. num pts to test on, 1 at a time (online)
     ):
-        # test inputs
+        # preconditions
         assert timeframe in CAND_TIMEFRAMES
-
-        _, signal, pair_str = unpack_feed_str(predict_feed_str)
-        assert signal in CAND_SIGNALS, signal
-        _, quote_str = unpack_pair_str(pair_str)
-        assert quote_str in CAND_USDCOINS
-
+        verify_feed_str(predict_feed_str)
         assert 0 < N_test < np.inf
 
         # save values
@@ -59,31 +50,37 @@ class DataPP:  # user-uncontrollable params, at data-eng level
         raise ValueError("need to support timeframe={self.timeframe}")
 
     @property
-    def yval_exchange_id(self) -> str:
+    def predict_feed_tup(self) -> Tuple[str, str, str]:
+        """
+        Return (exchange_str, signal_str, pair_str)
+        E.g. ("binance", "close", "BTC/USDT")
+        """
+        return unpack_feed_str(self.predict_feed_str)
+
+    @property
+    def exchange_str(self) -> str:
         """Return e.g. 'binance'"""
-        exchange_id, _, _ = unpack_feed_str(self.predict_feed_str)
-        return exchange_id
+        return self.predict_feed_tup[0]
 
     @property
-    def yval_signal(self) -> str:
+    def signal_str(self) -> str:
         """Return e.g. 'high'"""
-        _, signal, _ = unpack_feed_str(self.predict_feed_str)
-        assert signal in CAND_SIGNALS
-        return signal
+        return self.predict_feed_tup[1]
 
     @property
-    def yval_coin(self) -> str:
+    def pair_str(self) -> str:
+        """Return e.g. 'ETH/USDT'"""
+        return self.predict_feed_tup[2]
+
+    @property
+    def base_str(self) -> str:
         """Return e.g. 'ETH'"""
-        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
-        base_str, _ = unpack_pair_str(pair_str)
-        return base_str
+        return unpack_pair_str(self.predict_feed_tup[2])[0]
 
     @property
-    def usdcoin(self) -> str:
+    def quote_str(self) -> str:
         """Return e.g. 'USDT'"""
-        _, _, pair_str = unpack_feed_str(self.predict_feed_str)
-        _, quote_str = unpack_pair_str(pair_str)
-        return quote_str
+        return unpack_pair_str(self.predict_feed_tup[2])[1]
 
     @enforce_types
     def __str__(self) -> str:

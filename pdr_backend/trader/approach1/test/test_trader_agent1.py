@@ -20,7 +20,7 @@ def mock_feed():
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
     trader_config = Mock(spec=TraderConfig1)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
@@ -53,7 +53,7 @@ async def test_do_trade(
     web3_config,
 ):
     trader_config = Mock(spec=TraderConfig1)
-    trader_config.exchange_id = "mexc3"
+    trader_config.exchange_str = "mexc3"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0

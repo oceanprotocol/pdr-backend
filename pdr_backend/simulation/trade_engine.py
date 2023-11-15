@@ -51,9 +51,7 @@ class TradeEngine:
           sim_ss -- user-controllable params, at sim level
         """
         # ensure training data has the target yval
-        assert data_pp.yval_exchange_id in data_ss.exchs_dict
-        assert data_pp.yval_signal in data_ss.signals
-        assert data_pp.yval_coin in data_ss.coins
+        assert data_pp.predict_feed_tup in data_ss.input_feed_tups
 
         # pp & ss values
         self.data_pp = data_pp
@@ -82,12 +80,14 @@ class TradeEngine:
             self.plot_state = PlotState()
 
     @property
-    def usdcoin(self) -> str:
-        return self.data_pp.usdcoin
+    def tokcoin(self) -> str:
+        """Return e.g. 'ETH'"""
+        return self.data_pp.base_str
 
     @property
-    def tokcoin(self) -> str:
-        return self.data_pp.yval_coin
+    def usdcoin(self) -> str:
+        """Return e.g. 'USDT'"""
+        return self.data_pp.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):

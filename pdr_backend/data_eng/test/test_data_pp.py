@@ -17,10 +17,12 @@ def test_data_pp_5m():
     # test properties
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_m == 5
-    assert pp.yval_exchange_id == "kraken"
-    assert pp.yval_signal == "high"
-    assert pp.yval_coin == "ETH"
-    assert pp.usdcoin == "USDT"
+    assert pp.predict_feed_tup == ("kraken", "high", "ETH-USDT")
+    assert pp.exchange_str == "kraken"
+    assert pp.signal_str == "high"
+    assert pp.pair_str == "ETH-USDT"
+    assert pp.base_str == "ETH"
+    assert pp.quote_str == "USDT"
 
 
 @enforce_types

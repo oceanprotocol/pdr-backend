@@ -85,16 +85,14 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
     # setup: ss
     ss = DataSS(  # user-controllable params
+        ["binanceus h ETH/USDT"],
         csv_dir=csvdir,
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
         max_n_train=7,
         autoregressive_n=3,
-        signals=["high"],
-        coins=["ETH"],
-        exchange_ids=["binanceus"],
     )
-    ss.exchs_dict["binanceus"] = exchange
+    ss.exchs_dict["binanceus"] = exchange  # override with fake exchange
 
     # setup: data_factory, filename
     data_factory = DataFactory(pp, ss)
@@ -140,7 +138,7 @@ def _test_update_csv(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 # end-to-end tests
 
 BINANCE_ETH_DATA = [
-    # time           #open  #high  #low    #close  #volume
+    # time          #o   #h  #l    #c    #v
     [1686805500000, 0.5, 12, 0.12, 1.1, 7.0],
     [1686805800000, 0.5, 11, 0.11, 2.2, 7.0],
     [1686806100000, 0.5, 10, 0.10, 3.3, 7.0],
@@ -176,7 +174,7 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
     csvdir = str(tmpdir)
 
-    csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
+    csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
     pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
 
@@ -195,13 +193,13 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "kraken:ETH:high:t-4",
-        "kraken:ETH:high:t-3",
-        "kraken:ETH:high:t-2",
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert x_df["kraken:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
     # =========== now have a different testshift (1 not 0)
@@ -216,13 +214,13 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "kraken:ETH:high:t-4",
-        "kraken:ETH:high:t-3",
-        "kraken:ETH:high:t-2",
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
     ]
     assert found_cols == target_cols
 
-    assert x_df["kraken:ETH:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
     # =========== now have a different max_n_train
@@ -247,12 +245,12 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     csv_dfs = {
         "binanceus": {
-            "BTC": _df_from_raw_data(BINANCE_BTC_DATA),
-            "ETH": _df_from_raw_data(BINANCE_ETH_DATA),
+            "BTC-USDT": _df_from_raw_data(BINANCE_BTC_DATA),
+            "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
         },
         "kraken": {
-            "BTC": _df_from_raw_data(KRAKEN_BTC_DATA),
-            "ETH": _df_from_raw_data(KRAKEN_ETH_DATA),
+            "BTC-USDT": _df_from_raw_data(KRAKEN_BTC_DATA),
+            "ETH-USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
         },
     }
 
@@ -263,14 +261,12 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     )
 
     ss = DataSS(
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
         csv_dir=csvdir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,
         autoregressive_n=3,
-        signals=["high", "low"],
-        coins=["BTC", "ETH"],
-        exchange_ids=["binanceus", "kraken"],
     )
 
     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
@@ -282,49 +278,49 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "binanceus:BTC:high:t-4",
-        "binanceus:BTC:high:t-3",
-        "binanceus:BTC:high:t-2",
-        "binanceus:BTC:low:t-4",
-        "binanceus:BTC:low:t-3",
-        "binanceus:BTC:low:t-2",
-        "binanceus:ETH:high:t-4",
-        "binanceus:ETH:high:t-3",
-        "binanceus:ETH:high:t-2",
-        "binanceus:ETH:low:t-4",
-        "binanceus:ETH:low:t-3",
-        "binanceus:ETH:low:t-2",
-        "kraken:BTC:high:t-4",
-        "kraken:BTC:high:t-3",
-        "kraken:BTC:high:t-2",
-        "kraken:BTC:low:t-4",
-        "kraken:BTC:low:t-3",
-        "kraken:BTC:low:t-2",
-        "kraken:ETH:high:t-4",
-        "kraken:ETH:high:t-3",
-        "kraken:ETH:high:t-2",
-        "kraken:ETH:low:t-4",
-        "kraken:ETH:low:t-3",
-        "kraken:ETH:low:t-2",
+        "binanceus:BTC-USDT:high:t-4",
+        "binanceus:BTC-USDT:high:t-3",
+        "binanceus:BTC-USDT:high:t-2",
+        "binanceus:ETH-USDT:high:t-4",
+        "binanceus:ETH-USDT:high:t-3",
+        "binanceus:ETH-USDT:high:t-2",
+        "binanceus:BTC-USDT:low:t-4",
+        "binanceus:BTC-USDT:low:t-3",
+        "binanceus:BTC-USDT:low:t-2",
+        "binanceus:ETH-USDT:low:t-4",
+        "binanceus:ETH-USDT:low:t-3",
+        "binanceus:ETH-USDT:low:t-2",
+        "kraken:BTC-USDT:high:t-4",
+        "kraken:BTC-USDT:high:t-3",
+        "kraken:BTC-USDT:high:t-2",
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
+        "kraken:BTC-USDT:low:t-4",
+        "kraken:BTC-USDT:low:t-3",
+        "kraken:BTC-USDT:low:t-2",
+        "kraken:ETH-USDT:low:t-4",
+        "kraken:ETH-USDT:low:t-3",
+        "kraken:ETH-USDT:low:t-2",
     ]
     assert found_cols == target_cols
 
-    # test binanceus:ETH:high like in 1-signal
-    assert target_cols[6:9] == [
-        "binanceus:ETH:high:t-4",
-        "binanceus:ETH:high:t-3",
-        "binanceus:ETH:high:t-2",
+    # test binanceus:ETH-USDT:high like in 1-signal
+    assert target_cols[3:6] == [
+        "binanceus:ETH-USDT:high:t-4",
+        "binanceus:ETH-USDT:high:t-3",
+        "binanceus:ETH-USDT:high:t-2",
     ]
-    Xa = X[:, 6:9]
+    Xa = X[:, 3:6]
     assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
     assert Xa[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
     assert Xa[0, :].tolist() == [11, 10, 9] and y[0] == 8
 
-    assert x_df.iloc[-1].tolist()[6:9] == [4, 3, 2]
-    assert x_df.iloc[-2].tolist()[6:9] == [5, 4, 3]
-    assert x_df.iloc[0].tolist()[6:9] == [11, 10, 9]
+    assert x_df.iloc[-1].tolist()[3:6] == [4, 3, 2]
+    assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
+    assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
 
-    assert x_df["binanceus:ETH:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
 
@@ -332,16 +328,17 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 def test_create_xy__handle_nan(tmpdir):
     # create hist_df
     csvdir = str(tmpdir)
-    csv_dfs = {"kraken": {"ETH": _df_from_raw_data(BINANCE_ETH_DATA)}}
+    csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
     pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_csv_dfs(csv_dfs)
 
     # corrupt hist_df with nans
-    assert "high" in ss.signals
-    hist_df.at[1686805800000, "kraken:ETH:high"] = np.nan  # first row
-    hist_df.at[1686806700000, "kraken:ETH:high"] = np.nan  # middle row
-    hist_df.at[1686808800000, "kraken:ETH:high"] = np.nan  # last row
+    all_signal_strs = set(signal_str for _, signal_str, _ in ss.input_feed_tups)
+    assert "high" in all_signal_strs
+    hist_df.at[1686805800000, "kraken:ETH-USDT:high"] = np.nan  # first row
+    hist_df.at[1686806700000, "kraken:ETH-USDT:high"] = np.nan  # middle row
+    hist_df.at[1686808800000, "kraken:ETH-USDT:high"] = np.nan  # last row
     assert has_nan(hist_df)
 
     # run create_xy() and force the nans to stick around
@@ -371,14 +368,12 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
     )
 
     ss = DataSS(
+        [pp.predict_feed_str],
         csv_dir=csvdir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,
         autoregressive_n=3,
-        signals=[pp.yval_signal],
-        coins=[pp.yval_coin],
-        exchange_ids=[pp.yval_exchange_id],
     )
     return pp, ss
 
