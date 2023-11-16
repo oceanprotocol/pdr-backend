@@ -12,7 +12,7 @@ class Prediction:
         payout,
         user,
         submittimestamp,
-        predictionId
+        predictionId,
     ) -> None:
         self.pair = pair
         self.timeframe = timeframe

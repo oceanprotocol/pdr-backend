@@ -13,6 +13,7 @@ def create_csv_header_columns(columns: List[str], file: TextIOWrapper):
     writer.writerow(columns)
     return writer
 
+
 @enforce_types
 def generate_csv_file_path(csv_output_dir: str, key: str) -> str:
     return os.path.join(
@@ -20,10 +21,11 @@ def generate_csv_file_path(csv_output_dir: str, key: str) -> str:
         key + ".csv",
     )
 
+
 @enforce_types
 def generate_prediction_data_structure(
-    predictions: List[Prediction]) -> Dict[str, List[Prediction]]:
-
+    predictions: List[Prediction],
+) -> Dict[str, List[Prediction]]:
     data: Dict[str, List[Prediction]] = {}
     for prediction in predictions:
         key = (
@@ -34,10 +36,12 @@ def generate_prediction_data_structure(
         data[key].append(prediction)
     return data
 
+
 @enforce_types
 def check_and_create_dir(dir_path: str):
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
+
 
 @enforce_types
 def write_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
@@ -50,7 +54,8 @@ def write_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str)
         filename = generate_csv_file_path(csv_output_dir, key)
         with open(filename, "w", newline="") as file:
             writer = create_csv_header_columns(
-                ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"], file)
+                ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"], file
+            )
 
             for prediction in predictions:
                 writer.writerow(
@@ -64,6 +69,7 @@ def write_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str)
                 )
         print(f"CSV file '{filename}' created successfully.")
 
+
 @enforce_types
 def write_analysis_prediction(all_predictions: List[Prediction], csv_output_dir: str):
     check_and_create_dir(csv_output_dir)
@@ -76,15 +82,17 @@ def write_analysis_prediction(all_predictions: List[Prediction], csv_output_dir:
         with open(filename, "w", newline="") as file:
             writer = create_csv_header_columns(
                 [
-                    "PredictionID", 
+                    "PredictionID",
                     "Timestamp",
                     "Submit Timestamp",
                     "Stake",
                     "Wallet",
                     "Payout",
                     "True Value",
-                    "Predicted Value"
-                ], file)
+                    "Predicted Value",
+                ],
+                file,
+            )
 
             for prediction in predictions:
                 writer.writerow(
