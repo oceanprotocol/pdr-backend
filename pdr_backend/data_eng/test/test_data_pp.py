@@ -31,6 +31,9 @@ def test_data_pp_1feed():
     assert pp.base_str == "ETH"
     assert pp.quote_str == "USDT"
 
+    # str
+    assert "DataPP=" in str(pp)
+
 
 @enforce_types
 def test_data_pp_3feeds():
