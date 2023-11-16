@@ -31,7 +31,7 @@ def do_help_long(status_code=0):
 
     
 @enforce_types
-def print_arguments(arguments: Namespace):
+def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
@@ -44,7 +44,7 @@ def print_arguments(arguments: Namespace):
         
 @enforce_types
 class YAML_FILE_Mixin:
-    def add_argument_YAML_FILE()
+    def add_argument_YAML_FILE(self):
         self.add_argument(
             "--YAML_FILE",
             default="ppss.yaml",
@@ -55,8 +55,8 @@ class YAML_FILE_Mixin:
 
         
 @enforce_types
-class YAML_FILE_Mixin:
-    def add_argument_NETWORK()
+class NETWORK_Mixin:
+    def add_argument_NETWORK(self):
         self.add_argument(
             "NETWORK",
             type=str,
@@ -115,17 +115,10 @@ class _ArgParser_NETWORK_YAML_FILE(ArgParser, NETWORK_Mixin, YAML_FILE_Mixin):
         self.add_argument_YAML_FILE()
 
         
-@enforce_types
-class TruevalArgParser(ArgParser, _ArgParser_NETWORK_YAML_FILE):
-    pass
+TruevalArgParser =  _ArgParser_NETWORK_YAML_FILE
+
+DfbuyerArgParser = _ArgParser_NETWORK_YAML_FILE
+
+PublisherArgParser = _ArgParser_NETWORK_YAML_FILE
 
 
-@enforce_types
-class DfBuyerArgParser(ArgParser, _ArgParser_NETWORK_YAML_FILE):
-    pass
-
-
-@enforce_types
-class PublisherArgParser(ArgParser, _ArgParser_NETWORK_YAML_FILE):
-    pass
-   

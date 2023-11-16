@@ -18,7 +18,8 @@ class DataPP(StrMixin):
         if self.timeframe not in CAND_TIMEFRAMES:
             raise ValueError(self.timeframe)
         verify_feeds_strs(self.predict_feeds_strs)
-        assert 0 < self.test_n < np.inf
+        if not (0 < self.test_n < np.inf):
+            raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
 
     # --------------------------------
     # yaml properties
@@ -70,7 +71,8 @@ class DataPP(StrMixin):
         E.g. ("binance", "open",  "ADA-USDT")
         Only applicable when 1 feed.
         """
-        assert len(self.predict_feed_tups) == 1
+        if len(self.predict_feed_tups) != 1:
+            raise ValueError("This method only works with 1 predict_feed")
         return self.predict_feed_tups[0]
 
     @property

@@ -1,7 +1,7 @@
 data_pp:
   timeframe: 1h
   predict_feeds:
-    - binance c BTC/USDT,ETH/USDT
+    - binance c BTC/USDT
   sim_only:
     test_n : 200
 
