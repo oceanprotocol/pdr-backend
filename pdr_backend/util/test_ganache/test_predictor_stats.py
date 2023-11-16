@@ -23,7 +23,7 @@ sample_predictions = [
         payout=0.0,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         submittimestamp=1622547000,
-        predictionId='test-predictionid1'
+        predictionId="test-predictionid1",
     ),
     Prediction(
         pair="ADA/USDT",
@@ -36,7 +36,7 @@ sample_predictions = [
         payout=0.0,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         submittimestamp=1622547000,
-        predictionId='test-predictionid2'
+        predictionId="test-predictionid2",
     ),
 ]
 

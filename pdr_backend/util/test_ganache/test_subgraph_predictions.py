@@ -20,7 +20,7 @@ SAMPLE_PREDICTION = Prediction(
     payout=0.0,
     user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     submittimestamp=1622547000,
-    predictionId='test-predictionid'
+    predictionId="test-predictionid",
 )
 
 # pylint: disable=line-too-long

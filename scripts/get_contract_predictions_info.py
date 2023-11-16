@@ -32,7 +32,9 @@ if __name__ == "__main__":
         address_filter = contract_addr.lower().split(",")
     elif contract_addr == "all":
         addresses = get_all_contract_ids_by_owner(
-            owner_address="0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network="mainnet")
+            owner_address="0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703",
+            network="mainnet",
+        )
         address_filter = [address.lower() for address in addresses]
     else:
         address_filter = [contract_addr.lower()]
