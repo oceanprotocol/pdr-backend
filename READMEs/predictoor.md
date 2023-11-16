@@ -45,10 +45,10 @@ Simulation allows us to quickly build intuition, and assess the performance of t
 
 Let's simulate! In console:
 ```console
-python pdr_backend/simulation/runtrade.py
+python pdr_backend/sim/runsim.py
 ```
 
-What `runtrade.py` does:
+What `runsim.py` does:
 1. Set simulation parameters.
 1. Grab historical price data from exchanges and stores in `csvs/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
@@ -58,11 +58,9 @@ What `runtrade.py` does:
    - Plot total profit versus time.
    - (It logs this all to screen, and to `out*.txt`.)
 
-The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runtrade.py](../pdr_backend/simulation/runtrade.py).
+The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runsim.py](../pdr_backend/sim/runsim.py).
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
-
-([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
 
 ## Run Predictoor Bot on Sapphire Testnet
 
@@ -162,9 +160,6 @@ Once you're familiar with the above, you can make your own model and optimize it
 1. Fork `pdr-backend` repo.
 1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
 1. Bring your model as a Predictoor bot to testnet then mainnet.
-
-
-([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
 
 
 ## Run Many Bots at Once

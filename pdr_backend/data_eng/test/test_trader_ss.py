@@ -5,10 +5,11 @@ from pdr_backend.data_eng.trader_ss import TraderSS
 
 @enforce_types
 def test_trader_ss():
-    d = {"sim_only":
-         {"buy_amt": "10 USD",
-          }
-         }
+    d = {
+        "sim_only": {
+            "buy_amt": "10 USD",
+        }
+    }
     ss = TraderSS(d)
 
     # yaml properties

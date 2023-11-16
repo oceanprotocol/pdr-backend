@@ -17,6 +17,7 @@ _UNWANTED_ENVVARS = [
     "STAKE_AMOUNT",
 ]
 
+
 @enforce_types
 class BasePredictoorAgent(ABC):
 
@@ -27,7 +28,7 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, call get_prediction()
     """
 
-    def __init__(self, config: BaseConfig, ppss:PPSS):
+    def __init__(self, config: BaseConfig, ppss: PPSS):
         # preconditions
         for envvar in _UNWANTED_ENVVARS:
             assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
@@ -38,11 +39,11 @@ class BasePredictoorAgent(ABC):
 
         # set self.feeds
         self.feeds: Dict[str, Feed] = {}
-        
+
         cand_feeds = self.config.get_feeds()
         if not cand_feeds:
             print("No feeds found. Exiting")
-            sys.exit()    
+            sys.exit()
         for feed in cand_feeds.values():
             feed_tup = (feed.source, "close", feed.pair)
             if feed_tup in self.ppss.data_pp.predict_feed_tups:
@@ -54,7 +55,7 @@ class BasePredictoorAgent(ABC):
 
         # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs) # [addr] : contract
+        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0

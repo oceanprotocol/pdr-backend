@@ -8,7 +8,6 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 @enforce_types
 class PredictoorAgent1(BasePredictoorAgent):
-
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:

@@ -7,19 +7,21 @@ from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 @enforce_types
 def test_data_pp_1feed():
-    pp = DataPP({
-        "timeframe" : "5m",
-        "predict_feeds" : ["kraken h ETH/USDT"],
-        "sim_only" : {"test_n" : 2},
-    })
-                     
+    pp = DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": ["kraken h ETH/USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
+
     # yaml properties
     assert isinstance(pp.timeframe, str)
     assert pp.predict_feeds_strs == ["kraken h ETH/USDT"]
     assert pp.test_n == 2
 
     # derivative properties
-    assert isinstance(pp.timeframe_ms, int) # test more below
+    assert isinstance(pp.timeframe_ms, int)  # test more below
     assert isinstance(pp.timeframe_m, int)  # ""
     assert pp.predict_feed_tups == [("kraken", "high", "ETH-USDT")]
     assert pp.predict_feed_tup == ("kraken", "high", "ETH-USDT")
@@ -32,15 +34,17 @@ def test_data_pp_1feed():
 
 @enforce_types
 def test_data_pp_3feeds():
-    pp = DataPP({
-        "timeframe" : "5m",
-        "predict_feeds" : ["kraken h ETH/USDT", "binance oh BTC/USDT"],
-        "sim_only" : {"test_n" : 2},
-    })
-                     
+    pp = DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": ["kraken h ETH/USDT", "binance oh BTC/USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
+
     # yaml properties
     assert pp.timeframe == "5m"
-    assert pp.predict_feeds_strs == ["kraken h ETH/USDT","binance oh BTC/USDT"]
+    assert pp.predict_feeds_strs == ["kraken h ETH/USDT", "binance oh BTC/USDT"]
 
     # derivative properties
     assert pp.predict_feed_tups == [
@@ -61,25 +65,30 @@ def test_data_pp_3feeds():
     with pytest.raises(AssertionError):
         pp.quote_str
 
+
 @enforce_types
 def test_data_pp_5m_vs_1h():
-    #5m
-    pp = DataPP({
-        "timeframe" : "5m",
-        "predict_feeds" : ["kraken h ETH/USDT"],
-        "sim_only" : {"test_n" : 2},
-    })
+    # 5m
+    pp = DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": ["kraken h ETH/USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
     assert pp.timeframe == "5m"
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_s == 5 * 60
     assert pp.timeframe_m == 5
 
-    #1h
-    pp = DataPP({
-        "timeframe" : "1h",
-        "predict_feeds" : ["kraken h ETH/USDT"],
-        "sim_only" : {"test_n" : 2},
-    })
+    # 1h
+    pp = DataPP(
+        {
+            "timeframe": "1h",
+            "predict_feeds": ["kraken h ETH/USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
     assert pp.timeframe == "1h"
     assert pp.timeframe_ms == 60 * 60 * 1000
     assert pp.timeframe_s == 60 * 60

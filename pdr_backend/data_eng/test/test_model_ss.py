@@ -6,7 +6,7 @@ from pdr_backend.data_eng.model_ss import APPROACHES, ModelSS
 
 @enforce_types
 def test_model_ss1():
-    d = {"approach" : "LIN"}
+    d = {"approach": "LIN"}
     ss = ModelSS(d)
 
     # yaml properties
@@ -20,8 +20,8 @@ def test_model_ss1():
 @enforce_types
 def test_model_ss2():
     for approach in APPROACHES:
-        ss = ModelSS({"approach" : approach})
+        ss = ModelSS({"approach": approach})
         assert approach in str(ss)
 
     with pytest.raises(ValueError):
-        ModelSS({"approach" : "foo_approach"})
+        ModelSS({"approach": "foo_approach"})

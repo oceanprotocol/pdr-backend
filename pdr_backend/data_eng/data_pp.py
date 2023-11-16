@@ -10,10 +10,9 @@ from pdr_backend.util.strutil import StrMixin
 
 
 class DataPP(StrMixin):
-
     @enforce_types
     def __init__(self, d: dict):
-        self.d = d # yaml_dict["data_pp"]
+        self.d = d  # yaml_dict["data_pp"]
 
         # test inputs
         if self.timeframe not in CAND_TIMEFRAMES:
@@ -25,15 +24,15 @@ class DataPP(StrMixin):
     # yaml properties
     @property
     def timeframe(self) -> str:
-        return self.d["timeframe"] # eg "1m"
+        return self.d["timeframe"]  # eg "1m"
 
     @property
     def predict_feeds_strs(self) -> List[str]:
-        return self.d["predict_feeds"] # eg ["binance oh BTC/USDT",..]
+        return self.d["predict_feeds"]  # eg ["binance oh BTC/USDT",..]
 
     @property
     def test_n(self) -> int:
-        return self.d["sim_only"]["test_n"] # eg 200
+        return self.d["sim_only"]["test_n"]  # eg 200
 
     # --------------------------------
     # derivative properties
@@ -41,7 +40,7 @@ class DataPP(StrMixin):
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
         return self.timeframe_m * 60 * 1000
-    
+
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""

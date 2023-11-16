@@ -1,17 +1,14 @@
-#!/usr/bin/env python
 import os
 
 from pdr_backend.data_eng.constants import DEFAULT_PPSS_YAML_FILENAME
 from pdr_backend.data_eng.ppss import PPSS
-from pdr_backend.sim.trade_engine import TradeEngine
+from pdr_backend.sim.sim_engine import SimEngine
 
-yaml_filename = os.path.abspath(DEFAULT_PPSS_YAML_FILENAME)
-ppss = PPSS(yaml_filename)
+def run():
+    ppss = PPSS(yaml_filename)
 
-print(ppss)
+    print(ppss)
 
-trade_engine = TradeEngine(ppss)
+    sim_engine = SimEngine(ppss)
 
-trade_engine.run()
-
-
+    sim_engine.run()

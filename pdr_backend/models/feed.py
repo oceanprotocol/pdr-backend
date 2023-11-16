@@ -8,7 +8,7 @@ from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.strutil import StrMixin
 
 
-class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes    
+class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,

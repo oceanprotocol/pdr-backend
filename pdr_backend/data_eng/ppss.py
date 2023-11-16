@@ -11,28 +11,30 @@ from pdr_backend.data_eng.sim_ss import SimSS
 from pdr_backend.data_eng.trader_pp import TraderPP
 from pdr_backend.data_eng.trader_ss import TraderSS
 
+
 class PPSS:
     """
     All uncontrollable (pp) and controllable (ss) settings in one place
     Constructed by loading from a .yaml file or yaml-formatted string.
     """
-    
+
     def __init__(
-            self,
-            yaml_filename:Optional[str]=None,
-            yaml_str:Optional[str]=None,
+        self,
+        yaml_filename: Optional[str] = None,
+        yaml_str: Optional[str] = None,
     ):
         # preconditions
-        assert yaml_filename or yaml_str and not (yaml_filename and yaml_str),\
-            "need to set yaml_filename_ or yaml_str but not both"
+        assert (
+            yaml_filename or yaml_str and not (yaml_filename and yaml_str)
+        ), "need to set yaml_filename_ or yaml_str but not both"
 
         # get d
         if yaml_filename is not None:
-            with open(yaml_filename, 'r') as f:
+            with open(yaml_filename, "r") as f:
                 d = yaml.safe_load(f)
         else:
             d = yaml.safe_load(yaml_str)
-            
+
         # fill attributes from d
         self.data_pp = DataPP(d["data_pp"])
         self.data_ss = DataSS(d["data_ss"])
@@ -52,6 +54,7 @@ class PPSS:
         s += f"trader_ss={self.trader_ss}\n"
         s += f"sim_ss={self.sim_ss}\n"
         return s
+
 
 def fast_test_yaml_str(tmpdir):
     """Use this for testing. It has fast runtime."""

@@ -59,8 +59,6 @@ The baseline settings use a linear model inputting prices of the previous 10 epo
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
-([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
-
 ## Run Trader Bot on Sapphire Testnet
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.

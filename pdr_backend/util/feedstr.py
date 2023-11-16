@@ -138,7 +138,7 @@ def pack_feed_str(feed_tup: Tuple[str, str, str]) -> str:
     char = signal_to_char(signal_str)
     feed_str = f"{exchange_str} {char} {pair_str}"
     return feed_str
-    
+
 
 # ==========================================================================
 # verify..() functions

@@ -5,11 +5,12 @@ from pdr_backend.data_eng.predictoor_ss import PredictoorSS
 
 @enforce_types
 def test_predictoor_ss(tmpdir):
-    d = {"bot_only":
-         {"s_until_epoch_end" : 60,
-          "stake_amount" : 1,
-          }
-         }
+    d = {
+        "bot_only": {
+            "s_until_epoch_end": 60,
+            "stake_amount": 1,
+        }
+    }
     ss = PredictoorSS(d)
 
     # yaml properties

@@ -13,6 +13,7 @@ from pdr_backend.util.signalstr import (
 # ==========================================================================
 # conversions
 
+
 def test_conversions():
     tups = [
         ("o", "open"),
@@ -24,7 +25,7 @@ def test_conversions():
     for char, signal in tups:
         assert char_to_signal(char) == signal
         assert signal_to_char(signal) == char
-    
+
 
 # ==========================================================================
 # unpack..() functions

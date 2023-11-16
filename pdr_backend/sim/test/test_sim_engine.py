@@ -1,5 +1,3 @@
-import os
-
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.ppss import PPSS, fast_test_yaml_str

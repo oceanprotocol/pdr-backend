@@ -10,7 +10,7 @@ class SimSS(StrMixin):
     """User-controllable strategy params related to the simulation itself"""
 
     def __init__(self, d: dict):
-        self.d = d # yaml_dict["sim_ss"]
+        self.d = d  # yaml_dict["sim_ss"]
 
         # handle log_dir
         assert self.log_dir == os.path.abspath(self.log_dir)
@@ -23,12 +23,11 @@ class SimSS(StrMixin):
     @property
     def do_plot(self) -> bool:
         return self.d["do_plot"]
-    
+
     @property
     def log_dir(self) -> str:
         s = self.d["log_dir"]
-        if s != os.path.abspath(s): # rel path given; needs an abs path
+        if s != os.path.abspath(s):  # rel path given; needs an abs path
             return os.path.abspath(s)
         # abs path given
         return s
-    

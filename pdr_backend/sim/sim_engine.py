@@ -30,13 +30,14 @@ class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
-        assert len(ppss.data_pp.predict_feed_tups) == 1, \
-            "sim engine can only handle 1 prediction feed"
+        assert (
+            len(ppss.data_pp.predict_feed_tups) == 1
+        ), "sim engine can only handle 1 prediction feed"
         assert ppss.data_pp.predict_feed_tups[0] in ppss.data_ss.input_feed_tups
 
         # pp & ss values
         self.ppss = ppss
-        
+
         # state
         self.holdings = copy.copy(self.ppss.trader_pp.init_holdings)
         self.tot_profit_usd = 0.0
@@ -79,7 +80,7 @@ class SimEngine:
         self._init_loop_attributes()
         log = self._log
         log("Start run")
-        
+
         # main loop!
         data_factory = DataFactory(self.ppss.data_pp, self.ppss.data_ss)
         hist_df = data_factory.get_hist_df()

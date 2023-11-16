@@ -243,8 +243,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     )
     ss = _data_ss(
         csv_dir,
-        ["binanceus hl BTC/USDT,ETH/USDT",
-         "kraken hl BTC/USDT,ETH/USDT"],
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
     )
     assert ss.autoregressive_n == 3
     assert ss.n == (4 + 4) * 3
@@ -340,22 +339,28 @@ def test_create_xy__handle_nan(tmpdir):
 
 @enforce_types
 def _data_pp_1feed(predict_feeds=None) -> DataPP:
-    return DataPP({
-        "timeframe" : "5m",
-        "predict_feeds" : predict_feeds or ["kraken h ETH/USDT"],
-        "sim_only" : {"test_n" : 2},
-    })
+    return DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": predict_feeds or ["kraken h ETH/USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
+
 
 @enforce_types
 def _data_ss(csv_dir, input_feeds, st_timestr=None, fin_timestr=None):
-    return DataSS({
-        "input_feeds" : input_feeds,
-        "csv_dir" : csv_dir,
-        "st_timestr" : st_timestr or "2023-06-18",
-        "fin_timestr" : fin_timestr or "2023-06-21",
-        "max_n_train" : 7,
-        "autoregressive_n" : 3,
-      })
+    return DataSS(
+        {
+            "input_feeds": input_feeds,
+            "csv_dir": csv_dir,
+            "st_timestr": st_timestr or "2023-06-18",
+            "fin_timestr": fin_timestr or "2023-06-21",
+            "max_n_train": 7,
+            "autoregressive_n": 3,
+        }
+    )
+
 
 @enforce_types
 def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):

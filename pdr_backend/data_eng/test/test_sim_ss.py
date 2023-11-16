@@ -5,10 +5,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.sim_ss import SimSS
 
-_D = {
-    "do_plot" : False,
-    "log_dir" : "logs"
-}
+_D = {"do_plot": False, "log_dir": "logs"}
+
 
 @enforce_types
 def test_sim_ss():
@@ -27,7 +25,7 @@ def test_log_dir(tmpdir):
     # rel path given; needs an abs path
     d = copy.deepcopy(_D)
     d["log_dir"] = "logs"
-    ss = SimSS(d)    
+    ss = SimSS(d)
     target_log_dir = os.path.abspath("logs")
     assert ss.log_dir == target_log_dir
 

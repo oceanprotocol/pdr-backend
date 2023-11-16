@@ -20,8 +20,9 @@ OWNER_ADDR = "0xowner"
 INIT_TIMESTAMP = 107
 INIT_BLOCK_NUMBER = 13
 
+
 class MockQuery:
-    def __init__(self, data_pp):       
+    def __init__(self, data_pp):
         feed_s = f"{data_pp.exchange_str}|{data_pp.pair_str}|{data_pp.timeframe}"
         feed_dict = {  # info inside a predictoor contract
             "name": f"Feed of {feed_s}",
@@ -36,9 +37,11 @@ class MockQuery:
             "source": data_pp.exchange_str,
         }
         self.feed_dict = feed_dict
-        
+
     # mock query_feed_contracts()
-    def mock_query_feed_contracts(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def mock_query_feed_contracts(
+        self, *args, **kwargs
+    ):  # pylint: disable=unused-argument
         feed_dicts = {self.feed_dict["address"]: self.feed_dict}
         return feed_dicts
 
@@ -57,9 +60,10 @@ class MockEth:
         mock_block = {"timestamp": self.timestamp}
         return mock_block
 
+
 @enforce_types
 class MockFeedContract:
-    def __init__(self, w3, s_per_epoch:int):
+    def __init__(self, w3, s_per_epoch: int):
         self._w3 = w3
         self.s_per_epoch = s_per_epoch
         self.contract_address: str = FEED_ADDR
@@ -84,7 +88,7 @@ class MockFeedContract:
 
 
 @enforce_types
-def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):    
+def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     _setenvs(monkeypatch)
 
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -118,7 +122,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     # now we're done the mocking, time for the real work!!
 
     # real work: initialize
-    config = BaseConfig() # this object's constructor grabs & stores envvars
+    config = BaseConfig()  # this object's constructor grabs & stores envvars
     agent = predictoor_agent_class(config, ppss)
 
     # last bit of mocking

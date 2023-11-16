@@ -16,10 +16,9 @@ from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
 class DataSS:
-    
     @enforce_types
     def __init__(self, d: dict):
-        self.d = d # yaml_dict["data_ss"]
+        self.d = d  # yaml_dict["data_ss"]
 
         # handle csv_dir
         assert self.csv_dir == os.path.abspath(self.csv_dir)
@@ -28,8 +27,12 @@ class DataSS:
             os.makedirs(self.csv_dir)
 
         # test inputs
-        assert 0 <= timestr_to_ut(self.st_timestr) <= \
-            timestr_to_ut(self.fin_timestr) <= np.inf
+        assert (
+            0
+            <= timestr_to_ut(self.st_timestr)
+            <= timestr_to_ut(self.fin_timestr)
+            <= np.inf
+        )
         assert 0 < self.max_n_train
         assert 0 < self.autoregressive_n < np.inf
         verify_feeds_strs(self.input_feeds_strs)
@@ -45,32 +48,33 @@ class DataSS:
     # yaml properties
     @property
     def input_feeds_strs(self) -> List[str]:
-        return self.d["input_feeds"] # eg ["binance ohlcv BTC/USDT",..]
-    
+        return self.d["input_feeds"]  # eg ["binance ohlcv BTC/USDT",..]
+
     @property
     def csv_dir(self) -> str:
         s = self.d["csv_dir"]
-        if s != os.path.abspath(s): # rel path given; needs an abs path
+        if s != os.path.abspath(s):  # rel path given; needs an abs path
             return os.path.abspath(s)
         # abs path given
         return s
-    
+
     @property
     def st_timestr(self) -> str:
-        return self.d["st_timestr"] # eg "2019-09-13_04:00" (earliest)
-    
+        return self.d["st_timestr"]  # eg "2019-09-13_04:00" (earliest)
+
     @property
     def fin_timestr(self) -> str:
-        return self.d["fin_timestr"] # eg "now","2023-09-23_17:55","2023-09-23"
-    
+        return self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
+
     @property
     def max_n_train(self) -> int:
-        return self.d["max_n_train"] # eg 50000. S.t. what data is available
-    
+        return self.d["max_n_train"]  # eg 50000. S.t. what data is available
+
     @property
     def autoregressive_n(self) -> int:
-        return self.d["autoregressive_n"] # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
-
+        return self.d[
+            "autoregressive_n"
+        ]  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
 
     # --------------------------------
     # derivative properties
@@ -159,7 +163,7 @@ class DataSS:
     def copy_with_yval(self, data_pp: DataPP):
         """Copy self, add data_pp's feeds to new data_ss' inputs as needed"""
         d2 = copy.deepcopy(self.d)
-        
+
         for predict_feed_tup in data_pp.predict_feed_tups:
             if predict_feed_tup in self.input_feed_tups:
                 continue

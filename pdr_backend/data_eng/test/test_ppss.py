@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.ppss import PPSS, fast_test_yaml_str
 
+
 @enforce_types
 def test_ppss_from_file(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -13,10 +14,12 @@ def test_ppss_from_file(tmpdir):
 
     _test_ppss(yaml_filename=yaml_filename)
 
+
 @enforce_types
 def test_ppss_from_str(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
     _test_ppss(yaml_str=yaml_str)
+
 
 @enforce_types
 def _test_ppss(yaml_filename=None, yaml_str=None):
@@ -41,5 +44,3 @@ def _test_ppss(yaml_filename=None, yaml_str=None):
     assert "trader_pp" in s
     assert "trader_ss" in s
     assert "sim_ss" in s
-
-    
