@@ -73,6 +73,7 @@ def fetch_filtered_predictions(
             {{
                 predictPredictions(skip: {offset}, first: {chunk_size}, {where_clause}) {{
                     id
+                    timestamp
                     user {{
                         id
                     }}
@@ -148,6 +149,8 @@ def fetch_filtered_predictions(
                 source,
                 payout,
                 predictoor_user,
+                submittimestamp=prediction["timestamp"],
+                predictionId=prediction["id"],
             )
             predictions.append(prediction_obj)
 
