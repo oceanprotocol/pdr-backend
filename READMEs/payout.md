@@ -17,8 +17,10 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 
 #### 2. Execute Payout
 
-- Running locally: Simply run the python script with the command: `python pdr_backend/predictoor/main.py payout`.
-- Using Container Image: Simply execute the command: `predictoor payout`.
+From console:
+```console
+pdr claim OCEAN
+```
 
 #### 3. Completion
 
@@ -36,8 +38,10 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 
 #### 2. Claim ROSE Rewards
 
-- Running locally: Simply run the python script with the command: `python pdr_backend/predictoor/main.py roseclaim`.
-- Using Container Image: Simply execute the command: `predictoor roseclaim`.
+From console:
+```console
+pdr claim ROSE
+```
 
 #### 3. Completion
 

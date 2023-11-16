@@ -64,7 +64,7 @@ Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](
 - They call to a subgraph, at a given url, with a particular query
 - and they may filter further
 
-**Filters**, You can set some envvars to filter query results for agents. Check out the [envvar documentation](./envvars.md#filters) to learn more about these filters and how to set them.
+**Filters**, You can set some ppss.yaml to filter query results for agents. 
 
 ### Appendix
 

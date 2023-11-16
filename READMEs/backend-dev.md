@@ -36,8 +36,6 @@ export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-su
 #OR: export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 ```
 
-([envvars.md](envvars.md) has details.)
-
 ### Local Usage: Testing & linting
 
 In work console, run tests:

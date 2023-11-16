@@ -197,8 +197,6 @@ export SOURCE_FILTER=
 export OWNER_ADDRS=0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 ```
 
-([envvars.md](envvars.md) has details.)
-
 You also need to set the `STAKE_TOKEN` envvar to the OCEAN address in barge. In local console:
 ```console
 grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'

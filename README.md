@@ -16,7 +16,6 @@ SPDX-License-Identifier: Apache-2.0
 ## Atomic READMEs
 
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
-- [Envvars](READMEs/envvars.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Static models in predictoors](READMEs/static-model.md)
 
@@ -27,7 +26,6 @@ SPDX-License-Identifier: Apache-2.0
   - [Release process](READMEs/release-process.md)
   - [Run barge locally](READMEs/barge.md)
   - [Run barge remotely on VPS](READMEs/vps.md)
-  - [MacOS gotchas](READMEs/macos.md) wrt Docker & ports
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
 - **[Scripts](scripts/)** for performance stats, more

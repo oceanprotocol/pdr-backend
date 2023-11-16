@@ -41,8 +41,6 @@ Then, run dfbuyer bot. In console:
 python pdr_backend/dfbuyer/main.py
 ```
 
-There are other environment variables that you might want to set, such as the **weekly spending limit**. To get more information about them check out the [environment variables documentation](./envvars.md).
-
 The bot will consume "WEEKLY_SPENDING_LIMIT" worth of assets each week. This amount is distributed equally among all DF eligible assets.
 
 ![flow](https://user-images.githubusercontent.com/25263018/269256707-566b9f5d-7e97-4549-b483-2a6700826769.png)
