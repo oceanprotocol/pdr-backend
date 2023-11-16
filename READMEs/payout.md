@@ -19,7 +19,7 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 
 From console:
 ```console
-pdr claim OCEAN
+pdr claim
 ```
 
 #### 3. Completion
@@ -40,7 +40,7 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 
 From console:
 ```console
-pdr claim ROSE
+pdr claimrose
 ```
 
 #### 3. Completion
