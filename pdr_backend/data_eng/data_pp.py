@@ -65,6 +65,16 @@ class DataPP(StrMixin):
         return unpack_feeds_strs(self.predict_feeds_strs)
 
     @property
+    def pair_strs(self) -> str:
+        """Return e.g. ['ETH/USDT','BTC/USDT']."""
+        return [tup[2] for tup in self.predict_feed_tups]
+
+    @property
+    def exchange_strs(self) -> str:
+        """Return e.g. ['binance','kraken']."""
+        return [tup[2] for tup in self.predict_feed_tups]
+
+    @property
     def predict_feed_tup(self) -> Tuple[str, str, str]:
         """
         Return (exchange_str, signal_str, pair_str)

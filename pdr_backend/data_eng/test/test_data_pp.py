@@ -24,6 +24,8 @@ def test_data_pp_1feed():
     assert isinstance(pp.timeframe_ms, int)  # test more below
     assert isinstance(pp.timeframe_m, int)  # ""
     assert pp.predict_feed_tups == [("kraken", "high", "ETH-USDT")]
+    assert pp.pair_strs == ["ETH-USDT"]
+    assert pp.exchange_strs == ["kraken"]
     assert pp.predict_feed_tup == ("kraken", "high", "ETH-USDT")
     assert pp.exchange_str == "kraken"
     assert pp.signal_str == "high"
@@ -55,6 +57,8 @@ def test_data_pp_3feeds():
         ("binance", "open", "BTC-USDT"),
         ("binance", "high", "BTC-USDT"),
     ]
+    assert pp.pair_strs == ["ETH-USDT","BTC-USDT"]
+    assert pp.exchange_strs == ["kraken", "binance"]
     with pytest.raises(AssertionError):
         pp.predict_feed_tup
     with pytest.raises(AssertionError):

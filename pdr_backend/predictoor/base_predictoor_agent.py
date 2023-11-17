@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.data_eng.ppss import PPSS
 
 _UNWANTED_ENVVARS = [
@@ -28,19 +27,22 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, call get_prediction()
     """
 
-    def __init__(self, config: BaseConfig, ppss: PPSS):
+    def __init__(self, ppss: PPSS):
         # preconditions
         for envvar in _UNWANTED_ENVVARS:
             assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
 
         # set config, ppss, and related
-        self.config = config
         self.ppss = ppss
 
         # set self.feeds
         self.feeds: Dict[str, Feed] = {}
 
-        cand_feeds = self.config.get_feeds()
+        cand_feeds = self.ppss.web3_pp.get_feeds(
+            pair_filters=self.ppss.data_pp.pair_strs,
+            timeframe_filters=[self.ppss.data_pp.timeframe],
+            source_filters=self.ppss.data_pp.exchange_strs,
+        )                      
         if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
@@ -55,7 +57,7 @@ class BasePredictoorAgent(ABC):
 
         # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.ppss.web3_pp.get_contracts(feed_addrs)  # [addr] : contract
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0
@@ -66,8 +68,6 @@ class BasePredictoorAgent(ABC):
 
         # print
         print("\n" + "-" * 80)
-        print("Config:")
-        print(self.config)
         print(self.ppss)
 
         print("\n" + "." * 80)
@@ -86,7 +86,7 @@ class BasePredictoorAgent(ABC):
             self.take_step()
 
     def take_step(self):
-        w3 = self.config.web3_config.w3
+        w3 = self.web3_pp.web3_config.w3
         print("\n" + "-" * 80)
         print("Take_step() begin.")
 
@@ -97,7 +97,7 @@ class BasePredictoorAgent(ABC):
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = self.config.web3_config.get_block(block_number, full_transactions=False)
+        block = self.web3_pp.web3_config.get_block(block_number, full_transactions=False)
         if not block:
             print("  Done step: block not ready yet")
             return
