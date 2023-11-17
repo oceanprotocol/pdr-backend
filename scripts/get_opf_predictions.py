@@ -131,9 +131,6 @@ def get_all_predictions():
             predictedValue = prediction["payout"]["predictedValue"]
             stake = float(prediction["stake"])
 
-            if stake < 0.01:
-                continue
-
             prediction_obj = Prediction(
                 pair_name, timeframe, predictedValue, stake, trueval, timestamp
             )
