@@ -93,7 +93,9 @@ def test_batch_submit_truevals(agent_fixture, slot):
 
 
 def test_take_step(agent_fixture, slot):
-    with patch.object(
+    with patch(
+        "pdr_backend.trueval.trueval_agent_batch.wait_until_subgraph_syncs"
+    ), patch.object(
         agent_fixture, "get_batch", return_value=[slot]
     ) as mock_get_batch, patch.object(
         agent_fixture, "process_trueval_slot"
