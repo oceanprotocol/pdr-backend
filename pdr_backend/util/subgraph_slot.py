@@ -179,19 +179,29 @@ def fetch_slots_for_all_assets(
 @enforce_types
 def calculate_prediction_prediction_result(
     round_sum_stakes_up: float, round_sum_stakes: float
-) -> Dict[str, bool]:
+) -> Optional[bool]:
     """
     Calculates the prediction result based on the sum of stakes.
 
     Args:
         round_sum_stakes_up: The summed stakes for the 'up' prediction.
-        round_sum_stakes: The summed stakes for the 'down' prediction.
+        round_sum_stakes: The summed stakes for all prediction.
 
     Returns:
-        A dictionary with a boolean indicating the predicted direction.
+        A boolean indicating the predicted direction.
     """
 
-    return {"direction": round_sum_stakes_up > round_sum_stakes}
+    # checks for to be sure that the division is not by zero
+    round_sum_stakes_up_float = float(round_sum_stakes_up)
+    round_sum_stakes_float = float(round_sum_stakes)
+
+    if round_sum_stakes_float == 0.0:
+        return None
+
+    if round_sum_stakes_up_float == 0.0:
+        return False
+
+    return (round_sum_stakes_up_float / round_sum_stakes_float) > 0.5
 
 
 @enforce_types
@@ -233,12 +243,19 @@ def process_single_slot(
         slot.roundSumStakesUp, slot.roundSumStakes
     )
 
-    true_values: List[Dict[str, Any]] = slot.trueValues or []
-    true_value = true_values[0]["trueValue"] if true_values else None
+    if prediction_result is None:
+        print("Prediction result is None for slot: ", slot.id)
+        return (
+            staked_yesterday,
+            staked_today,
+            correct_predictions_count,
+            slots_evaluated,
+        )
 
-    if len(true_values) > 0 and prediction_result["direction"] == (
-        1 if true_value else 0
-    ):
+    true_values: List[Dict[str, Any]] = slot.trueValues or []
+    true_value: Optional[bool] = true_values[0]["trueValue"] if true_values else None
+
+    if len(true_values) > 0 and prediction_result == true_value:
         correct_predictions_count += 1
 
     if len(true_values) > 0 and true_value is not None:
