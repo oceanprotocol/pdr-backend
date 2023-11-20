@@ -21,7 +21,7 @@ class WrappedToken:
             address=self.contract_address, abi=abi
         )
 
-    def balance_of(self, address: str) -> int:
+    def balanceOf(self, address: str) -> int:
         return Token(self.config, self.contract_address).balanceOf(address)
 
     def withdraw(self, amount: int, wait_for_receipt=True):

@@ -77,7 +77,7 @@ def do_rose_payout():
     print("Converting wROSE to ROSE")
     time.sleep(10)
     wrose = WrappedToken(config.web3_config, wrapped_rose)
-    wrose_balance = wrose.balance_of(config.web3_config.owner)
+    wrose_balance = wrose.balanceOf(config.web3_config.owner)
     if wrose_balance == 0:
         print("wROSE balance is 0")
     else:

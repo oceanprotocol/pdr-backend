@@ -93,8 +93,8 @@ def test_do_rose_payout():
     mock_contract.claim_rewards = Mock()
 
     mock_wrose = Mock(spec=WrappedToken)
-    mock_wrose.balance_of = Mock()
-    mock_wrose.balance_of.return_value = 100
+    mock_wrose.balanceOf = Mock()
+    mock_wrose.balanceOf.return_value = 100
     mock_wrose.withdraw = Mock()
 
     with patch("pdr_backend.predictoor.payout.time"), patch(
@@ -108,5 +108,5 @@ def test_do_rose_payout():
         mock_contract.claim_rewards.assert_called_with(
             "mock_owner", "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
-        mock_wrose.balance_of.assert_called()
+        mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(100)
