@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.base_config import BaseConfig
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.models.wrapped_token import WrappedToken
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
 from pdr_backend.models.dfrewards import DFRewards
 
@@ -65,12 +66,18 @@ def do_rose_payout():
         raise Exception("Unsupported network")
     contract = DFRewards(config.web3_config, address)
     claimable_rewards = contract.get_claimable_rewards(owner, wrapped_rose)
-    print(f"Found {claimable_rewards} ROSE available to claim")
+    print(f"Found {claimable_rewards} wROSE available to claim")
 
     if claimable_rewards > 0:
-        print("Claiming ROSE rewards...")
+        print("Claiming wROSE rewards...")
         contract.claim_rewards(owner, wrapped_rose)
     else:
-        print("No rewards, exiting")
+        print("No rewards available to claim")
+
+    print("Converting wROSE to ROSE")
+    time.sleep(10)
+    wrose = WrappedToken(config.web3_config, wrapped_rose)
+    wrose_balance = wrose.balance_of(config.web3_config.owner)
+    wrose.withdraw(wrose_balance)
 
     print("ROSE reward claim done")
