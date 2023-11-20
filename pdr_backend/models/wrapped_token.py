@@ -2,8 +2,9 @@ from pdr_backend.models.token import Token
 from pdr_backend.util.web3_config import Web3Config
 
 
-class WrappedToken:
+class WrappedToken(Token):
     def __init__(self, config: Web3Config, address: str):
+        super().__init__(config, address)
         abi = [
             {
                 "constant": False,
@@ -15,14 +16,9 @@ class WrappedToken:
                 "type": "function",
             },
         ]
-        self.config = config
-        self.contract_address = config.w3.to_checksum_address(address)
-        self.contract_instance = config.w3.eth.contract(
+        self.contract_instance_wrapped = config.w3.eth.contract(
             address=self.contract_address, abi=abi
         )
-
-    def balanceOf(self, address: str) -> int:
-        return Token(self.config, self.contract_address).balanceOf(address)
 
     def withdraw(self, amount: int, wait_for_receipt=True):
         """
@@ -30,7 +26,7 @@ class WrappedToken:
         """
         gas_price = self.config.w3.eth.gas_price
 
-        tx = self.contract_instance.functions.withdraw(amount).transact(
+        tx = self.contract_instance_wrapped.functions.withdraw(amount).transact(
             {"from": self.config.owner, "gasPrice": gas_price}
         )
         if not wait_for_receipt:
