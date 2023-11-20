@@ -4,6 +4,7 @@ import pytest
 
 from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.models.wrapped_token import WrappedToken
 from pdr_backend.predictoor.payout import (
     batchify,
     do_payout,
@@ -91,10 +92,21 @@ def test_do_rose_payout():
     mock_contract.get_claimable_rewards.return_value = 100
     mock_contract.claim_rewards = Mock()
 
-    with patch(
+    mock_wrose = Mock(spec=WrappedToken)
+    mock_wrose.balanceOf = Mock()
+    mock_wrose.balanceOf.return_value = 100
+    mock_wrose.withdraw = Mock()
+
+    with patch("pdr_backend.predictoor.payout.time"), patch(
         "pdr_backend.predictoor.payout.BaseConfig", return_value=mock_config
-    ), patch("pdr_backend.predictoor.payout.DFRewards", return_value=mock_contract):
+    ), patch(
+        "pdr_backend.predictoor.payout.WrappedToken", return_value=mock_wrose
+    ), patch(
+        "pdr_backend.predictoor.payout.DFRewards", return_value=mock_contract
+    ):
         do_rose_payout()
         mock_contract.claim_rewards.assert_called_with(
             "mock_owner", "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
+        mock_wrose.balanceOf.assert_called()
+        mock_wrose.withdraw.assert_called_with(100)
