@@ -78,6 +78,10 @@ def do_rose_payout():
     time.sleep(10)
     wrose = WrappedToken(config.web3_config, wrapped_rose)
     wrose_balance = wrose.balance_of(config.web3_config.owner)
-    wrose.withdraw(wrose_balance)
+    if wrose_balance == 0:
+        print("wROSE balance is 0")
+    else:
+        print(f"Found {wrose_balance/1e18} wROSE, converting to ROSE...")
+        wrose.withdraw(wrose_balance)
 
     print("ROSE reward claim done")
