@@ -65,44 +65,44 @@ def test_web3_pp__yaml_dict():
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    pp = Web3PP("network1", _D)
+    web3_pp = Web3PP("network1", _D)
 
     # test web3_config
-    assert pp._web3_config is None
+    assert web3_pp._web3_config is None
 
-    c = pp.web3_config # calcs & caches pp._web3_config
+    c = web3_pp.web3_config # calcs & caches web3_pp._web3_config
     assert isinstance(c, Web3Config)
-    assert c.rpc_url == pp.rpc_url
+    assert id(c) == id(web3_pp.web3_config)
+    assert c.rpc_url == web3_pp.rpc_url
     assert c.private_key == PRIV_KEY
     assert isinstance(c.w3, Web3)
 
     # test derived properties
-    assert pp.private_key == PRIV_KEY
-    assert isinstance(pp.w3, Web3)
-    assert id(pp.w3) == id(c.w3)
+    assert web3_pp.private_key == PRIV_KEY
+    assert isinstance(web3_pp.w3, Web3)
+    assert id(web3_pp.w3) == id(c.w3)
 
     # test setter
-    pp.set_web3_config(None)
-    import pdb; pdb.set_trace()
-    assert pp.web3_config is None
+    web3_pp.set_web3_config("foo")
+    assert web3_pp.web3_config == "foo"
     
     # str
-    assert "Web3PP=" in str(pp)
+    assert "Web3PP=" in str(web3_pp)
 
     
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    pp = Web3PP("network1", _D)
+    web3_pp = Web3PP("network1", _D)
 
     def _mock_get_pending_slots(*args):
         timestamp = args[1]
         return [f"1_{timestamp}", f"2_{timestamp}"]
     
     with patch(
-        "pdr_backend.models.web3_pp.get_pending_slots", _mock_get_pending_slots
+        "pdr_backend.util.web3_pp.get_pending_slots", _mock_get_pending_slots
     ):
-        slots = pp.get_pending_slots(6789)
+        slots = web3_pp.get_pending_slots(6789)
     assert slots == ["1_6789", "2_6789"]
 
 
@@ -110,7 +110,7 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 def test_web3_pp__get_feeds__get_contracts(monkeypatch):
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    pp = Web3PP("network1", _D)
+    web3_pp = Web3PP("network1", _D)
 
     # test get_feeds(). Uses results from get_feeds
     def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
@@ -118,10 +118,10 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         return feed_dicts
 
     with patch(
-        "pdr_backend.models.web3_pp.query_feed_contracts",
+        "pdr_backend.util.web3_pp.query_feed_contracts",
         _mock_query_feed_contracts,
     ):
-        feeds = pp.get_feeds()
+        feeds = web3_pp.get_feeds()
         
     feed_addrs = list(feeds.keys())
     assert feed_addrs == [ADDR]
@@ -132,7 +132,7 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         m.contract_address = ADDR
         return m
 
-    with patch("pdr_backend.models.web3_pp.PredictoorContract", _mock_contract):
-        contracts = pp.get_contracts(feed_addrs)
+    with patch("pdr_backend.util.web3_pp.PredictoorContract", _mock_contract):
+        contracts = web3_pp.get_contracts(feed_addrs)
     assert list(contracts.keys()) == feed_addrs
     assert contracts[ADDR].contract_address == ADDR

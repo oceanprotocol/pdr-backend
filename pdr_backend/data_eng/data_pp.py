@@ -5,6 +5,7 @@ import numpy as np
 
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
+from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.strutil import StrMixin
 
@@ -37,6 +38,10 @@ class DataPP(StrMixin):
 
     # --------------------------------
     # setters
+    @enforce_types
+    def set_timeframe(self, timeframe: str):
+        self.d["timeframe"] = timeframe
+        
     @enforce_types
     def set_predict_feeds(self, predict_feeds_strs: List[str]):
         self.d["predict_feeds"] = predict_feeds_strs
@@ -71,14 +76,14 @@ class DataPP(StrMixin):
         return unpack_feeds_strs(self.predict_feeds_strs)
 
     @property
-    def pair_strs(self) -> str:
+    def pair_strs(self) -> set:
         """Return e.g. ['ETH/USDT','BTC/USDT']."""
-        return [tup[2] for tup in self.predict_feed_tups]
+        return remove_dups([tup[2] for tup in self.predict_feed_tups])
 
     @property
     def exchange_strs(self) -> str:
         """Return e.g. ['binance','kraken']."""
-        return [tup[2] for tup in self.predict_feed_tups]
+        return remove_dups([tup[0] for tup in self.predict_feed_tups])
 
     @property
     def predict_feed_tup(self) -> Tuple[str, str, str]:

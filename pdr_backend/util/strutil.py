@@ -1,19 +1,6 @@
 import inspect
 
 from enforce_typing import enforce_types
-
-@enforce_types
-class PpssStrMixin:
-    def __str__(self) -> str:
-        return self.longstr()
-
-        
-    def longstr(self) -> str:
-        class_name = self.__class__.__name__
-        
-        s = "\n"
-        s += f"{class_name}={{\n"
-        s += ["\n"]
     
 
 @enforce_types

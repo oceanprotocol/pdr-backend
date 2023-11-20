@@ -48,7 +48,7 @@ sim_ss: # sim only
   do_plot: True
   log_dir: logs
 
-web3_pp:
+web3_pp:  
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev

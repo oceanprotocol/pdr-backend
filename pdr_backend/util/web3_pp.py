@@ -10,23 +10,20 @@ from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
-from pdr_backend.util.strutil import PpssStrMixin
+from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 
-class Web3PP(PpssStrMixin):
+class Web3PP(StrMixin):
+    __STR_OBJDIR__ = ["d", "network"]
+    
     @enforce_types
     def __init__(self, network:str, d: dict):
         self.network = network # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.d = d  # yaml_dict["data_pp"]
 
-        self._web3_config: Optional[Web3Config] = None
-
-    @enforce_types
-    def __str__(self):
-        s = """
-        
+        self._web3_config = None
 
     # --------------------------------
     # JIT cached properties - only do the work if requested
@@ -69,8 +66,7 @@ class Web3PP(PpssStrMixin):
     # --------------------------------
     # setters (add as needed)
     @enforce_types
-    def set_web3_config(self, web3_config: Optional[Web3Config]):
-        import pdb; pdb.set_trace()
+    def set_web3_config(self, web3_config):
         self._web3_config = web3_config
 
     # --------------------------------

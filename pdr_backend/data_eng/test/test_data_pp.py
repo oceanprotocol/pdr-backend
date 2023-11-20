@@ -39,7 +39,7 @@ def test_data_pp_1feed():
     # setters
     pp.set_timeframe("1h")
     assert pp.timeframe == "1h"
-    pp.set_predict_feeds_strs(["binance oh BTC/DAI"])
+    pp.set_predict_feeds(["binance oh BTC/DAI"])
     assert pp.predict_feeds_strs == ["binance oh BTC/DAI"]
 
 
