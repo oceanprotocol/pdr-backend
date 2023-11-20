@@ -177,7 +177,7 @@ def fetch_slots_for_all_assets(
 
 
 @enforce_types
-def calculate_prediction_prediction_result(
+def calculate_prediction_result(
     round_sum_stakes_up: float, round_sum_stakes: float
 ) -> Optional[bool]:
     """
@@ -239,7 +239,7 @@ def process_single_slot(
     elif timestamp > end_of_previous_day_timestamp:
         staked_today += float(slot.roundSumStakes)
 
-    prediction_result = calculate_prediction_prediction_result(
+    prediction_result = calculate_prediction_result(
         slot.roundSumStakesUp, slot.roundSumStakes
     )
 
