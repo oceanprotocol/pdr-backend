@@ -2,7 +2,6 @@ import os
 import time
 from typing import Any, List
 from enforce_typing import enforce_types
-from pdr_backend.models.base_config import BaseConfig
 
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs

@@ -7,7 +7,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.models.base_config import BaseConfig
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.predictoor.payout import do_payout, do_rose_payout
@@ -54,7 +53,6 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    config = BaseConfig()
     ppss = PPSS(args.YAML_FILE)
 
     approach = args.APPROACH

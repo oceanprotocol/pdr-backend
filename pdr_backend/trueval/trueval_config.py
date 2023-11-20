@@ -2,8 +2,6 @@ from os import getenv
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.base_config import BaseConfig
-
 
 @enforce_types
 class TruevalConfig(BaseConfig):
