@@ -2,6 +2,19 @@ import inspect
 
 from enforce_typing import enforce_types
 
+@enforce_types
+class PpssStrMixin:
+    def __str__(self) -> str:
+        return self.longstr()
+
+        
+    def longstr(self) -> str:
+        class_name = self.__class__.__name__
+        
+        s = "\n"
+        s += f"{class_name}={{\n"
+        s += ["\n"]
+    
 
 @enforce_types
 class StrMixin:
@@ -20,7 +33,11 @@ class StrMixin:
         obj = self
 
         short_attrs, long_attrs = [], []
-        for attr in dir(obj):
+        if hasattr(self, "__STR_OBJDIR__"):
+            obj_dir = self.__STR_OBJDIR__
+        else:
+            obj_dir = dir(obj)
+        for attr in obj_dir:
             if "__" in attr:
                 continue
             attr_obj = getattr(obj, attr)

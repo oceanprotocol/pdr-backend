@@ -2,9 +2,10 @@ import os
 from unittest.mock import patch, Mock
 
 from enforce_typing import enforce_types
+from web3 import Web3
 
-from pdr_backend.models.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.web3_pp import Web3PP
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
@@ -28,14 +29,14 @@ _D1 = {
     "rpc_url" : "rpc url 1",
     "subgraph_url" : "subgraph url 1",
     "stake_token" : "0xStake1",
-    "owner_address" : "0xOwner1",
+    "owner_addrs" : "0xOwner1",
 }
 _D2 = {
     "address_file" : "address.json 2",
     "rpc_url" : "rpc url 2",
     "subgraph_url" : "subgraph url 2",
     "stake_token" : "0xStake2",
-    "owner_address" : "0xOwner2",
+    "owner_addrs" : "0xOwner2",
 }
 _D = {
     "network1": _D1,
@@ -52,7 +53,7 @@ def test_web3_pp__yaml_dict():
     assert pp.rpc_url == "rpc url 1"
     assert pp.subgraph_url == "subgraph url 1"
     assert pp.stake_token == "0xStake1"
-    assert pp.owner_address == "0xOwner1"
+    assert pp.owner_addrs == "0xOwner1"
     
     # network2
     pp2 = Web3PP("network2", _D)
@@ -65,16 +66,25 @@ def test_web3_pp__yaml_dict():
 def test_web3_pp__JIT_cached_properties(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     pp = Web3PP("network1", _D)
-    
-    assert pp._private_key is None
-    k = pp.private_key # calcs & caches pp._private_key 
-    assert k == PRIV_KEY 
-    assert pp._private_key is not None
 
+    # test web3_config
     assert pp._web3_config is None
-    w3 = pp.web3_config # calcs & caches pp._web3_config
-    assert isinstance(w3, Web3Config)
-    assert pp._web3_config is not None
+
+    c = pp.web3_config # calcs & caches pp._web3_config
+    assert isinstance(c, Web3Config)
+    assert c.rpc_url == pp.rpc_url
+    assert c.private_key == PRIV_KEY
+    assert isinstance(c.w3, Web3)
+
+    # test derived properties
+    assert pp.private_key == PRIV_KEY
+    assert isinstance(pp.w3, Web3)
+    assert id(pp.w3) == id(c.w3)
+
+    # test setter
+    pp.set_web3_config(None)
+    import pdb; pdb.set_trace()
+    assert pp.web3_config is None
     
     # str
     assert "Web3PP=" in str(pp)
@@ -126,4 +136,3 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         contracts = pp.get_contracts(feed_addrs)
     assert list(contracts.keys()) == feed_addrs
     assert contracts[ADDR].contract_address == ADDR
-

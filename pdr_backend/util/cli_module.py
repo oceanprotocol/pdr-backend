@@ -10,8 +10,8 @@ from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.predictoor.payout import do_payout, do_rose_payout
-from pdr_backend.trader.trader_agent import TraderAgent
-from pdr_backend.trader.trader_config import TraderConfig
+from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
+from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.util.cli_arguments import (
     do_help_long,
     print_args,
@@ -70,7 +70,7 @@ def do_predictoor():
         agent.run()
 
     else:
-        raise ValueError(f"Unknown predictoor approach {appr}")
+        raise ValueError(f"Unknown predictoor approach {approach}")
 
 
 @enforce_types
@@ -79,14 +79,17 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ## TO DO: use this
-    # ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE)
+    approach = args.APPROACH
 
-    ## TO DO: use args.APPROACH
-    
-    config = TraderConfig()
-    t = TraderAgent(config)
-    t.run(testing)
+    if approach == 1:
+        agent = TraderAgent1(ppss)
+    elif approach == 2:
+        agent = TraderAgent2(ppss)
+    else:
+        raise ValueError(f"Unknown trader approach {approach}")
+
+    agent.run()
 
     
 @enforce_types

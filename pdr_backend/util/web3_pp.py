@@ -1,38 +1,43 @@
+from os import getenv
 from typing import Dict, List, Optional
  
 from enforce_typing import enforce_types
- 
+from eth_account.signers.local import LocalAccount
+from web3 import Web3
+from web3.types import BlockData
+
 from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.env import getenv_or_exit, parse_filters
-from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.strutil import PpssStrMixin
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 
-class Web3PP(StrMixin):
+class Web3PP(PpssStrMixin):
     @enforce_types
     def __init__(self, network:str, d: dict):
         self.network = network # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.d = d  # yaml_dict["data_pp"]
 
-        self._private_key: Optional[str] = None
         self._web3_config: Optional[Web3Config] = None
+
+    @enforce_types
+    def __str__(self):
+        s = """
+        
 
     # --------------------------------
     # JIT cached properties - only do the work if requested
     #   (and therefore don't complain if missing envvar)
-    @property
-    def private_key(self) -> str:
-        if self._private_key is None:
-            self._private_key = getenv_or_exit("PRIVATE_KEY")  # type: ignore
-        return self._private_key
 
     @property
     def web3_config(self) -> Web3Config:
         if self._web3_config is None:
-            self._web3_config = Web3Config(self.rpc_url, self.private_key)
+            rpc_url = self.rpc_url
+            private_key = getenv("PRIVATE_KEY")
+            self._web3_config = Web3Config(rpc_url, private_key)
         return self._web3_config
     
     # --------------------------------
@@ -58,8 +63,33 @@ class Web3PP(StrMixin):
         return self.dn["stake_token"]
 
     @property
-    def owner_address(self) -> str:
-        return self.dn["owner_address"]
+    def owner_addrs(self) -> str:
+        return self.dn["owner_addrs"]
+
+    # --------------------------------
+    # setters (add as needed)
+    @enforce_types
+    def set_web3_config(self, web3_config: Optional[Web3Config]):
+        import pdb; pdb.set_trace()
+        self._web3_config = web3_config
+
+    # --------------------------------
+    # derived properties
+    @property
+    def private_key(self) -> Optional[str]:
+        return self.web3_config.private_key
+    
+    @property
+    def account(self) -> Optional[LocalAccount]:
+        return self.web3_config.account
+    
+    @property
+    def w3(self) -> Optional[Web3]:
+        return self.web3_config.w3
+    
+    @property
+    def get_block(self, *args, **kwargs) -> BlockData:
+        return self.web3_config.get_block(*args, **kwargs)
 
     # --------------------------------
     # onchain feed data
@@ -105,7 +135,7 @@ class Web3PP(StrMixin):
             pair_filters,
             timeframe_filters,
             source_filters,
-            [self.owner_address],
+            [self.owner_addrs],
         )
         feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
         return feeds
@@ -128,7 +158,7 @@ class Web3PP(StrMixin):
         return get_pending_slots(
             self.subgraph_url,
             timestamp,
-            self.owner_address,
+            self.owner_addrs,
             pair_filters,
             timeframe_filter,
             source_filter,

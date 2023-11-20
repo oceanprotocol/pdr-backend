@@ -86,7 +86,7 @@ class BasePredictoorAgent(ABC):
             self.take_step()
 
     def take_step(self):
-        w3 = self.web3_pp.web3_config.w3
+        w3 = self.web3_pp.w3
         print("\n" + "-" * 80)
         print("Take_step() begin.")
 
@@ -97,7 +97,7 @@ class BasePredictoorAgent(ABC):
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = self.web3_pp.web3_config.get_block(block_number, full_transactions=False)
+        block = self.web3_pp.get_block(block_number, full_transactions=False)
         if not block:
             print("  Done step: block not ready yet")
             return

@@ -5,9 +5,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.ppss import PPSS
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.trader_config import TraderConfig
 from pdr_backend.util.cache import Cache
 
 
@@ -15,21 +15,25 @@ from pdr_backend.util.cache import Cache
 class TraderAgent:
     def __init__(
         self,
-        trader_config: TraderConfig,
+        ppss: PPSS,
         _do_trade: Optional[Callable[[Feed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
-        self.config = trader_config
+        self.ppss = ppss
         self._do_trade = _do_trade if _do_trade else self.do_trade
 
-        self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
+        self.feeds: Dict[str, Feed] = self.ppss.web3_pp.get_feeds(
+            pair_filters=self.ppss.data_pp.pair_strs,
+            timeframe_filters=[self.ppss.data_pp.timeframe],
+            source_filters=self.ppss.data_pp.exchange_strs,
+        )                      
 
         if not self.feeds:
             print("No feeds found. Exiting")
             sys.exit()
 
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.ppss.web3_pp.get_contracts(feed_addrs)  # [addr] : contract
 
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
@@ -42,8 +46,7 @@ class TraderAgent:
         self.load_cache()
 
         print("-" * 80)
-        print("Config:")
-        print(self.config)
+        print(self.ppss)
 
         print("\n" + "." * 80)
         print("Feeds (detailed):")
@@ -59,7 +62,7 @@ class TraderAgent:
 
     def check_subscriptions_and_subscribe(self):
         for addr, feed in self.feeds.items():
-            contract = PredictoorContract(self.config.web3_config, addr)
+            contract = PredictoorContract(self.ppss.web3_pp.web3_config, addr)
             if not contract.is_valid_subscription():
                 print(f"Purchasing new subscription for feed: {feed}")
                 contract.buy_and_start_subscription(None, True)
@@ -85,7 +88,7 @@ class TraderAgent:
                 break
 
     async def take_step(self):
-        w3 = self.config.web3_config.w3
+        w3 = self.ppss.web3_pp.w3
 
         # at new block number yet?
         block_number = w3.eth.block_number
@@ -95,7 +98,7 @@ class TraderAgent:
         self.prev_block_number = block_number
 
         # is new block ready yet?
-        block = self.config.web3_config.get_block(block_number, full_transactions=False)
+        block = self.ppss.web3_pp.get_block(block_number, full_transactions=False)
         if not block:
             return
 
@@ -149,7 +152,7 @@ class TraderAgent:
             logs.append("      Done feed: already traded this epoch")
             return epoch_s_left, logs
 
-        if epoch_s_left < self.config.trader_min_buffer:
+        if epoch_s_left < self.ppss.trader_ss.min_buffer:
             logs.append("      Done feed: not enough time left in epoch")
             return epoch_s_left, logs
 
@@ -159,7 +162,7 @@ class TraderAgent:
                 None, predictoor_contract.get_agg_predval, (epoch + 1) * s_per_epoch
             )
         except Exception as e:
-            if tries < self.config.max_tries:
+            if tries < self.ppss.trader_ss.max_tries:
                 logs.append(e.args[0]["message"])
                 if (
                     len(e.args) > 0

@@ -36,6 +36,12 @@ def test_data_pp_1feed():
     # str
     assert "DataPP=" in str(pp)
 
+    # setters
+    pp.set_timeframe("1h")
+    assert pp.timeframe == "1h"
+    pp.set_predict_feeds_strs(["binance oh BTC/DAI"])
+    assert pp.predict_feeds_strs == ["binance oh BTC/DAI"]
+
 
 @enforce_types
 def test_data_pp_3feeds():

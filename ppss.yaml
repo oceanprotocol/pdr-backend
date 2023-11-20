@@ -1,3 +1,5 @@
+# (web3_pp is at bottom, because it's long)
+
 data_pp:
   timeframe: 1h
   predict_feeds:
@@ -38,30 +40,31 @@ trader_ss:
   sim_only:
     buy_amt: 10 USD
   bot_only:
-    approach1:
-    approach2:
+    min_buffer: 60 # in s. only trade if there's > this time left
+    max_tries: 10 # max no. attempts to process a feed
+    position_size: 3
 
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
 
-web3:
+web3_pp:
   sapphire-testnet:
-    address_file: "${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
     owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
   
-  sapphire-testnet:
-    address_file: "${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+  sapphire-mainnet:
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://sapphire.oasis.io
     subgraph_url: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520 # OCEAN token address
     owner_addrs: 0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
 
   barge-predictoor-bot:
-    address_file: "${HOME}/address-barge-pdrbot.json"
+    address_file: "~/address-barge-pdrbot.json"
     private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
     rpc_url: http://4.245.224.119:8545 # from VPS 
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
@@ -70,7 +73,7 @@ web3:
     owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
   barge-pytest:
-    address_file: "${HOME}/address-barge-pytest.json"
+    address_file: "~/address-barge-pytest.json"
     private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
     rpc_url: http://74.234.16.165:8545
     subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph

@@ -1,4 +1,4 @@
-from pdr_backend.predictoor.test.agent_runner import run_agent_test
+from pdr_backend.predictoor.test.predictoor_agent_runner import run_agent_test
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 
 

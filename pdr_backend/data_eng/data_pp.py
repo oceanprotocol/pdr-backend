@@ -36,6 +36,12 @@ class DataPP(StrMixin):
         return self.d["sim_only"]["test_n"]  # eg 200
 
     # --------------------------------
+    # setters
+    @enforce_types
+    def set_predict_feeds(self, predict_feeds_strs: List[str]):
+        self.d["predict_feeds"] = predict_feeds_strs
+    
+    # --------------------------------
     # derivative properties
     @property
     def timeframe_ms(self) -> int:

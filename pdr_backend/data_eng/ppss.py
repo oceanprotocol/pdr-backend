@@ -10,6 +10,7 @@ from pdr_backend.data_eng.predictoor_ss import PredictoorSS
 from pdr_backend.data_eng.sim_ss import SimSS
 from pdr_backend.data_eng.trader_pp import TraderPP
 from pdr_backend.data_eng.trader_ss import TraderSS
+from pdr_backend.util.web3_pp import Web3PP
 
 
 class PPSS:
@@ -36,6 +37,7 @@ class PPSS:
             d = yaml.safe_load(yaml_str)
 
         # fill attributes from d
+        self.web3_pp = Web3PP(d["web3_pp"])
         self.data_pp = DataPP(d["data_pp"])
         self.data_ss = DataSS(d["data_ss"])
         self.model_ss = ModelSS(d["model_ss"])
@@ -46,6 +48,7 @@ class PPSS:
 
     def __str__(self):
         s = ""
+        s += f"web3_pp={self.web3_pp}\n"
         s += f"data_pp={self.data_pp}\n"
         s += f"data_ss={self.data_ss}\n"
         s += f"model_ss={self.model_ss}\n"
@@ -96,8 +99,20 @@ trader_pp:
 trader_ss:
   sim_only:
     buy_amt: 10000 USDT
+  bot_only:
+    min_buffer: 60 
+    max_tries: 10
+    position_size: 3
 
 sim_ss:
   do_plot: False
   log_dir: {log_dir}
+
+web3_pp:
+  sapphire-testnet:
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
+    rpc_url: https://testnet.sapphire.oasis.dev
+    subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+    stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
+    owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
     """

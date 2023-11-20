@@ -5,13 +5,13 @@ from typing import List, Optional, Tuple
 import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.ppss import PPSS
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach2.portfolio import (
     Portfolio,
     Order,
     create_order,
 )
-from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
 from pdr_backend.trader.trader_agent import TraderAgent
 
 
@@ -26,10 +26,6 @@ class TraderAgent2(TraderAgent):
         2. If new prediction up, open long
         3. If new prediction down, open short
 
-        You can use the ENV_VARS to:
-        1. Configure your strategy: pair, timeframe, etc..
-        2. Configure your exchange: api_key + secret_key
-
         You can improve this by:
         1. Improving the type of method to buy/exit (i.e. limit)
         2. Improving the buy Conditional statement
@@ -37,20 +33,19 @@ class TraderAgent2(TraderAgent):
         4. Using SL and TP
     """
 
-    def __init__(self, config: TraderConfig2):
+    def __init__(self, ppss: PPSS):
+        super().__init__(ppss)
+
         # Initialize cache params
         self.portfolio = None
         self.reset_cache = False
-
-        super().__init__(config)
-        self.config: TraderConfig2 = config
 
         # If cache params are empty, instantiate
         if self.portfolio is None:
             self.portfolio = Portfolio(list(self.feeds.keys()))
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_str)
+        exchange_class = getattr(ccxt, self.ppss.data_pp.exchange_str)
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -83,11 +78,11 @@ class TraderAgent2(TraderAgent):
     def should_close(self, order: Order):
         """
         @description
-            Check if order has lapsed in time relative to config.timeframe
+            Check if order has lapsed in time relative to data_pp.timeframe
         """
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
-        order_lapsed = now_ts - tx_ts > self.config.timedelta * 1000
+        order_lapsed = now_ts - tx_ts > self.ppss.data_pp.timeframe_ms
         return order_lapsed
 
     def update_positions(self, feeds: Optional[List[str]] = None):
@@ -117,7 +112,7 @@ class TraderAgent2(TraderAgent):
 
                 print("     [Close Position] Requirements met")
                 order = self.exchange.create_market_sell_order(
-                    self.config.exchange_pair,
+                    self.ppss.data_pp.exchange_str,
                     position.open_order.amount,
                 )
                 self.portfolio.close_position(addr, order)
@@ -149,10 +144,11 @@ class TraderAgent2(TraderAgent):
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             print("     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
-                symbol=self.config.exchange_pair, amount=self.config.size
+                symbol=self.ppss.data_pp.exchange_str,
+                amount=self.ppss.trader_ss.position_size,
             )
             if order and self.portfolio:
-                order = create_order(order, self.config.exchange_str)
+                order = create_order(order, self.ppss.data_pp.exchange_str)
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()
         else:
