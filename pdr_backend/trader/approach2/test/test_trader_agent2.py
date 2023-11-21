@@ -77,27 +77,12 @@ def test_update_positions(
     web3_config,
     tmpdir,
 ):
-    yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
-    ppss.data_pp.set_predict_feeds_strs(["mexc c BTC/USDT"])
-    ppss.data_pp.set_timeframe("5m")
-    ppss.trader_ss.set_position_size(10.0)
+    # params
+    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss.web3_pp.set_web3_config(web3_config)
 
-    trader_config.get_feeds = Mock()
-    trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
-    trader_config.get_contracts = Mock()
-    trader_config.get_contracts.return_value = {
-        "0x0000000000000000000000000000000000000000": predictoor_contract
-    }
-    trader_config.max_tries = 10
-    trader_config.web3_config = web3_config
-
-    # Creating a new agent and setting up the mock objects
-    agent = TraderAgent2(trader_config)
-    assert agent.config == trader_config
-    check_subscriptions_and_subscribe_mock.assert_called_once()
+    # agent
+    agent = TraderAgent2(ppss)
 
     # Creating mock objects and functions
     agent.exchange = Mock()
@@ -135,38 +120,22 @@ def test_should_close(
     predictoor_contract,
     web3_config,
 ):
-    trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_str = "mexc"
-    trader_config.exchange_pair = "BTC/USDT"
-    trader_config.timeframe = "5m"
-    trader_config.size = 10.0
-    trader_config.get_feeds = Mock()
-    trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
-    trader_config.get_contracts = Mock()
-    trader_config.get_contracts.return_value = {
-        "0x0000000000000000000000000000000000000000": predictoor_contract
-    }
-    trader_config.max_tries = 10
-    trader_config.web3_config = web3_config
+    # params
+    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss.web3_pp.set_web3_config(web3_config)
+    ppss.set_timeframe(300)
 
-    # TraderConfig2.timedelta is a property, so we need to mock it
-    trader_config.timedelta = 300
+    # agent
+    agent = TraderAgent2(ppss)
 
-    # Creating a new agent and setting up the mock objects
-    agent = TraderAgent2(trader_config)
-    assert agent.config == trader_config
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    # Test 1 - Creating mock objects and functions to handle should_close
+    # test 1 - creating mock objects and functions to handle should_close
     mock_order = Mock()
     mock_order.timestamp = 1
 
     result = agent.should_close(mock_order)
     assert result
 
-    # Test 2 - Make more order recent, now it should not close
+    # test 2 - ensure more order recent, now it should not close
     mock_order.timestamp = datetime.now().timestamp() * 1000
 
     result = agent.should_close(mock_order)

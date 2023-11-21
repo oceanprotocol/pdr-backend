@@ -96,7 +96,7 @@ class TraderAgent1(TraderAgent):
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.ppss.data_pp.pair_str, self.config.size
+                self.ppss.data_pp.pair_str, self.ppss.trader_ss.position_size
             )
 
             # If order is successful, we log the order so we can close it

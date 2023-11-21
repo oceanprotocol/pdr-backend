@@ -84,7 +84,7 @@ async def test_process_block_at_feed(
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
+    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
 
     ppss.web3_pp.get_feeds.return_value = {"0x123": feed}
     ppss.web3_pp.get_contracts.return_value = {"0x123": predictoor_contract}

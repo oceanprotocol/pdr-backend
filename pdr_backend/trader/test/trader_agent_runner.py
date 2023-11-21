@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
+from pdr_backend.models.feed import Feed
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
 
@@ -17,10 +18,10 @@ def mock_feed():
 @enforce_types
 def mock_ppss(predictoor_contract, tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
+    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
 
     ppss.data_pp.set_timeframe("5m")
-    ppss.data_pp.set_predict_feeds_strs(["mexc c BTC/USDT"])
+    ppss.data_pp.set_predict_feeds(["mexc c BTC/USDT"])
 
     ppss.web3_pp.get_feeds = Mock()
     ppss.web3_pp.get_feeds.return_value = {
@@ -39,7 +40,7 @@ def mock_ppss(predictoor_contract, tmpdir):
 @enforce_types
 def run_no_feeds(tmpdir, agent_class):
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
+    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
     ppss.data_pp.set_predict_feeds([])
     ppss.web3_pp.get_feeds = Mock()
     ppss.get_feeds.return_value = {}

@@ -43,7 +43,8 @@ def do_sim():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    dummy_network = "barge-pytest"
+    ppss = PPSS(dummy_network, args.YAML_FILE)
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -54,7 +55,7 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
 
     approach = args.APPROACH
     if approach == 1:
@@ -81,7 +82,7 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
     approach = args.APPROACH
 
     if approach == 1:
@@ -110,7 +111,7 @@ def do_trueval():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
     raise AssertionError("FIXME")
 
 
@@ -120,7 +121,7 @@ def do_dfbuyer():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
     raise AssertionError("FIXME")
 
 
@@ -130,5 +131,5 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
     raise AssertionError("FIXME")
