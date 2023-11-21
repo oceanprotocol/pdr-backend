@@ -3,7 +3,6 @@ from os import getenv
 from enforce_typing import enforce_types
 
 
-
 @enforce_types
 class DFBuyerConfig(BaseConfig):
     def __init__(self):

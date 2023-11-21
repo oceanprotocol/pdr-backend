@@ -42,7 +42,7 @@ class BasePredictoorAgent(ABC):
             pair_filters=self.ppss.data_pp.pair_strs,
             timeframe_filters=[self.ppss.data_pp.timeframe],
             source_filters=self.ppss.data_pp.exchange_strs,
-        )                      
+        )
         if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
@@ -57,7 +57,9 @@ class BasePredictoorAgent(ABC):
 
         # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.ppss.web3_pp.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.ppss.web3_pp.get_contracts(
+            feed_addrs
+        )  # [addr] : contract
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0

@@ -11,8 +11,7 @@ from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 
 @enforce_types
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
-def test_new_agent(
-        check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
+def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
 

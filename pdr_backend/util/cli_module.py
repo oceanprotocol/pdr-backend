@@ -36,6 +36,7 @@ def _do_main():
 
     func()
 
+
 @enforce_types
 def do_sim():
     parser = SimArgParser("Run simulation", "sim")
@@ -46,7 +47,7 @@ def do_sim():
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
-    
+
 @enforce_types
 def do_predictoor():
     parser = PredictoorArgParser("Run a predictoor bot", "predictoor")
@@ -59,12 +60,13 @@ def do_predictoor():
     if approach == 1:
         agent = PredictoorAgent1(config, ppss)
         agent.run()
-                
+
     elif approach == 2:
         # must import here, otherwise it wants MODELDIR envvar
         from pdr_backend.predictoor.approach2.main2 import do_main2x
+
         do_main2()
-        
+
     elif approach == 3:
         agent = PredictoorAgent3(config, ppss)
         agent.run()
@@ -91,17 +93,17 @@ def do_trader():
 
     agent.run()
 
-    
+
 @enforce_types
 def do_claim_OCEAN():
     do_payout()
 
-    
+
 @enforce_types
 def do_claim_ROSE():
     do_rose_payout()
 
-    
+
 @enforce_types
 def do_trueval():
     parser = TruevalArgParser("Run trueval bot", "trueval")
@@ -130,4 +132,3 @@ def do_publisher():
 
     ppss = PPSS(args.YAML_FILE)
     raise AssertionError("FIXME")
-

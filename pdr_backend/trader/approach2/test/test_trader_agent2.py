@@ -12,8 +12,7 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_new_agent(
-        check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
+def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
 
@@ -24,7 +23,7 @@ def test_new_agent(
 
     # when no feeds
     run_no_feeds(tmpdir, TraderAgent2)
-    
+
 
 @enforce_types
 @pytest.mark.asyncio
@@ -82,7 +81,7 @@ def test_update_positions(
     ppss.data_pp.set_predict_feeds_strs(["mexc c BTC/USDT"])
     ppss.data_pp.set_timeframe("5m")
     ppss.trader_ss.set_position_size(10.0)
-    
+
     trader_config.get_feeds = Mock()
     trader_config.get_feeds.return_value = {
         "0x0000000000000000000000000000000000000000": mock_feed()

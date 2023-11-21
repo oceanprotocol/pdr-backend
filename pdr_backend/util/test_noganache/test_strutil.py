@@ -37,7 +37,7 @@ def testStrMixin1():
 def testStrMixin2():
     class Foo(StrMixin):
         __STR_OBJDIR__ = ["x", "y"]
-        
+
         def __init__(self):
             self.x = 1
             self.y = 2

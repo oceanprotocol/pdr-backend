@@ -9,11 +9,7 @@ def test_trader_ss():
         "sim_only": {
             "buy_amt": "10 USD",
         },
-        "bot_only": {
-            "min_buffer": 60,
-            "max_tries": 10,
-            "position_size" : 3
-        },
+        "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
     }
     ss = TraderSS(d)
 
@@ -25,7 +21,6 @@ def test_trader_ss():
 
     # derivative properties
     assert ss.buy_amt_usd == 10.0
-
 
     # setters
     ss.set_max_tries(12)

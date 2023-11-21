@@ -25,26 +25,27 @@ FEED_DICT = {  # info inside a predictoor contract
 }
 
 _D1 = {
-    "address_file" : "address.json 1",
-    "rpc_url" : "rpc url 1",
-    "subgraph_url" : "subgraph url 1",
-    "stake_token" : "0xStake1",
-    "owner_addrs" : "0xOwner1",
+    "address_file": "address.json 1",
+    "rpc_url": "rpc url 1",
+    "subgraph_url": "subgraph url 1",
+    "stake_token": "0xStake1",
+    "owner_addrs": "0xOwner1",
 }
 _D2 = {
-    "address_file" : "address.json 2",
-    "rpc_url" : "rpc url 2",
-    "subgraph_url" : "subgraph url 2",
-    "stake_token" : "0xStake2",
-    "owner_addrs" : "0xOwner2",
+    "address_file": "address.json 2",
+    "rpc_url": "rpc url 2",
+    "subgraph_url": "subgraph url 2",
+    "stake_token": "0xStake2",
+    "owner_addrs": "0xOwner2",
 }
 _D = {
     "network1": _D1,
-    "network2" : _D2, 
+    "network2": _D2,
 }
 
+
 @enforce_types
-def test_web3_pp__yaml_dict():    
+def test_web3_pp__yaml_dict():
     pp = Web3PP("network1", _D)
 
     assert pp.network == "network1"
@@ -54,14 +55,14 @@ def test_web3_pp__yaml_dict():
     assert pp.subgraph_url == "subgraph url 1"
     assert pp.stake_token == "0xStake1"
     assert pp.owner_addrs == "0xOwner1"
-    
+
     # network2
     pp2 = Web3PP("network2", _D)
     assert pp2.network == "network2"
     assert pp2.dn == _D2
     assert pp2.address_file == "address.json 2"
 
-    
+
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
@@ -70,7 +71,7 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
     # test web3_config
     assert web3_pp._web3_config is None
 
-    c = web3_pp.web3_config # calcs & caches web3_pp._web3_config
+    c = web3_pp.web3_config  # calcs & caches web3_pp._web3_config
     assert isinstance(c, Web3Config)
     assert id(c) == id(web3_pp.web3_config)
     assert c.rpc_url == web3_pp.rpc_url
@@ -85,11 +86,11 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
     # test setter
     web3_pp.set_web3_config("foo")
     assert web3_pp.web3_config == "foo"
-    
+
     # str
     assert "Web3PP=" in str(web3_pp)
 
-    
+
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
@@ -98,10 +99,8 @@ def test_web3_pp__get_pending_slots(monkeypatch):
     def _mock_get_pending_slots(*args):
         timestamp = args[1]
         return [f"1_{timestamp}", f"2_{timestamp}"]
-    
-    with patch(
-        "pdr_backend.ppss.web3_pp.get_pending_slots", _mock_get_pending_slots
-    ):
+
+    with patch("pdr_backend.ppss.web3_pp.get_pending_slots", _mock_get_pending_slots):
         slots = web3_pp.get_pending_slots(6789)
     assert slots == ["1_6789", "2_6789"]
 
@@ -122,7 +121,7 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         _mock_query_feed_contracts,
     ):
         feeds = web3_pp.get_feeds()
-        
+
     feed_addrs = list(feeds.keys())
     assert feed_addrs == [ADDR]
 

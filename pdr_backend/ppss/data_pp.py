@@ -41,11 +41,11 @@ class DataPP(StrMixin):
     @enforce_types
     def set_timeframe(self, timeframe: str):
         self.d["timeframe"] = timeframe
-        
+
     @enforce_types
     def set_predict_feeds(self, predict_feeds_strs: List[str]):
         self.d["predict_feeds"] = predict_feeds_strs
-    
+
     # --------------------------------
     # derivative properties
     @property

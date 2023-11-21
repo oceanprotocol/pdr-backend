@@ -1,4 +1,3 @@
-
 def main(testing=False):
     config = TraderConfig()
     t = TraderAgent(config)

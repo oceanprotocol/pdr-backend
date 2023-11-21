@@ -26,14 +26,16 @@ class TraderAgent:
             pair_filters=self.ppss.data_pp.pair_strs,
             timeframe_filters=[self.ppss.data_pp.timeframe],
             source_filters=self.ppss.data_pp.exchange_strs,
-        )                      
+        )
 
         if not self.feeds:
             print("No feeds found. Exiting")
             sys.exit()
 
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.ppss.web3_pp.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.ppss.web3_pp.get_contracts(
+            feed_addrs
+        )  # [addr] : contract
 
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0

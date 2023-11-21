@@ -63,7 +63,7 @@ def test_data_pp_3feeds():
         ("binance", "open", "BTC-USDT"),
         ("binance", "high", "BTC-USDT"),
     ]
-    assert pp.pair_strs == ["ETH-USDT","BTC-USDT"]
+    assert pp.pair_strs == ["ETH-USDT", "BTC-USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]
     with pytest.raises(AssertionError):
         pp.predict_feed_tup

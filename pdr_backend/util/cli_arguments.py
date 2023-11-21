@@ -26,13 +26,12 @@ Tools for core team:
 """
 
 
-
 @enforce_types
 def do_help_long(status_code=0):
     print(HELP_LONG)
     sys.exit(status_code)
 
-    
+
 @enforce_types
 def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
@@ -56,23 +55,23 @@ class YAML_Mixin:
             required=False,
         )
 
-        
+
 @enforce_types
 class APPROACH_Mixin:
     def add_argument_APPROACH(self):
         self.add_argument("APPROACH", type=int, help="1|2|..")
 
-        
+
 @enforce_types
 class NETWORK_Mixin:
     def add_argument_NETWORK(self):
         self.add_argument(
             "NETWORK",
             type=str,
-            help="sapphire-testnet|sapphire-mainnet|barge-pdr|barge-pytest"
-            )
+            help="sapphire-testnet|sapphire-mainnet|barge-pdr|barge-pytest",
+        )
 
-        
+
 @enforce_types
 class SimArgParser(ArgParser, YAML_Mixin):
     def __init__(self, description: str, command_name: str):
@@ -80,13 +79,13 @@ class SimArgParser(ArgParser, YAML_Mixin):
         self.add_argument("command", choices=[command_name])
         self.add_argument_YAML()
 
-        
+
 @enforce_types
 class _ArgParser_APPROACH_NETWORK_YAML(
-        ArgParser,
-        APPROACH_Mixin,
-        NETWORK_Mixin,
-        YAML_Mixin,
+    ArgParser,
+    APPROACH_Mixin,
+    NETWORK_Mixin,
+    YAML_Mixin,
 ):
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
@@ -95,10 +94,11 @@ class _ArgParser_APPROACH_NETWORK_YAML(
         self.add_argument_NETWORK()
         self.add_argument_YAML()
 
+
 PredictoorArgParser = _ArgParser_APPROACH_NETWORK_YAML
 TraderArgParser = _ArgParser_APPROACH_NETWORK_YAML
 
-        
+
 @enforce_types
 class _ArgParser_NETWORK_YAML(ArgParser, NETWORK_Mixin, YAML_Mixin):
     @enforce_types
@@ -108,8 +108,7 @@ class _ArgParser_NETWORK_YAML(ArgParser, NETWORK_Mixin, YAML_Mixin):
         self.add_argument_NETWORK()
         self.add_argument_YAML()
 
-TruevalArgParser =  _ArgParser_NETWORK_YAML
+
+TruevalArgParser = _ArgParser_NETWORK_YAML
 DfbuyerArgParser = _ArgParser_NETWORK_YAML
 PublisherArgParser = _ArgParser_NETWORK_YAML
-
-

@@ -1,7 +1,7 @@
 import inspect
 
 from enforce_typing import enforce_types
-    
+
 
 @enforce_types
 class StrMixin:
