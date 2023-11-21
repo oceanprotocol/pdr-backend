@@ -64,4 +64,5 @@ jobs:
           coverage report
 
       - name: Contract logs
+        if: success() || failure()
         run: docker logs ocean_ocean-contracts_1
