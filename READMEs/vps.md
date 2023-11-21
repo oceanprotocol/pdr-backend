@@ -92,13 +92,13 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 In VPS console:
 ```console
-# Create the docker group if it does not exist
+# create the docker group if it does not exist
 sudo groupadd docker
 
-# Add your user to the docker group
+# add your user to the docker group
 sudo usermod -aG docker $USER
 
-# Log in to the new docker group (to avoid having to log out / log in again; but if not enough, try to reboot):
+# log in to the new docker group (to avoid having to log out / log in again; but if not enough, try to reboot):
 newgrp docker
 ```
 
@@ -108,7 +108,7 @@ newgrp docker
 
 In VPS console:
 ```console
-## install barge remotely
+# install barge remotely
 cd
 mkdir code
 cd code
@@ -122,28 +122,28 @@ git checkout predictoor
 (If needed) SSH into VPS console:
 ```console
 ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
-#or
+# or
 ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 ```
 
 In VPS console:
 ```console
-## cleanup past barge
+# cleanup past barge
 rm -rf ~/.ocean
 cd ~/code/barge
 ./cleanup.sh
 docker system prune -a --volumes
 
-## run barge
+# run barge...
 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
 export GANACHE_BLOCKTIME=5
 
-#pick just OPTION 1 or 2 below, depending on your goals
+# pick just OPTION 1 or 2 below, depending on your goals
 
-#OPTION 1: for predictoor bot: run barge with all bots except predictoor. (Use this your first time through)
+# OPTION 1: for predictoor bot: run barge with all bots except predictoor. (Use this your first time through)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 
-#OR, OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
+# OR, OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
@@ -153,10 +153,10 @@ Then, copy VPS' `address.json` file to local. In local console:
 ```console
 cd
 
-#OPTION 1: for predictoor bot
+# OPTION 1: for predictoor bot
 scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json MyVmBargePredictoor.address.json
 
-#OR, OPTION 2: for unit testing
+# OR, OPTION 2: for unit testing
 scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json MyVmBargeUnitTest.address.json
 ```
 
@@ -180,18 +180,18 @@ If it returns nothing, then contracts have not yet been deployed to ganache. It'
 
 In local console:
 ```console
-# Setup virtualenv (if needed)
+# set up virtualenv (if needed)
 cd ~/code/pdr-backend
 source venv/bin/activate
 
-# Set envvars
+# set envvars
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
 export ADDRESS_FILE="${HOME}/MyVmBargePredictoor.address.json" # from scp to local
 
 export RPC_URL=http://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL=http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
 
-#for predictoor bot. Setting to empty means no filters.
+# for predictoor bot. Setting to empty means no filters.
 export PAIR_FILTER=
 export TIMEFRAME_FILTER=
 export SOURCE_FILTER=
@@ -250,27 +250,27 @@ export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean
 
 In work console, run tests:
 ```console
-#run a single test. The "-s" is for more output.
+# run a single test. The "-s" is for more output.
 pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constants -s
 
-#run all tests in a file
+# run all tests in a file
 pytest pdr_backend/util/test_noganache/test_util_constants.py -s
 
-#run a single test that flexes network connection
+# run a single test that flexes network connection
 pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filename -s
 
-#run all regular tests; see details on pytest markers to select specific suites
+# run all regular tests; see details on pytest markers to select specific suites
 pytest
 ```
 
 In work console, run linting checks:
 ```console
-#run static type-checking. By default, uses config mypy.ini. Note: pytest does dynamic type-checking.
+# run static type-checking. By default, uses config mypy.ini. Note: pytest does dynamic type-checking.
 mypy ./
 
-#run linting on code style
+# run linting on code style
 pylint pdr_backend/*
 
-#auto-fix some pylint complaints
+# auto-fix some pylint complaints
 black ./
 ```
