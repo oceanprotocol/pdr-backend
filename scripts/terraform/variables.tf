@@ -1,8 +1,3 @@
-# Predictoor Variables
-variable "predictoor_branch" {
-  type = string
-}
-
 # Cloud Provider Variables
 variable "username" {
   type = string
@@ -13,6 +8,14 @@ variable "credentials_path" {
 }
 
 variable "project_id" {
+  type = string
+}
+
+variable "region" {
+  type = string
+}
+
+variable "zone" {
   type = string
 }
 

@@ -1,6 +1,3 @@
-# Predictoor Variables
-predictoor_branch = "main"
-
 # Cloud Variables
 username = "Your account username"
 credentials_path = "Path to your credentials file"

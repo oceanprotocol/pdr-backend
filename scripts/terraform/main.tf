@@ -2,96 +2,109 @@
 provider "google" {
   credentials = file(var.credentials_path)  # Replace with your GCP credentials file
   project     = var.project_id             # Replace with your GCP project ID
-  region      = "europe-west4"                    # Replace with your desired region
+  region      = var.region                    # Replace with your desired region
 }
 
-resource "google_compute_instance" "vm_instance" {
-  name         = "predictoor-vm"                   # Replace with your desired VM name
-  machine_type = "n2-standard-4"                  # Replace with your desired machine type
-  zone         = "europe-west4-a"                 # Replace with your desired zone
+data "google_client_config" "current" {}
 
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"   # Replace with your desired OS image
-      size  = 100                                # Replace with your desired disk size in GB
+resource "google_container_cluster" "pdr_cluster" {
+  name     = "pdr-cluster"
+  location = var.zone
+
+  remove_default_node_pool = true
+  initial_node_count = 1
+
+  master_auth {
+    client_certificate_config {
+      issue_client_certificate = false
     }
   }
-  
-  network_interface {
-    network = "default"
-    access_config {
-      # Ephemeral IP
+}
+
+resource "google_container_node_pool" "pdr_nodes" {
+  name       = "pdr-nodes"
+  location   = var.zone
+  cluster    = google_container_cluster.pdr_cluster.name
+  node_count = 1
+
+  node_config {
+    preemptible  = true
+    machine_type = "e2-small"
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  }
+}
+
+provider "kubernetes" {
+  host                   = "https://${google_container_cluster.pdr_cluster.endpoint}"
+  token                  = data.google_client_config.current.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.pdr_cluster.master_auth[0].cluster_ca_certificate)
+}
+
+resource "kubernetes_deployment" "app_deployment" {
+  metadata {
+    name = "predictoor-agents"
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "predictoor-agents"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "predictoor-agents"
+        }
+      }
+
+      spec {
+        container {
+          image = "gcr.io/var.project_id/pdr-backend:latest"
+          name  = "pdr-btc-5m"
+
+          env {
+            name = "PRIVATE_KEY"
+            value = var.BTC_5m_PK
+          }
+
+          env {
+            name = "MODULE_NAME"
+            value = "predictoor"
+          }
+
+          env {
+            name = "COMMAND"
+            value = "3"
+          }
+        }
+
+        container {
+          image = "gcr.io/var.project_id/pdr-backend:latest"
+          name  = "pdr-eth-5m"
+
+          env {
+            name = "PRIVATE_KEY"
+            value = var.ETH_5m_PK
+          }
+
+          env {
+            name = "MODULE_NAME"
+            value = "predictoor"
+          }
+
+          env {
+            name = "COMMAND"
+            value = "3"
+          }
+        }
+      }
     }
   }
-  
-  metadata_startup_script = <<-EOF
-    #!/bin/bash
-
-    # Assume user account
-    su ${var.username} >> debug.log
-
-    # Create path for ocean-contracts and clone contract address list
-    mkdir /home/${var.username}/.ocean/
-    mkdir /home/${var.username}/.ocean/ocean-contracts/
-    mkdir /home/${var.username}/.ocean/ocean-contracts/artifacts/
-    wget https://github.com/idiom-bytes/predictoor_contracts/raw/main/address.json -O /home/${var.username}/.ocean/ocean-contracts/artifacts/address.json
-
-    # Install Git
-    sudo apt-get update
-    sudo apt-get install -y git
-
-    # Clone the GitHub repository
-    git clone https://github.com/oceanprotocol/pdr-backend.git /home/${var.username}/pdr-backend
-
-    # Change directory to pdr-backend
-    cd /home/${var.username}/pdr-backend
-    git checkout ${var.predictoor_branch}
-
-    # Install Python 3 venv
-    sudo apt-get install -y python3-venv
-
-    # Create a virtual environment and install requirements
-    python3 -m venv venv
-    source ./venv/bin/activate
-    pip install -r requirements.txt
-
-    echo "export PKs" >> debug.log
-
-    # export 5m PKs 
-    export BTC_5m_PK=${var.BTC_5m_PK}
-    export ETH_5m_PK=${var.ETH_5m_PK}
-    export ADA_5m_PK=${var.ADA_5m_PK}
-    export BNB_5m_PK=${var.BNB_5m_PK}
-    export SOL_5m_PK=${var.SOL_5m_PK}
-    export XRP_5m_PK=${var.XRP_5m_PK}
-    export DOT_5m_PK=${var.DOT_5m_PK}
-    export LTC_5m_PK=${var.LTC_5m_PK}
-    export DOGE_5m_PK=${var.DOGE_5m_PK}
-    export TRX_5m_PK=${var.TRX_5m_PK}
-
-    # export 1h PKs 
-    export BTC_1h_PK=${var.BTC_1h_PK}
-    export ETH_1h_PK=${var.ETH_1h_PK}
-    export ADA_1h_PK=${var.ADA_1h_PK}
-    export BNB_1h_PK=${var.BNB_1h_PK}
-    export SOL_1h_PK=${var.SOL_1h_PK}
-    export XRP_1h_PK=${var.XRP_1h_PK}
-    export DOT_1h_PK=${var.DOT_1h_PK}
-    export LTC_1h_PK=${var.LTC_1h_PK}
-    export DOGE_1h_PK=${var.DOGE_1h_PK}
-    export TRX_1h_PK=${var.TRX_1h_PK}
-
-    # install pm2
-    echo "install pm2" >> debug.log
-    sudo apt-get install -y npm >> debug.log
-    sudo npm install pm2@latest -g  >> debug.log
-
-    # Run PM2 for all feeds
-    su ${var.username} -c "pm2 startup systemd -u ${var.username} --hp /home/${var.username}" >> debug.log
-    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-5m.config.js  >> debug.log
-    pm2 start /home/${var.username}/pdr-backend/scripts/terraform/pm2-config/mainnet-predictoor-1h.config.js  >> debug.log
-
-    # Save the PM2 processes
-    pm2 save  >> debug.log
-  EOF
 }
