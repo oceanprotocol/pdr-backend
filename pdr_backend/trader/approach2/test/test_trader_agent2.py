@@ -4,15 +4,16 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.models.feed import Feed
-from pdr_backend.trader.test.trader_agent_runner import mock_feed, mock_ppss
+from pdr_backend.trader.test.trader_agent_runner import (
+    mock_feed,
+    mock_ppss,
+    run_no_feeds,
+)
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
@@ -71,12 +72,7 @@ async def test_do_trade(
 # Test for TraderAgent2.update_positions
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_update_positions(
-    check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-    web3_config,
-    tmpdir,
-):
+def test_update_positions(predictoor_contract, web3_config, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
     ppss.web3_pp.set_web3_config(web3_config)
@@ -115,11 +111,7 @@ def test_update_positions(
 # Test for TraderAgent2.should_close
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_should_close(
-    check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-    web3_config,
-):
+def test_should_close(predictoor_contract, web3_config, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
     ppss.web3_pp.set_web3_config(web3_config)

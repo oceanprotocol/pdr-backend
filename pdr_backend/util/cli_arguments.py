@@ -1,6 +1,5 @@
 from argparse import ArgumentParser as ArgParser
 from argparse import Namespace
-import os
 import sys
 
 from enforce_typing import enforce_types

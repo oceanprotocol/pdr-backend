@@ -1,5 +1,7 @@
 import os
+
 from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
@@ -8,9 +10,8 @@ from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 def test_ppss_from_file(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
     yaml_filename = os.path.join(tmpdir, "ppss.yaml")
-    f = open(yaml_filename, "a")
-    f.write(yaml_str)
-    f.close()
+    with open(yaml_filename, "a") as f:
+        f.write(yaml_str)
 
     _test_ppss(yaml_filename=yaml_filename)
 
@@ -47,7 +48,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None):
 
 
 @enforce_types
-def _test_bad_network_name():
+def _test_bad_network_name(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
     with pytest.raises(ValueError):
-        ppss = PPSS(network="foo network", yaml_str=yaml_str)
+        PPSS(network="foo network", yaml_str=yaml_str)

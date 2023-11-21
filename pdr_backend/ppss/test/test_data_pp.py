@@ -2,7 +2,6 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 
 @enforce_types
@@ -66,17 +65,17 @@ def test_data_pp_3feeds():
     assert pp.pair_strs == ["ETH-USDT", "BTC-USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]
     with pytest.raises(ValueError):
-        pp.predict_feed_tup
+        pp.predict_feed_tup  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
-        pp.exchange_str
+        pp.exchange_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
-        pp.signal_str
+        pp.signal_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
-        pp.pair_str
+        pp.pair_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
-        pp.base_str
+        pp.base_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
-        pp.quote_str
+        pp.quote_str  # pylint: disable=pointless-statement
 
 
 @enforce_types

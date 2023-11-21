@@ -4,12 +4,10 @@ from typing import Dict, List, Optional
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
-from web3.types import BlockData
 
 from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
-from pdr_backend.util.env import getenv_or_exit, parse_filters
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
@@ -105,7 +103,7 @@ class Web3PP(StrMixin):
             contracts[addr] = PredictoorContract(self.web3_config, addr)
         return contracts
 
-    #keep off. @enforce_types
+    # keep off. @enforce_types
     def get_feeds(
         self,
         pair_filters: Optional[List[str]] = None,

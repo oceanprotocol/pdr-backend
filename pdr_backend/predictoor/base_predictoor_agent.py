@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import sys
 from os import getenv
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
@@ -102,7 +102,9 @@ class BasePredictoorAgent(ABC):
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = self.ppss.web3_pp.web3_config.get_block(block_number, full_transactions=False)
+        block = self.ppss.web3_pp.web3_config.get_block(
+            block_number, full_transactions=False
+        )
         if not block:
             print("  Done step: block not ready yet")
             return

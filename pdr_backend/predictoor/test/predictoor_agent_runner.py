@@ -10,7 +10,6 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.util.constants import S_PER_DAY
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
@@ -46,7 +45,7 @@ class MockQuery:
 
 
 # mock w3.eth.block_number, w3.eth.get_block()
-#@enforce_types
+@enforce_types
 class MockEth:
     def __init__(self):
         self.timestamp = INIT_TIMESTAMP
@@ -60,7 +59,7 @@ class MockEth:
         return mock_block
 
 
-#@enforce_types
+@enforce_types
 class MockFeedContract:
     def __init__(self, w3, s_per_epoch: int):
         self._w3 = w3
@@ -86,8 +85,8 @@ class MockFeedContract:
         self._prediction_slots.append(timestamp)
 
 
-#@enforce_types
-def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):    
+@enforce_types
+def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
 
     yaml_str = fast_test_yaml_str(tmpdir)

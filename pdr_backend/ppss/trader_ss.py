@@ -52,5 +52,5 @@ class TraderSS(StrMixin):
     # derivative properties
     @property
     def buy_amt_usd(self):
-        amt_s, token = self.buy_amt_str.split()
+        amt_s, _ = self.buy_amt_str.split()
         return float(amt_s)

@@ -1,6 +1,3 @@
-import argparse
-import importlib
-import os
 import sys
 
 from enforce_typing import enforce_types
@@ -14,13 +11,13 @@ from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.util.cli_arguments import (
     do_help_long,
+    DfbuyerArgParser,
     print_args,
-    SimArgParser,
     PredictoorArgParser,
+    PublisherArgParser,
+    SimArgParser,
     TraderArgParser,
     TruevalArgParser,
-    DfbuyerArgParser,
-    PublisherArgParser,
 )
 
 
@@ -59,17 +56,19 @@ def do_predictoor():
 
     approach = args.APPROACH
     if approach == 1:
-        agent = PredictoorAgent1(config, ppss)
+        agent = PredictoorAgent1(ppss)
         agent.run()
 
     elif approach == 2:
         # must import here, otherwise it wants MODELDIR envvar
-        from pdr_backend.predictoor.approach2.main2 import do_main2x
+        from pdr_backend.predictoor.approach2.main2 import (
+            do_main2,
+        )  # pylint: disable=import-outside-toplevel
 
         do_main2()
 
     elif approach == 3:
-        agent = PredictoorAgent3(config, ppss)
+        agent = PredictoorAgent3(ppss)
         agent.run()
 
     else:
@@ -111,17 +110,17 @@ def do_trueval():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
     raise AssertionError("FIXME")
 
 
 @enforce_types
 def do_dfbuyer():
-    parser = DfBuyerArgParser("Run dfbuyer bot", "dfbuyer")
+    parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
     raise AssertionError("FIXME")
 
 
@@ -131,5 +130,5 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
     raise AssertionError("FIXME")

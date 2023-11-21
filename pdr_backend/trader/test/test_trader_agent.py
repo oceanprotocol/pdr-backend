@@ -4,10 +4,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.trader.test.trader_agent_runner import mock_feed, mock_ppss
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.trader.test.trader_agent_runner import (
+    mock_feed,
+    mock_ppss,
+    run_no_feeds,
+)
 from pdr_backend.trader.trader_agent import TraderAgent
 
 
@@ -29,7 +32,7 @@ def test_new_agent(
 
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 def test_run(
-    check_subscriptions_and_subscribe_mock, tmpdir
+    check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir
 ):  # pylint: disable=unused-argument
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
@@ -46,7 +49,10 @@ def test_run(
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_take_step(
-    check_subscriptions_and_subscribe_mock, web3_config, tmpdir
+    check_subscriptions_and_subscribe_mock,
+    predictoor_contract,
+    web3_config,
+    tmpdir,
 ):  # pylint: disable=unused-argument
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
