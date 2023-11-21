@@ -91,10 +91,10 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     _setenvs(monkeypatch)
 
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
+    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
     mock_query = MockQuery(ppss.data_pp)
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.query_feed_contracts",
+        "pdr_backend.ppss.web3_pp.query_feed_contracts",
         mock_query.mock_query_feed_contracts,
     )
 
@@ -114,15 +114,14 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
         return mock_contract
 
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.PredictoorContract", mock_contract_func
+        "pdr_backend.ppss.web3_pp.PredictoorContract", mock_contract_func
     )
     monkeypatch.setattr("time.sleep", advance_func)
 
     # now we're done the mocking, time for the real work!!
 
     # real work: initialize
-    config = BaseConfig()  # this object's constructor grabs & stores envvars
-    agent = predictoor_agent_class(config, ppss)
+    agent = predictoor_agent_class(ppss)
 
     # last bit of mocking
     agent.config.web3_config.w3 = mock_w3

@@ -116,4 +116,13 @@ web3_pp:
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
     owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
+  barge-pytest:
+    address_file: "~/address-barge-pytest.json"
+    private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
+    rpc_url: http://74.234.16.165:8545
+    subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+    # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+    stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
+    owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
+
     """
