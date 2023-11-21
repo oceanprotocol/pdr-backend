@@ -1,21 +1,13 @@
 import os
 import csv
 from typing import List, Dict
-from io import TextIOWrapper
 
 from enforce_typing import enforce_types
 from pdr_backend.util.subgraph_predictions import Prediction
 
 
 @enforce_types
-def create_csv_header_columns(columns: List[str], file: TextIOWrapper):
-    writer = csv.writer(file)
-    writer.writerow(columns)
-    return writer
-
-
-@enforce_types
-def generate_csv_file_path(csv_output_dir: str, key: str) -> str:
+def key_csv_filename_with_dir(csv_output_dir: str, key: str) -> str:
     return os.path.join(
         csv_output_dir,
         key + ".csv",
@@ -44,17 +36,19 @@ def check_and_create_dir(dir_path: str):
 
 
 @enforce_types
-def write_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
+def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
     check_and_create_dir(csv_output_dir)
 
     data = generate_prediction_data_structure(all_predictions)
 
     for key, predictions in data.items():
         predictions.sort(key=lambda x: x.timestamp)
-        filename = generate_csv_file_path(csv_output_dir, key)
+        filename = key_csv_filename_with_dir(csv_output_dir, key)
         with open(filename, "w", newline="") as file:
-            writer = create_csv_header_columns(
-                ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"], file
+            writer = csv.writer(file)
+
+            writer.writerow(
+                ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"]
             )
 
             for prediction in predictions:
@@ -71,16 +65,17 @@ def write_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str)
 
 
 @enforce_types
-def write_analysis_prediction(all_predictions: List[Prediction], csv_output_dir: str):
+def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
     check_and_create_dir(csv_output_dir)
 
     data = generate_prediction_data_structure(all_predictions)
 
     for key, predictions in data.items():
         predictions.sort(key=lambda x: x.timestamp)
-        filename = generate_csv_file_path(csv_output_dir, key)
+        filename = key_csv_filename_with_dir(csv_output_dir, key)
         with open(filename, "w", newline="") as file:
-            writer = create_csv_header_columns(
+            writer = csv.writer(file)
+            writer.writerow(
                 [
                     "PredictionID",
                     "Timestamp",
@@ -90,16 +85,15 @@ def write_analysis_prediction(all_predictions: List[Prediction], csv_output_dir:
                     "Payout",
                     "True Value",
                     "Predicted Value",
-                ],
-                file,
+                ]
             )
 
             for prediction in predictions:
                 writer.writerow(
                     [
-                        prediction.predictionId,
+                        prediction.prediction_id,
                         prediction.timestamp,
-                        prediction.submittimestamp,
+                        prediction.submit_timestamp,
                         prediction.stake,
                         prediction.user,
                         prediction.payout,

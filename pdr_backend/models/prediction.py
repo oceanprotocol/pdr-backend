@@ -11,8 +11,8 @@ class Prediction:
         source,
         payout,
         user,
-        submittimestamp,
-        predictionId,
+        submit_timestamp,
+        prediction_id,
     ) -> None:
         self.pair = pair
         self.timeframe = timeframe
@@ -23,5 +23,5 @@ class Prediction:
         self.source = source
         self.payout = payout
         self.user = user
-        self.submittimestamp = submittimestamp
-        self.predictionId = predictionId
+        self.submit_timestamp = submit_timestamp
+        self.prediction_id = prediction_id

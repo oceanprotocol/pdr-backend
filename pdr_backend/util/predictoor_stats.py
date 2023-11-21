@@ -47,7 +47,11 @@ def aggregate_prediction_statistics(
         predictor_key = prediction.user
         source = prediction.source
 
-        is_correct = prediction.prediction == prediction.trueval
+        is_correct = (
+            prediction.prediction == prediction.trueval
+            if prediction.trueval is not None
+            else False
+        )
 
         if pair_timeframe_key not in stats["pair_timeframe"]:
             stats["pair_timeframe"][pair_timeframe_key] = {
@@ -73,11 +77,15 @@ def aggregate_prediction_statistics(
 
         stats["pair_timeframe"][pair_timeframe_key]["total"] += 1
         stats["pair_timeframe"][pair_timeframe_key]["stake"] += prediction.stake
-        stats["pair_timeframe"][pair_timeframe_key]["payout"] += prediction.payout
+        stats["pair_timeframe"][pair_timeframe_key]["payout"] += (
+            prediction.payout if prediction.payout else 0
+        )
 
         stats["predictor"][predictor_key]["total"] += 1
         stats["predictor"][predictor_key]["stake"] += prediction.stake
-        stats["predictor"][predictor_key]["payout"] += prediction.payout
+        stats["predictor"][predictor_key]["payout"] += (
+            prediction.payout if prediction.payout else 0
+        )
         stats["predictor"][predictor_key]["details"].add(
             (prediction.pair, prediction.timeframe, source)
         )

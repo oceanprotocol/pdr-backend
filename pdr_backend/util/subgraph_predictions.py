@@ -126,16 +126,28 @@ def fetch_filtered_predictions(
             source = info["source"]
             timestamp = prediction["slot"]["slot"]
 
-            if prediction["payout"] is None:
-                continue
+            # if prediction["payout"] is None:
+            #     continue
 
-            trueval = prediction["payout"]["trueValue"]
-            payout = float(prediction["payout"]["payout"])
+            trueval = (
+                prediction["payout"]["trueValue"]
+                if prediction["payout"] is not None
+                else None
+            )
+            payout = (
+                float(prediction["payout"]["payout"])
+                if prediction["payout"] is not None
+                else None
+            )
 
-            if trueval is None:
-                continue
+            # if trueval is None:
+            #     continue
 
-            predictedValue = prediction["payout"]["predictedValue"]
+            predictedValue = (
+                prediction["payout"]["predictedValue"]
+                if prediction["payout"] is not None
+                else None
+            )
             stake = float(prediction["stake"])
             predictoor_user = prediction["user"]["id"]
 
@@ -149,8 +161,8 @@ def fetch_filtered_predictions(
                 source,
                 payout,
                 predictoor_user,
-                submittimestamp=prediction["timestamp"],
-                predictionId=prediction["id"],
+                submit_timestamp=prediction["timestamp"],
+                prediction_id=prediction["id"],
             )
             predictions.append(prediction_obj)
 

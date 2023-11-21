@@ -22,8 +22,8 @@ sample_predictions = [
         source="binance",
         payout=0.0,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        submittimestamp=1622547000,
-        predictionId="test-predictionid1",
+        submit_timestamp=1622547000,
+        prediction_id="test-predictionid1",
     ),
     Prediction(
         pair="ADA/USDT",
@@ -35,8 +35,8 @@ sample_predictions = [
         source="binance",
         payout=0.0,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        submittimestamp=1622547000,
-        predictionId="test-predictionid2",
+        submit_timestamp=1622547000,
+        prediction_id="test-predictionid2",
     ),
 ]
 
