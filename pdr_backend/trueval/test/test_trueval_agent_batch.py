@@ -9,51 +9,45 @@ from pdr_backend.util.constants import ZERO_ADDRESS
 
 
 def test_new_agent(trueval_config):
-    print(
-        "RUNNING TEST_NEW_AGENT TEST -------------------------------------------------------------------------"
-    )
     agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
     assert agent_.config == trueval_config
     assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
 def test_process_trueval_slot_up(
-    agent_fixture, slot, predictoor_contract_mock
+    agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    print(
-        "RUNNING TEST_PROCESS_TRUEVAL_SLOT_UP TEST -------------------------------------------------------------------------"
-    )
-    with patch.object(agent_fixture, "get_trueval", return_value=(True, False)):
+    with patch.object(agent, "get_trueval", return_value=(True, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent_fixture.process_trueval_slot(slot)
+        agent.process_trueval_slot(slot)
 
         assert not slot.cancel
         assert slot.trueval
 
 
 def test_process_trueval_slot_down(
-    agent_fixture, slot, predictoor_contract_mock
+    agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    with patch.object(agent_fixture, "get_trueval", return_value=(False, False)):
+    with patch.object(agent, "get_trueval", return_value=(False, False)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent_fixture.process_trueval_slot(slot)
+        agent.process_trueval_slot(slot)
 
         assert not slot.cancel
         assert not slot.trueval
 
 
 def test_process_trueval_slot_cancel(
-    agent_fixture, slot, predictoor_contract_mock
+    agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    with patch.object(agent_fixture, "get_trueval", return_value=(False, True)):
+    with patch.object(agent, "get_trueval", return_value=(False, True)):
         slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
-        agent_fixture.process_trueval_slot(slot)
+        agent.process_trueval_slot(slot)
 
         assert slot.cancel
         assert not slot.trueval
 
 
-def test_batch_submit_truevals(agent_fixture, slot):
+def test_batch_submit_truevals(agent, slot):
     times = 3
     slot.feed.address = "0x0000000000000000000000000000000000c0ffee"
     trueval_slots = [
@@ -83,28 +77,28 @@ def test_batch_submit_truevals(agent_fixture, slot):
     cancels = [[False] * times, [False] * times]
 
     with patch.object(
-        agent_fixture.predictoor_batcher,
+        agent.predictoor_batcher,
         "submit_truevals_contracts",
         return_value={"transactionHash": bytes.fromhex("badc0ffeee")},
     ) as mock:
-        tx = agent_fixture.batch_submit_truevals(trueval_slots)
+        tx = agent.batch_submit_truevals(trueval_slots)
         assert tx == "badc0ffeee"
         mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
 
 
-def test_take_step(agent_fixture, slot):
+def test_take_step(agent, slot):
     with patch(
         "pdr_backend.trueval.trueval_agent_batch.wait_until_subgraph_syncs"
     ), patch.object(
-        agent_fixture, "get_batch", return_value=[slot]
+        agent, "get_batch", return_value=[slot]
     ) as mock_get_batch, patch.object(
-        agent_fixture, "process_trueval_slot"
+        agent, "process_trueval_slot"
     ) as mock_process_trueval_slot, patch(
         "time.sleep"
     ), patch.object(
-        agent_fixture, "batch_submit_truevals"
+        agent, "batch_submit_truevals"
     ) as mock_batch_submit_truevals:
-        agent_fixture.take_step()
+        agent.take_step()
 
         mock_get_batch.assert_called_once()
         call_args = mock_process_trueval_slot.call_args[0][0]
@@ -120,6 +114,6 @@ def test_take_step(agent_fixture, slot):
 # Fixtures
 
 
-@pytest.fixture()
+@pytest.fixture(name="agent")
 def agent_fixture(trueval_config):
     return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
