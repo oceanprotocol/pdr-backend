@@ -22,7 +22,7 @@ class Web3PP(StrMixin):
     def __init__(self, network: str, d: dict):
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
-        
+
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.d = d  # yaml_dict["data_pp"]
 

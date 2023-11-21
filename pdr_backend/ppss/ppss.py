@@ -21,7 +21,7 @@ class PPSS:
 
     def __init__(
         self,
-        network: str, # e.g. "sapphire-testnet"
+        network: str,  # e.g. "sapphire-testnet"
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
     ):

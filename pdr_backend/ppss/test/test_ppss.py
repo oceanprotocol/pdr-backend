@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
+
 @enforce_types
 def test_ppss_from_file(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -50,4 +51,3 @@ def _test_bad_network_name():
     yaml_str = fast_test_yaml_str(tmpdir)
     with pytest.raises(ValueError):
         ppss = PPSS(network="foo network", yaml_str=yaml_str)
-    
