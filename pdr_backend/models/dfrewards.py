@@ -19,6 +19,9 @@ class DFRewards(BaseContract):
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def get_claimable_rewards(self, user_addr: str, token_addr: str) -> float:
+        """
+        Returns the amount of claimable rewards in units of ETH
+        """
         claimable_wei = self.contract_instance.functions.claimable(
             user_addr, token_addr
         ).call()

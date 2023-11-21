@@ -164,5 +164,5 @@ if __name__ == "__main__":
 
     # ---------------- dfbuyer ----------------
 
-    token_amt = 46320
+    token_amt = 44460
     check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url, token_amt)
