@@ -7,18 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 
 This README shows how to run Barge on an Azure Ubuntu VPS (Virtual Private Server). This is for use in backend dev, running predictoor bot, running trader bot.
 
-1. [Install pdr-backend locally](#1-install-pdr-backend-locally)
-2. [Setup VPS](#2-setup-vps)
-   - [Create new VPS](#create-new-vps)
-   - [Open ports of VPS](#open-ports-of-vps)
-   - [Install Docker in VPS](#install-docker-in-vps)
-   - [Install Barge in VPS](#install-barge-in-vps)
-3. [Run Barge in VPS](#3-run-barge-in-vps)
-4. [Run predictoor bot locally](#4-run-predictoor-bot-locally)
-5. [Run tests locally](#5-run-tests-locally)
 
-
-## 1. Install pdr-backend Locally
+## 1. Locally, install pdr-backend
 
 In local console:
 ```console
@@ -37,7 +27,7 @@ pip install -r requirements.txt
 
 ## 2. Setup VPS
 
-### Create new VPS
+### In Azure Portal, Create new VPS
 
 Create a new Ubuntu VM via Azure portal, as follow.
 
@@ -46,18 +36,20 @@ First, sign in to the [Azure portal](https://portal.azure.com/)
 From Azure portal, [create new VM](https://learn.microsoft.com/en-gb/azure/virtual-machines/linux/quick-create-portal?tabs=ubuntu#create-virtual-machine). Includes:
   - your VM's username will be `azureuser`
   - download your ssh key as a file, eg `~/Desktop/myKey.pem`
-  - note your IP address, eg `4.245.224.119`
+  - note your IP address, eg `4.245.224.119` or `74.234.16.165`
 
 Test it: open a new console, and ssh into new VM.
 ```console
 ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
+# or
+ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 ```
 
-### Open ports of VPS
+### In Azure Portal, Open ports of VPS
 
 Running Barge, the VPS exposes these urls:
-- RPC is at http://4.245.224.119:8545
-- Subgraph is at http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+- RPC is at http://4.245.224.119:8545 or http://74.234.16.165:8545
+- Subgraph is at http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
@@ -68,7 +60,6 @@ BUT you will not be able to see these yet, because the VPS' ports are not yet op
 - Repeat the previous step for port 9000 (Subgraph), priority 110.
 
 (Ref: these [instructions](https://learn.microsoft.com/en-us/answers/questions/1190066/how-can-i-open-a-port-in-azure-so-that-a-constant).)
-
 
 ### Install Docker in VPS
 
@@ -126,11 +117,13 @@ cd barge
 git checkout predictoor
 ```
 
-## 3. Run Barge in VPS
+## 3. In VPS, Run Predictoor Barge
 
 (If needed) SSH into VPS console:
 ```console
 ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
+#or
+ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 ```
 
 In VPS console:
@@ -150,7 +143,7 @@ export GANACHE_BLOCKTIME=5
 #OPTION 1: for predictoor bot: run barge with all bots except predictoor. (Use this your first time through)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
 
-#OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
+#OR, OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
@@ -159,12 +152,21 @@ Wait.
 Then, copy VPS' `address.json` file to local. In local console:
 ```console
 cd
-scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json .
+
+#OPTION 1: for predictoor bot
+scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json MyVmBargePredictoor.address.json
+
+#OR, OPTION 2: for unit testing
+scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json MyVmBargeUnitTest.address.json
 ```
 
-Confirm that `address.json` has a "develpment" entry. In local console:
+Note how we give it a unique name, vs just "address.json". This keeps it distinct from the address file for _second_ Barge VM we run for pytesting (details below)
+
+Confirm that `MyVmBargePredictoor.address.json` has a "development" entry. In local console:
 ```console
-grep development ~/address.json
+grep development ~/MyVmBargePredictoor.address.json
+# or
+grep development ~/MyVmBargeUnitTest.address.json
 ```
 
 It should return:
@@ -174,7 +176,7 @@ It should return:
 
 If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
 
-## 4. Run Predictoor Bot Locally
+## 4. Locally, Run Predictoor Bot (OPTION 1)
 
 In local console:
 ```console
@@ -184,7 +186,7 @@ source venv/bin/activate
 
 # Set envvars
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
-export ADDRESS_FILE="${HOME}/address.json" # from scp to local
+export ADDRESS_FILE="${HOME}/MyVmBargePredictoor.address.json" # from scp to local
 
 export RPC_URL=http://4.245.224.119:8545 # from VPS 
 export SUBGRAPH_URL=http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
@@ -223,7 +225,7 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 (You can track at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).)
 
 
-## 5. Run Tests Locally
+## 5. Locally, Run Tests (OPTION 2)
 
 ### Set up a second VPS / Barge
 
@@ -233,16 +235,17 @@ In steps 2 & 3 above, we set up a _first_ VPS & Barge, for predictoor bot.
 Now, repeat 2 & 3 above, to up a _second_ VPS & Barge, for local testing. 
 - Give it the same key as the first barge.
 - Assume its IP address is 74.234.16.165
+- The "OR" options in sections 2 above use this second IP address. Therefore you can go through the flow easily.
 
 ### Set Local Ennvars
 
 To envvars that use the second Barge. In local console:
 ```console
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
-export ADDRESS_FILE="${HOME}/address.json" # from scp to local
+export ADDRESS_FILE="${HOME}/MyVmBargeUnitTest.address.json" # from scp to local
 
-export RPC_URL=http://74.234.16.165:8545
-export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+export RPC_URL=http://74.234.16.165:8545 # from VPS
+export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
 ```
 
 In work console, run tests:
