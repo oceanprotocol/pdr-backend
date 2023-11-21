@@ -321,11 +321,9 @@ def get_pending_slots(
             chunk_size,
         )
 
-        print(query)
-
         offset += chunk_size
         try:
-            result = query_subgraph(subgraph_url, query, 0, 0.001)
+            result = query_subgraph(subgraph_url, query)
             if not "data" in result:
                 print("No data in result")
                 break
