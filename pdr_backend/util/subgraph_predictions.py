@@ -11,6 +11,7 @@ from pdr_backend.util.networkutil import get_subgraph_url
 class ContractIdAndSPE(TypedDict):
     id: str
     seconds_per_epoch: int
+    name: str
 
 
 class FilterMode(Enum):
@@ -238,6 +239,9 @@ def fetch_contract_id_and_spe(
             }){
                 id
                 secondsPerEpoch
+                token {
+                    name
+                }
             }
         }
         """ % json.dumps(
@@ -253,7 +257,11 @@ def fetch_contract_id_and_spe(
     # Parse the results and construct ContractDetail objects
     contract_data = result["data"]["predictContracts"]
     contracts: List[ContractIdAndSPE] = [
-        {"id": contract["id"], "seconds_per_epoch": contract["secondsPerEpoch"]}
+        {
+            "id": contract["id"],
+            "seconds_per_epoch": contract["secondsPerEpoch"],
+            "name": contract["token"]["name"],
+        }
         for contract in contract_data
     ]
 

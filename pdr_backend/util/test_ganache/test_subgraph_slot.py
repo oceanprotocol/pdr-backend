@@ -1,18 +1,19 @@
 from unittest.mock import patch
 from dataclasses import asdict
-from typing import Dict
+from typing import Dict, List
 from enforce_typing import enforce_types
 
 from pdr_backend.util.subgraph_slot import (
     get_predict_slots_query,
     get_slots,
     fetch_slots_for_all_assets,
-    calculate_prediction_prediction_result,
+    calculate_prediction_result,
     process_single_slot,
     aggregate_statistics,
     calculate_statistics_for_all_assets,
     PredictSlot,
 )
+from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
@@ -92,13 +93,13 @@ def test_get_slots(mock_query_subgraph):
 
 
 @enforce_types
-def test_calculate_prediction_prediction_result():
+def test_calculate_prediction_result():
     # Test the calculate_prediction_prediction_result function with expected inputs
-    result = calculate_prediction_prediction_result(150.0, 100.0)
-    assert result["direction"]
+    result = calculate_prediction_result(150.0, 200.0)
+    assert result
 
-    result = calculate_prediction_prediction_result(100.0, 150.0)
-    assert not result["direction"]
+    result = calculate_prediction_result(100.0, 250.0)
+    assert not result
 
 
 @enforce_types
@@ -141,9 +142,17 @@ def test_aggregate_statistics():
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Set up the mock to return a predetermined value
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
+    # Contracts List
+    contracts: List[ContractIdAndSPE] = [
+        {"id": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
+    ]
     # Test the calculate_statistics_for_all_assets function
     statistics = calculate_statistics_for_all_assets(
-        asset_ids=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
+        asset_ids=["0xAsset"],
+        contracts=contracts,
+        start_ts_param=1000,
+        end_ts_param=2000,
+        network="mainnet",
     )
     # Verify that the statistics are calculated as expected
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
