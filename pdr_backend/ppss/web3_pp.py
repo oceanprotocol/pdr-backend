@@ -86,10 +86,6 @@ class Web3PP(StrMixin):
     def w3(self) -> Optional[Web3]:
         return self.web3_config.w3
 
-    @property
-    def get_block(self, *args, **kwargs) -> BlockData:
-        return self.web3_config.get_block(*args, **kwargs)
-
     # --------------------------------
     # onchain feed data
     @enforce_types
@@ -109,7 +105,7 @@ class Web3PP(StrMixin):
             contracts[addr] = PredictoorContract(self.web3_config, addr)
         return contracts
 
-    @enforce_types
+    #keep off. @enforce_types
     def get_feeds(
         self,
         pair_filters: Optional[List[str]] = None,

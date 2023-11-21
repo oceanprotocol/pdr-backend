@@ -46,7 +46,7 @@ class MockQuery:
 
 
 # mock w3.eth.block_number, w3.eth.get_block()
-@enforce_types
+#@enforce_types
 class MockEth:
     def __init__(self):
         self.timestamp = INIT_TIMESTAMP
@@ -60,7 +60,7 @@ class MockEth:
         return mock_block
 
 
-@enforce_types
+#@enforce_types
 class MockFeedContract:
     def __init__(self, w3, s_per_epoch: int):
         self._w3 = w3
@@ -86,9 +86,9 @@ class MockFeedContract:
         self._prediction_slots.append(timestamp)
 
 
-@enforce_types
-def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
-    _setenvs(monkeypatch)
+#@enforce_types
+def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):    
+    monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
 
     yaml_str = fast_test_yaml_str(tmpdir)
     ppss = PPSS("barge-pytest", yaml_str=yaml_str)
@@ -124,7 +124,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     agent = predictoor_agent_class(ppss)
 
     # last bit of mocking
-    agent.config.web3_config.w3 = mock_w3
+    agent.ppss.web3_pp.web3_config.w3 = mock_w3
 
     # real work: main iterations
     for _ in range(1000):
@@ -151,11 +151,3 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     assert (mock_w3.eth.timestamp + 2 * ppss.data_pp.timeframe_s) >= max(
         mock_contract._prediction_slots
     )
-
-
-def _setenvs(monkeypatch):
-    # envvars handled by BaseConfig
-    monkeypatch.setenv("RPC_URL", "http://foo")
-    monkeypatch.setenv("SUBGRAPH_URL", "http://bar")
-    monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    monkeypatch.setenv("OWNER_ADDRS", OWNER_ADDR)

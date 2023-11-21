@@ -38,11 +38,14 @@ class BasePredictoorAgent(ABC):
         # set self.feeds
         self.feeds: Dict[str, Feed] = {}
 
-        cand_feeds = self.ppss.web3_pp.get_feeds(
-            pair_filters=self.ppss.data_pp.pair_strs,
-            timeframe_filters=[self.ppss.data_pp.timeframe],
-            source_filters=self.ppss.data_pp.exchange_strs,
-        )
+        x = list(self.ppss.data_pp.pair_strs)
+        y = list([self.ppss.data_pp.timeframe])
+        z = list(self.ppss.data_pp.exchange_strs)
+        cand_feeds = self.ppss.web3_pp.get_feeds(x, y, z)
+        #     pair_filters=self.ppss.data_pp.pair_strs,
+        #     timeframe_filters=[self.ppss.data_pp.timeframe],
+        #     source_filters=self.ppss.data_pp.exchange_strs,
+        # )
         if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
@@ -88,7 +91,7 @@ class BasePredictoorAgent(ABC):
             self.take_step()
 
     def take_step(self):
-        w3 = self.web3_pp.w3
+        w3 = self.ppss.web3_pp.w3
         print("\n" + "-" * 80)
         print("Take_step() begin.")
 
@@ -99,7 +102,7 @@ class BasePredictoorAgent(ABC):
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = self.web3_pp.get_block(block_number, full_transactions=False)
+        block = self.ppss.web3_pp.web3_config.get_block(block_number, full_transactions=False)
         if not block:
             print("  Done step: block not ready yet")
             return
