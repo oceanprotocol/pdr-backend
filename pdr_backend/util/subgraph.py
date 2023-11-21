@@ -65,7 +65,7 @@ def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
 
 @enforce_types
 def query_subgraph(
-    subgraph_url: str, query: str, tries: int = 0, timeout: float = 1.5
+    subgraph_url: str, query: str, tries: int = 3, timeout: float = 30.0
 ) -> Dict[str, dict]:
     """
     @arguments
@@ -321,9 +321,11 @@ def get_pending_slots(
             chunk_size,
         )
 
+        print(query)
+
         offset += chunk_size
         try:
-            result = query_subgraph(subgraph_url, query)
+            result = query_subgraph(subgraph_url, query, 0, 0.001)
             if not "data" in result:
                 print("No data in result")
                 break
