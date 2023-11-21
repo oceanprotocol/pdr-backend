@@ -77,7 +77,7 @@ class TraderAgent1(TraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.config.exchange_str in ("mexc", "mexc3"):
+            if self.config.exchange_str in ("mexc"):
                 amount = float(self.order["info"]["origQty"])
 
             # close it
