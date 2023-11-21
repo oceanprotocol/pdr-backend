@@ -16,10 +16,13 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 class Web3PP(StrMixin):
-    __STR_OBJDIR__ = ["d", "network"]
+    __STR_OBJDIR__ = ["network", "d"]
 
     @enforce_types
     def __init__(self, network: str, d: dict):
+        if network not in d:
+            raise ValueError(f"network '{network}' not found in dict")
+        
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.d = d  # yaml_dict["data_pp"]
 

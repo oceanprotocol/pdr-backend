@@ -21,6 +21,7 @@ class PPSS:
 
     def __init__(
         self,
+        network: str, # e.g. "sapphire-testnet"
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
     ):
@@ -37,7 +38,7 @@ class PPSS:
             d = yaml.safe_load(yaml_str)
 
         # fill attributes from d
-        self.web3_pp = Web3PP(d["web3_pp"])
+        self.web3_pp = Web3PP(network, d["web3_pp"])
         self.data_pp = DataPP(d["data_pp"])
         self.data_ss = DataSS(d["data_ss"])
         self.model_ss = ModelSS(d["model_ss"])

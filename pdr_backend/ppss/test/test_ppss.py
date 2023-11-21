@@ -3,7 +3,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
-
 @enforce_types
 def test_ppss_from_file(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -24,7 +23,7 @@ def test_ppss_from_str(tmpdir):
 @enforce_types
 def _test_ppss(yaml_filename=None, yaml_str=None):
     # construct
-    ppss = PPSS(yaml_filename=yaml_filename, yaml_str=yaml_str)
+    ppss = PPSS("sapphire-testnet", yaml_filename, yaml_str)
 
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     assert ppss.data_pp.timeframe in ["5m", "1h"]
@@ -44,3 +43,11 @@ def _test_ppss(yaml_filename=None, yaml_str=None):
     assert "trader_pp" in s
     assert "trader_ss" in s
     assert "sim_ss" in s
+
+
+@enforce_types
+def _test_bad_network_name():
+    yaml_str = fast_test_yaml_str(tmpdir)
+    with pytest.raises(ValueError):
+        ppss = PPSS(network="foo network", yaml_str=yaml_str)
+    
