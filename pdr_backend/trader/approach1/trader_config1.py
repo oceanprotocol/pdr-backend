@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.trader.trader_config import TraderConfig
 
-CAND_EXCHANGE = ["mexc3", "mexc"]
+CAND_EXCHANGE = ["mexc"]
 CAND_PAIR = [
     "BTC/USDT",
     "ETH/USDT",
@@ -20,7 +20,7 @@ CAND_PAIR = [
 CAND_TIMEFRAME = ["5m", "1h"]
 
 
-# Mexc3 does not support
+# Mexc does not support
 @enforce_types
 class TraderConfig1(TraderConfig):
     def __init__(self):
