@@ -55,7 +55,7 @@ class MEXCOrder(Order):
 
 
 def create_order(order: Dict, exchange: ccxt.Exchange) -> Order:
-    if exchange in ("mexc", "mexc3"):
+    if exchange in ("mexc"):
         return MEXCOrder(order)
     return Order(order)
 
