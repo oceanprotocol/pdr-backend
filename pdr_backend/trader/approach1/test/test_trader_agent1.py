@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.data_eng.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.test.trader_agent_runner import mock_feed, mock_ppss
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1

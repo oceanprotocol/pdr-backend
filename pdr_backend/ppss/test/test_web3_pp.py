@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from web3 import Web3
 
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.util.web3_pp import Web3PP
+from pdr_backend.ppss.web3_pp import Web3PP
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
@@ -100,7 +100,7 @@ def test_web3_pp__get_pending_slots(monkeypatch):
         return [f"1_{timestamp}", f"2_{timestamp}"]
     
     with patch(
-        "pdr_backend.util.web3_pp.get_pending_slots", _mock_get_pending_slots
+        "pdr_backend.ppss.web3_pp.get_pending_slots", _mock_get_pending_slots
     ):
         slots = web3_pp.get_pending_slots(6789)
     assert slots == ["1_6789", "2_6789"]
@@ -118,7 +118,7 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         return feed_dicts
 
     with patch(
-        "pdr_backend.util.web3_pp.query_feed_contracts",
+        "pdr_backend.ppss.web3_pp.query_feed_contracts",
         _mock_query_feed_contracts,
     ):
         feeds = web3_pp.get_feeds()
@@ -132,7 +132,7 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         m.contract_address = ADDR
         return m
 
-    with patch("pdr_backend.util.web3_pp.PredictoorContract", _mock_contract):
+    with patch("pdr_backend.ppss.web3_pp.PredictoorContract", _mock_contract):
         contracts = web3_pp.get_contracts(feed_addrs)
     assert list(contracts.keys()) == feed_addrs
     assert contracts[ADDR].contract_address == ADDR

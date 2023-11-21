@@ -6,7 +6,7 @@ import ccxt
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.util.feedstr import (
     unpack_feeds_strs,
     pack_feed_str,

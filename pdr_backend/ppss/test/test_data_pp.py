@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.data_eng.data_pp import DataPP
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 

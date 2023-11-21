@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.data_eng.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 
 _UNWANTED_ENVVARS = [
     "PAIR_FILTER",

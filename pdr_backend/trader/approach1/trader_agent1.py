@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, Optional
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.trader_agent import TraderAgent
 

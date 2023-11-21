@@ -9,7 +9,7 @@ import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.data_eng.data_factory import DataFactory
-from pdr_backend.data_eng.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.data_eng.model_factory import ModelFactory
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut, pretty_timestr

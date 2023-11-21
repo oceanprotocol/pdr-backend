@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.cache import Cache

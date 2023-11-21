@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.trader_ss import TraderSS
+from pdr_backend.ppss.trader_ss import TraderSS
 
 
 @enforce_types

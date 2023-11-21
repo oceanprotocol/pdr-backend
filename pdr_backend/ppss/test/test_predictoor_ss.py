@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 
 
 @enforce_types

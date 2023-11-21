@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from pdr_backend.data_eng.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.trader.test.trader_agent_runner import mock_feed, mock_ppss

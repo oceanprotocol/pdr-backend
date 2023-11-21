@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.trader_pp import TraderPP
+from pdr_backend.ppss.trader_pp import TraderPP
 
 
 @enforce_types

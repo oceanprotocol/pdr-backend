@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach2.portfolio import (
     Portfolio,
