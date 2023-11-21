@@ -20,7 +20,7 @@ def mock_ppss(predictoor_contract, tmpdir):
     ppss = PPSS(yaml_str=yaml_str)
 
     ppss.data_pp.set_timeframe("5m")
-    ppss.data_pp.set_predict_feeds_strs(["mexc3 c BTC/USDT"])
+    ppss.data_pp.set_predict_feeds_strs(["mexc c BTC/USDT"])
 
     ppss.web3_pp.get_feeds = Mock()
     ppss.web3_pp.get_feeds.return_value = {

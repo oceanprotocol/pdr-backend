@@ -12,6 +12,7 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
+
 def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
@@ -135,7 +136,7 @@ def test_should_close(
     web3_config,
 ):
     trader_config = Mock(spec=TraderConfig2)
-    trader_config.exchange_str = "mexc3"
+    trader_config.exchange_str = "mexc"
     trader_config.exchange_pair = "BTC/USDT"
     trader_config.timeframe = "5m"
     trader_config.size = 10.0
