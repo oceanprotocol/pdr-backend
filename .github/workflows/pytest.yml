@@ -53,8 +53,15 @@ jobs:
             [ -f "$HOME/.ocean/ocean-contracts/artifacts/ready" ] && break
             done
 
+      - name: "Read address.json contents"
+        working-directory: ${{ github.workspace }}
+        run: cat "$HOME/.ocean/ocean-contracts/artifacts/address.json"
+
       - name: Test with pytest
         id: pytest
         run: |
           coverage run --omit="*test*" -m pytest
           coverage report
+
+      - name: Contract logs
+        run: docker logs ocean_ocean-contracts_1
