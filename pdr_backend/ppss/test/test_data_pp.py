@@ -65,17 +65,17 @@ def test_data_pp_3feeds():
     ]
     assert pp.pair_strs == ["ETH-USDT", "BTC-USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.predict_feed_tup
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.exchange_str
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.signal_str
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.pair_str
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.base_str
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         pp.quote_str
 
 
