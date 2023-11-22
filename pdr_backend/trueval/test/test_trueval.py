@@ -1,8 +1,8 @@
 from enforce_typing import enforce_types
-from pdr_backend.trueval.trueval_agent_base import get_trueval
 
 import pytest
 
+from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.models.feed import Feed
 
 
