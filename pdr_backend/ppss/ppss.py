@@ -114,6 +114,11 @@ trader_ss:
     max_tries: 10
     position_size: 3
 
+dfbuyer_ss:
+  batch_size: 30
+  weekly_spending_limit: 3000
+  consume_interval_seconds: 60
+
 sim_ss:
   do_plot: False
   log_dir: {log_dir}
