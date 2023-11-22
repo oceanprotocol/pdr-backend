@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.wrapped_token import WrappedToken
-from pdr_backend.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
 
@@ -40,16 +40,17 @@ def request_payout_batches(
 
     print("\nBatch completed")
 
-    
+
 @enforce_types
 def do_ocean_payout(ppss: PPSS):
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
-    
+
     assert ppss.web3_pp.network == "sapphire-mainnet"
-    assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID, \
-        "unsupported network"
-    
+    assert (
+        web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+    ), "unsupported network"
+
     print("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
     print("Finding pending payouts")
@@ -61,23 +62,23 @@ def do_ocean_payout(ppss: PPSS):
         print(f"Claiming payouts for {pdr_contract_addr}")
         pdr_contract = PredictoorContract(web3_config, pdr_contract_addr)
         request_payout_batches(
-            pdr_contract,
-            ppss.payout_ss.batch_size,
-            pending_payouts[pdr_contract_addr])
+            pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
+        )
 
-        
+
 @enforce_types
 def do_rose_payout(ppss: PPSS):
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
-    
+
     assert ppss.web3_pp.network == "sapphire-mainnet", "unsupported network"
-    assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID, \
-        "unsupported network"
-    
+    assert (
+        web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+    ), "unsupported network"
+
     dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
-    
+
     dfrewards_contract = DFRewards(web3_config, dfrewards_addr)
     claimable_rewards = dfrewards_contract.get_claimable_rewards(
         web3_config.owner, wROSE_addr
@@ -92,8 +93,8 @@ def do_rose_payout(ppss: PPSS):
 
     print("Converting wROSE to ROSE")
     time.sleep(10)
-    wROSE = WrappedToken(config.web3_config, wROSE_addr)
-    wROSE_bal = wROSE.balanceOf(config.web3_config.owner)
+    wROSE = WrappedToken(web3_config, wROSE_addr)
+    wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == 0:
         print("wROSE balance is 0")
     else:

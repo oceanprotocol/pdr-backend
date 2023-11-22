@@ -7,6 +7,8 @@ APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
 
 @enforce_types
 class ModelSS(StrMixin):
+    __STR_OBJDIR__ = ["d"]
+    
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["model_ss"]
 

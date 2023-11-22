@@ -3,6 +3,8 @@ from pdr_backend.util.strutil import StrMixin
 
 
 class TruevalSS(StrMixin):
+    __STR_OBJDIR__ = ["d"]
+    
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["trueval_ss"]
@@ -17,4 +19,4 @@ class TruevalSS(StrMixin):
     @property
     def batch_size(self) -> int:
         """# slots to process in a batch"""
-        return self.d["batch_size"]  
+        return self.d["batch_size"]

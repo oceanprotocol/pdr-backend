@@ -2,6 +2,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.trueval_ss import TruevalSS
 
+
 @enforce_types
 def test_trueval_ss():
     d = {"sleep_time": 30, "batch_size": 50}

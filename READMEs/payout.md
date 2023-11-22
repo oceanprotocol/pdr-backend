@@ -19,7 +19,7 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 
 From console:
 ```console
-pdr claim
+pdr claim_OCEAN ppss.yaml
 ```
 
 #### 3. Completion
@@ -40,7 +40,7 @@ It's good practice to run the payout module again. This ensures any failed block
 
 From console:
 ```console
-pdr claimrose
+pdr claim_ROSE ppss.yaml
 ```
 
 #### 3. Completion

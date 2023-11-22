@@ -5,8 +5,11 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.token import Token, NativeToken
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.constants import \
-    SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID, OCEAN_TOKEN_ADDRS
+from pdr_backend.util.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+    OCEAN_TOKEN_ADDRS,
+)
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 

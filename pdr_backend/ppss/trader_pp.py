@@ -6,6 +6,8 @@ from pdr_backend.util.strutil import StrMixin
 
 
 class TraderPP(StrMixin):
+    __STR_OBJDIR__ = ["d"]
+    
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["trader_pp"]

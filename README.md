@@ -46,6 +46,7 @@ Main tools:
 ## Atomic READMEs
 
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
+- [Claim payout for predictoor bot](READMEs/payout.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Run barge locally](READMEs/barge.md)
 - [Static models in predictoors](READMEs/static-model.md)
@@ -58,24 +59,24 @@ Main tools:
   - [Release process](READMEs/release-process.md)
 - **[Run dfbuyer bot](READMEs/dfbuyer.md)** - runs Predictoor DF rewards
 - **[Run publisher](READMEs/publisher.md)** - publish new feeds
-- **[Scripts](scripts/)** for performance stats, more
 
 ## Repo structure
 
 This repo implements all bots in Predictoor ecosystem.
 
-Each bot has a directory:
-- `predictoor` - submits individual predictions
-- `trader` - buys aggregated predictions, then trades
-- `trueval` - report true values to contract
-- `dfbuyer` - implement Predictoor DF
+Each bot has a directory. Alphabetically:
+- `dfbuyer` - buy feeds on behalf of Predictoor DF
+- `predictoor` - submit individual predictions
 - `publisher` - publish pdr data feeds
+- `trader` - buy aggregated predictions, then trade
+- `trueval` - report true values to contract
 
-Other directories:
-- `sim` - simulation flow
-- `ppss` - all settings, both problem setup (pp) and solution strategy (ss)
-- `util` - function-based tools
-- `models` - classes that wrap Predictoor contracts, and class-based data structures
-- `data_eng` - data engineering & modeling
+Other directories, alphabetically:
 - `accuracy` - calculates % correct, for display in predictoor.ai webapp
+- `data_eng` - data engineering & modeling
+- `models` - class-based data structures, and classes to wrap contracts
+- `payout` - OCEAN & ROSE payout
+- `ppss` - settings
+- `sim` - simulation flow
+- `util` - function-based tools
 

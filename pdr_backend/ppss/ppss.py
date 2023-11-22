@@ -17,10 +17,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 
 
 class PPSS:  # pylint: disable=too-many-instance-attributes
-    """
-    All uncontrollable (pp) and controllable (ss) settings in one place
-    Constructed by loading from a .yaml file or yaml-formatted string.
-    """
+    __STR_OBJDIR__ = ["d"]
 
     def __init__(
         self,

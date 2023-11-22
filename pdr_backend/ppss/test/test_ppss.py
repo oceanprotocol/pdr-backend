@@ -12,7 +12,7 @@ def test_bad_network_name(tmpdir):
     with pytest.raises(ValueError):
         PPSS(yaml_str=yaml_str, network="foo network")
 
-        
+
 @enforce_types
 def test_ppss_from_file(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)

@@ -1,7 +1,10 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.util.constants import \
-    SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID
+from pdr_backend.util.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
+
 
 @enforce_types
 def get_opf_addresses(chain_id: int):

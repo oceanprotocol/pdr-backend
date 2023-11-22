@@ -5,9 +5,9 @@ from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
-from pdr_backend.predictoor.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
@@ -127,7 +127,7 @@ def do_claim_OCEAN():
     network = "sapphire-mainnet"
     ppss = PPSS(args.YAML_FILE, network)
     do_ocean_payout(ppss)
-    
+
 
 @enforce_types
 def do_claim_ROSE():
@@ -139,7 +139,8 @@ def do_claim_ROSE():
     ppss = PPSS(args.YAML_FILE, network)
     do_rose_payout(ppss)
 
-
+    
+@enforce_types
 def do_get_predictoor_info():
     parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
     args = parser.parse_args()
