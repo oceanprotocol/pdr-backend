@@ -67,6 +67,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         return s
 
 _CACHED_FILE_S = None
+CACHED_PPSS = None
 def fast_test_yaml_str(tmpdir):
     """Use this for testing. It has fast runtime."""
     with open("./ppss.yaml") as f:
