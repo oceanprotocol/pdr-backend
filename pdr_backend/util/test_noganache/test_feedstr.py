@@ -12,7 +12,6 @@ from pdr_backend.util.feedstr import (
     verify_feeds_str,
     verify_feed_str,
     verify_feed_tup,
-    verify_exchange_str,
 )
 
 
@@ -136,6 +135,10 @@ def test_unpack_feed_str():
     assert exchange_str == "binance"
     assert signal == "close"
     assert pair == "BTC-USDT"
+
+
+# ==========================================================================
+# pack..() functions
 
 
 @enforce_types
@@ -271,24 +274,3 @@ def test_verify_feed_tup():
     for feed_tup in tups:
         with pytest.raises(ValueError):
             verify_feed_tup(feed_tup)
-
-
-@enforce_types
-def test_verify_exchange_str():
-    # ok
-    strs = [
-        "binance",
-        "kraken",
-    ]
-    for exchange_str in strs:
-        verify_exchange_str(exchange_str)
-
-    # not ok
-    strs = [
-        "",
-        "  ",
-        "xyz",
-    ]
-    for exchange_str in strs:
-        with pytest.raises(ValueError):
-            verify_exchange_str(exchange_str)

@@ -5,9 +5,9 @@ Complementary to models/feed.py which models a prediction feed contract.
 
 from typing import List, Tuple
 
-import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.util.exchangestr import verify_exchange_str
 from pdr_backend.util.pairstr import (
     unpack_pairs_str,
     verify_pair_str,
@@ -128,11 +128,15 @@ def unpack_feed_str(feed_str: str, do_verify: bool = True) -> Tuple[str, str, st
     return feed_tup
 
 
+# ==========================================================================
+# pack..() functions
+
+
 @enforce_types
 def pack_feed_str(feed_tup: Tuple[str, str, str]) -> str:
     """
     Example: Given ("binance", "open", "BTC-USDT")
-    Return "binance o ADA/USDT"
+    Return "binance o BTC-USDT"
     """
     exchange_str, signal_str, pair_str = feed_tup
     char = signal_to_char(signal_str)
@@ -205,17 +209,3 @@ def verify_feed_tup(feed_tup: Tuple[str, str, str]):
     verify_exchange_str(exchange_str)
     verify_signal_str(signal_str)
     verify_pair_str(pair_str)
-
-
-@enforce_types
-def verify_exchange_str(exchange_str: str):
-    """
-    @description
-      Raise an error if exchange is invalid.
-
-    @argument
-      exchange_str -- e.g. "binance"
-    """
-    # it's valid if ccxt sees it
-    if not hasattr(ccxt, exchange_str):
-        raise ValueError(exchange_str)

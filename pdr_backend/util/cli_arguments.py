@@ -9,25 +9,25 @@ HELP_LONG = """Predictoor tool
 Usage: pdr sim|predictoor|trader|..
 
 Main tools:
-  pdr sim --YAML_FILE
-  pdr predictoor APPROACH NETWORK --YAML_FILE
-  pdr trader APPROACH NETWORK --YAML_FILE
+  pdr sim Yaml
+  pdr predictoor APPROACH NETWORK YAML_FILE
+  pdr trader APPROACH NETWORK YAML_FILE
   pdr claim_OCEAN
   prd claim_ROSE
 
 Utilities:
   pdr help
-  pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR NETWORK --YAML_FILE
-  pdr check_network NETWORK --YAML_FILE --LOOKBACK_HOURS
+  pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR NETWORK YAML_FILE
+  pdr check_network NETWORK YAML_FILE --LOOKBACK_HOURS
 
 Transactions are signed with envvar 'PRIVATE_KEY`.
 
 Tools for core team:
-  pdr trueval NETWORK --YAML_FILE
-  pdr dfbuyer NETWORK --YAML_FILE
-  pdr publisher NETWORK --YAML_FILE
-  pdr topup NETWORK --YAML_FILE
-  pdr get_opf_predictions CSVDIR NETWORK --YAML_FILE
+  pdr trueval NETWORK YAML_FILE
+  pdr dfbuyer NETWORK YAML_FILE
+  pdr publisher NETWORK YAML_FILE
+  pdr topup NETWORK YAML_FILE
+  pdr get_opf_predictions CSVDIR NETWORK YAML_FILE
 """
 
 
@@ -50,13 +50,7 @@ def print_args(arguments: Namespace):
 @enforce_types
 class YAML_Mixin:
     def add_argument_YAML(self):
-        self.add_argument(
-            "--YAML_FILE",
-            default="ppss.yaml",
-            type=str,
-            help="Settings file",
-            required=False,
-        )
+        self.add_argument("YAML_FILE", type=str, help="PPSS settings file")
 
 
 @enforce_types

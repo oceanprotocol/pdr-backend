@@ -3,10 +3,10 @@ from typing import List, Tuple
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.util.constants import CAND_TIMEFRAMES
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
+from pdr_backend.util.timeframestr import verify_timeframe_str
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -16,8 +16,7 @@ class DataPP(StrMixin):
         self.d = d  # yaml_dict["data_pp"]
 
         # test inputs
-        if self.timeframe not in CAND_TIMEFRAMES:
-            raise ValueError(self.timeframe)
+        verify_timeframe_str(self.timeframe)
         verify_feeds_strs(self.predict_feeds_strs)
         if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
             raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")

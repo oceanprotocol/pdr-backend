@@ -100,10 +100,6 @@ trader_pp:
       - 100000 USDT
       - 0 BTC
 
-trueval_ss:
-  batch_size: 30
-  sleep_time: 30
-
 trader_ss:
   sim_only:
     buy_amt: 10000 USDT
@@ -115,6 +111,10 @@ trader_ss:
 sim_ss:
   do_plot: False
   log_dir: {log_dir}
+
+trueval_ss:
+  batch_size: 30
+  sleep_time: 30
 
 web3_pp:
   sapphire-testnet:

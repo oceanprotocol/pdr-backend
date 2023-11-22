@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from enforce_typing import enforce_types
 
@@ -71,6 +71,27 @@ def unpack_pair_str(pair_str: str, do_verify: bool = True) -> Tuple[str, str]:
         verify_quote_str(quote_str)
 
     return (base_str, quote_str)
+
+
+# ==========================================================================
+# pack..() functions
+
+
+@enforce_types
+def pack_pair_str_list(pair_str_list) -> str:
+    """
+    Example: Given ["BTC/USDT","ETH/DAI"]
+    Return "BTC/USDT,ETH/DAI"
+    """
+    if pair_str_list in [None, []]:
+        return None
+    if not isinstance(pair_str_list, list):
+        raise TypeError(pair_str_list)
+    for pair_str in pair_str_list:
+        verify_pair_str(pair_str)
+
+    pairs_str = ",".join(pair_str_list)
+    return pairs_str
 
 
 # ==========================================================================
