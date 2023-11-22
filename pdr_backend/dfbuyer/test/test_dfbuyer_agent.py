@@ -16,11 +16,13 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
 
     assert len(mock_get_address.call_args_list) == 2
     call1 = mock_get_address.call_args_list[0]
-    assert call1 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "PredictoorHelper")
+    assert call1 == call(
+        dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"
+    )
     call2 = mock_get_address.call_args_list[1]
-    assert call2 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "Ocean")
+    assert call2 == call(dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "Ocean")
 
-    mock_token.assert_called_with(dfbuyer_config.web3_config, agent.token_addr)
+    mock_token.assert_called_with(dfbuyer_config.web3_pp.web3_config, agent.token_addr)
     mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True
@@ -66,7 +68,7 @@ def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract")
 def test_get_consume_so_far(mock_get_consume_so_far, dfbuyer_agent):
     agent = MagicMock()
-    agent.config.web3_config.owner = "0x123"
+    agent.config.web3_pp.web3_config.owner = "0x123"
     agent.feeds = {"feed1": "0x1", "feed2": "0x2"}
     mock_get_consume_so_far.return_value = {"0x1": 10.5}
     expected_result = {"0x1": 10.5}
