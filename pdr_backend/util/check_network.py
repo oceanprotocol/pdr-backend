@@ -1,11 +1,10 @@
 import math
-import sys
 import time
-from addresses import get_opf_addresses
-from pdr_backend.models.base_config import BaseConfig
-from pdr_backend.models.token import Token
-from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
 
+from addresses import get_opf_addresses
+from pdr_backend.models.token import Token
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
 
 WEEK = 86400 * 7
 
@@ -26,7 +25,7 @@ def print_stats(contract_dict, field_name, threshold=0.9):
     status = "PASS" if with_field / count > threshold else "FAIL"
     token_name = contract_dict["token"]["name"]
     timeframe = seconds_to_text(int(contract_dict["secondsPerEpoch"]))
-    print(f"{token_name} {timeframe}: {with_field}/{count} {field_name} - {status}")
+    print(f"{token_name} {timeframe}: " f"{with_field}/{count} {field_name} - {status}")
 
 
 def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
@@ -43,13 +42,15 @@ def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
     )
     expected = get_expected_consume(int(ts_now), tokens)
     print(
-        f"Checking consume amounts (dfbuyer), expecting {expected} consume per contract"
+        "Checking consume amounts (dfbuyer)"
+        f", expecting {expected} consume per contract"
     )
     for addr in contract_addresses:
         x = sofar[addr]
         log_text = "PASS" if x >= expected else "FAIL"
         print(
-            f"    {log_text}... got {x} consume for contract: {addr}, expected {expected}"
+            f"    {log_text}... got {x} consume for contract: {addr}"
+            f", expected {expected}"
         )
 
 
@@ -61,17 +62,11 @@ def get_expected_consume(for_ts: int, tokens: int):
     return n_intervals * amount_per_feed_per_interval
 
 
-if __name__ == "__main__":
-    config = BaseConfig()
-
-    lookback_hours = 24
-    if len(sys.argv) > 1:
-        try:
-            lookback_hours = int(sys.argv[1])
-        except ValueError:
-            print("Please provide a valid integer as the number of epochs to check!")
-
-    addresses = get_opf_addresses(config.web3_config.w3.eth.chain_id)
+def check_network_main(ppss: PPSS, lookback_hours: int):
+    subgraph_url = ppss.web3_pp.subgraph_url
+    web3_config = ppss.web3_pp.web3_config
+    chain_id = web3_config.w3.eth.chain_id
+    addresses = get_opf_addresses(chain_id)
 
     ts = int(time.time())
     ts_start = ts - lookback_hours * 60 * 60
@@ -115,7 +110,8 @@ if __name__ == "__main__":
         ts,
         ts_start,
     )
-    result = query_subgraph(config.subgraph_url, query, timeout=10.0)
+    result = query_subgraph(subgraph_url, query, timeout=10.0)
+
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
     if no_of_contracts >= 11:
@@ -124,6 +120,7 @@ if __name__ == "__main__":
         print(f"Number of Predictoor contracts: {no_of_contracts} - FAILED")
 
     print("-" * 60)
+
     # check number of predictions
     print("Predictions:")
     for contract in result["data"]["predictContracts"]:
@@ -136,17 +133,17 @@ if __name__ == "__main__":
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "trueValues")
     print("\nChecking account balances")
-    # pylint: disable=line-too-long
-    ocean_address = (
-        "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
-        if config.web3_config.w3.eth.chain_id == 23294
-        else "0x973e69303259B0c2543a38665122b773D28405fB"
-    )
-    ocean_token = Token(config.web3_config, ocean_address)
+
+    if chain_id == 23294:
+        ocean_address = "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
+    else:
+        ocean_address = "0x973e69303259B0c2543a38665122b773D28405fB"
+
+    ocean_token = Token(web3_config, ocean_address)
 
     for name, value in addresses.items():
         ocean_bal_wei = ocean_token.balanceOf(value)
-        native_bal_wei = config.web3_config.w3.eth.get_balance(value)
+        native_bal_wei = web3_config.w3.eth.get_balance(value)
 
         ocean_bal = ocean_bal_wei / 1e18
         native_bal = native_bal_wei / 1e18
@@ -157,12 +154,12 @@ if __name__ == "__main__":
         if name == "trueval":
             ocean_warning = " OK "
 
-        # pylint: disable=line-too-long
         print(
-            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}, Native: {native_bal:.2f}{native_warning}"
+            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}"
+            f", Native: {native_bal:.2f}{native_warning}"
         )
 
     # ---------------- dfbuyer ----------------
 
     token_amt = 44460
-    check_dfbuyer(addresses["dfbuyer"].lower(), result, config.subgraph_url, token_amt)
+    check_dfbuyer(addresses["dfbuyer"].lower(), result, subgraph_url, token_amt)

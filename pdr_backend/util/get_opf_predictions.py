@@ -1,5 +1,8 @@
 import csv
-from typing import List
+from typing import Dict, List
+
+from enforce_typing import enforce_types
+
 from pdr_backend.util.subgraph import query_subgraph
 
 addresses = {
@@ -50,22 +53,24 @@ predictoor_pairs = {
 }
 
 
-class Prediction:
+@enforce_types
+class SimplePrediction:  # maybe TODO: replace with model.prediction.Prediction
     def __init__(self, pair, timeframe, prediction, stake, trueval, timestamp) -> None:
-        self.pair = pair
-        self.timeframe = timeframe
+        self.pair: str = pair
+        self.timeframe: str = timeframe
         self.prediction = prediction
         self.stake = stake
         self.trueval = trueval
         self.timestamp = timestamp
 
 
-def get_all_predictions():
-    chunk_size = 1000
-    offset = 0
-    predictions: List[Prediction] = []
+@enforce_types
+def get_all_predictions() -> List[SimplePrediction]:
+    chunk_size: int = 1000
+    offset: int = 0
+    pred_objs: List[SimplePrediction] = []
 
-    address_filter = [a.lower() for a in addresses.values()]
+    address_filter: List[str] = [a.lower() for a in addresses.values()]
 
     while True:
         query = """
@@ -91,8 +96,10 @@ def get_all_predictions():
             chunk_size,
             str(address_filter).replace("'", '"'),
         )
+
         # pylint: disable=line-too-long
         mainnet_subgraph = "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+
         result = query_subgraph(
             mainnet_subgraph,
             query,
@@ -106,67 +113,70 @@ def get_all_predictions():
         if not "data" in result:
             break
 
-        data = result["data"]["predictPredictions"]
-        if len(data) == 0:
+        result_data = result["data"]["predictPredictions"]
+        if len(result_data) == 0:
             break
-        for prediction in data:
-            predictoor_key = [
+        for pred_dict in result_data:
+            pdr_key = [
                 key
-                for key, value in addresses.items()
-                if value.lower() == prediction["user"]["id"]
+                for key, address in addresses.items()
+                if address.lower() == pred_dict["user"]["id"]
             ][0]
-            pair_info = predictoor_pairs[predictoor_key]
+            pair_info = predictoor_pairs[pdr_key]
             pair_name = pair_info["pair"]
             timeframe = pair_info["timeframe"]
-            timestamp = prediction["slot"]["slot"]
+            timestamp = pred_dict["slot"]["slot"]
 
-            if prediction["payout"] is None:
+            if pred_dict["payout"] is None:
                 continue
 
-            trueval = prediction["payout"]["trueValue"]
-
+            trueval = pred_dict["payout"]["trueValue"]
             if trueval is None:
                 continue
 
-            predictedValue = prediction["payout"]["predictedValue"]
-            stake = float(prediction["stake"])
-
+            pred_value = pred_dict["payout"]["predictedValue"]
+            
+            stake = float(pred_dict["stake"])
             if stake < 0.01:
                 continue
 
-            prediction_obj = Prediction(
-                pair_name, timeframe, predictedValue, stake, trueval, timestamp
+            prediction_obj = SimplePrediction(
+                pair_name, timeframe, pred_value, stake, trueval, timestamp
             )
-            predictions.append(prediction_obj)
+            pred_objs.append(prediction_obj)
 
-    return predictions
+    return pred_objs
 
 
-def write_csv(all_predictions):
-    data = {}
-    for prediction in all_predictions:
-        key = prediction.pair + prediction.timeframe
-        if key not in data:
-            data[key] = []
-        data[key].append(prediction)
-    for key, prediction in data.items():
-        prediction.sort(key=lambda x: x.timestamp)
-        filename = key + ".csv"
+@enforce_types
+def write_csv(pred_objs: List[SimplePrediction]):
+    preds_dict: Dict[str,List[SimplePrediction]] = {}
+    for pred_obj in pred_objs:
+        pair_timeframe: str = pred_obj.pair + pred_obj.timeframe
+        if pair_timeframe not in preds_dict:
+            preds_dict[pair_timeframe] = []
+        preds_dict[pair_timeframe].append(pred_obj)
+        
+    for pair_timeframe, pred_objs in preds_dict.items():
+        pred_objs.sort(pair_timeframe=lambda x: x.timestamp)
+        
+        filename = pair_timeframe + ".csv"
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["Predicted Value", "True Value", "Timestamp", "Stake"])
-            for prediction in prediction:
+            for pred_obj in pred_objs:
                 writer.writerow(
                     [
-                        prediction.prediction,
-                        prediction.trueval,
-                        prediction.timestamp,
-                        prediction.stake,
+                        pred_obj.prediction,
+                        pred_obj.trueval,
+                        pred_obj.timestamp,
+                        pred_obj.stake,
                     ]
                 )
         print(f"CSV file '{filename}' created successfully.")
 
 
-if __name__ == "__main__":
-    _predictions = get_all_predictions()
-    write_csv(_predictions)
+@enforce_types
+def get_opf_predictions_main():
+    pred_objs: List[SimplePrediction] = get_all_predictions()
+    write_csv(pred_objs)

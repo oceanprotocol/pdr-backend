@@ -28,6 +28,7 @@ install_requirements = [
     "requests",
     "scikit-learn",
     "statsmodels",
+    "types-pyYAML",
     "types-requests",
     "web3",
     "sapphire.py",
