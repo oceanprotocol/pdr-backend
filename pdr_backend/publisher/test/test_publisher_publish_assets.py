@@ -59,7 +59,7 @@ def test_publish_assets(
     mock_token.return_value = mock_token_instance
 
     test_config = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(test_config)
+    ppss = PPSS("development", yaml_str=test_config)
     publish_assets(ppss)
 
     mock_get_address.assert_called_once_with(8996, "Ocean")
