@@ -61,9 +61,9 @@ def do_predictoor():
 
     elif approach == 2:
         # must import here, otherwise it wants MODELDIR envvar
-        from pdr_backend.predictoor.approach2.main2 import (
+        from pdr_backend.predictoor.approach2.main2 import (  # pylint: disable=import-outside-toplevel
             do_main2,
-        )  # pylint: disable=import-outside-toplevel
+        )
 
         do_main2()
 
