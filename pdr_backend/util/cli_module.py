@@ -36,7 +36,6 @@ from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
 from pdr_backend.util.topup import topup_main
 
 
-
 @enforce_types
 def _do_main():
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
@@ -126,6 +125,7 @@ def do_claim_OCEAN():
 def do_claim_ROSE():
     do_rose_payout()
 
+
 def do_get_predictoor_info():
     parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
     args = parser.parse_args()
@@ -167,7 +167,6 @@ def do_trueval(testing=False):
     agent.run(testing)
 
 
-
 @enforce_types
 def do_dfbuyer():
     parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
@@ -207,4 +206,4 @@ def do_get_opf_predictions():
     print_args(args)
 
     ppss = PPSS(args.NETWORK, args.YAML_FILE)
-    get_opf_predictions_main(ppss)
+    get_opf_predictions_main(ppss, args.CSV_DIR)

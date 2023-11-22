@@ -27,7 +27,7 @@ Tools for core team:
   pdr dfbuyer NETWORK --YAML_FILE
   pdr publisher NETWORK --YAML_FILE
   pdr topup NETWORK --YAML_FILE
-  pdr get_opf_predictions NETWORK --YAML_FILE
+  pdr get_opf_predictions CSVDIR NETWORK --YAML_FILE
 """
 
 
@@ -63,6 +63,12 @@ class YAML_Mixin:
 class APPROACH_Mixin:
     def add_argument_APPROACH(self):
         self.add_argument("APPROACH", type=int, help="1|2|..")
+
+
+@enforce_types
+class CSVDIR_Mixin:
+    def add_argument_CSVDIR(self):
+        self.add_argument("CSVDIR", type=str, help="Csv output dir")
 
 
 @enforce_types
@@ -145,7 +151,7 @@ class CheckNetworkArgParser(ArgParser, NETWORK_Mixin, YAML_Mixin):
 
 
 @enforce_types
-class GetPredictoorInfoArgParser(ArgParser, NETWORK_Mixin, YAML_Mixin):
+class GetPredictoorInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
@@ -153,10 +159,9 @@ class GetPredictoorInfoArgParser(ArgParser, NETWORK_Mixin, YAML_Mixin):
         self.add_argument("PDR_ADDRS", type=str, help="Predictoor address(es)")
         self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
         self.add_argument("END", type=str, help="End date yyyy-mm-dd")
-        self.add_argument("CSVDIR", type=str, help="Csv output dir")
+        self.add_argument_CSVDIR()
         self.add_argument_NETWORK()
         self.add_argument_YAML()
-
 
 
 TruevalArgParser = _ArgParser_APPROACH_NETWORK_YAML
@@ -167,4 +172,13 @@ PublisherArgParser = _ArgParser_NETWORK_YAML
 
 TopupArgParser = _ArgParser_NETWORK_YAML
 
-GetOpfPredictionsArgParser = _ArgParser_NETWORK_YAML
+
+@enforce_types
+class GetOpfPredictionsArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_CSVDIR()
+        self.add_argument_NETWORK()
+        self.add_argument_YAML()

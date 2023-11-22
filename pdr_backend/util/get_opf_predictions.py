@@ -1,8 +1,10 @@
 import csv
+import os
 from typing import Dict, List
 
 from enforce_typing import enforce_types
 
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.subgraph import query_subgraph
 
 addresses = {
@@ -55,20 +57,20 @@ predictoor_pairs = {
 
 @enforce_types
 class SimplePrediction:  # maybe TODO: replace with model.prediction.Prediction
-    def __init__(self, pair, timeframe, prediction, stake, trueval, timestamp) -> None:
+    def __init__(self, pair, timeframe, predval, stake, trueval, timestamp) -> None:
         self.pair: str = pair
         self.timeframe: str = timeframe
-        self.prediction = prediction
+        self.predval = predval
         self.stake = stake
         self.trueval = trueval
         self.timestamp = timestamp
 
 
 @enforce_types
-def get_all_predictions() -> List[SimplePrediction]:
+def get_all_predictions(ppss) -> List[SimplePrediction]:
     chunk_size: int = 1000
     offset: int = 0
-    pred_objs: List[SimplePrediction] = []
+    all_pred_objs: List[SimplePrediction] = []
 
     address_filter: List[str] = [a.lower() for a in addresses.values()]
 
@@ -97,11 +99,8 @@ def get_all_predictions() -> List[SimplePrediction]:
             str(address_filter).replace("'", '"'),
         )
 
-        # pylint: disable=line-too-long
-        mainnet_subgraph = "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
-
         result = query_subgraph(
-            mainnet_subgraph,
+            ppss.web3_pp.subgraph_url,
             query,
             timeout=10.0,
         )
@@ -134,40 +133,54 @@ def get_all_predictions() -> List[SimplePrediction]:
             if trueval is None:
                 continue
 
-            pred_value = pred_dict["payout"]["predictedValue"]
-            
+            predval = pred_dict["payout"]["predictedValue"]
+
             stake = float(pred_dict["stake"])
             if stake < 0.01:
                 continue
 
-            prediction_obj = SimplePrediction(
-                pair_name, timeframe, pred_value, stake, trueval, timestamp
+            pred_obj = SimplePrediction(
+                pair_name, timeframe, predval, stake, trueval, timestamp
             )
-            pred_objs.append(prediction_obj)
+            all_pred_objs.append(pred_obj)
 
-    return pred_objs
+    return all_pred_objs
 
 
 @enforce_types
-def write_csv(pred_objs: List[SimplePrediction]):
-    preds_dict: Dict[str,List[SimplePrediction]] = {}
-    for pred_obj in pred_objs:
-        pair_timeframe: str = pred_obj.pair + pred_obj.timeframe
-        if pair_timeframe not in preds_dict:
-            preds_dict[pair_timeframe] = []
-        preds_dict[pair_timeframe].append(pred_obj)
-        
+def _group_preds_by_pair_timeframe(all_pred_objs: List[SimplePrediction]):
+    """Return a dict of [pair_timeframe] : List[SimplePrediction]"""
+    d: Dict[str, List[SimplePrediction]] = {}
+    for pred_obj in all_pred_objs:
+        k = _pair_timeframe(pred_obj)
+        if k not in d:
+            d[k] = []
+        d[k].append(pred_obj)
+    return d
+
+
+@enforce_types
+def _pair_timeframe(pred_obj: SimplePrediction) -> str:
+    """Returns e.g. "BTC/ETH_5m" for a given pred_obj"""
+    return f"{pred_obj.pair}_{pred_obj.timeframe}"
+
+
+@enforce_types
+def write_csv(all_pred_objs: List[SimplePrediction], csvdir: str):
+    preds_dict = _group_preds_by_pair_timeframe(all_pred_objs)
+
     for pair_timeframe, pred_objs in preds_dict.items():
         pred_objs.sort(pair_timeframe=lambda x: x.timestamp)
-        
-        filename = pair_timeframe + ".csv"
-        with open(filename, "w", newline="") as file:
-            writer = csv.writer(file)
+
+        filebase = pair_timeframe + ".csv"
+        filename = os.path.abspath(os.path.join(csvdir, filebase))
+        with open(filename, "w", newline="") as f:
+            writer = csv.writer(f)
             writer.writerow(["Predicted Value", "True Value", "Timestamp", "Stake"])
             for pred_obj in pred_objs:
                 writer.writerow(
                     [
-                        pred_obj.prediction,
+                        pred_obj.predval,
                         pred_obj.trueval,
                         pred_obj.timestamp,
                         pred_obj.stake,
@@ -177,6 +190,6 @@ def write_csv(pred_objs: List[SimplePrediction]):
 
 
 @enforce_types
-def get_opf_predictions_main():
-    pred_objs: List[SimplePrediction] = get_all_predictions()
-    write_csv(pred_objs)
+def get_opf_predictions_main(ppss: PPSS, csvdir: str):
+    all_pred_objs: List[SimplePrediction] = get_all_predictions(ppss)
+    write_csv(all_pred_objs, csvdir)

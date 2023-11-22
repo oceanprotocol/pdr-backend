@@ -37,7 +37,8 @@ class TruevalAgentBase(ABC):
             timestamp,
         )
         print(
-            f"Found {len(pending_slots)} pending slots, processing {self.ppss.trueval_ss.batch_size}"
+            f"Found {len(pending_slots)} pending slots"
+            f", processing {self.ppss.trueval_ss.batch_size}"
         )
         pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
         return pending_slots

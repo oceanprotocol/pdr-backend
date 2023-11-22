@@ -5,7 +5,6 @@ from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.trueval.trueval_ss import TruevalSS
 
 
 @pytest.fixture()

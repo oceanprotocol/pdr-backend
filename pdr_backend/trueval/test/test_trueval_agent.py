@@ -1,9 +1,9 @@
 from unittest.mock import Mock, patch, MagicMock
 
 from enforce_typing import enforce_types
-from pdr_backend.ppss.web3_pp import Web3PP
 import pytest
 
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 
