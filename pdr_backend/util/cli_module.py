@@ -1,3 +1,4 @@
+import os
 import sys
 
 from enforce_typing import enforce_types
@@ -40,6 +41,7 @@ from pdr_backend.util.topup import topup_main
 
 @enforce_types
 def _do_main():
+    os.environ.pop("NETWORK_OVERRIDE", None)  # disallow override in CLI
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
         do_help_long(0)
 
@@ -61,8 +63,7 @@ def do_sim():
     args = parser.parse_args()
     print_args(args)
 
-    dummy_network = "barge-pytest"
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="development")
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -73,7 +74,7 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -102,7 +103,7 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     approach = args.APPROACH
 
     if approach == 1:
@@ -124,8 +125,7 @@ def do_claim_OCEAN():
     args = parser.parse_args()
     print_args(args)
 
-    network = "sapphire-mainnet"
-    ppss = PPSS(args.YAML_FILE, network)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
     do_ocean_payout(ppss)
 
 
@@ -135,18 +135,17 @@ def do_claim_ROSE():
     args = parser.parse_args()
     print_args(args)
 
-    network = "sapphire-mainnet"
-    ppss = PPSS(args.YAML_FILE, network)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
     do_rose_payout(ppss)
 
-    
+
 @enforce_types
 def do_get_predictoor_info():
     parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     get_predictoor_info_main(ppss, args.PDR_ADDRS, args.ST, args.END, args.CSVDIR)
 
 
@@ -156,7 +155,7 @@ def do_check_network():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
@@ -166,7 +165,7 @@ def do_trueval(testing=False):
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -182,13 +181,13 @@ def do_trueval(testing=False):
     agent.run(testing)
 
 
-@enforce_types
+# @enforce_types
 def do_dfbuyer():
     parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
@@ -199,7 +198,9 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)  # pylint: disable=unused-variable
+    ppss = PPSS(  # pylint: disable=unused-variable
+        yaml_filename=args.YAML_FILE, network=args.NETWORK
+    )
     raise AssertionError("FIXME")
 
 
@@ -211,7 +212,7 @@ def do_topup():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     topup_main(ppss)
 
 
@@ -221,5 +222,5 @@ def do_get_opf_predictions():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     get_opf_predictions_main(ppss, args.CSV_DIR)

@@ -79,3 +79,22 @@ def dictToFeed(feed_dict: Dict[str, Any]):
         source=d["source"],
     )
     return feed
+
+
+@enforce_types
+def feed_dict_ok(feed_dict: Dict[str, Any]):
+    """Returns True if the feed_dict contents pass basic validity tests."""
+    d = feed_dict
+    ok = (  # pylint: disable=too-many-boolean-expressions
+        isinstance(d["name"], str)
+        and isinstance(d["address"], str)
+        and isinstance(d["symbol"], str)
+        and isinstance(d["seconds_per_epoch"], int)
+        and isinstance(d["seconds_per_subscription"], int)
+        and isinstance(d["trueval_submit_timeout"], int)
+        and isinstance(d["owner"], str)
+        and isinstance(d["pair"], str)
+        and isinstance(d["timeframe"], str)
+        and isinstance(d["source"], str)
+    )
+    return ok

@@ -1,16 +1,8 @@
 import os
 
 from enforce_typing import enforce_types
-import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-
-
-@enforce_types
-def test_bad_network_name(tmpdir):
-    yaml_str = fast_test_yaml_str(tmpdir)
-    with pytest.raises(ValueError):
-        PPSS(yaml_str=yaml_str, network="foo network")
 
 
 @enforce_types
@@ -30,21 +22,9 @@ def test_ppss_from_str(tmpdir):
 
 
 @enforce_types
-def test_ppss_default_network(tmpdir):
-    yaml_str = fast_test_yaml_str(tmpdir)
-    _test_ppss(yaml_str=yaml_str, network=None)
-
-
-@enforce_types
 def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     # construct
     ppss = PPSS(yaml_filename, yaml_str, network)
-
-    # test network
-    if network is None:
-        assert isinstance(ppss.web3_pp.network, str)
-    else:
-        assert ppss.web3_pp.network == network
 
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     #  - so just do one test for each of this class's pp/ss attribute

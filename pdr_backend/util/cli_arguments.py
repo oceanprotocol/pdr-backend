@@ -28,6 +28,7 @@ Tools for core team:
   pdr publisher YAML_FILE NETWORK
   pdr topup YAML_FILE NETWORK
   pdr get_opf_predictions CSVDIR YAML_FILE NETWORK
+  pytest, black, mypy, pylint, ..
 """
 
 

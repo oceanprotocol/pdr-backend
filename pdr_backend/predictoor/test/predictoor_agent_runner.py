@@ -92,8 +92,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
 
     ppss = _ppss(tmpdir)
-    web3_config = ppss.web3_pp.web3_config
-    
+
     mock_query = MockQuery(ppss.data_pp)
     monkeypatch.setattr(
         "pdr_backend.ppss.web3_pp.query_feed_contracts",
@@ -144,7 +143,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     print(f"all timestamps seen = {mock_w3.eth._timestamps_seen}")
     print()
     print(
-        "unique prediction_slots = " 
+        "unique prediction_slots = "
         f"{sorted(set(mock_feed_contract._prediction_slots))}"
     )
     print(f"all prediction_slots = {mock_feed_contract._prediction_slots}")
@@ -159,7 +158,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
 @enforce_types
 def _ppss(tmpdir) -> PPSS:
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str, network="barge-pytest")
+    ppss = PPSS(yaml_str=yaml_str, network="development")
 
     assert hasattr(ppss, "data_pp")
     ppss.data_pp = DataPP(

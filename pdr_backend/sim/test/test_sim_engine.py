@@ -12,7 +12,7 @@ from pdr_backend.sim.sim_engine import SimEngine
 @enforce_types
 def test_SimEngine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s)
+    ppss = PPSS(yaml_str=s, network="development")
 
     assert hasattr(ppss, "data_pp")
     ppss.data_pp = DataPP(

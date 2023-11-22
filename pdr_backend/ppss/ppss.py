@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+from enforce_typing import enforce_types
 import yaml
 
 from pdr_backend.ppss.data_pp import DataPP
@@ -16,9 +17,8 @@ from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
 
 
+@enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
-    __STR_OBJDIR__ = ["d"]
-
     def __init__(
         self,
         yaml_filename: Optional[str] = None,
@@ -69,11 +69,13 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 _CACHED_YAML_FILE_S = None
 
 
+@enforce_types
 def fast_test_yaml_str(tmpdir=None):
     """Use this for testing. It has fast runtime."""
     global _CACHED_YAML_FILE_S
     if _CACHED_YAML_FILE_S is None:
-        with open("./ppss.yaml") as f:
+        filename = os.path.abspath("ppss.yaml")
+        with open(filename) as f:
             _CACHED_YAML_FILE_S = f.read()
 
     s = _CACHED_YAML_FILE_S

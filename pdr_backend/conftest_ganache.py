@@ -7,7 +7,6 @@ from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
 
-NETWORK = "development"
 CHAIN_ID = 8996
 S_PER_EPOCH = 300
 
@@ -29,7 +28,7 @@ def _web3_config():
     global _W3C
     if _W3C is None:
         s = fast_test_yaml_str()
-        ppss = PPSS(yaml_str=s, network=NETWORK)
+        ppss = PPSS(yaml_str=s, network="development")
         _W3C = ppss.web3_pp.web3_config
     return _W3C
 

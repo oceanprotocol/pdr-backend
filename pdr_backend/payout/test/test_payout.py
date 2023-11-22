@@ -13,8 +13,6 @@ from pdr_backend.payout.payout import (
     request_payout_batches,
 )
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
-from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
@@ -26,7 +24,7 @@ def test_batchify():
     with pytest.raises(Exception):
         batchify("12345", 2)
 
-        
+
 @enforce_types
 def test_request_payout_batches():
     mock_contract = Mock(spec=PredictoorContract)
@@ -61,9 +59,12 @@ def test_do_ocean_payout(tmpdir):
     mock_contract = Mock(spec=PredictoorContract)
     mock_contract.payout_multiple = Mock()
 
-    with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), \
-         patch("pdr_backend.payout.payout.query_pending_payouts", return_value=mock_pending_payouts), \
-         patch("pdr_backend.payout.payout.PredictoorContract", return_value=mock_contract):
+    with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), patch(
+        "pdr_backend.payout.payout.query_pending_payouts",
+        return_value=mock_pending_payouts,
+    ), patch(
+        "pdr_backend.payout.payout.PredictoorContract", return_value=mock_contract
+    ):
         do_ocean_payout(ppss)
         print(mock_contract.payout_multiple.call_args_list)
         call_args = mock_contract.payout_multiple.call_args_list
@@ -73,12 +74,12 @@ def test_do_ocean_payout(tmpdir):
         assert call_args[3] == call([14, 15], True)
         assert len(call_args) == 4
 
-        
+
 @enforce_types
 def test_do_rose_payout(tmpdir):
     ppss = _ppss(tmpdir)
     web3_config = ppss.web3_pp.web3_config
-    
+
     mock_contract = Mock(spec=DFRewards)
     mock_contract.get_claimable_rewards = Mock()
     mock_contract.get_claimable_rewards.return_value = 100
@@ -89,15 +90,16 @@ def test_do_rose_payout(tmpdir):
     mock_wrose.balanceOf.return_value = 100
     mock_wrose.withdraw = Mock()
 
-    with patch("pdr_backend.payout.payout.time"), \
-         patch("pdr_backend.payout.payout.WrappedToken", return_value=mock_wrose), \
-         patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract):
+    with patch("pdr_backend.payout.payout.time"), patch(
+        "pdr_backend.payout.payout.WrappedToken", return_value=mock_wrose
+    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract):
         do_rose_payout(ppss)
         mock_contract.claim_rewards.assert_called_with(
             web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(100)
+
 
 @enforce_types
 def _ppss(tmpdir):

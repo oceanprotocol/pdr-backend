@@ -1,4 +1,3 @@
-import os
 import time
 from typing import Any, List
 from enforce_typing import enforce_types
@@ -69,7 +68,6 @@ def do_ocean_payout(ppss: PPSS):
 @enforce_types
 def do_rose_payout(ppss: PPSS):
     web3_config = ppss.web3_pp.web3_config
-    subgraph_url: str = ppss.web3_pp.subgraph_url
 
     assert ppss.web3_pp.network == "sapphire-mainnet", "unsupported network"
     assert (

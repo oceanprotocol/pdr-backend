@@ -40,27 +40,35 @@ _D2 = {
     "owner_addrs": "0xOwner2",
 }
 _D = {
-    "default_network": "network2",
     "network1": _D1,
     "network2": _D2,
 }
 
 
 @enforce_types
-def test_web3_pp__default_network():
-    pp = Web3PP(_D)
+def test_web3_pp__network_override(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
+
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network1"
+
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    pp = Web3PP(_D, "network1")
     assert pp.network == "network2"
-    assert pp.address_file == "address.json 2"
 
 
 @enforce_types
-def test_web3_pp__bad_network():
+def test_web3_pp__bad_network(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
+
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
 
 
 @enforce_types
-def test_web3_pp__yaml_dict():
+def test_web3_pp__yaml_dict(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
+
     pp = Web3PP(_D, "network1")
 
     assert pp.network == "network1"
@@ -80,6 +88,7 @@ def test_web3_pp__yaml_dict():
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -108,6 +117,7 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -125,6 +135,8 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_feeds__get_contracts(monkeypatch):
+    monkeypatch.delenv("NETWORK_OVERRIDE")
+
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
