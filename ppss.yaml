@@ -81,6 +81,9 @@ web3_pp:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: http://localhost:8545
     subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+    # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+    stake_token: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1" # this value is just a placeholder; set it with above
+    owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
   barge-predictoor-bot:
     address_file: "~/address-barge-predictoor-bot.json"

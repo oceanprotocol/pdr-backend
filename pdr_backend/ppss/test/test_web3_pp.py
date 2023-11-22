@@ -47,11 +47,14 @@ _D = {
 
 @enforce_types
 def test_web3_pp__network_override(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
 
+    # does it do what we want with no override?
     pp = Web3PP(_D, "network1")
     assert pp.network == "network1"
 
+    # does it do what we want _with_ override?
     monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
     pp = Web3PP(_D, "network1")
     assert pp.network == "network2"
@@ -59,7 +62,8 @@ def test_web3_pp__network_override(monkeypatch):
 
 @enforce_types
 def test_web3_pp__bad_network(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
 
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
@@ -67,7 +71,8 @@ def test_web3_pp__bad_network(monkeypatch):
 
 @enforce_types
 def test_web3_pp__yaml_dict(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
 
     pp = Web3PP(_D, "network1")
 
@@ -88,7 +93,9 @@ def test_web3_pp__yaml_dict(monkeypatch):
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -117,7 +124,8 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -135,7 +143,8 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_feeds__get_contracts(monkeypatch):
-    monkeypatch.delenv("NETWORK_OVERRIDE")
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
 
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
