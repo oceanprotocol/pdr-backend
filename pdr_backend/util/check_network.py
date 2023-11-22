@@ -1,9 +1,9 @@
 import math
 import time
 
-from addresses import get_opf_addresses
 from pdr_backend.models.token import Token
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.addresses import get_opf_addresses
 from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_subgraph
 
 WEEK = 86400 * 7
