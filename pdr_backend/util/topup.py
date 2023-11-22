@@ -3,9 +3,9 @@ from typing import Dict
 
 from enforce_typing import enforce_types
 
-from addresses import get_opf_addresses
 from pdr_backend.models.token import Token, NativeToken
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.addresses import get_opf_addresses
 
 MAINNET_ID = 23294
 TESTNET_ID = 23295
