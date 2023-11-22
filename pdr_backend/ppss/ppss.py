@@ -35,7 +35,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             with open(yaml_filename, "r") as f:
                 d = yaml.safe_load(f)
         else:
-            d = yaml.safe_load(yaml_str)
+            d = yaml.safe_load(str(yaml_str))
 
         # fill attributes from d
         self.web3_pp = Web3PP(network, d["web3_pp"])

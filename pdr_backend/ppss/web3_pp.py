@@ -24,7 +24,7 @@ class Web3PP(StrMixin):
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.d = d  # yaml_dict["data_pp"]
 
-        self._web3_config = None
+        self._web3_config: Optional[Web3Config] = None
 
     # --------------------------------
     # JIT cached properties - only do the work if requested
@@ -36,7 +36,7 @@ class Web3PP(StrMixin):
             rpc_url = self.rpc_url
             private_key = getenv("PRIVATE_KEY")
             self._web3_config = Web3Config(rpc_url, private_key)
-        return self._web3_config
+        return self._web3_config  # type: ignore[return-value]
 
     # --------------------------------
     # yaml properties
@@ -46,23 +46,23 @@ class Web3PP(StrMixin):
 
     @property
     def address_file(self) -> str:
-        return self.dn["address_file"]
+        return self.dn["address_file"]  # type: ignore[index]
 
     @property
     def rpc_url(self) -> str:
-        return self.dn["rpc_url"]
+        return self.dn["rpc_url"]  # type: ignore[index]
 
     @property
     def subgraph_url(self) -> str:
-        return self.dn["subgraph_url"]
+        return self.dn["subgraph_url"]  # type: ignore[index]
 
     @property
     def stake_token(self) -> str:
-        return self.dn["stake_token"]
+        return self.dn["stake_token"]  # type: ignore[index]
 
     @property
     def owner_addrs(self) -> str:
-        return self.dn["owner_addrs"]
+        return self.dn["owner_addrs"]  # type: ignore[index]
 
     # --------------------------------
     # setters (add as needed)
@@ -148,10 +148,10 @@ class Web3PP(StrMixin):
           pending_slots -- List[Slot]
         """
         return get_pending_slots(
-            self.subgraph_url,
-            timestamp,
-            self.owner_addrs,
-            pair_filters,
-            timeframe_filter,
-            source_filter,
+            subgraph_url=self.subgraph_url,
+            timestamp=timestamp,
+            owner_addresses=[self.owner_addrs] if self.owner_addrs else None,
+            pair_filter=pair_filters,
+            timeframe_filter=timeframe_filter,
+            source_filter=source_filter,
         )
