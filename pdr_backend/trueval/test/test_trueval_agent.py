@@ -12,7 +12,7 @@ from pdr_backend.util.web3_config import Web3Config
 @enforce_types
 def test_new_agent(trueval_config):
     agent_ = TruevalAgentSingle(trueval_config, get_trueval)
-    assert agent_.config == trueval_config
+    assert agent_.ppss == trueval_config
 
 
 @enforce_types

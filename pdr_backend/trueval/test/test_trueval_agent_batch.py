@@ -11,7 +11,7 @@ from pdr_backend.util.constants import ZERO_ADDRESS
 @pytest.mark.skip("reason=avoid hangs, until #229 fixed")
 def test_new_agent(trueval_config):
     agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
-    assert agent_.config == trueval_config
+    assert agent_.ppss == trueval_config
     assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
