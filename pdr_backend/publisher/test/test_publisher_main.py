@@ -50,7 +50,7 @@ def mock_publish():
 
 
 # pylint: disable=redefined-outer-name
-def test_main(
+def test_publish_assets(
     mock_getenv_or_exit,
     mock_web3_config,
     mock_token,
