@@ -11,6 +11,7 @@ from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_pp import TraderPP
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.trueval.trueval_ss import TruevalSS
 
 
 class PPSS:
@@ -21,7 +22,7 @@ class PPSS:
 
     def __init__(
         self,
-        network: str, # e.g. "sapphire-testnet"
+        network: str,  # e.g. "sapphire-testnet"
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
     ):
@@ -46,6 +47,7 @@ class PPSS:
         self.trader_pp = TraderPP(d["trader_pp"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
+        self.trueval_ss = TruevalSS(d["trueval_ss"])
 
     def __str__(self):
         s = ""
@@ -57,6 +59,7 @@ class PPSS:
         s += f"trader_pp={self.trader_pp}\n"
         s += f"trader_ss={self.trader_ss}\n"
         s += f"sim_ss={self.sim_ss}\n"
+        s += f"trueval_ss={self.trueval_ss}\n"
         return s
 
 
