@@ -12,6 +12,9 @@ from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.predictoor.payout import do_payout, do_rose_payout
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
+from pdr_backend.trueval.trueval_agent_base import get_trueval
+from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
+from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.util.cli_arguments import (
     do_help_long,
     print_args,
@@ -22,6 +25,7 @@ from pdr_backend.util.cli_arguments import (
     DfbuyerArgParser,
     PublisherArgParser,
 )
+from pdr_backend.util.contract import get_address
 
 
 @enforce_types
@@ -105,13 +109,25 @@ def do_claim_ROSE():
 
 
 @enforce_types
-def do_trueval():
+def do_trueval(testing=False):
     parser = TruevalArgParser("Run trueval bot", "trueval")
     args = parser.parse_args()
     print_args(args)
 
     ppss = PPSS(args.YAML_FILE)
-    raise AssertionError("FIXME")
+    approach = args.APPROACH
+
+    if approach == 1:
+        agent = TruevalAgentSingle(ppss, get_trueval)
+    elif approach == 2:
+        predictoor_batcher_addr = get_address(
+            ppss.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"
+        )
+        agent = TruevalAgentBatch(ppss, get_trueval, predictoor_batcher_addr)
+    else:
+        raise ValueError(f"Unknown trueval approach {approach}")
+
+    agent.run(testing)
 
 
 @enforce_types
