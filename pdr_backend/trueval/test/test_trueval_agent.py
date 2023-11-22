@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -6,7 +6,6 @@ import pytest
 
 from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
-from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
@@ -32,7 +31,9 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
     assert predictoor_contract_mock.call_count == 1
-    predictoor_contract_mock.assert_called_once_with(agent.config.web3_config, "0x1")
+    predictoor_contract_mock.assert_called_once_with(
+        agent.ppss.web3_pp.web3_config, "0x1"
+    )
 
 
 @enforce_types
@@ -121,14 +122,14 @@ def test_take_step(slot, agent):
         "BATCH_SIZE": "1",
     }
 
-    mocked_web3_config = MagicMock(spec=Web3Config)
+    mocked_web3_config = MagicMock(spec=Web3PP)
+    mocked_web3_config.get_pending_slots = Mock()
+    mocked_web3_config.get_pending_slots.return_value = [slot]
 
     with patch.dict("os.environ", mocked_env), patch.object(
-        agent.config, "web3_config", new=mocked_web3_config
+        agent.ppss, "web3_pp", new=mocked_web3_config
     ), patch(
         "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
-    ), patch.object(
-        Web3PP, "get_pending_slots", return_value=[slot]
     ), patch(
         "time.sleep"
     ), patch.object(
@@ -146,16 +147,16 @@ def test_run(slot, agent):
         "BATCH_SIZE": "1",
     }
 
-    mocked_web3_config = MagicMock(spec=Web3Config)
+    mocked_web3_config = MagicMock(spec=Web3PP)
+    mocked_web3_config.get_pending_slots = Mock()
+    mocked_web3_config.get_pending_slots.return_value = [slot]
 
     with patch.dict("os.environ", mocked_env), patch.object(
-        agent.config, "web3_config", new=mocked_web3_config
+        agent.ppss, "web3_pp", new=mocked_web3_config
     ), patch(
         "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
     ), patch(
         "time.sleep"
-    ), patch.object(
-        TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgentSingle, "process_slot"
     ) as ps_mock:
