@@ -1,7 +1,6 @@
 from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.env import getenv_or_exit
 from pdr_backend.ppss.ppss import PPSS
 
 
@@ -74,10 +73,10 @@ def publish_assets(ppss: PPSS):
         )
         print("Publish done")
 
+    fee_collector = ppss.publisher_ss.fee_collector_addr
     if web3_config.w3.eth.chain_id == 23295:
         print("Publishing pairs on testnet")
         helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
-        fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
             publish(
                 s_per_epoch=300,
@@ -110,7 +109,6 @@ def publish_assets(ppss: PPSS):
     if web3_config.w3.eth.chain_id == 23294:
         print("Publishing pairs on mainnet")
         helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
-        fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
             publish(
                 s_per_epoch=300,
