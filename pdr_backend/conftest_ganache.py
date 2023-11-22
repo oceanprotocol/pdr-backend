@@ -1,13 +1,11 @@
-import os
 import pytest
 
 from pdr_backend.models.token import Token
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.web3_config import Web3Config
 
 NETWORK = "development"
 CHAIN_ID = 8996
@@ -44,7 +42,7 @@ def ocean_token() -> Token:
 
 @pytest.fixture(scope="module")
 def predictoor_contract():
-    web3_config = _web3_config()
+    w3c = _web3_config()
     _, _, _, _, logs = publish(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
@@ -52,19 +50,19 @@ def predictoor_contract():
         quote="USDT",
         source="kraken",
         timeframe="5m",
-        trueval_submitter_addr=config.owner,
-        feeCollector_addr=config.owner,
+        trueval_submitter_addr=w3c.owner,
+        feeCollector_addr=w3c.owner,
         rate=3,
         cut=0.2,
-        web3_config=web3_config,
+        web3_config=w3c,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(web3_config, dt_addr)
+    return PredictoorContract(w3c, dt_addr)
 
 
 @pytest.fixture(scope="module")
 def predictoor_contract2():
-    web3_config = _web3_config()
+    w3c = _web3_config()
     _, _, _, _, logs = publish(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
@@ -72,14 +70,14 @@ def predictoor_contract2():
         quote="USDT",
         source="kraken",
         timeframe="5m",
-        trueval_submitter_addr=config.owner,
-        feeCollector_addr=config.owner,
+        trueval_submitter_addr=w3c.owner,
+        feeCollector_addr=w3c.owner,
         rate=3,
         cut=0.2,
-        web3_config=config,
+        web3_config=w3c,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(web3_config, dt_addr)
+    return PredictoorContract(w3c, dt_addr)
 
 
 # pylint: disable=redefined-outer-name

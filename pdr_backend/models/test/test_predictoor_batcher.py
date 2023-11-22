@@ -1,5 +1,5 @@
 from web3.types import RPCEndpoint
-from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
+from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.data_nft import DataNft
@@ -16,14 +16,14 @@ def test_submit_truevals(
 
     # fast forward time
     predictoor_contract.config.w3.provider.make_request(
-        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
+        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 10]
     )
     predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
-    end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
+    end_epoch = current_epoch + S_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
+    epochs = list(range(current_epoch, end_epoch, S_PER_EPOCH))
     truevals = [True] * len(epochs)
     cancels = [False] * len(epochs)
 
@@ -61,17 +61,15 @@ def test_submit_truevals_contracts(
 
     # fast forward time
     predictoor_contract.config.w3.provider.make_request(
-        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
+        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 10]
     )
     predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
-    end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
+    end_epoch = current_epoch + S_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs1 = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
-    epochs2 = list(
-        range(current_epoch + SECONDS_PER_EPOCH * 2, end_epoch, SECONDS_PER_EPOCH)
-    )
+    epochs1 = list(range(current_epoch, end_epoch, S_PER_EPOCH))
+    epochs2 = list(range(current_epoch + S_PER_EPOCH * 2, end_epoch, S_PER_EPOCH))
     epochs = [epochs1, epochs2]
     truevals = [[True] * len(epochs1), [True] * len(epochs2)]
     cancels = [[False] * len(epochs1), [False] * len(epochs2)]

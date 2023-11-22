@@ -282,12 +282,7 @@ class DataFactory:
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
-        try:
-            assert X.shape[1] == ss.n
-        except:
-            import pdb
-
-            pdb.set_trace()
+        assert X.shape[1] == ss.n
 
         # return
         return X, y, x_df
