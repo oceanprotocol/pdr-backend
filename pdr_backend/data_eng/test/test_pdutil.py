@@ -32,6 +32,8 @@ FOUR_ROWS_RAW_TOHLCV_DATA = [
     [1686806700000, 1644.57, 1646.41, 1642.49, 1645.81, 22.8612],
     [1686807000000, 1645.77, 1646.2, 1645.23, 1646.05, 8.1741],
 ]
+
+
 ONE_ROW_RAW_TOHLCV_DATA = [[1686807300000, 1646, 1647.2, 1646.23, 1647.05, 8.1742]]
 
 
@@ -119,24 +121,25 @@ def _filename(tmpdir) -> str:
 def test_load_basic(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
+    df = transform_df(df)
     save_parquet(filename, df)
 
     # simplest specification. Don't specify cols, st or fin
-    df2 = load_csv(filename)
+    df2 = load_parquet(filename)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
     # explicitly specify cols, but not st or fin
-    df2 = load_csv(filename, OHLCV_COLS)
+    df2 = load_parquet(filename, OHLCV_COLS)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
     # explicitly specify cols, st, fin
-    df2 = load_csv(filename, OHLCV_COLS, st=None, fin=None)
+    df2 = load_parquet(filename, OHLCV_COLS, st=None, fin=None)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
-    df2 = load_csv(filename, OHLCV_COLS, st=0, fin=np.inf)
+    df2 = load_parquet(filename, OHLCV_COLS, st=0, fin=np.inf)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
@@ -218,36 +221,52 @@ def _df_from_raw_data(raw_data: list):
 
 @enforce_types
 def test_has_data(tmpdir):
-    filename0 = os.path.join(tmpdir, "f0.csv")
-    save_csv(filename0, _df_from_raw_data([]))
+    filename0 = os.path.join(tmpdir, "f0.parquet")
+    save_parquet(filename0, transform_df(_df_from_raw_data([])))
     assert not has_data(filename0)
 
-    filename1 = os.path.join(tmpdir, "f1.csv")
-    save_csv(filename1, _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
+    filename1 = os.path.join(tmpdir, "f1.parquet")
+    save_parquet(filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)))
     assert has_data(filename1)
 
-    filename4 = os.path.join(tmpdir, "f4.csv")
-    save_csv(filename4, _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
+    filename4 = os.path.join(tmpdir, "f4.parquet")
+    save_parquet(filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)))
     assert has_data(filename4)
 
 
 @enforce_types
 def test_oldest_ut_and_newest_ut__with_data(tmpdir):
     filename = _filename(tmpdir)
-    df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_csv(filename, df)
 
-    ut0 = oldest_ut(filename)
+    # write out four rows
+    df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
+    df = transform_df(df)
+    save_parquet(filename, df)
+
     utN = newest_ut(filename)
-    assert ut0 == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
-    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[-1][0]
+    ut0 = oldest_ut(filename)
+
+    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
+    assert ut0 == FOUR_ROWS_RAW_TOHLCV_DATA[-1][0]
+
+    # append and check newest/oldest
+    df = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
+    df = transform_df(df)
+    save_parquet(filename, df)
+
+    utN = newest_ut(filename)
+    ut0 = oldest_ut(filename)
+
+    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
+    assert ut0 == ONE_ROW_RAW_TOHLCV_DATA[0][0]
 
 
 @enforce_types
 def test_oldest_ut_and_newest_ut__no_data(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data([])
-    save_csv(filename, df)
+    df = transform_df(df)
+    save_parquet(filename, df)
 
     with pytest.raises(ValueError):
         oldest_ut(filename)

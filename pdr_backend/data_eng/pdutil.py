@@ -169,6 +169,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
     columns = ["timestamp", "datetime"] + OHLCV_COLS
 
     df = df.select(columns)
+
     if os.path.exists(filename):  # append existing file
         # TODO: Implement parquet-append with pyarrow
         cur_df = pl.read_parquet(filename)
