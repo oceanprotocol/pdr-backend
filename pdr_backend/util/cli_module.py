@@ -61,7 +61,7 @@ def do_sim():
     print_args(args)
 
     dummy_network = "barge-pytest"
-    ppss = PPSS(dummy_network, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE)
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -72,7 +72,7 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -101,7 +101,7 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     approach = args.APPROACH
 
     if approach == 1:
@@ -132,7 +132,7 @@ def do_get_predictoor_info():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     get_predictoor_info_main(ppss, args.PDR_ADDRS, args.ST, args.END, args.CSVDIR)
 
 
@@ -142,7 +142,7 @@ def do_check_network():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
@@ -152,9 +152,9 @@ def do_trueval(testing=False):
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
+    
     approach = args.APPROACH
-
     if approach == 1:
         agent = TruevalAgentSingle(ppss, get_trueval)
     elif approach == 2:
@@ -174,7 +174,7 @@ def do_dfbuyer():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
@@ -185,7 +185,7 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
+    ppss = PPSS(args.YAML_FILE, args.NETWORK) # pylint: disable=unused-variable
     raise AssertionError("FIXME")
 
 
@@ -197,7 +197,7 @@ def do_topup():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     topup_main(ppss)
 
 
@@ -207,5 +207,5 @@ def do_get_opf_predictions():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)
     get_opf_predictions_main(ppss, args.CSV_DIR)

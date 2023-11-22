@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch, Mock
 
 from enforce_typing import enforce_types
+import pytest
 from web3 import Web3
 
 from pdr_backend.util.web3_config import Web3Config
@@ -39,14 +40,28 @@ _D2 = {
     "owner_addrs": "0xOwner2",
 }
 _D = {
+    "default_network": "network2",
     "network1": _D1,
     "network2": _D2,
 }
 
 
 @enforce_types
+def test_web3_pp__default_network():
+    pp = Web3PP(_D)
+    assert pp.network == "network2"
+    assert pp.address_file == "address.json 2"
+
+
+@enforce_types
+def test_web3_pp__bad_network():
+    with pytest.raises(ValueError):
+        Web3PP(_D, "bad network")
+    
+
+@enforce_types
 def test_web3_pp__yaml_dict():
-    pp = Web3PP("network1", _D)
+    pp = Web3PP(_D, "network1")
 
     assert pp.network == "network1"
     assert pp.dn == _D1
@@ -57,7 +72,7 @@ def test_web3_pp__yaml_dict():
     assert pp.owner_addrs == "0xOwner1"
 
     # network2
-    pp2 = Web3PP("network2", _D)
+    pp2 = Web3PP(_D, "network2")
     assert pp2.network == "network2"
     assert pp2.dn == _D2
     assert pp2.address_file == "address.json 2"
@@ -66,7 +81,7 @@ def test_web3_pp__yaml_dict():
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     # test web3_config
     assert web3_pp._web3_config is None
@@ -94,7 +109,7 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     def _mock_get_pending_slots(*args, **kwargs):
         if len(args) >= 2:
@@ -112,7 +127,7 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 def test_web3_pp__get_feeds__get_contracts(monkeypatch):
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     # test get_feeds(). Uses results from get_feeds
     def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument

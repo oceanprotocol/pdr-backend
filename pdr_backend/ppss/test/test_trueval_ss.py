@@ -1,4 +1,4 @@
-from pdr_backend.trueval.trueval_ss import TruevalSS
+from pdr_backend.ppss.trueval_ss import TruevalSS
 
 
 def test_trueval_ss():

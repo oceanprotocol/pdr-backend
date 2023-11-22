@@ -9,9 +9,9 @@ from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 
 
 @enforce_types
-def test_new_agent(trueval_ss):
-    agent_ = TruevalAgentSingle(trueval_ss, get_trueval)
-    assert agent_.ppss == trueval_ss
+def test_new_agent(mock_ppss):
+    agent_ = TruevalAgentSingle(mock_ppss, get_trueval)
+    assert agent_.ppss == mock_ppss
 
 
 @enforce_types
@@ -180,5 +180,5 @@ def test_get_init_and_ts(agent):
 
 
 @pytest.fixture(name="agent")
-def agent_fixture(trueval_ss):
-    return TruevalAgentSingle(trueval_ss, get_trueval)
+def agent_fixture(mock_ppss):
+    return TruevalAgentSingle(mock_ppss, get_trueval)

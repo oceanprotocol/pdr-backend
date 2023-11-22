@@ -20,7 +20,9 @@ class Web3PP(StrMixin):
     __STR_OBJDIR__ = ["network", "d"]
 
     @enforce_types
-    def __init__(self, network: str, d: dict):
+    def __init__(self, d: dict, network: Optional[str] = None):
+        if network is None:
+            network = d["default_network"] # e.g. "development", "sapphire-testnet"
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
 

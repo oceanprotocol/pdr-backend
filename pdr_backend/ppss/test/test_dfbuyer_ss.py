@@ -1,4 +1,4 @@
-from pdr_backend.dfbuyer.dfbuyer_ss import DFBuyerSS
+from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 
 
 def test_trueval_config():

@@ -52,6 +52,11 @@ trueval_ss:
   batch_size: 30
   sleep_time: 30
 
+dfbuyer_ss:
+  batch_size: 42
+  consume_interval_seconds: 42
+  weekly_spending_limit: 25401600 # 42 * 7 * 24 * 3600
+
 web3_pp:
   default_network: development
   
