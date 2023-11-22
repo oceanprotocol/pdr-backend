@@ -54,6 +54,10 @@ def test_initialize_df():
     assert df.columns == TOHLCV_COLS[:3] + ["datetime"]
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [pl.Datetime(time_unit="ms", time_zone="UTC")]
 
+    # assert error without timestamp
+    df = initialize_df(OHLCV_COLS)
+    with pytest.raises(Exception):
+        df = transform_df(df)
 
 @enforce_types
 def test_concat_next_df():
