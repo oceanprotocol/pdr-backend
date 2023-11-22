@@ -29,7 +29,7 @@ def initialize_df(filter_cols: List[str]) -> pl.DataFrame:
     # define schema
     cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     schema = {col: cand_dtypes[col] for col in filter_cols}
-    
+
     print("schema", schema)
 
     df = pl.DataFrame(data=None, schema=schema)
@@ -172,6 +172,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
     else:  # write new file
         df.write_parquet(filename)
         print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+
 
 # TODO - Move ohlcv logic out, keep util generic
 @enforce_types

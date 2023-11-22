@@ -10,7 +10,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
-    TOHLCV_DTYPES_PL
+    TOHLCV_DTYPES_PL,
 )
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
@@ -74,7 +74,9 @@ def test_concat_next_df():
 def _assert_TOHLCVd_cols_and_types(df: pl.DataFrame):
     assert df.columns == TOHLCV_COLS + ["datetime"]
     assert list(df.schema.values())[:-1] == TOHLCV_DTYPES_PL
-    assert str(list(df.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
+    assert (
+        str(list(df.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
+    )
     assert "timestamp" in df.columns and df.schema["timestamp"] == pl.Int64
 
 
