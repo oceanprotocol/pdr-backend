@@ -115,9 +115,9 @@ trader_ss:
     position_size: 3
 
 dfbuyer_ss:
-  batch_size: 30
-  weekly_spending_limit: 3000
-  consume_interval_seconds: 60
+  batch_size: 20
+  weekly_spending_limit: 37000
+  consume_interval_seconds: 86400
 
 sim_ss:
   do_plot: False
