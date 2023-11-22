@@ -3,14 +3,15 @@ import pytest
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.main import publish_assets
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.ppss.web3_pp import Web3PP
 
 
 @pytest.fixture
 def mock_web3_config():
-    with patch("pdr_backend.publisher.main.Web3Config") as mock:
-        mock_instance = MagicMock(spec=Web3Config)
-        mock_instance.w3 = Mock()
-        mock_instance.owner = "0x1"
+    with patch("pdr_backend.ppss.web3_pp.Web3PP") as mock:
+        mock_instance = MagicMock(spec=Web3PP)
+        mock_instance.web3_config = Mock()
+        mock_instance.web3_config.owner = "0x1"
         mock.return_value = mock_instance
         yield mock_instance
 
@@ -52,7 +53,7 @@ def test_publish_assets(
     mock_publish,
     tmpdir,
 ):
-    mock_web3_config.w3.eth.chain_id = 8996
+    mock_web3_config.web3_config.w3.eth.chain_id = 8996
     mock_get_address.return_value = "mock_ocean_address"
     mock_token_instance = MagicMock()
     mock_token.return_value = mock_token_instance
