@@ -109,6 +109,6 @@ class _ArgParser_NETWORK_YAML(ArgParser, NETWORK_Mixin, YAML_Mixin):
         self.add_argument_YAML()
 
 
-TruevalArgParser = _ArgParser_NETWORK_YAML
+TruevalArgParser = _ArgParser_APPROACH_NETWORK_YAML
 DfbuyerArgParser = _ArgParser_NETWORK_YAML
 PublisherArgParser = _ArgParser_NETWORK_YAML
