@@ -1,4 +1,3 @@
-import argparse
 from unittest.mock import Mock, patch
 
 import yaml
@@ -14,6 +13,7 @@ from pdr_backend.util.cli_module import do_dfbuyer
 )  # Mock the constructor to return None
 @patch("pdr_backend.util.cli_module.print_args")
 @patch("builtins.open")
+# pylint: disable = redefined-builtin, unused-argument
 def test_main(
     mock_agent_init,
     mock_agent_run,
