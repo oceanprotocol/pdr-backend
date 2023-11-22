@@ -1,4 +1,4 @@
-from typing import List
+from typing import Union
 
 from enforce_typing import enforce_types
 
@@ -6,7 +6,7 @@ from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 
 @enforce_types
-def pack_timeframe_str_list(timeframe_str_list) -> str:
+def pack_timeframe_str_list(timeframe_str_list) -> Union[str, None]:
     """
     Example: Given ["1m","1h"]
     Return "1m,1h"

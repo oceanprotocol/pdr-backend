@@ -52,7 +52,9 @@ trueval_ss:
   batch_size: 30
   sleep_time: 30
 
-web3_pp:  
+web3_pp:
+  default_network: development
+  
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev
@@ -66,6 +68,11 @@ web3_pp:
     subgraph_url: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520 # OCEAN token address
     owner_addrs: 0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
+    
+  development:
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
+    rpc_url: http://localhost:8545
+    subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
 
   barge-predictoor-bot:
     address_file: "~/address-barge-predictoor-bot.json"
