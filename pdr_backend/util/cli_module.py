@@ -1,6 +1,7 @@
 import sys
 
 from enforce_typing import enforce_types
+from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
@@ -34,7 +35,6 @@ from pdr_backend.util.contract import get_address
 from pdr_backend.util.get_opf_predictions import get_opf_predictions_main
 from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
 from pdr_backend.util.topup import topup_main
-
 
 
 @enforce_types
@@ -126,6 +126,7 @@ def do_claim_OCEAN():
 def do_claim_ROSE():
     do_rose_payout()
 
+
 def do_get_predictoor_info():
     parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
     args = parser.parse_args()
@@ -167,7 +168,6 @@ def do_trueval(testing=False):
     agent.run(testing)
 
 
-
 @enforce_types
 def do_dfbuyer():
     parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
@@ -175,7 +175,8 @@ def do_dfbuyer():
     print_args(args)
 
     ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
-    raise AssertionError("FIXME")
+    agent = DFBuyerAgent(ppss)
+    agent.run()
 
 
 @enforce_types
