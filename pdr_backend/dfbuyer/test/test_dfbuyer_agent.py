@@ -89,18 +89,16 @@ def test_get_prices(mock_contract, dfbuyer_agent):
 
 
 def test_prepare_batches(dfbuyer_agent):
-    dfbuyer_agent.ppss.dfbuyer_ss.batch_size = 10
-
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    consume_times = dict(zip(addresses, [5, 15, 7, 3, 12, 8]))
+    consume_times = dict(zip(addresses, [10, 30, 14, 6, 24, 16]))
     result = dfbuyer_agent._prepare_batches(consume_times)
 
     expected_result = [
-        ([addresses[0], addresses[1]], [5, 5]),
-        ([addresses[1]], [10]),
-        ([addresses[2], addresses[3]], [7, 3]),
-        ([addresses[4]], [10]),
-        ([addresses[4], addresses[5]], [2, 8]),
+        ([addresses[0], addresses[1]], [10, 10]),
+        ([addresses[1]], [20]),
+        ([addresses[2], addresses[3]], [14, 6]),
+        ([addresses[4]], [20]),
+        ([addresses[4], addresses[5]], [4, 16]),
     ]
     assert result == expected_result
 
