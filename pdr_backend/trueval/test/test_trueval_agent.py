@@ -1,18 +1,18 @@
 from unittest.mock import patch, MagicMock
 
 from enforce_typing import enforce_types
+from pdr_backend.ppss.web3_pp import Web3PP
 import pytest
 
 from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
-from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
-def test_new_agent(trueval_config):
-    agent_ = TruevalAgentSingle(trueval_config, get_trueval)
-    assert agent_.ppss == trueval_config
+def test_new_agent(trueval_ss):
+    agent_ = TruevalAgentSingle(trueval_ss, get_trueval)
+    assert agent_.ppss == trueval_ss
 
 
 @enforce_types
@@ -128,11 +128,9 @@ def test_take_step(slot, agent):
     ), patch(
         "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
     ), patch.object(
-        TruevalConfig, "get_pending_slots", return_value=[slot]
+        Web3PP, "get_pending_slots", return_value=[slot]
     ), patch(
         "time.sleep"
-    ), patch.object(
-        TruevalConfig, "get_pending_slots", return_value=[slot]
     ), patch.object(
         TruevalAgentSingle, "process_slot"
     ) as ps_mock:
@@ -181,5 +179,5 @@ def test_get_init_and_ts(agent):
 
 
 @pytest.fixture(name="agent")
-def agent_fixture(trueval_config):
-    return TruevalAgentSingle(trueval_config, get_trueval)
+def agent_fixture(trueval_ss):
+    return TruevalAgentSingle(trueval_ss, get_trueval)
