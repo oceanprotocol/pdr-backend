@@ -15,26 +15,37 @@ from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
+    TOHLCV_DTYPES_PL,
 )
 
 
+# TODO: Move this implementation to data_factory.ohlcv module
 @enforce_types
-def initialize_df(cols: List[str]) -> pl.DataFrame:
+def initialize_df(filter_cols: List[str]) -> pl.DataFrame:
     """Start a new df, with the expected columns, index, and dtypes
     It's ok whether cols has "timestamp" or not. Same for "datetime".
-    The return df has "timestamp" for index and "datetime" as col
+    Polars has no index, so "timestamp" and "datetime" are regular cols
     """
-    dtypes = {
-        col: pd.Series(dtype=dtype)
-        for col, dtype in zip(TOHLCV_COLS, TOHLCV_DTYPES)
-        if col in cols or col == "timestamp"
-    }
-    df = pl.DataFrame(dtypes)
-    df = df.with_columns([pl.from_epoch("timestamp", time_unit="ms").alias("datetime")])
+    # define schema
+    cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+    schema = {col: cand_dtypes[col] for col in filter_cols}
+    
+    print("schema", schema)
+
+    df = pl.DataFrame(data=None, schema=schema)
+    df = df.with_columns(
+        [
+            pl.from_epoch("timestamp", time_unit="ms")
+            .dt.replace_time_zone("UTC")
+            .alias("datetime")
+        ]
+    )
 
     return df
 
 
+# TODO: Move transforms & manipulations out
+# TODO: Make this only check schemas and concat
 @enforce_types
 def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
     """Add a next df to existing df, with the expected columns etc.
@@ -43,11 +54,12 @@ def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
     assert "datetime" in df.columns
     assert "datetime" not in next_df.columns
     next_df = next_df.with_columns(
-        [pl.from_epoch("timestamp", time_unit="ms").alias("datetime")]
+        [
+            pl.from_epoch("timestamp", time_unit="ms")
+            .dt.replace_time_zone("UTC")
+            .alias("datetime")
+        ]
     )
-
-    print("df.columns", df)
-    print("next_df.columns", next_df)
 
     df = pl.concat([df, next_df])
     return df
@@ -138,6 +150,7 @@ def load_csv(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
     return df
 
 
+# TODO - Move ohlcv logic out, keep util generic
 @enforce_types
 def save_parquet(filename: str, df: pl.DataFrame):
     """write to parquet file
@@ -151,7 +164,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
 
     df = df.select(columns)
     if os.path.exists(filename):  # append existing file
-        # TODO - Implement parquet-append with pyarrow
+        # TODO: Implement parquet-append with pyarrow
         cur_df = pl.read_parquet(filename)
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
@@ -160,7 +173,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
         df.write_parquet(filename)
         print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
 
-
+# TODO - Move ohlcv logic out, keep util generic
 @enforce_types
 def load_parquet(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
     """Load parquet file as a dataframe.
@@ -208,7 +221,7 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
     df = concat_next_df(df0, df)
 
     # postconditions, return
-    # TODO - Resolve for np.int64 vs pl.Int64
+    # TODO: Helper to go from np<->pl schema/dtypes
     assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
     assert "datetime" in df.columns and df["datetime"].dtype == pl.Datetime
 

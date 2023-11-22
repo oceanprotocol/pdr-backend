@@ -10,6 +10,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
+    TOHLCV_DTYPES_PL
 )
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
@@ -49,7 +50,10 @@ def test_concat_next_df():
     df = initialize_df(TOHLCV_COLS)
     assert len(df) == 0
 
-    next_df = pl.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, schema=TOHLCV_COLS)
+    cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+    schema = {col: cand_dtypes[col] for col in TOHLCV_COLS}
+
+    next_df = pl.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 4
 
     # add 4 rows to empty df
@@ -58,7 +62,7 @@ def test_concat_next_df():
     _assert_TOHLCVd_cols_and_types(df)
 
     # from df with 4 rows, add 1 more row
-    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=TOHLCV_COLS)
+    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
 
     df = concat_next_df(df, next_df)
@@ -68,11 +72,10 @@ def test_concat_next_df():
 
 @enforce_types
 def _assert_TOHLCVd_cols_and_types(df: pl.DataFrame):
-    # TODO - Fix Polar checks
-    assert df.columns.tolist() == OHLCV_COLS + ["datetime"]
-    assert df.dtypes.tolist()[:-1] == OHLCV_DTYPES
-    assert str(df.dtypes.tolist()[-1]) == "datetime64[ns, UTC]"
-    assert "timestamp" in df.columns() and df["timestamp"].dtype == np.int64
+    assert df.columns == TOHLCV_COLS + ["datetime"]
+    assert list(df.schema.values())[:-1] == TOHLCV_DTYPES_PL
+    assert str(list(df.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
+    assert "timestamp" in df.columns and df.schema["timestamp"] == pl.Int64
 
 
 def _filename(tmpdir) -> str:

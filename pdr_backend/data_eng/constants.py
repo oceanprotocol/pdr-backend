@@ -7,7 +7,7 @@ OHLCV_DTYPES_PL = [pl.Float64] * len(OHLCV_COLS)
 
 TOHLCV_COLS = ["timestamp"] + OHLCV_COLS
 TOHLCV_DTYPES = [np.int64] + OHLCV_DTYPES
-TOHLCV_DTYPES_PL = [pl.Int64] + OHLCV_DTYPES
+TOHLCV_DTYPES_PL = [pl.Int64] + OHLCV_DTYPES_PL
 
 # warn if OHLCV_MULT_MIN * timeframe < time-between-data < OHLCV_MULT_MAX * t
 OHLCV_MULT_MIN = 0.5
