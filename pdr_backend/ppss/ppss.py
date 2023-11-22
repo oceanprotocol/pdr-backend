@@ -100,6 +100,10 @@ trader_pp:
       - 100000 USDT
       - 0 BTC
 
+trueval_ss:
+  batch_size: 30
+  sleep_time: 30
+
 trader_ss:
   sim_only:
     buy_amt: 10000 USDT
@@ -119,4 +123,8 @@ web3_pp:
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
     owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
+  development:
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
+    rpc_url: http://localhost:8545
+    subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
     """
