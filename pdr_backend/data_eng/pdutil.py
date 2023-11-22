@@ -16,7 +16,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
-    TOHLCV_DTYPES_PL
+    TOHLCV_DTYPES_PL,
 )
 
 
@@ -27,7 +27,7 @@ def initialize_df(cols: List[str] = None) -> pl.DataFrame:
     Polars has no index, so "timestamp" and "datetime" are regular cols
     Applies transform to get columns (including datetime)
     """
-    
+
     # define schema
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
 
@@ -37,7 +37,9 @@ def initialize_df(cols: List[str] = None) -> pl.DataFrame:
 
 
 # TODO: Move this implementation to data_factory.ohlcv module
-def transform_df(df: pl.DataFrame,) -> pl.DataFrame:
+def transform_df(
+    df: pl.DataFrame,
+) -> pl.DataFrame:
     """Apply the transform on TOHLCV struct.
     - Adds datetime
     """
@@ -45,7 +47,7 @@ def transform_df(df: pl.DataFrame,) -> pl.DataFrame:
     # preconditions
     assert "timestamp" in df.columns
     assert "datetime" not in df.columns
-    
+
     # add datetime
     df = df.with_columns(
         [
@@ -55,6 +57,7 @@ def transform_df(df: pl.DataFrame,) -> pl.DataFrame:
         ]
     )
     return df
+
 
 # TODO: Make this only check schemas and concat
 @enforce_types
@@ -199,7 +202,7 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     @notes
       Polars does not have an index. "timestamp" is a regular col and required for "datetime"
       (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
-      
+
       TODO: Fix (1), save_parquet already saves out dataframe.
       Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
     """
@@ -209,10 +212,10 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     if "timestamp" not in cols:
         cols = ["timestamp"] + cols
     assert "datetime" not in cols
-    
+
     # set st, fin
     st = st if st is not None else 0
-    fin = fin if fin is not None else np.inf    
+    fin = fin if fin is not None else np.inf
 
     # load tohlcv
     df = pl.read_parquet(

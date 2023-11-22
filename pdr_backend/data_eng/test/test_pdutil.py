@@ -40,7 +40,7 @@ def test_initialize_df():
     df = initialize_df()
     assert isinstance(df, pl.DataFrame)
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL
-    
+
     df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
@@ -53,12 +53,15 @@ def test_initialize_df():
     df = initialize_df(TOHLCV_COLS[:3])
     df = transform_df(df)
     assert df.columns == TOHLCV_COLS[:3] + ["datetime"]
-    assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [pl.Datetime(time_unit="ms", time_zone="UTC")]
+    assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [
+        pl.Datetime(time_unit="ms", time_zone="UTC")
+    ]
 
     # assert error without timestamp
     df = initialize_df(OHLCV_COLS)
     with pytest.raises(Exception):
         df = transform_df(df)
+
 
 @enforce_types
 def test_concat_next_df():
@@ -75,7 +78,7 @@ def test_concat_next_df():
     # add 4 rows to empty df
     df = concat_next_df(df, next_df)
     assert len(df) == 4
-    
+
     # add datetime
     df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
@@ -143,7 +146,7 @@ def test_load_append(tmpdir):
     # save 4-row parquet
     filename = _filename(tmpdir)
     df_4_rows = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    
+
     # saving tohlcv w/o datetime throws an error
     with pytest.raises(Exception):
         save_parquet(filename, df_4_rows)  # write new file
@@ -163,7 +166,7 @@ def test_load_append(tmpdir):
         df_4_rows, transform_df(pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema))
     )
     df_5_rows_loaded = load_parquet(filename)
-    
+
     # we don't need to transform
     _assert_TOHLCVd_cols_and_types(df_5_rows_loaded)
 
@@ -191,18 +194,21 @@ def test_load_filtered(tmpdir):
     assert "timestamp" in df2.columns
     assert len(df2["timestamp"]) == 2
     assert df2["timestamp"].to_list() == timestamps[1:3]
-    
+
     # test cols and types
     assert df2["timestamp"].dtype == pl.Int64
     assert list(df2.columns) == TOHLCV_COLS[:3] + ["datetime"]
     assert list(df2.schema.values())[:-1] == TOHLCV_DTYPES_PL[:3]
-    assert str(list(df2.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
-    
+    assert (
+        str(list(df2.schema.values())[-1])
+        == "Datetime(time_unit='ms', time_zone='UTC')"
+    )
+
 
 @enforce_types
 def _df_from_raw_data(raw_data: list):
     df = initialize_df(TOHLCV_COLS)
-    
+
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     next_df = pl.DataFrame(raw_data, schema=schema)
 
