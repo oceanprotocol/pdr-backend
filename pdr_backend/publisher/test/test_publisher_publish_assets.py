@@ -6,12 +6,6 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 @pytest.fixture
-def mock_getenv_or_exit():
-    with patch("pdr_backend.publisher.main.getenv_or_exit") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_web3_config():
     with patch("pdr_backend.publisher.main.Web3Config") as mock:
         mock_instance = MagicMock(spec=Web3Config)
