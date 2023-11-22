@@ -119,5 +119,5 @@ def test_take_step(agent, slot):
 
 
 @pytest.fixture(name="agent")
-def agent_fixture(trueval_config):
-    return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
+def agent_fixture(trueval_ss):
+    return TruevalAgentBatch(trueval_ss, get_trueval, ZERO_ADDRESS)
