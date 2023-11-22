@@ -34,11 +34,12 @@ class TraderAgent2(TraderAgent):
     """
 
     def __init__(self, ppss: PPSS):
-        super().__init__(ppss)
-
-        # Initialize cache params
+        # Initialize cache params. Must be *before* calling parent constructor!
         self.portfolio = None
         self.reset_cache = False
+
+        #
+        super().__init__(ppss)
 
         # If cache params are empty, instantiate
         if self.portfolio is None:
