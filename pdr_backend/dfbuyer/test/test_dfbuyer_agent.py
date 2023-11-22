@@ -16,11 +16,13 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
 
     assert len(mock_get_address.call_args_list) == 2
     call1 = mock_get_address.call_args_list[0]
-    assert call1 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "PredictoorHelper")
+    assert call1 == call(
+        dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"
+    )
     call2 = mock_get_address.call_args_list[1]
-    assert call2 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "Ocean")
+    assert call2 == call(dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "Ocean")
 
-    mock_token.assert_called_with(dfbuyer_config.web3_config, agent.token_addr)
+    mock_token.assert_called_with(dfbuyer_config.web3_pp.web3_config, agent.token_addr)
     mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True
@@ -29,12 +31,14 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
 
 def test_get_expected_amount_per_feed(dfbuyer_agent):
     ts = 1695211135
-    amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
-        dfbuyer_agent.feeds
+    amount_per_feed_per_interval = (
+        dfbuyer_agent.ppss.dfbuyer_ss.amount_per_interval / len(dfbuyer_agent.feeds)
     )
     week_start = (math.floor(ts / WEEK)) * WEEK
     time_passed = ts - week_start
-    n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds) + 1
+    n_intervals = (
+        int(time_passed / dfbuyer_agent.ppss.dfbuyer_ss.consume_interval_seconds) + 1
+    )
     expected_result = n_intervals * amount_per_feed_per_interval
     result = dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result == expected_result
@@ -45,8 +49,8 @@ def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
     end = ts + WEEK - 86400  # last day
     just_before_new_week = ts + WEEK - 1  # 1 second before next week
 
-    amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
-        dfbuyer_agent.feeds
+    amount_per_feed_per_interval = (
+        dfbuyer_agent.ppss.dfbuyer_ss.amount_per_interval / len(dfbuyer_agent.feeds)
     )
     result1 = dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result1 == amount_per_feed_per_interval
@@ -66,7 +70,7 @@ def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract")
 def test_get_consume_so_far(mock_get_consume_so_far, dfbuyer_agent):
     agent = MagicMock()
-    agent.config.web3_config.owner = "0x123"
+    agent.ppss.web3_pp.web3_config.owner = "0x123"
     agent.feeds = {"feed1": "0x1", "feed2": "0x2"}
     mock_get_consume_so_far.return_value = {"0x1": 10.5}
     expected_result = {"0x1": 10.5}
@@ -85,18 +89,16 @@ def test_get_prices(mock_contract, dfbuyer_agent):
 
 
 def test_prepare_batches(dfbuyer_agent):
-    dfbuyer_agent.config.batch_size = 10
-
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    consume_times = dict(zip(addresses, [5, 15, 7, 3, 12, 8]))
+    consume_times = dict(zip(addresses, [10, 30, 14, 6, 24, 16]))
     result = dfbuyer_agent._prepare_batches(consume_times)
 
     expected_result = [
-        ([addresses[0], addresses[1]], [5, 5]),
-        ([addresses[1]], [10]),
-        ([addresses[2], addresses[3]], [7, 3]),
-        ([addresses[4]], [10]),
-        ([addresses[4], addresses[5]], [2, 8]),
+        ([addresses[0], addresses[1]], [10, 10]),
+        ([addresses[1]], [20]),
+        ([addresses[2], addresses[3]], [14, 6]),
+        ([addresses[4]], [20]),
+        ([addresses[4], addresses[5]], [4, 16]),
     ]
     assert result == expected_result
 
@@ -204,7 +206,7 @@ def test_consume_method(mock_sleep, dfbuyer_agent):
         with pytest.raises(Exception, match="Error"):
             dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
 
-        assert mock_sleep.call_count == dfbuyer_agent.config.max_request_tries
+        assert mock_sleep.call_count == dfbuyer_agent.ppss.dfbuyer_ss.max_request_tries
 
 
 def test_consume_batch_method(dfbuyer_agent):
