@@ -4,7 +4,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS
 
 
 @enforce_types
-def test_predictoor_ss(tmpdir):
+def test_predictoor_ss():
     d = {
         "bot_only": {
             "s_until_epoch_end": 60,

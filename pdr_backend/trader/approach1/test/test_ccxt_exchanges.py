@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 
 @enforce_types
 def test_ccxt_mexc_pairs():
-    exchange = ccxt.mexc3()
+    exchange = ccxt.mexc()
     markets = exchange.load_markets()
 
     # print(f"MEXC symbols: {[v.get('symbol','') for k,v in exchange.markets.items()]}")

@@ -10,7 +10,6 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.util.constants import S_PER_DAY
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
@@ -88,13 +87,13 @@ class MockFeedContract:
 
 @enforce_types
 def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
-    _setenvs(monkeypatch)
+    monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
 
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str)
+    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
     mock_query = MockQuery(ppss.data_pp)
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.query_feed_contracts",
+        "pdr_backend.ppss.web3_pp.query_feed_contracts",
         mock_query.mock_query_feed_contracts,
     )
 
@@ -114,18 +113,17 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
         return mock_contract
 
     monkeypatch.setattr(
-        "pdr_backend.models.base_config.PredictoorContract", mock_contract_func
+        "pdr_backend.ppss.web3_pp.PredictoorContract", mock_contract_func
     )
     monkeypatch.setattr("time.sleep", advance_func)
 
     # now we're done the mocking, time for the real work!!
 
     # real work: initialize
-    config = BaseConfig()  # this object's constructor grabs & stores envvars
-    agent = predictoor_agent_class(config, ppss)
+    agent = predictoor_agent_class(ppss)
 
     # last bit of mocking
-    agent.config.web3_config.w3 = mock_w3
+    agent.ppss.web3_pp.web3_config.w3 = mock_w3
 
     # real work: main iterations
     for _ in range(1000):
@@ -152,11 +150,3 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     assert (mock_w3.eth.timestamp + 2 * ppss.data_pp.timeframe_s) >= max(
         mock_contract._prediction_slots
     )
-
-
-def _setenvs(monkeypatch):
-    # envvars handled by BaseConfig
-    monkeypatch.setenv("RPC_URL", "http://foo")
-    monkeypatch.setenv("SUBGRAPH_URL", "http://bar")
-    monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    monkeypatch.setenv("OWNER_ADDRS", OWNER_ADDR)
