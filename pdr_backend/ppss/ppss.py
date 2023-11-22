@@ -64,85 +64,19 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s += f"trueval_ss={self.trueval_ss}\n"
         return s
 
-
+_CACHED_FILE_S = None
 def fast_test_yaml_str(tmpdir):
     """Use this for testing. It has fast runtime."""
-    csv_dir = os.path.join(tmpdir, "csvs")
-    log_dir = os.path.join(tmpdir, "logs")
-    return f"""
-data_pp:
-  timeframe: 5m
-  predict_feeds:
-    - binance c BTC/USDT
-  sim_only:
-    test_n : 100
+    with open("./ppss.yaml") as f:
+        s = f.read()
 
-data_ss:
-  input_feeds :
-    - binance oc BTC/USDT,ETH/USDT
-  st_timestr: 2023-06-22_00:00
-  fin_timestr: 2023-06-24_00:00
-  max_n_train: 500
-  autoregressive_n : 2
-  csv_dir: {csv_dir}
+    if CACHED_PPSS is None:
+        s = CACHED_PPSS
+        
+    assert "csv_dir: csvs" in s
+    s = s.replace("csv_dir: csvs", f"csv_dir: {os.path.join(tmpdir, 'csvs')}")
+    
+    assert "log_dir: logs" in s
+    s.replace("log_dir: logs", f"log_dir: {os.path.join(tmpdir, 'logs')}")
 
-model_ss:
-  approach: LIN
-
-predictoor_ss:
-  bot_only:
-    s_until_epoch_end: 60
-    stake_amount: 1
-  approach3:
-
-trader_pp:
-  sim_only:
-    fee_percent: 0.0
-    init_holdings:
-      - 100000 USDT
-      - 0 BTC
-
-trader_ss:
-  sim_only:
-    buy_amt: 10000 USDT
-  bot_only:
-    min_buffer: 60 
-    max_tries: 10
-    position_size: 3
-
-dfbuyer_ss:
-  batch_size: 20
-  weekly_spending_limit: 37000
-  consume_interval_seconds: 86400
-
-sim_ss:
-  do_plot: False
-  log_dir: {log_dir}
-
-trueval_ss:
-  batch_size: 30
-  sleep_time: 30
-
-web3_pp:
-  sapphire-testnet:
-    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
-    rpc_url: https://testnet.sapphire.oasis.dev
-    subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-    stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
-    owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
-  development:
-    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
-    rpc_url: http://localhost:8545
-    subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-
-  barge-pytest:
-    address_file: "~/address-barge-pytest.json"
-    private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
-    rpc_url: http://74.234.16.165:8545
-    subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-    # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
-    stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
-    owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
-
-
-    """
+    return s
