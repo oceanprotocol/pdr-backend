@@ -74,12 +74,24 @@ def test_concat_next_df():
     # add 4 rows to empty df
     df = concat_next_df(df, next_df)
     assert len(df) == 4
+    
+    # add datetime
+    df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
     # from df with 4 rows, add 1 more row
     next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
 
+    # assert that concat verifies schemas match
+    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
+    assert len(next_df) == 1
+    assert "datetime" not in next_df.columns
+    with pytest.raises(Exception):
+        df = concat_next_df(df, next_df)
+
+    # add datetime to next_df and concat both
+    next_df = transform_df(next_df)
     df = concat_next_df(df, next_df)
     assert len(df) == 4 + 1
     _assert_TOHLCVd_cols_and_types(df)
