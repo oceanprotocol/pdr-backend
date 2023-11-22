@@ -30,16 +30,15 @@ def initialize_df(filter_cols: List[str]) -> pl.DataFrame:
     cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     schema = {col: cand_dtypes[col] for col in filter_cols}
 
-    print("schema", schema)
-
     df = pl.DataFrame(data=None, schema=schema)
-    df = df.with_columns(
-        [
-            pl.from_epoch("timestamp", time_unit="ms")
-            .dt.replace_time_zone("UTC")
-            .alias("datetime")
-        ]
-    )
+    if "timestamp" in df.columns:
+        df = df.with_columns(
+            [
+                pl.from_epoch("timestamp", time_unit="ms")
+                .dt.replace_time_zone("UTC")
+                .alias("datetime")
+            ]
+        )
 
     return df
 
@@ -57,7 +56,7 @@ def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
         [
             pl.from_epoch("timestamp", time_unit="ms")
             .dt.replace_time_zone("UTC")
-            .alias("datetime")
+            .alias("datetime") if "timestamp" in df.columns else None
         ]
     )
 
