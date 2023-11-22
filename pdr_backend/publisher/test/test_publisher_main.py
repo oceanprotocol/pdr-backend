@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, Mock, patch
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 import pytest
-from pdr_backend.publisher.main import main
+from pdr_backend.publisher.main import publish_assets
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -56,6 +57,7 @@ def test_main(
     mock_get_address,
     mock_fund_dev_accounts,
     mock_publish,
+    tmpdir,
 ):
     mock_getenv_or_exit.side_effect = [
         "mock_rpc_url",
@@ -67,7 +69,9 @@ def test_main(
     mock_token_instance = MagicMock()
     mock_token.return_value = mock_token_instance
 
-    main()
+    test_config = fast_test_yaml_str(tmpdir)
+    ppss = PPSS(test_config)
+    publish_assets(ppss)
 
     mock_getenv_or_exit.assert_any_call("RPC_URL")
     mock_getenv_or_exit.assert_any_call("PRIVATE_KEY")
