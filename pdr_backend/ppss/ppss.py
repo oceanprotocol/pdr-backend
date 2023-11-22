@@ -67,15 +67,11 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         return s
 
 _CACHED_FILE_S = None
-CACHED_PPSS = None
 def fast_test_yaml_str(tmpdir):
     """Use this for testing. It has fast runtime."""
     with open("./ppss.yaml") as f:
         s = f.read()
 
-    if CACHED_PPSS is None:
-        CACHED_PPSS = s
-        
     assert "csv_dir: csvs" in s
     s = s.replace("csv_dir: csvs", f"csv_dir: {os.path.join(tmpdir, 'csvs')}")
     
