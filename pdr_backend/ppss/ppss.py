@@ -14,7 +14,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.trueval.trueval_ss import TruevalSS
 
 
-class PPSS:
+class PPSS:  # pylint: disable=too-many-instance-attributes
     """
     All uncontrollable (pp) and controllable (ss) settings in one place
     Constructed by loading from a .yaml file or yaml-formatted string.
@@ -127,4 +127,15 @@ web3_pp:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: http://localhost:8545
     subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+
+  barge-pytest:
+    address_file: "~/address-barge-pytest.json"
+    private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
+    rpc_url: http://74.234.16.165:8545
+    subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+    # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+    stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
+    owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
+
+
     """

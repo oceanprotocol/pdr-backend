@@ -72,7 +72,7 @@ class TraderAgent1(TraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.ppss.data_pp.exchange_str in ("mexc", "mexc3"):
+            if self.ppss.data_pp.exchange_str == "mexc":
                 amount = float(self.order["info"]["origQty"])
 
             # close it
@@ -96,7 +96,7 @@ class TraderAgent1(TraderAgent):
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.ppss.data_pp.pair_str, self.config.size
+                self.ppss.data_pp.pair_str, self.ppss.trader_ss.position_size
             )
 
             # If order is successful, we log the order so we can close it

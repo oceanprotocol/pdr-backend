@@ -19,7 +19,7 @@ class DataPP(StrMixin):
         if self.timeframe not in CAND_TIMEFRAMES:
             raise ValueError(self.timeframe)
         verify_feeds_strs(self.predict_feeds_strs)
-        if not (0 < self.test_n < np.inf):
+        if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
             raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
 
     # --------------------------------

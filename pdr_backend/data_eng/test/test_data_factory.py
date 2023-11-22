@@ -1,5 +1,5 @@
 import copy
-from typing import List, Tuple
+from typing import List
 
 from enforce_typing import enforce_types
 import numpy as np

@@ -40,7 +40,7 @@ def request_payout_batches(
 
 
 def do_payout():
-    config = BaseConfig()
+    config = BaseConfig()  # pylint: disable=undefined-variable
     owner = config.web3_config.owner
     BATCH_SIZE = int(os.getenv("BATCH_SIZE", "250"))
     print("Starting payout")
@@ -59,7 +59,7 @@ def do_payout():
 def do_rose_payout():
     address = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wrapped_rose = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
-    config = BaseConfig()
+    config = BaseConfig()  # pylint: disable=undefined-variable
     owner = config.web3_config.owner
     if config.web3_config.w3.eth.chain_id != 23294:
         raise Exception("Unsupported network")
