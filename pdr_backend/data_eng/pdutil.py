@@ -28,9 +28,6 @@ def initialize_df(cols: List[str] = None) -> pl.DataFrame:
     Applies transform to get columns (including datetime)
     """
     
-    # preconditions
-    assert "timestamp" not in cols
-    
     # define schema
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
 

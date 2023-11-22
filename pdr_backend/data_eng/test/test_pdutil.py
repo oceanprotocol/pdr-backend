@@ -15,6 +15,7 @@ from pdr_backend.data_eng.constants import (
 )
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
+    transform_df,
     concat_next_df,
     save_csv,
     load_csv,
@@ -35,18 +36,21 @@ ONE_ROW_RAW_TOHLCV_DATA = [[1686807300000, 1646, 1647.2, 1646.23, 1647.05, 8.174
 
 @enforce_types
 def test_initialize_df():
-    df = initialize_df(TOHLCV_COLS)
-
+    df = initialize_df()
     assert isinstance(df, pl.DataFrame)
+    assert list(df.schema.values()) == TOHLCV_DTYPES_PL
+    
+    df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
-    # test that it works with just 2 cols
+    # test that it works with just 2 cols and without datetime
     df = initialize_df(OHLCV_COLS[:2])
     assert df.columns == OHLCV_COLS[:2]
     assert list(df.schema.values())[:2] == OHLCV_DTYPES_PL[:2]
 
-    # test that if we add timestamp that we get datetime
+    # test datetime w/ just ut + 2 cols
     df = initialize_df(TOHLCV_COLS[:3])
+    df = transform_df(df)
     assert df.columns == TOHLCV_COLS[:3] + ["datetime"]
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [pl.Datetime(time_unit="ms", time_zone="UTC")]
 
