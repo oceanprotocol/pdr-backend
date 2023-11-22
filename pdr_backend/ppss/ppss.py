@@ -11,6 +11,7 @@ from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_pp import TraderPP
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.trueval.trueval_ss import TruevalSS
 
 
 class PPSS:  # pylint: disable=too-many-instance-attributes
@@ -46,6 +47,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.trader_pp = TraderPP(d["trader_pp"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
+        self.trueval_ss = TruevalSS(d["trueval_ss"])
 
     def __str__(self):
         s = ""
@@ -57,6 +59,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s += f"trader_pp={self.trader_pp}\n"
         s += f"trader_ss={self.trader_ss}\n"
         s += f"sim_ss={self.sim_ss}\n"
+        s += f"trueval_ss={self.trueval_ss}\n"
         return s
 
 
@@ -97,6 +100,10 @@ trader_pp:
       - 100000 USDT
       - 0 BTC
 
+trueval_ss:
+  batch_size: 30
+  sleep_time: 30
+
 trader_ss:
   sim_only:
     buy_amt: 10000 USDT
@@ -116,6 +123,11 @@ web3_pp:
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
     owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
+  development:
+    address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
+    rpc_url: http://localhost:8545
+    subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+
   barge-pytest:
     address_file: "~/address-barge-pytest.json"
     private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
@@ -124,5 +136,6 @@ web3_pp:
     # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
     stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
     owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
+
 
     """
