@@ -25,6 +25,8 @@ def web3_config():
 
 
 _W3C = None
+
+
 def _web3_config():
     global _W3C
     if _W3C is None:
@@ -32,7 +34,6 @@ def _web3_config():
         ppss = PPSS(yaml_str=s, network=NETWORK)
         _W3C = ppss.web3_pp.web3_config
     return _W3C
-        
 
 
 @pytest.fixture(scope="session")

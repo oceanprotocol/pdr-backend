@@ -12,4 +12,3 @@ def getenv_or_exit(envvar_name: str) -> Union[None, str]:
         print(f"You must set {envvar_name} environment variable")
         sys.exit(1)
     return value
-

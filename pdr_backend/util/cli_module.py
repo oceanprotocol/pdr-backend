@@ -153,7 +153,7 @@ def do_trueval(testing=False):
     print_args(args)
 
     ppss = PPSS(args.YAML_FILE, args.NETWORK)
-    
+
     approach = args.APPROACH
     if approach == 1:
         agent = TruevalAgentSingle(ppss, get_trueval)
@@ -185,7 +185,7 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE, args.NETWORK) # pylint: disable=unused-variable
+    ppss = PPSS(args.YAML_FILE, args.NETWORK)  # pylint: disable=unused-variable
     raise AssertionError("FIXME")
 
 

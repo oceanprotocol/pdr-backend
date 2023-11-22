@@ -25,7 +25,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self,
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
-        network: Optional[str] = None, # eg "development", "sapphire-testnet"
+        network: Optional[str] = None,  # eg "development", "sapphire-testnet"
     ):
         # preconditions
         assert (
@@ -67,6 +67,8 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
 
 _CACHED_YAML_FILE_S = None
+
+
 def fast_test_yaml_str(tmpdir=None):
     """Use this for testing. It has fast runtime."""
     global _CACHED_YAML_FILE_S
@@ -79,7 +81,7 @@ def fast_test_yaml_str(tmpdir=None):
     if tmpdir is not None:
         assert "csv_dir: csvs" in s
         s = s.replace("csv_dir: csvs", f"csv_dir: {os.path.join(tmpdir, 'csvs')}")
-    
+
         assert "log_dir: logs" in s
         s.replace("log_dir: logs", f"log_dir: {os.path.join(tmpdir, 'logs')}")
 

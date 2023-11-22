@@ -57,7 +57,7 @@ def test_web3_pp__default_network():
 def test_web3_pp__bad_network():
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
-    
+
 
 @enforce_types
 def test_web3_pp__yaml_dict():

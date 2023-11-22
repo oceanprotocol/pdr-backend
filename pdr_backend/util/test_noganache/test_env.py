@@ -12,4 +12,3 @@ def test_getenv_or_exit(monkeypatch):
 
     monkeypatch.setenv("RPC_URL", "http://test.url")
     assert getenv_or_exit("RPC_URL") == "http://test.url"
-

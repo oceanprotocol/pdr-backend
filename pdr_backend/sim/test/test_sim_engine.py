@@ -37,8 +37,8 @@ def test_SimEngine(tmpdir):
     assert hasattr(ppss, "sim_ss")
     ppss.sim_ss = SimSS(
         {
-            "do_plot" : False,
-            "log_dir" : os.path.join(tmpdir, "logs"),
+            "do_plot": False,
+            "log_dir": os.path.join(tmpdir, "logs"),
         }
     )
 

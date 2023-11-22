@@ -285,7 +285,9 @@ class DataFactory:
         try:
             assert X.shape[1] == ss.n
         except:
-            import pdb; pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
 
         # return
         return X, y, x_df

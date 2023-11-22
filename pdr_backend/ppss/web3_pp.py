@@ -22,7 +22,7 @@ class Web3PP(StrMixin):
     @enforce_types
     def __init__(self, d: dict, network: Optional[str] = None):
         if network is None:
-            network = d["default_network"] # e.g. "development", "sapphire-testnet"
+            network = d["default_network"]  # e.g. "development", "sapphire-testnet"
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
 
