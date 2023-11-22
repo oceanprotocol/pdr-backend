@@ -7,8 +7,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
-from pdr_backend.predictoor.payout import do_payout as do_ocean_payout
-from pdr_backend.predictoor.payout import do_rose_payout
+from pdr_backend.predictoor.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
@@ -18,9 +17,11 @@ from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.util.check_network import check_network_main
 
 from pdr_backend.util.cli_arguments import (
-    do_help_long,
+    ClaimOceanArgParser,
+    ClaimRoseArgParser,
     CheckNetworkArgParser,
     DfbuyerArgParser,
+    do_help_long,
     GetOpfPredictionsArgParser,
     GetPredictoorInfoArgParser,
     PredictoorArgParser,
@@ -119,12 +120,24 @@ def do_trader():
 
 @enforce_types
 def do_claim_OCEAN():
-    do_ocean_payout()
+    parser = ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN")
+    args = parser.parse_args()
+    print_args(args)
 
+    network = "sapphire-mainnet"
+    ppss = PPSS(args.YAML_FILE, network)
+    do_ocean_payout(ppss)
+    
 
 @enforce_types
 def do_claim_ROSE():
-    do_rose_payout()
+    parser = ClaimRoseArgParser("Claim ROSE", "claim_ROSE")
+    args = parser.parse_args()
+    print_args(args)
+
+    network = "sapphire-mainnet"
+    ppss = PPSS(args.YAML_FILE, network)
+    do_rose_payout(ppss)
 
 
 def do_get_predictoor_info():

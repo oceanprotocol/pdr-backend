@@ -12,8 +12,8 @@ Main tools:
   pdr sim YAML_FILE
   pdr predictoor APPROACH YAML_FILE NETWORK
   pdr trader APPROACH YAML_FILE NETWORK
-  pdr claim_OCEAN
-  prd claim_ROSE
+  pdr claim_OCEAN YAML_FILE
+  prd claim_ROSE YAML_FILE
 
 Utilities:
   pdr help
@@ -75,6 +75,27 @@ class NETWORK_Mixin:
         )
 
 
+
+
+@enforce_types
+class _ArgParser_YAML(ArgParser, YAML_Mixin):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_YAML()
+        
+
+@enforce_types
+class _ArgParser_YAML_NETWORK(ArgParser, NETWORK_Mixin, YAML_Mixin):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_YAML()
+        self.add_argument_NETWORK()
+
+        
 @enforce_types
 class _ArgParser_APPROACH_YAML_NETWORK(
     ArgParser,
@@ -86,16 +107,6 @@ class _ArgParser_APPROACH_YAML_NETWORK(
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
         self.add_argument_APPROACH()
-        self.add_argument_YAML()
-        self.add_argument_NETWORK()
-
-
-@enforce_types
-class _ArgParser_YAML_NETWORK(ArgParser, NETWORK_Mixin, YAML_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
         self.add_argument_YAML()
         self.add_argument_NETWORK()
 
@@ -116,9 +127,9 @@ PredictoorArgParser = _ArgParser_APPROACH_YAML_NETWORK
 
 TraderArgParser = _ArgParser_APPROACH_YAML_NETWORK
 
-# "pdr claim_OCEAN" doesn't have args to parse, so nothing needed here
+ClaimOceanArgParser = _ArgParser_YAML
 
-# "pdr claim_ROSE" doesn't have args to parse, so nothing needed here
+ClaimRoseArgParser = _ArgParser_YAML
 
 
 @enforce_types

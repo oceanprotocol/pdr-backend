@@ -5,14 +5,9 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.token import Token, NativeToken
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.addresses import get_opf_addresses
-
-MAINNET_ID = 23294
-TESTNET_ID = 23295
-OCEAN_ADDRS = {
-    MAINNET_ID: "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520",
-    TESTNET_ID: "0x973e69303259B0c2543a38665122b773D28405fB",
-}
+from pdr_backend.util.constants import \
+    SAPPHIRE_TESTNET_CHAINID, SAPPHIRE_MAINNET_CHAINID, OCEAN_TOKEN_ADDRS
+from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 
 @enforce_types
@@ -22,11 +17,11 @@ def topup_main(ppss: PPSS):
 
     web3_config = ppss.web3_pp.web3_config
     chain_id = web3_config.w3.eth.chain_id
-    if chain_id not in [MAINNET_ID, TESTNET_ID]:
+    if chain_id not in [SAPPHIRE_MAINNET_CHAINID, SAPPHIRE_TESTNET_CHAINID]:
         print("Unknown network")
         sys.exit(1)
 
-    OCEAN = Token(web3_config, OCEAN_ADDRS[chain_id])
+    OCEAN = Token(web3_config, OCEAN_TOKEN_ADDRS[chain_id])
     ROSE = NativeToken(web3_config)
 
     owner_OCEAN_bal = int(OCEAN.balanceOf(web3_config.owner)) / 1e18

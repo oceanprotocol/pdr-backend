@@ -57,6 +57,9 @@ dfbuyer_ss:
   consume_interval_seconds: 42
   weekly_spending_limit: 25401600 # 42 * 7 * 24 * 3600
 
+payout_ss:
+  batch_size: 250
+
 web3_pp:
   default_network: development
   

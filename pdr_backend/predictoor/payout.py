@@ -3,10 +3,12 @@ import time
 from typing import Any, List
 from enforce_typing import enforce_types
 
+from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.wrapped_token import WrappedToken
+from pdr_backend.ppss import PPSS
+from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.subgraph import query_pending_payouts, wait_until_subgraph_syncs
-from pdr_backend.models.dfrewards import DFRewards
 
 
 @enforce_types
@@ -38,49 +40,64 @@ def request_payout_batches(
 
     print("\nBatch completed")
 
-
-def do_payout():
-    config = BaseConfig()  # pylint: disable=undefined-variable
-    owner = config.web3_config.owner
-    BATCH_SIZE = int(os.getenv("BATCH_SIZE", "250"))
+    
+@enforce_types
+def do_ocean_payout(ppss: PPSS):
+    web3_config = ppss.web3_pp.web3_config
+    subgraph_url: str = ppss.web3_pp.subgraph_url
+    
+    assert ppss.web3_pp.network == "sapphire-mainnet"
+    assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID, \
+        "unsupported network"
+    
     print("Starting payout")
-    wait_until_subgraph_syncs(config.web3_config, config.subgraph_url)
+    wait_until_subgraph_syncs(web3_config, subgraph_url)
     print("Finding pending payouts")
-    pending_payouts = query_pending_payouts(config.subgraph_url, owner)
+    pending_payouts = query_pending_payouts(subgraph_url, web3_config.owner)
     total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
     print(f"Found {total_timestamps} slots")
 
-    for contract_address in pending_payouts:
-        print(f"Claiming payouts for {contract_address}")
-        contract = PredictoorContract(config.web3_config, contract_address)
-        request_payout_batches(contract, BATCH_SIZE, pending_payouts[contract_address])
+    for pdr_contract_addr in pending_payouts:
+        print(f"Claiming payouts for {pdr_contract_addr}")
+        pdr_contract = PredictoorContract(web3_config, pdr_contract_addr)
+        request_payout_batches(
+            pdr_contract,
+            ppss.payout_ss.batch_size,
+            pending_payouts[pdr_contract_addr])
 
-
-def do_rose_payout():
-    address = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
-    wrapped_rose = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
-    config = BaseConfig()  # pylint: disable=undefined-variable
-    owner = config.web3_config.owner
-    if config.web3_config.w3.eth.chain_id != 23294:
-        raise Exception("Unsupported network")
-    contract = DFRewards(config.web3_config, address)
-    claimable_rewards = contract.get_claimable_rewards(owner, wrapped_rose)
+        
+@enforce_types
+def do_rose_payout(ppss: PPSS):
+    web3_config = ppss.web3_pp.web3_config
+    subgraph_url: str = ppss.web3_pp.subgraph_url
+    
+    assert ppss.web3_pp.network == "sapphire-mainnet", "unsupported network"
+    assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID, \
+        "unsupported network"
+    
+    dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
+    wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+    
+    dfrewards_contract = DFRewards(web3_config, dfrewards_addr)
+    claimable_rewards = dfrewards_contract.get_claimable_rewards(
+        web3_config.owner, wROSE_addr
+    )
     print(f"Found {claimable_rewards} wROSE available to claim")
 
     if claimable_rewards > 0:
         print("Claiming wROSE rewards...")
-        contract.claim_rewards(owner, wrapped_rose)
+        dfrewards_contract.claim_rewards(web3_config.owner, wROSE_addr)
     else:
         print("No rewards available to claim")
 
     print("Converting wROSE to ROSE")
     time.sleep(10)
-    wrose = WrappedToken(config.web3_config, wrapped_rose)
-    wrose_balance = wrose.balanceOf(config.web3_config.owner)
-    if wrose_balance == 0:
+    wROSE = WrappedToken(config.web3_config, wROSE_addr)
+    wROSE_bal = wROSE.balanceOf(config.web3_config.owner)
+    if wROSE_bal == 0:
         print("wROSE balance is 0")
     else:
-        print(f"Found {wrose_balance/1e18} wROSE, converting to ROSE...")
-        wrose.withdraw(wrose_balance)
+        print(f"Found {wROSE_bal/1e18} wROSE, converting to ROSE...")
+        wROSE.withdraw(wROSE_bal)
 
     print("ROSE reward claim done")

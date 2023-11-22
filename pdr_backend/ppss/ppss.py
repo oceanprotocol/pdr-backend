@@ -7,6 +7,7 @@ from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.model_ss import ModelSS
+from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_pp import TraderPP
@@ -45,6 +46,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.model_ss = ModelSS(d["model_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
+        self.payout_ss = PayoutSS(d["payout_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
         self.trader_pp = TraderPP(d["trader_pp"])
         self.trader_ss = TraderSS(d["trader_ss"])
@@ -56,6 +58,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s += f"data_pp={self.data_pp}\n"
         s += f"data_ss={self.data_ss}\n"
         s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
+        s += f"payout_ss={self.payout_ss}\n"
         s += f"model_ss={self.model_ss}\n"
         s += f"predictoor_ss={self.predictoor_ss}\n"
         s += f"trader_pp={self.trader_pp}\n"

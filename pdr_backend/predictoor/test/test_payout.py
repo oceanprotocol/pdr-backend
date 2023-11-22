@@ -11,6 +11,7 @@ from pdr_backend.predictoor.payout import (
     do_rose_payout,
     request_payout_batches,
 )
+from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -84,7 +85,7 @@ def test_do_rose_payout():
     mock_config.subgraph_url = ""
     mock_config.web3_config = Mock(spec=Web3Config)
     mock_config.web3_config.w3 = Mock()
-    mock_config.web3_config.w3.eth.chain_id = 23294
+    mock_config.web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
     mock_config.web3_config.owner = "mock_owner"
 
     mock_contract = Mock(spec=DFRewards)
