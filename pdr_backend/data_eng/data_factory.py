@@ -17,6 +17,7 @@ from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
+    transform_df,
     concat_next_df,
     save_csv,
     load_csv,
@@ -82,7 +83,7 @@ class DataFactory:
             print("      Given start time, no data to gather. Exit.")
             return
 
-        # Fill in df
+        # fill in
         df = initialize_df(OHLCV_COLS)
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
@@ -140,8 +141,8 @@ class DataFactory:
             print("      Given start time, no data to gather. Exit.")
             return
 
-        # Fill in df
-        df = initialize_df(OHLCV_COLS)
+        # empty ohlcv df
+        df = initialize_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
 
@@ -171,6 +172,7 @@ class DataFactory:
 
             raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
             next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_COLS)
+            # concat both TOHLCV data
             df = concat_next_df(df, next_df)
 
             if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
@@ -182,7 +184,10 @@ class DataFactory:
             print(f"      newest_ut_value: {newest_ut_value}")
             st_ut = newest_ut_value + self.pp.timeframe_ms
 
-        # output to csv
+        # add datetime
+        df = transform_df(df)
+
+        # output to parquet
         save_parquet(filename, df)
 
     def _calc_start_ut_maybe_delete(self, filename: str) -> int:

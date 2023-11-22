@@ -9,57 +9,63 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
+from polars import col
 import pyarrow.dataset as ds
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
-    TOHLCV_DTYPES_PL,
+    TOHLCV_DTYPES_PL
 )
 
 
 # TODO: Move this implementation to data_factory.ohlcv module
 @enforce_types
-def initialize_df(filter_cols: List[str]) -> pl.DataFrame:
-    """Start a new df, with the expected columns, index, and dtypes
-    It's ok whether cols has "timestamp" or not. Same for "datetime".
+def initialize_df(cols: List[str] = None) -> pl.DataFrame:
+    """Start an empty df with the expected columns and schema
     Polars has no index, so "timestamp" and "datetime" are regular cols
+    Applies transform to get columns (including datetime)
     """
+    
+    # preconditions
+    assert "timestamp" not in cols
+    
     # define schema
-    cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-    schema = {col: cand_dtypes[col] for col in filter_cols}
+    schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
 
-    df = pl.DataFrame(data=None, schema=schema)
-    if "timestamp" in df.columns:
-        df = df.with_columns(
-            [
-                pl.from_epoch("timestamp", time_unit="ms")
-                .dt.replace_time_zone("UTC")
-                .alias("datetime")
-            ]
-        )
-
+    # create df
+    df = pl.DataFrame(data=[], schema=schema).select(cols if cols else "*")
     return df
 
 
-# TODO: Move transforms & manipulations out
-# TODO: Make this only check schemas and concat
-@enforce_types
-def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
-    """Add a next df to existing df, with the expected columns etc.
-    The existing df *should* have the 'datetime' col, and next_df should *not*.
+# TODO: Move this implementation to data_factory.ohlcv module
+def transform_df(df: pl.DataFrame,) -> pl.DataFrame:
+    """Apply the transform on TOHLCV struct.
+    - Adds datetime
     """
-    assert "datetime" in df.columns
-    assert "datetime" not in next_df.columns
-    next_df = next_df.with_columns(
+
+    # preconditions
+    assert "timestamp" in df.columns
+    assert "datetime" not in df.columns
+    
+    # add datetime
+    df = df.with_columns(
         [
             pl.from_epoch("timestamp", time_unit="ms")
             .dt.replace_time_zone("UTC")
-            .alias("datetime") if "timestamp" in df.columns else None
+            .alias("datetime")
         ]
     )
+    return df
 
+# TODO: Make this only check schemas and concat
+@enforce_types
+def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
+    """Add a next_df to existing df, with the expected columns etc.
+    Makes sure that both schemas match before concatenating.
+    """
+    assert df.schema == next_df.schema
     df = pl.concat([df, next_df])
     return df
 
@@ -193,32 +199,33 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
       df -- dataframe
 
     @notes
-      Don't specify "timestamp" as a column because it's the df *index*
+      Polars does not have an index. "timestamp" is a regular col and required for "datetime"
       Don't specify "datetime" as a column, as that'll get calc'd from timestamp
     """
+    # handle cols
     if cols is None:
-        cols = OHLCV_COLS
-    assert "timestamp" not in cols
+        cols = TOHLCV_COLS
+    if "timestamp" not in cols:
+        cols = ["timestamp"] + cols
     assert "datetime" not in cols
-    cols = ["timestamp"] + cols
+    
+    # set st, fin
+    st = st if st is not None else 0
+    fin = fin if fin is not None else np.inf    
 
-    # set dtypes
-    cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES))
-    dtypes = {col: cand_dtypes[col] for col in cols}
-
-    # load
+    # load tohlcv
     df = pl.read_parquet(
         filename,
         columns=cols,
-    ).with_columns(dtypes)
-
-    st = st if st is not None else 0
-    fin = fin if fin is not None else np.inf
+    )
     df = df.filter((pl.col("timestamp") >= st) & (pl.col("timestamp") <= fin))
 
-    # add in datetime column
+    # initialize df and enforce schema
     df0 = initialize_df(cols)
     df = concat_next_df(df0, df)
+
+    # add in datetime column
+    df = transform_df(df)
 
     # postconditions, return
     # TODO: Helper to go from np<->pl schema/dtypes
