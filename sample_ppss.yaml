@@ -48,6 +48,10 @@ sim_ss: # sim only
   do_plot: True
   log_dir: logs
 
+trueval_ss:
+  batch_size: 30
+  sleep_time: 30
+
 web3_pp:  
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
@@ -64,7 +68,7 @@ web3_pp:
     owner_addrs: 0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
 
   barge-predictoor-bot:
-    address_file: "~/address-barge-pdrbot.json"
+    address_file: "~/address-barge-predictoor-bot.json"
     private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
     rpc_url: http://4.245.224.119:8545 # from VPS 
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS

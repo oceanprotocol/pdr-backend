@@ -4,6 +4,7 @@ import pytest
 from pdr_backend.util.pairstr import (
     unpack_pairs_str,
     unpack_pair_str,
+    pack_pair_str_list,
     verify_pairs_str,
     verify_pair_str,
     verify_base_str,
@@ -31,6 +32,28 @@ def test_unpack_pairs_str():
         "ETH-USDC",
         "DOT-DAI",
     ]
+
+
+# ==========================================================================
+# pack..() functions
+
+
+@enforce_types
+def test_pack_pair_str_list():
+    assert pack_pair_str_list(None) is None
+    assert pack_pair_str_list([]) is None
+    assert pack_pair_str_list(["ADA-USDT"]) == "ADA-USDT"
+    assert pack_pair_str_list(["ADA-USDT", "BTC-USDT"]) == "ADA-USDT,BTC-USDT"
+    assert pack_pair_str_list(["ADA/USDT", "BTC-USDT"]) == "ADA/USDT,BTC-USDT"
+
+    with pytest.raises(TypeError):
+        pack_pair_str_list("")
+
+    with pytest.raises(ValueError):
+        pack_pair_str_list(["adfs"])
+
+    with pytest.raises(ValueError):
+        pack_pair_str_list(["ADA-USDT fgds"])
 
 
 # ==========================================================================

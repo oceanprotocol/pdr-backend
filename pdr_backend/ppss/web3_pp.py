@@ -8,7 +8,10 @@ from web3 import Web3
 from pdr_backend.models.feed import dictToFeed, Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
+from pdr_backend.util.exchangestr import pack_exchange_str_list
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.pairstr import pack_pair_str_list
+from pdr_backend.util.timeframestr import pack_timeframe_str_list
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
@@ -123,11 +126,11 @@ class Web3PP(StrMixin):
           feeds -- dict of [feed_addr] : Feed
         """
         feed_dicts = query_feed_contracts(
-            self.subgraph_url,
-            pair_filters,
-            timeframe_filters,
-            source_filters,
-            [self.owner_addrs],
+            subgraph_url=self.subgraph_url,
+            pairs_string=pack_pair_str_list(pair_filters),
+            timeframes_string=pack_timeframe_str_list(timeframe_filters),
+            sources_string=pack_exchange_str_list(source_filters),
+            owners_string=[self.owner_addrs],
         )
         feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
         return feeds

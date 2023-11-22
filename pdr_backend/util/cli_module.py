@@ -1,6 +1,7 @@
 import sys
 
 from enforce_typing import enforce_types
+from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.publisher.main import publish_assets
@@ -174,8 +175,9 @@ def do_dfbuyer():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
-    raise AssertionError("FIXME")
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    agent = DFBuyerAgent(ppss)
+    agent.run()
 
 
 @enforce_types

@@ -96,8 +96,11 @@ def test_web3_pp__get_pending_slots(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP("network1", _D)
 
-    def _mock_get_pending_slots(*args):
-        timestamp = args[1]
+    def _mock_get_pending_slots(*args, **kwargs):
+        if len(args) >= 2:
+            timestamp = args[1]
+        else:
+            timestamp = kwargs["timestamp"]
         return [f"1_{timestamp}", f"2_{timestamp}"]
 
     with patch("pdr_backend.ppss.web3_pp.get_pending_slots", _mock_get_pending_slots):

@@ -4,4 +4,3 @@ from pdr_backend.util import cli_module
 
 if __name__ == "__main__":
     cli_module._do_main()
-

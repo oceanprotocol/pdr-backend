@@ -2,6 +2,7 @@ import os
 from typing import Optional
 
 import yaml
+from pdr_backend.dfbuyer.dfbuyer_ss import DFBuyerSS
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -50,6 +51,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.sim_ss = SimSS(d["sim_ss"])
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.publisher_ss = PublisherSS(network, d["publisher_ss"])
+        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
 
     def __str__(self):
         s = ""
@@ -102,10 +104,6 @@ trader_pp:
       - 100000 USDT
       - 0 BTC
 
-trueval_ss:
-  batch_size: 30
-  sleep_time: 30
-
 trader_ss:
   sim_only:
     buy_amt: 10000 USDT
@@ -114,9 +112,18 @@ trader_ss:
     max_tries: 10
     position_size: 3
 
+dfbuyer_ss:
+  batch_size: 20
+  weekly_spending_limit: 37000
+  consume_interval_seconds: 86400
+
 sim_ss:
   do_plot: False
   log_dir: {log_dir}
+
+trueval_ss:
+  batch_size: 30
+  sleep_time: 30
 
 web3_pp:
   sapphire-testnet:
