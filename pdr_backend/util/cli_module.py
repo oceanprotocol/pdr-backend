@@ -174,7 +174,7 @@ def do_dfbuyer():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)  # pylint: disable=unused-variable
+    ppss = PPSS(args.NETWORK, args.YAML_FILE)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
