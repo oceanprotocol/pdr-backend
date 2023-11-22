@@ -45,7 +45,6 @@ def mock_publish():
 
 # pylint: disable=redefined-outer-name
 def test_publish_assets(
-    mock_getenv_or_exit,
     mock_web3_config,
     mock_token,
     mock_get_address,
@@ -53,11 +52,6 @@ def test_publish_assets(
     mock_publish,
     tmpdir,
 ):
-    mock_getenv_or_exit.side_effect = [
-        "mock_rpc_url",
-        "mock_private_key",
-        "mock_fee_collector",
-    ]
     mock_web3_config.w3.eth.chain_id = 8996
     mock_get_address.return_value = "mock_ocean_address"
     mock_token_instance = MagicMock()
@@ -67,8 +61,6 @@ def test_publish_assets(
     ppss = PPSS(test_config)
     publish_assets(ppss)
 
-    mock_getenv_or_exit.assert_any_call("RPC_URL")
-    mock_getenv_or_exit.assert_any_call("PRIVATE_KEY")
     mock_get_address.assert_called_once_with(8996, "Ocean")
     mock_fund_dev_accounts.assert_called_once()
     mock_publish.assert_any_call(
