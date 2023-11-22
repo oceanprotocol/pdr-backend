@@ -237,7 +237,7 @@ Now, repeat 2 & 3 above, to up a _second_ VPS & Barge, for local testing.
 - Assume its IP address is 74.234.16.165
 - The "OR" options in sections 2 above use this second IP address. Therefore you can go through the flow easily.
 
-### Set Local Ennvars
+### Set Local Envars
 
 To envvars that use the second Barge. In local console:
 ```console
