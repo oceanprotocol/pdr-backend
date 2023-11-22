@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from enforce_typing import enforce_types
 
@@ -78,7 +78,7 @@ def unpack_pair_str(pair_str: str, do_verify: bool = True) -> Tuple[str, str]:
 
 
 @enforce_types
-def pack_pair_str_list(pair_str_list) -> str:
+def pack_pair_str_list(pair_str_list) -> Union[str, None]:
     """
     Example: Given ["BTC/USDT","ETH/DAI"]
     Return "BTC/USDT,ETH/DAI"

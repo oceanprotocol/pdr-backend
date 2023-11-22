@@ -1,9 +1,11 @@
+from typing import Union
+
 import ccxt
 from enforce_typing import enforce_types
 
 
 @enforce_types
-def pack_exchange_str_list(exchange_str_list) -> str:
+def pack_exchange_str_list(exchange_str_list) -> Union[str, None]:
     """
     Example: Given ["binance","kraken"]
     Return "binance,kraken"
