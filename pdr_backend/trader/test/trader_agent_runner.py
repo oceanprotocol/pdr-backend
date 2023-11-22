@@ -33,9 +33,11 @@ def mock_ppss(predictoor_contract, tmpdir):
         "0x0000000000000000000000000000000000000000": predictoor_contract
     }
 
-    ppss.trader_ss.set_set_max_tries(10)
+    ppss.trader_ss.set_max_tries(10)
     ppss.trader_ss.set_position_size(10.0)
     ppss.trader_ss.set_min_buffer(20)
+
+    return ppss
 
 
 @enforce_types
@@ -44,7 +46,7 @@ def run_no_feeds(tmpdir, agent_class):
     ppss = PPSS("barge-pytest", yaml_str=yaml_str)
     ppss.data_pp.set_predict_feeds([])
     ppss.web3_pp.get_feeds = Mock()
-    ppss.get_feeds.return_value = {}
+    ppss.web3_pp.get_feeds.return_value = {}
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(ValueError):
         agent_class(ppss)
