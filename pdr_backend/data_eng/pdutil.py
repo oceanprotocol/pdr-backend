@@ -9,8 +9,6 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
-from polars import col
-import pyarrow.dataset as ds
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
@@ -22,7 +20,7 @@ from pdr_backend.data_eng.constants import (
 
 # TODO: Move this implementation to data_factory.ohlcv module
 @enforce_types
-def initialize_df(cols: List[str] = None) -> pl.DataFrame:
+def initialize_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
     Polars has no index, so "timestamp" and "datetime" are regular cols
     Applies transform to get columns (including datetime)
@@ -150,7 +148,7 @@ def load_csv(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
     df = concat_next_df(df0, df)
 
     # postconditions, return
-    assert "timestamp" in df.columns and df["timestamp"].dtype == pl.int64
+    assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
     assert "datetime" in df.columns and df["datetime"].dtype == pl.Datetime
     return df
 

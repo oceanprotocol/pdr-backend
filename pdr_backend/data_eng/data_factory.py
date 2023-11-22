@@ -22,7 +22,6 @@ from pdr_backend.data_eng.pdutil import (
     save_csv,
     load_csv,
     save_parquet,
-    load_parquet,
     has_data,
     oldest_ut,
     newest_ut,
