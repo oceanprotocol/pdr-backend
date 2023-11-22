@@ -73,7 +73,7 @@ def fast_test_yaml_str(tmpdir):
         s = f.read()
 
     if CACHED_PPSS is None:
-        CACHED_PPSS = S
+        CACHED_PPSS = s
         
     assert "csv_dir: csvs" in s
     s = s.replace("csv_dir: csvs", f"csv_dir: {os.path.join(tmpdir, 'csvs')}")
