@@ -3,6 +3,7 @@ import os
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 
 from pdr_backend.data_eng.constants import (
@@ -18,7 +19,7 @@ from pdr_backend.data_eng.pdutil import (
     has_data,
     oldest_ut,
     newest_ut,
-    _get_last_line,
+    _get_tail_df,
 )
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
@@ -48,7 +49,7 @@ def test_concat_next_df():
     df = initialize_df(TOHLCV_COLS)
     assert len(df) == 0
 
-    next_df = pd.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, columns=TOHLCV_COLS)
+    next_df = pl.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, schema=TOHLCV_COLS)
     assert len(next_df) == 4
 
     # add 4 rows to empty df
@@ -57,7 +58,7 @@ def test_concat_next_df():
     _assert_TOHLCVd_cols_and_types(df)
 
     # from df with 4 rows, add 1 more row
-    next_df = pd.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, columns=TOHLCV_COLS)
+    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=TOHLCV_COLS)
     assert len(next_df) == 1
 
     df = concat_next_df(df, next_df)
@@ -66,11 +67,12 @@ def test_concat_next_df():
 
 
 @enforce_types
-def _assert_TOHLCVd_cols_and_types(df: pd.DataFrame):
+def _assert_TOHLCVd_cols_and_types(df: pl.DataFrame):
+    # TODO - Fix Polar checks
     assert df.columns.tolist() == OHLCV_COLS + ["datetime"]
     assert df.dtypes.tolist()[:-1] == OHLCV_DTYPES
     assert str(df.dtypes.tolist()[-1]) == "datetime64[ns, UTC]"
-    assert df.index.name == "timestamp" and df.index.dtype == np.int64
+    assert "timestamp" in df.columns() and df["timestamp"].dtype == np.int64
 
 
 def _filename(tmpdir) -> str:
@@ -200,15 +202,30 @@ def test_oldest_ut_and_newest_ut__no_data(tmpdir):
 
 @enforce_types
 def test_get_last_line(tmpdir):
-    filename = os.path.join(tmpdir, "foo.csv")
+    df = pl.DataFrame(
+        {
+            "timestamp": [0, 1, 2, 3],
+            "open": [100, 101, 102, 103],
+            "high": [100, 101, 102, 103],
+            "low": [100, 101, 102, 103],
+            "close": [100, 101, 102, 103],
+            "volume": [100, 101, 102, 103],
+        }
+    )
 
-    with open(filename, "w") as f:
-        f.write(
-            """line0 boo bo bum
-line1 foo bar
-line2 bah bah
-line3 ha ha lol"""
-        )
-    target_last_line = "line3 ha ha lol"
-    found_last_line = _get_last_line(filename)
-    assert found_last_line == target_last_line
+    filename = os.path.join(tmpdir, "foo.parquet")
+    df.write_parquet(filename)
+
+    target_tail_df = pl.DataFrame(
+        {
+            "timestamp": [3],
+            "open": [103],
+            "high": [103],
+            "low": [103],
+            "close": [103],
+            "volume": [103],
+        }
+    )
+
+    tail_df = _get_tail_df(filename, n=1)
+    assert tail_df.frame_equal(target_tail_df)

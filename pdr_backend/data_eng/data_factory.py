@@ -5,6 +5,7 @@ from typing import Dict
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
@@ -19,6 +20,8 @@ from pdr_backend.data_eng.pdutil import (
     concat_next_df,
     save_csv,
     load_csv,
+    save_parquet,
+    load_parquet,
     has_data,
     oldest_ut,
     newest_ut,
@@ -121,6 +124,66 @@ class DataFactory:
 
         # output to csv
         save_csv(filename, df)
+
+    def _update_hist_parquet_at_exch_and_pair(
+        self, exch_str: str, pair_str: str, fin_ut: int
+    ):
+        pair_str = pair_str.replace("/", "-")
+        print(f"    Update parquet at exchange={exch_str}, pair={pair_str}.")
+
+        filename = self._hist_parquet_filename(exch_str, pair_str)
+        print(f"      filename={filename}")
+
+        st_ut = self._calc_start_ut_maybe_delete(filename)
+        print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
+        if st_ut > min(current_ut(), fin_ut):
+            print("      Given start time, no data to gather. Exit.")
+            return
+
+        # Fill in df
+        df = initialize_df(OHLCV_COLS)
+        while True:
+            print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
+
+            exch = self.ss.exchs_dict[exch_str]
+
+            # C is [sample x signal(TOHLCV)]. Row 0 is oldest
+            # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
+            raw_tohlcv_data = exch.fetch_ohlcv(
+                symbol=pair_str.replace("-", "/"),  # eg "BTC/USDT"
+                timeframe=self.pp.timeframe,  # eg "5m", "1h"
+                since=st_ut,  # timestamp of first candle
+                limit=1000,  # max # candles to retrieve
+            )
+            uts = [vec[0] for vec in raw_tohlcv_data]
+            if len(uts) > 1:
+                # Ideally, time between ohclv candles is always 5m or 1h
+                # But exchange data often has gaps. Warn about worst violations
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+                diffs_m = diffs_ms / 1000 / 60  # in minutes
+                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
+
+                if min(diffs_m) < mn_thr:
+                    print(f"      **WARNING: short candle time: {min(diffs_m)} min")
+                if max(diffs_m) > mx_thr:
+                    print(f"      **WARNING: long candle time: {max(diffs_m)} min")
+
+            raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
+            next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_COLS)
+            df = concat_next_df(df, next_df)
+
+            if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
+                break
+
+            # prep next iteration
+            newest_ut_value = df.tail(1)["timestamp"][0]
+
+            print(f"      newest_ut_value: {newest_ut_value}")
+            st_ut = newest_ut_value + self.pp.timeframe_ms
+
+        # output to csv
+        save_parquet(filename, df)
 
     def _calc_start_ut_maybe_delete(self, filename: str) -> int:
         """
@@ -294,6 +357,16 @@ class DataFactory:
         """
         pair_str = pair_str.replace("/", "-")
         basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.csv"
+        filename = os.path.join(self.ss.csv_dir, basename)
+        return filename
+
+    def _hist_parquet_filename(self, exch_str, pair_str) -> str:
+        """
+        Given exch_str and pair_str (and self path),
+        compute parquet filename
+        """
+        pair_str = pair_str.replace("/", "-")
+        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
         filename = os.path.join(self.ss.csv_dir, basename)
         return filename
 

@@ -20,6 +20,8 @@ install_requirements = [
     "numpy",
     "pandas",
     "pathlib",
+    "polars",
+    "pyarrow",
     "pylint",
     "pytest",
     "pytest-asyncio",
