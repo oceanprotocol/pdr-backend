@@ -1,5 +1,3 @@
-from typing import List
-
 from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import CAND_TIMEFRAMES

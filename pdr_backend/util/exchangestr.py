@@ -1,5 +1,3 @@
-from typing import List
-
 import ccxt
 from enforce_typing import enforce_types
 
