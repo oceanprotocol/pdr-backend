@@ -10,6 +10,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
     TOHLCV_COLS,
+    TOHLCV_DTYPES,
     OHLCV_DTYPES_PL,
     TOHLCV_DTYPES_PL,
 )
@@ -17,8 +18,8 @@ from pdr_backend.data_eng.pdutil import (
     initialize_df,
     transform_df,
     concat_next_df,
-    save_csv,
-    load_csv,
+    save_parquet,
+    load_parquet,
     has_data,
     oldest_ut,
     newest_ut,
@@ -115,7 +116,7 @@ def _filename(tmpdir) -> str:
 def test_load_basic(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_csv(filename, df)
+    save_parquet(filename, df)
 
     # simplest specification. Don't specify cols, st or fin
     df2 = load_csv(filename)
@@ -139,21 +140,33 @@ def test_load_basic(tmpdir):
 
 @enforce_types
 def test_load_append(tmpdir):
-    # save 4-row csv
+    # save 4-row parquet
     filename = _filename(tmpdir)
     df_4_rows = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_csv(filename, df_4_rows)  # write new file
+    
+    # saving tohlcv w/o datetime throws an error
+    with pytest.raises(Exception):
+        save_parquet(filename, df_4_rows)  # write new file
 
-    # append 1 row to csv
+    # transform then save
+    df_4_rows = transform_df(df_4_rows)
+    save_parquet(filename, df_4_rows)  # write new file
+
+    # append 1 row to parquet
     df_1_row = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
-    save_csv(filename, df_1_row)  # will append existing file
+    df_1_row = transform_df(df_1_row)
+    save_parquet(filename, df_1_row)  # will append existing file
 
-    # test
+    # test that us doing a manual concat is the same as the load
+    schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     df_5_rows = concat_next_df(
-        df_4_rows, pd.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, columns=TOHLCV_COLS)
+        df_4_rows, transform_df(pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema))
     )
-    df_5_rows_loaded = load_csv(filename)
+    df_5_rows_loaded = load_parquet(filename)
+    
+    # we don't need to transform
     _assert_TOHLCVd_cols_and_types(df_5_rows_loaded)
+
     assert len(df_5_rows_loaded) == 5
     assert str(df_5_rows) == str(df_5_rows_loaded)
 
@@ -163,32 +176,36 @@ def test_load_filtered(tmpdir):
     # save
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_csv(filename, df)
+    df = transform_df(df)
+    save_parquet(filename, df)
 
     # load with filters on rows & columns
     cols = OHLCV_COLS[:2]  # ["open", "high"]
     timestamps = [row[0] for row in FOUR_ROWS_RAW_TOHLCV_DATA]
     st = timestamps[1]  # 1686806400000
     fin = timestamps[2]  # 1686806700000
-    df2 = load_csv(filename, cols, st, fin)
+    df2 = load_parquet(filename, cols, st, fin)
 
     # test entries
     assert len(df2) == 2
-    assert len(df2.index.values) == 2
-    assert df2.index.values.tolist() == timestamps[1:3]
-
+    assert "timestamp" in df2.columns
+    assert len(df2["timestamp"]) == 2
+    assert df2["timestamp"].to_list() == timestamps[1:3]
+    
     # test cols and types
-    assert df2.columns.tolist() == OHLCV_COLS[:2] + ["datetime"]
-    assert df2.dtypes.tolist()[:-1] == OHLCV_DTYPES[:2]
-    assert str(df2.dtypes.tolist()[-1]) == "datetime64[ns, UTC]"
-    assert df2.index.name == "timestamp"
-    assert df2.index.dtype == np.int64
-
+    assert df2["timestamp"].dtype == pl.Int64
+    assert list(df2.columns) == TOHLCV_COLS[:3] + ["datetime"]
+    assert list(df2.schema.values())[:-1] == TOHLCV_DTYPES_PL[:3]
+    assert str(list(df2.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
+    
 
 @enforce_types
 def _df_from_raw_data(raw_data: list):
-    df = initialize_df(OHLCV_COLS)
-    next_df = pd.DataFrame(raw_data, columns=TOHLCV_COLS)
+    df = initialize_df(TOHLCV_COLS)
+    
+    schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+    next_df = pl.DataFrame(raw_data, schema=schema)
+
     df = concat_next_df(df, next_df)
     return df
 

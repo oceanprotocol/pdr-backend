@@ -159,10 +159,11 @@ def save_parquet(filename: str, df: pl.DataFrame):
     parquet only supports appending via the pyarrow engine
     """
     # preconditions
-    assert df.columns == TOHLCV_COLS + ["datetime"]
+    assert df.columns[:6] == TOHLCV_COLS
+    assert "datetime" in df.columns
 
-    # parquet column order: timestamp (index), datetime, O, H, L, C, V
-    columns = ["datetime"] + TOHLCV_COLS
+    # parquet column order: timestamp, datetime, O, H, L, C, V
+    columns = ["timestamp", "datetime"] + OHLCV_COLS
 
     df = df.select(columns)
     if os.path.exists(filename):  # append existing file
@@ -178,7 +179,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
 
 # TODO - Move ohlcv logic out, keep util generic
 @enforce_types
-def load_parquet(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
+def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     """Load parquet file as a dataframe.
 
     Features:
@@ -197,7 +198,10 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pd.DataFrame:
 
     @notes
       Polars does not have an index. "timestamp" is a regular col and required for "datetime"
-      Don't specify "datetime" as a column, as that'll get calc'd from timestamp
+      (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
+      
+      TODO: Fix (1), save_parquet already saves out dataframe.
+      Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
     """
     # handle cols
     if cols is None:
