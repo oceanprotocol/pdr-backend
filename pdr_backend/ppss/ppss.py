@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import yaml
-from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerSS
+from pdr_backend.dfbuyer.dfbuyer_ss import DFBuyerSS
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
