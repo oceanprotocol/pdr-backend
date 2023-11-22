@@ -97,6 +97,13 @@ predictoor_ss:
     stake_amount: 1
   approach3:
 
+publisher_ss:
+  sapphire-mainnet:
+    fee_collector_address: 0x0000000000000000000000000000000000000000
+  sapphire-testnet:
+    fee_collector_address: 0x0000000000000000000000000000000000000000
+
+
 trader_pp:
   sim_only:
     fee_percent: 0.0
