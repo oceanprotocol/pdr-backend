@@ -2,20 +2,17 @@ from pdr_backend.models.token import Token
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.env import getenv_or_exit
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.ppss.ppss import PPSS
 
 
-def main():
-    rpc_url = getenv_or_exit("RPC_URL")
-    private_key = getenv_or_exit("PRIVATE_KEY")
-
+def publish_assets(ppss: PPSS):
     # pairs to deploy on testnet and mainnet
     pair_list = ["BTC", "ETH", "BNB", "XRP", "ADA", "DOGE", "SOL", "LTC", "TRX", "DOT"]
 
     # token price
     rate = 3 / (1 + 0.2 + 0.001)
 
-    web3_config = Web3Config(rpc_url, private_key)
+    web3_config = ppss.web3_pp.web3_config
 
     if web3_config.w3.eth.chain_id == 8996:
         print("Funding dev accounts and publishing pairs on local network...")
@@ -142,8 +139,3 @@ def main():
                 web3_config=web3_config,
             )
         print("Publish done")
-
-
-if __name__ == "__main__":
-    print("Publisher start")
-    main()
