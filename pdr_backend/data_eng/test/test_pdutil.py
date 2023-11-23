@@ -2,15 +2,12 @@ import os
 
 from enforce_typing import enforce_types
 import numpy as np
-import pandas as pd
 import polars as pl
 import pytest
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
-    OHLCV_DTYPES,
     TOHLCV_COLS,
-    TOHLCV_DTYPES,
     OHLCV_DTYPES_PL,
     TOHLCV_DTYPES_PL,
 )
@@ -209,7 +206,7 @@ def test_load_filtered(tmpdir):
 
 
 @enforce_types
-def _df_from_raw_data(raw_data: list):
+def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     df = initialize_df(TOHLCV_COLS)
 
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))

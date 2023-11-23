@@ -6,17 +6,17 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pdr_backend.data_eng.constants import TOHLCV_COLS
+from pdr_backend.data_eng.constants import TOHLCV_COLS, TOHLCV_DTYPES_PL
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
 from pdr_backend.data_eng.data_factory import DataFactory
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
+    transform_df,
     concat_next_df,
-    load_csv,
     load_parquet,
 )
-from pdr_backend.util.mathutil import has_nan, fill_nans
+# from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr
 
 MS_PER_5M_EPOCH = 300000
@@ -141,109 +141,116 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
 
-# # ======================================================================
-# # end-to-end tests
+# ======================================================================
+# end-to-end tests
 
-# BINANCE_ETH_DATA = [
-#     # time          #o   #h  #l    #c    #v
-#     [1686805500000, 0.5, 12, 0.12, 1.1, 7.0],
-#     [1686805800000, 0.5, 11, 0.11, 2.2, 7.0],
-#     [1686806100000, 0.5, 10, 0.10, 3.3, 7.0],
-#     [1686806400000, 1.1, 9, 0.09, 4.4, 1.4],
-#     [1686806700000, 3.5, 8, 0.08, 5.5, 2.8],
-#     [1686807000000, 4.7, 7, 0.07, 6.6, 8.1],
-#     [1686807300000, 4.5, 6, 0.06, 7.7, 8.1],
-#     [1686807600000, 0.6, 5, 0.05, 8.8, 8.1],
-#     [1686807900000, 0.9, 4, 0.04, 9.9, 8.1],
-#     [1686808200000, 2.7, 3, 0.03, 10.10, 8.1],
-#     [1686808500000, 0.7, 2, 0.02, 11.11, 8.1],
-#     [1686808800000, 0.7, 1, 0.01, 12.12, 8.3],
-# ]
-
-
-# @enforce_types
-# def _addval(DATA: list, val: float) -> list:
-#     DATA2 = copy.deepcopy(DATA)
-#     for row_i, row in enumerate(DATA2):
-#         for col_j, _ in enumerate(row):
-#             if col_j == 0:
-#                 continue
-#             DATA2[row_i][col_j] += val
-#     return DATA2
+BINANCE_ETH_DATA = [
+    # time          #o   #h  #l    #c    #v
+    [1686805500000, 0.5, 12, 0.12, 1.1, 7.0],
+    [1686805800000, 0.5, 11, 0.11, 2.2, 7.0],
+    [1686806100000, 0.5, 10, 0.10, 3.3, 7.0],
+    [1686806400000, 1.1, 9, 0.09, 4.4, 1.4],
+    [1686806700000, 3.5, 8, 0.08, 5.5, 2.8],
+    [1686807000000, 4.7, 7, 0.07, 6.6, 8.1],
+    [1686807300000, 4.5, 6, 0.06, 7.7, 8.1],
+    [1686807600000, 0.6, 5, 0.05, 8.8, 8.1],
+    [1686807900000, 0.9, 4, 0.04, 9.9, 8.1],
+    [1686808200000, 2.7, 3, 0.03, 10.10, 8.1],
+    [1686808500000, 0.7, 2, 0.02, 11.11, 8.1],
+    [1686808800000, 0.7, 1, 0.01, 12.12, 8.3],
+]
 
 
-# BINANCE_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0)
-# KRAKEN_ETH_DATA = _addval(BINANCE_ETH_DATA, 0.0001)
-# KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
+@enforce_types
+def _addval(DATA: list, val: float) -> list:
+    DATA2 = copy.deepcopy(DATA)
+    for row_i, row in enumerate(DATA2):
+        for col_j, _ in enumerate(row):
+            if col_j == 0:
+                continue
+            DATA2[row_i][col_j] += val
+    return DATA2
 
 
-# @enforce_types
-# def test_create_xy__1exchange_1coin_1signal(tmpdir):
-#     csvdir = str(tmpdir)
+BINANCE_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0)
+KRAKEN_ETH_DATA = _addval(BINANCE_ETH_DATA, 0.0001)
+KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
-#     csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
 
-#     pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+@enforce_types
+def test_create_xy__1exchange_1coin_1signal(tmpdir):
+    csvdir = str(tmpdir)
 
-#     assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * autoregressive_n
+    df = _df_from_raw_data(BINANCE_ETH_DATA)
+    df = transform_df(df)
+    parquet_dfs = {"kraken": {"ETH-USDT": df}}
 
-#     data_factory = DataFactory(pp, ss)
-#     hist_df = data_factory._merge_csv_dfs(csv_dfs)
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
-#     _assert_shapes(ss, X, y, x_df)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
 
-#     assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-#     assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-#     assert X[0, :].tolist() == [11, 10, 9] and y[0] == 8
+    assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * autoregressive_n
 
-#     assert x_df.iloc[-1].tolist() == [4, 3, 2]
+    data_factory = DataFactory(pp, ss)
+    hist_df = data_factory._merge_parquet_dfs(parquet_dfs)
 
-#     found_cols = x_df.columns.tolist()
-#     target_cols = [
-#         "kraken:ETH-USDT:high:t-4",
-#         "kraken:ETH-USDT:high:t-3",
-#         "kraken:ETH-USDT:high:t-2",
-#     ]
-#     assert found_cols == target_cols
+    # =========== initial testshift (0)
+    # @ model/ai-level, we convert to pandas
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    _assert_shapes(ss, X, y, x_df)
 
-#     assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
-#     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
+    assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
+    assert X[0, :].tolist() == [11, 10, 9] and y[0] == 8
 
-#     # =========== now have a different testshift (1 not 0)
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=1)
-#     _assert_shapes(ss, X, y, x_df)
+    assert x_df.iloc[-1].tolist() == [4, 3, 2]
 
-#     assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
-#     assert X[-2, :].tolist() == [6, 5, 4] and y[-2] == 3
-#     assert X[0, :].tolist() == [12, 11, 10] and y[0] == 9
+    found_cols = x_df.columns.tolist()
+    target_cols = [
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
+    ]
+    assert found_cols == target_cols
 
-#     assert x_df.iloc[-1].tolist() == [5, 4, 3]
+    assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
-#     found_cols = x_df.columns.tolist()
-#     target_cols = [
-#         "kraken:ETH-USDT:high:t-4",
-#         "kraken:ETH-USDT:high:t-3",
-#         "kraken:ETH-USDT:high:t-2",
-#     ]
-#     assert found_cols == target_cols
+    # =========== now have a different testshift (1 not 0)
+    # @ model/ai-level, we convert to pandas
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=1)
+    _assert_shapes(ss, X, y, x_df)
 
-#     assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
-#     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
+    assert X[-2, :].tolist() == [6, 5, 4] and y[-2] == 3
+    assert X[0, :].tolist() == [12, 11, 10] and y[0] == 9
 
-#     # =========== now have a different max_n_train
-#     ss.max_n_train = 5
-#     # ss.autoregressive_n = 2
+    assert x_df.iloc[-1].tolist() == [5, 4, 3]
 
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
-#     _assert_shapes(ss, X, y, x_df)
+    found_cols = x_df.columns.tolist()
+    target_cols = [
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
+    ]
+    assert found_cols == target_cols
 
-#     assert X.shape[0] == 5 + 1  # +1 for one test point
-#     assert y.shape[0] == 5 + 1
-#     assert len(x_df) == 5 + 1
+    assert x_df["kraken:ETH-USDT:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
-#     assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-#     assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-#     assert X[0, :].tolist() == [9, 8, 7] and y[0] == 6
+    # =========== now have a different max_n_train
+    ss.max_n_train = 5
+    # ss.autoregressive_n = 2
+
+    # @ model/ai-level, we convert to pandas
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    _assert_shapes(ss, X, y, x_df)
+
+    assert X.shape[0] == 5 + 1  # +1 for one test point
+    assert y.shape[0] == 5 + 1
+    assert len(x_df) == 5 + 1
+
+    assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
+    assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
+    assert X[0, :].tolist() == [9, 8, 7] and y[0] == 6
 
 
 # @enforce_types
@@ -366,38 +373,41 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 #     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
-# @enforce_types
-# def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
-#     pp = DataPP(
-#         "5m",
-#         "kraken h ETH/USDT",
-#         N_test=2,
-#     )
+@enforce_types
+def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
+    pp = DataPP(
+        "5m",
+        "kraken h ETH/USDT",
+        N_test=2,
+    )
 
-#     ss = DataSS(
-#         [pp.predict_feed_str],
-#         csv_dir=csvdir,
-#         st_timestr="2023-06-18",
-#         fin_timestr="2023-06-21",
-#         max_n_train=7,
-#         autoregressive_n=3,
-#     )
-#     return pp, ss
-
-
-# @enforce_types
-# def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
-#     assert X.shape[0] == y.shape[0]
-#     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
-#     assert X.shape[1] == ss.n
-
-#     assert len(x_df) == X.shape[0]
-#     assert len(x_df.columns) == ss.n
+    ss = DataSS(
+        [pp.predict_feed_str],
+        csv_dir=csvdir,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
+    )
+    return pp, ss
 
 
-# @enforce_types
-# def _df_from_raw_data(raw_data: list) -> pd.DataFrame:
-#     df = initialize_df(TOHLCV_COLS)
-#     next_df = pd.DataFrame(raw_data, columns=TOHLCV_COLS)
-#     df = concat_next_df(df, next_df)
-#     return df
+@enforce_types
+def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
+    assert X.shape[0] == y.shape[0]
+    assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
+    assert X.shape[1] == ss.n
+
+    assert len(x_df) == X.shape[0]
+    assert len(x_df.columns) == ss.n
+
+
+@enforce_types
+def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
+    df = initialize_df(TOHLCV_COLS)
+
+    schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+    next_df = pl.DataFrame(raw_data, schema=schema)
+
+    df = concat_next_df(df, next_df)
+    return df
