@@ -48,7 +48,7 @@ trader_ss:
   sim_only:
     buy_amt: 10 USD
   bot_only:
-    min_buffer: 60 # in s. only trade if there's > this time left
+    min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3
 
@@ -61,9 +61,9 @@ trueval_ss:
   sleep_time: 30
 
 dfbuyer_ss:
-  batch_size: 42
-  consume_interval_seconds: 42
-  weekly_spending_limit: 25401600 # 42 * 7 * 24 * 3600
+  batch_size: 20
+  consume_interval_seconds: 86400
+  weekly_spending_limit: 37000
 
 payout_ss:
   batch_size: 250

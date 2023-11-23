@@ -111,13 +111,17 @@ async def test_process_block_at_feed(
 
     agent._do_trade = Mock(side_effect=_do_trade)
 
+    # mock feed seconds per epoch is 60
+    # test agent config min buffer is 30
+    # so it should trade if there's more than 30 seconds left in the epoch
+
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
     s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 55)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 0
     assert s_till_epoch_end == 5
 
-    # epoch_s_left = 60 + 60 - 80 = 40, so we should not trade
+    # epoch_s_left = 60 + 60 - 80 = 40, so we should trade
     s_till_epoch_end, _ = await agent._process_block_at_feed("0x123", 80)
     assert len(agent.prev_traded_epochs_per_feed["0x123"]) == 1
     assert s_till_epoch_end == 40
