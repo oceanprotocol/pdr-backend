@@ -300,9 +300,6 @@ class DataFactory:
         hist_df_cols = ["timestamp"]
         for exch_str in parquet_dfs.keys():
             for pair_str, parquet_df in parquet_dfs[exch_str].items():
-                print("pair_str: ", pair_str)
-                print("parquet_df: ", parquet_df)
-
                 assert "-" in pair_str, pair_str
                 assert "datetime" in parquet_df.columns
                 assert "timestamp" in parquet_df.columns
@@ -328,23 +325,18 @@ class DataFactory:
                 # drop OHLCV from hist_df_cols
                 hist_df_cols = [x for x in hist_df_cols if x not in OHLCV_COLS]
 
-                print(">>>>>> hist_df iteration:", hist_df)
-                print(">>>>>> parquet_df iteration:", parquet_df)
-                print(">>>>>> hist_df_cols iteration:", hist_df_cols)
-
                 # join to hist_df
                 if hist_df.shape[0] == 0:
                     hist_df = parquet_df
                 else:
-                    hist_df = hist_df.join(parquet_df, on="timestamp", how="outer")
+                    hist_df = hist_df.join(parquet_df, on="timestamp")
 
-        print(">>>>>> hist_df exit loop:", hist_df)
+        # select columns in-order [timestamp, ..., datetime]
         hist_df = hist_df.select(hist_df_cols + ["datetime"])
-
-        print(">>>>>> hist_df final:", hist_df)
-
+        
         assert "datetime" in hist_df.columns
         assert "timestamp" in hist_df.columns
+
         return hist_df
 
     # TODO: Move to model_factory/model + use generic df<=>serialize<=>parquet

@@ -51,7 +51,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     """n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000"""
 
     # setup: base data
-    csvdir = str(tmpdir)
+    parquetdir = str(tmpdir)
 
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
@@ -93,7 +93,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     # setup: ss
     ss = DataSS(  # user-controllable params
         ["binanceus h ETH/USDT"],
-        csv_dir=csvdir,
+        csv_dir=parquetdir,
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
         max_n_train=7,
@@ -124,7 +124,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     assert uts[-1] == ss.fin_timestamp
     assert uts == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
-    # work 2: two more epochs at end --> it'll append existing csv
+    # work 2: two more epochs at end --> it'll append existing parquet
     ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
     data_factory._update_hist_parquet_at_exch_and_pair(
         "binanceus", "ETH/USDT", ss.fin_timestamp
@@ -132,7 +132,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     uts2 = _uts_in_parquet(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
-    # work 3: two more epochs at beginning *and* end --> it'll create new csv
+    # work 3: two more epochs at beginning *and* end --> it'll create new parquet
     ss.st_timestr = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
     ss.fin_timestr = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
     data_factory._update_hist_parquet_at_exch_and_pair(
@@ -180,13 +180,13 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    csvdir = str(tmpdir)
+    parquetdir = str(tmpdir)
 
     df = _df_from_raw_data(BINANCE_ETH_DATA)
     df = transform_df(df)
     parquet_dfs = {"kraken": {"ETH-USDT": df}}
 
-    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(parquetdir)
 
     assert ss.n == 1 * 1 * 1 * 3  # n_exchs * n_coins * n_signals * autoregressive_n
 
@@ -256,9 +256,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
 @enforce_types
 def test_create_xy__2exchanges_2coins_2signals(tmpdir):
-    csvdir = str(tmpdir)
+    parquetdir = str(tmpdir)
 
-    csv_dfs = {
+    parquet_dfs = {
         "binanceus": {
             "BTC-USDT": transform_df(_df_from_raw_data(BINANCE_BTC_DATA)),
             "ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA)),
@@ -277,7 +277,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     ss = DataSS(
         ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
-        csv_dir=csvdir,
+        csv_dir=parquetdir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,
@@ -287,7 +287,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
 
     data_factory = DataFactory(pp, ss)
-    hist_df = data_factory._merge_parquet_dfs(csv_dfs)
+    hist_df = data_factory._merge_parquet_dfs(parquet_dfs)
 
     # =========== initial testshift (0)
     # @ model/ai-level, we convert to pandas
@@ -345,11 +345,11 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create hist_df
-    csvdir = str(tmpdir)
-    csv_dfs = {"kraken": {"ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA))}}
-    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    parquetdir = str(tmpdir)
+    parquet_dfs = {"kraken": {"ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA))}}
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(parquetdir)
     data_factory = DataFactory(pp, ss)
-    hist_df = data_factory._merge_parquet_dfs(csv_dfs)
+    hist_df = data_factory._merge_parquet_dfs(parquet_dfs)
 
     # corrupt hist_df with nans
     # Corrupt hist_df with NaN values
@@ -382,7 +382,7 @@ def test_create_xy__handle_nan(tmpdir):
 
 
 @enforce_types
-def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
+def _data_pp_ss_1exchange_1coin_1signal(dir: str) -> Tuple[DataPP, DataSS]:
     pp = DataPP(
         "5m",
         "kraken h ETH/USDT",
@@ -391,7 +391,7 @@ def _data_pp_ss_1exchange_1coin_1signal(csvdir: str) -> Tuple[DataPP, DataSS]:
 
     ss = DataSS(
         [pp.predict_feed_str],
-        csv_dir=csvdir,
+        csv_dir=dir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,
