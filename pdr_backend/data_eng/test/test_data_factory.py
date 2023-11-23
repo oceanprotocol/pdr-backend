@@ -16,6 +16,7 @@ from pdr_backend.data_eng.pdutil import (
     concat_next_df,
     load_parquet,
 )
+
 # from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr
 
@@ -253,89 +254,92 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert X[0, :].tolist() == [9, 8, 7] and y[0] == 6
 
 
-# @enforce_types
-# def test_create_xy__2exchanges_2coins_2signals(tmpdir):
-#     csvdir = str(tmpdir)
+@enforce_types
+def test_create_xy__2exchanges_2coins_2signals(tmpdir):
+    csvdir = str(tmpdir)
 
-#     csv_dfs = {
-#         "binanceus": {
-#             "BTC-USDT": _df_from_raw_data(BINANCE_BTC_DATA),
-#             "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
-#         },
-#         "kraken": {
-#             "BTC-USDT": _df_from_raw_data(KRAKEN_BTC_DATA),
-#             "ETH-USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
-#         },
-#     }
+    csv_dfs = {
+        "binanceus": {
+            "BTC-USDT": transform_df(_df_from_raw_data(BINANCE_BTC_DATA)),
+            "ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA)),
+        },
+        "kraken": {
+            "BTC-USDT": transform_df(_df_from_raw_data(KRAKEN_BTC_DATA)),
+            "ETH-USDT": transform_df(_df_from_raw_data(KRAKEN_ETH_DATA)),
+        },
+    }
 
-#     pp = DataPP(
-#         "5m",
-#         "binanceus h ETH/USDT",
-#         N_test=2,
-#     )
+    pp = DataPP(
+        "5m",
+        "binanceus h ETH/USDT",
+        N_test=2,
+    )
 
-#     ss = DataSS(
-#         ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
-#         csv_dir=csvdir,
-#         st_timestr="2023-06-18",
-#         fin_timestr="2023-06-21",
-#         max_n_train=7,
-#         autoregressive_n=3,
-#     )
+    ss = DataSS(
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
+        csv_dir=csvdir,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
+    )
 
-#     assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
+    assert ss.n == 2 * 2 * 2 * 3  #  n_exchs * n_coins * n_signals * autoregressive_n
 
-#     data_factory = DataFactory(pp, ss)
-#     hist_df = data_factory._merge_csv_dfs(csv_dfs)
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
-#     _assert_shapes(ss, X, y, x_df)
+    data_factory = DataFactory(pp, ss)
+    hist_df = data_factory._merge_parquet_dfs(csv_dfs)
 
-#     found_cols = x_df.columns.tolist()
-#     target_cols = [
-#         "binanceus:BTC-USDT:high:t-4",
-#         "binanceus:BTC-USDT:high:t-3",
-#         "binanceus:BTC-USDT:high:t-2",
-#         "binanceus:ETH-USDT:high:t-4",
-#         "binanceus:ETH-USDT:high:t-3",
-#         "binanceus:ETH-USDT:high:t-2",
-#         "binanceus:BTC-USDT:low:t-4",
-#         "binanceus:BTC-USDT:low:t-3",
-#         "binanceus:BTC-USDT:low:t-2",
-#         "binanceus:ETH-USDT:low:t-4",
-#         "binanceus:ETH-USDT:low:t-3",
-#         "binanceus:ETH-USDT:low:t-2",
-#         "kraken:BTC-USDT:high:t-4",
-#         "kraken:BTC-USDT:high:t-3",
-#         "kraken:BTC-USDT:high:t-2",
-#         "kraken:ETH-USDT:high:t-4",
-#         "kraken:ETH-USDT:high:t-3",
-#         "kraken:ETH-USDT:high:t-2",
-#         "kraken:BTC-USDT:low:t-4",
-#         "kraken:BTC-USDT:low:t-3",
-#         "kraken:BTC-USDT:low:t-2",
-#         "kraken:ETH-USDT:low:t-4",
-#         "kraken:ETH-USDT:low:t-3",
-#         "kraken:ETH-USDT:low:t-2",
-#     ]
-#     assert found_cols == target_cols
+    # =========== initial testshift (0)
+    # @ model/ai-level, we convert to pandas
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    _assert_shapes(ss, X, y, x_df)
 
-#     # test binanceus:ETH-USDT:high like in 1-signal
-#     assert target_cols[3:6] == [
-#         "binanceus:ETH-USDT:high:t-4",
-#         "binanceus:ETH-USDT:high:t-3",
-#         "binanceus:ETH-USDT:high:t-2",
-#     ]
-#     Xa = X[:, 3:6]
-#     assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-#     assert Xa[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-#     assert Xa[0, :].tolist() == [11, 10, 9] and y[0] == 8
+    found_cols = x_df.columns.tolist()
+    target_cols = [
+        "binanceus:BTC-USDT:high:t-4",
+        "binanceus:BTC-USDT:high:t-3",
+        "binanceus:BTC-USDT:high:t-2",
+        "binanceus:ETH-USDT:high:t-4",
+        "binanceus:ETH-USDT:high:t-3",
+        "binanceus:ETH-USDT:high:t-2",
+        "binanceus:BTC-USDT:low:t-4",
+        "binanceus:BTC-USDT:low:t-3",
+        "binanceus:BTC-USDT:low:t-2",
+        "binanceus:ETH-USDT:low:t-4",
+        "binanceus:ETH-USDT:low:t-3",
+        "binanceus:ETH-USDT:low:t-2",
+        "kraken:BTC-USDT:high:t-4",
+        "kraken:BTC-USDT:high:t-3",
+        "kraken:BTC-USDT:high:t-2",
+        "kraken:ETH-USDT:high:t-4",
+        "kraken:ETH-USDT:high:t-3",
+        "kraken:ETH-USDT:high:t-2",
+        "kraken:BTC-USDT:low:t-4",
+        "kraken:BTC-USDT:low:t-3",
+        "kraken:BTC-USDT:low:t-2",
+        "kraken:ETH-USDT:low:t-4",
+        "kraken:ETH-USDT:low:t-3",
+        "kraken:ETH-USDT:low:t-2",
+    ]
+    assert found_cols == target_cols
 
-#     assert x_df.iloc[-1].tolist()[3:6] == [4, 3, 2]
-#     assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
-#     assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
+    # test binanceus:ETH-USDT:high like in 1-signal
+    assert target_cols[3:6] == [
+        "binanceus:ETH-USDT:high:t-4",
+        "binanceus:ETH-USDT:high:t-3",
+        "binanceus:ETH-USDT:high:t-2",
+    ]
+    Xa = X[:, 3:6]
+    assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
+    assert Xa[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
+    assert Xa[0, :].tolist() == [11, 10, 9] and y[0] == 8
 
-#     assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
-#     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df.iloc[-1].tolist()[3:6] == [4, 3, 2]
+    assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
+    assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
+
+    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
 
 # @enforce_types

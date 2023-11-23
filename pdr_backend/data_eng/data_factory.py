@@ -294,8 +294,9 @@ class DataFactory:
           hist_df -- df w/ cols={exch_str}:{pair_str}:{signal_str}+"datetime",
             and index=timestamp
         """
+        # init hist_df such that it can do basic operations
         print("  Merge parquet DFs.")
-        hist_df = pl.DataFrame(data={}, schema={"timestamp": pl.Int64})
+        hist_df = initialize_df()
         hist_df_cols = ["timestamp"]
         for exch_str in parquet_dfs.keys():
             for pair_str, parquet_df in parquet_dfs[exch_str].items():
@@ -307,28 +308,40 @@ class DataFactory:
                 assert "timestamp" in parquet_df.columns
 
                 for parquet_col in parquet_df.columns:
-                    if parquet_col == "datetime":
-                        if "datetime" in hist_df.columns:
-                            continue
-                        hist_col = parquet_col
-                    else:
-                        signal_str = parquet_col  # eg "close"
-                        hist_col = f"{exch_str}:{pair_str}:{signal_str}"
+                    if parquet_col in ["timestamp", "datetime"]:
+                        continue
+                    
+                    signal_str = parquet_col  # eg "close"
+                    hist_col = f"{exch_str}:{pair_str}:{signal_str}"
 
-                    # we already have timestamp and will merge on this, skip it
-                    if not parquet_col in ["timestamp"]:
-                        parquet_df = parquet_df.with_columns(
-                            [pl.col(parquet_col).alias(hist_col)]
-                        )
-                        hist_df_cols.append(hist_col)
+                    parquet_df = parquet_df.with_columns(
+                        [pl.col(parquet_col).alias(hist_col)]
+                    )
+                    hist_df_cols.append(hist_col)
 
+                # drop columns we won't merge
+                # drop original OHLCV cols and datetime
                 parquet_df = parquet_df.drop(OHLCV_COLS)
+                if "datetime" in hist_df.columns:
+                    parquet_df = parquet_df.drop("datetime")
+
+                # drop OHLCV from hist_df_cols
                 hist_df_cols = [x for x in hist_df_cols if x not in OHLCV_COLS]
-                print(">>>>>> parquet_df final:", parquet_df)
-                print(">>>>>> hist_df_cols final:", hist_df_cols)
-                hist_df = hist_df.join(parquet_df, on="timestamp", how="outer")
-                hist_df = hist_df.select(hist_df_cols)
-                print(">>>>>> hist_df final:", hist_df)
+
+                print(">>>>>> hist_df iteration:", hist_df)
+                print(">>>>>> parquet_df iteration:", parquet_df)
+                print(">>>>>> hist_df_cols iteration:", hist_df_cols)
+
+                # join to hist_df
+                if hist_df.shape[0] == 0:
+                    hist_df = parquet_df
+                else:
+                    hist_df = hist_df.join(parquet_df, on="timestamp", how="outer")
+
+        print(">>>>>> hist_df exit loop:", hist_df)
+        hist_df = hist_df.select(hist_df_cols + ["datetime"])
+
+        print(">>>>>> hist_df final:", hist_df)
 
         assert "datetime" in hist_df.columns
         assert "timestamp" in hist_df.columns
