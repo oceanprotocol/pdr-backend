@@ -11,15 +11,16 @@ This is for core devs to improve pdr-backend repo itself.
 
 Follow directions to install pdr-backend in [predictoor.md](predictoor.md)
 
-## Local Network
+## Setup Barge
 
-First, [install barge](barge.md#install-barge).
+**Local barge.** If you're on ubuntu, you can run barge locally.
+- First, [install barge](barge.md#install-barge).
+- Then, run it. In barge console: `./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph`
 
-Then, run barge. In barge console:
-```console
-# Run barge with just predictoor contracts, queryable, but no agents
-./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
-```
+**Or, remote barge.** If you're on MacOS or Windows, run barge on VPS.
+- Follow the instructions in [vps.md](vps.md)
+
+### Setup dev environment
 
 Open a new "work" console and:
 ```console
@@ -27,40 +28,42 @@ Open a new "work" console and:
 cd pdr-backend
 source venv/bin/activate
 
-# Set envvars
+# Set PRIVATE_KEY
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
-export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
 
-export RPC_URL=http://127.0.0.1:8545
-export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph"
-#OR: export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
+# Unit tests default to using "development" network -- a locally-run barge.
+# If you need another network such as barge on VPS, then override via e.g.
+export NETWORK_OVERRIDE=barge-pytest
 ```
+
+All other settings are in [`ppss.yaml`](../ppss.yaml). Some of these are used in unit tests. Whereas most READMEs make a copy `my_ppss.yaml`, for development we typically want to operate directly on `ppss.yaml`.
 
 ### Local Usage: Testing & linting
 
 In work console, run tests:
 ```console
-#(ensure envvars set as above)
+# (ensure PRIVATE_KEY set as above)
 
-#run a single test
-pytest pdr_backend/util/test/test_constants.py::test_constants1
+# run a single test. The "-s" is for more output.
+# note that pytest does dynamic type-checking too:)
+pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constants -s
 
-#run all tests in a file
-pytest pdr_backend/util/test/test_constants.py
+# run all tests in a file
+pytest pdr_backend/util/test_noganache/test_util_constants.py -s
 
-#run all regular tests; see details on pytest markers to select specific suites
+# run all regular tests; see details on pytest markers to select specific suites
 pytest
 ```
 
 In work console, run linting checks:
 ```console
-#run static type-checking. By default, uses config mypy.ini. Note: pytest does dynamic type-checking.
+# mypy does static type-checking and more. Configure it via mypy.ini
 mypy ./
 
-#run linting on code style
+# run linting on code style. Configure it via .pylintrc.
 pylint pdr_backend/*
 
-#auto-fix some pylint complaints
+# auto-fix some pylint complaints like whitespace
 black ./
 ```
 
@@ -80,12 +83,21 @@ In work console:
 ```console
 #(ensure envvars set as above)
 
-# run trader agent
-python pdr_backend/trader/main.py
+# run trader agent, approach 1
+pdr trader 1 ppss.yaml development
+# or
+pdr trader 1 ppss.yaml barge-pytest
 ```
 
 (You can track at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).)
 
 ## Remote Usage
 
-Combine local setup above with remote setup envvars like in [predictoor.md](predictoor.md).
+In the CLI, simply point to a different network:
+```console
+# run on testnet
+pdr trader ppss.yaml sapphire-testnet
+
+# or, run on mainnet
+pdr trader ppss.yaml sapphire-mainnet
+```

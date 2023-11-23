@@ -7,7 +7,7 @@ from pdr_backend.util.strutil import StrMixin
 
 @enforce_types
 class SimSS(StrMixin):
-    """User-controllable strategy params related to the simulation itself"""
+    __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["sim_ss"]

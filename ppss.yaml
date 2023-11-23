@@ -58,6 +58,14 @@ trueval_ss:
   batch_size: 30
   sleep_time: 30
 
+dfbuyer_ss:
+  batch_size: 42
+  consume_interval_seconds: 42
+  weekly_spending_limit: 25401600 # 42 * 7 * 24 * 3600
+
+payout_ss:
+  batch_size: 250
+
 web3_pp:
   default_network: development
   
@@ -65,36 +73,39 @@ web3_pp:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-    stake_token: 0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
-    owner_addrs: 0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
+    stake_token: "0x973e69303259B0c2543a38665122b773D28405fB" # (fake) OCEAN token address
+    owner_addrs: "0xe02a421dfc549336d47efee85699bd0a3da7d6ff" # OPF deployer address
   
   sapphire-mainnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://sapphire.oasis.io
     subgraph_url: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-    stake_token: 0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520 # OCEAN token address
-    owner_addrs: 0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
+    stake_token: "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520" # OCEAN token address
+    owner_addrs: "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703" # OPF deployer address
     
   development:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: http://localhost:8545
     subgraph_url: http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+    # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
+    stake_token: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1" # this value is just a placeholder; set it with above
+    owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
   barge-predictoor-bot:
     address_file: "~/address-barge-predictoor-bot.json"
-    private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
+    private_key: "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
     rpc_url: http://4.245.224.119:8545 # from VPS 
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
     # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
-    stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
-    owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
+    stake_token: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1" # this value is just a placeholder; set it with above
+    owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
   barge-pytest:
     address_file: "~/address-barge-pytest.json"
-    private_key: 0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58
+    private_key: "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
     rpc_url: http://74.234.16.165:8545
     subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
     # get by: grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
-    stake_token: 0x282d8efCe846A88B159800bd4130ad77443Fa1A1 # this value is just a placeholder; set it with above
-    owner_addrs: 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
+    stake_token: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1" # this value is just a placeholder; set it with above
+    owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 

@@ -90,10 +90,16 @@ async def test_process_block_at_feed(
     predictoor_contract.get_agg_predval.return_value = (1, 2)
 
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
+    ppss = PPSS(yaml_str=yaml_str, network="development")
 
-    ppss.web3_pp.get_feeds.return_value = {"0x123": feed}
-    ppss.web3_pp.get_contracts.return_value = {"0x123": predictoor_contract}
+    def mock_get_feeds(*args, **kwargs):
+        return {"0x123": feed}
+
+    def mock_get_contracts(*args, **kwargs):
+        return {"0x123": predictoor_contract}
+
+    ppss.web3_pp.get_feeds = mock_get_feeds
+    ppss.web3_pp.get_contracts = mock_get_contracts
 
     # agent
     agent = TraderAgent(ppss, custom_trader)
@@ -203,7 +209,7 @@ async def test_get_pred_properties(
         "0x0000000000000000000000000000000000000000": mock_feed()
     }
     ppss.trader_ss.set_max_tries(10)
-    ppss.web3_pp.web3_config = web3_config
+    ppss.web3_pp.set_web3_config(web3_config)
     agent = TraderAgent(ppss)
     check_subscriptions_and_subscribe_mock.assert_called_once()
 

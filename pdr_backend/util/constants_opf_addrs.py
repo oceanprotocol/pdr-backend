@@ -1,7 +1,15 @@
-def get_opf_addresses(chain_id):
-    addresses = {}
-    if chain_id == 23295:
-        addresses = {
+from enforce_typing import enforce_types
+
+from pdr_backend.util.constants import (
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_MAINNET_CHAINID,
+)
+
+
+@enforce_types
+def get_opf_addresses(chain_id: int):
+    if chain_id == SAPPHIRE_TESTNET_CHAINID:
+        return {
             "predictoor1": "0xE02A421dFc549336d47eFEE85699Bd0A3Da7D6FF",
             "predictoor2": "0x00C4C993e7B0976d63E7c92D874346C3D0A05C1e",
             "predictoor3": "0x005C414442a892077BD2c1d62B1dE2Fc127E5b9B",
@@ -10,8 +18,8 @@ def get_opf_addresses(chain_id):
             "dfbuyer": "0xeA24C440eC55917fFa030C324535fc49B42c2fD7",
         }
 
-    if chain_id == 23294:
-        addresses = {
+    if chain_id == SAPPHIRE_MAINNET_CHAINID:
+        return {
             "predictoor1": "0x35Afee1168D1e1053298F368488F4eE95E891a6e",
             "predictoor2": "0x1628BeA0Fb859D56Cd2388054c0bA395827e4374",
             "predictoor3": "0x3f0825d0c0bbfbb86cd13C7E6c9dC778E3Bb44ec",
@@ -56,4 +64,5 @@ def get_opf_addresses(chain_id):
             "websocket": "0x6Cc4Fe9Ba145AbBc43227b3D4860FA31AFD225CB",
             "dfbuyer": "0x2433e002Ed10B5D6a3d8d1e0C5D2083BE9E37f1D",
         }
-    return addresses
+
+    raise ValueError(chain_id)

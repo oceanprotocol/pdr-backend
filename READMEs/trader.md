@@ -43,9 +43,11 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+
 Let's simulate! In console:
 ```console
-pdr sim ppss.yaml
+pdr sim my_ppss.yaml
 ```
 
 What it does:
@@ -62,8 +64,6 @@ The baseline settings use a linear model inputting prices of the previous 10 epo
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
-`ppss.yaml` has run settings. Change that as you wish (or make your own copy).
-
 ## Run Trader Bot on Sapphire Testnet
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
@@ -77,11 +77,11 @@ Then, copy & paste your private key as an envvar. In console:
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `ppss.yaml` as desired. If this is your first time, it has good defaults.
+Update `my_ppss.yaml` as desired.
 
 Then, run a simple trading bot. In console:
 ```console
-pdr trader 2 sapphire-testnet ppss.yaml
+pdr trader 2 my_ppss.yaml sapphire-testnet 
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. 
@@ -99,11 +99,11 @@ Then, copy & paste your private key as an envvar. (You can skip this if it's sam
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `ppss.yaml` as desired.
+Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
 ```console
-pdr trader 2 sapphire-mainnet ppss.yaml
+pdr trader 2 my_ppss.yaml sapphire-mainnet 
 ```
 
 This is where there's real $ at stake. Good luck!
@@ -122,10 +122,6 @@ Once you're familiar with the above, you can set your own trading strategy and o
 1. Fork `pdr-backend` repo.
 1. Change trader bot code as you wish, while iterating with simulation.
 1. Bring your trader bot to testnet then mainnet.
-
-To help, here's the code structure of the bot:
-- It runs [`trader_agent.py::TraderAgent`](../pdr_backend/trader/trader_agent.py) found in `pdr_backend/trader/`
-- It's configured by envvars and [`trader_config.py::TraderConfig`](../pdr_backend/trader/trader_config.py)
 
 ## Run Bots Remotely
 

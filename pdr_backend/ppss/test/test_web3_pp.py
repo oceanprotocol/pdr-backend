@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch, Mock
 
 from enforce_typing import enforce_types
+import pytest
 from web3 import Web3
 
 from pdr_backend.util.web3_config import Web3Config
@@ -45,8 +46,35 @@ _D = {
 
 
 @enforce_types
-def test_web3_pp__yaml_dict():
-    pp = Web3PP("network1", _D)
+def test_web3_pp__network_override(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
+    # does it do what we want with no override?
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network1"
+
+    # does it do what we want _with_ override?
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network2"
+
+
+@enforce_types
+def test_web3_pp__bad_network(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
+    with pytest.raises(ValueError):
+        Web3PP(_D, "bad network")
+
+
+@enforce_types
+def test_web3_pp__yaml_dict(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
+    pp = Web3PP(_D, "network1")
 
     assert pp.network == "network1"
     assert pp.dn == _D1
@@ -57,7 +85,7 @@ def test_web3_pp__yaml_dict():
     assert pp.owner_addrs == "0xOwner1"
 
     # network2
-    pp2 = Web3PP("network2", _D)
+    pp2 = Web3PP(_D, "network2")
     assert pp2.network == "network2"
     assert pp2.dn == _D2
     assert pp2.address_file == "address.json 2"
@@ -65,8 +93,11 @@ def test_web3_pp__yaml_dict():
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     # test web3_config
     assert web3_pp._web3_config is None
@@ -93,8 +124,10 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     def _mock_get_pending_slots(*args, **kwargs):
         if len(args) >= 2:
@@ -110,9 +143,12 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_feeds__get_contracts(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    web3_pp = Web3PP("network1", _D)
+    web3_pp = Web3PP(_D, "network1")
 
     # test get_feeds(). Uses results from get_feeds
     def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument

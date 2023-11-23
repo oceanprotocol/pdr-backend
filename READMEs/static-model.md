@@ -48,7 +48,7 @@ export MODELDIR=$(pwd)/pdr-model-simple/
 pip install scikit-learn ta
 
 #run static model predictoor bot
-python pdr_backend/predictoor/main.py 2
+pdr predictoor 2 my_ppss.yaml sapphire-testnet
 ```
 
 ## Your own static model

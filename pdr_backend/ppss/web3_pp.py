@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.models.feed import dictToFeed, Feed
+from pdr_backend.models.feed import dictToFeed, Feed, feed_dict_ok
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.exchangestr import pack_exchange_str_list
@@ -20,7 +20,8 @@ class Web3PP(StrMixin):
     __STR_OBJDIR__ = ["network", "d"]
 
     @enforce_types
-    def __init__(self, network: str, d: dict):
+    def __init__(self, d: dict, network: str):
+        network = getenv("NETWORK_OVERRIDE") or network  # allow envvar override
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
 
@@ -130,9 +131,13 @@ class Web3PP(StrMixin):
             pairs_string=pack_pair_str_list(pair_filters),
             timeframes_string=pack_timeframe_str_list(timeframe_filters),
             sources_string=pack_exchange_str_list(source_filters),
-            owners_string=[self.owner_addrs],
+            owners_string=self.owner_addrs,
         )
-        feeds = {addr: dictToFeed(feed_dict) for addr, feed_dict in feed_dicts.items()}
+        feeds = {
+            addr: dictToFeed(feed_dict)
+            for addr, feed_dict in feed_dicts.items()
+            if feed_dict_ok(feed_dict)
+        }
         return feeds
 
     @enforce_types

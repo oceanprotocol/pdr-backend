@@ -9,13 +9,16 @@ SPDX-License-Identifier: Apache-2.0
 
 You can query an Ocean subgraph at one of the following:
 
-Local (= `$SUBGRAPH_URL`):
+The subgraph url for each network is in the ppss yaml under "subgraph url".
+
+Typically, these are something like:
+- Local (barge)
   - http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
   - OR http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph
-
-Remote:
-- Sapphire testnet, at https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-- Sapphire mainnet, at https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+- Sapphire testnet
+  - https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+- Sapphire mainnet
+  - https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
 
 ### Typical query
 
@@ -64,9 +67,6 @@ Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](
 - They call to a subgraph, at a given url, with a particular query
 - and they may filter further
 
-**Filters**, You can set some ppss.yaml to filter query results for agents. 
-
 ### Appendix
 
 - [ocean-subgraph repo](https://github.com/oceanprotocol/ocean-subgraph)
-- [ocean-subgraph PR#678](https://github.com/oceanprotocol/ocean-subgraph/pull/678) lists full entities. (Things may have changed a bit since then)

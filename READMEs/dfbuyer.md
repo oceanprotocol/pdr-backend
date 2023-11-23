@@ -27,25 +27,31 @@ Open a new console and:
 cd pdr-backend
 source venv/bin/activate
 
-# Set envvars
+# Set envvar
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
-export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
-
-export RPC_URL=http://127.0.0.1:8545
-export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph"
-#OR: export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 ```
+
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
 
 Then, run dfbuyer bot. In console:
 ```console
-python pdr_backend/dfbuyer/main.py
+pdr dfbuyer my_ppss.yaml development
 ```
 
 The bot will consume "WEEKLY_SPENDING_LIMIT" worth of assets each week. This amount is distributed equally among all DF eligible assets.
 
 ![flow](https://user-images.githubusercontent.com/25263018/269256707-566b9f5d-7e97-4549-b483-2a6700826769.png)
 
+
 ## Remote Usage
 
-Combine local setup above with remote setup envvars like in [predictoor.md](predictoor.md).
+In the CLI, simply point to a different network:
+```console
+# run on testnet
+pdr dfbuyer my_ppss.yaml sapphire-testnet
+
+# or, run on mainnet
+pdr dfbuyer my_ppss.yaml sapphire-mainnet
+```
+
 

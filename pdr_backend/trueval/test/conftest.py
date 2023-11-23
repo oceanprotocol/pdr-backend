@@ -40,7 +40,7 @@ def set_env_vars():
 
 
 @pytest.fixture()
-def trueval_ss(tmpdir):
+def mock_ppss(tmpdir):
     return PPSS(yaml_str=fast_test_yaml_str(tmpdir), network="development")
 
 

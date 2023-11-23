@@ -115,7 +115,7 @@ def test_should_close(predictoor_contract, web3_config, tmpdir):
     # params
     ppss = mock_ppss(predictoor_contract, tmpdir)
     ppss.web3_pp.set_web3_config(web3_config)
-    ppss.set_timeframe(300)
+    ppss.data_pp.set_timeframe(300)
 
     # agent
     agent = TraderAgent2(ppss)

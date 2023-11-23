@@ -100,7 +100,9 @@ class TraderAgent:
         self.prev_block_number = block_number
 
         # is new block ready yet?
-        block = self.ppss.web3_pp.get_block(block_number, full_transactions=False)
+        block = self.ppss.web3_pp.web3_config.get_block(
+            block_number, full_transactions=False
+        )
         if not block:
             return
 

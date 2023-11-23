@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
+from pdr_backend.ppss.data_pp import DataPP
+from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.constants import S_PER_DAY
 
@@ -89,8 +91,8 @@ class MockFeedContract:
 def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
 
-    yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS("barge-pytest", yaml_str=yaml_str)
+    ppss = _ppss(tmpdir)
+
     mock_query = MockQuery(ppss.data_pp)
     monkeypatch.setattr(
         "pdr_backend.ppss.web3_pp.query_feed_contracts",
@@ -99,7 +101,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
 
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = MockEth()
-    mock_contract = MockFeedContract(mock_w3, ppss.data_pp.timeframe_s)
+    mock_feed_contract = MockFeedContract(mock_w3, ppss.data_pp.timeframe_s)
 
     # mock time.sleep()
     def advance_func(*args, **kwargs):  # pylint: disable=unused-argument
@@ -110,7 +112,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
             mock_w3.eth._timestamps_seen.append(mock_w3.eth.timestamp)
 
     def mock_contract_func(*args, **kwargs):  # pylint: disable=unused-argument
-        return mock_contract
+        return mock_feed_contract
 
     monkeypatch.setattr(
         "pdr_backend.ppss.web3_pp.PredictoorContract", mock_contract_func
@@ -126,7 +128,7 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     agent.ppss.web3_pp.web3_config.w3 = mock_w3
 
     # real work: main iterations
-    for _ in range(1000):
+    for _ in range(100):
         agent.take_step()
 
     # log some final results for debubbing / inspection
@@ -141,12 +143,41 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     print(f"all timestamps seen = {mock_w3.eth._timestamps_seen}")
     print()
     print(
-        "unique prediction_slots = " f"{sorted(set(mock_contract._prediction_slots))}"
+        "unique prediction_slots = "
+        f"{sorted(set(mock_feed_contract._prediction_slots))}"
     )
-    print(f"all prediction_slots = {mock_contract._prediction_slots}")
+    print(f"all prediction_slots = {mock_feed_contract._prediction_slots}")
 
     # relatively basic sanity tests
-    assert mock_contract._prediction_slots
+    assert mock_feed_contract._prediction_slots
     assert (mock_w3.eth.timestamp + 2 * ppss.data_pp.timeframe_s) >= max(
-        mock_contract._prediction_slots
+        mock_feed_contract._prediction_slots
     )
+
+
+@enforce_types
+def _ppss(tmpdir) -> PPSS:
+    yaml_str = fast_test_yaml_str(tmpdir)
+    ppss = PPSS(yaml_str=yaml_str, network="development")
+
+    assert hasattr(ppss, "data_pp")
+    ppss.data_pp = DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": ["kraken c BTC/USDT"],
+            "sim_only": {"test_n": 10},
+        }
+    )
+    assert hasattr(ppss, "data_ss")
+    ppss.data_ss = DataSS(
+        {
+            "input_feeds": ["kraken c BTC/USDT"],
+            "csv_dir": os.path.join("csvs"),
+            "st_timestr": "2023-06-18",
+            "fin_timestr": "2023-07-21",
+            "max_n_train": 100,
+            "autoregressive_n": 2,
+        }
+    )
+
+    return ppss

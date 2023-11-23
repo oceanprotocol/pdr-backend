@@ -1,3 +1,4 @@
+import os
 import sys
 
 from enforce_typing import enforce_types
@@ -6,10 +7,9 @@ from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.publisher.main import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
-from pdr_backend.predictoor.payout import do_payout as do_ocean_payout
-from pdr_backend.predictoor.payout import do_rose_payout
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
@@ -19,9 +19,11 @@ from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.util.check_network import check_network_main
 
 from pdr_backend.util.cli_arguments import (
-    do_help_long,
+    ClaimOceanArgParser,
+    ClaimRoseArgParser,
     CheckNetworkArgParser,
     DfbuyerArgParser,
+    do_help_long,
     GetOpfPredictionsArgParser,
     GetPredictoorInfoArgParser,
     PredictoorArgParser,
@@ -40,6 +42,7 @@ from pdr_backend.util.topup import topup_main
 
 @enforce_types
 def _do_main():
+    os.environ.pop("NETWORK_OVERRIDE", None)  # disallow override in CLI
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
         do_help_long(0)
 
@@ -61,8 +64,7 @@ def do_sim():
     args = parser.parse_args()
     print_args(args)
 
-    dummy_network = "barge-pytest"
-    ppss = PPSS(dummy_network, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="development")
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -73,7 +75,7 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -102,7 +104,7 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     approach = args.APPROACH
 
     if approach == 1:
@@ -120,20 +122,31 @@ def do_trader():
 
 @enforce_types
 def do_claim_OCEAN():
-    do_ocean_payout()
+    parser = ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
+    do_ocean_payout(ppss)
 
 
 @enforce_types
 def do_claim_ROSE():
-    do_rose_payout()
+    parser = ClaimRoseArgParser("Claim ROSE", "claim_ROSE")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
+    do_rose_payout(ppss)
 
 
+@enforce_types
 def do_get_predictoor_info():
     parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     get_predictoor_info_main(ppss, args.PDR_ADDRS, args.ST, args.END, args.CSVDIR)
 
 
@@ -143,7 +156,7 @@ def do_check_network():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
@@ -153,9 +166,9 @@ def do_trueval(testing=False):
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.YAML_FILE)
-    approach = args.APPROACH
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
 
+    approach = args.APPROACH
     if approach == 1:
         agent = TruevalAgentSingle(ppss, get_trueval)
     elif approach == 2:
@@ -169,13 +182,13 @@ def do_trueval(testing=False):
     agent.run(testing)
 
 
-@enforce_types
+# @enforce_types
 def do_dfbuyer():
     parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
@@ -186,7 +199,9 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(  # pylint: disable=unused-variable
+        yaml_filename=args.YAML_FILE, network=args.NETWORK
+    )
     publish_assets(ppss)
 
 
@@ -198,7 +213,7 @@ def do_topup():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     topup_main(ppss)
 
 
@@ -208,5 +223,5 @@ def do_get_opf_predictions():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(args.NETWORK, args.YAML_FILE)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     get_opf_predictions_main(ppss, args.CSV_DIR)

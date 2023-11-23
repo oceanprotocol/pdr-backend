@@ -29,7 +29,7 @@ def mock_token():
 @pytest.fixture
 def dfbuyer_config(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS("development", yaml_str=yaml_str)
+    ppss = PPSS(yaml_str=yaml_str, network="development")
 
     ppss.web3_pp.get_feeds = Mock()
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
