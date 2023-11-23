@@ -17,6 +17,7 @@ Main tools:
 
 Utilities:
   pdr help
+  pdr <cmd> -h
   pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
   pdr check_network YAML_FILE NETWORK --LOOKBACK_HOURS
 

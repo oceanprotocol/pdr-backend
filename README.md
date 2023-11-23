@@ -15,8 +15,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Settings: PPSS
 
-A single "ppss" yaml file holds parameters for all bots and simulation flows.
-- See [`sample_ppss.yaml`](sample_ppss.yaml) for an example.
+A "ppss" yaml file, like [`ppss.yaml`](ppss.yaml), holds parameters for all bots and simulation flows.
 - We follow the idiom "pp" = problem setup (what to solve), "ss" = solution strategy (how to solve).
 - `PRIVATE_KEY` is an exception; it's set as an envvar.
 
@@ -37,8 +36,8 @@ Usage: pdr sim|predictoor|trader|..
 
 Main tools:
   pdr sim YAML_FILE
-  pdr predictoor APPROACH NETWORK YAML_FILE
-  pdr trader APPROACH NETWORK YAML_FILE
+  pdr predictoor APPROACH YAML_FILE NETWORK
+  pdr trader APPROACH YAML_FILE NETWORK
 ...
 ```
 

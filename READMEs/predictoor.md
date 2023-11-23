@@ -46,9 +46,11 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+
 Let's simulate! In console:
 ```console
-pdr sim ppss.yaml
+pdr sim my_ppss.yaml
 ```
 
 What it does:
@@ -65,8 +67,6 @@ The baseline settings use a linear model inputting prices of the previous 10 epo
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
 
-`ppss.yaml` has run settings. Change that as you wish (or make your own copy).
-
 ## Run Predictoor Bot on Sapphire Testnet
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
@@ -80,16 +80,18 @@ Then, copy & paste your private key as an envvar. In console:
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `ppss.yaml` as desired. If this is your first time, it has good defaults.
+Update `my_ppss.yaml` as desired.
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
-pdr predictoor 3 sapphire-testnet ppss.yaml
+pdr predictoor 3 my_ppss.yaml sapphire-testnet 
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
 
 At every 5m/1h epoch, it builds & submits >1 times, to maximize accuracy without missing submission deadlines. Specifically: 60 s before predictions are due, it builds a model then submits a prediction. It repeats this until the deadline.
+
+The CLI has a tool to track performance. Type `pdr get_predictoor_info -h` for details.
 
 You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).
 
@@ -105,11 +107,11 @@ Then, copy & paste your private key as an envvar. (You can skip this if it's sam
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `ppss.yaml` as desired.
+Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
 ```console
-pdr predictoor 3 sapphire-mainnet ppss.yaml
+pdr predictoor 3 my_ppss.yaml sapphire-mainnet 
 ```
 
 This is where there's real $ at stake. Good luck!
@@ -122,11 +124,6 @@ When running predictoors on mainnet, you have the potential to earn $.
 
 **[Here](payout.md)** are instructions to claim your earnings.
 
-## Check Performance
-
-After you run your bot and claimed the payout, you might want to check how your bot is perfoming before you start improving it.
-
-Follow **[this instructions](predictoor-data.md)** to get an overview of your performance so far.
 
 # Go Beyond
 
