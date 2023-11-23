@@ -1,4 +1,5 @@
 import os
+from os import getenv
 
 import argparse
 
@@ -13,7 +14,7 @@ def test_main(monkeypatch):
     class MockArgs(argparse.Namespace):
         @property
         def NETWORK(self):
-            return "development"
+            return getenv("NETWORK_OVERRIDE") or "development"  # allow override
 
         @property
         def YAML_FILE(self):

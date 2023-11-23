@@ -56,9 +56,9 @@ def test_get_exchanges(predictoor_contract):
 
 
 @enforce_types
-def test_get_stake_token(predictoor_contract, web3_config):
+def test_get_stake_token(predictoor_contract, web3_pp):
     stake_token = predictoor_contract.get_stake_token()
-    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    ocean_address = get_address(web3_pp, "Ocean")
     assert stake_token == ocean_address
 
 

@@ -48,7 +48,6 @@ Main tools:
 - [Claim payout for predictoor bot](READMEs/payout.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Run barge locally](READMEs/barge.md)
-- [Static models in predictoors](READMEs/static-model.md)
 
 ## Flows for core team
 

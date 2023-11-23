@@ -6,9 +6,9 @@ from pdr_backend.util.env import getenv_or_exit
 
 @enforce_types
 def test_getenv_or_exit(monkeypatch):
-    monkeypatch.delenv("RPC_URL", raising=False)
+    monkeypatch.delenv("MY_VAR", raising=False)
     with pytest.raises(SystemExit):
-        getenv_or_exit("RPC_URL")
+        getenv_or_exit("MY_VAR")
 
-    monkeypatch.setenv("RPC_URL", "http://test.url")
-    assert getenv_or_exit("RPC_URL") == "http://test.url"
+    monkeypatch.setenv("MY_VAR", "http://test.url")
+    assert getenv_or_exit("MY_VAR") == "http://test.url"

@@ -20,20 +20,24 @@ WEEK = 7 * 86400
 @enforce_types
 class DFBuyerAgent:
     def __init__(self, ppss: PPSS):
+        self.feeds = ppss.web3_pp.get_feeds()
+        if not self.feeds:
+            print("No feeds found")
+            return
+
         self.ppss: PPSS = ppss
         self.last_consume_ts = 0
-        self.feeds = ppss.web3_pp.get_feeds()
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
-            self.ppss.web3_pp.web3_config,
-            get_address(ppss.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"),
+            ppss.web3_pp,
+            get_address(ppss.web3_pp, "PredictoorHelper"),
         )
-        self.token_addr = get_address(ppss.web3_pp.web3_config.w3.eth.chain_id, "Ocean")
+        self.token_addr = get_address(ppss.web3_pp, "Ocean")
         self.fail_counter = 0
         self.batch_size = ppss.dfbuyer_ss.batch_size
 
         print("-" * 80)
         print("Config:")
-        print(self.ppss)
+        print(ppss)
 
         print("\n" + "." * 80)
         print("Feeds (detailed):")
@@ -45,7 +49,7 @@ class DFBuyerAgent:
         for addr, feed in self.feeds.items():
             print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
 
-        token = Token(self.ppss.web3_pp.web3_config, self.token_addr)
+        token = Token(self.ppss.web3_pp, self.token_addr)
 
         # Check allowance and approve if necessary
         print("Checking allowance...")
@@ -61,6 +65,8 @@ class DFBuyerAgent:
             print(f"Done: {tx['transactionHash'].hex()}")
 
     def run(self, testing: bool = False):
+        if not self.feeds:
+            return
         while True:
             ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
             self.take_step(ts)
@@ -69,6 +75,8 @@ class DFBuyerAgent:
                 break
 
     def take_step(self, ts: int):
+        if not self.feeds:
+            return
         print("Taking step for timestamp:", ts)
         wait_until_subgraph_syncs(
             self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
@@ -235,9 +243,7 @@ class DFBuyerAgent:
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         prices: Dict[str, float] = {}
         for address in contract_addresses:
-            rate_wei = PredictoorContract(
-                self.ppss.web3_pp.web3_config, address
-            ).get_price()
+            rate_wei = PredictoorContract(self.ppss.web3_pp, address).get_price()
             rate_float = float(
                 self.ppss.web3_pp.web3_config.w3.from_wei(rate_wei, "ether")
             )

@@ -21,27 +21,44 @@ def web3_config():
     return _web3_config()
 
 
-_W3C = None
-
-
 def _web3_config():
-    global _W3C
-    if _W3C is None:
-        s = fast_test_yaml_str()
-        ppss = PPSS(yaml_str=s, network="development")
-        _W3C = ppss.web3_pp.web3_config
-    return _W3C
+    return _web3_pp().web3_config
+
+
+@pytest.fixture(scope="session")
+def rpc_url():
+    return _web3_pp().rpc_url
+
+
+@pytest.fixture(scope="session")
+def web3_pp():
+    return _web3_pp()
+
+
+def _web3_pp():
+    return _ppss().web3_pp
+
+
+@pytest.fixture(scope="session")
+def ppss():
+    return _ppss()
+
+
+def _ppss():
+    s = fast_test_yaml_str()
+    return PPSS(yaml_str=s, network="development")
 
 
 @pytest.fixture(scope="session")
 def ocean_token() -> Token:
-    token_address = get_address(CHAIN_ID, "Ocean")
-    return Token(_web3_config(), token_address)
+    token_address = get_address(_web3_pp(), "Ocean")
+    return Token(_web3_pp(), token_address)
 
 
 @pytest.fixture(scope="module")
 def predictoor_contract():
-    w3c = _web3_config()
+    w3p = _web3_pp()
+    w3c = w3p.web3_config
     _, _, _, _, logs = publish(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
@@ -53,15 +70,16 @@ def predictoor_contract():
         feeCollector_addr=w3c.owner,
         rate=3,
         cut=0.2,
-        web3_config=w3c,
+        web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3c, dt_addr)
+    return PredictoorContract(w3p, dt_addr)
 
 
 @pytest.fixture(scope="module")
 def predictoor_contract2():
-    w3c = _web3_config()
+    w3p = _web3_pp()
+    w3c = w3p.web3_config
     _, _, _, _, logs = publish(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
@@ -73,14 +91,15 @@ def predictoor_contract2():
         feeCollector_addr=w3c.owner,
         rate=3,
         cut=0.2,
-        web3_config=w3c,
+        web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3c, dt_addr)
+    return PredictoorContract(w3p, dt_addr)
 
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def predictoor_batcher():
-    predictoor_batcher_addr = get_address(CHAIN_ID, "PredictoorHelper")
-    return PredictoorBatcher(_web3_config(), predictoor_batcher_addr)
+    w3p = _web3_pp()
+    predictoor_batcher_addr = get_address(w3p, "PredictoorHelper")
+    return PredictoorBatcher(w3p, predictoor_batcher_addr)

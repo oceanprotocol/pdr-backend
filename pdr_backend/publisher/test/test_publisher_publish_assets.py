@@ -50,7 +50,7 @@ def test_publish_assets(
         mock.web3_config = Mock()
         mock.web3_config.owner = "0x1"
         mock.web3_config.w3.eth.chain_id = 8996
-        publish_assets(ppss)
+        publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
     mock_get_address.assert_called_once_with(8996, "Ocean")
     mock_fund_dev_accounts.assert_called_once()
@@ -65,5 +65,5 @@ def test_publish_assets(
         feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
         rate=3 / (1 + 0.2 + 0.001),
         cut=0.2,
-        web3_config=mock.web3_config,
+        web3_pp=ppss.web3_pp,
     )

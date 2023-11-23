@@ -80,22 +80,14 @@ def do_predictoor():
     approach = args.APPROACH
     if approach == 1:
         agent = PredictoorAgent1(ppss)
-        agent.run()
-
-    elif approach == 2:
-        # must import here, otherwise it wants MODELDIR envvar
-        from pdr_backend.predictoor.approach2.main2 import (  # pylint: disable=import-outside-toplevel
-            do_main2,
-        )
-
-        do_main2()
 
     elif approach == 3:
         agent = PredictoorAgent3(ppss)
-        agent.run()
 
     else:
         raise ValueError(f"Unknown predictoor approach {approach}")
+
+    agent.run()
 
 
 @enforce_types
@@ -172,9 +164,7 @@ def do_trueval(testing=False):
     if approach == 1:
         agent = TruevalAgentSingle(ppss, get_trueval)
     elif approach == 2:
-        predictoor_batcher_addr = get_address(
-            ppss.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"
-        )
+        predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
         agent = TruevalAgentBatch(ppss, get_trueval, predictoor_batcher_addr)
     else:
         raise ValueError(f"Unknown trueval approach {approach}")
@@ -199,10 +189,8 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(  # pylint: disable=unused-variable
-        yaml_filename=args.YAML_FILE, network=args.NETWORK
-    )
-    publish_assets(ppss)
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 
 @enforce_types
