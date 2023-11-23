@@ -56,5 +56,5 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          coverage run --omit="*test*" -m pytest -s
+          coverage run --omit="*test*" -m pytest
           coverage report
