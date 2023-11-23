@@ -9,7 +9,6 @@ from pdr_backend.util.cli_module import do_dfbuyer
 
 
 @enforce_types
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs")
 def test_main(monkeypatch):
     class MockArgs(argparse.Namespace):
         @property
@@ -32,4 +31,5 @@ def test_main(monkeypatch):
         MockArgParser,
     )
 
-    do_dfbuyer()
+    with patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs"):
+        do_dfbuyer()
