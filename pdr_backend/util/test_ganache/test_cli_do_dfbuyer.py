@@ -1,12 +1,15 @@
 import os
 
 import argparse
+
+from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.util.cli_module import do_dfbuyer
 
 
 @enforce_types
+@patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs")
 def test_main(monkeypatch):
     class MockArgs(argparse.Namespace):
         @property
