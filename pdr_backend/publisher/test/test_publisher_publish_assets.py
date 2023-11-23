@@ -7,16 +7,6 @@ from pdr_backend.ppss.web3_pp import Web3PP
 
 
 @pytest.fixture
-def mock_web3_config():
-    with patch("pdr_backend.ppss.web3_pp.Web3PP") as mock:
-        mock_instance = MagicMock(spec=Web3PP)
-        mock_instance.web3_config = Mock()
-        mock_instance.web3_config.owner = "0x1"
-        mock.return_value = mock_instance
-        yield mock_instance
-
-
-@pytest.fixture
 def mock_token():
     with patch("pdr_backend.publisher.main.Token") as mock:
         mock_instance = MagicMock()
@@ -59,7 +49,13 @@ def test_publish_assets(
     mock_token.return_value = mock_token_instance
 
     test_config = fast_test_yaml_str(tmpdir)
-    ppss = PPSS("development", yaml_str=test_config)
+    ppss = PPSS(network="development", yaml_str=test_config)
+    with patch.object(ppss, "web3_pp") as mock:
+        mock_instance = MagicMock(spec=Web3PP)
+        mock_instance.web3_config = Mock()
+        mock_instance.web3_config.owner = "0x1"
+        mock.return_value = mock_instance
+    print(ppss.web3_pp)
     publish_assets(ppss)
 
     mock_get_address.assert_called_once_with(8996, "Ocean")
