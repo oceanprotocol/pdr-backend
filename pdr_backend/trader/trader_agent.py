@@ -64,7 +64,7 @@ class TraderAgent:
 
     def check_subscriptions_and_subscribe(self):
         for addr, feed in self.feeds.items():
-            contract = PredictoorContract(self.ppss.web3_pp.web3_config, addr)
+            contract = PredictoorContract(self.ppss.web3_pp, addr)
             if not contract.is_valid_subscription():
                 print(f"Purchasing new subscription for feed: {feed}")
                 contract.buy_and_start_subscription(None, True)

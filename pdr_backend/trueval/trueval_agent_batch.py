@@ -36,7 +36,7 @@ class TruevalAgentBatch(TruevalAgentBase):
     ):
         super().__init__(ppss, _get_trueval)
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
-            self.ppss.web3_pp.web3_config, predictoor_batcher_addr
+            self.ppss.web3_pp, predictoor_batcher_addr
         )
 
     def take_step(self):
@@ -77,16 +77,14 @@ class TruevalAgentBatch(TruevalAgentBase):
             lambda: {"epoch_starts": [], "trueVals": [], "cancelRounds": []}
         )
 
+        w3 = self.ppss.web3_pp.web3_config.w3
         for slot in slots:
-            if slot.trueval is not None:  # Only consider slots with non-None truevals
-                data = contracts[
-                    self.ppss.web3_pp.web3_config.w3.to_checksum_address(
-                        slot.feed.address
-                    )
-                ]
-                data["epoch_starts"].append(slot.slot_number)
-                data["trueVals"].append(slot.trueval)
-                data["cancelRounds"].append(slot.cancel)
+            if slot.trueval is None:  # We only want slots with non-None truevals
+                continue
+            data = contracts[w3.to_checksum_address(slot.feed.address)]
+            data["epoch_starts"].append(slot.slot_number)
+            data["trueVals"].append(slot.trueval)
+            data["cancelRounds"].append(slot.cancel)
 
         contract_addrs = list(contracts.keys())
         epoch_starts = [data["epoch_starts"] for data in contracts.values()]
