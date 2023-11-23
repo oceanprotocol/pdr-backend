@@ -73,7 +73,7 @@ def publish_assets(ppss: PPSS):
         )
         print("Publish done")
 
-    fee_collector = ppss.publisher_ss.fee_collector_addr
+    fee_collector = ppss.publisher_ss.fee_collector_address
     if web3_config.w3.eth.chain_id == 23295:
         print("Publishing pairs on testnet")
         helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")

@@ -33,6 +33,8 @@ publisher_ss:
     fee_collector_address: 0x0000000000000000000000000000000000000000
   sapphire-testnet:
     fee_collector_address: 0x0000000000000000000000000000000000000000
+  development:
+    fee_collector_address: 0x0000000000000000000000000000000000000000
 
 trader_pp:
   sim_only:
