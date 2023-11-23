@@ -161,19 +161,19 @@ Then, copy VPS' `address.json` file to local. In local console:
 cd
 
 # OPTION 1: for predictoor bot
-scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json address-barge-predictoor-bot.address.json
+scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json barge-predictoor-bot.address.json
 
 # OR, OPTION 2: for unit testing
-scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json address-barge-pytest.address.json
+scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json barge-pytest.address.json
 ```
 
 We give the address file a unique name, vs just "address.json". This keeps it distinct from the address file for _second_ Barge VM we run for pytest (details below).
 
-Confirm that `address-barge-predictoor-bot.address.json` has a "development" entry. In local console:
+Confirm that `barge-predictoor-bot.address.json` has a "development" entry. In local console:
 ```console
-grep development ~/address-barge-predictoor-bot.address.json
+grep development ~/barge-predictoor-bot.address.json
 # or
-grep development ~/address-barge-pytest.address.json
+grep development ~/barge-pytest.address.json
 ```
 
 It should return:
@@ -205,7 +205,7 @@ cp ppss.yaml my_ppss.yaml
 
 In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
 - change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/address-barge-predictoor-bot.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/address-barge-predictoor-bot.json`, in `"development"` -> `"Ocean"` entry.)
+- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-predictoor-bot.address.json`, in `"development"` -> `"Ocean"` entry.)
 
 ### Run pdr bot
 
@@ -254,7 +254,7 @@ Whereas most READMEs copy `ppss.yaml` to `my_ppss.yaml`, for development we typi
 
 In `ppss.yaml` file, in `web3_pp` ->  `barge-pytest` section: (note the different barge section)
 - change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/address-barge-pytest.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/address-barge-predictoor-bot.json`, in `"development"` -> `"Ocean"` entry.)
+- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-pytest.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-pytest.address.json`, in `"development"` -> `"Ocean"` entry.)
 
 
 ### Run tests
@@ -269,6 +269,9 @@ pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constan
 
 # run all tests in a file
 pytest pdr_backend/util/test_noganache/test_util_constants.py -s
+
+# run a single test that flexes network connection
+pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filename -s
 
 # run all regular tests; see details on pytest markers to select specific suites
 pytest
