@@ -61,9 +61,9 @@ trueval_ss:
   sleep_time: 30
 
 dfbuyer_ss:
-  batch_size: 42
-  consume_interval_seconds: 42
-  weekly_spending_limit: 25401600 # 42 * 7 * 24 * 3600
+  batch_size: 20
+  consume_interval_seconds: 37000
+  weekly_spending_limit: 86400
 
 payout_ss:
   batch_size: 250
