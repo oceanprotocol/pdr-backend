@@ -307,7 +307,7 @@ class DataFactory:
                 for parquet_col in parquet_df.columns:
                     if parquet_col in ["timestamp", "datetime"]:
                         continue
-                    
+
                     signal_str = parquet_col  # eg "close"
                     hist_col = f"{exch_str}:{pair_str}:{signal_str}"
 
@@ -333,7 +333,7 @@ class DataFactory:
 
         # select columns in-order [timestamp, ..., datetime]
         hist_df = hist_df.select(hist_df_cols + ["datetime"])
-        
+
         assert "datetime" in hist_df.columns
         assert "timestamp" in hist_df.columns
 

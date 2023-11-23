@@ -63,9 +63,11 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool
     raise ValueError(f"Can't handle type {type(x)}")
 
 
-# TODO - Decide whether to support polars + pandas in mathutil, or separate math from df, and move to pdutil
+# TODO - Decide whether to support polars + pandas in mathutil, or separate math from df and move to pdutil
 @enforce_types
-def fill_nans(df: Union[pd.DataFrame, pl.DataFrame]) -> Union[pd.DataFrame, pl.DataFrame]:
+def fill_nans(
+    df: Union[pd.DataFrame, pl.DataFrame]
+) -> Union[pd.DataFrame, pl.DataFrame]:
     """Interpolate the nans using Linear method available in pandas.
     It ignores the index and treat the values as equally spaced.
 
@@ -79,9 +81,13 @@ def fill_nans(df: Union[pd.DataFrame, pl.DataFrame]) -> Union[pd.DataFrame, pl.D
         interpolate_df = df.to_pandas()
 
     # interpolate is a pandas-only feature
-    interpolate_df = interpolate_df.interpolate(method="linear", limit_direction="forward")
-    interpolate_df = interpolate_df.interpolate(method="linear", limit_direction="backward")  # row 0
-    
+    interpolate_df = interpolate_df.interpolate(
+        method="linear", limit_direction="forward"
+    )
+    interpolate_df = interpolate_df.interpolate(
+        method="linear", limit_direction="backward"
+    )  # row 0
+
     # return polars if input was polars
     if type(output_type) == pl.DataFrame:
         interpolate_df = pl.from_pandas(interpolate_df)

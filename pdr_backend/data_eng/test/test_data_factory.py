@@ -346,7 +346,9 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 def test_create_xy__handle_nan(tmpdir):
     # create hist_df
     parquetdir = str(tmpdir)
-    parquet_dfs = {"kraken": {"ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA))}}
+    parquet_dfs = {
+        "kraken": {"ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA))}
+    }
     pp, ss = _data_pp_ss_1exchange_1coin_1signal(parquetdir)
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_parquet_dfs(parquet_dfs)
@@ -354,18 +356,22 @@ def test_create_xy__handle_nan(tmpdir):
     # corrupt hist_df with nans
     # Corrupt hist_df with NaN values
     nan_indices = [1686805800000, 1686806700000, 1686808800000]
-    hist_df = hist_df.with_columns([
-        pl.when(hist_df['timestamp'].is_in(nan_indices))
-        .then(pl.lit(None, pl.Float64))
-        .otherwise(hist_df['kraken:ETH-USDT:high'])
-        .alias('kraken:ETH-USDT:high')
-    ])
+    hist_df = hist_df.with_columns(
+        [
+            pl.when(hist_df["timestamp"].is_in(nan_indices))
+            .then(pl.lit(None, pl.Float64))
+            .otherwise(hist_df["kraken:ETH-USDT:high"])
+            .alias("kraken:ETH-USDT:high")
+        ]
+    )
 
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
     # @ model/ai-level, we convert to pandas
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0, do_fill_nans=False)
+    X, y, x_df = data_factory.create_xy(
+        hist_df.to_pandas(), testshift=0, do_fill_nans=False
+    )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -373,7 +379,9 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(hist_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0, do_fill_nans=True)
+    X, y, x_df = data_factory.create_xy(
+        hist_df.to_pandas(), testshift=0, do_fill_nans=True
+    )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
