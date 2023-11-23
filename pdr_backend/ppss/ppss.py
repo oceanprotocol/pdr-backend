@@ -50,7 +50,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.trader_ss = TraderSS(d["trader_ss"])
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.publisher_ss = PublisherSS(network, d["publisher_ss"])
-        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
 
     def __str__(self):
