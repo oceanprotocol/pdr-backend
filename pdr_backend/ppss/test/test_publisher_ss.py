@@ -1,4 +1,4 @@
-from pdr_backend.publisher.publisher_ss import PublisherSS
+from pdr_backend.ppss.publisher_ss import PublisherSS
 
 
 def test_publisher_ss():
