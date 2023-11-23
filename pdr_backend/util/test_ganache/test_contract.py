@@ -2,6 +2,8 @@ from pathlib import Path
 
 from enforce_typing import enforce_types
 
+import pytest
+
 from pdr_backend.util.contract import (
     get_address,
     get_addresses,
