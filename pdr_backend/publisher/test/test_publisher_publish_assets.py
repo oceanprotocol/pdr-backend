@@ -54,8 +54,7 @@ def test_publish_assets(
         mock_instance.web3_config = Mock()
         mock_instance.web3_config.owner = "0x1"
         mock.return_value = mock_instance
-    print(ppss.web3_pp)
-    publish_assets(ppss)
+        publish_assets(ppss)
 
     mock_get_address.assert_called_once_with(8996, "Ocean")
     mock_fund_dev_accounts.assert_called_once()
