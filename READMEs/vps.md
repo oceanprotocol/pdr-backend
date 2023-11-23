@@ -254,7 +254,7 @@ Whereas most READMEs copy `ppss.yaml` to `my_ppss.yaml`, for development we typi
 
 In `ppss.yaml` file, in `web3_pp` ->  `barge-pytest` section: (note the different barge section)
 - change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-pytest.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-pytest.address.json`, in `"development"` -> `"Ocean"` entry.)
+- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-pytest.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-pytest.address.json`, in `"development"` -> `"Ocean"` entry.)
 
 
 ### Run tests
@@ -269,6 +269,9 @@ pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constan
 
 # run all tests in a file
 pytest pdr_backend/util/test_noganache/test_util_constants.py -s
+
+# run a single test that flexes network connection
+pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filename -s
 
 # run all regular tests; see details on pytest markers to select specific suites
 pytest
