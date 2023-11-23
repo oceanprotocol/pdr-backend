@@ -390,7 +390,116 @@ def test_create_xy__handle_nan(tmpdir):
 
 
 @enforce_types
-def _data_pp_ss_1exchange_1coin_1signal(dir: str) -> Tuple[DataPP, DataSS]:
+def test_get_hist_df_calls(tmpdir):
+    """Test core DataFactory functions are being called"""
+    parquetdir = str(tmpdir)
+
+    # create hist_df
+    parquetdir = str(tmpdir)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(parquetdir)
+    data_factory = DataFactory(pp, ss)
+
+    # setup mock objects
+    def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_update_parquet.called = True
+
+    def mock_load_parquet(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_load_parquet.called = True
+
+    def mock_merge_parquet_dfs(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_merge_parquet_dfs.called = True
+        return pl.DataFrame([1, 2, 3])
+
+    data_factory._update_parquet = mock_update_parquet
+    data_factory._load_parquet = mock_load_parquet
+    data_factory._merge_parquet_dfs = mock_merge_parquet_dfs
+
+    # call and assert
+    hist_df = data_factory.get_hist_df()
+    assert isinstance(hist_df, pd.DataFrame)
+    assert len(hist_df) == 3
+
+    assert mock_update_parquet.called
+    assert mock_load_parquet.called
+    assert mock_merge_parquet_dfs.called
+
+
+@enforce_types
+def test_get_hist_df_fns(tmpdir):
+    """Test DataFactory get_hist_df functions are being called"""
+    parquetdir = str(tmpdir)
+
+    # create hist_df
+    parquetdir = str(tmpdir)
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(parquetdir)
+    data_factory = DataFactory(pp, ss)
+
+    # setup mock objects
+    def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_update_parquet.called = True
+
+    def mock_load_parquet(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_load_parquet.called = True
+
+    def mock_merge_parquet_dfs(*args, **kwargs):  # pylint: disable=unused-argument
+        mock_merge_parquet_dfs.called = True
+        return pl.DataFrame([1, 2, 3])
+
+    data_factory._update_parquet = mock_update_parquet
+    data_factory._load_parquet = mock_load_parquet
+    data_factory._merge_parquet_dfs = mock_merge_parquet_dfs
+
+    # call and assert
+    hist_df = data_factory.get_hist_df()
+    assert isinstance(hist_df, pd.DataFrame)
+    assert len(hist_df) == 3
+
+    assert mock_update_parquet.called
+    assert mock_load_parquet.called
+    assert mock_merge_parquet_dfs.called
+
+
+@enforce_types
+def test_get_hist_df(tmpdir):
+    """DataFactory get_hist_df() is executing e2e correctly"""
+    parquetdir = str(tmpdir)
+
+    pp = DataPP(
+        "5m",
+        "binanceus h ETH/USDT",
+        N_test=2,
+    )
+
+    ss = DataSS(
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
+        csv_dir=parquetdir,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
+    )
+
+    data_factory = DataFactory(pp, ss)
+    hist_df = data_factory.get_hist_df()
+
+    # call and assert
+    hist_df = data_factory.get_hist_df()
+    assert isinstance(hist_df, pd.DataFrame)
+
+    # 865 records created
+    assert len(hist_df) == 865
+
+    # binance is returning valid data
+    assert hist_df["binanceus:BTC-USDT:high"].isna().sum() == 0
+    assert hist_df["binanceus:ETH-USDT:high"].isna().sum() == 0
+
+    # kraken is returning nans
+    assert hist_df["kraken:BTC-USDT:high"].isna().sum() == 865
+    assert hist_df["kraken:ETH-USDT:high"].isna().sum() == 865
+
+
+@enforce_types
+def _data_pp_ss_1exchange_1coin_1signal(tmpdir: str) -> Tuple[DataPP, DataSS]:
     pp = DataPP(
         "5m",
         "kraken h ETH/USDT",
@@ -399,7 +508,7 @@ def _data_pp_ss_1exchange_1coin_1signal(dir: str) -> Tuple[DataPP, DataSS]:
 
     ss = DataSS(
         [pp.predict_feed_str],
-        csv_dir=dir,
+        csv_dir=tmpdir,
         st_timestr="2023-06-18",
         fin_timestr="2023-06-21",
         max_n_train=7,

@@ -50,7 +50,7 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
     return round(x, sig - int(floor(log10(abs(x)))) - 1)
 
 
-# TODO - Decide whether to support polars + pandas in mathutil, or separate math from df, and move to pdutil
+# TODO - Decide whether to support polars + pandas in mathutil
 @enforce_types
 def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool:
     """Returns True if any entry in x has a nan"""
@@ -59,11 +59,11 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool
     if type(x) in [pd.DataFrame, pd.Series]:
         return x.isnull().values.any()  # type: ignore[union-attr]
     if type(x) == pl.DataFrame:
-        return x.null_count() > 0
+        return bool(x.null_count() > 0)
     raise ValueError(f"Can't handle type {type(x)}")
 
 
-# TODO - Decide whether to support polars + pandas in mathutil, or separate math from df and move to pdutil
+# TODO - Decide whether to support polars + pandas in mathutil
 @enforce_types
 def fill_nans(
     df: Union[pd.DataFrame, pl.DataFrame]
@@ -73,12 +73,14 @@ def fill_nans(
 
     Ref: https://www.geeksforgeeks.org/working-with-missing-data-in-pandas/
     """
-    interpolate_df = df
+    interpolate_df = pd.DataFrame()
     output_type = type(df)
 
     # polars support
     if output_type == pl.DataFrame:
         interpolate_df = df.to_pandas()
+    else:
+        interpolate_df = df
 
     # interpolate is a pandas-only feature
     interpolate_df = interpolate_df.interpolate(
