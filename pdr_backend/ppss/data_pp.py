@@ -7,11 +7,9 @@ from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import verify_timeframe_str
-from pdr_backend.util.strutil import StrMixin
 
 
-class DataPP(StrMixin):
-    __STR_OBJDIR__ = ["d"]
+class DataPP:
 
     @enforce_types
     def __init__(self, d: dict):
@@ -121,3 +119,12 @@ class DataPP(StrMixin):
     def quote_str(self) -> str:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
         return unpack_pair_str(self.pair_str)[1]
+
+    @enforce_types
+    def __str__(self) -> str:
+        s = "DataPP:\n"
+        s += f"  timeframe={self.timeframe}\n"
+        s += f"  predict_feeds_strs={self.predict_feeds_strs}\n"
+        s += f"  test_n={self.test_n}\n"
+        s += "-" * 10 + "\n"
+        return s

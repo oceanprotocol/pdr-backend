@@ -16,7 +16,6 @@ from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
 class DataSS:
-    __STR_OBJDIR__ = ["d"]
 
     @enforce_types
     def __init__(self, d: dict):
@@ -129,36 +128,20 @@ class DataSS:
 
     @enforce_types
     def __str__(self) -> str:
-        s = "DataSS={\n"
-
-        s += f"  input_feeds_strs={self.input_feeds_strs}"
-        s += f"  -> n_inputfeeds={self.n_input_feeds}"
-        s += "  \n"
-
-        s += f"  csv_dir={self.csv_dir}\n"
-        s += f"  st_timestr={self.st_timestr}\n"
-        s += f"  -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
-        s += f"  fin_timestr={self.fin_timestr}\n"
-        s += f"  -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
-        s += "  \n"
-
-        s += f"  max_n_train={self.max_n_train} -- max # pts to train on\n"
-        s += "  \n"
-
-        s += f"  autoregressive_n={self.autoregressive_n}"
-        s += " -- model inputs ar_n past pts z[t-1], .., z[t-ar_n]\n"
-        s += "  \n"
-
-        s += f"  -> n_input_feeds * ar_n = n = {self.n}"
-        s += "-- # input variables to model\n"
-        s += "  \n"
-
-        s += f"  exchs_dict={self.exchs_dict}\n"
-        s += f"  -> n_exchs={self.n_exchs}\n"
-        s += f"  -> exchange_strs={self.exchange_strs}\n"
-        s += "  \n"
-
-        s += "/DataSS}\n"
+        s = "DataSS:\n"
+        s += f"input_feeds_strs={self.input_feeds_strs}"
+        s += f" -> n_inputfeeds={self.n_input_feeds}\n"
+        s += f"st_timestr={self.st_timestr}"
+        s += f" -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
+        s += f"fin_timestr={self.fin_timestr}"
+        s += f" -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
+        s += f"max_n_train={self.max_n_train}"
+        s += f", autoregressive_n=ar_n={self.autoregressive_n}"
+        s += f" -> n = n_input_feeds * ar_n = {self.n} = # inputs to model\n"
+        s += f"exchs_dict={self.exchs_dict}"
+        s += f" -> n_exchs={self.n_exchs}\n"
+        s += f"csv_dir={self.csv_dir}\n"
+        s += "-" * 10 + "\n"
         return s
 
     @enforce_types
