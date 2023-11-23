@@ -16,7 +16,6 @@ from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publisher_ss import PublisherSS
-from pdr_backend.ppss.trueval_ss import TruevalSS
 
 
 @enforce_types

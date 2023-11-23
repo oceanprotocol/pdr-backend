@@ -2,9 +2,8 @@ from unittest.mock import Mock, patch
 
 import yaml
 
-from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.ppss.ppss import fast_test_yaml_str
-from pdr_backend.util.cli_module import do_dfbuyer, do_publisher
+from pdr_backend.util.cli_module import do_publisher
 
 
 @patch("pdr_backend.util.cli_module.publish_assets")

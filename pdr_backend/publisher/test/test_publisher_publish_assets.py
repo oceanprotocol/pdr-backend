@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.main import publish_assets
-from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.ppss.web3_pp import Web3PP
 
 
