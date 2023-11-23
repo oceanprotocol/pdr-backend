@@ -10,7 +10,6 @@ from pdr_backend.util.timeframestr import verify_timeframe_str
 
 
 class DataPP:
-
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["data_pp"]

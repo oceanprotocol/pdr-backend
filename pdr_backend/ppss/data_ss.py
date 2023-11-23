@@ -16,7 +16,6 @@ from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
 class DataSS:
-
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["data_ss"]
