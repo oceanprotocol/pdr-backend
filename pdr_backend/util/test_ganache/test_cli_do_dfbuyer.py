@@ -1,6 +1,8 @@
 import os
 
 import argparse
+
+from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.util.cli_module import do_dfbuyer
@@ -29,4 +31,5 @@ def test_main(monkeypatch):
         MockArgParser,
     )
 
-    do_dfbuyer()
+    with patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs"):
+        do_dfbuyer()

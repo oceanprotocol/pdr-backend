@@ -15,6 +15,7 @@ from pdr_backend.ppss.trader_pp import TraderPP
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.ppss.publisher_ss import PublisherSS
 
 
 @enforce_types
@@ -48,6 +49,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.trader_pp = TraderPP(d["trader_pp"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.trueval_ss = TruevalSS(d["trueval_ss"])
+        self.publisher_ss = PublisherSS(network, d["publisher_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
 
     def __str__(self):

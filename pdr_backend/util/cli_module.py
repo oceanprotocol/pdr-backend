@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.publisher.main import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
@@ -201,7 +202,7 @@ def do_publisher():
     ppss = PPSS(  # pylint: disable=unused-variable
         yaml_filename=args.YAML_FILE, network=args.NETWORK
     )
-    raise AssertionError("FIXME")
+    publish_assets(ppss)
 
 
 @enforce_types
