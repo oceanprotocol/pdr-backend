@@ -17,7 +17,7 @@ from pdr_backend.data_eng.pdutil import (
     load_parquet,
 )
 
-# from pdr_backend.util.mathutil import has_nan, fill_nans
+from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr
 
 MS_PER_5M_EPOCH = 300000
@@ -342,39 +342,43 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
 
-# @enforce_types
-# def test_create_xy__handle_nan(tmpdir):
-#     # create hist_df
-#     csvdir = str(tmpdir)
-#     csv_dfs = {"kraken": {"ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA)}}
-#     pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
-#     data_factory = DataFactory(pp, ss)
-#     hist_df = data_factory._merge_csv_dfs(csv_dfs)
+@enforce_types
+def test_create_xy__handle_nan(tmpdir):
+    # create hist_df
+    csvdir = str(tmpdir)
+    csv_dfs = {"kraken": {"ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA))}}
+    pp, ss = _data_pp_ss_1exchange_1coin_1signal(csvdir)
+    data_factory = DataFactory(pp, ss)
+    hist_df = data_factory._merge_parquet_dfs(csv_dfs)
 
-#     # corrupt hist_df with nans
-#     all_signal_strs = set(signal_str for _, signal_str, _ in ss.input_feed_tups)
-#     assert "high" in all_signal_strs
-#     hist_df.at[1686805800000, "kraken:ETH-USDT:high"] = np.nan  # first row
-#     hist_df.at[1686806700000, "kraken:ETH-USDT:high"] = np.nan  # middle row
-#     hist_df.at[1686808800000, "kraken:ETH-USDT:high"] = np.nan  # last row
-#     assert has_nan(hist_df)
+    # corrupt hist_df with nans
+    # Corrupt hist_df with NaN values
+    nan_indices = [1686805800000, 1686806700000, 1686808800000]
+    hist_df = hist_df.with_columns([
+        pl.when(hist_df['timestamp'].is_in(nan_indices))
+        .then(pl.lit(None, pl.Float64))
+        .otherwise(hist_df['kraken:ETH-USDT:high'])
+        .alias('kraken:ETH-USDT:high')
+    ])
 
-#     # run create_xy() and force the nans to stick around
-#     # -> we want to ensure that we're building X/y with risk of nan
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
-#     assert has_nan(X) and has_nan(y) and has_nan(x_df)
+    # =========== initial testshift (0)
+    # run create_xy() and force the nans to stick around
+    # -> we want to ensure that we're building X/y with risk of nan
+    # @ model/ai-level, we convert to pandas
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0, do_fill_nans=False)
+    assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
-#     # nan approach 1: fix externally
-#     hist_df2 = fill_nans(hist_df)
-#     assert not has_nan(hist_df2)
+    # nan approach 1: fix externally
+    hist_df2 = fill_nans(hist_df)
+    assert not has_nan(hist_df2)
 
-#     # nan approach 2: explicitly tell create_xy to fill nans
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
-#     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
+    # nan approach 2: explicitly tell create_xy to fill nans
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0, do_fill_nans=True)
+    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
-#     # nan approach 3: create_xy fills nans by default (best)
-#     X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
-#     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
+    # nan approach 3: create_xy fills nans by default (best)
+    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
 @enforce_types
