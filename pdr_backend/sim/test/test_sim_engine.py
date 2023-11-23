@@ -10,7 +10,7 @@ from pdr_backend.sim.sim_engine import SimEngine
 
 
 @enforce_types
-def test_SimEngine(tmpdir):
+def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
@@ -18,17 +18,17 @@ def test_SimEngine(tmpdir):
     ppss.data_pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["kraken c BTC/USDT"],
+            "predict_feeds": ["binanceus c BTC/USDT"],
             "sim_only": {"test_n": 10},
         }
     )
     assert hasattr(ppss, "data_ss")
     ppss.data_ss = DataSS(
         {
-            "input_feeds": ["kraken oc BTC/USDT ETH/USDT"],
-            "csv_dir": os.path.join("csvs"),
+            "input_feeds": ["binanceus oc BTC/USDT ETH/USDT"],
+            "csv_dir": os.path.join(tmpdir, "csvs"),
             "st_timestr": "2023-06-18",
-            "fin_timestr": "2023-07-21",
+            "fin_timestr": "2023-06-30",
             "max_n_train": 100,
             "autoregressive_n": 2,
         }
