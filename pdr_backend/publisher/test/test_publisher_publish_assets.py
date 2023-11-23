@@ -46,13 +46,10 @@ def test_publish_assets(
 
     test_config = fast_test_yaml_str(tmpdir)
     ppss = PPSS(network="development", yaml_str=test_config)
-    with patch.object(ppss, "web3_pp") as mock:
-        mock.web3_config = Mock()
-        mock.web3_config.owner = "0x1"
-        mock.web3_config.w3.eth.chain_id = 8996
-        publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
-    mock_get_address.assert_called_once_with(8996, "Ocean")
+    publish_assets(ppss.web3_pp, ppss.publisher_ss)
+
+    mock_get_address.assert_called_once_with(ppss.web3_pp, "Ocean")
     mock_fund_dev_accounts.assert_called_once()
     mock_publish.assert_any_call(
         s_per_epoch=300,
