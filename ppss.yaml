@@ -48,7 +48,7 @@ trader_ss:
   sim_only:
     buy_amt: 10 USD
   bot_only:
-    min_buffer: 60 # in s. only trade if there's > this time left
+    min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3
 
