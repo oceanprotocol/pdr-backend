@@ -16,9 +16,7 @@ def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
 
     assert len(mock_get_address.call_args_list) == 2
     call1 = mock_get_address.call_args_list[0]
-    assert call1 == call(
-        dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "PredictoorHelper"
-    )
+    assert call1 == call(dfbuyer_config.web3_pp, "PredictoorHelper")
     call2 = mock_get_address.call_args_list[1]
     assert call2 == call(dfbuyer_config.web3_pp.web3_config.w3.eth.chain_id, "Ocean")
 
