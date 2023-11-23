@@ -5,7 +5,7 @@ from pdr_backend.util.strutil import StrMixin
 class PublisherSS(StrMixin):
     @enforce_types
     def __init__(self, network: str, d: dict):
-        self.d = d  # yaml_dict["trueval_ss"]
+        self.d = d  # yaml_dict["publisher_ss"]
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
 
     # --------------------------------
@@ -13,6 +13,6 @@ class PublisherSS(StrMixin):
     @property
     def fee_collector_address(self) -> str:
         """
-        Returns the address of FeeCollector for the current network
+        Returns the address of FeeCollector of the current network
         """
         return self.d[self.network]["fee_collector_address"]
