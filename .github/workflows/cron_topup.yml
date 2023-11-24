@@ -3,7 +3,8 @@ name: Topup accounts
 on:
   schedule:
     - cron: "0 * * * *"
-  
+  push:
+
 jobs:
   topup-mainnet:
     runs-on: ubuntu-latest
