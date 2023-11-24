@@ -22,11 +22,9 @@ jobs:
             pip install -r requirements.txt
         - name: Set env variables
           run: |
-            echo "SUBGRAPH_URL=http://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph" >> $GITHUB_ENV
-            echo "RPC_URL=https://sapphire.oasis.io" >> $GITHUB_ENV
             echo "PRIVATE_KEY=${{ secrets.TOPUP_SCRIPT_PK }}" >> $GITHUB_ENV
         - name: Run top-up script
-          run: python3 scripts/topup.py
+          run: python3 pdr topup ppss.yaml sapphire-mainnet
   
   topup-testnet:
     runs-on: ubuntu-latest
@@ -43,8 +41,6 @@ jobs:
             pip install -r requirements.txt
         - name: Set env variables
           run: |
-            echo "SUBGRAPH_URL=http://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph" >> $GITHUB_ENV
-            echo "RPC_URL=https://testnet.sapphire.oasis.dev" >> $GITHUB_ENV
             echo "PRIVATE_KEY=${{ secrets.TOPUP_SCRIPT_PK }}" >> $GITHUB_ENV
         - name: Run top-up script
-          run: python3 scripts/topup.py
+          run: python3 pdr topup ppss.yaml sapphire-testnet
