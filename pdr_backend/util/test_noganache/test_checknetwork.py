@@ -1,6 +1,7 @@
 import time
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.check_network import (
     WEEK,
     check_dfbuyer,
@@ -103,8 +104,10 @@ def test_get_expected_consume():
 
 
 @pytest.fixture
-def mock_ppss():
-    ppss = MagicMock()
+def mock_ppss(tmpdir):
+    s = fast_test_yaml_str(tmpdir)
+    ppss = PPSS(yaml_str=s, network="development")
+    ppss.web3_pp = Mock()
     ppss.web3_pp.subgraph_url = "http://example.com/subgraph"
     ppss.web3_pp.web3_config = MagicMock()
     ppss.web3_pp.web3_config.w3.eth.chain_id = 1
