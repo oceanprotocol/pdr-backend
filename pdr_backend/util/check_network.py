@@ -1,6 +1,8 @@
 import math
 import time
 
+from enforce_typing import enforce_types
+
 from pdr_backend.models.token import Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
@@ -9,6 +11,7 @@ from pdr_backend.util.subgraph import get_consume_so_far_per_contract, query_sub
 WEEK = 86400 * 7
 
 
+@enforce_types
 def seconds_to_text(seconds: int) -> str:
     if seconds == 300:
         return "5m"
@@ -54,6 +57,7 @@ def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
         )
 
 
+@enforce_types
 def get_expected_consume(for_ts: int, tokens: int):
     amount_per_feed_per_interval = tokens / 7 / 20
     week_start = (math.floor(for_ts / WEEK)) * WEEK
@@ -139,7 +143,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     else:
         ocean_address = "0x973e69303259B0c2543a38665122b773D28405fB"
 
-    ocean_token = Token(web3_config, ocean_address)
+    ocean_token = Token(ppss.web3_pp, ocean_address)
 
     for name, value in addresses.items():
         ocean_bal_wei = ocean_token.balanceOf(value)
