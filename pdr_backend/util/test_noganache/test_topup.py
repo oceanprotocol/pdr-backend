@@ -1,6 +1,6 @@
-from os import name
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from pdr_backend.models.token import NativeToken, Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str

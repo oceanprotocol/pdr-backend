@@ -1,8 +1,8 @@
-from os import name
-import pytest
 from unittest.mock import Mock, patch
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
+import pytest
+
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
 

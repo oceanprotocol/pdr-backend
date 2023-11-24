@@ -1,7 +1,8 @@
-from os import name
 import time
-import pytest
 from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.check_network import (
     WEEK,
@@ -37,6 +38,7 @@ def test_non_integer_input():
         seconds_to_text("300")
 
 
+# pylint: disable=unused-argument
 def mock_get_consume_so_far_per_contract(
     subgraph_url, dfbuyer_addr, ts_start_time, contract_addresses
 ):
@@ -45,6 +47,7 @@ def mock_get_consume_so_far_per_contract(
     }
 
 
+# pylint: disable=unused-argument
 def mock_get_expected_consume(ts_now, tokens):
     return 100
 
