@@ -1,3 +1,4 @@
+from os import name
 import time
 import pytest
 from unittest.mock import MagicMock, Mock, patch
@@ -57,7 +58,7 @@ def mock_get_expected_consume(ts_now, tokens):
     side_effect=mock_get_expected_consume,
 )
 def test_check_dfbuyer(
-    mock_get_expected_consume, mock_get_consume_so_far_per_contract, capsys
+    mock_get_expected_consume_, mock_get_consume_so_far_per_contract_, capsys
 ):
     subgraph_url = "test_subgraph"
     dfbuyer_addr = "0x1"
@@ -74,10 +75,10 @@ def test_check_dfbuyer(
 
     ts_now = time.time()
     ts_start_time = int((ts_now // WEEK) * WEEK)
-    mock_get_consume_so_far_per_contract.assert_called_once_with(
+    mock_get_consume_so_far_per_contract_.assert_called_once_with(
         subgraph_url, dfbuyer_addr, ts_start_time, ["0x1"]
     )
-    mock_get_expected_consume.assert_called_once_with(int(ts_now), tokens)
+    mock_get_expected_consume_.assert_called_once_with(int(ts_now), tokens)
 
 
 def test_get_expected_consume():
@@ -103,7 +104,7 @@ def test_get_expected_consume():
     assert get_expected_consume(for_ts, tokens) == expected
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_ppss_")
 def mock_ppss(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
@@ -114,16 +115,6 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@pytest.fixture
-def mock_addresses():
-    return {"dfbuyer": "0xdfBuyerAddress", "some_other_address": "0xSomeOtherAddress"}
-
-
-@pytest.fixture
-def mock_result():
-    return {"data": {"predictContracts": []}}
-
-
 @patch("pdr_backend.util.check_network.get_opf_addresses")
 @patch("pdr_backend.util.subgraph.query_subgraph")
 @patch("pdr_backend.util.check_network.Token")
@@ -131,17 +122,18 @@ def test_check_network_main(
     mock_token,
     mock_query_subgraph,
     mock_get_opf_addresses,
-    mock_ppss,
-    mock_addresses,
-    mock_result,
+    mock_ppss_,
 ):
-    mock_get_opf_addresses.return_value = mock_addresses
-    mock_query_subgraph.return_value = mock_result
+    mock_get_opf_addresses.return_value = {
+        "dfbuyer": "0xdfBuyerAddress",
+        "some_other_address": "0xSomeOtherAddress",
+    }
+    mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
     mock_token.return_value.balanceOf.return_value = 1000 * 1e18
-    mock_ppss.web3_pp.web3_config.w3.eth.get_balance.return_value = 1000 * 1e18
-    check_network_main(mock_ppss, lookback_hours=24)
+    mock_ppss_.web3_pp.web3_config.w3.eth.get_balance.return_value = 1000 * 1e18
+    check_network_main(mock_ppss_, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with(1)
     assert mock_query_subgraph.call_count == 2
     mock_token.assert_called()
-    mock_ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()
+    mock_ppss_.web3_pp.web3_config.w3.eth.get_balance.assert_called()

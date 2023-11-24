@@ -1,3 +1,4 @@
+from os import name
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -6,7 +7,7 @@ from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.topup import topup_main
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_ppss_")
 def mock_ppss(tmpdir):
     web3_config = MagicMock()
     web3_config.w3.eth = MagicMock()
@@ -19,7 +20,7 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_token_")
 def mock_token():
     token = MagicMock(spec=Token)
     token.balanceOf.side_effect = [500 * 1e18, 0, 0]  # Mock balance in wei
@@ -27,7 +28,7 @@ def mock_token():
     return token
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_native_token_")
 def mock_native_token():
     native_token = MagicMock(spec=NativeToken)
     native_token.balanceOf.side_effect = [500 * 1e18, 0, 0]  # Mock balance in wei
@@ -35,7 +36,7 @@ def mock_native_token():
     return native_token
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_get_opf_addresses_")
 def mock_get_opf_addresses():
     return MagicMock(
         return_value={
@@ -45,15 +46,19 @@ def mock_get_opf_addresses():
     )
 
 
-def test_topup_main(mock_ppss, mock_token, mock_native_token, mock_get_opf_addresses):
-    with patch("pdr_backend.util.topup.Token", return_value=mock_token), patch(
-        "pdr_backend.util.topup.NativeToken", return_value=mock_native_token
-    ), patch("pdr_backend.util.topup.get_opf_addresses", mock_get_opf_addresses), patch(
+def test_topup_main(
+    mock_ppss_, mock_token_, mock_native_token_, mock_get_opf_addresses_
+):
+    with patch("pdr_backend.util.topup.Token", return_value=mock_token_), patch(
+        "pdr_backend.util.topup.NativeToken", return_value=mock_native_token_
+    ), patch(
+        "pdr_backend.util.topup.get_opf_addresses", mock_get_opf_addresses_
+    ), patch(
         "pdr_backend.util.topup.sys.exit"
     ) as mock_exit:
-        topup_main(mock_ppss)
+        topup_main(mock_ppss_)
 
         mock_exit.assert_called_with(0)
 
-        assert mock_token.transfer.called
-        assert mock_native_token.transfer.called
+        assert mock_token_.transfer.called
+        assert mock_native_token_.transfer.called
