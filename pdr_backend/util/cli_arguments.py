@@ -28,7 +28,6 @@ Tools for core team:
   pdr dfbuyer YAML_FILE NETWORK
   pdr publisher YAML_FILE NETWORK
   pdr topup YAML_FILE NETWORK
-  pdr get_opf_predictions CSVDIR YAML_FILE NETWORK
   pytest, black, mypy, pylint, ..
 """
 
@@ -176,14 +175,3 @@ DfbuyerArgParser = _ArgParser_YAML_NETWORK
 PublisherArgParser = _ArgParser_YAML_NETWORK
 
 TopupArgParser = _ArgParser_YAML_NETWORK
-
-
-@enforce_types
-class GetOpfPredictionsArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_CSVDIR()
-        self.add_argument_YAML()
-        self.add_argument_NETWORK()
