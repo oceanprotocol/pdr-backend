@@ -65,7 +65,7 @@ def test_do_ocean_payout(tmpdir):
     ), patch(
         "pdr_backend.payout.payout.PredictoorContract", return_value=mock_contract
     ):
-        do_ocean_payout(ppss, check_network=False)
+        do_ocean_payout(ppss)
         print(mock_contract.payout_multiple.call_args_list)
         call_args = mock_contract.payout_multiple.call_args_list
         assert call_args[0] == call([1, 2, 3], True)
@@ -73,9 +73,6 @@ def test_do_ocean_payout(tmpdir):
         assert call_args[2] == call([9, 10, 11, 12, 13], True)
         assert call_args[3] == call([14, 15], True)
         assert len(call_args) == 4
-
-        with pytest.raises(AssertionError):
-            do_ocean_payout(ppss, check_network=True)
 
 
 @enforce_types
@@ -96,15 +93,12 @@ def test_do_rose_payout(tmpdir):
     with patch("pdr_backend.payout.payout.time"), patch(
         "pdr_backend.payout.payout.WrappedToken", return_value=mock_wrose
     ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract):
-        do_rose_payout(ppss, check_network=False)
+        do_rose_payout(ppss)
         mock_contract.claim_rewards.assert_called_with(
             web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(100)
-
-        with pytest.raises(AssertionError):
-            do_rose_payout(ppss, check_network=True)
 
 
 @enforce_types
