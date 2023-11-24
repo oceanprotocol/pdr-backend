@@ -24,7 +24,6 @@ from pdr_backend.util.cli_arguments import (
     CheckNetworkArgParser,
     DfbuyerArgParser,
     do_help_long,
-    GetOpfPredictionsArgParser,
     GetPredictoorInfoArgParser,
     PredictoorArgParser,
     print_args,
@@ -35,7 +34,6 @@ from pdr_backend.util.cli_arguments import (
 )
 
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.get_opf_predictions import get_opf_predictions_main
 from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
 from pdr_backend.util.topup import topup_main
 
@@ -203,13 +201,3 @@ def do_topup():
 
     ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     topup_main(ppss)
-
-
-@enforce_types
-def do_get_opf_predictions():
-    parser = GetOpfPredictionsArgParser("Get OPF Predictions", "get_opf_predictions")
-    args = parser.parse_args()
-    print_args(args)
-
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
-    get_opf_predictions_main(ppss, args.CSV_DIR)
