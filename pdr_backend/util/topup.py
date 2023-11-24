@@ -24,8 +24,8 @@ def topup_main(ppss: PPSS):
         print("Unknown network")
         sys.exit(1)
 
-    OCEAN = Token(web3_config, OCEAN_TOKEN_ADDRS[chain_id])
-    ROSE = NativeToken(web3_config)
+    OCEAN = Token(ppss.web3_pp, OCEAN_TOKEN_ADDRS[chain_id])
+    ROSE = NativeToken(ppss.web3_pp)
 
     owner_OCEAN_bal = int(OCEAN.balanceOf(web3_config.owner)) / 1e18
     owner_ROSE_bal = int(ROSE.balanceOf(web3_config.owner)) / 1e18
