@@ -41,14 +41,15 @@ def request_payout_batches(
 
 
 @enforce_types
-def do_ocean_payout(ppss: PPSS):
+def do_ocean_payout(ppss: PPSS, check_network=True):
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
 
-    assert ppss.web3_pp.network == "sapphire-mainnet"
-    assert (
-        web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
-    ), "unsupported network"
+    if check_network:
+        assert (
+            ppss.web3_pp.network == "sapphire-mainnet"
+            and web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+        ), f"unsupported network {ppss.web3_pp.network}"
 
     print("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
@@ -66,13 +67,14 @@ def do_ocean_payout(ppss: PPSS):
 
 
 @enforce_types
-def do_rose_payout(ppss: PPSS):
+def do_rose_payout(ppss: PPSS, check_network=True):
     web3_config = ppss.web3_pp.web3_config
 
-    assert ppss.web3_pp.network == "sapphire-mainnet", "unsupported network"
-    assert (
-        web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
-    ), "unsupported network"
+    if check_network:
+        assert (
+            ppss.web3_pp.network == "sapphire-mainnet"
+            and web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+        ), f"unsupported network {ppss.web3_pp.network}"
 
     dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
