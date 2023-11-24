@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 from pdr_backend.models.token import NativeToken, Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.web3_config import Web3Config
 
 
 @pytest.fixture
