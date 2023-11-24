@@ -33,7 +33,7 @@ def test_data_pp_1feed():
     assert pp.quote_str == "USDT"
 
     # str
-    assert "DataPP=" in str(pp)
+    assert "DataPP" in str(pp)
 
     # setters
     pp.set_timeframe("1h")

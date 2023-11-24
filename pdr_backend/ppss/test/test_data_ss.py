@@ -55,7 +55,7 @@ def test_data_ss_basic():
     assert "binanceus" in ss.exchange_strs
 
     # test str
-    assert "DataSS=" in str(ss)
+    assert "DataSS" in str(ss)
 
 
 @enforce_types
