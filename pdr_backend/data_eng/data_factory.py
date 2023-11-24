@@ -12,8 +12,8 @@ from pdr_backend.data_eng.constants import (
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
 )
-from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.data_eng.data_ss import DataSS
+from pdr_backend.ppss.data_pp import DataPP
+from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.data_eng.pdutil import (
     initialize_df,
     concat_next_df,
@@ -250,7 +250,7 @@ class DataFactory:
         ]
 
         for hist_col in target_hist_cols:
-            assert hist_col in hist_df.columns, "missing a data col"
+            assert hist_col in hist_df.columns, f"missing data col: {hist_col}"
             z = hist_df[hist_col].tolist()  # [..., z(t-3), z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)

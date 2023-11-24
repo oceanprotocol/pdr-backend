@@ -4,7 +4,7 @@ from pdr_backend.util import mathutil
 from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum, asCurrency
 
 
-def testStrMixin():
+def testStrMixin1():
     class Foo(StrMixin):
         def __init__(self):
             self.x = 1
@@ -32,6 +32,24 @@ def testStrMixin():
 
     s3 = f.longstr()
     assert s3 == s
+
+
+def testStrMixin2():
+    class Foo(StrMixin):
+        __STR_OBJDIR__ = ["x", "y"]
+
+        def __init__(self):
+            self.x = 1
+            self.y = 2
+            self.z = 3
+
+    f = Foo()
+    s = str(f)
+    s2 = s.replace(" ", "")
+    assert "Foo={" in s
+    assert "x=1" in s2
+    assert "y=2" in s2
+    assert "z=3" not in s2
 
 
 def testDictStr():

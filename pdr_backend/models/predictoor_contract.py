@@ -9,17 +9,16 @@ from pdr_backend.models.token import Token
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
 from pdr_backend.util.networkutil import is_sapphire_network, send_encrypted_tx
-from pdr_backend.util.web3_config import Web3Config
 
 _KEYS = KeyAPI(NativeECCBackend)
 
 
 @enforce_types
 class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
-    def __init__(self, config: Web3Config, address: str):
-        super().__init__(config, address, "ERC20Template3")
+    def __init__(self, web3_pp, address: str):
+        super().__init__(web3_pp, address, "ERC20Template3")
         stake_token = self.get_stake_token()
-        self.token = Token(config, stake_token)
+        self.token = Token(web3_pp, stake_token)
         self.last_allowance = 0
 
     def is_valid_subscription(self):
@@ -94,7 +93,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         (fixed_rate_address, exchange_str) = fixed_rates[0]
 
         # get datatoken price
-        exchange = FixedRate(self.config, fixed_rate_address)
+        exchange = FixedRate(self.web3_pp, fixed_rate_address)
         (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
 
         # approve
@@ -173,7 +172,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             return 0
         (fixed_rate_address, exchange_str) = fixed_rates[0]
         # get datatoken price
-        exchange = FixedRate(self.config, fixed_rate_address)
+        exchange = FixedRate(self.web3_pp, fixed_rate_address)
         (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
         return baseTokenAmount
 

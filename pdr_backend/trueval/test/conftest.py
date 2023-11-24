@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
-from pdr_backend.trueval.trueval_config import TruevalConfig
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 
 
 @pytest.fixture()
@@ -40,8 +40,8 @@ def set_env_vars():
 
 
 @pytest.fixture()
-def trueval_config():
-    return TruevalConfig()
+def mock_ppss(tmpdir):
+    return PPSS(yaml_str=fast_test_yaml_str(tmpdir), network="development")
 
 
 @pytest.fixture()

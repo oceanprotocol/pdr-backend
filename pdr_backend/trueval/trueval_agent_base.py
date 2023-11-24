@@ -8,17 +8,17 @@ from enforce_typing import enforce_types
 from pdr_backend.models.slot import Slot
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.feed import Feed
-from pdr_backend.trueval.trueval_config import TruevalConfig
+from pdr_backend.ppss.ppss import PPSS
 
 
 @enforce_types
 class TruevalAgentBase(ABC):
     def __init__(
         self,
-        trueval_config: TruevalConfig,
+        ppss: PPSS,
         _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
     ):
-        self.config = trueval_config
+        self.ppss = ppss
         self.get_trueval = _get_trueval
         self.contract_cache: Dict[str, tuple] = {}
 
@@ -32,14 +32,15 @@ class TruevalAgentBase(ABC):
         raise NotImplementedError("Take step is not implemented")
 
     def get_batch(self) -> List[Slot]:
-        timestamp = self.config.web3_config.get_block("latest")["timestamp"]
-        pending_slots = self.config.get_pending_slots(
+        timestamp = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+        pending_slots = self.ppss.web3_pp.get_pending_slots(
             timestamp,
         )
         print(
-            f"Found {len(pending_slots)} pending slots, processing {self.config.batch_size}"
+            f"Found {len(pending_slots)} pending slots"
+            f", processing {self.ppss.trueval_ss.batch_size}"
         )
-        pending_slots = pending_slots[: self.config.batch_size]
+        pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
         return pending_slots
 
     def get_contract_info(
@@ -51,7 +52,7 @@ class TruevalAgentBase(ABC):
             ]
         else:
             predictoor_contract = PredictoorContract(
-                self.config.web3_config, contract_address
+                self.ppss.web3_pp.web3_config, contract_address
             )
             seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
             self.contract_cache[contract_address] = (

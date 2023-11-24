@@ -7,8 +7,8 @@ from pdr_backend.util.web3_config import Web3Config
 
 @enforce_types
 class Token(BaseContract):
-    def __init__(self, config: Web3Config, address: str):
-        super().__init__(config, address, "ERC20Template3")
+    def __init__(self, web3_pp, address: str):
+        super().__init__(web3_pp, address, "ERC20Template3")
 
     def allowance(self, account, spender):
         return self.contract_instance.functions.allowance(account, spender).call()

@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 
-from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
+from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.token import Token
 from pdr_backend.util.contract import get_address
 
@@ -56,9 +56,9 @@ def test_get_exchanges(predictoor_contract):
 
 
 @enforce_types
-def test_get_stake_token(predictoor_contract, web3_config):
+def test_get_stake_token(predictoor_contract, web3_pp):
     stake_token = predictoor_contract.get_stake_token()
-    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    ocean_address = get_address(web3_pp, "Ocean")
     assert stake_token == ocean_address
 
 
@@ -72,19 +72,19 @@ def test_get_price(predictoor_contract):
 def test_get_current_epoch(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch()
     now = predictoor_contract.config.get_block("latest").timestamp
-    assert current_epoch == int(now // SECONDS_PER_EPOCH)
+    assert current_epoch == int(now // S_PER_EPOCH)
 
 
 def test_get_current_epoch_ts(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     now = predictoor_contract.config.get_block("latest").timestamp
-    assert current_epoch == int(now // SECONDS_PER_EPOCH) * SECONDS_PER_EPOCH
+    assert current_epoch == int(now // S_PER_EPOCH) * S_PER_EPOCH
 
 
 @enforce_types
 def test_get_seconds_per_epoch(predictoor_contract):
     seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
-    assert seconds_per_epoch == SECONDS_PER_EPOCH
+    assert seconds_per_epoch == S_PER_EPOCH
 
 
 @enforce_types
@@ -98,7 +98,7 @@ def test_get_aggpredval(predictoor_contract):
 def test_soonest_timestamp_to_predict(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     soonest_timestamp = predictoor_contract.soonest_timestamp_to_predict(current_epoch)
-    assert soonest_timestamp == current_epoch + SECONDS_PER_EPOCH * 2
+    assert soonest_timestamp == current_epoch + S_PER_EPOCH * 2
 
 
 @enforce_types
@@ -132,7 +132,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     assert prediction[1] == 1e18
 
     predictoor_contract.config.w3.provider.make_request(
-        "evm_increaseTime", [SECONDS_PER_EPOCH * 2]
+        "evm_increaseTime", [S_PER_EPOCH * 2]
     )
     predictoor_contract.config.w3.provider.make_request("evm_mine", [])
     receipt = predictoor_contract.submit_trueval(True, soonest_timestamp, False, True)
@@ -146,7 +146,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
 
 @enforce_types
 def test_redeem_unused_slot_revenue(predictoor_contract):
-    current_epoch = predictoor_contract.get_current_epoch_ts() - SECONDS_PER_EPOCH * 123
+    current_epoch = predictoor_contract.get_current_epoch_ts() - S_PER_EPOCH * 123
     receipt = predictoor_contract.redeem_unused_slot_revenue(current_epoch, True)
     assert receipt["status"] == 1
 

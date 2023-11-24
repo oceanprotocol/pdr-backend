@@ -8,9 +8,9 @@ from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch, TruevalSl
 from pdr_backend.util.constants import ZERO_ADDRESS
 
 
-def test_new_agent(trueval_config):
-    agent_ = TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
-    assert agent_.config == trueval_config
+def test_new_agent(mock_ppss):
+    agent_ = TruevalAgentBatch(mock_ppss, get_trueval, ZERO_ADDRESS)
+    assert agent_.ppss == mock_ppss
     assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
@@ -115,5 +115,5 @@ def test_take_step(agent, slot):
 
 
 @pytest.fixture(name="agent")
-def agent_fixture(trueval_config):
-    return TruevalAgentBatch(trueval_config, get_trueval, ZERO_ADDRESS)
+def agent_fixture(mock_ppss):
+    return TruevalAgentBatch(mock_ppss, get_trueval, ZERO_ADDRESS)
