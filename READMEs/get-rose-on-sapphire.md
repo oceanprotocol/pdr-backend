@@ -8,23 +8,33 @@
 
 ## 1. Create a Wallet
 
-For optimal support and the ability to transfer ROSE between paratimes, it's recommended to use the Oasis Wallet extension for Chrome. Follow the detailed instructions provided in the official [Oasis Wallet extension documentation](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) to install and setup your wallet.
+For optimal support and the ability to transfer ROSE between paratimes, we recommended to use Oasis Wallet extension for Chrome.
+- To install and set up, go to [Oasis Wallet extension documentation](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) and follow its instructions.
 
 ## 2. Purchase ROSE
 
-Acquire ROSE from various exchanges like Binance, Coinbase, Gate.io, or KuCoin. Once obtained, ensure to withdraw the amount of ROSE you'd like to utilize to your web3 wallet. If withdrawing to the Oasis Sapphire network is supported by the centralized exchange (CEX) you're using, you can do so and skip the next two steps. However, if that's not an option, ensure you are sending the funds to the Oasis Emerald network, as sending to a different network may result in the loss of your tokens. **Always double-check the receiving address before initiating the withdrawal to secure your assets.**
+First, acquire ROSE at an exchange like Binance, Coinbase, Gate.io, or KuCoin.
+
+Then, you'll be withdrawing ROSE to your web3 wallet.
+- If the exchange supports withdrawal directly to Oasis Sapphire Paratime: great, do that directly! Then you can skip step 3. 
+- It it doesn't support direct: first, send to Oasis Emerald Network. Then, follow step 3.
+
+⚠️ Sending to the wrong address or network will likely result in the loss of your tokens. To minimize risk: send a small test amount first, and double-check the receiving address and network.
 
 ## 3. Transfer ROSE from Oasis wallet to Sapphire ParaTime
 
-To transfer your ROSE tokens from the Oasis wallet to the Sapphire ParaTime, first make sure you have an Ethereum Account to be used by the EVM-compatible Sapphire ParaTime. This will probably be the account you will use to send predictions.
+To transfer ROSE from Oasis wallet to Sapphire ParaTime, first make sure you have an Ethereum Account to be used by the EVM-compatible Sapphire ParaTime. This will probably be the account you will use to send predictions with.
 
-Now to transfer the tokens go to **ParaTimes** section of the Oasis Wallet, click on **To ParaTime** button from the **Sapphire** section, enter the amount you want to send and the Ethereum Account address to transfer to and send the tokens. You can also import the Ethereum Account inside Oasis Wallet to make the process easier.
+To transfer the ROSE, go to the **ParaTimes** section of the Oasis Wallet, click on **To ParaTime** button from the **Sapphire** section, enter the amount you want to send and the Ethereum Account address to transfer to and send the tokens. (You can also import the Ethereum Account inside Oasis Wallet.)
 
-For more informations please refer directly to the detailed guide available in the official Oasis documentation.
+For details, please refer to the official Oasis guide: [How to Transfer ROSE into a ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime)
 
-[How to Transfer ROSE into a ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime)
+⚠️ Be sure to select “Sapphire” as the destination paratime during the transfer process. Double-check this selection to avoid transferring tokens to an unintended paratime. 
 
-Important Note: Ensure to select “Sapphire” as the destination paratime during the transfer process. Double-check this selection to avoid transferring tokens to an unintended paratime. 
+## Conclusion
+
+Congratulations! You have successfully transferred ROSE to Sapphire Mainnet. Do manage private keys with utmost care.
+
 
 > [!WARNING]
 > Disclaimer: This guide does not provide financial advice. Always conduct thorough research or consult a professional before making investment decisions. Make sure to verify URLs and ensure all information aligns with the current operations and networks of the related platforms as cryptocurrency ecosystems frequently update and evolve. Always ensure to use official and secure websites when conducting transactions.

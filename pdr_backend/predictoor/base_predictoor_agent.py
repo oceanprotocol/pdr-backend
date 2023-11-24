@@ -1,12 +1,20 @@
 from abc import ABC, abstractmethod
 import sys
+from os import getenv
 import time
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.predictoor.base_predictoor_config import BasePredictoorConfig
+from pdr_backend.ppss.ppss import PPSS
+
+_UNWANTED_ENVVARS = [
+    "PAIR_FILTER",
+    "TIMEFRAME_FILTER",
+    "SOURCE_FILTER",
+    "STAKE_AMOUNT",
+]
 
 
 @enforce_types
@@ -16,30 +24,56 @@ class BasePredictoorAgent(ABC):
     What it does
     - Fetches Predictoor contracts from subgraph, and filters them
     - Monitors each contract for epoch changes.
-    - When a value can be predicted, call predict.py::predict_function()
+    - When a value can be predicted, call get_prediction()
     """
 
-    def __init__(self, config: BasePredictoorConfig):
-        self.config = config
+    def __init__(self, ppss: PPSS):
+        # preconditions
+        for envvar in _UNWANTED_ENVVARS:
+            assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
 
-        self.feeds: Dict[str, Feed] = self.config.get_feeds()  # [addr] : Feed
+        # set config, ppss, and related
+        self.ppss = ppss
 
-        if not self.feeds:
+        # set self.feeds
+        self.feeds: Dict[str, Feed] = {}
+
+        x = list(self.ppss.data_pp.pair_strs)
+        y = list([self.ppss.data_pp.timeframe])
+        z = list(self.ppss.data_pp.exchange_strs)
+        cand_feeds = self.ppss.web3_pp.get_feeds(x, y, z)
+        #     pair_filters=self.ppss.data_pp.pair_strs,
+        #     timeframe_filters=[self.ppss.data_pp.timeframe],
+        #     source_filters=self.ppss.data_pp.exchange_strs,
+        # )
+        if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
+        for feed in cand_feeds.values():
+            feed_tup = (feed.source, "close", feed.pair)
+            if feed_tup in self.ppss.data_pp.predict_feed_tups:
+                self.feeds[feed.address] = feed
 
+        if not self.feeds:
+            print("No feeds left after filtering. Exiting")
+            sys.exit()
+
+        # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.config.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = self.ppss.web3_pp.get_contracts(
+            feed_addrs
+        )  # [addr] : contract
 
+        # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
         self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
 
+        # print
         print("\n" + "-" * 80)
-        print("Config:")
-        print(self.config)
+        print(self.ppss)
 
         print("\n" + "." * 80)
         print("Feeds (detailed):")
@@ -57,7 +91,7 @@ class BasePredictoorAgent(ABC):
             self.take_step()
 
     def take_step(self):
-        w3 = self.config.web3_config.w3
+        w3 = self.ppss.web3_pp.w3
         print("\n" + "-" * 80)
         print("Take_step() begin.")
 
@@ -68,7 +102,9 @@ class BasePredictoorAgent(ABC):
             print("  Done step: block_number hasn't advanced yet. So sleep.")
             time.sleep(1)
             return
-        block = self.config.web3_config.get_block(block_number, full_transactions=False)
+        block = self.ppss.web3_pp.web3_config.get_block(
+            block_number, full_transactions=False
+        )
         if not block:
             print("  Done step: block not ready yet")
             return
@@ -92,11 +128,12 @@ class BasePredictoorAgent(ABC):
         print(f"    Process {feed} at epoch={epoch}")
 
         # within the time window to predict?
+        s_until_epoch_end = self.ppss.predictoor_ss.s_until_epoch_end
         print(
             f"      {epoch_s_left} s left in epoch"
-            f" (predict if <= {self.config.s_until_epoch_end} s left)"
+            f" (predict if <= {s_until_epoch_end} s left)"
         )
-        too_early = epoch_s_left > self.config.s_until_epoch_end
+        too_early = epoch_s_left > s_until_epoch_end
         if too_early:
             print("      Done feed: too early to predict")
             return (None, None, False)

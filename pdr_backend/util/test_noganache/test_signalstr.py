@@ -2,10 +2,29 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.util.signalstr import (
+    char_to_signal,
+    signal_to_char,
     unpack_signalchar_str,
     verify_signalchar_str,
     verify_signal_str,
 )
+
+
+# ==========================================================================
+# conversions
+
+
+def test_conversions():
+    tups = [
+        ("o", "open"),
+        ("h", "high"),
+        ("l", "low"),
+        ("c", "close"),
+        ("v", "volume"),
+    ]
+    for char, signal in tups:
+        assert char_to_signal(char) == signal
+        assert signal_to_char(signal) == char
 
 
 # ==========================================================================

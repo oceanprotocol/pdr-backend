@@ -4,8 +4,8 @@ from typing import Any, Dict, Tuple, Optional
 import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
-from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
 from pdr_backend.trader.trader_agent import TraderAgent
 
 
@@ -25,10 +25,6 @@ class TraderAgent1(TraderAgent):
         1. If existing open position, close it.
         2. If new long prediction meets criteria, open long.
 
-        You can use the ENV_VARS to:
-        1. Configure your strategy: pair, timeframe, etc..
-        2. Configure your exchange: api_key + secret_key
-
         You can improve this by:
         1. Improving how to enter/exit trade w/ orders
         2. Improving when to buy
@@ -36,12 +32,11 @@ class TraderAgent1(TraderAgent):
         4. Using SL and TP
     """
 
-    def __init__(self, config: TraderConfig1):
-        super().__init__(config)
-        self.config: TraderConfig1 = config
+    def __init__(self, ppss: PPSS):
+        super().__init__(ppss)
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_str)
+        exchange_class = getattr(ccxt, self.ppss.data_pp.exchange_str)
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -77,12 +72,12 @@ class TraderAgent1(TraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.config.exchange_str in ("mexc"):
+            if self.ppss.data_pp.exchange_str == "mexc":
                 amount = float(self.order["info"]["origQty"])
 
             # close it
             order = self.exchange.create_market_sell_order(
-                self.config.exchange_pair, amount
+                self.ppss.data_pp.pair_str, amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")
@@ -101,7 +96,7 @@ class TraderAgent1(TraderAgent):
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.config.exchange_pair, self.config.size
+                self.ppss.data_pp.pair_str, self.ppss.trader_ss.position_size
             )
 
             # If order is successful, we log the order so we can close it

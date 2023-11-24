@@ -1,23 +1,16 @@
+import copy
 from typing import Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.data_factory import DataFactory
-from pdr_backend.data_eng.data_pp import DataPP
-from pdr_backend.model_eng.model_factory import ModelFactory
-
+from pdr_backend.ppss.data_pp import DataPP
+from pdr_backend.data_eng.model_factory import ModelFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
-from pdr_backend.predictoor.approach3.predictoor_config3 import PredictoorConfig3
 
 
 @enforce_types
 class PredictoorAgent3(BasePredictoorAgent):
-    predictoor_config_class = PredictoorConfig3
-
-    def __init__(self, config: PredictoorConfig3):
-        super().__init__(config)
-        self.config: PredictoorConfig3 = config
-
     def get_prediction(
         self, addr: str, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
@@ -33,25 +26,15 @@ class PredictoorAgent3(BasePredictoorAgent):
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
           stake -- int -- amount to stake, in units of Eth
         """
+        # Compute data_ss
         feed = self.feeds[addr]
+        d = copy.deepcopy(self.ppss.data_pp.d)
+        d["predict_feeds"] = [f"{feed.source} c {feed.pair}"]
+        data_pp = DataPP(d)
+        data_ss = self.ppss.data_ss.copy_with_yval(data_pp)
 
-        # user-uncontrollable params, at data-eng level
-        data_pp = DataPP(
-            feed.timeframe,  # eg "5m"
-            f"{feed.source} c {feed.base}/{feed.quote}",
-            N_test=1,  # N/A for this context
-        )
-
-        # user-controllable params, at data-eng level
-        data_ss = self.config.data_ss.copy_with_yval(data_pp)
-
-        #  user-controllable params, at model-eng level
-        model_ss = self.config.model_ss
-
-        # do work...
+        # From data_ss, build X/y
         data_factory = DataFactory(data_pp, data_ss)
-
-        # Compute X/y
         hist_df = data_factory.get_hist_df()
         X, y, _ = data_factory.create_xy(hist_df, testshift=0)
 
@@ -61,7 +44,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        model_factory = ModelFactory(model_ss)
+        model_factory = ModelFactory(self.ppss.model_ss)
         model = model_factory.build(X_train, y_train)
 
         # Predict from test data
@@ -69,7 +52,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         curprice = y_train[-1]
         predval = predprice > curprice
 
-        # Stake what was set via envvar STAKE_AMOUNT
-        stake = self.config.stake_amount
+        # Stake amount
+        stake = self.ppss.predictoor_ss.stake_amount
 
         return (bool(predval), stake)

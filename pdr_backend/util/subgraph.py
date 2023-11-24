@@ -428,6 +428,8 @@ def get_consume_so_far_per_contract(
         )
         offset += chunk_size
         result = query_subgraph(subgraph_url, query, 3, 30.0)
+        if "data" not in result or "predictContracts" not in result["data"]:
+            break
         contracts = result["data"]["predictContracts"]
         if contracts == []:
             break
