@@ -56,8 +56,8 @@ class DataFactory:
         print(f"  Data fin: {pretty_timestr(fin_ut)}")
 
         self._update_parquet(fin_ut)
-        csv_dfs = self._load_parquet(fin_ut)
-        hist_df = self._merge_parquet_dfs(csv_dfs)
+        parquet_dfs = self._load_parquet(fin_ut)
+        hist_df = self._merge_parquet_dfs(parquet_dfs)
 
         print("Get historical data, across many exchanges & pairs: done.")
         return hist_df.to_pandas()
@@ -328,16 +328,6 @@ class DataFactory:
 
         # return
         return X, y, x_df
-
-    def _hist_csv_filename(self, exch_str, pair_str) -> str:
-        """
-        Given exch_str and pair_str (and self path),
-        compute csv filename
-        """
-        pair_str = pair_str.replace("/", "-")
-        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.csv"
-        filename = os.path.join(self.ss.csv_dir, basename)
-        return filename
 
     def _hist_parquet_filename(self, exch_str, pair_str) -> str:
         """

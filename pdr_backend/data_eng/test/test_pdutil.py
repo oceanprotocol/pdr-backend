@@ -82,21 +82,27 @@ def test_concat_next_df():
     df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
-    # from df with 4 rows, add 1 more row
+    # assert 1 more row
     next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
 
-    # assert that concat verifies schemas match
+    # assert that concat verifies schemas match and require datetime
     next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
     assert "datetime" not in next_df.columns
     with pytest.raises(Exception):
         df = concat_next_df(df, next_df)
 
-    # add datetime to next_df and concat both
+    # add datetime to next_df
     next_df = transform_df(next_df)
+
+    # add 1 row to existing 4 rows
     df = concat_next_df(df, next_df)
     assert len(df) == 4 + 1
+
+    # assert concat order
+    assert df.head(1)["timestamp"].to_list()[0] == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
+    assert df.tail(1)["timestamp"].to_list()[0] == ONE_ROW_RAW_TOHLCV_DATA[0][0]
     _assert_TOHLCVd_cols_and_types(df)
 
 
@@ -240,22 +246,23 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
     df = transform_df(df)
     save_parquet(filename, df)
 
-    utN = newest_ut(filename)
+    # assert head == oldest and tail == latest
     ut0 = oldest_ut(filename)
+    utN = newest_ut(filename)
 
-    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
-    assert ut0 == FOUR_ROWS_RAW_TOHLCV_DATA[-1][0]
+    assert ut0 == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
+    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[-1][0]
 
     # append and check newest/oldest
     df = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
     df = transform_df(df)
     save_parquet(filename, df)
 
-    utN = newest_ut(filename)
     ut0 = oldest_ut(filename)
+    utN = newest_ut(filename)
 
-    assert utN == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
-    assert ut0 == ONE_ROW_RAW_TOHLCV_DATA[0][0]
+    assert ut0 == FOUR_ROWS_RAW_TOHLCV_DATA[0][0]
+    assert utN == ONE_ROW_RAW_TOHLCV_DATA[0][0]
 
 
 @enforce_types
@@ -272,7 +279,7 @@ def test_oldest_ut_and_newest_ut__no_data(tmpdir):
 
 
 @enforce_types
-def test_get_last_line(tmpdir):
+def test_parquet_tail_records(tmpdir):
     df = pl.DataFrame(
         {
             "timestamp": [0, 1, 2, 3],

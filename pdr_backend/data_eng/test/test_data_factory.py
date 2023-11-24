@@ -497,6 +497,70 @@ def test_get_hist_df(tmpdir):
     assert hist_df["kraken:BTC-USDT:high"].isna().sum() == 865
     assert hist_df["kraken:ETH-USDT:high"].isna().sum() == 865
 
+    # assert head is oldest
+    assert (
+        hist_df.head(1)["timestamp"].to_list()[0]
+        < hist_df.tail(1)["timestamp"].to_list()[0]
+    )
+
+
+@enforce_types
+def test_exchange_hist_overlap(tmpdir):
+    """DataFactory get_hist_df() and concat is executing e2e correctly"""
+    parquetdir = str(tmpdir)
+
+    pp = DataPP(
+        "5m",
+        "binanceus h ETH/USDT",
+        N_test=2,
+    )
+
+    ss = DataSS(
+        ["binanceus hl BTC/USDT"],
+        csv_dir=parquetdir,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-21",
+        max_n_train=7,
+        autoregressive_n=3,
+    )
+
+    data_factory = DataFactory(pp, ss)
+
+    # call and assert
+    hist_df = data_factory.get_hist_df()
+    assert isinstance(hist_df, pd.DataFrame)
+
+    # 865 records created
+    assert len(hist_df) == 865
+
+    # assert head is oldest and tail is latest
+    assert (
+        hist_df.head(1)["timestamp"].to_list()[0]
+        < hist_df.tail(1)["timestamp"].to_list()[0]
+    )
+
+    # let's get more data from exchange with overlap
+    ss2 = DataSS(
+        ["binanceus hl BTC/USDT"],
+        csv_dir=parquetdir,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-24",
+        max_n_train=7,
+        autoregressive_n=3,
+    )
+
+    data_factory2 = DataFactory(pp, ss2)
+    hist_df2 = data_factory2.get_hist_df()
+
+    # assert on expected values
+    # another 864 records appended
+    # head (index = 0) still points to oldest date with tail (index = n) being the latest date
+    assert len(hist_df2) == 865 + 864
+    assert (
+        hist_df2.head(1)["timestamp"].to_list()[0]
+        < hist_df2.tail(1)["timestamp"].to_list()[0]
+    )
+
 
 @enforce_types
 def _data_pp_ss_1exchange_1coin_1signal(tmpdir: str) -> Tuple[DataPP, DataSS]:

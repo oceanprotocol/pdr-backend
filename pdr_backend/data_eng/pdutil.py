@@ -86,7 +86,9 @@ def save_parquet(filename: str, df: pl.DataFrame):
         cur_df = pl.read_parquet(filename)
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
-        print(f"  Just appended {df.shape[0]} df rows to file {filename}")
+        print(
+            f"  Just appended {df.shape[0] - cur_df.shape[0]} df rows to file {filename}"
+        )
     else:  # write new file
         df.write_parquet(filename)
         print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
@@ -159,10 +161,10 @@ def has_data(filename: str) -> bool:
 
 
 @enforce_types
-def oldest_ut(filename: str) -> int:
+def newest_ut(filename: str) -> int:
     """
-    Return the timestamp for the oldest entry in the parquet file.
-    Assumes the oldest entry is the last() row.
+    Return the timestamp for the youngest entry in the file.
+    The latest date should be the tail (row = n), or last entry in the file/dataframe
     """
     df = _get_tail_df(filename, n=1)
     ut = int(df["timestamp"][0])
@@ -181,10 +183,10 @@ def _get_tail_df(filename: str, n: int = 5) -> pl.DataFrame:
 
 
 @enforce_types
-def newest_ut(filename: str) -> int:
+def oldest_ut(filename: str) -> int:
     """
-    Return the timestamp for the youngest entry in the file.
-    Assumes the youngest entry is the very last line in the file.
+    Return the timestamp for the oldest entry in the parquet file.
+    The oldest date should be the head (row = 0), or the first entry in the file/dataframe
     """
     df = _get_head_df(filename, n=1)
     ut = int(df["timestamp"][0])
