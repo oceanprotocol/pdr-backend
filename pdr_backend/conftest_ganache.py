@@ -1,19 +1,24 @@
+import os
 import pytest
 
 from pdr_backend.models.token import Token
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.web3_config import Web3Config
 
-CHAIN_ID = 8996
-S_PER_EPOCH = 300
+SECONDS_PER_EPOCH = 300
+os.environ["MODELDIR"] = "my_model_dir"
 
 
 @pytest.fixture(scope="session")
 def chain_id():
-    return CHAIN_ID
+    return _chain_id()
+
+
+def _chain_id():
+    return 8996
 
 
 @pytest.fixture(scope="session")
@@ -22,84 +27,57 @@ def web3_config():
 
 
 def _web3_config():
-    return _web3_pp().web3_config
-
-
-@pytest.fixture(scope="session")
-def rpc_url():
-    return _web3_pp().rpc_url
-
-
-@pytest.fixture(scope="session")
-def web3_pp():
-    return _web3_pp()
-
-
-def _web3_pp():
-    return _ppss().web3_pp
-
-
-@pytest.fixture(scope="session")
-def ppss():
-    return _ppss()
-
-
-def _ppss():
-    s = fast_test_yaml_str()
-    return PPSS(yaml_str=s, network="development")
+    return Web3Config(os.getenv("RPC_URL"), os.getenv("PRIVATE_KEY"))
 
 
 @pytest.fixture(scope="session")
 def ocean_token() -> Token:
-    token_address = get_address(_web3_pp(), "Ocean")
-    return Token(_web3_pp(), token_address)
+    token_address = get_address(_chain_id(), "Ocean")
+    return Token(_web3_config(), token_address)
 
 
 @pytest.fixture(scope="module")
 def predictoor_contract():
-    w3p = _web3_pp()
-    w3c = w3p.web3_config
+    config = Web3Config(os.getenv("RPC_URL"), os.getenv("PRIVATE_KEY"))
     _, _, _, _, logs = publish(
-        s_per_epoch=S_PER_EPOCH,
-        s_per_subscription=S_PER_EPOCH * 24,
+        s_per_epoch=SECONDS_PER_EPOCH,
+        s_per_subscription=SECONDS_PER_EPOCH * 24,
         base="ETH",
         quote="USDT",
         source="kraken",
         timeframe="5m",
-        trueval_submitter_addr=w3c.owner,
-        feeCollector_addr=w3c.owner,
+        trueval_submitter_addr=config.owner,
+        feeCollector_addr=config.owner,
         rate=3,
         cut=0.2,
-        web3_pp=w3p,
+        web3_config=config,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3p, dt_addr)
+    return PredictoorContract(config, dt_addr)
 
 
 @pytest.fixture(scope="module")
 def predictoor_contract2():
-    w3p = _web3_pp()
-    w3c = w3p.web3_config
+    config = Web3Config(os.getenv("RPC_URL"), os.getenv("PRIVATE_KEY"))
     _, _, _, _, logs = publish(
-        s_per_epoch=S_PER_EPOCH,
-        s_per_subscription=S_PER_EPOCH * 24,
+        s_per_epoch=SECONDS_PER_EPOCH,
+        s_per_subscription=SECONDS_PER_EPOCH * 24,
         base="ETH",
         quote="USDT",
         source="kraken",
         timeframe="5m",
-        trueval_submitter_addr=w3c.owner,
-        feeCollector_addr=w3c.owner,
+        trueval_submitter_addr=config.owner,
+        feeCollector_addr=config.owner,
         rate=3,
         cut=0.2,
-        web3_pp=w3p,
+        web3_config=config,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3p, dt_addr)
+    return PredictoorContract(config, dt_addr)
 
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def predictoor_batcher():
-    w3p = _web3_pp()
-    predictoor_batcher_addr = get_address(w3p, "PredictoorHelper")
-    return PredictoorBatcher(w3p, predictoor_batcher_addr)
+    predictoor_batcher_addr = get_address(_chain_id(), "PredictoorHelper")
+    return PredictoorBatcher(_web3_config(), predictoor_batcher_addr)

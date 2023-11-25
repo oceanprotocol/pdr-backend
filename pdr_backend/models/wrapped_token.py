@@ -1,9 +1,10 @@
 from pdr_backend.models.token import Token
+from pdr_backend.util.web3_config import Web3Config
 
 
 class WrappedToken(Token):
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address)
+    def __init__(self, config: Web3Config, address: str):
+        super().__init__(config, address)
         abi = [
             {
                 "constant": False,
@@ -15,7 +16,7 @@ class WrappedToken(Token):
                 "type": "function",
             },
         ]
-        self.contract_instance_wrapped = self.config.w3.eth.contract(
+        self.contract_instance_wrapped = config.w3.eth.contract(
             address=self.contract_address, abi=abi
         )
 

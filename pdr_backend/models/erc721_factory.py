@@ -3,15 +3,18 @@ from web3.logs import DISCARD
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
 class ERC721Factory(BaseContract):
-    def __init__(self, web3_pp):
-        address = get_address(web3_pp, "ERC721Factory")
+    def __init__(self, config: Web3Config, chain_id=None):
+        if not chain_id:
+            chain_id = config.w3.eth.chain_id
+        address = get_address(chain_id, "ERC721Factory")
         if not address:
             raise ValueError("Cannot figure out ERC721Factory address")
-        super().__init__(web3_pp, address, "ERC721Factory")
+        super().__init__(config, address, "ERC721Factory")
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
         #            gasPrice = self.config.w3.eth.gas_price

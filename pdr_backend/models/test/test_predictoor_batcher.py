@@ -1,28 +1,35 @@
 from web3.types import RPCEndpoint
-from pdr_backend.conftest_ganache import S_PER_EPOCH
+from pdr_backend.conftest_ganache import SECONDS_PER_EPOCH
+from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.data_nft import DataNft
+from pdr_backend.models.token import Token
+from pdr_backend.util.web3_config import Web3Config
 
 
-def test_submit_truevals(predictoor_contract, web3_pp, predictoor_batcher):
-    web3_config = web3_pp.web3_config
+def test_submit_truevals(
+    predictoor_contract: PredictoorContract,
+    web3_config: Web3Config,
+    predictoor_batcher: PredictoorBatcher,
+):
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
     # fast forward time
-    web3_config.w3.provider.make_request(
-        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 10]
+    predictoor_contract.config.w3.provider.make_request(
+        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
     )
-    web3_config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
+    predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
-    end_epoch = current_epoch + S_PER_EPOCH * 10
+    end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs = list(range(current_epoch, end_epoch, S_PER_EPOCH))
+    epochs = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
     truevals = [True] * len(epochs)
     cancels = [False] * len(epochs)
 
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
-    datanft = DataNft(web3_pp, erc721addr)
+    datanft = DataNft(web3_config, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before = [
@@ -45,25 +52,26 @@ def test_submit_truevals(predictoor_contract, web3_pp, predictoor_batcher):
 
 
 def test_submit_truevals_contracts(
-    predictoor_contract,
-    predictoor_contract2,
-    web3_pp,
-    web3_config,
-    predictoor_batcher,
+    predictoor_contract: PredictoorContract,
+    predictoor_contract2: PredictoorContract,
+    web3_config: Web3Config,
+    predictoor_batcher: PredictoorBatcher,
 ):
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
     # fast forward time
-    web3_config.w3.provider.make_request(
-        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 10]
+    predictoor_contract.config.w3.provider.make_request(
+        RPCEndpoint("evm_increaseTime"), [SECONDS_PER_EPOCH * 10]
     )
-    web3_config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
+    predictoor_contract.config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
-    end_epoch = current_epoch + S_PER_EPOCH * 10
+    end_epoch = current_epoch + SECONDS_PER_EPOCH * 10
 
     # get trueval for epochs
-    epochs1 = list(range(current_epoch, end_epoch, S_PER_EPOCH))
-    epochs2 = list(range(current_epoch + S_PER_EPOCH * 2, end_epoch, S_PER_EPOCH))
+    epochs1 = list(range(current_epoch, end_epoch, SECONDS_PER_EPOCH))
+    epochs2 = list(
+        range(current_epoch + SECONDS_PER_EPOCH * 2, end_epoch, SECONDS_PER_EPOCH)
+    )
     epochs = [epochs1, epochs2]
     truevals = [[True] * len(epochs1), [True] * len(epochs2)]
     cancels = [[False] * len(epochs1), [False] * len(epochs2)]
@@ -74,10 +82,10 @@ def test_submit_truevals_contracts(
 
     # add predictoor helper as ercdeployer
     erc721addr = predictoor_contract.erc721_addr()
-    datanft = DataNft(web3_pp, erc721addr)
+    datanft = DataNft(web3_config, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
     erc721addr = predictoor_contract2.erc721_addr()
-    datanft = DataNft(web3_pp, erc721addr)
+    datanft = DataNft(web3_config, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before_1 = [
@@ -118,7 +126,11 @@ def test_submit_truevals_contracts(
         assert trueval is True
 
 
-def test_consume_multiple(predictoor_contract, ocean_token, predictoor_batcher):
+def test_consume_multiple(
+    predictoor_contract: PredictoorContract,
+    ocean_token: Token,
+    predictoor_batcher: PredictoorBatcher,
+):
     owner = ocean_token.config.owner
 
     price = predictoor_contract.get_price()

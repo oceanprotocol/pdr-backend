@@ -7,8 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 
 Barge is a Docker container to run a local Ganache network having Predictoor contracts and (optionally) local bots. This README describes how to install Barge, and provides reference on running it with various agents.
 
-⚠️ If you're on MacOS or Windows, we recommend using a remotely-run Barge. See [vps flow](vps.md).
-
 ## Contents
 
 Main:
@@ -41,7 +39,11 @@ docker system prune -a --volumes
 ```
 
 **Then, get Docker running.** To run barge, you need the Docker engine running. Here's how:
-- If you're on Linux: you're good, there's nothing extra to do
+- If you're on Linux: you're good, there's nothing extra to do.
+- If you're on MacOS: 
+  - via console: `open -a Docker`
+  - or, via app: open Finder app, find Docker, click to open app. (You don't need to press "play" or anything else. The app being open is enough.)
+  - ⚠️ MacOS may give Docker issues. [Here](macos.md) are workarounds.
 
 Congrats! Barge is installed and ready to be run.
 

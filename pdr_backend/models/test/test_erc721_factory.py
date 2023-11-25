@@ -5,12 +5,12 @@ from pdr_backend.util.contract import get_address
 
 
 @enforce_types
-def test_ERC721Factory(web3_pp, web3_config):
-    factory = ERC721Factory(web3_pp)
+def test_ERC721Factory(web3_config):
+    factory = ERC721Factory(web3_config)
     assert factory is not None
 
-    ocean_address = get_address(web3_pp, "Ocean")
-    fre_address = get_address(web3_pp, "FixedPrice")
+    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
 
     rate = 3
     cut = 0.2

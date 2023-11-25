@@ -10,16 +10,12 @@ from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 @enforce_types
 class TruevalAgentSingle(TruevalAgentBase):
     def take_step(self):
-        wait_until_subgraph_syncs(
-            self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
-        )
+        wait_until_subgraph_syncs(self.config.web3_config, self.config.subgraph_url)
         pending_slots = self.get_batch()
 
         if len(pending_slots) == 0:
-            print(
-                f"No pending slots, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-            )
-            time.sleep(self.ppss.trueval_ss.sleep_time)
+            print(f"No pending slots, sleeping for {self.config.sleep_time} seconds...")
+            time.sleep(self.config.sleep_time)
             return
 
         for slot in pending_slots:
@@ -29,10 +25,8 @@ class TruevalAgentSingle(TruevalAgentBase):
                 self.process_slot(slot)
             except Exception as e:
                 print("An error occured", e)
-        print(
-            f"Done processing, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-        )
-        time.sleep(self.ppss.trueval_ss.sleep_time)
+        print(f"Done processing, sleeping for {self.config.sleep_time} seconds...")
+        time.sleep(self.config.sleep_time)
 
     def process_slot(self, slot: Slot) -> dict:
         predictoor_contract, _ = self.get_contract_info(slot.feed.address)

@@ -2,12 +2,13 @@ from typing import List
 from enforce_typing import enforce_types
 from eth_typing import ChecksumAddress
 from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
 class PredictoorBatcher(BaseContract):
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address, "PredictoorHelper")
+    def __init__(self, config: Web3Config, address: str):
+        super().__init__(config, address, "PredictoorHelper")
 
     def consume_multiple(
         self,

@@ -7,8 +7,8 @@ from enforce_typing import enforce_types
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
+from pdr_backend.trueval.trueval_config import TruevalConfig
 from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 
 
@@ -30,26 +30,22 @@ class TruevalSlot(Slot):
 class TruevalAgentBatch(TruevalAgentBase):
     def __init__(
         self,
-        ppss: PPSS,
+        trueval_config: TruevalConfig,
         _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
         predictoor_batcher_addr: str,
     ):
-        super().__init__(ppss, _get_trueval)
+        super().__init__(trueval_config, _get_trueval)
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
-            self.ppss.web3_pp, predictoor_batcher_addr
+            self.config.web3_config, predictoor_batcher_addr
         )
 
     def take_step(self):
-        wait_until_subgraph_syncs(
-            self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
-        )
+        wait_until_subgraph_syncs(self.config.web3_config, self.config.subgraph_url)
         pending_slots = self.get_batch()
 
         if len(pending_slots) == 0:
-            print(
-                f"No pending slots, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-            )
-            time.sleep(self.ppss.trueval_ss.sleep_time)
+            print(f"No pending slots, sleeping for {self.config.sleep_time} seconds...")
+            time.sleep(self.config.sleep_time)
             return
 
         # convert slots to TruevalSlot
@@ -66,25 +62,23 @@ class TruevalAgentBatch(TruevalAgentBase):
         print("Submitting transaction...")
 
         tx_hash = self.batch_submit_truevals(trueval_slots)
-        print(
-            f"Tx sent: {tx_hash}, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-        )
+        print(f"Tx sent: {tx_hash}, sleeping for {self.config.sleep_time} seconds...")
 
-        time.sleep(self.ppss.trueval_ss.sleep_time)
+        time.sleep(self.config.sleep_time)
 
     def batch_submit_truevals(self, slots: List[TruevalSlot]) -> str:
         contracts: dict = defaultdict(
             lambda: {"epoch_starts": [], "trueVals": [], "cancelRounds": []}
         )
 
-        w3 = self.ppss.web3_pp.web3_config.w3
         for slot in slots:
-            if slot.trueval is None:  # We only want slots with non-None truevals
-                continue
-            data = contracts[w3.to_checksum_address(slot.feed.address)]
-            data["epoch_starts"].append(slot.slot_number)
-            data["trueVals"].append(slot.trueval)
-            data["cancelRounds"].append(slot.cancel)
+            if slot.trueval is not None:  # Only consider slots with non-None truevals
+                data = contracts[
+                    self.config.web3_config.w3.to_checksum_address(slot.feed.address)
+                ]
+                data["epoch_starts"].append(slot.slot_number)
+                data["trueVals"].append(slot.trueval)
+                data["cancelRounds"].append(slot.cancel)
 
         contract_addrs = list(contracts.keys())
         epoch_starts = [data["epoch_starts"] for data in contracts.values()]

@@ -3,12 +3,9 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# VPS Backend Dev
+# Run Barge Remotely on VPS
 
-This README shows how to
-- Set up an Azure Ubuntu VPS (Virtual Private Server)
-- Run Barge on the VPS
-- Run sim/bots or pytest using the VPS. (In fact, one VPS per flow)
+This README shows how to run Barge on an Azure Ubuntu VPS (Virtual Private Server). This is for use in backend dev, running predictoor bot, running trader bot.
 
 
 ## 1. Locally, install pdr-backend
@@ -51,12 +48,8 @@ ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 ### In Azure Portal, Open ports of VPS
 
 Running Barge, the VPS exposes these urls:
-- RPC is at:
-  - http://4.245.224.119:8545
-  - or http://74.234.16.165:8545
-- Subgraph is at:
-  - http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-  - or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+- RPC is at http://4.245.224.119:8545 or http://74.234.16.165:8545
+- Subgraph is at http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
@@ -161,19 +154,19 @@ Then, copy VPS' `address.json` file to local. In local console:
 cd
 
 # OPTION 1: for predictoor bot
-scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json barge-predictoor-bot.address.json
+scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json MyVmBargePredictoor.address.json
 
 # OR, OPTION 2: for unit testing
-scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json barge-pytest.address.json
+scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json MyVmBargeUnitTest.address.json
 ```
 
-We give the address file a unique name, vs just "address.json". This keeps it distinct from the address file for _second_ Barge VM we run for pytest (details below).
+Note how we give it a unique name, vs just "address.json". This keeps it distinct from the address file for _second_ Barge VM we run for pytesting (details below)
 
-Confirm that `barge-predictoor-bot.address.json` has a "development" entry. In local console:
+Confirm that `MyVmBargePredictoor.address.json` has a "development" entry. In local console:
 ```console
-grep development ~/barge-predictoor-bot.address.json
+grep development ~/MyVmBargePredictoor.address.json
 # or
-grep development ~/barge-pytest.address.json
+grep development ~/MyVmBargeUnitTest.address.json
 ```
 
 It should return:
@@ -185,33 +178,44 @@ If it returns nothing, then contracts have not yet been deployed to ganache. It'
 
 ## 4. Locally, Run Predictoor Bot (OPTION 1)
 
-### Set envvars
-
 In local console:
 ```console
 # set up virtualenv (if needed)
 cd ~/code/pdr-backend
 source venv/bin/activate
 
+# set envvars
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
+export ADDRESS_FILE="${HOME}/MyVmBargePredictoor.address.json" # from scp to local
+
+export RPC_URL=http://4.245.224.119:8545 # from VPS 
+export SUBGRAPH_URL=http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
+
+# for predictoor bot. Setting to empty means no filters.
+export PAIR_FILTER=
+export TIMEFRAME_FILTER=
+export SOURCE_FILTER=
+
+export OWNER_ADDRS=0xe2DD09d719Da89e5a3D0F2549c7E24566e947260 # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 ```
 
-### Set PPSS
+([envvars.md](envvars.md) has details.)
 
-Let's configure the yaml file. In console:
+You also need to set the `STAKE_TOKEN` envvar to the OCEAN address in barge. In local console:
 ```console
-cp ppss.yaml my_ppss.yaml
+grep --after-context=10 development ~/address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'
 ```
 
-In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
-- change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-predictoor-bot.address.json`, in `"development"` -> `"Ocean"` entry.)
+It should return something like the following. Copy that into the prompt and hit enter:
+```console
+export STAKE_TOKEN=0x282d8efCe846A88B159800bd4130ad77443Fa1A1
+```
 
-### Run pdr bot
+(Alternatively: open `~/address.json` file, find the "development" : "Ocean" entry, and paste it into prompt with `export STAKE_TOKEN=<paste here>`)
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
-pdr predictoor 3 my_ppss.yaml barge-predictoor-bot
+python pdr_backend/predictoor/main.py 3
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -225,46 +229,28 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 
 ### Set up a second VPS / Barge
 
-In steps 2 & 3 above, we had set up a _first_ VPS & Barge, for predictoor bot.
+In steps 2 & 3 above, we set up a _first_ VPS & Barge, for predictoor bot.
 - Assume its IP address is 4.245.224.119
 
 Now, repeat 2 & 3 above, to up a _second_ VPS & Barge, for local testing. 
 - Give it the same key as the first barge.
 - Assume its IP address is 74.234.16.165
-- The "OR" options in sections 2 above use this second IP address. Therefore you can go through the flow with simple copy-and-pastes.
+- The "OR" options in sections 2 above use this second IP address. Therefore you can go through the flow easily.
 
-### Set envvars
+### Set Local Envars
 
-In local console:
+To envvars that use the second Barge. In local console:
 ```console
-# set up virtualenv (if needed)
-cd ~/code/pdr-backend
-source venv/bin/activate
+export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+export ADDRESS_FILE="${HOME}/MyVmBargeUnitTest.address.json" # from scp to local
 
-# same private key as 'run predictoor bot'
-export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
-
-# Unit tests default to using "development" network. So, override!
-export NETWORK_OVERRIDE=barge-pytest
+export RPC_URL=http://74.234.16.165:8545 # from VPS
+export SUBGRAPH_URL=http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
 ```
-
-### Set PPSS
-
-Whereas most READMEs copy `ppss.yaml` to `my_ppss.yaml`, for development we typically want to operate directly on the original one.
-
-In `ppss.yaml` file, in `web3_pp` ->  `barge-pytest` section: (note the different barge section)
-- change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-pytest.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-pytest.address.json`, in `"development"` -> `"Ocean"` entry.)
-
-
-### Run tests
 
 In work console, run tests:
 ```console
-# (ensure PRIVATE_KEY set as above)
-
 # run a single test. The "-s" is for more output.
-# note that pytest does dynamic type-checking too:)
 pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constants -s
 
 # run all tests in a file
@@ -279,12 +265,12 @@ pytest
 
 In work console, run linting checks:
 ```console
-# mypy does static type-checking and more. Configure it via mypy.ini
+# run static type-checking. By default, uses config mypy.ini. Note: pytest does dynamic type-checking.
 mypy ./
 
-# run linting on code style. Configure it via .pylintrc.
+# run linting on code style
 pylint pdr_backend/*
 
-# auto-fix some pylint complaints like whitespace
+# auto-fix some pylint complaints
 black ./
 ```

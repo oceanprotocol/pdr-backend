@@ -21,13 +21,17 @@ Then, run barge. In barge console:
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
-Open a new console and:
+Open a new "work" console and:
 ```console
 # Setup virtualenv
 cd pdr-backend
 source venv/bin/activate
 
-# Set envvars - note that publisher needs >>1 private keys
+# Set envvars - note that publisher needs WAY more private keys than others
+export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
+export RPC_URL=http://127.0.0.1:8545
+export SUBGRAPH_URL="http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph"
+#OR: export SUBGRAPH_URL="http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
 export PREDICTOOR_PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 export PREDICTOOR2_PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 export PREDICTOOR3_PRIVATE_KEY=<YOUR_PRIVATE_KEY>
@@ -37,21 +41,10 @@ export PDR_WEBSOCKET_KEY=<YOUR_PRIVATE_KEY>
 export PDR_MM_USER=<YOUR_PRIVATE_KEY>
 """
 
-Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit. The section "publisher_ss" has parameters for this bot.
-
-Then, run publisher bot. In console:
-```console
-pdr publisher my_ppss.yaml development
+# publish! main.py & publish.py do all the work
+python pdr_backend/publisher/main.py
 ```
-
 
 ## Remote Usage
 
-In the CLI, simply point to a different network:
-```console
-# run on testnet
-pdr publisher my_ppss.yaml sapphire-testnet
-
-# or, run on mainnet
-pdr publisher my_ppss.yaml sapphire-mainnet
-```
+Combine local setup above with remote setup envvars like in [predictoor.md](predictoor.md).

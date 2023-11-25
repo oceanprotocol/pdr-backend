@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock, Mock, patch
 import pytest
-
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
 from pdr_backend.models.feed import Feed
 from pdr_backend.util.constants import (
     MAX_UINT,
@@ -27,16 +26,12 @@ def mock_token():
 
 
 @pytest.fixture
-def dfbuyer_config(tmpdir):
-    yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str, network="development")
-
-    ppss.web3_pp.get_feeds = Mock()
+def dfbuyer_config():
+    config = DFBuyerConfig()
+    config.get_feeds = Mock()
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    ppss.web3_pp.get_feeds.return_value = {
-        address: mock_feed() for address in addresses
-    }
-    return ppss
+    config.get_feeds.return_value = {address: mock_feed() for address in addresses}
+    return config
 
 
 @pytest.fixture

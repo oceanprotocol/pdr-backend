@@ -20,11 +20,7 @@ class StrMixin:
         obj = self
 
         short_attrs, long_attrs = [], []
-        if hasattr(self, "__STR_OBJDIR__"):
-            obj_dir = self.__STR_OBJDIR__
-        else:
-            obj_dir = dir(obj)
-        for attr in obj_dir:
+        for attr in dir(obj):
             if "__" in attr:
                 continue
             attr_obj = getattr(obj, attr)

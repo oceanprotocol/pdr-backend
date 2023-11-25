@@ -7,7 +7,6 @@ from eth_account import Account
 from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.erc721_factory import ERC721Factory
 from pdr_backend.models.token import Token
-from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
 
 MAX_UINT256 = 2**256 - 1
@@ -40,15 +39,14 @@ def publish(
     feeCollector_addr: str,
     rate: Union[int, float],
     cut: Union[int, float],
-    web3_pp: Web3PP,
+    web3_config,
 ):
-    web3_config = web3_pp.web3_config
     pair = base + "/" + quote
     trueval_timeout = 60 * 60 * 24 * 3
     owner = web3_config.owner
-    ocean_address = get_address(web3_pp, "Ocean")
-    fre_address = get_address(web3_pp, "FixedPrice")
-    factory = ERC721Factory(web3_pp)
+    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
+    fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
+    factory = ERC721Factory(web3_config)
 
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
     trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
@@ -87,7 +85,7 @@ def publish(
     data_nft_address: str = logs_nft["newTokenAddress"]
     print(f"Deployed NFT: {data_nft_address}")
 
-    data_nft = DataNft(web3_pp, data_nft_address)
+    data_nft = DataNft(web3_config, data_nft_address)
     tx = data_nft.set_data("pair", pair)
     print(f"Pair set to {pair} in {tx.hex()}")
 

@@ -15,8 +15,14 @@ from pdr_backend.util.constants import WEB3_MAX_TRIES
 
 @enforce_types
 class Web3Config:
-    def __init__(self, rpc_url: str, private_key: Optional[str] = None):
-        self.rpc_url: str = rpc_url
+    def __init__(
+        self, rpc_url: Optional[str] = None, private_key: Optional[str] = None
+    ):
+        self.rpc_url = rpc_url
+
+        if rpc_url is None:
+            raise ValueError("You must set RPC_URL variable")
+
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
 
         if private_key is not None:

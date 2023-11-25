@@ -1,26 +1,25 @@
 from pdr_backend.models.token import Token
-from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.publisher.publish import publish, fund_dev_accounts
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.constants import (
-    DEVELOPMENT_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
-    SAPPHIRE_TESTNET_CHAINID,
-)
+from pdr_backend.util.env import getenv_or_exit
+from pdr_backend.util.web3_config import Web3Config
 
 
-def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
+def main():
+    rpc_url = getenv_or_exit("RPC_URL")
+    private_key = getenv_or_exit("PRIVATE_KEY")
+
     # pairs to deploy on testnet and mainnet
     pair_list = ["BTC", "ETH", "BNB", "XRP", "ADA", "DOGE", "SOL", "LTC", "TRX", "DOT"]
 
     # token price
     rate = 3 / (1 + 0.2 + 0.001)
 
-    web3_config = web3_pp.web3_config
-    if web3_config.w3.eth.chain_id == DEVELOPMENT_CHAINID:
+    web3_config = Web3Config(rpc_url, private_key)
+
+    if web3_config.w3.eth.chain_id == 8996:
         print("Funding dev accounts and publishing pairs on local network...")
-        ocean_address = get_address(web3_pp, "Ocean")
+        ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
         OCEAN = Token(web3_config, ocean_address)
         accounts_to_fund = [
             #    account_key_env,   OCEAN_to_send
@@ -46,7 +45,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
             feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
             rate=rate,
             cut=0.2,
-            web3_pp=web3_pp,
+            web3_config=web3_config,
         )
 
         publish(
@@ -60,7 +59,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
             feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
             rate=rate,
             cut=0.2,
-            web3_pp=web3_pp,
+            web3_config=web3_config,
         )
 
         publish(
@@ -74,14 +73,14 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
             feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
             rate=rate,
             cut=0.2,
-            web3_pp=web3_pp,
+            web3_config=web3_config,
         )
         print("Publish done")
 
-    fee_collector = publisher_ss.fee_collector_address
-    if web3_config.w3.eth.chain_id == SAPPHIRE_TESTNET_CHAINID:
+    if web3_config.w3.eth.chain_id == 23295:
         print("Publishing pairs on testnet")
-        helper_contract = get_address(web3_pp, "PredictoorHelper")
+        helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
+        fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
             publish(
                 s_per_epoch=300,
@@ -94,7 +93,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 feeCollector_addr=fee_collector,
                 rate=rate,
                 cut=0.2,
-                web3_pp=web3_pp,
+                web3_config=web3_config,
             )
             publish(
                 s_per_epoch=3600,
@@ -107,13 +106,14 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 feeCollector_addr=fee_collector,
                 rate=rate,
                 cut=0.2,
-                web3_pp=web3_pp,
+                web3_config=web3_config,
             )
         print("Publish done")
 
-    if web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID:
+    if web3_config.w3.eth.chain_id == 23294:
         print("Publishing pairs on mainnet")
-        helper_contract = get_address(web3_pp, "PredictoorHelper")
+        helper_contract = get_address(web3_config.w3.eth.chain_id, "PredictoorHelper")
+        fee_collector = getenv_or_exit("FEE_COLLECTOR")
         for pair in pair_list:
             publish(
                 s_per_epoch=300,
@@ -126,7 +126,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 feeCollector_addr=fee_collector,
                 rate=rate,
                 cut=0.2,
-                web3_pp=web3_pp,
+                web3_config=web3_config,
             )
             publish(
                 s_per_epoch=3600,
@@ -139,6 +139,11 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 feeCollector_addr=fee_collector,
                 rate=rate,
                 cut=0.2,
-                web3_pp=web3_pp,
+                web3_config=web3_config,
             )
         print("Publish done")
+
+
+if __name__ == "__main__":
+    print("Publisher start")
+    main()

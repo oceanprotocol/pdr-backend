@@ -1,13 +1,18 @@
 # comment out until more fleshed out
 # from pdr_backend.publisher.publish import fund_dev_accounts, publish
 
+
+import os
+
 from pytest import approx
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish import publish
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.web3_config import Web3Config
 
 
-def test_publisher_publish(web3_pp, web3_config):
+def test_publisher_publish():
+    config = Web3Config(os.getenv("RPC_URL"), os.getenv("PRIVATE_KEY"))
     base = "ETH"
     quote = "USDT"
     source = "kraken"
@@ -21,20 +26,20 @@ def test_publisher_publish(web3_pp, web3_config):
         quote=quote,
         source=source,
         timeframe=timeframe,
-        trueval_submitter_addr=web3_config.owner,
-        feeCollector_addr=web3_config.owner,
+        trueval_submitter_addr=config.owner,
+        feeCollector_addr=config.owner,
         rate=3,
         cut=0.2,
-        web3_pp=web3_pp,
+        web3_config=config,
     )
     nft_name = base + "-" + quote + "-" + source + "-" + timeframe
     nft_symbol = base + "/" + quote
-    assert nft_data == (nft_name, nft_symbol, 1, "", True, web3_config.owner)
+    assert nft_data == (nft_name, nft_symbol, 1, "", True, config.owner)
 
     dt_addr = logs_erc["newTokenAddress"]
-    assert web3_config.w3.is_address(dt_addr)
+    assert config.w3.is_address(dt_addr)
 
-    contract = PredictoorContract(web3_pp, dt_addr)
+    contract = PredictoorContract(config, dt_addr)
 
     assert contract.get_secondsPerEpoch() == seconds_per_epoch
     assert (
@@ -43,7 +48,7 @@ def test_publisher_publish(web3_pp, web3_config):
     )
     assert contract.get_price() / 1e18 == approx(3 * (1.201))
 
-    ocean_address = get_address(web3_pp, "Ocean")
+    ocean_address = get_address(config.w3.eth.chain_id, "Ocean")
     assert contract.get_stake_token() == ocean_address
 
     assert contract.get_trueValSubmitTimeout() == 3 * 24 * 60 * 60
