@@ -23,8 +23,12 @@ jobs:
           pip install -r requirements.txt
 
       - name: Notify Slack
+        env:
+          RPC_URL: "https://sapphire.oasis.io"
+          SUBGRAPH_URL: "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+          PRIVATE_KEY: "0xb23c44b8118eb7a7f70d21b0d20aed9b05d85d22ac6a0e57697c564da1c35554"
         run: |
-          output=$(python pdr check_network ppss.yaml sapphire-mainnet | grep -E 'FAIL|WARNING|error' || true)
+          output=$(python scripts/check_network.py 1 | grep -E 'FAIL|WARNING|error' || true)
           fact=$(curl -s https://catfact.ninja/fact | jq -r '.fact')
           if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
