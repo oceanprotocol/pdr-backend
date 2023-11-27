@@ -60,7 +60,7 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool
         return x.isnull().values.any()  # type: ignore[union-attr]
     if type(x) == pl.DataFrame:
         has_None = any(col.has_validity() for col in x)
-        return has_None or sum(sum(x).is_nan()) > 0 # type: ignore[union-attr]
+        return has_None or sum(sum(x).is_nan()) > 0  # type: ignore[union-attr]
     raise ValueError(f"Can't handle type {type(x)}")
 
 
