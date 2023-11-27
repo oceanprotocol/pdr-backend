@@ -152,4 +152,3 @@ if __name__ == "__main__":
     print(
         "View the releases page to learn how to migrate: github.com/oceanprotocol/pdr-backend/releases"
     )
-
