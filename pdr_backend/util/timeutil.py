@@ -79,6 +79,10 @@ def dt_to_ut(dt: datetime.datetime) -> int:
 @enforce_types
 def ut_to_dt(ut: int) -> datetime.datetime:
     """Convert unix time (in # ms) to datetime format"""
+    # precondition
+    assert ut >= 0, ut
+
+    # main work
     dt = datetime.datetime.utcfromtimestamp(ut / 1000)
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
 

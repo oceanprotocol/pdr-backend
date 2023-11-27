@@ -172,7 +172,7 @@ def _ppss(tmpdir) -> PPSS:
     ppss.data_ss = DataSS(
         {
             "input_feeds": ["binanceus c BTC/USDT"],
-            "csv_dir": os.path.join("csvs"),
+            "parquet_dir": os.path.join("parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-07-21",
             "max_n_train": 100,
