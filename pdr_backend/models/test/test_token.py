@@ -7,7 +7,7 @@ from pdr_backend.models.token import Token
 
 
 @enforce_types
-def test_Token(web3_pp, web3_config):
+def test_token(web3_pp, web3_config):
     token_address = get_address(web3_pp, "Ocean")
     token = Token(web3_pp, token_address)
 
