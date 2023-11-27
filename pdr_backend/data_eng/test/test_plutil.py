@@ -306,4 +306,4 @@ def test_parquet_tail_records(tmpdir):
     )
 
     tail_df = _get_tail_df(filename, n=1)
-    assert tail_df.frame_equal(target_tail_df)
+    assert tail_df.equals(target_tail_df)
