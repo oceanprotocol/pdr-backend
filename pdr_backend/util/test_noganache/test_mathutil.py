@@ -168,6 +168,12 @@ def test_has_nan__or_None():
     assert has_nan(pd.DataFrame({"A": [1.0, None], "B": [3.0, 4.0]}))
     assert has_nan(pd.DataFrame({"A": [1.0, None], "B": [np.nan, 4.0]}))
 
+    # pl Series
+    assert not has_nan(pl.Series([1.0, 2.0, 3.0, 4.0]))
+    assert has_nan(pl.Series([1.0, 2.0, np.nan, 4.0]))
+    assert has_nan(pl.Series([1.0, None, 3.0, 4.0]))
+    assert has_nan(pl.Series([1.0, None, np.nan, 4.0]))
+
     # pl DataFrame
     assert not has_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [3.0, 4.0]}))
     assert has_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [np.nan, 4.0]}))

@@ -51,13 +51,18 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
 
 
 @enforce_types
-def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool:
+def has_nan(
+    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
+) -> bool:
     """Returns True if any entry in x has a nan _or_ a None"""
     if type(x) == np.ndarray:
         has_None = (x == None).any()  # pylint: disable=singleton-comparison
         return has_None or np.isnan(np.min(x))
     if type(x) in [pd.DataFrame, pd.Series]:
         return x.isnull().values.any()  # type: ignore[union-attr]
+    if type(x) == pl.Series:
+        has_None = x.has_validity()
+        return has_None or sum(x.is_nan()) > 0  # type: ignore[union-attr]
     if type(x) == pl.DataFrame:
         has_None = any(col.has_validity() for col in x)
         return has_None or sum(sum(x).is_nan()) > 0  # type: ignore[union-attr]
