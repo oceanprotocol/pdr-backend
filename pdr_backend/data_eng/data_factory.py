@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict
+from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -16,7 +16,7 @@ from pdr_backend.data_eng.constants import (
 )
 from pdr_backend.data_eng.data_pp import DataPP
 from pdr_backend.data_eng.data_ss import DataSS
-from pdr_backend.data_eng.pdutil import (
+from pdr_backend.data_eng.plutil import (
     initialize_df,
     transform_df,
     concat_next_df,
@@ -86,52 +86,46 @@ class DataFactory:
         df = initialize_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
-
-            try:
-                exch = self.ss.exchs_dict[exch_str]
-
-                # C is [sample x signal(TOHLCV)]. Row 0 is oldest
-                # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
-                raw_tohlcv_data = exch.fetch_ohlcv(
-                    symbol=pair_str.replace("-", "/"),  # eg "BTC/USDT"
-                    timeframe=self.pp.timeframe,  # eg "5m", "1h"
-                    since=st_ut,  # timestamp of first candle
-                    limit=1000,  # max # candles to retrieve
-                )
-                uts = [vec[0] for vec in raw_tohlcv_data]
-                if len(uts) > 1:
-                    # Ideally, time between ohclv candles is always 5m or 1h
-                    # But exchange data often has gaps. Warn about worst violations
-                    diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
-                    diffs_m = diffs_ms / 1000 / 60  # in minutes
-                    mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
-                    mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
-
-                    if min(diffs_m) < mn_thr:
-                        print(f"      **WARNING: short candle time: {min(diffs_m)} min")
-                    if max(diffs_m) > mx_thr:
-                        print(f"      **WARNING: long candle time: {max(diffs_m)} min")
-
-                # filter out data that's too new
-                raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
-
-                # concat both TOHLCV data
-                schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-                next_df = pl.DataFrame(raw_tohlcv_data, schema=schema)
-                df = concat_next_df(df, next_df)
-
-                if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
-                    break
-
-                # prep next iteration
-                newest_ut_value = df.tail(1)["timestamp"][0]
-
-                print(f"      newest_ut_value: {newest_ut_value}")
-                st_ut = newest_ut_value + self.pp.timeframe_ms
-
-            except Exception as e:
-                print(f"      **WARNING exchange: {e}")
+            exch = self.ss.exchs_dict[exch_str]
+            raw_tohlcv_data = _safe_fetch_ohlcv(
+                exch,
+                symbol=pair_str.replace("-", "/"),
+                timeframe=self.pp.timeframe,
+                since=st_ut,
+                limit=1000,
+            )
+            if raw_tohlcv_data is None:  # exchange had error
                 return
+            uts = [vec[0] for vec in raw_tohlcv_data]
+            if len(uts) > 1:
+                # Ideally, time between ohclv candles is always 5m or 1h
+                # But exchange data often has gaps. Warn about worst violations
+                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+                diffs_m = diffs_ms / 1000 / 60  # in minutes
+                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
+
+                if min(diffs_m) < mn_thr:
+                    print(f"      **WARNING: short candle time: {min(diffs_m)} min")
+                if max(diffs_m) > mx_thr:
+                    print(f"      **WARNING: long candle time: {max(diffs_m)} min")
+
+            # filter out data that's too new
+            raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
+
+            # concat both TOHLCV data
+            schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+            next_df = pl.DataFrame(raw_tohlcv_data, schema=schema)
+            df = concat_next_df(df, next_df)
+
+            if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
+                break
+
+            # prep next iteration
+            newest_ut_value = df.tail(1)["timestamp"][0]
+
+            print(f"      newest_ut_value: {newest_ut_value}")
+            st_ut = newest_ut_value + self.pp.timeframe_ms
 
         # add datetime
         df = transform_df(df)
@@ -259,7 +253,7 @@ class DataFactory:
 
         return hist_df
 
-    # TODO: Move to model_factory/model + use generic df<=>serialize<=>parquet
+    # TO DO: Move to model_factory/model + use generic df<=>serialize<=>parquet
     def create_xy(
         self,
         hist_df: pd.DataFrame,
@@ -350,3 +344,43 @@ def _slice(x: list, st: int, fin: int) -> list:
     if fin == 0:
         return x[st:]
     return x[st:fin]
+
+
+@enforce_types
+def _safe_fetch_ohlcv(
+    exch,
+    symbol: str,
+    timeframe: str,
+    since: int,
+    limit: int,
+) -> Union[List[tuple], None]:
+    """
+    @description
+      calls ccxt.exchange.fetch_ohlcv() but if there's an error it
+      emits a warning and returns None, vs crashing everything
+
+    @arguments
+      exch -- eg ccxt.binanceus()
+      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      timeframe -- eg "1h", "1m"
+      since -- Timestamp of first candle. In unix time (in ms)
+      limit -- max # candles to retrieve
+
+    @return
+      raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
+        where row 0 is oldest
+        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
+    """
+    if "-" in symbol:
+        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
+
+    try:
+        return exch.fetch_ohlcv(
+            symbol=symbol,
+            timeframe=timeframe,
+            since=since,
+            limit=limit,
+        )
+    except Exception as e:
+        print(f"      **WARNING exchange: {e}")
+        return None

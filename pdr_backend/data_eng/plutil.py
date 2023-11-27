@@ -1,5 +1,5 @@
 """
-pdutil: pandas dataframe & cvs utilities. 
+plutil: polars dataframe & cvs utilities. 
 These utilities are specific to the time-series dataframe columns we're using.
 """
 import os
@@ -16,7 +16,6 @@ from pdr_backend.data_eng.constants import (
 )
 
 
-# TODO: Move this implementation to data_factory.ohlcv module
 @enforce_types
 def initialize_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
@@ -32,7 +31,7 @@ def initialize_df(cols: List[str] = []) -> pl.DataFrame:
     return df
 
 
-# TODO: Move this implementation to data_factory.ohlcv module
+@enforce_types
 def transform_df(
     df: pl.DataFrame,
 ) -> pl.DataFrame:
@@ -55,7 +54,6 @@ def transform_df(
     return df
 
 
-# TODO: Make this only check schemas and concat
 @enforce_types
 def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
     """Add a next_df to existing df, with the expected columns etc.
@@ -66,7 +64,6 @@ def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 
-# TODO - Move ohlcv logic out, keep util generic
 @enforce_types
 def save_parquet(filename: str, df: pl.DataFrame):
     """write to parquet file
@@ -82,7 +79,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
     df = df.select(columns)
 
     if os.path.exists(filename):  # append existing file
-        # TODO: Implement parquet-append with pyarrow
+        # TO DO: Implement parquet-append with pyarrow
         cur_df = pl.read_parquet(filename)
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
@@ -94,7 +91,6 @@ def save_parquet(filename: str, df: pl.DataFrame):
         print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
 
 
-# TODO - Move ohlcv logic out, keep util generic
 @enforce_types
 def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     """Load parquet file as a dataframe.
@@ -117,7 +113,7 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
       Polars does not have an index. "timestamp" is a regular col and required for "datetime"
       (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
 
-      TODO: Fix (1), save_parquet already saves out dataframe.
+      TO DO: Fix (1), save_parquet already saves out dataframe.
       Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
     """
     # handle cols
@@ -146,7 +142,7 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     df = transform_df(df)
 
     # postconditions, return
-    # TODO: Helper to go from np<->pl schema/dtypes
+    # TO DO: Helper to go from np<->pl schema/dtypes
     assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
     assert "datetime" in df.columns and df["datetime"].dtype == pl.Datetime
 

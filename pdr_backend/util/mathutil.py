@@ -50,7 +50,6 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
     return round(x, sig - int(floor(log10(abs(x)))) - 1)
 
 
-# TODO - Decide whether to support polars + pandas in mathutil
 @enforce_types
 def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool:
     """Returns True if any entry in x has a nan"""
@@ -63,7 +62,6 @@ def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool
     raise ValueError(f"Can't handle type {type(x)}")
 
 
-# TODO - Decide whether to support polars + pandas in mathutil
 @enforce_types
 def fill_nans(
     df: Union[pd.DataFrame, pl.DataFrame]

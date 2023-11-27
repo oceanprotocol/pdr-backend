@@ -11,7 +11,7 @@ from pdr_backend.data_eng.constants import (
     OHLCV_DTYPES_PL,
     TOHLCV_DTYPES_PL,
 )
-from pdr_backend.data_eng.pdutil import (
+from pdr_backend.data_eng.plutil import (
     initialize_df,
     transform_df,
     concat_next_df,
