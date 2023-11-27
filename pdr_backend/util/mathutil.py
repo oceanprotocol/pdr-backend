@@ -6,6 +6,7 @@ from typing import Union
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from pdr_backend.util.strutil import StrMixin
 
@@ -50,25 +51,50 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
 
 
 @enforce_types
-def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series]) -> bool:
-    """Returns True if any entry in x has a nan"""
+def has_nan(x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame]) -> bool:
+    """Returns True if any entry in x has a nan _or_ a None"""
     if type(x) == np.ndarray:
-        return np.isnan(np.min(x))
+        has_None = (x == None).any()  # pylint: disable=singleton-comparison
+        return has_None or np.isnan(np.min(x))
     if type(x) in [pd.DataFrame, pd.Series]:
         return x.isnull().values.any()  # type: ignore[union-attr]
+    if type(x) == pl.DataFrame:
+        has_None = any(col.has_validity() for col in x)
+        return has_None or sum(sum(x).is_nan()) > 0 # type: ignore[union-attr]
     raise ValueError(f"Can't handle type {type(x)}")
 
 
 @enforce_types
-def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
-    """Interpolate the nans using Linear method.
+def fill_nans(
+    df: Union[pd.DataFrame, pl.DataFrame]
+) -> Union[pd.DataFrame, pl.DataFrame]:
+    """Interpolate the nans using Linear method available in pandas.
     It ignores the index and treat the values as equally spaced.
 
     Ref: https://www.geeksforgeeks.org/working-with-missing-data-in-pandas/
     """
-    df = df.interpolate(method="linear", limit_direction="forward")
-    df = df.interpolate(method="linear", limit_direction="backward")  # row 0
-    return df
+    interpolate_df = pd.DataFrame()
+    output_type = type(df)
+
+    # polars support
+    if output_type == pl.DataFrame:
+        interpolate_df = df.to_pandas()
+    else:
+        interpolate_df = df
+
+    # interpolate is a pandas-only feature
+    interpolate_df = interpolate_df.interpolate(
+        method="linear", limit_direction="forward"
+    )
+    interpolate_df = interpolate_df.interpolate(
+        method="linear", limit_direction="backward"
+    )  # row 0
+
+    # return polars if input was polars
+    if type(output_type) == pl.DataFrame:
+        interpolate_df = pl.from_pandas(interpolate_df)
+
+    return interpolate_df
 
 
 @enforce_types

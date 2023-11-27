@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 
 from pdr_backend.util.mathutil import (
@@ -142,43 +143,67 @@ def test_round_sig():
 
 
 @enforce_types
-def test_has_nan():
+def test_has_nan__or_None():
     # 1d array
     assert not has_nan(np.array([1.0, 2.0, 3.0, 4.0]))
     assert has_nan(np.array([1.0, 2.0, np.nan, 4.0]))
+    assert has_nan(np.array([1.0, None, 3.0, 4.0]))
+    assert has_nan(np.array([1.0, None, np.nan, 4.0]))
 
     # 2d array
     assert not has_nan(np.array([[1.0, 2.0], [3.0, 4.0]]))
     assert has_nan(np.array([[1.0, 2.0], [np.nan, 4.0]]))
+    assert has_nan(np.array([[1.0, None], [3.0, 4.0]]))
+    assert has_nan(np.array([[1.0, None], [np.nan, 4.0]]))
 
     # pd Series
     assert not has_nan(pd.Series([1.0, 2.0, 3.0, 4.0]))
     assert has_nan(pd.Series([1.0, 2.0, np.nan, 4.0]))
+    assert has_nan(pd.Series([1.0, None, 3.0, 4.0]))
+    assert has_nan(pd.Series([1.0, None, np.nan, 4.0]))
 
     # pd DataFrame
     assert not has_nan(pd.DataFrame({"A": [1.0, 2.0], "B": [3.0, 4.0]}))
     assert has_nan(pd.DataFrame({"A": [1.0, 2.0], "B": [np.nan, 4.0]}))
+    assert has_nan(pd.DataFrame({"A": [1.0, None], "B": [3.0, 4.0]}))
+    assert has_nan(pd.DataFrame({"A": [1.0, None], "B": [np.nan, 4.0]}))
+
+    # pl DataFrame
+    assert not has_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [3.0, 4.0]}))
+    assert has_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [np.nan, 4.0]}))
+    assert has_nan(pl.DataFrame({"A": [1.0, None], "B": [3.0, 4.0]}))
+    assert has_nan(pl.DataFrame({"A": [1.0, None], "B": [np.nan, 4.0]}))
 
 
 @enforce_types
-def test_fill_nans():
+def test_fill_nans_pd():
+    _test_fill_nans(pd)
+
+
+@enforce_types
+def test_fill_nans_pl():
+    _test_fill_nans(pl)
+
+
+@enforce_types
+def _test_fill_nans(pdl):
     # nan at front
-    df1 = pd.DataFrame({"A": [np.nan, 1.0, 2.0, 3.0, 4.0, 5.0]})
+    df1 = pdl.DataFrame({"A": [np.nan, 1.0, 2.0, 3.0, 4.0, 5.0]})
     df2 = fill_nans(df1)
     assert not has_nan(df2)
 
     # nan in middle
-    df1 = pd.DataFrame({"A": [1.0, 2.0, np.nan, 3.0, 4.0]})
+    df1 = pdl.DataFrame({"A": [1.0, 2.0, np.nan, 3.0, 4.0]})
     df2 = fill_nans(df1)
     assert not has_nan(df2)
 
     # nan at end
-    df1 = pd.DataFrame({"A": [1.0, 2.0, 3.0, 4.0, np.nan]})
+    df1 = pdl.DataFrame({"A": [1.0, 2.0, 3.0, 4.0, np.nan]})
     df2 = fill_nans(df1)
     assert not has_nan(df2)
 
     # nan at front, middle, end
-    df1 = pd.DataFrame({"A": [np.nan, 1.0, 2.0, np.nan, 3.0, 4.0, np.nan]})
+    df1 = pdl.DataFrame({"A": [np.nan, 1.0, 2.0, np.nan, 3.0, 4.0, np.nan]})
     df2 = fill_nans(df1)
     assert not has_nan(df2)
 

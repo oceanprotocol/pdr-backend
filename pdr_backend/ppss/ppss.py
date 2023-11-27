@@ -83,10 +83,13 @@ def fast_test_yaml_str(tmpdir=None):
     s = _CACHED_YAML_FILE_S
 
     if tmpdir is not None:
-        assert "csv_dir: csvs" in s
-        s = s.replace("csv_dir: csvs", f"csv_dir: {os.path.join(tmpdir, 'csvs')}")
+        assert "parquet_dir: parquet_data" in s
+        s = s.replace(
+            "parquet_dir: parquet_data",
+            f"parquet_dir: {os.path.join(tmpdir, 'parquet_data')}",
+        )
 
         assert "log_dir: logs" in s
-        s.replace("log_dir: logs", f"log_dir: {os.path.join(tmpdir, 'logs')}")
+        s = s.replace("log_dir: logs", f"log_dir: {os.path.join(tmpdir, 'logs')}")
 
     return s

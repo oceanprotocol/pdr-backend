@@ -9,7 +9,7 @@ from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
     "input_feeds": ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"],
-    "csv_dir": "csvs",
+    "parquet_dir": "parquet_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
     "max_n_train": 7,
@@ -23,7 +23,7 @@ def test_data_ss_basic():
 
     # yaml properties
     assert ss.input_feeds_strs == ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"]
-    assert "csvs" in ss.csv_dir
+    assert "parquet_data" in ss.parquet_dir
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
 
@@ -69,20 +69,20 @@ def test_data_ss_now():
 
 
 @enforce_types
-def test_csv_dir(tmpdir):
+def test_parquet_dir(tmpdir):
     # rel path given; needs an abs path
     d = copy.deepcopy(_D)
-    d["csv_dir"] = "csvs"
+    d["parquet_dir"] = "parquet_data"
     ss = DataSS(d)
-    target_csv_dir = os.path.abspath("csvs")
-    assert ss.csv_dir == target_csv_dir
+    target_parquet_dir = os.path.abspath("parquet_data")
+    assert ss.parquet_dir == target_parquet_dir
 
     # abs path given
     d = copy.deepcopy(_D)
-    d["csv_dir"] = os.path.join(tmpdir, "csvs")
+    d["parquet_dir"] = os.path.join(tmpdir, "parquet_data")
     ss = DataSS(d)
-    target_csv_dir = os.path.join(tmpdir, "csvs")
-    assert ss.csv_dir == target_csv_dir
+    target_parquet_dir = os.path.join(tmpdir, "parquet_data")
+    assert ss.parquet_dir == target_parquet_dir
 
 
 @enforce_types

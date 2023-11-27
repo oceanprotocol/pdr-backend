@@ -1,28 +1,31 @@
 import os
 import sys
-from typing import Dict
+from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
+    TOHLCV_DTYPES_PL,
 )
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.data_eng.pdutil import (
+from pdr_backend.data_eng.plutil import (
     initialize_df,
+    transform_df,
     concat_next_df,
-    save_csv,
-    load_csv,
+    load_parquet,
+    save_parquet,
     has_data,
     oldest_ut,
     newest_ut,
 )
+from pdr_backend.ppss.data_pp import DataPP
+from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
@@ -52,25 +55,25 @@ class DataFactory:
         print(f"  Data start: {pretty_timestr(self.ss.st_timestamp)}")
         print(f"  Data fin: {pretty_timestr(fin_ut)}")
 
-        self._update_csvs(fin_ut)
-        csv_dfs = self._load_csvs(fin_ut)
-        hist_df = self._merge_csv_dfs(csv_dfs)
+        self._update_parquet(fin_ut)
+        parquet_dfs = self._load_parquet(fin_ut)
+        hist_df = self._merge_parquet_dfs(parquet_dfs)
 
         print("Get historical data, across many exchanges & pairs: done.")
-        return hist_df
+        return hist_df.to_pandas()
 
-    def _update_csvs(self, fin_ut: int):
-        print("  Update csvs.")
+    def _update_parquet(self, fin_ut: int):
+        print("  Update parquet.")
         for exch_str, pair_str in self.ss.exchange_pair_tups:
-            self._update_hist_csv_at_exch_and_pair(exch_str, pair_str, fin_ut)
+            self._update_hist_parquet_at_exch_and_pair(exch_str, pair_str, fin_ut)
 
-    def _update_hist_csv_at_exch_and_pair(
+    def _update_hist_parquet_at_exch_and_pair(
         self, exch_str: str, pair_str: str, fin_ut: int
     ):
-        pair_str = pair_str.replace("/", "-")
-        print(f"    Update csv at exchange={exch_str}, pair={pair_str}.")
+        assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+        print(f"    Update parquet at exchange={exch_str}, pair={pair_str}.")
 
-        filename = self._hist_csv_filename(exch_str, pair_str)
+        filename = self._hist_parquet_filename(exch_str, pair_str)
         print(f"      filename={filename}")
 
         st_ut = self._calc_start_ut_maybe_delete(filename)
@@ -79,21 +82,20 @@ class DataFactory:
             print("      Given start time, no data to gather. Exit.")
             return
 
-        # Fill in df
-        df = initialize_df(OHLCV_COLS)
+        # empty ohlcv df
+        df = initialize_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
-
             exch = self.ss.exchs_dict[exch_str]
-
-            # C is [sample x signal(TOHLCV)]. Row 0 is oldest
-            # TOHLCV = unixTime (in ms), Open, High, Low, Close, Volume
-            raw_tohlcv_data = exch.fetch_ohlcv(
-                symbol=pair_str.replace("-", "/"),  # eg "BTC/USDT"
-                timeframe=self.pp.timeframe,  # eg "5m", "1h"
-                since=st_ut,  # timestamp of first candle
-                limit=1000,  # max # candles to retrieve
+            raw_tohlcv_data = safe_fetch_ohlcv(
+                exch,
+                symbol=pair_str.replace("-", "/"),
+                timeframe=self.pp.timeframe,
+                since=st_ut,
+                limit=1000,
             )
+            if raw_tohlcv_data is None:  # exchange had error
+                return
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
                 # Ideally, time between ohclv candles is always 5m or 1h
@@ -108,19 +110,28 @@ class DataFactory:
                 if max(diffs_m) > mx_thr:
                     print(f"      **WARNING: long candle time: {max(diffs_m)} min")
 
+            # filter out data that's too new
             raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
-            next_df = pd.DataFrame(raw_tohlcv_data, columns=TOHLCV_COLS)
+
+            # concat both TOHLCV data
+            schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
+            next_df = pl.DataFrame(raw_tohlcv_data, schema=schema)
             df = concat_next_df(df, next_df)
 
             if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
                 break
 
             # prep next iteration
-            newest_ut_value = int(df.index.values[-1])
+            newest_ut_value = df.tail(1)["timestamp"][0]
+
+            print(f"      newest_ut_value: {newest_ut_value}")
             st_ut = newest_ut_value + self.pp.timeframe_ms
 
-        # output to csv
-        save_csv(filename, df)
+        # add datetime
+        df = transform_df(df)
+
+        # output to parquet
+        save_parquet(filename, df)
 
     def _calc_start_ut_maybe_delete(self, filename: str) -> int:
         """
@@ -156,71 +167,97 @@ class DataFactory:
         os.remove(filename)
         return self.ss.st_timestamp
 
-    def _load_csvs(self, fin_ut: int) -> Dict[str, Dict[str, pd.DataFrame]]:
+    def _load_parquet(self, fin_ut: int) -> Dict[str, Dict[str, pl.DataFrame]]:
         """
         @arguments
           fin_ut -- finish timestamp
 
         @return
-          csv_dfs -- dict of [exch_str][pair_str] : df
+          parquet_dfs -- dict of [exch_str][pair_str] : df
             Where df has columns=OHLCV_COLS+"datetime", and index=timestamp
         """
-        print("  Load csvs.")
+        print("  Load parquet.")
         st_ut = self.ss.st_timestamp
 
-        csv_dfs: Dict[str, Dict[str, pd.DataFrame]] = {}  # [exch][pair] : df
+        parquet_dfs: Dict[str, Dict[str, pl.DataFrame]] = {}  # [exch][pair] : df
         for exch_str in self.ss.exchange_strs:
-            csv_dfs[exch_str] = {}
+            parquet_dfs[exch_str] = {}
 
         for exch_str, pair_str in self.ss.exchange_pair_tups:
-            print(f"Load csv from exchange={exch_str}, pair={pair_str}")
-            filename = self._hist_csv_filename(exch_str, pair_str)
+            assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+            filename = self._hist_parquet_filename(exch_str, pair_str)
             cols = [
                 signal_str  # cols is a subset of TOHLCV_COLS
                 for e, signal_str, p in self.ss.input_feed_tups
                 if e == exch_str and p == pair_str
             ]
-            csv_df = load_csv(filename, cols, st_ut, fin_ut)
-            assert "datetime" in csv_df.columns
-            assert csv_df.index.name == "timestamp"
-            csv_dfs[exch_str][pair_str] = csv_df
+            parquet_df = load_parquet(filename, cols, st_ut, fin_ut)
 
-        return csv_dfs
+            assert "datetime" in parquet_df.columns
+            assert "timestamp" in parquet_df.columns
 
-    def _merge_csv_dfs(self, csv_dfs: dict) -> pd.DataFrame:
+            parquet_dfs[exch_str][pair_str] = parquet_df
+
+        return parquet_dfs
+
+    def _merge_parquet_dfs(self, parquet_dfs: dict) -> pl.DataFrame:
         """
         @arguments
-          csv_dfs -- dict [exch_str][pair_str] : df
+          parquet_dfs -- dict [exch_str][pair_str] : df
             where df has cols={signal_str}+"datetime", and index=timestamp
         @return
           hist_df -- df w/ cols={exch_str}:{pair_str}:{signal_str}+"datetime",
             and index=timestamp
         """
-        print("  Merge csv DFs.")
-        hist_df = pd.DataFrame()
-        for exch_str in csv_dfs.keys():
-            for pair_str, csv_df in csv_dfs[exch_str].items():
-                assert "-" in pair_str, pair_str
-                assert "datetime" in csv_df.columns
-                assert csv_df.index.name == "timestamp"
+        # init hist_df such that it can do basic operations
+        print("  Merge parquet DFs.")
+        hist_df = initialize_df()
+        hist_df_cols = ["timestamp"]
+        for exch_str in parquet_dfs.keys():
+            for pair_str, parquet_df in parquet_dfs[exch_str].items():
+                assert "-" in pair_str, f"pair_s{pair_str}' needs -"
+                assert "datetime" in parquet_df.columns
+                assert "timestamp" in parquet_df.columns
 
-                for csv_col in csv_df.columns:
-                    if csv_col == "datetime":
-                        if "datetime" in hist_df.columns:
-                            continue
-                        hist_col = csv_col
-                    else:
-                        signal_str = csv_col  # eg "close"
-                        hist_col = f"{exch_str}:{pair_str}:{signal_str}"
-                    hist_df[hist_col] = csv_df[csv_col]
+                for parquet_col in parquet_df.columns:
+                    if parquet_col in ["timestamp", "datetime"]:
+                        continue
+
+                    signal_str = parquet_col  # eg "close"
+                    hist_col = f"{exch_str}:{pair_str}:{signal_str}"
+
+                    parquet_df = parquet_df.with_columns(
+                        [pl.col(parquet_col).alias(hist_col)]
+                    )
+                    hist_df_cols.append(hist_col)
+
+                # drop columns we won't merge
+                # drop original OHLCV cols and datetime
+                parquet_df = parquet_df.drop(OHLCV_COLS)
+                if "datetime" in hist_df.columns:
+                    parquet_df = parquet_df.drop("datetime")
+
+                # drop OHLCV from hist_df_cols
+                hist_df_cols = [x for x in hist_df_cols if x not in OHLCV_COLS]
+
+                # join to hist_df
+                if hist_df.shape[0] == 0:
+                    hist_df = parquet_df
+                else:
+                    hist_df = hist_df.join(parquet_df, on="timestamp", how="outer")
+
+        # select columns in-order [timestamp, ..., datetime]
+        hist_df = hist_df.select(hist_df_cols + ["datetime"])
 
         assert "datetime" in hist_df.columns
-        assert hist_df.index.name == "timestamp"
+        assert "timestamp" in hist_df.columns
+
         return hist_df
 
+    # TO DO: Move to model_factory/model + use generic df<=>serialize<=>parquet
     def create_xy(
         self,
-        hist_df: pd.DataFrame,
+        hist_df: pd.DataFrame,  # not a pl.DataFrame, by design
         testshift: int,
         do_fill_nans: bool = True,
     ):
@@ -238,6 +275,8 @@ class DataFactory:
           x_df -- df w/ cols={exch_str}:{pair_str}:{signal}:t-{x} + "datetime"
             index=0,1,.. (nothing special)
         """
+        if not isinstance(hist_df, pd.DataFrame):
+            raise ValueError("hist_df should be a pd.DataFrame")
         if do_fill_nans and has_nan(hist_df):
             hist_df = fill_nans(hist_df)
 
@@ -287,14 +326,14 @@ class DataFactory:
         # return
         return X, y, x_df
 
-    def _hist_csv_filename(self, exch_str, pair_str) -> str:
+    def _hist_parquet_filename(self, exch_str, pair_str) -> str:
         """
         Given exch_str and pair_str (and self path),
-        compute csv filename
+        compute parquet filename
         """
-        pair_str = pair_str.replace("/", "-")
-        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.csv"
-        filename = os.path.join(self.ss.csv_dir, basename)
+        assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
+        filename = os.path.join(self.ss.parquet_dir, basename)
         return filename
 
 
@@ -308,3 +347,43 @@ def _slice(x: list, st: int, fin: int) -> list:
     if fin == 0:
         return x[st:]
     return x[st:fin]
+
+
+@enforce_types
+def safe_fetch_ohlcv(
+    exch,
+    symbol: str,
+    timeframe: str,
+    since: int,
+    limit: int,
+) -> Union[List[tuple], None]:
+    """
+    @description
+      calls ccxt.exchange.fetch_ohlcv() but if there's an error it
+      emits a warning and returns None, vs crashing everything
+
+    @arguments
+      exch -- eg ccxt.binanceus()
+      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      timeframe -- eg "1h", "1m"
+      since -- Timestamp of first candle. In unix time (in ms)
+      limit -- max # candles to retrieve
+
+    @return
+      raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
+        where row 0 is oldest
+        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
+    """
+    if "-" in symbol:
+        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
+
+    try:
+        return exch.fetch_ohlcv(
+            symbol=symbol,
+            timeframe=timeframe,
+            since=since,
+            limit=limit,
+        )
+    except Exception as e:
+        print(f"      **WARNING exchange: {e}")
+        return None
