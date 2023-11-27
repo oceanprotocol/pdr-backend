@@ -6,6 +6,4 @@ if __name__ == "__main__":
     print(
         "View the releases page to learn how to migrate: github.com/oceanprotocol/pdr-backend/releases"
     )
-    print(
-        "Swich back to version v0.1.1 if you'd like to keep using main.py and env vars"
-    )
+
