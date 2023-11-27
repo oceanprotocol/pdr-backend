@@ -5,7 +5,7 @@ from typing import List
 from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.data_eng.data_factory import DataFactory
@@ -83,7 +83,7 @@ class SimEngine:
 
         # main loop!
         data_factory = DataFactory(self.ppss.data_pp, self.ppss.data_ss)
-        hist_df = data_factory.get_hist_df()
+        hist_df: pl.DataFrame = data_factory.get_hist_df()
         for test_i in range(self.ppss.data_pp.test_n):
             self.run_one_iter(test_i, hist_df)
             self._plot(test_i, self.ppss.data_pp.test_n)
@@ -95,7 +95,7 @@ class SimEngine:
         log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
 
     @enforce_types
-    def run_one_iter(self, test_i: int, hist_df: pd.DataFrame):
+    def run_one_iter(self, test_i: int, hist_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_factory = DataFactory(self.ppss.data_pp, self.ppss.data_ss)
@@ -114,7 +114,8 @@ class SimEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        ut = int(hist_df.index.values[-1]) - testshift * self.ppss.data_pp.timeframe_ms
+        recent_ut = int(hist_df["timestamp"].to_list()[-1])
+        ut = recent_ut - testshift * self.ppss.data_pp.timeframe_ms
 
         # current price
         curprice = y_train[-1]

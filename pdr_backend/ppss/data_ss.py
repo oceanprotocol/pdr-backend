@@ -81,7 +81,7 @@ class DataSS:
     @property
     def st_timestamp(self) -> int:
         """
-        Return start timestamp, in ut.
+        Return start timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.st_timestr.
         """
         return timestr_to_ut(self.st_timestr)
@@ -89,7 +89,7 @@ class DataSS:
     @property
     def fin_timestamp(self) -> int:
         """
-        Return fin timestamp, in ut.
+        Return fin timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.fin_timestr.
 
         ** This value will change dynamically if fin_timestr is "now".

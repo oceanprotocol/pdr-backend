@@ -62,7 +62,7 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
 
 
 @enforce_types
-def _assert_shapes(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
+def _assert_pd_df_shape(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n
@@ -108,10 +108,14 @@ def test_update_parquet5(tmpdir):
 
 @enforce_types
 def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
-    """n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000"""
+    """
+    @arguments
+      n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000
+    """
 
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
+        """Return a ut : unix time, in ms, in UTC time zone"""
         return since + i * MS_PER_5M_EPOCH
 
     def _uts_in_range(st_ut: int, fin_ut: int) -> List[int]:
@@ -227,19 +231,39 @@ ETHUSDT_PARQUET_DFS = {
 
 
 @enforce_types
+def test_hist_df_shape(tmpdir):
+    _, _, data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH-USDT")
+    hist_df = data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
+    assert isinstance(hist_df, pl.DataFrame)
+    assert hist_df.columns == [
+        "timestamp",
+        "binanceus:ETH-USDT:open",
+        "binanceus:ETH-USDT:high",
+        "binanceus:ETH-USDT:low",
+        "binanceus:ETH-USDT:close",
+        "binanceus:ETH-USDT:volume",
+        "datetime",
+    ]
+    assert hist_df.shape == (12, 7)
+    assert len(hist_df["timestamp"]) == 12
+    assert (  # pylint: disable=unsubscriptable-object
+        hist_df["timestamp"][0] == 1686805500000
+    )
+
+
+@enforce_types
 def test_create_xy__input_type(tmpdir):
     # hist_df should be pl
     _, _, data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH-USDT")
     hist_df = data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
-    assert not isinstance(hist_df, pd.DataFrame)
     assert isinstance(hist_df, pl.DataFrame)
 
-    # create_xy() input should be pd
-    data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    # create_xy() input should be pl
+    data_factory.create_xy(hist_df, testshift=0)
 
-    # create_xy() inputs shouldn't be pl
-    with pytest.raises(ValueError):
-        data_factory.create_xy(hist_df, testshift=0)
+    # create_xy() inputs shouldn't be pd
+    with pytest.raises(AssertionError):
+        data_factory.create_xy(hist_df.to_pandas(), testshift=0)
 
 
 @enforce_types
@@ -248,9 +272,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     hist_df = data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
 
     # =========== initial testshift (0)
-    # At model level, we use pandas not polars. Hence "to_pandas()"
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
-    _assert_shapes(ss, X, y, x_df)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
+    _assert_pd_df_shape(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
     assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
@@ -269,9 +292,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
     assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
-    # =========== now have a different testshift (1 not 0). Note "to_pandas()"
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=1)
-    _assert_shapes(ss, X, y, x_df)
+    # =========== now have a different testshift (1 not 0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=1)
+    _assert_pd_df_shape(ss, X, y, x_df)
 
     assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
     assert X[-2, :].tolist() == [6, 5, 4] and y[-2] == 3
@@ -290,11 +313,11 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
     assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
 
-    # =========== now have a different max_n_train. Note "to_pandas()"
+    # =========== now have a different max_n_train
     ss.d["max_n_train"] = 5
 
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
-    _assert_shapes(ss, X, y, x_df)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
+    _assert_pd_df_shape(ss, X, y, x_df)
 
     assert X.shape[0] == 5 + 1  # +1 for one test point
     assert y.shape[0] == 5 + 1
@@ -330,8 +353,8 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     data_factory = DataFactory(pp, ss)
     hist_df = data_factory._merge_parquet_dfs(parquet_dfs)
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
-    _assert_shapes(ss, X, y, x_df)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
+    _assert_pd_df_shape(ss, X, y, x_df)
 
     found_cols = x_df.columns.tolist()
     target_cols = [
@@ -405,9 +428,7 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = data_factory.create_xy(
-        hist_df.to_pandas(), testshift=0, do_fill_nans=False
-    )
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -415,13 +436,11 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(hist_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = data_factory.create_xy(
-        hist_df.to_pandas(), testshift=0, do_fill_nans=True
-    )
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+    X, y, x_df = data_factory.create_xy(hist_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
@@ -451,7 +470,7 @@ def test_get_hist_df_calls(tmpdir):
 
     # call and assert
     hist_df = data_factory.get_hist_df()
-    assert isinstance(hist_df, pd.DataFrame)
+    assert isinstance(hist_df, pl.DataFrame)
     assert len(hist_df) == 3
 
     assert mock_update_parquet.called
@@ -481,7 +500,6 @@ def test_get_hist_df_fns(tmpdir):
 
     # call and assert
     hist_df = data_factory.get_hist_df()
-    assert isinstance(hist_df, pd.DataFrame)
     assert len(hist_df) == 3
 
     assert mock_update_parquet.called
@@ -503,21 +521,18 @@ def test_get_hist_df(tmpdir):
     )
     data_factory = DataFactory(pp, ss)
 
-    hist_df = data_factory.get_hist_df()
-
     # call and assert
     hist_df = data_factory.get_hist_df()
-    assert isinstance(hist_df, pd.DataFrame)
 
     # 289 records created
     assert len(hist_df) == 289
 
     # binanceus is returning valid data
-    assert hist_df["binanceus:BTC-USDT:high"].isna().sum() == 0
-    assert hist_df["binanceus:ETH-USDT:high"].isna().sum() == 0
+    assert not has_nan(hist_df["binanceus:BTC-USDT:high"])
+    assert not has_nan(hist_df["binanceus:ETH-USDT:high"])
 
     # kraken is returning nans
-    assert hist_df["kraken:BTC-USDT:high"].isna().sum() == 289
+    assert has_nan(hist_df["kraken:BTC-USDT:high"])
 
     # assert head is oldest
     head_timestamp = hist_df.head(1)["timestamp"].to_list()[0]
@@ -537,16 +552,14 @@ def test_exchange_hist_overlap(tmpdir):
 
     # call and assert
     hist_df = data_factory.get_hist_df()
-    assert isinstance(hist_df, pd.DataFrame)
 
     # 289 records created
     assert len(hist_df) == 289
 
-    # assert head is oldest and tail is latest
-    assert (
-        hist_df.head(1)["timestamp"].to_list()[0]
-        < hist_df.tail(1)["timestamp"].to_list()[0]
-    )
+    # assert head is oldest
+    head_timestamp = hist_df.head(1)["timestamp"].to_list()[0]
+    tail_timestamp = hist_df.tail(1)["timestamp"].to_list()[0]
+    assert head_timestamp < tail_timestamp
 
     # let's get more data from exchange with overlap
     _, _, data_factory2 = _data_pp_ss_1feed(

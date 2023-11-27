@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -32,18 +32,59 @@ from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 @enforce_types
 class DataFactory:
+    """
+    Roles:
+    - From each CEX API, fill >=1 parquet_dfs -> parquet files data lake
+    - From parquet_dfs, fill 1 hist_df -- historical data across all CEXes
+    - From hist_df, create (X, y, x_df) -- for model building
+
+    Where:
+      parquet_dfs -- dict of [exch_str][pair_str] : df
+        And df has columns of: "open", "high", .., "volume", "datetime"
+        (and index = timestamp)
+
+      hist_df -- polars DataFrame with cols like:
+        "timestamp",
+        "binanceus:ETH-USDT:open",
+        "binanceus:ETH-USDT:high",
+        "binanceus:ETH-USDT:low",
+        "binanceus:ETH-USDT:close",
+        "binanceus:ETH-USDT:volume",
+        ...
+        "datetime",
+        (and no index)
+
+    And:
+      X -- 2d array of [sample_i, var_i] : value -- inputs for model
+      y -- 1d array of [sample_i] -- target outputs for model
+
+      x_df -- *pandas* DataFrame with cols like:
+        "binanceus:ETH-USDT:open:t-3",
+        "binanceus:ETH-USDT:open:t-2",
+        "binanceus:ETH-USDT:open:t-1",
+        "binanceus:ETH-USDT:high:t-3",
+        "binanceus:ETH-USDT:high:t-2",
+        "binanceus:ETH-USDT:high:t-1",
+        ...
+        "datetime",
+        (and index = 0, 1, .. -- nothing special)
+
+    Finally:
+       - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
+       - "datetime" values ares python datetime.datetime, UTC
+    """
+
     def __init__(self, pp: DataPP, ss: DataSS):
         self.pp = pp
         self.ss = ss
 
-    def get_hist_df(self) -> pd.DataFrame:
+    def get_hist_df(self) -> pl.DataFrame:
         """
         @description
           Get historical dataframe, across many exchanges & pairs.
 
         @return
-          hist_df -- df w/ cols={exchange_str}:{pair_str}:{signal}+"datetime",
-            and index=timestamp
+          hist_df -- *polars* Dataframe. See class docstring
         """
         print("Get historical data, across many exchanges & pairs: begin.")
 
@@ -60,7 +101,10 @@ class DataFactory:
         hist_df = self._merge_parquet_dfs(parquet_dfs)
 
         print("Get historical data, across many exchanges & pairs: done.")
-        return hist_df.to_pandas()
+
+        # postconditions
+        assert isinstance(hist_df, pl.DataFrame)
+        return hist_df
 
     def _update_parquet(self, fin_ut: int):
         print("  Update parquet.")
@@ -203,11 +247,10 @@ class DataFactory:
     def _merge_parquet_dfs(self, parquet_dfs: dict) -> pl.DataFrame:
         """
         @arguments
-          parquet_dfs -- dict [exch_str][pair_str] : df
-            where df has cols={signal_str}+"datetime", and index=timestamp
+          parquet_dfs -- see class docstring
+
         @return
-          hist_df -- df w/ cols={exch_str}:{pair_str}:{signal_str}+"datetime",
-            and index=timestamp
+          hist_df -- see class docstring
         """
         # init hist_df such that it can do basic operations
         print("  Merge parquet DFs.")
@@ -257,31 +300,34 @@ class DataFactory:
     # TO DO: Move to model_factory/model + use generic df<=>serialize<=>parquet
     def create_xy(
         self,
-        hist_df: pd.DataFrame,  # not a pl.DataFrame, by design
+        hist_df: pl.DataFrame,
         testshift: int,
         do_fill_nans: bool = True,
-    ):
+    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
         """
         @arguments
-          hist_df -- df w cols={exch_str}:{pair_str}:{signal_str}+"datetime",
-            and index=timestamp
+          hist_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
             If you turn this off and hist_df has nans, then X/y/etc gets nans
 
         @return --
-          X -- 2d array of [sample_i, var_i] : value
-          y -- 1d array of [sample_i]
-          x_df -- df w/ cols={exch_str}:{pair_str}:{signal}:t-{x} + "datetime"
-            index=0,1,.. (nothing special)
+          X -- 2d array of [sample_i, var_i] : value -- inputs for model
+          y -- 1d array of [sample_i] -- target outputs for model
+          x_df -- *pandas* DataFrame. See class docstring.
         """
-        if not isinstance(hist_df, pd.DataFrame):
-            raise ValueError("hist_df should be a pd.DataFrame")
+        # preconditions
+        assert isinstance(hist_df, pl.DataFrame), pl.__class__
+        assert "timestamp" in hist_df.columns
+        assert "datetime" in hist_df.columns
+
+        # condition inputs
         if do_fill_nans and has_nan(hist_df):
             hist_df = fill_nans(hist_df)
-
         ss = self.ss
-        x_df = pd.DataFrame()
+
+        # main work
+        x_df = pd.DataFrame()  # build this up
 
         target_hist_cols = [
             f"{exch_str}:{pair_str}:{signal_str}"
@@ -290,7 +336,7 @@ class DataFactory:
 
         for hist_col in target_hist_cols:
             assert hist_col in hist_df.columns, f"missing data col: {hist_col}"
-            z = hist_df[hist_col].tolist()  # [..., z(t-3), z(t-2), z(t-1)]
+            z = hist_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
@@ -315,13 +361,14 @@ class DataFactory:
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
         pp = self.pp
         hist_col = f"{pp.exchange_str}:{pp.pair_str}:{pp.signal_str}"
-        z = hist_df[hist_col].tolist()
+        z = hist_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == ss.n
+        assert isinstance(x_df, pd.DataFrame)
 
         # return
         return X, y, x_df
@@ -366,7 +413,7 @@ def safe_fetch_ohlcv(
       exch -- eg ccxt.binanceus()
       symbol -- eg "BTC/USDT". NOT "BTC-USDT"
       timeframe -- eg "1h", "1m"
-      since -- Timestamp of first candle. In unix time (in ms)
+      since -- timestamp of first candle. In unix time (in ms)
       limit -- max # candles to retrieve
 
     @return
