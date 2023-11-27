@@ -82,7 +82,7 @@ def get_contract_filename(contract_name: str, address_file: Union[str, None]):
         root_dir = os.path.join(address_dir, "..")
         paths = list(Path(root_dir).rglob(contract_basename))
         if paths:
-            assert len(paths) == 1, "had duplicates for {contract_basename}"
+            assert len(paths) == 1, f"had duplicates for {contract_basename}"
             path = paths[0]
             path = Path(path).expanduser().resolve()
             assert (
