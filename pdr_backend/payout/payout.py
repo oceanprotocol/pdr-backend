@@ -75,7 +75,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
 
-    dfrewards_contract = DFRewards(web3_config, dfrewards_addr)
+    dfrewards_contract = DFRewards(ppss.web3_pp, dfrewards_addr)
     claimable_rewards = dfrewards_contract.get_claimable_rewards(
         web3_config.owner, wROSE_addr
     )

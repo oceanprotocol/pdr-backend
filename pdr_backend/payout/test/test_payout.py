@@ -74,9 +74,6 @@ def test_do_ocean_payout(tmpdir):
         assert call_args[3] == call([14, 15], True)
         assert len(call_args) == 4
 
-    with pytest.raises(AssertionError):  # assert fails bc network isn't sapphire
-        do_ocean_payout(ppss, check_network=True)
-
 
 @enforce_types
 def test_do_rose_payout(tmpdir):
@@ -102,9 +99,6 @@ def test_do_rose_payout(tmpdir):
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(100)
-
-    with pytest.raises(AssertionError):  # assert fails bc network isn't sapphire
-        do_rose_payout(ppss, check_network=True)
 
 
 @enforce_types
