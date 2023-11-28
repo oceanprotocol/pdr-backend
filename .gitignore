@@ -164,8 +164,9 @@ cython_debug/
 .test_cache/
 .cache/
 
-# predictoor dynamic modeling
+# predictoor-specific
 out*.txt
+my_ppss.yaml
 csvs/
 parquet_data/
 # pdr_backend accuracy output
