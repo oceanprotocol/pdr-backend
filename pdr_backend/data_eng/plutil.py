@@ -12,7 +12,7 @@ import polars as pl
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
-    TOHLCV_DTYPES_PL,
+    TOHLCV_SCHEMA_PL,
 )
 
 
@@ -22,12 +22,8 @@ def initialize_df(cols: List[str] = []) -> pl.DataFrame:
     Polars has no index, so "timestamp" and "datetime" are regular cols
     Applies transform to get columns (including datetime)
     """
-
-    # define schema
-    schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-
-    # create df
-    df = pl.DataFrame(data=[], schema=schema).select(cols if cols else "*")
+    df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL)
+    df = df.select(cols if cols else "*")
     return df
 
 

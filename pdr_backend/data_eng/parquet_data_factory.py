@@ -1,19 +1,17 @@
 import os
-import sys
-from typing import Dict, List, Tuple, Union
+from typing import Dict
 
 from enforce_typing import enforce_types
 import numpy as np
-import pandas as pd
 import polars as pl
 
 from pdr_backend.data_eng.constants import (
     OHLCV_COLS,
-    TOHLCV_COLS,
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
-    TOHLCV_DTYPES_PL,
+    TOHLCV_SCHEMA_PL,
 )
+from pdr_backend.data_eng.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.data_eng.plutil import (
     initialize_df,
     transform_df,
@@ -26,17 +24,15 @@ from pdr_backend.data_eng.plutil import (
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 
 @enforce_types
-class DataFactory:
+class ParquetDataFactory:
     """
     Roles:
     - From each CEX API, fill >=1 parquet_dfs -> parquet files data lake
     - From parquet_dfs, fill 1 hist_df -- historical data across all CEXes
-    - From hist_df, create (X, y, x_df) -- for model building
 
     Where:
       parquet_dfs -- dict of [exch_str][pair_str] : df
@@ -158,8 +154,7 @@ class DataFactory:
             raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
 
             # concat both TOHLCV data
-            schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-            next_df = pl.DataFrame(raw_tohlcv_data, schema=schema)
+            next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
             df = concat_next_df(df, next_df)
 
             if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
@@ -297,82 +292,6 @@ class DataFactory:
 
         return hist_df
 
-    # TO DO: Move to model_factory/model + use generic df<=>serialize<=>parquet
-    def create_xy(
-        self,
-        hist_df: pl.DataFrame,
-        testshift: int,
-        do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
-        """
-        @arguments
-          hist_df -- *polars* DataFrame. See class docstring
-          testshift -- to simulate across historical test data
-          do_fill_nans -- if any values are nan, fill them? (Via interpolation)
-            If you turn this off and hist_df has nans, then X/y/etc gets nans
-
-        @return --
-          X -- 2d array of [sample_i, var_i] : value -- inputs for model
-          y -- 1d array of [sample_i] -- target outputs for model
-          x_df -- *pandas* DataFrame. See class docstring.
-        """
-        # preconditions
-        assert isinstance(hist_df, pl.DataFrame), pl.__class__
-        assert "timestamp" in hist_df.columns
-        assert "datetime" in hist_df.columns
-
-        # condition inputs
-        if do_fill_nans and has_nan(hist_df):
-            hist_df = fill_nans(hist_df)
-        ss = self.ss
-
-        # main work
-        x_df = pd.DataFrame()  # build this up
-
-        target_hist_cols = [
-            f"{exch_str}:{pair_str}:{signal_str}"
-            for exch_str, signal_str, pair_str in ss.input_feed_tups
-        ]
-
-        for hist_col in target_hist_cols:
-            assert hist_col in hist_df.columns, f"missing data col: {hist_col}"
-            z = hist_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
-            maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z) - maxshift - 1)
-            if N_train <= 0:
-                print(
-                    f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
-                    " (= testshift + autoregressive_n = "
-                    f"{testshift} + {ss.autoregressive_n})\n"
-                    "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n"
-                )
-                sys.exit(1)
-            for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
-                shift = testshift + delayshift
-                x_col = hist_col + f":t-{delayshift+1}"
-                assert (shift + N_train + 1) <= len(z)
-                # 1 point for test, the rest for train data
-                x_df[x_col] = _slice(z, -shift - N_train - 1, -shift)
-
-        X = x_df.to_numpy()
-
-        # y is set from yval_{exch_str, signal_str, pair_str}
-        # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        pp = self.pp
-        hist_col = f"{pp.exchange_str}:{pp.pair_str}:{pp.signal_str}"
-        z = hist_df[hist_col].to_list()
-        y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
-
-        # postconditions
-        assert X.shape[0] == y.shape[0]
-        assert X.shape[0] <= (ss.max_n_train + 1)
-        assert X.shape[1] == ss.n
-        assert isinstance(x_df, pd.DataFrame)
-
-        # return
-        return X, y, x_df
-
     def _hist_parquet_filename(self, exch_str, pair_str) -> str:
         """
         Given exch_str and pair_str (and self path),
@@ -382,55 +301,3 @@ class DataFactory:
         basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
         filename = os.path.join(self.ss.parquet_dir, basename)
         return filename
-
-
-@enforce_types
-def _slice(x: list, st: int, fin: int) -> list:
-    """Python list slice returns an empty list on x[st:fin] if st<0 and fin=0
-    This overcomes that issue, for cases when st<0"""
-    assert st < 0
-    assert fin <= 0
-    assert st < fin
-    if fin == 0:
-        return x[st:]
-    return x[st:fin]
-
-
-@enforce_types
-def safe_fetch_ohlcv(
-    exch,
-    symbol: str,
-    timeframe: str,
-    since: int,
-    limit: int,
-) -> Union[List[tuple], None]:
-    """
-    @description
-      calls ccxt.exchange.fetch_ohlcv() but if there's an error it
-      emits a warning and returns None, vs crashing everything
-
-    @arguments
-      exch -- eg ccxt.binanceus()
-      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
-      timeframe -- eg "1h", "1m"
-      since -- timestamp of first candle. In unix time (in ms)
-      limit -- max # candles to retrieve
-
-    @return
-      raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
-        where row 0 is oldest
-        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
-    """
-    if "-" in symbol:
-        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
-
-    try:
-        return exch.fetch_ohlcv(
-            symbol=symbol,
-            timeframe=timeframe,
-            since=since,
-            limit=limit,
-        )
-    except Exception as e:
-        print(f"      **WARNING exchange: {e}")
-        return None
