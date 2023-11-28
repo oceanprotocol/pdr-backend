@@ -79,6 +79,8 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     next_df = pl.DataFrame(raw_data, schema=schema)
 
     df = concat_next_df(df, next_df)
+    df = transform_df(df)
+
     return df
 
 
@@ -225,7 +227,7 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
 ETHUSDT_PARQUET_DFS = {
     "binanceus": {
-        "ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA)),
+        "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
     }
 }
 
@@ -334,12 +336,12 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     parquet_dfs = {
         "binanceus": {
-            "BTC-USDT": transform_df(_df_from_raw_data(BINANCE_BTC_DATA)),
-            "ETH-USDT": transform_df(_df_from_raw_data(BINANCE_ETH_DATA)),
+            "BTC-USDT": _df_from_raw_data(BINANCE_BTC_DATA),
+            "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
         },
         "kraken": {
-            "BTC-USDT": transform_df(_df_from_raw_data(KRAKEN_BTC_DATA)),
-            "ETH-USDT": transform_df(_df_from_raw_data(KRAKEN_ETH_DATA)),
+            "BTC-USDT": _df_from_raw_data(KRAKEN_BTC_DATA),
+            "ETH-USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
         },
     }
 
