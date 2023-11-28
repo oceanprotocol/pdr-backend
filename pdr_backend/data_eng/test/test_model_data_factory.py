@@ -7,6 +7,7 @@ import pytest
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
 from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
 from pdr_backend.data_eng.test.resources import (
+    _hist_df_ETHUSDT,
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,
@@ -17,8 +18,67 @@ from pdr_backend.data_eng.test.resources import (
     KRAKEN_BTC_DATA,
     ETHUSDT_PARQUET_DFS,
 )
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.util.mathutil import has_nan, fill_nans
+
+
+@enforce_types
+def test_create_xy__0(tmpdir):
+    data_pp = DataPP(
+        {
+            "timeframe": "5m",
+            "predict_feeds": ["binanceus c ETH-USDT"],
+            "sim_only": {"test_n": 2},
+        }
+    )
+    data_ss = DataSS(
+        {
+            "input_feeds": ["binanceus oc ETH-USDT"],
+            "parquet_dir": str(tmpdir),
+            "st_timestr": "2023-06-18",  # not used by ModelDataFactory
+            "fin_timestr": "2023-06-21",  # ""
+            "max_n_train": 4,
+            "autoregressive_n": 2,
+        }
+    )
+    hist_df = pl.DataFrame(
+        {
+            # every column is ordered from youngest to oldest
+            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by ModelDataFactory
+            "datetime": [None] * 8,  # ""
+            # The underlying AR process is: close[t] = close[t-1] + open[t-1]
+            "binanceus:ETH-USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH-USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
+        }
+    )
+
+    target_X = np.array(
+        [
+            [0.1, 0.1, 3.1, 4.2],  # oldest
+            [0.1, 0.1, 4.2, 5.3],
+            [0.1, 0.1, 5.3, 6.4],
+            [0.1, 0.1, 6.4, 7.5],
+            [0.1, 0.1, 7.5, 8.6],
+        ]
+    )  # newest
+    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
+    target_x_df = pd.DataFrame(
+        {
+            "binanceus:ETH-USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH-USDT:open:t-2": [0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH-USDT:close:t-3": [3.1, 4.2, 5.3, 6.4, 7.5],
+            "binanceus:ETH-USDT:close:t-2": [4.2, 5.3, 6.4, 7.5, 8.6],
+        }
+    )
+
+    model_data_factory = ModelDataFactory(data_pp, data_ss)
+    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+
+    _assert_pd_df_shape(data_ss, X, y, x_df)
+    assert np.array_equal(X, target_X)
+    assert np.array_equal(y, target_y)
+    assert x_df.equals(target_x_df)
 
 
 @enforce_types
@@ -28,61 +88,116 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
 
-    # =========== initial testshift (0)
+    # =========== have testshift = 0
+    target_X = np.array(
+        [
+            [11.0, 10.0, 9.0],  # oldest
+            [10.0, 9.0, 8.0],
+            [9.0, 8.0, 7.0],
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
+            [4.0, 3.0, 2.0],
+        ]
+    )  # newest
+
+    target_y = np.array(
+        [
+            8.0,  # oldest
+            7.0,
+            6.0,
+            5.0,
+            4.0,
+            3.0,
+            2.0,
+            1.0,  # newest
+        ]
+    )
+    target_x_df = pd.DataFrame(
+        {
+            "binanceus:ETH-USDT:high:t-4": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH-USDT:high:t-3": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH-USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+        }
+    )
+
     X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+
     _assert_pd_df_shape(ss, X, y, x_df)
+    assert np.array_equal(X, target_X)
+    assert np.array_equal(y, target_y)
+    assert x_df.equals(target_x_df)
 
-    assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-    assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-    assert X[0, :].tolist() == [11, 10, 9] and y[0] == 8
+    # =========== now, have testshift = 1
+    target_X = np.array(
+        [
+            [12.0, 11.0, 10.0],  # oldest
+            [11.0, 10.0, 9.0],
+            [10.0, 9.0, 8.0],
+            [9.0, 8.0, 7.0],
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
+        ]
+    )  # newest
+    target_y = np.array(
+        [
+            9.0,  # oldest
+            8.0,
+            7.0,
+            6.0,
+            5.0,
+            4.0,
+            3.0,
+            2.0,  # newest
+        ]
+    )
+    target_x_df = pd.DataFrame(
+        {
+            "binanceus:ETH-USDT:high:t-4": [12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
+            "binanceus:ETH-USDT:high:t-3": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH-USDT:high:t-2": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+        }
+    )
 
-    assert x_df.iloc[-1].tolist() == [4, 3, 2]
-
-    found_cols = x_df.columns.tolist()
-    target_cols = [
-        "binanceus:ETH-USDT:high:t-4",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-    ]
-    assert found_cols == target_cols
-
-    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
-    assert X[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
-
-    # =========== now have a different testshift (1 not 0)
     X, y, x_df = model_data_factory.create_xy(hist_df, testshift=1)
+
     _assert_pd_df_shape(ss, X, y, x_df)
-
-    assert X[-1, :].tolist() == [5, 4, 3] and y[-1] == 2
-    assert X[-2, :].tolist() == [6, 5, 4] and y[-2] == 3
-    assert X[0, :].tolist() == [12, 11, 10] and y[0] == 9
-
-    assert x_df.iloc[-1].tolist() == [5, 4, 3]
-
-    found_cols = x_df.columns.tolist()
-    target_cols = [
-        "binanceus:ETH-USDT:high:t-4",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-    ]
-    assert found_cols == target_cols
-
-    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
-    assert X[:, 2].tolist() == [10, 9, 8, 7, 6, 5, 4, 3]
+    assert np.array_equal(X, target_X)
+    assert np.array_equal(y, target_y)
+    assert x_df.equals(target_x_df)
 
     # =========== now have a different max_n_train
+    target_X = np.array(
+        [
+            [9.0, 8.0, 7.0],  # oldest
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
+            [4.0, 3.0, 2.0],
+        ]
+    )  # newest
+    target_y = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0])  # oldest  # newest
+    target_x_df = pd.DataFrame(
+        {
+            "binanceus:ETH-USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH-USDT:high:t-3": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH-USDT:high:t-2": [7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+        }
+    )
+
+    assert "max_n_train" in ss.d
     ss.d["max_n_train"] = 5
 
     X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+
     _assert_pd_df_shape(ss, X, y, x_df)
-
-    assert X.shape[0] == 5 + 1  # +1 for one test point
-    assert y.shape[0] == 5 + 1
-    assert len(x_df) == 5 + 1
-
-    assert X[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-    assert X[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-    assert X[0, :].tolist() == [9, 8, 7] and y[0] == 6
+    assert np.array_equal(X, target_X)
+    assert np.array_equal(y, target_y)
+    assert x_df.equals(target_x_df)
 
 
 @enforce_types
@@ -113,8 +228,8 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     model_data_factory = ModelDataFactory(pp, ss)
     X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
-    _assert_pd_df_shape(ss, X, y, x_df)
 
+    _assert_pd_df_shape(ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
     target_cols = [
         "binanceus:BTC-USDT:high:t-4",
@@ -159,19 +274,43 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
     assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
 
-    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+    ]
     assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
 
 
 @enforce_types
+def test_create_xy__check_timestamp_order(tmpdir):
+    hist_df, model_data_factory = _hist_df_ETHUSDT(tmpdir)
+
+    # timestamps should be descending order
+    uts = hist_df["timestamp"].to_list()
+    assert uts == sorted(uts, reverse=False)
+
+    # happy path
+    model_data_factory.create_xy(hist_df, testshift=0)
+
+    # failure path
+    bad_uts = sorted(uts, reverse=True)  # bad order
+    bad_hist_df = hist_df.with_columns(pl.Series("timestamp", bad_uts))
+    with pytest.raises(AssertionError):
+        model_data_factory.create_xy(bad_hist_df, testshift=0)
+
+
+@enforce_types
 def test_create_xy__input_type(tmpdir):
-    # hist_df should be pl
-    _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH-USDT"
-    )
-    assert isinstance(model_data_factory, ModelDataFactory)
-    hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
+    hist_df, model_data_factory = _hist_df_ETHUSDT(tmpdir)
+
     assert isinstance(hist_df, pl.DataFrame)
+    assert isinstance(model_data_factory, ModelDataFactory)
 
     # create_xy() input should be pl
     model_data_factory.create_xy(hist_df, testshift=0)

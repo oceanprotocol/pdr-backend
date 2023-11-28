@@ -50,6 +50,8 @@ class ParquetDataFactory:
         "datetime",
         (and no index)
 
+      #For each column: oldest first, newest at the end
+
     And:
       X -- 2d array of [sample_i, var_i] : value -- inputs for model
       y -- 1d array of [sample_i] -- target outputs for model

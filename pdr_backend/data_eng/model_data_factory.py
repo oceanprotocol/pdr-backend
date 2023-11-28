@@ -66,6 +66,11 @@ class ModelDataFactory:
         assert "timestamp" in hist_df.columns
         assert "datetime" in hist_df.columns
 
+        # every column should be ordered with oldest first, youngest last.
+        # let's verify! The timestamps should be in ascending order
+        uts = hist_df["timestamp"].to_list()
+        assert uts == sorted(uts, reverse=False)
+
         # condition inputs
         if do_fill_nans and has_nan(hist_df):
             hist_df = fill_nans(hist_df)
