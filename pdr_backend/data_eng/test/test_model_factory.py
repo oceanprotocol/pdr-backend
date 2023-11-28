@@ -25,7 +25,7 @@ def test_model_factory_basic():
 
 
 @enforce_types
-def test_model_factory_accuracy():
+def test_model_accuracy_from_xy():
     model_ss = ModelSS({"approach": "LIN"})
     factory = ModelFactory(model_ss)
 

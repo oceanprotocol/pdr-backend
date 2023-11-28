@@ -17,6 +17,15 @@ from pdr_backend.ppss.data_ss import DataSS
 
 
 @enforce_types
+def _hist_df_ETHUSDT(tmpdir):
+    _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
+        tmpdir, "binanceus h ETH-USDT"
+    )
+    hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
+    return hist_df, model_data_factory
+
+
+@enforce_types
 def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     pp = _data_pp([feed])
@@ -64,7 +73,7 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     return df
 
 
-BINANCE_ETH_DATA = [
+BINANCE_ETH_DATA = [  # oldest first, newest on the bottom (at the end)
     # time          #o   #h  #l    #c    #v
     [1686805500000, 0.5, 12, 0.12, 1.1, 7.0],
     [1686805800000, 0.5, 11, 0.11, 2.2, 7.0],
