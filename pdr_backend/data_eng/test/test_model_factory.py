@@ -32,13 +32,13 @@ def test_model_factory_accuracy():
     (X_train, y_train, X_test, y_test) = _data()
 
     model = factory.build(X_train, y_train)
-    
+
     y_train_hat = model.predict(X_train)
-    assert sum(abs(y_train - y_train_hat)) < 1e-10 # near-perfect since linear
+    assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
 
     y_test_hat = model.predict(X_test)
     assert sum(abs(y_test - y_test_hat)) < 1e-10
-    
+
 
 @enforce_types
 def _data() -> tuple:
@@ -54,5 +54,5 @@ def _data() -> tuple:
 @enforce_types
 def f(X: np.ndarray) -> np.ndarray:
     # y = 3 * x0 + 2 * x1
-    y = 3.0 + 1.0 * X[:,0] + 2.0 * X[:,1]
+    y = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]
     return y
