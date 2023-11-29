@@ -28,13 +28,13 @@ def test_create_xy__0(tmpdir):
     data_pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["binanceus c ETH-USDT"],
+            "predict_feeds": ["binanceus c ETH/USDT"],
             "sim_only": {"test_n": 2},
         }
     )
     data_ss = DataSS(
         {
-            "input_feeds": ["binanceus oc ETH-USDT"],
+            "input_feeds": ["binanceus oc ETH/USDT"],
             "parquet_dir": str(tmpdir),
             "st_timestr": "2023-06-18",  # not used by ModelDataFactory
             "fin_timestr": "2023-06-21",  # ""
@@ -48,8 +48,8 @@ def test_create_xy__0(tmpdir):
             "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by ModelDataFactory
             "datetime": [None] * 8,  # ""
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
-            "binanceus:ETH-USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-            "binanceus:ETH-USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
+            "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH/USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
         }
     )
 
@@ -65,10 +65,10 @@ def test_create_xy__0(tmpdir):
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH-USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
-            "binanceus:ETH-USDT:open:t-2": [0.1, 0.1, 0.1, 0.1, 0.1],
-            "binanceus:ETH-USDT:close:t-3": [3.1, 4.2, 5.3, 6.4, 7.5],
-            "binanceus:ETH-USDT:close:t-2": [4.2, 5.3, 6.4, 7.5, 8.6],
+            "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH/USDT:open:t-2": [0.1, 0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH/USDT:close:t-3": [3.1, 4.2, 5.3, 6.4, 7.5],
+            "binanceus:ETH/USDT:close:t-2": [4.2, 5.3, 6.4, 7.5, 8.6],
         }
     )
 
@@ -84,7 +84,7 @@ def test_create_xy__0(tmpdir):
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
     _, ss, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH-USDT"
+        tmpdir, "binanceus h ETH/USDT"
     )
     hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
 
@@ -116,9 +116,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH-USDT:high:t-4": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH-USDT:high:t-3": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
-            "binanceus:ETH-USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+            "binanceus:ETH/USDT:high:t-4": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-3": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
 
@@ -156,9 +156,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH-USDT:high:t-4": [12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
-            "binanceus:ETH-USDT:high:t-3": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH-USDT:high:t-2": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-4": [12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
+            "binanceus:ETH/USDT:high:t-3": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-2": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
         }
     )
 
@@ -183,9 +183,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     target_y = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH-USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH-USDT:high:t-3": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
-            "binanceus:ETH-USDT:high:t-2": [7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+            "binanceus:ETH/USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-3": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-2": [7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
 
@@ -206,19 +206,19 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
     parquet_dfs = {
         "binanceus": {
-            "BTC-USDT": _df_from_raw_data(BINANCE_BTC_DATA),
-            "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
+            "BTC/USDT": _df_from_raw_data(BINANCE_BTC_DATA),
+            "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
         },
         "kraken": {
-            "BTC-USDT": _df_from_raw_data(KRAKEN_BTC_DATA),
-            "ETH-USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
+            "BTC/USDT": _df_from_raw_data(KRAKEN_BTC_DATA),
+            "ETH/USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
         },
     }
 
-    pp = _data_pp(["binanceus h ETH-USDT"])
+    pp = _data_pp(["binanceus h ETH/USDT"])
     ss = _data_ss(
         parquet_dir,
-        ["binanceus hl BTC-USDT,ETH-USDT", "kraken hl BTC-USDT,ETH-USDT"],
+        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
     )
     assert ss.autoregressive_n == 3
     assert ss.n == (4 + 4) * 3
@@ -232,38 +232,38 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     _assert_pd_df_shape(ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
     target_cols = [
-        "binanceus:BTC-USDT:high:t-4",
-        "binanceus:BTC-USDT:high:t-3",
-        "binanceus:BTC-USDT:high:t-2",
-        "binanceus:ETH-USDT:high:t-4",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-        "binanceus:BTC-USDT:low:t-4",
-        "binanceus:BTC-USDT:low:t-3",
-        "binanceus:BTC-USDT:low:t-2",
-        "binanceus:ETH-USDT:low:t-4",
-        "binanceus:ETH-USDT:low:t-3",
-        "binanceus:ETH-USDT:low:t-2",
-        "kraken:BTC-USDT:high:t-4",
-        "kraken:BTC-USDT:high:t-3",
-        "kraken:BTC-USDT:high:t-2",
-        "kraken:ETH-USDT:high:t-4",
-        "kraken:ETH-USDT:high:t-3",
-        "kraken:ETH-USDT:high:t-2",
-        "kraken:BTC-USDT:low:t-4",
-        "kraken:BTC-USDT:low:t-3",
-        "kraken:BTC-USDT:low:t-2",
-        "kraken:ETH-USDT:low:t-4",
-        "kraken:ETH-USDT:low:t-3",
-        "kraken:ETH-USDT:low:t-2",
+        "binanceus:BTC/USDT:high:t-4",
+        "binanceus:BTC/USDT:high:t-3",
+        "binanceus:BTC/USDT:high:t-2",
+        "binanceus:ETH/USDT:high:t-4",
+        "binanceus:ETH/USDT:high:t-3",
+        "binanceus:ETH/USDT:high:t-2",
+        "binanceus:BTC/USDT:low:t-4",
+        "binanceus:BTC/USDT:low:t-3",
+        "binanceus:BTC/USDT:low:t-2",
+        "binanceus:ETH/USDT:low:t-4",
+        "binanceus:ETH/USDT:low:t-3",
+        "binanceus:ETH/USDT:low:t-2",
+        "kraken:BTC/USDT:high:t-4",
+        "kraken:BTC/USDT:high:t-3",
+        "kraken:BTC/USDT:high:t-2",
+        "kraken:ETH/USDT:high:t-4",
+        "kraken:ETH/USDT:high:t-3",
+        "kraken:ETH/USDT:high:t-2",
+        "kraken:BTC/USDT:low:t-4",
+        "kraken:BTC/USDT:low:t-3",
+        "kraken:BTC/USDT:low:t-2",
+        "kraken:ETH/USDT:low:t-4",
+        "kraken:ETH/USDT:low:t-3",
+        "kraken:ETH/USDT:low:t-2",
     ]
     assert found_cols == target_cols
 
-    # test binanceus:ETH-USDT:high like in 1-signal
+    # test binanceus:ETH/USDT:high like in 1-signal
     assert target_cols[3:6] == [
-        "binanceus:ETH-USDT:high:t-4",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
+        "binanceus:ETH/USDT:high:t-4",
+        "binanceus:ETH/USDT:high:t-3",
+        "binanceus:ETH/USDT:high:t-2",
     ]
     Xa = X[:, 3:6]
     assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
@@ -274,7 +274,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
     assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
 
-    assert x_df["binanceus:ETH-USDT:high:t-2"].tolist() == [
+    assert x_df["binanceus:ETH/USDT:high:t-2"].tolist() == [
         9,
         8,
         7,
@@ -324,7 +324,7 @@ def test_create_xy__input_type(tmpdir):
 def test_create_xy__handle_nan(tmpdir):
     # create hist_df
     __, __, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH-USDT"
+        tmpdir, "binanceus h ETH/USDT"
     )
     hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
 
@@ -337,8 +337,8 @@ def test_create_xy__handle_nan(tmpdir):
         [
             pl.when(hist_df["timestamp"].is_in(nan_indices))
             .then(pl.lit(None, pl.Float64))
-            .otherwise(hist_df["binanceus:ETH-USDT:high"])
-            .alias("binanceus:ETH-USDT:high")
+            .otherwise(hist_df["binanceus:ETH/USDT:high"])
+            .alias("binanceus:ETH/USDT:high")
         ]
     )
     assert has_nan(hist_df)

@@ -69,7 +69,7 @@ class DataPP:
     def predict_feed_tups(self) -> List[Tuple[str, str, str]]:
         """
         Return list of (exchange_str, signal_str, pair_str)
-        E.g. [("binance", "open",  "ADA-USDT"), ...]
+        E.g. [("binance", "open",  "ADA/USDT"), ...]
         """
         return unpack_feeds_strs(self.predict_feeds_strs)
 
@@ -87,7 +87,7 @@ class DataPP:
     def predict_feed_tup(self) -> Tuple[str, str, str]:
         """
         Return (exchange_str, signal_str, pair_str)
-        E.g. ("binance", "open",  "ADA-USDT")
+        E.g. ("binance", "open",  "ADA/USDT")
         Only applicable when 1 feed.
         """
         if len(self.predict_feed_tups) != 1:
