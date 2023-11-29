@@ -37,6 +37,7 @@ class ParquetDataFactory:
     Where:
       parquet_dfs -- dict of [exch_str][pair_str] : df
         And df has columns of: "open", "high", .., "volume", "datetime"
+        Where pair_str must have '/' not '-', to avoid key issues
         (and index = timestamp)
 
       hist_df -- polars DataFrame with cols like:
@@ -112,7 +113,13 @@ class ParquetDataFactory:
     def _update_hist_parquet_at_exch_and_pair(
         self, exch_str: str, pair_str: str, fin_ut: int
     ):
-        assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+        """
+        @arguments
+          exch_str -- eg "binanceus"
+          pair_str -- eg "BTC/USDT". Not "BTC-USDT", to avoid key issues
+          fin_ut -- a timestamp, in ms, in UTC
+        """
+        assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
         print(f"    Update parquet at exchange={exch_str}, pair={pair_str}.")
 
         filename = self._hist_parquet_filename(exch_str, pair_str)
@@ -216,6 +223,7 @@ class ParquetDataFactory:
         @return
           parquet_dfs -- dict of [exch_str][pair_str] : df
             Where df has columns=OHLCV_COLS+"datetime", and index=timestamp
+            And pair_str is eg "BTC/USDT". Not "BTC-USDT", to avoid key issues
         """
         print("  Load parquet.")
         st_ut = self.ss.st_timestamp
@@ -225,7 +233,7 @@ class ParquetDataFactory:
             parquet_dfs[exch_str] = {}
 
         for exch_str, pair_str in self.ss.exchange_pair_tups:
-            assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+            assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
             filename = self._hist_parquet_filename(exch_str, pair_str)
             cols = [
                 signal_str  # cols is a subset of TOHLCV_COLS
@@ -255,7 +263,7 @@ class ParquetDataFactory:
         hist_df_cols = ["timestamp"]
         for exch_str in parquet_dfs.keys():
             for pair_str, parquet_df in parquet_dfs[exch_str].items():
-                assert "-" in pair_str, f"pair_s{pair_str}' needs -"
+                assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
                 assert "datetime" in parquet_df.columns
                 assert "timestamp" in parquet_df.columns
 
@@ -296,10 +304,21 @@ class ParquetDataFactory:
 
     def _hist_parquet_filename(self, exch_str, pair_str) -> str:
         """
-        Given exch_str and pair_str (and self path),
-        compute parquet filename
+        @description
+          Computes a name for the parquet file.
+
+        @arguments
+          exch_str -- eg "binanceus"
+          pair_str -- eg "BTC/USDT" or "BTC-USDT"
+
+        @return
+          parquet_filename -- name for parquet file.
+
+        @notes
+          If pair_str has '/', it will become '-' in the filename.
         """
-        assert "-" in pair_str, f"pair_str '{pair_str}' needs '-'"
+        assert "/" in pair_str or "-" in pair_str, pair_str
+        pair_str = pair_str.replace("/", "-")  # filesystem needs "-"
         basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
         filename = os.path.join(self.ss.parquet_dir, basename)
         return filename

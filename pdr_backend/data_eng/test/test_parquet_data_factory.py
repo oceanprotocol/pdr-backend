@@ -2,6 +2,7 @@ from typing import List
 
 from enforce_typing import enforce_types
 import polars as pl
+import pytest
 
 from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
 from pdr_backend.data_eng.plutil import load_parquet
@@ -79,22 +80,35 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
     _, ss, pq_data_factory, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH-USDT",
+        "binanceus h ETH/USDT",
         st_timestr,
         fin_timestr,
     )
     ss.exchs_dict["binanceus"] = FakeExchange()
 
-    filename = pq_data_factory._hist_parquet_filename("binanceus", "ETH-USDT")
+    # setup: filename
+    #   it's ok for input pair_str to have '/' or '-', it handles it
+    #   but the output filename should not have '/' its pairstr part
+    filename = pq_data_factory._hist_parquet_filename("binanceus", "ETH/USDT")
+    filename2 = pq_data_factory._hist_parquet_filename("binanceus", "ETH-USDT")
+    assert filename == filename2
+    assert "ETH-USDT" in filename and "ETH/USDT" not in filename
+
+    # ensure we check for unwanted "-". (Everywhere but filename, it's '/')
+    with pytest.raises(AssertionError):
+        pq_data_factory._update_hist_parquet_at_exch_and_pair(
+            "binanceus", "ETH-USDT", ss.fin_timestamp
+        )
+
+    # work 1: new parquet
+    pq_data_factory._update_hist_parquet_at_exch_and_pair(
+        "binanceus", "ETH/USDT", ss.fin_timestamp
+    )
 
     def _uts_in_parquet(filename: str) -> List[int]:
         df = load_parquet(filename)
         return df["timestamp"].to_list()
 
-    # work 1: new parquet
-    pq_data_factory._update_hist_parquet_at_exch_and_pair(
-        "binanceus", "ETH-USDT", ss.fin_timestamp
-    )
     uts: List[int] = _uts_in_parquet(filename)
     if isinstance(n_uts, int):
         assert len(uts) == n_uts
@@ -108,7 +122,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     # work 2: two more epochs at end --> it'll append existing parquet
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
     pq_data_factory._update_hist_parquet_at_exch_and_pair(
-        "binanceus", "ETH-USDT", ss.fin_timestamp
+        "binanceus", "ETH/USDT", ss.fin_timestamp
     )
     uts2 = _uts_in_parquet(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
@@ -117,7 +131,7 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
     ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
     pq_data_factory._update_hist_parquet_at_exch_and_pair(
-        "binanceus", "ETH-USDT", ss.fin_timestamp
+        "binanceus", "ETH/USDT", ss.fin_timestamp
     )
     uts3 = _uts_in_parquet(filename)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
@@ -132,10 +146,10 @@ def test_get_hist_df(tmpdir):
     """DataFactory get_hist_df() is executing e2e correctly"""
     parquet_dir = str(tmpdir)
 
-    pp = _data_pp(["binanceus h BTC-USDT"])
+    pp = _data_pp(["binanceus h BTC/USDT"])
     ss = _data_ss(
         parquet_dir,
-        ["binanceus h BTC-USDT,ETH-USDT", "kraken h BTC-USDT"],
+        ["binanceus h BTC-USDT,ETH/USDT", "kraken h BTC/USDT"],
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
@@ -148,11 +162,11 @@ def test_get_hist_df(tmpdir):
     assert len(hist_df) == 289
 
     # binanceus is returning valid data
-    assert not has_nan(hist_df["binanceus:BTC-USDT:high"])
-    assert not has_nan(hist_df["binanceus:ETH-USDT:high"])
+    assert not has_nan(hist_df["binanceus:BTC/USDT:high"])
+    assert not has_nan(hist_df["binanceus:ETH/USDT:high"])
 
     # kraken is returning nans
-    assert has_nan(hist_df["kraken:BTC-USDT:high"])
+    assert has_nan(hist_df["kraken:BTC/USDT:high"])
 
     # assert head is oldest
     head_timestamp = hist_df.head(1)["timestamp"].to_list()[0]
@@ -165,7 +179,7 @@ def test_exchange_hist_overlap(tmpdir):
     """DataFactory get_hist_df() and concat is executing e2e correctly"""
     _, _, pq_data_factory, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH-USDT",
+        "binanceus h ETH/USDT",
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
@@ -184,7 +198,7 @@ def test_exchange_hist_overlap(tmpdir):
     # let's get more data from exchange with overlap
     _, _, pq_data_factory2, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH-USDT",
+        "binanceus h ETH/USDT",
         st_timestr="2023-06-18",  # same
         fin_timestr="2023-06-20",  # different
     )
@@ -202,16 +216,16 @@ def test_exchange_hist_overlap(tmpdir):
 
 @enforce_types
 def test_hist_df_shape(tmpdir):
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH-USDT")
+    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
     hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
     assert isinstance(hist_df, pl.DataFrame)
     assert hist_df.columns == [
         "timestamp",
-        "binanceus:ETH-USDT:open",
-        "binanceus:ETH-USDT:high",
-        "binanceus:ETH-USDT:low",
-        "binanceus:ETH-USDT:close",
-        "binanceus:ETH-USDT:volume",
+        "binanceus:ETH/USDT:open",
+        "binanceus:ETH/USDT:high",
+        "binanceus:ETH/USDT:low",
+        "binanceus:ETH/USDT:close",
+        "binanceus:ETH/USDT:volume",
         "datetime",
     ]
     assert hist_df.shape == (12, 7)
@@ -228,7 +242,7 @@ def test_hist_df_shape(tmpdir):
 @enforce_types
 def test_get_hist_df_calls(tmpdir):
     """Test core DataFactory functions are being called"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH-USDT")
+    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
 
     # setup mock objects
     def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument
@@ -258,7 +272,7 @@ def test_get_hist_df_calls(tmpdir):
 @enforce_types
 def test_get_hist_df_fns(tmpdir):
     """Test DataFactory get_hist_df functions are being called"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH-USDT")
+    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
 
     # setup mock objects
     def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument

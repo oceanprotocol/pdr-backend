@@ -36,16 +36,16 @@ def test_data_ss_basic():
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
     assert ss.input_feed_tups == [
-        ("kraken", "high", "ETH-USDT"),
-        ("kraken", "close", "ETH-USDT"),
-        ("binanceus", "high", "ETH-USDT"),
-        ("binanceus", "high", "TRX-DAI"),
+        ("kraken", "high", "ETH/USDT"),
+        ("kraken", "close", "ETH/USDT"),
+        ("binanceus", "high", "ETH/USDT"),
+        ("binanceus", "high", "TRX/DAI"),
     ]
     assert ss.exchange_pair_tups == set(
         [
-            ("kraken", "ETH-USDT"),
-            ("binanceus", "ETH-USDT"),
-            ("binanceus", "TRX-DAI"),
+            ("kraken", "ETH/USDT"),
+            ("binanceus", "ETH/USDT"),
+            ("binanceus", "TRX/DAI"),
         ]
     )
     assert len(ss.input_feed_tups) == ss.n_input_feeds == 4

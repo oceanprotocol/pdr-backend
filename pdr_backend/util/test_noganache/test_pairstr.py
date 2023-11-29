@@ -23,14 +23,14 @@ def test_unpack_pair_str():
 
 @enforce_types
 def test_unpack_pairs_str():
-    assert unpack_pairs_str("ADA-USDT BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
-    assert unpack_pairs_str("ADA/USDT,BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
-    assert unpack_pairs_str("ADA/USDT, BTC/USDT") == ["ADA-USDT", "BTC-USDT"]
+    assert unpack_pairs_str("ADA-USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
+    assert unpack_pairs_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
+    assert unpack_pairs_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
     assert unpack_pairs_str("ADA/USDT BTC/USDT,ETH-USDC, DOT/DAI") == [
-        "ADA-USDT",
-        "BTC-USDT",
-        "ETH-USDC",
-        "DOT-DAI",
+        "ADA/USDT",
+        "BTC/USDT",
+        "ETH/USDC",
+        "DOT/DAI",
     ]
 
 
@@ -42,9 +42,11 @@ def test_unpack_pairs_str():
 def test_pack_pair_str_list():
     assert pack_pair_str_list(None) is None
     assert pack_pair_str_list([]) is None
-    assert pack_pair_str_list(["ADA-USDT"]) == "ADA-USDT"
-    assert pack_pair_str_list(["ADA-USDT", "BTC-USDT"]) == "ADA-USDT,BTC-USDT"
-    assert pack_pair_str_list(["ADA/USDT", "BTC-USDT"]) == "ADA/USDT,BTC-USDT"
+    assert pack_pair_str_list(["ADA/USDT"]) == "ADA/USDT"
+    assert pack_pair_str_list(["ADA-USDT"]) == "ADA/USDT"
+    assert pack_pair_str_list(["ADA/USDT", "BTC/USDT"]) == "ADA/USDT,BTC/USDT"
+    assert pack_pair_str_list(["ADA/USDT", "BTC-USDT"]) == "ADA/USDT,BTC/USDT"
+    assert pack_pair_str_list(["ADA-USDT", "BTC-USDT"]) == "ADA/USDT,BTC/USDT"
 
     with pytest.raises(TypeError):
         pack_pair_str_list("")

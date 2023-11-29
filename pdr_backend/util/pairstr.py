@@ -5,6 +5,11 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import CAND_USDCOINS
 
+# convention: it allows "-" and "/" as input, and always outputs "/".
+
+# note: the only place that "/" doesn't work is filenames.
+#   So it converts to "-" just-in-time. That's outside this module.
+
 
 # ==========================================================================
 # unpack..() functions
@@ -17,20 +22,20 @@ def unpack_pairs_str(pairs_str: str, do_verify: bool = True) -> List[str]:
       Unpack the string for *one or more* pairs, into list of pair_str
 
       Example: Given 'ADA-USDT, BTC/USDT, ETH/USDT'
-      Return ['ADA-USDT', 'BTC-USDT', 'ETH-USDT']
+      Return ['ADA/USDT', 'BTC/USDT', 'ETH/USDT']
 
     @argument
       pairs_str - '<base>/<quote>' or 'base-quote'
       do_verify - typically T. Only F to avoid recursion from verify functions
 
     @return
-      pair_str_list -- List[<pair_str>]
+      pair_str_list -- List[<pair_str>], where all "-" are "/"
     """
     pairs_str = pairs_str.strip()
     pairs_str = " ".join(pairs_str.split())  # replace multiple whitespace w/ 1
     pairs_str = pairs_str.replace(", ", ",").replace(" ,", ",")
     pairs_str = pairs_str.replace(" ", ",")
-    pairs_str = pairs_str.replace("/", "-")  # ETH/USDT -> ETH-USDT. Safer files.
+    pairs_str = pairs_str.replace("-", "/")  # ETH/USDT -> ETH-USDT. Safer files.
     pair_str_list = pairs_str.split(",")
 
     if do_verify:
@@ -80,7 +85,7 @@ def unpack_pair_str(pair_str: str, do_verify: bool = True) -> Tuple[str, str]:
 @enforce_types
 def pack_pair_str_list(pair_str_list) -> Union[str, None]:
     """
-    Example: Given ["BTC/USDT","ETH/DAI"]
+    Example: Given ["BTC/USDT","ETH-DAI"]
     Return "BTC/USDT,ETH/DAI"
     """
     if pair_str_list in [None, []]:
@@ -89,6 +94,7 @@ def pack_pair_str_list(pair_str_list) -> Union[str, None]:
         raise TypeError(pair_str_list)
     for pair_str in pair_str_list:
         verify_pair_str(pair_str)
+    pair_str_list = [pair_str.replace("-", "/") for pair_str in pair_str_list]
 
     pairs_str = ",".join(pair_str_list)
     return pairs_str

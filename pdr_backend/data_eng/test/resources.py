@@ -19,7 +19,7 @@ from pdr_backend.ppss.data_ss import DataSS
 @enforce_types
 def _hist_df_ETHUSDT(tmpdir):
     _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH-USDT"
+        tmpdir, "binanceus h ETH/USDT"
     )
     hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
     return hist_df, model_data_factory
@@ -107,6 +107,6 @@ KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
 ETHUSDT_PARQUET_DFS = {
     "binanceus": {
-        "ETH-USDT": _df_from_raw_data(BINANCE_ETH_DATA),
+        "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
     }
 }
