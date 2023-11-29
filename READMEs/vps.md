@@ -63,7 +63,7 @@ BUT you will not be able to see these yet, because the VPS' ports are not yet op
 - On the bottom right, there's a table with a list of resources ("MyVm", "MyVM-ip", "MyVM-nsg", "MyVM-vnet", ..). In it, click the "-nsgs" resource.
 - Now you're in the "Network Security Group" (nsg) section
 - In the sidebar on left, click on "Inbound security rules"
-- Click the "+ Add" button in about center middle. A side window will pop up. Keep all fields default except: "Destination port ranges" = 8545, "Protocol" = TCP, "Priority" = 100. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
+- Click the "+ Add" button in about center middle. A side window will pop up. Keep all fields default except: "Destination port ranges" = 8545, "Protocol" = TCP, "Priority" = 100, "Name" = RPC. Click "Add" button on side window bottom left. Congrats! Now you've exposed port 8545 (RPC) via TCP.
 - Repeat the previous step for port 9000 (Subgraph), priority 110.
 
 (Ref: these [instructions](https://learn.microsoft.com/en-us/answers/questions/1190066/how-can-i-open-a-port-in-azure-so-that-a-constant).)
@@ -202,6 +202,12 @@ Let's configure the yaml file. In console:
 ```console
 cp ppss.yaml my_ppss.yaml
 ```
+
+In `my_ppss.yaml` file, in `data_pp` ->  `predict_feeds` section:
+- change `binance c BTC/USDT` to `binance c ETH/USDT`
+
+In `my_ppss.yaml` file, in `data_pp` ->  `input_feeds` section:
+- change `binance ohlcv BTC/USDT` to `binance ohlcv ETH/USDT`
 
 In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
 - change the urls and addresses as needed to reflect your VPS
