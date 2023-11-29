@@ -121,7 +121,6 @@ mkdir code
 cd code
 git clone https://github.com/oceanprotocol/barge
 cd barge
-git checkout predictoor
 ```
 
 ## 3. In VPS, Run Predictoor Barge
