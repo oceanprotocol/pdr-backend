@@ -215,6 +215,6 @@ def test_get_system_statistics():
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns
-    assert "cum_sum_stake" in stats_df.columns
-    assert "cum_unique_predictoors" in stats_df.columns
-    assert stats_df["cum_sum_stake"].round(2).to_list() == [0.1, 0.2, 0.3]
+    assert "daily_unique_predictoors_count" in stats_df.columns
+    assert "cum_daily_unique_predictoors_count" in stats_df.columns
+    assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 3]

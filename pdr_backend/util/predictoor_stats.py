@@ -223,59 +223,30 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
         .group_by("datetime")
         .agg(
             [
-                pl.col("user").unique().alias("unique_predictoors"),
-                pl.col("user").unique().count().alias("unique_predictoors_count"),
+                pl.col("user").unique().alias("daily_unique_predictoors"),
+                pl.col("user").unique().count().alias("daily_unique_predictoors_count"),
                 pl.lit(1).alias("index"),
             ]
         )
         .sort("datetime")
         .with_columns(
             [
-                pl.col("unique_predictoors")
+                pl.col("daily_unique_predictoors")
                 .cumulative_eval(pl.element().explode().unique().count())
                 .over("index")
-                .alias("cum_unique_predictoors")
+                .alias("cum_daily_unique_predictoors_count")
             ]
         )
-        .select(["datetime", "unique_predictoors_count", "cum_unique_predictoors"])
+        .select(["datetime", "daily_unique_predictoors_count", "cum_daily_unique_predictoors_count"])
     )
 
     return stats_df
 
 
 @enforce_types
-def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
-    assert "datetime" in stats_df.columns
-    assert "cum_unique_predictoors" in stats_df.columns
-
-    charts_dir = get_charts_dir(csvs_dir)
-
-    dates = stats_df["datetime"].to_list()
-    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
-
-    # draw cum_unique_predictoors
-    chart_path = os.path.join(charts_dir, "cum_unique_predictoors.png")
-    plt.figure(figsize=(10, 6))
-    plt.plot(
-        stats_df["datetime"].to_pandas(),
-        stats_df["cum_unique_predictoors"],
-        marker="o",
-        linestyle="-",
-    )
-    plt.xlabel("Date")
-    plt.ylabel("# Unique Predictoor Addresses")
-    plt.title("Cumulative # Unique Predictoors")
-    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
-    plt.tight_layout()
-    plt.savefig(chart_path)
-    plt.close()
-    print("Chart created:", chart_path)
-
-
-@enforce_types
 def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
-    assert "cum_unique_predictoors" in stats_df.columns
+    assert "daily_unique_predictoors_count" in stats_df.columns
 
     charts_dir = get_charts_dir(csvs_dir)
 
@@ -287,7 +258,7 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     plt.figure(figsize=(10, 6))
     plt.plot(
         stats_df["datetime"].to_pandas(),
-        stats_df["unique_predictoors_count"],
+        stats_df["daily_unique_predictoors_count"],
         marker="o",
         linestyle="-",
     )
@@ -299,3 +270,34 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     plt.savefig(chart_path)
     plt.close()
     print("Chart created:", chart_path)
+
+
+@enforce_types
+def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+    assert "datetime" in stats_df.columns
+    assert "cum_daily_unique_predictoors_count" in stats_df.columns
+
+    charts_dir = get_charts_dir(csvs_dir)
+
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw cum_unique_predictoors
+    chart_path = os.path.join(charts_dir, "cum_daily_unique_predictoors.png")
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["cum_daily_unique_predictoors_count"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("# Unique Predictoor Addresses")
+    plt.title("Cumulative # Unique Predictoor Addresses")
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+    print("Chart created:", chart_path)
+
+
