@@ -215,18 +215,14 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
         # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
         pl.from_epoch("timestamp", time_unit="s").dt.strftime("%Y-%m-%d").alias("datetime"),
     ]).group_by("datetime").agg([
-        pl.col("stake").sum().alias("sum_stake"),
         pl.col("user").unique().alias("unique_predictoors"),
         pl.col("user").unique().count().alias("unique_predictoors_count"),
         pl.lit(1).alias("index")
     ]).sort("datetime").with_columns([
-        pl.col("sum_stake").cum_sum().alias("cum_sum_stake"),
         pl.col("unique_predictoors").cumulative_eval(pl.element().explode().unique().count()).over("index").alias("cum_unique_predictoors")
     ]).select([
         "datetime",
-        "sum_stake",
         "unique_predictoors_count",
-        "cum_sum_stake",
         "cum_unique_predictoors"
     ])
     
@@ -250,26 +246,12 @@ def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> Non
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_unique_predictoors"], marker='o', linestyle='-')
     plt.xlabel('Date')
-    plt.ylabel('Cumulative Unique Users')
-    plt.title('Cumulative Unique Users over Time')
+    plt.ylabel('Unique Predictoor Addresses')
+    plt.title('Cumulative # Unique Predictoors vs Time')
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
-
-    # draw cum_sum_stake
-    chart_path = os.path.join(charts_dir, "cum_sum_stake.png")
-    print("chart_path:", chart_path)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_sum_stake"], marker='o', linestyle='-')
-    plt.xlabel('Date')
-    plt.ylabel('Cumulative Sum Stake in $OCEAN over Time')
-    plt.title('Cumulative Sum Stake in $OCEAN')
-    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
-    plt.tight_layout()
-    plt.savefig(chart_path)
-    plt.close
 
 
 @enforce_types
@@ -289,22 +271,8 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["unique_predictoors_count"], marker='o', linestyle='-')
     plt.xlabel('Date')
-    plt.ylabel('Unique User Count')
-    plt.title('Daily Unique Users')
-    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
-    plt.tight_layout()
-    plt.savefig(chart_path)
-    plt.close()
-
-    # draw daily_stake
-    chart_path = os.path.join(charts_dir, "daily_stake.png")
-    print("chart_path:", chart_path)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(stats_df["datetime"].to_pandas(), stats_df["sum_stake"], marker='o', linestyle='-')
-    plt.xlabel('Date')
-    plt.ylabel('Total Stake')
-    plt.title('Daily $OCEAN Staked')
+    plt.ylabel('Unique Predictoor Addresses')
+    plt.title('Daily # Unique Predictoor Addresses')
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)
