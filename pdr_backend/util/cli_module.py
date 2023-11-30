@@ -158,7 +158,7 @@ def do_get_system_info():
         network="mainnet",
     )
 
-    get_system_info_main(ppss, [addresses[0]], args.ST, args.END)
+    get_system_info_main(ppss, addresses, args.ST, args.END)
 
 
 @enforce_types
