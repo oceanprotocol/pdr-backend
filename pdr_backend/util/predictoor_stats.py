@@ -1,7 +1,10 @@
-from typing import List, Dict, Tuple, TypedDict, Set
 from enforce_typing import enforce_types
-from pdr_backend.models.prediction import Prediction
+from typing import List, Dict, Tuple, TypedDict, Set
 
+from pdr_backend.models.prediction import Prediction
+from pdr_backend.util.csvs import get_charts_dir
+
+import os
 import matplotlib.pyplot as plt
 import polars as pl
 
@@ -214,12 +217,15 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
     ]).group_by("datetime").agg([
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("user").unique().alias("unique_predictoors"),
+        pl.col("user").unique().count().alias("unique_predictoors_count"),
         pl.lit(1).alias("index")
     ]).sort("datetime").with_columns([
         pl.col("sum_stake").cum_sum().alias("cum_sum_stake"),
         pl.col("unique_predictoors").cumulative_eval(pl.element().explode().unique().count()).over("index").alias("cum_unique_predictoors")
     ]).select([
         "datetime",
+        "sum_stake",
+        "unique_predictoors_count",
         "cum_sum_stake",
         "cum_unique_predictoors"
     ])
@@ -228,31 +234,78 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
 
 
 @enforce_types
-def plot_system_statistics(stats_df: pl.DataFrame) -> None:
+def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
     assert "cum_unique_predictoors" in stats_df.columns
 
+    charts_dir = get_charts_dir(csvs_dir)
+    
     dates = stats_df["datetime"].to_list()
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
     # draw cum_unique_predictoors
+    chart_path = os.path.join(charts_dir, "cum_unique_predictoors.png")
+    print("chart_path:", chart_path)
+
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_unique_predictoors"], marker='o', linestyle='-')
     plt.xlabel('Date')
     plt.ylabel('Cumulative Unique Users')
-    plt.title('Cumulative Unique Users Over Time')
+    plt.title('Cumulative Unique Users over Time')
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
-    plt.savefig('cum_unique_predictoors.png')
+    plt.savefig(chart_path)
     plt.close()
 
     # draw cum_sum_stake
+    chart_path = os.path.join(charts_dir, "cum_sum_stake.png")
+    print("chart_path:", chart_path)
+
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_sum_stake"], marker='o', linestyle='-')
     plt.xlabel('Date')
-    plt.ylabel('Cumulative Stake')
-    plt.title('Cumulative Stake Over Time')
+    plt.ylabel('Cumulative Sum Stake in $OCEAN over Time')
+    plt.title('Cumulative Sum Stake in $OCEAN')
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
-    plt.savefig('cum_sum_stake.png')
+    plt.savefig(chart_path)
     plt.close
+
+
+@enforce_types
+def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+    assert "datetime" in stats_df.columns
+    assert "cum_unique_predictoors" in stats_df.columns
+
+    charts_dir = get_charts_dir(csvs_dir)
+    
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw unique_predictoors
+    chart_path = os.path.join(charts_dir, "daily_unique_predictoors.png")
+    print("chart_path:", chart_path)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(stats_df["datetime"].to_pandas(), stats_df["unique_predictoors_count"], marker='o', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel('Unique User Count')
+    plt.title('Daily Unique Users')
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+
+    # draw daily_stake
+    chart_path = os.path.join(charts_dir, "daily_stake.png")
+    print("chart_path:", chart_path)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(stats_df["datetime"].to_pandas(), stats_df["sum_stake"], marker='o', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel('Total Stake')
+    plt.title('Daily $OCEAN Staked')
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()

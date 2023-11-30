@@ -2,6 +2,13 @@ import os
 import csv
 
 
+def get_charts_dir(csvs_dir):
+    charts_dir = os.path.join(csvs_dir, "charts")
+    if not os.path.exists(charts_dir):
+        os.makedirs(charts_dir)
+    return charts_dir
+
+
 def write_prediction_csv(all_predictions, csv_output_dir):
     if not os.path.exists(csv_output_dir):
         os.makedirs(csv_output_dir)
