@@ -19,6 +19,9 @@ Reference: how to run barge with...
 - [One agent](#barge-one-agent) - eg trueval bot
 - [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer bots
 
+Finally:
+- [Change Barge Itself](#change-barge-itself)
+
 
 ## Install Barge
 
@@ -81,6 +84,14 @@ This will run all of the following at once:
 - trader agent
 - predictoor agent
 - dfbuyer agent
+
+## Change Barge Itself
+
+Some subcomponents of Barge are those from pdr-backend. If you change those components, then the new behavior becomes part of Barge upon the next Github Release of pdr-backend. See [release-process.md](release-process.md) Docker / Barge section for details.
+
+For each other subcomponent of Barge, you need to change its respective repo similarly.
+
+And for Barge core functionality, make changes to the [barge repo](https://github.com/oceanprotocol/barge) itself.
 
 ## Other READMEs
 
