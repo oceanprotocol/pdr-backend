@@ -1,13 +1,12 @@
-from enforce_typing import enforce_types
-from typing import List, Dict, Tuple, TypedDict, Set
-
-from pdr_backend.models.prediction import Prediction
-from pdr_backend.util.csvs import get_charts_dir
-
 import os
+from typing import List, Dict, Tuple, TypedDict, Set
+from enforce_typing import enforce_types
+
 import matplotlib.pyplot as plt
 import polars as pl
 
+from pdr_backend.models.prediction import Prediction
+from pdr_backend.util.csvs import get_charts_dir
 
 class PairTimeframeStat(TypedDict):
     pair: str
@@ -60,7 +59,7 @@ def aggregate_prediction_statistics(
                 "correct": 0,
                 "total": 0,
                 "stake": 0,
-                "payout": 0,
+                "payout": 0.0,
             }
 
         if predictor_key not in stats["predictor"]:
@@ -68,7 +67,7 @@ def aggregate_prediction_statistics(
                 "correct": 0,
                 "total": 0,
                 "stake": 0,
-                "payout": 0,
+                "payout": 0.0,
                 "details": set(),
             }
 
@@ -200,7 +199,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:    
+def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in all_predictions]
     preds_df = pl.DataFrame(preds_dicts)
@@ -211,21 +210,35 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
     # leveraging the sorted values...
     # 3. calculate cum_sum_stake
     # 4. do a cumulative_eval over index(1), then explode + count unique user addresses
-    stats_df = preds_df.with_columns([
-        # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
-        pl.from_epoch("timestamp", time_unit="s").dt.strftime("%Y-%m-%d").alias("datetime"),
-    ]).group_by("datetime").agg([
-        pl.col("user").unique().alias("unique_predictoors"),
-        pl.col("user").unique().count().alias("unique_predictoors_count"),
-        pl.lit(1).alias("index")
-    ]).sort("datetime").with_columns([
-        pl.col("unique_predictoors").cumulative_eval(pl.element().explode().unique().count()).over("index").alias("cum_unique_predictoors")
-    ]).select([
-        "datetime",
-        "unique_predictoors_count",
-        "cum_unique_predictoors"
-    ])
-    
+    stats_df = (
+        preds_df.with_columns(
+            [
+                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+                pl.from_epoch("timestamp", time_unit="s")
+                .dt.strftime("%Y-%m-%d")
+                .alias("datetime"),
+            ]
+        )
+        .group_by("datetime")
+        .agg(
+            [
+                pl.col("user").unique().alias("unique_predictoors"),
+                pl.col("user").unique().count().alias("unique_predictoors_count"),
+                pl.lit(1).alias("index"),
+            ]
+        )
+        .sort("datetime")
+        .with_columns(
+            [
+                pl.col("unique_predictoors")
+                .cumulative_eval(pl.element().explode().unique().count())
+                .over("index")
+                .alias("cum_unique_predictoors")
+            ]
+        )
+        .select(["datetime", "unique_predictoors_count", "cum_unique_predictoors"])
+    )
+
     return stats_df
 
 
@@ -235,17 +248,22 @@ def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> Non
     assert "cum_unique_predictoors" in stats_df.columns
 
     charts_dir = get_charts_dir(csvs_dir)
-    
+
     dates = stats_df["datetime"].to_list()
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
     # draw cum_unique_predictoors
     chart_path = os.path.join(charts_dir, "cum_unique_predictoors.png")
     plt.figure(figsize=(10, 6))
-    plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_unique_predictoors"], marker='o', linestyle='-')
-    plt.xlabel('Date')
-    plt.ylabel('# Unique Predictoor Addresses')
-    plt.title('Cumulative # Unique Predictoors')
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["cum_unique_predictoors"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("# Unique Predictoor Addresses")
+    plt.title("Cumulative # Unique Predictoors")
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)
@@ -259,17 +277,22 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "cum_unique_predictoors" in stats_df.columns
 
     charts_dir = get_charts_dir(csvs_dir)
-    
+
     dates = stats_df["datetime"].to_list()
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
     # draw unique_predictoors
     chart_path = os.path.join(charts_dir, "daily_unique_predictoors.png")
     plt.figure(figsize=(10, 6))
-    plt.plot(stats_df["datetime"].to_pandas(), stats_df["unique_predictoors_count"], marker='o', linestyle='-')
-    plt.xlabel('Date')
-    plt.ylabel('# Unique Predictoor Addresses')
-    plt.title('Daily # Unique Predictoor Addresses')
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["unique_predictoors_count"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("# Unique Predictoor Addresses")
+    plt.title("Daily # Unique Predictoor Addresses")
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)

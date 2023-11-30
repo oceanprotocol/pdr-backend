@@ -1,40 +1,43 @@
 from typing import List, Set
 from enforce_typing import enforce_types
+import polars as pl
 
 from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
     get_cli_statistics,
-    get_system_statistics
+    get_system_statistics,
 )
 
 from pdr_backend.util.subgraph_predictions import (
     Prediction,
 )
 
-import polars as pl
-
 sample_predictions = [
     Prediction(
+        id="1",
         pair="ADA/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.050051425480971974,
         trueval=False,
-        timestamp=1698527100,
+        timestamp=1698527000,
         source="binance",
         payout=0.0,
+        slot=1698527100,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="2",
         pair="ADA/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1698527700,
+        timestamp=1698527600,
         source="binance",
         payout=0.0,
+        slot=1698527700,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
 ]
@@ -113,39 +116,46 @@ def test_get_cli_statistics(capsys):
 
 multi_predictions = [
     Prediction(
+        id="1",
         pair="ADA/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=False,
-        timestamp=1701503100,
+        timestamp=1701503000,
         source="binance",
         payout=0.0,
+        slot=1701503100,
         user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="2",
         pair="BTC/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1701589500,
+        timestamp=1701589400,
         source="binance",
         payout=0.0,
+        slot=1701589500,
         user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="3",
         pair="ETH/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1701675900,
+        timestamp=1701675800,
         source="binance",
         payout=0.0,
+        slot=1701675900,
         user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="4",
         pair="BTC/USDT",
         timeframe="1h",
         prediction=True,
@@ -154,41 +164,48 @@ multi_predictions = [
         timestamp=1701503100,
         source="binance",
         payout=0.0,
+        slot=1701503000,
         user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="5",
         pair="XRP/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1701589500,
+        timestamp=1701589400,
         source="binance",
         payout=0.0,
+        slot=1701589500,
         user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="6",
         pair="BNB/USDT",
         timeframe="1h",
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1701675900,
+        timestamp=1701675800,
         source="kraken",
         payout=0.0,
+        slot=1701675900,
         user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
+        id="7",
         pair="ETH/USDT",
         timeframe="1h",
         prediction=True,
         stake=None,
         trueval=False,
-        timestamp=1701589500,
+        timestamp=1701589400,
         source="binance",
         payout=0.0,
+        slot=1701589500,
         user="0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
-    )
+    ),
 ]
 
 
@@ -201,4 +218,3 @@ def test_get_system_statistics():
     assert "cum_sum_stake" in stats_df.columns
     assert "cum_unique_predictoors" in stats_df.columns
     assert stats_df["cum_sum_stake"].round(2).to_list() == [0.1, 0.2, 0.3]
-

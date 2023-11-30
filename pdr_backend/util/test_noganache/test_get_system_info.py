@@ -25,22 +25,15 @@ def test_get_system_info_main_mainnet(
     mock_ppss_.web3_pp.network = "main"
     mock_fetch_filtered_predictions.return_value = []
 
-    # TODO - Fix get_system_stats() throwing error, use mock instead
-    get_system_info_main(
-        mock_ppss_,
-        ["0x123"],
-        "2023-01-01",
-        "2023-01-02"
-    )
+    get_system_info_main(mock_ppss_, "0x123", "2023-01-01", "2023-01-02", "csvs/")
 
     mock_fetch_filtered_predictions.assert_called_with(
         1672531200,
         1672617600,
-        ["0x123"],
+        "0x123",
         "mainnet",
         FilterMode.CONTRACT,
         payout_only=False,
-        trueval_only=False
+        trueval_only=False,
     )
     mock_get_system_statistics.assert_called_with([])
-

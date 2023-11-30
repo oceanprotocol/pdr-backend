@@ -1,10 +1,8 @@
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.predictoor_stats import (
-    get_system_statistics,
-    plot_system_cum_sum_statistics,
-    plot_system_daily_statistics,
-)
+
+from pdr_backend.util.csvs import save_analysis_csv
+from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     fetch_filtered_predictions,
@@ -14,7 +12,7 @@ from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 
 @enforce_types
-def get_system_info_main(
+def get_contract_predictions_info_main(
     ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, csvs_dir: str
 ):
     # get network
@@ -54,16 +52,14 @@ def get_system_info_main(
         contract_list,
         network,
         FilterMode.CONTRACT,
-        payout_only=False,
-        trueval_only=False,
+        payout_only=True,
+        trueval_only=True,
     )
 
     if len(predictions) == 0:
         print("No records found. Please adjust start and end times.")
         return
 
-    # calculate statistics and draw plots
-    stats_df = get_system_statistics(predictions)
+    save_analysis_csv(predictions, csvs_dir)
 
-    plot_system_cum_sum_statistics(csvs_dir, stats_df)
-    plot_system_daily_statistics(csvs_dir, stats_df)
+    get_cli_statistics(predictions)

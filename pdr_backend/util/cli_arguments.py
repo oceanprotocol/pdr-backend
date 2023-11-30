@@ -19,7 +19,8 @@ Utilities:
   pdr help
   pdr <cmd> -h
   pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
-  pdr get_system_info ST END YAML_FILE NETWORK
+  pdr get_contract_predictions_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
+  pdr get_system_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
   pdr check_network YAML_FILE NETWORK --LOOKBACK_HOURS
 
 Transactions are signed with envvar 'PRIVATE_KEY`.
@@ -170,12 +171,40 @@ class GetPredictoorInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mi
 
 
 @enforce_types
+class GetContractPredictionsInfoArgParser(
+    ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin
+):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument(
+            "CONTRACT_ADDRS",
+            nargs="?",
+            type=str,
+            default="",
+            help="Contract address(es) for Predictoor feeds",
+        )
+        self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
+        self.add_argument("END", type=str, help="End date yyyy-mm-dd")
+        self.add_argument_CSVDIR()
+        self.add_argument_YAML()
+        self.add_argument_NETWORK()
+
+
+@enforce_types
 class GetSystemInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_argument("CONTRACT_ADDRS", nargs="?", type=str, default="", help="Contract address(es) for Predictoor feeds")
+        self.add_argument(
+            "CONTRACT_ADDRS",
+            nargs="?",
+            type=str,
+            default="",
+            help="Contract address(es) for Predictoor feeds",
+        )
         self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
         self.add_argument("END", type=str, help="End date yyyy-mm-dd")
         self.add_argument_CSVDIR()

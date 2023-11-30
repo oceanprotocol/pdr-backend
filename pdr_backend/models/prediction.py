@@ -1,17 +1,24 @@
+from typing import Union
+
+
 class Prediction:
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=redefine-builtin
     def __init__(
         self,
-        pair,
-        timeframe,
-        prediction,
-        stake,
-        trueval,
-        timestamp,
-        source,
-        payout,
-        user,
+        id: str,
+        pair: str,
+        timeframe: str,
+        prediction: Union[bool, None],
+        stake: Union[float, None],
+        trueval: Union[bool, None],
+        timestamp: int,  # timestamp == prediction submitted timestamp
+        source: str,
+        payout: Union[float, None],
+        slot: int,  # slot/epoch timestamp
+        user: str,
     ) -> None:
+        self.id = id
         self.pair = pair
         self.timeframe = timeframe
         self.prediction = prediction
@@ -20,4 +27,5 @@ class Prediction:
         self.timestamp = timestamp
         self.source = source
         self.payout = payout
+        self.slot = slot
         self.user = user

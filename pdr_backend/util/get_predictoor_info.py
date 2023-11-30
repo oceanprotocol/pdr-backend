@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.csvs import write_prediction_csv
+from pdr_backend.util.csvs import save_prediction_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import (
     fetch_filtered_predictions,
@@ -41,6 +41,6 @@ def get_predictoor_info_main(
         FilterMode.PREDICTOOR,
     )
 
-    write_prediction_csv(predictions, csv_output_dir)
+    save_prediction_csv(predictions, csv_output_dir)
 
     get_cli_statistics(predictions)

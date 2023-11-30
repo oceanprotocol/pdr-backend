@@ -28,7 +28,7 @@ def fetch_filtered_predictions(
     network: str,
     filter_mode: FilterMode,
     payout_only: bool = True,
-    trueval_only: bool = True
+    trueval_only: bool = True,
 ) -> List[Prediction]:
     """
     Fetches predictions from a subgraph within a specified time range
@@ -67,7 +67,7 @@ def fetch_filtered_predictions(
 
     # pylint: disable=line-too-long
     if filter_mode == FilterMode.NONE:
-        pass
+        where_clause = f", where: {{slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.CONTRACT:
         where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.PREDICTOOR:
@@ -129,35 +129,39 @@ def fetch_filtered_predictions(
             pair_name = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
-            timestamp = prediction["slot"]["slot"]
-            predictoor_user = prediction["user"]["id"]
+            timestamp = prediction["timestamp"]
+            slot = prediction["slot"]["slot"]
+            user = prediction["user"]["id"]
 
             trueval = None
             payout = None
             predicted_value = None
             stake = None
-            
-            if payout_only == True and prediction["payout"] is None:
+
+            if payout_only is True and prediction["payout"] is None:
                 continue
-            elif not prediction["payout"] is None:
+
+            if not prediction["payout"] is None:
                 stake = float(prediction["stake"])
                 trueval = prediction["payout"]["trueValue"]
                 predicted_value = prediction["payout"]["predictedValue"]
                 payout = float(prediction["payout"]["payout"])
-                                
-            if trueval_only == True and trueval is None:
+
+            if trueval_only is True and trueval is None:
                 continue
 
             prediction_obj = Prediction(
-                pair_name,
-                timeframe,
-                predicted_value,
-                stake,
-                trueval,
-                timestamp,
-                source,
-                payout,
-                predictoor_user,
+                id=prediction["id"],
+                pair=pair_name,
+                timeframe=timeframe,
+                prediction=predicted_value,
+                stake=stake,
+                trueval=trueval,
+                timestamp=timestamp,
+                source=source,
+                payout=payout,
+                slot=slot,
+                user=user,
             )
             predictions.append(prediction_obj)
 

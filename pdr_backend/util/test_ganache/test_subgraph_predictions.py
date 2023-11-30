@@ -10,14 +10,17 @@ from pdr_backend.util.subgraph_predictions import (
 )
 
 SAMPLE_PREDICTION = Prediction(
+    # pylint: disable=line-too-long
+    id="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     pair="ADA/USDT",
     timeframe="5m",
     prediction=True,
     stake=0.050051425480971974,
     trueval=False,
-    timestamp=1698527100,
+    timestamp=1698527000,
     source="binance",
     payout=0.0,
+    slot=1698527100,
     user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
 )
 
@@ -29,6 +32,7 @@ MOCK_PREDICTIONS_RESPONSE_FIRST_CALL = {
                 "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
                 "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
                 "stake": "0.050051425480971974",
+                "timestamp": 1698527000,
                 "payout": {"payout": "0", "trueValue": False, "predictedValue": True},
                 "slot": {
                     "slot": 1698527100,
