@@ -1,6 +1,8 @@
 from typing import List, Dict, Tuple, TypedDict, Set
 from enforce_typing import enforce_types
 from pdr_backend.models.prediction import Prediction
+
+import matplotlib.pyplot as plt
 import polars as pl
 
 
@@ -195,8 +197,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
-    
+def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:    
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in all_predictions]
     preds_df = pl.DataFrame(preds_dicts)
@@ -226,3 +227,32 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
     return stats_df
 
 
+@enforce_types
+def plot_system_statistics(stats_df: pl.DataFrame) -> None:
+    assert "datetime" in stats_df.columns
+    assert "cum_unique_predictoors" in stats_df.columns
+
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw cum_unique_predictoors
+    plt.figure(figsize=(10, 6))
+    plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_unique_predictoors"], marker='o', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Unique Users')
+    plt.title('Cumulative Unique Users Over Time')
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig('cum_unique_predictoors.png')
+    plt.close()
+
+    # draw cum_sum_stake
+    plt.figure(figsize=(10, 6))
+    plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_sum_stake"], marker='o', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Stake')
+    plt.title('Cumulative Stake Over Time')
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig('cum_sum_stake.png')
+    plt.close
