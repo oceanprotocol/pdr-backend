@@ -5,11 +5,14 @@ from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
     get_cli_statistics,
+    get_system_statistics
 )
 
 from pdr_backend.util.subgraph_predictions import (
     Prediction,
 )
+
+import polars as pl
 
 sample_predictions = [
     Prediction(
@@ -106,3 +109,96 @@ def test_get_cli_statistics(capsys):
     assert "Overall Accuracy" in output
     assert "Accuracy for Pair" in output
     assert "Accuracy for Predictoor Address" in output
+
+
+multi_predictions = [
+    Prediction(
+        pair="ADA/USDT",
+        timeframe="5m",
+        prediction=True,
+        stake=0.0500,
+        trueval=False,
+        timestamp=1701503100,
+        source="binance",
+        payout=0.0,
+        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="BTC/USDT",
+        timeframe="5m",
+        prediction=True,
+        stake=0.0500,
+        trueval=True,
+        timestamp=1701589500,
+        source="binance",
+        payout=0.0,
+        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="ETH/USDT",
+        timeframe="5m",
+        prediction=True,
+        stake=0.0500,
+        trueval=True,
+        timestamp=1701675900,
+        source="binance",
+        payout=0.0,
+        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="BTC/USDT",
+        timeframe="1h",
+        prediction=True,
+        stake=0.0500,
+        trueval=False,
+        timestamp=1701503100,
+        source="binance",
+        payout=0.0,
+        user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="XRP/USDT",
+        timeframe="5m",
+        prediction=True,
+        stake=0.0500,
+        trueval=True,
+        timestamp=1701589500,
+        source="binance",
+        payout=0.0,
+        user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="BNB/USDT",
+        timeframe="1h",
+        prediction=True,
+        stake=0.0500,
+        trueval=True,
+        timestamp=1701675900,
+        source="kraken",
+        payout=0.0,
+        user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    Prediction(
+        pair="ETH/USDT",
+        timeframe="1h",
+        prediction=True,
+        stake=None,
+        trueval=False,
+        timestamp=1701589500,
+        source="binance",
+        payout=0.0,
+        user="0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
+    )
+]
+
+
+@enforce_types
+def test_get_system_statistics():
+    stats_df = get_system_statistics(multi_predictions)
+    assert isinstance(stats_df, pl.DataFrame)
+    assert stats_df.shape == (3, 3)
+    assert "datetime" in stats_df.columns
+    assert "cum_sum_stake" in stats_df.columns
+    assert "cum_unique_predictoors" in stats_df.columns
+    assert stats_df["cum_sum_stake"].round(2).to_list() == [0.1, 0.2, 0.3]
+

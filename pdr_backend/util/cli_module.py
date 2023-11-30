@@ -25,6 +25,7 @@ from pdr_backend.util.cli_arguments import (
     DfbuyerArgParser,
     do_help_long,
     GetPredictoorInfoArgParser,
+    GetSystemInfoArgParser,
     PredictoorArgParser,
     print_args,
     PublisherArgParser,
@@ -35,6 +36,8 @@ from pdr_backend.util.cli_arguments import (
 
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
+from pdr_backend.util.get_system_info import get_system_info_main
+from pdr_backend.util.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.topup import topup_main
 
 
@@ -138,6 +141,24 @@ def do_get_predictoor_info():
 
     ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
     get_predictoor_info_main(ppss, args.PDR_ADDRS, args.ST, args.END, args.CSVDIR)
+
+
+@enforce_types
+def do_get_system_info():
+    parser = GetSystemInfoArgParser("Get system info", "get_system_info")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    
+    # get all feeds and yield system stats
+    addresses = get_all_contract_ids_by_owner(
+        owner_address=ppss.web3_pp.owner_addrs,
+        # network=ppss.web3_pp.network,
+        network="mainnet",
+    )
+
+    get_system_info_main(ppss, [addresses[0]], args.ST, args.END)
 
 
 @enforce_types

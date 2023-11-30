@@ -15,6 +15,7 @@ class ContractIdAndSPE(TypedDict):
 
 
 class FilterMode(Enum):
+    NONE = 0
     CONTRACT = 1
     PREDICTOOR = 2
 
@@ -26,6 +27,8 @@ def fetch_filtered_predictions(
     filters: List[str],
     network: str,
     filter_mode: FilterMode,
+    payout_only: bool = True,
+    trueval_only: bool = True
 ) -> List[Prediction]:
     """
     Fetches predictions from a subgraph within a specified time range
@@ -63,16 +66,19 @@ def fetch_filtered_predictions(
     filters = [f.lower() for f in filters]
 
     # pylint: disable=line-too-long
-    if filter_mode == FilterMode.CONTRACT:
-        where_clause = f"where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+    if filter_mode == FilterMode.NONE:
+        pass
+    elif filter_mode == FilterMode.CONTRACT:
+        where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.PREDICTOOR:
-        where_clause = f"where: {{user_: {{id_in: {json.dumps(filters)}}}, slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+        where_clause = f", where: {{user_: {{id_in: {json.dumps(filters)}}}, slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
 
     while True:
         query = f"""
             {{
-                predictPredictions(skip: {offset}, first: {chunk_size}, {where_clause}) {{
+                predictPredictions(skip: {offset}, first: {chunk_size} {where_clause}) {{
                     id
+                    timestamp
                     user {{
                         id
                     }}
@@ -124,24 +130,28 @@ def fetch_filtered_predictions(
             timeframe = info["timeframe"]
             source = info["source"]
             timestamp = prediction["slot"]["slot"]
-
-            if prediction["payout"] is None:
-                continue
-
-            trueval = prediction["payout"]["trueValue"]
-            payout = float(prediction["payout"]["payout"])
-
-            if trueval is None:
-                continue
-
-            predictedValue = prediction["payout"]["predictedValue"]
-            stake = float(prediction["stake"])
             predictoor_user = prediction["user"]["id"]
+
+            trueval = None
+            payout = None
+            predicted_value = None
+            stake = None
+            
+            if payout_only == True and prediction["payout"] is None:
+                continue
+            elif not prediction["payout"] is None:
+                stake = float(prediction["stake"])
+                trueval = prediction["payout"]["trueValue"]
+                predicted_value = prediction["payout"]["predictedValue"]
+                payout = float(prediction["payout"]["payout"])
+                                
+            if trueval_only == True and trueval is None:
+                continue
 
             prediction_obj = Prediction(
                 pair_name,
                 timeframe,
-                predictedValue,
+                predicted_value,
                 stake,
                 trueval,
                 timestamp,

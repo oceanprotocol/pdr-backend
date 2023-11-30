@@ -1,6 +1,7 @@
 from typing import List, Dict, Tuple, TypedDict, Set
 from enforce_typing import enforce_types
 from pdr_backend.models.prediction import Prediction
+import polars as pl
 
 
 class PairTimeframeStat(TypedDict):
@@ -191,3 +192,37 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
         for detail in stat_predictoor_item["details"]:
             print(f"Pair: {detail[0]}, Timeframe: {detail[1]}, Source: {detail[2]}")
         print("\n")
+
+
+@enforce_types
+def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
+    
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in all_predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # Calculate predictoor statistics
+    # 1. transform timestamp to datetime
+    # 2. group by date and sum stake, and collect all unique users by address
+    # leveraging the sorted values...
+    # 3. calculate cum_sum_stake
+    # 4. do a cumulative_eval over index(1), then explode + count unique user addresses
+    stats_df = preds_df.with_columns([
+        # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+        pl.from_epoch("timestamp", time_unit="s").dt.strftime("%Y-%m-%d").alias("datetime"),
+    ]).group_by("datetime").agg([
+        pl.col("stake").sum().alias("sum_stake"),
+        pl.col("user").unique().alias("unique_predictoors"),
+        pl.lit(1).alias("index")
+    ]).sort("datetime").with_columns([
+        pl.col("sum_stake").cum_sum().alias("cum_sum_stake"),
+        pl.col("unique_predictoors").cumulative_eval(pl.element().explode().unique().count()).over("index").alias("cum_unique_predictoors")
+    ]).select([
+        "datetime",
+        "cum_sum_stake",
+        "cum_unique_predictoors"
+    ])
+    
+    return stats_df
+
+
