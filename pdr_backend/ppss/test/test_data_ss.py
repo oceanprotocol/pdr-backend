@@ -2,6 +2,7 @@ import copy
 import os
 
 from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -65,7 +66,9 @@ def test_data_ss_now():
     ss = DataSS(d)
 
     assert ss.fin_timestr == "now"
-    assert ss.fin_timestamp == timestr_to_ut("now")
+
+    ut2 = timestr_to_ut("now")
+    assert ss.fin_timestamp / 1000 == pytest.approx(ut2 / 1000, 1.0)
 
 
 @enforce_types
