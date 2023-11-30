@@ -241,8 +241,6 @@ def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> Non
 
     # draw cum_unique_predictoors
     chart_path = os.path.join(charts_dir, "cum_unique_predictoors.png")
-    print("chart_path:", chart_path)
-
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["cum_unique_predictoors"], marker='o', linestyle='-')
     plt.xlabel('Date')
@@ -252,6 +250,7 @@ def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> Non
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
+    print("Chart created:", chart_path)
 
 
 @enforce_types
@@ -266,8 +265,6 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
 
     # draw unique_predictoors
     chart_path = os.path.join(charts_dir, "daily_unique_predictoors.png")
-    print("chart_path:", chart_path)
-
     plt.figure(figsize=(10, 6))
     plt.plot(stats_df["datetime"].to_pandas(), stats_df["unique_predictoors_count"], marker='o', linestyle='-')
     plt.xlabel('Date')
@@ -277,3 +274,4 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
+    print("Chart created:", chart_path)
