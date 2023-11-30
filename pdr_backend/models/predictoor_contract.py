@@ -5,6 +5,7 @@ from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
 
 from pdr_backend.models.fixed_rate import FixedRate
+
 # pylint: disable=cyclic-import
 from pdr_backend.models.token import Token
 from pdr_backend.models.base_contract import BaseContract
