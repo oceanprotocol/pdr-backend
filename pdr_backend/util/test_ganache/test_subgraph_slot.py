@@ -7,7 +7,7 @@ from pdr_backend.util.subgraph_slot import (
     get_predict_slots_query,
     get_slots,
     fetch_slots_for_all_assets,
-    calculate_prediction_prediction_result,
+    calculate_prediction_result,
     process_single_slot,
     aggregate_statistics,
     calculate_statistics_for_all_assets,
@@ -93,13 +93,13 @@ def test_get_slots(mock_query_subgraph):
 
 
 @enforce_types
-def test_calculate_prediction_prediction_result():
+def test_calculate_prediction_result():
     # Test the calculate_prediction_prediction_result function with expected inputs
-    result = calculate_prediction_prediction_result(150.0, 100.0)
-    assert result["direction"]
+    result = calculate_prediction_result(150.0, 200.0)
+    assert result
 
-    result = calculate_prediction_prediction_result(100.0, 150.0)
-    assert not result["direction"]
+    result = calculate_prediction_result(100.0, 250.0)
+    assert not result
 
 
 @enforce_types
