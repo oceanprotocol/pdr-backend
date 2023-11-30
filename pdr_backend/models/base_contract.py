@@ -1,6 +1,7 @@
 from abc import ABC
 from enforce_typing import enforce_types
 
+# pylint: disable=cyclic-import
 from pdr_backend.util.contract import get_contract_abi
 
 

@@ -8,6 +8,7 @@ import polars as pl
 from pdr_backend.models.prediction import Prediction
 from pdr_backend.util.csvs import get_charts_dir
 
+
 class PairTimeframeStat(TypedDict):
     pair: str
     timeframe: str

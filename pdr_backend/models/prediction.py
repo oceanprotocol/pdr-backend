@@ -3,7 +3,7 @@ from typing import Union
 
 class Prediction:
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=redefine-builtin
+    # pylint: disable=redefined-builtin
     def __init__(
         self,
         id: str,
