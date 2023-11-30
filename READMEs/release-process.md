@@ -61,17 +61,21 @@ In the last line: you should be able to log in with your username (eg trentmc).
 
 We recommend local testing (versus adding more to dockerhub). Here's how.
 
-First, build your image locally (in pdr-backend folder): 
+First, build your image locally with a custom label, eg `yaml-cli2`.
 
 ```console
-docker build -t 'oceanprotocol/pdr-backend:trent_custom' .
-export PDR_BACKEND_VERSION=trent_custom
+cd ~/code/pdr-backend
+docker build -t 'oceanprotocol/pdr-backend:yaml-cli2' .
 ```
 
-Then, start barge, **with your own docker image**:
+Then, start barge, using the custom label:
 ```console
-./start_ocean.sh ......
+cd ~/code/barge
+export PDR_BACKEND_VERSION=yaml-cli2
+./start_ocean.sh ...<the usual>...
 ```
+
+Then, from pdr-backend, use barge as usual.
 
 Pros of local testing:
 
