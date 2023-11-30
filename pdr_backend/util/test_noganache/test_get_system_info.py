@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.util.get_system_info import get_system_info_main
+from pdr_backend.util.get_predictoor_traction_info import get_predictoor_traction_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
 
 
@@ -15,17 +15,17 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@patch("pdr_backend.util.get_system_info.get_system_statistics")
-@patch("pdr_backend.util.get_system_info.fetch_filtered_predictions")
-def test_get_system_info_main_mainnet(
+@patch("pdr_backend.util.get_predictoor_traction_info.get_predictoor_traction_statistics")
+@patch("pdr_backend.util.get_predictoor_traction_info.fetch_filtered_predictions")
+def test_get_predictoor_traction_info_main_mainnet(
     mock_fetch_filtered_predictions,
-    mock_get_system_statistics,
+    mock_get_predictoor_traction_statistics,
     mock_ppss_,
 ):
     mock_ppss_.web3_pp.network = "main"
     mock_fetch_filtered_predictions.return_value = []
 
-    get_system_info_main(mock_ppss_, "0x123", "2023-01-01", "2023-01-02", "csvs/")
+    get_predictoor_traction_info_main(mock_ppss_, "0x123", "2023-01-01", "2023-01-02", "csvs/")
 
     mock_fetch_filtered_predictions.assert_called_with(
         1672531200,
@@ -36,4 +36,4 @@ def test_get_system_info_main_mainnet(
         payout_only=False,
         trueval_only=False,
     )
-    mock_get_system_statistics.assert_called_with([])
+    mock_get_predictoor_traction_statistics.assert_called_with([])

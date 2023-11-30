@@ -6,7 +6,8 @@ from enforce_typing import enforce_types
 from pdr_backend.util.subgraph_predictions import Prediction
 
 
-def get_charts_dir(csvs_dir):
+@enforce_types
+def get_charts_dir(csvs_dir: str):
     charts_dir = os.path.join(csvs_dir, "charts")
     if not os.path.exists(charts_dir):
         os.makedirs(charts_dir)

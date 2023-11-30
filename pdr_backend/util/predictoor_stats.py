@@ -200,17 +200,13 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
+def get_predictoor_traction_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in all_predictions]
     preds_df = pl.DataFrame(preds_dicts)
 
-    # Calculate predictoor statistics
-    # 1. transform timestamp to datetime
-    # 2. group by date and sum stake, and collect all unique users by address
-    # leveraging the sorted values...
-    # 3. calculate cum_sum_stake
-    # 4. do a cumulative_eval over index(1), then explode + count unique user addresses
+    # Calculate predictoor traction statistics
+    # Predictoor addresses are aggergated historically
     stats_df = (
         preds_df.with_columns(
             [
@@ -237,14 +233,18 @@ def get_system_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
                 .alias("cum_daily_unique_predictoors_count")
             ]
         )
-        .select(["datetime", "daily_unique_predictoors_count", "cum_daily_unique_predictoors_count"])
+        .select([
+            "datetime", 
+            "daily_unique_predictoors_count", 
+            "cum_daily_unique_predictoors_count"
+        ])
     )
 
     return stats_df
 
 
 @enforce_types
-def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+def plot_predictoor_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
 
@@ -273,7 +273,7 @@ def plot_system_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
 
 
 @enforce_types
-def plot_system_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+def plot_predictoor_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
     assert "cum_daily_unique_predictoors_count" in stats_df.columns
 

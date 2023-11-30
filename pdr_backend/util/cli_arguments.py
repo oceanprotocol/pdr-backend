@@ -20,7 +20,7 @@ Utilities:
   pdr <cmd> -h
   pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
   pdr get_contract_predictions_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
-  pdr get_system_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
+  pdr get_predictoor_traction_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
   pdr check_network YAML_FILE NETWORK --LOOKBACK_HOURS
 
 Transactions are signed with envvar 'PRIVATE_KEY`.
@@ -193,7 +193,7 @@ class GetContractPredictionsInfoArgParser(
 
 
 @enforce_types
-class GetSystemInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
+class GetPredictoorTractionInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)

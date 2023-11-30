@@ -6,7 +6,7 @@ from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
     get_cli_statistics,
-    get_system_statistics,
+    get_predictoor_traction_statistics,
 )
 
 from pdr_backend.util.subgraph_predictions import (
@@ -210,8 +210,8 @@ multi_predictions = [
 
 
 @enforce_types
-def test_get_system_statistics():
-    stats_df = get_system_statistics(multi_predictions)
+def test_get_predictoor_traction_statistics():
+    stats_df = get_predictoor_traction_statistics(multi_predictions)
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns
