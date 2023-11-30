@@ -77,7 +77,6 @@ payout_ss:
 
 
 web3_pp:
-  default_network: development
   
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
