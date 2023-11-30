@@ -135,9 +135,9 @@ ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 In VPS console:
 ```console
 # cleanup past barge
-rm -rf ~/.ocean
 cd ~/code/barge
 ./cleanup.sh
+rm -rf ~/.ocean
 docker system prune -a --volumes
 
 # run barge...
