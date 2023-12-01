@@ -1,6 +1,12 @@
+import os
 from typing import List, Dict, Tuple, TypedDict, Set
 from enforce_typing import enforce_types
+
+import matplotlib.pyplot as plt
+import polars as pl
+
 from pdr_backend.models.prediction import Prediction
+from pdr_backend.util.csvs import get_charts_dir
 
 
 class PairTimeframeStat(TypedDict):
@@ -54,7 +60,7 @@ def aggregate_prediction_statistics(
                 "correct": 0,
                 "total": 0,
                 "stake": 0,
-                "payout": 0,
+                "payout": 0.0,
             }
 
         if predictor_key not in stats["predictor"]:
@@ -62,7 +68,7 @@ def aggregate_prediction_statistics(
                 "correct": 0,
                 "total": 0,
                 "stake": 0,
-                "payout": 0,
+                "payout": 0.0,
                 "details": set(),
             }
 
@@ -191,3 +197,155 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
         for detail in stat_predictoor_item["details"]:
             print(f"Pair: {detail[0]}, Timeframe: {detail[1]}, Source: {detail[2]}")
         print("\n")
+
+
+@enforce_types
+def get_traction_statistics(
+    all_predictions: List[Prediction],
+) -> pl.DataFrame:
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in all_predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # Calculate predictoor traction statistics
+    # Predictoor addresses are aggergated historically
+    stats_df = (
+        preds_df.with_columns(
+            [
+                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+                pl.from_epoch("timestamp", time_unit="s")
+                .dt.strftime("%Y-%m-%d")
+                .alias("datetime"),
+            ]
+        )
+        .group_by("datetime")
+        .agg(
+            [
+                pl.col("user").unique().alias("daily_unique_predictoors"),
+                pl.col("user").unique().count().alias("daily_unique_predictoors_count"),
+                pl.lit(1).alias("index"),
+            ]
+        )
+        .sort("datetime")
+        .with_columns(
+            [
+                pl.col("daily_unique_predictoors")
+                .cumulative_eval(pl.element().explode().unique().count())
+                .over("index")
+                .alias("cum_daily_unique_predictoors_count")
+            ]
+        )
+        .select(
+            [
+                "datetime",
+                "daily_unique_predictoors_count",
+                "cum_daily_unique_predictoors_count",
+            ]
+        )
+    )
+
+    return stats_df
+
+
+@enforce_types
+def get_slot_statistics(
+    all_predictions: List[Prediction],
+) -> pl.DataFrame:
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in all_predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # Create a <pair-timeframe-slot> key to group predictions
+    stats_df = (
+        preds_df.with_columns(
+            [
+                (
+                    pl.col("pair").cast(str)
+                    + "-"
+                    + pl.col("timeframe").cast(str)
+                    + "-"
+                    + pl.col("slot").cast(str)
+                ).alias("pair_timeframe_slot")
+            ]
+        )
+        .group_by("pair_timeframe_slot")
+        .agg(
+            [
+                pl.col("pair").first(),
+                pl.col("timeframe").first(),
+                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+                pl.from_epoch("timestamp", time_unit="s")
+                .first()
+                .dt.strftime("%Y-%m-%d")
+                .alias("datetime"),
+                pl.col("slot").first(),
+                pl.col("user")
+                .unique()
+                .count()
+                .alias("n_predictoors"),  # n unique predictoors
+                pl.col("payout").sum().alias("sum_payout"),  # Sum of stake
+                pl.col("stake").sum().alias("sum_stake"),  # Sum of stake
+            ]
+        )
+        .sort(["pair", "timeframe", "slot"])
+    )
+
+    return stats_df
+
+
+@enforce_types
+def plot_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+    assert "datetime" in stats_df.columns
+    assert "daily_unique_predictoors_count" in stats_df.columns
+
+    charts_dir = get_charts_dir(csvs_dir)
+
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw unique_predictoors
+    chart_path = os.path.join(charts_dir, "daily_unique_predictoors.png")
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["daily_unique_predictoors_count"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("# Unique Predictoor Addresses")
+    plt.title("Daily # Unique Predictoor Addresses")
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+    print("Chart created:", chart_path)
+
+
+@enforce_types
+def plot_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+    assert "datetime" in stats_df.columns
+    assert "cum_daily_unique_predictoors_count" in stats_df.columns
+
+    charts_dir = get_charts_dir(csvs_dir)
+
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw cum_unique_predictoors
+    chart_path = os.path.join(charts_dir, "cum_daily_unique_predictoors.png")
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["cum_daily_unique_predictoors_count"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("# Unique Predictoor Addresses")
+    plt.title("Cumulative # Unique Predictoor Addresses")
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+    print("Chart created:", chart_path)

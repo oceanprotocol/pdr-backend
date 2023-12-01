@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
+from pdr_backend.util.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
 
 
@@ -15,19 +15,19 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@patch("pdr_backend.util.get_predictoor_info.fetch_filtered_predictions")
-@patch("pdr_backend.util.get_predictoor_info.write_prediction_csv")
-@patch("pdr_backend.util.get_predictoor_info.get_cli_statistics")
-def test_get_predictoor_info_main_mainnet(
+@patch("pdr_backend.util.get_predictoors_info.fetch_filtered_predictions")
+@patch("pdr_backend.util.get_predictoors_info.save_prediction_csv")
+@patch("pdr_backend.util.get_predictoors_info.get_cli_statistics")
+def test_get_predictoors_info_main_mainnet(
     mock_get_cli_statistics,
-    mock_write_prediction_csv,
+    mock_save_prediction_csv,
     mock_fetch_filtered_predictions,
     mock_ppss_,
 ):
     mock_ppss_.web3_pp.network = "main"
     mock_fetch_filtered_predictions.return_value = []
 
-    get_predictoor_info_main(
+    get_predictoors_info_main(
         mock_ppss_,
         "0x123",
         "2023-01-01",
@@ -42,5 +42,5 @@ def test_get_predictoor_info_main_mainnet(
         "mainnet",
         FilterMode.PREDICTOOR,
     )
-    mock_write_prediction_csv.assert_called_with([], "/path/to/csv")
+    mock_save_prediction_csv.assert_called_with([], "/path/to/csv")
     mock_get_cli_statistics.assert_called_with([])

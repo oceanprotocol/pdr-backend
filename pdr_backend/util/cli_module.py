@@ -24,7 +24,9 @@ from pdr_backend.util.cli_arguments import (
     CheckNetworkArgParser,
     DfbuyerArgParser,
     do_help_long,
-    GetPredictoorInfoArgParser,
+    GetPredictoorsInfoArgParser,
+    GetPredictionsInfoArgParser,
+    GetTractionInfoArgParser,
     PredictoorArgParser,
     print_args,
     PublisherArgParser,
@@ -34,7 +36,9 @@ from pdr_backend.util.cli_arguments import (
 )
 
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
+from pdr_backend.util.get_predictions_info import get_predictions_info_main
+from pdr_backend.util.get_predictoors_info import get_predictoors_info_main
+from pdr_backend.util.get_traction_info import get_traction_info_main
 from pdr_backend.util.topup import topup_main
 
 
@@ -62,7 +66,7 @@ def do_sim():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network="development")
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="development")
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -73,7 +77,7 @@ def do_predictoor():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -94,7 +98,7 @@ def do_trader():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     approach = args.APPROACH
 
     if approach == 1:
@@ -116,7 +120,7 @@ def do_claim_OCEAN():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire_mainnet")
     do_ocean_payout(ppss)
 
 
@@ -126,18 +130,47 @@ def do_claim_ROSE():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network="sapphire_mainnet")
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire_mainnet")
     do_rose_payout(ppss)
 
 
 @enforce_types
-def do_get_predictoor_info():
-    parser = GetPredictoorInfoArgParser("Get predictoor info", "get_predictoor_info")
+def do_get_predictoors_info():
+    parser = GetPredictoorsInfoArgParser(
+        "For specified predictoors, report {accuracy, ..} of each predictoor",
+        "get_predictoors_info",
+    )
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
-    get_predictoor_info_main(ppss, args.PDR_ADDRS, args.ST, args.END, args.CSVDIR)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END, args.PQDIR)
+
+
+@enforce_types
+def do_get_predictions_info():
+    parser = GetPredictionsInfoArgParser(
+        "For specified feeds, report {accuracy, ..} of each predictoor",
+        "get_predictions_info",
+    )
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
+
+
+@enforce_types
+def do_get_traction_info():
+    parser = GetTractionInfoArgParser(
+        "Get traction info: # predictoors vs time, etc",
+        "get_traction_info",
+    )
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    get_traction_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types
@@ -146,7 +179,7 @@ def do_check_network():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
@@ -156,7 +189,7 @@ def do_trueval(testing=False):
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
     if approach == 1:
@@ -176,7 +209,7 @@ def do_dfbuyer():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
@@ -187,7 +220,7 @@ def do_publisher():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 
@@ -199,5 +232,5 @@ def do_topup():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     topup_main(ppss)
