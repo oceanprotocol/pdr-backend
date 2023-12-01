@@ -19,7 +19,6 @@ install_requirements = [
     "mypy",
     "numpy",
     "pandas",
-    "parquet-tools",
     "pathlib",
     "polars",
     "pyarrow",
