@@ -193,7 +193,9 @@ class GetContractPredictionsInfoArgParser(
 
 
 @enforce_types
-class GetPredictoorTractionInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
+class GetPredictoorTractionInfoArgParser(
+    ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin
+):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)

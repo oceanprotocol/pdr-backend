@@ -200,7 +200,9 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_predictoor_traction_statistics(all_predictions: List[Prediction]) -> pl.DataFrame:
+def get_predictoor_traction_statistics(
+    all_predictions: List[Prediction],
+) -> pl.DataFrame:
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in all_predictions]
     preds_df = pl.DataFrame(preds_dicts)
@@ -233,18 +235,22 @@ def get_predictoor_traction_statistics(all_predictions: List[Prediction]) -> pl.
                 .alias("cum_daily_unique_predictoors_count")
             ]
         )
-        .select([
-            "datetime", 
-            "daily_unique_predictoors_count", 
-            "cum_daily_unique_predictoors_count"
-        ])
+        .select(
+            [
+                "datetime",
+                "daily_unique_predictoors_count",
+                "cum_daily_unique_predictoors_count",
+            ]
+        )
     )
 
     return stats_df
 
 
 @enforce_types
-def plot_predictoor_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+def plot_predictoor_traction_daily_statistics(
+    csvs_dir: str, stats_df: pl.DataFrame
+) -> None:
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
 
@@ -273,7 +279,9 @@ def plot_predictoor_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFr
 
 
 @enforce_types
-def plot_predictoor_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+def plot_predictoor_traction_cum_sum_statistics(
+    csvs_dir: str, stats_df: pl.DataFrame
+) -> None:
     assert "datetime" in stats_df.columns
     assert "cum_daily_unique_predictoors_count" in stats_df.columns
 
@@ -299,5 +307,3 @@ def plot_predictoor_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.Data
     plt.savefig(chart_path)
     plt.close()
     print("Chart created:", chart_path)
-
-

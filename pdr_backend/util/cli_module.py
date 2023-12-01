@@ -40,7 +40,9 @@ from pdr_backend.util.get_predictoor_info import get_predictoor_info_main
 from pdr_backend.util.get_contract_predictions_info import (
     get_contract_predictions_info_main,
 )
-from pdr_backend.util.get_predictoor_traction_info import get_predictoor_traction_info_main
+from pdr_backend.util.get_predictoor_traction_info import (
+    get_predictoor_traction_info_main,
+)
 from pdr_backend.util.topup import topup_main
 
 
@@ -162,12 +164,16 @@ def do_get_contract_predictions_info():
 
 @enforce_types
 def do_get_predictoor_traction_info():
-    parser = GetPredictoorTractionInfoArgParser("Get system info", "get_predictoor_traction_info")
+    parser = GetPredictoorTractionInfoArgParser(
+        "Get system info", "get_predictoor_traction_info"
+    )
     args = parser.parse_args()
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.YAML_FILE, network=args.NETWORK)
-    get_predictoor_traction_info_main(ppss, args.CONTRACT_ADDRS, args.ST, args.END, args.CSVDIR)
+    get_predictoor_traction_info_main(
+        ppss, args.CONTRACT_ADDRS, args.ST, args.END, args.CSVDIR
+    )
 
 
 @enforce_types

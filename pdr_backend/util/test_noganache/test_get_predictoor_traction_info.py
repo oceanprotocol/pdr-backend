@@ -3,7 +3,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.util.get_predictoor_traction_info import get_predictoor_traction_info_main
+from pdr_backend.util.get_predictoor_traction_info import (
+    get_predictoor_traction_info_main,
+)
 from pdr_backend.util.subgraph_predictions import FilterMode
 
 from pdr_backend.util.subgraph_predictions import (
@@ -36,7 +38,7 @@ sample_predictions = [
         payout=0.0,
         slot=1701589500,
         user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
-    )
+    ),
 ]
 
 
@@ -48,11 +50,17 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@patch("pdr_backend.util.get_predictoor_traction_info.get_predictoor_traction_statistics")
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.get_predictoor_traction_statistics"
+)
 @patch("pdr_backend.util.get_predictoor_traction_info.get_all_contract_ids_by_owner")
 @patch("pdr_backend.util.get_predictoor_traction_info.fetch_filtered_predictions")
-@patch("pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_cum_sum_statistics")
-@patch("pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_daily_statistics")
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_cum_sum_statistics"
+)
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_daily_statistics"
+)
 def test_get_predictoor_traction_info_main_mainnet(
     mock_plot_predictoor_traction_daily_statistics,
     mock_plot_predictoor_traction_cum_sum_statistics,
@@ -64,8 +72,10 @@ def test_get_predictoor_traction_info_main_mainnet(
     mock_ppss_.web3_pp.network = "main"
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
     mock_fetch_filtered_predictions.return_value = sample_predictions
-    
-    get_predictoor_traction_info_main(mock_ppss_, "0x123", "2023-01-01", "2023-01-02", "csvs/")
+
+    get_predictoor_traction_info_main(
+        mock_ppss_, "0x123", "2023-01-01", "2023-01-02", "csvs/"
+    )
 
     mock_fetch_filtered_predictions.assert_called_with(
         1672531200,
