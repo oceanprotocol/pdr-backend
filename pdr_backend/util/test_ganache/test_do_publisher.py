@@ -31,10 +31,10 @@ def test_main(
             class MockArgs:
                 def __init__(self) -> None:
                     self.NETWORK = "development"
-                    self.YAML_FILE = "test.yml"
+                    self.PPSS_FILE = "test.yml"
 
                 def __repr__(self) -> str:
-                    return f"{self.NETWORK}, {self.YAML_FILE}"
+                    return f"{self.NETWORK}, {self.PPSS_FILE}"
 
             m.return_value.parse_args.return_value = MockArgs()
 
