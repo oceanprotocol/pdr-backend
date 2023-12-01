@@ -283,10 +283,14 @@ def get_pending_slots(
 
     slots: List[Slot] = []
 
+    now_ts = time.time()
+    # rounds older than 3 days are canceled
+    three_days_ago = now_ts - 60 * 60 * 24 * 3
+
     while True:
         query = """
         {
-            predictSlots(where: {slot_lte: %s, status: "Pending"}, skip:%s, first:%s){
+            predictSlots(where: {slot_gt: %s, slot_lte: %s, status: "Pending"}, skip:%s, first:%s){
                 id
                 slot
                 status
@@ -316,6 +320,7 @@ def get_pending_slots(
             }
         }
         """ % (
+            three_days_ago,
             timestamp,
             offset,
             chunk_size,
