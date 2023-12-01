@@ -1,7 +1,6 @@
 from enforce_typing import enforce_types
 from web3.types import TxParams, Wei
 
-# pylint: disable=cyclic-import
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.web3_config import Web3Config
 
