@@ -284,8 +284,8 @@ def get_pending_slots(
     slots: List[Slot] = []
 
     now_ts = time.time()
-    # rounds older than 3 days are canceled
-    three_days_ago = now_ts - 60 * 60 * 24 * 3
+    # rounds older than 3 days are canceled + 10 min buffer
+    three_days_ago = now_ts - 60 * 60 * 24 * 3 + 10 * 60
 
     while True:
         query = """
