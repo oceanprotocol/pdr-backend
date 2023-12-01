@@ -7,6 +7,7 @@ from pdr_backend.util.predictoor_stats import (
     get_endpoint_statistics,
     get_cli_statistics,
     get_predictoor_traction_statistics,
+    get_slot_statistics
 )
 
 from pdr_backend.util.subgraph_predictions import (
@@ -31,7 +32,7 @@ sample_predictions = [
         id="2",
         pair="ADA/USDT",
         timeframe="5m",
-        prediction=True,
+        prediction=False,
         stake=0.0500,
         trueval=True,
         timestamp=1701589400,
@@ -124,7 +125,7 @@ extra_predictions = [
         trueval=True,
         timestamp=1701675800,
         source="binance",
-        payout=0.0,
+        payout=0.0500,
         slot=1701675900,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
@@ -143,14 +144,14 @@ extra_predictions = [
     ),
     Prediction(
         id="5",
-        pair="XRP/USDT",
+        pair="ADA/USDT",
         timeframe="5m",
         prediction=True,
         stake=0.0500,
         trueval=True,
         timestamp=1701589400,
         source="binance",
-        payout=0.0,
+        payout=0.0500,
         slot=1701589500,
         user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
@@ -163,7 +164,7 @@ extra_predictions = [
         trueval=True,
         timestamp=1701675800,
         source="kraken",
-        payout=0.0,
+        payout=0.0500,
         slot=1701675900,
         user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
@@ -193,3 +194,22 @@ def test_get_predictoor_traction_statistics():
     assert "daily_unique_predictoors_count" in stats_df.columns
     assert "cum_daily_unique_predictoors_count" in stats_df.columns
     assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 3]
+
+
+@enforce_types
+def test_get_slot_statistics():
+    predictions = sample_predictions + extra_predictions
+    stats_df = get_slot_statistics(predictions)
+    assert isinstance(stats_df, pl.DataFrame)
+    assert stats_df.shape == (6, 8)
+    assert "datetime" in stats_df.columns
+    assert "pair" in stats_df.columns
+    assert "timeframe" in stats_df.columns
+    assert "slot" in stats_df.columns
+    assert "n_predictoors" in stats_df.columns
+    assert "sum_stake" in stats_df.columns
+    assert "sum_payout" in stats_df.columns
+    # 3rd is id = "7" > stake = None
+    # 4th is id = "2" + "5" > stake = 0.05 + 0.05 = 0.1
+    assert stats_df["sum_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.05]
+    assert stats_df["sum_stake"].to_list() == [0.05, 0.1, 0.05, 0.05, 0.0, 0.05]
