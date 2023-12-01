@@ -19,12 +19,12 @@ sample_predictions = [
         pair="ADA/USDT",
         timeframe="5m",
         prediction=True,
-        stake=0.050051425480971974,
+        stake=0.0500,
         trueval=False,
-        timestamp=1698527000,
+        timestamp=1701503000,
         source="binance",
         payout=0.0,
-        slot=1698527100,
+        slot=1701503100,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
@@ -34,10 +34,10 @@ sample_predictions = [
         prediction=True,
         stake=0.0500,
         trueval=True,
-        timestamp=1698527600,
+        timestamp=1701589400,
         source="binance",
         payout=0.0,
-        slot=1698527700,
+        slot=1701589500,
         user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
 ]
@@ -114,33 +114,7 @@ def test_get_cli_statistics(capsys):
     assert "Accuracy for Predictoor Address" in output
 
 
-multi_predictions = [
-    Prediction(
-        id="1",
-        pair="ADA/USDT",
-        timeframe="5m",
-        prediction=True,
-        stake=0.0500,
-        trueval=False,
-        timestamp=1701503000,
-        source="binance",
-        payout=0.0,
-        slot=1701503100,
-        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
-    ),
-    Prediction(
-        id="2",
-        pair="BTC/USDT",
-        timeframe="5m",
-        prediction=True,
-        stake=0.0500,
-        trueval=True,
-        timestamp=1701589400,
-        source="binance",
-        payout=0.0,
-        slot=1701589500,
-        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
-    ),
+extra_predictions = [
     Prediction(
         id="3",
         pair="ETH/USDT",
@@ -152,7 +126,7 @@ multi_predictions = [
         source="binance",
         payout=0.0,
         slot=1701675900,
-        user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     Prediction(
         id="4",
@@ -211,7 +185,8 @@ multi_predictions = [
 
 @enforce_types
 def test_get_predictoor_traction_statistics():
-    stats_df = get_predictoor_traction_statistics(multi_predictions)
+    predictions = sample_predictions + extra_predictions
+    stats_df = get_predictoor_traction_statistics(predictions)
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns

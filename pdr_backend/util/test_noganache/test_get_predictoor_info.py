@@ -16,11 +16,11 @@ def mock_ppss(tmpdir):
 
 
 @patch("pdr_backend.util.get_predictoor_info.fetch_filtered_predictions")
-@patch("pdr_backend.util.get_predictoor_info.write_prediction_csv")
+@patch("pdr_backend.util.get_predictoor_info.save_prediction_csv")
 @patch("pdr_backend.util.get_predictoor_info.get_cli_statistics")
 def test_get_predictoor_info_main_mainnet(
     mock_get_cli_statistics,
-    mock_write_prediction_csv,
+    mock_save_prediction_csv,
     mock_fetch_filtered_predictions,
     mock_ppss_,
 ):
@@ -42,5 +42,5 @@ def test_get_predictoor_info_main_mainnet(
         "mainnet",
         FilterMode.PREDICTOOR,
     )
-    mock_write_prediction_csv.assert_called_with([], "/path/to/csv")
+    mock_save_prediction_csv.assert_called_with([], "/path/to/csv")
     mock_get_cli_statistics.assert_called_with([])
