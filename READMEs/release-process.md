@@ -83,3 +83,7 @@ Pros of local testing:
 - no need of cleanups. If a PR is merged, we don't need to delete that branch from dockerhub autobuild.
 - no need of access to dockerhub
 - dockerhub should be used for production ready images only
+
+### Barge flow of calls
+
+[See here](barge-calls.md)

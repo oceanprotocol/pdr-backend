@@ -93,6 +93,8 @@ For each other subcomponent of Barge, you need to change its respective repo sim
 
 And for Barge core functionality, make changes to the [barge repo](https://github.com/oceanprotocol/barge) itself.
 
+More info: [Barge flow of calls](barge-calls.md)
+
 ## Other READMEs
 
 - [Parent predictoor README: predictoor.md](./predictoor.md)
