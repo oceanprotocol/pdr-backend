@@ -9,33 +9,29 @@ HELP_LONG = """Predictoor tool
 Usage: pdr sim|predictoor|trader|..
 
 Main tools:
-  pdr sim YAML_FILE
-  pdr predictoor APPROACH YAML_FILE NETWORK
-  pdr trader APPROACH YAML_FILE NETWORK
-  pdr claim_OCEAN YAML_FILE
-  prd claim_ROSE YAML_FILE
+  pdr sim PPSS_FILE
+  pdr predictoor APPROACH PPSS_FILE NETWORK
+  pdr trader APPROACH PPSS_FILE NETWORK
+  pdr claim_OCEAN PPSS_FILE
+  prd claim_ROSE PPSS_FILE
 
 Utilities:
   pdr help
   pdr <cmd> -h
-  pdr get_predictoor_info PDR_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
-  pdr get_contract_predictions_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
-  pdr get_predictoor_traction_info CONTRACT_ADDR1[,ADDR2,..] ST END CSVDIR YAML_FILE NETWORK
-  pdr check_network YAML_FILE NETWORK --LOOKBACK_HOURS
+  pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
+  pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
+  pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
+  pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
 
 Transactions are signed with envvar 'PRIVATE_KEY`.
 
 Tools for core team:
-  pdr trueval YAML_FILE NETWORK
-  pdr dfbuyer YAML_FILE NETWORK
-  pdr publisher YAML_FILE NETWORK
-  pdr topup YAML_FILE NETWORK
+  pdr trueval PPSS_FILE NETWORK
+  pdr dfbuyer PPSS_FILE NETWORK
+  pdr publisher PPSS_FILE NETWORK
+  pdr topup PPSS_FILE NETWORK
   pytest, black, mypy, pylint, ..
 """
-
-
-# ========================================================================
-# utilities
 
 
 @enforce_types
@@ -50,10 +46,8 @@ def print_args(arguments: Namespace):
         print(f"{arg_k}={arg_v}")
 
 
-@enforce_types
-class YAML_Mixin:
-    def add_argument_YAML(self):
-        self.add_argument("YAML_FILE", type=str, help="PPSS settings file")
+# ========================================================================
+# mixins
 
 
 @enforce_types
@@ -63,9 +57,27 @@ class APPROACH_Mixin:
 
 
 @enforce_types
-class CSVDIR_Mixin:
-    def add_argument_CSVDIR(self):
-        self.add_argument("CSVDIR", type=str, help="Csv output dir")
+class ST_Mixin:
+    def add_argument_ST(self):
+        self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
+
+
+@enforce_types
+class END_Mixin:
+    def add_argument_END(self):
+        self.add_argument("END", type=str, help="End date yyyy-mm-dd")
+
+
+@enforce_types
+class PQDIR_Mixin:
+    def add_argument_PQDIR(self):
+        self.add_argument("PQDIR", type=str, help="Parquet output dir")
+
+
+@enforce_types
+class PPSS_Mixin:
+    def add_argument_PPSS(self):
+        self.add_argument("PPSS_FILE", type=str, help="PPSS yaml settings file")
 
 
 @enforce_types
@@ -74,79 +86,36 @@ class NETWORK_Mixin:
         self.add_argument(
             "NETWORK",
             type=str,
-            help="sapphire-testnet|sapphire-mainnet|barge-pdr|barge-pytest",
+            help="sapphire-testnet|sapphire-mainnet|development|barge-pytest|..",
         )
 
 
 @enforce_types
-class _ArgParser_YAML(ArgParser, YAML_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_YAML()
+class PDRS_Mixin:
+    def add_argument_PDRS(self):
+        self.add_argument(
+            "--PDRS",
+            type=str,
+            help="Predictoor address(es), separated by comma. If not specified, uses all.",
+            required=False,
+        )
 
 
 @enforce_types
-class _ArgParser_YAML_NETWORK(ArgParser, NETWORK_Mixin, YAML_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_YAML()
-        self.add_argument_NETWORK()
+class FEEDS_Mixin:
+    def add_argument_FEEDS(self):
+        self.add_argument(
+            "--FEEDS",
+            type=str,
+            default="",
+            help="Predictoor feed address(es). If not specified, uses all.",
+            required=False,
+        )
 
 
 @enforce_types
-class _ArgParser_APPROACH_YAML_NETWORK(
-    ArgParser,
-    APPROACH_Mixin,
-    NETWORK_Mixin,
-    YAML_Mixin,
-):
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_APPROACH()
-        self.add_argument_YAML()
-        self.add_argument_NETWORK()
-
-
-# ========================================================================
-# actual arg-parser implementations. In order of help text.
-
-
-@enforce_types
-class SimArgParser(ArgParser, YAML_Mixin):
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_YAML()
-
-
-PredictoorArgParser = _ArgParser_APPROACH_YAML_NETWORK
-
-TraderArgParser = _ArgParser_APPROACH_YAML_NETWORK
-
-ClaimOceanArgParser = _ArgParser_YAML
-
-ClaimRoseArgParser = _ArgParser_YAML
-
-
-@enforce_types
-def do_help_long(status_code=0):
-    print(HELP_LONG)
-    sys.exit(status_code)
-
-
-@enforce_types
-class CheckNetworkArgParser(ArgParser, NETWORK_Mixin, YAML_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_YAML()
-        self.add_argument_NETWORK()
+class LOOKBACK_Mixin:
+    def add_argument_LOOKBACK(self):
         self.add_argument(
             "--LOOKBACK_HOURS",
             default=24,
@@ -156,68 +125,137 @@ class CheckNetworkArgParser(ArgParser, NETWORK_Mixin, YAML_Mixin):
         )
 
 
+# ========================================================================
+# argparser base classes
+
+
 @enforce_types
-class GetPredictoorInfoArgParser(ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin):
+class _ArgParser_PPSS(ArgParser, PPSS_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_argument("PDR_ADDRS", type=str, help="Predictoor address(es)")
-        self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
-        self.add_argument("END", type=str, help="End date yyyy-mm-dd")
-        self.add_argument_CSVDIR()
-        self.add_argument_YAML()
+        self.add_argument_PPSS()
+
+
+@enforce_types
+class _ArgParser_PPSS_NETWORK(ArgParser, PPSS_Mixin, NETWORK_Mixin):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_PPSS()
         self.add_argument_NETWORK()
 
 
 @enforce_types
-class GetContractPredictionsInfoArgParser(
-    ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin
+class _ArgParser_APPROACH_PPSS_NETWORK(
+    ArgParser,
+    APPROACH_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_APPROACH()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+
+
+@enforce_types
+class _ArgParser_PPSS_NETWORK_LOOKBACK(
+    ArgParser,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    LOOKBACK_Mixin,
 ):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_argument(
-            "CONTRACT_ADDRS",
-            nargs="?",
-            type=str,
-            default="",
-            help="Contract address(es) for Predictoor feeds",
-        )
-        self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
-        self.add_argument("END", type=str, help="End date yyyy-mm-dd")
-        self.add_argument_CSVDIR()
-        self.add_argument_YAML()
+        self.add_argument_PPSS()
         self.add_argument_NETWORK()
+        self.add_argument_LOOKBACK()
 
 
 @enforce_types
-class GetPredictoorTractionInfoArgParser(
-    ArgParser, CSVDIR_Mixin, NETWORK_Mixin, YAML_Mixin
-):
+class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
+    ArgParser,
+    ST_Mixin,
+    END_Mixin,
+    PQDIR_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    PDRS_Mixin,
+): # pylint: disable=too-many-ancestors
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_argument(
-            "CONTRACT_ADDRS",
-            nargs="?",
-            type=str,
-            default="",
-            help="Contract address(es) for Predictoor feeds",
-        )
-        self.add_argument("ST", type=str, help="Start date yyyy-mm-dd")
-        self.add_argument("END", type=str, help="End date yyyy-mm-dd")
-        self.add_argument_CSVDIR()
-        self.add_argument_YAML()
+        self.add_argument_ST()
+        self.add_argument_END()
+        self.add_argument_PQDIR()
+        self.add_argument_PPSS()
         self.add_argument_NETWORK()
+        self.add_argument_PDRS()
 
 
-TruevalArgParser = _ArgParser_APPROACH_YAML_NETWORK
+@enforce_types
+class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
+    ArgParser,
+    ST_Mixin,
+    END_Mixin,
+    PQDIR_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    FEEDS_Mixin,
+): # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_ST()
+        self.add_argument_END()
+        self.add_argument_PQDIR()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+        self.add_argument_FEEDS()
 
-DfbuyerArgParser = _ArgParser_YAML_NETWORK
 
-PublisherArgParser = _ArgParser_YAML_NETWORK
+# ========================================================================
+# actual arg-parser implementations are just aliases to argparser base classes
+# In order of help text.
 
-TopupArgParser = _ArgParser_YAML_NETWORK
+SimArgParser = _ArgParser_PPSS
+
+PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+
+TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+
+ClaimOceanArgParser = _ArgParser_PPSS
+
+ClaimRoseArgParser = _ArgParser_PPSS
+
+
+@enforce_types
+def do_help_long(status_code=0):
+    print(HELP_LONG)
+    sys.exit(status_code)
+
+
+GetPredictoorsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS
+
+GetPredictionsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
+
+GetTractionInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
+
+CheckNetworkArgParser = _ArgParser_PPSS_NETWORK_LOOKBACK
+
+TruevalArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+
+DfbuyerArgParser = _ArgParser_PPSS_NETWORK
+
+PublisherArgParser = _ArgParser_PPSS_NETWORK
+
+TopupArgParser = _ArgParser_PPSS_NETWORK

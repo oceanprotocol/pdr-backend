@@ -200,7 +200,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_predictoor_traction_statistics(
+def get_traction_statistics(
     all_predictions: List[Prediction],
 ) -> pl.DataFrame:
     # Get all predictions into a dataframe
@@ -294,9 +294,7 @@ def get_slot_statistics(
 
 
 @enforce_types
-def plot_predictoor_traction_daily_statistics(
-    csvs_dir: str, stats_df: pl.DataFrame
-) -> None:
+def plot_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
 
@@ -325,9 +323,7 @@ def plot_predictoor_traction_daily_statistics(
 
 
 @enforce_types
-def plot_predictoor_traction_cum_sum_statistics(
-    csvs_dir: str, stats_df: pl.DataFrame
-) -> None:
+def plot_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
     assert "datetime" in stats_df.columns
     assert "cum_daily_unique_predictoors_count" in stats_df.columns
 

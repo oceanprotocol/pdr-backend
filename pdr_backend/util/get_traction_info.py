@@ -1,9 +1,13 @@
+"""This module currently gives traction wrt predictoors.
+At some point, we can expand it into traction info wrt traders & txs too.
+"""
+
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.predictoor_stats import (
-    get_predictoor_traction_statistics,
-    plot_predictoor_traction_cum_sum_statistics,
-    plot_predictoor_traction_daily_statistics,
+    get_traction_statistics,
+    plot_traction_cum_sum_statistics,
+    plot_traction_daily_statistics,
 )
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
@@ -14,7 +18,7 @@ from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 
 @enforce_types
-def get_predictoor_traction_info_main(
+def get_traction_info_main(
     ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, csvs_dir: str
 ):
     # get network
@@ -63,7 +67,7 @@ def get_predictoor_traction_info_main(
         return
 
     # calculate statistics and draw plots
-    stats_df = get_predictoor_traction_statistics(predictions)
+    stats_df = get_traction_statistics(predictions)
 
-    plot_predictoor_traction_cum_sum_statistics(csvs_dir, stats_df)
-    plot_predictoor_traction_daily_statistics(csvs_dir, stats_df)
+    plot_traction_cum_sum_statistics(csvs_dir, stats_df)
+    plot_traction_daily_statistics(csvs_dir, stats_df)

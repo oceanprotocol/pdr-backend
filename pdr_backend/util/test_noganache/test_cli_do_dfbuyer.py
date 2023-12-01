@@ -16,7 +16,7 @@ def test_main(monkeypatch):
             return getenv("NETWORK_OVERRIDE") or "development"  # allow override
 
         @property
-        def YAML_FILE(self):
+        def PPSS_FILE(self):
             return os.path.abspath("ppss.yaml")
 
     class MockArgParser:

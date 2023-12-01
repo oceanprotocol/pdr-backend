@@ -1,9 +1,6 @@
 from abc import ABC
 from enforce_typing import enforce_types
 
-# pylint: disable=cyclic-import
-from pdr_backend.util.contract import get_contract_abi
-
 
 @enforce_types
 class BaseContract(ABC):
@@ -11,6 +8,10 @@ class BaseContract(ABC):
         super().__init__()
         from pdr_backend.ppss.web3_pp import (  # pylint: disable=import-outside-toplevel
             Web3PP,
+        )
+
+        from pdr_backend.util.contract import (  # pylint: disable=import-outside-toplevel
+            get_contract_abi,
         )
 
         if not isinstance(web3_pp, Web3PP):

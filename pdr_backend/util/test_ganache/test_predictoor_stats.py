@@ -6,7 +6,7 @@ from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
     get_cli_statistics,
-    get_predictoor_traction_statistics,
+    get_traction_statistics,
     get_slot_statistics,
 )
 
@@ -185,9 +185,9 @@ extra_predictions = [
 
 
 @enforce_types
-def test_get_predictoor_traction_statistics():
+def test_get_traction_statistics():
     predictions = sample_predictions + extra_predictions
-    stats_df = get_predictoor_traction_statistics(predictions)
+    stats_df = get_traction_statistics(predictions)
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns
