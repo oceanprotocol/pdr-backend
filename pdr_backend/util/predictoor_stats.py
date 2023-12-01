@@ -256,28 +256,39 @@ def get_slot_statistics(
     preds_df = pl.DataFrame(preds_dicts)
 
     # Create a <pair-timeframe-slot> key to group predictions
-    stats_df = preds_df.with_columns(
-        [
-            (
-                pl.col("pair").cast(str)
-                + "-"
-                + pl.col("timeframe").cast(str)
-                + "-"
-                + pl.col("slot").cast(str)
-            ).alias("pair_timeframe_slot")
-        ]
-    ).group_by("pair_timeframe_slot").agg(
-        [
-            pl.col("pair").first(),
-            pl.col("timeframe").first(),
-            # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
-            pl.from_epoch("timestamp", time_unit="s").first().dt.strftime("%Y-%m-%d").alias("datetime"),
-            pl.col("slot").first(),
-            pl.col("user").unique().count().alias("n_predictoors"), # n unique predictoors
-            pl.col("payout").sum().alias("sum_payout"),  # Sum of stake
-            pl.col("stake").sum().alias("sum_stake"),  # Sum of stake
-        ]
-    ).sort(["pair","timeframe","slot"])
+    stats_df = (
+        preds_df.with_columns(
+            [
+                (
+                    pl.col("pair").cast(str)
+                    + "-"
+                    + pl.col("timeframe").cast(str)
+                    + "-"
+                    + pl.col("slot").cast(str)
+                ).alias("pair_timeframe_slot")
+            ]
+        )
+        .group_by("pair_timeframe_slot")
+        .agg(
+            [
+                pl.col("pair").first(),
+                pl.col("timeframe").first(),
+                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+                pl.from_epoch("timestamp", time_unit="s")
+                .first()
+                .dt.strftime("%Y-%m-%d")
+                .alias("datetime"),
+                pl.col("slot").first(),
+                pl.col("user")
+                .unique()
+                .count()
+                .alias("n_predictoors"),  # n unique predictoors
+                pl.col("payout").sum().alias("sum_payout"),  # Sum of stake
+                pl.col("stake").sum().alias("sum_stake"),  # Sum of stake
+            ]
+        )
+        .sort(["pair", "timeframe", "slot"])
+    )
 
     return stats_df
 

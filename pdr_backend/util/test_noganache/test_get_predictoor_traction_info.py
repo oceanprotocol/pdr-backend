@@ -50,11 +50,17 @@ def mock_ppss(tmpdir):
     return ppss
 
 
-@patch("pdr_backend.util.get_predictoor_traction_info.get_predictoor_traction_statistics")
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.get_predictoor_traction_statistics"
+)
 @patch("pdr_backend.util.get_predictoor_traction_info.get_all_contract_ids_by_owner")
 @patch("pdr_backend.util.get_predictoor_traction_info.fetch_filtered_predictions")
-@patch("pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_cum_sum_statistics")
-@patch("pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_daily_statistics")
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_cum_sum_statistics"
+)
+@patch(
+    "pdr_backend.util.get_predictoor_traction_info.plot_predictoor_traction_daily_statistics"
+)
 def test_get_predictoor_traction_info_main_mainnet(
     mock_plot_predictoor_traction_daily_statistics,
     mock_plot_predictoor_traction_cum_sum_statistics,

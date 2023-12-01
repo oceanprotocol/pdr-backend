@@ -7,7 +7,7 @@ from pdr_backend.util.predictoor_stats import (
     get_endpoint_statistics,
     get_cli_statistics,
     get_predictoor_traction_statistics,
-    get_slot_statistics
+    get_slot_statistics,
 )
 
 from pdr_backend.util.subgraph_predictions import (
