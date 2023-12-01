@@ -188,7 +188,7 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
     PPSS_Mixin,
     NETWORK_Mixin,
     PDRS_Mixin,
-): # pylint: disable=too-many-ancestors
+):  # pylint: disable=too-many-ancestors
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
@@ -210,7 +210,7 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
     PPSS_Mixin,
     NETWORK_Mixin,
     FEEDS_Mixin,
-): # pylint: disable=too-many-ancestors
+):  # pylint: disable=too-many-ancestors
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
