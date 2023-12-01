@@ -1,18 +1,29 @@
+import os
+import time
 from typing import List
 
 from enforce_typing import enforce_types
+import numpy as np
 import polars as pl
 import pytest
 
+from pdr_backend.data_eng.constants import TOHLCV_SCHEMA_PL
 from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
-from pdr_backend.data_eng.plutil import load_parquet
+from pdr_backend.data_eng.plutil import (
+    initialize_df,
+    transform_df,
+    load_parquet,
+    save_parquet,
+    concat_next_df,
+)
 from pdr_backend.data_eng.test.resources import (
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,
     ETHUSDT_PARQUET_DFS,
 )
-from pdr_backend.util.mathutil import has_nan
+from pdr_backend.util.constants import S_PER_MIN
+from pdr_backend.util.mathutil import all_nan, has_nan
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr
 
 MS_PER_5M_EPOCH = 300000
@@ -142,8 +153,29 @@ def _test_update_parquet(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
 
 
 @enforce_types
-def test_get_hist_df(tmpdir):
-    """DataFactory get_hist_df() is executing e2e correctly"""
+def test_get_hist_df_happypath(tmpdir):
+    """Is get_hist_df() executing e2e correctly? Incl. call to exchange.
+
+    It may fail if the exchange is temporarily misbehaving, which
+      shows up as a FileNotFoundError.
+    So give it a few tries if needed.
+    """
+    n_tries = 5
+    for try_i in range(n_tries - 1):
+        try:
+            _test_get_hist_df_happypath(tmpdir)
+            return  # success
+
+        except FileNotFoundError:
+            print(f"test_get_hist_df_happypath try #{try_i+1}, file not found")
+            time.sleep(2)
+
+    # last chance
+    _test_get_hist_df_happypath(tmpdir)
+
+
+@enforce_types
+def _test_get_hist_df_happypath(tmpdir):
     parquet_dir = str(tmpdir)
 
     pp = _data_pp(["binanceus h BTC/USDT"])
@@ -172,6 +204,78 @@ def test_get_hist_df(tmpdir):
     head_timestamp = hist_df.head(1)["timestamp"].to_list()[0]
     tail_timestamp = hist_df.tail(1)["timestamp"].to_list()[0]
     assert head_timestamp < tail_timestamp
+
+
+@enforce_types
+def test_hist_df__low_vs_high_level__1_no_nan(tmpdir):
+    _test_hist_df__low_vs_high_level(tmpdir, ohlcv_val=12.1)
+
+
+@enforce_types
+def test_hist_df__low_vs_high_level__2_all_nan(tmpdir):
+    _test_hist_df__low_vs_high_level(tmpdir, ohlcv_val=np.nan)
+
+
+@enforce_types
+def _test_hist_df__low_vs_high_level(tmpdir, ohlcv_val):
+    """Does high-level behavior of hist_df() align with low-level implement'n?
+    Should work whether no nans, or all nans (as set by ohlcv_val)
+    """
+
+    # setup
+    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h BTC/USDT")
+    filename = pq_data_factory._hist_parquet_filename("binanceus", "BTC/USDT")
+    st_ut = pq_data_factory.ss.st_timestamp
+    fin_ut = pq_data_factory.ss.fin_timestamp
+
+    # mock
+    n_pts = 20
+
+    def mock_update_hist_pq(*args, **kwargs):  # pylint: disable=unused-argument
+        s_per_epoch = S_PER_MIN * 5
+        raw_tohlcv_data = [
+            [st_ut + s_per_epoch * i] + [ohlcv_val] * 5 for i in range(n_pts)
+        ]
+        df = initialize_df()
+        next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+        df = concat_next_df(df, next_df)
+        df = transform_df(df)  # add "datetime" col, more
+        save_parquet(filename, df)
+
+    pq_data_factory._update_hist_parquet_at_exch_and_pair = mock_update_hist_pq
+
+    # test 1: get hist_df via several low-level instrs, as get_hist_df() does
+    pq_data_factory._update_parquet(fin_ut)
+    assert os.path.getsize(filename) > 500
+
+    df0 = pl.read_parquet(filename, columns=["high"])
+    df1 = load_parquet(filename, ["high"], st_ut, fin_ut)
+    parquet_dfs = (  # pylint: disable=assignment-from-no-return
+        pq_data_factory._load_parquet(fin_ut)
+    )
+    hist_df = pq_data_factory._merge_parquet_dfs(parquet_dfs)
+
+    assert len(df0) == len(df1) == len(df1["high"]) == len(hist_df) == n_pts
+    if np.isnan(ohlcv_val):
+        assert all_nan(df0)
+        assert all_nan(df1["high"])
+        assert all_nan(hist_df["binanceus:BTC/USDT:high"])
+    else:
+        assert not has_nan(df0)
+        assert not has_nan(df1["high"])
+        assert not has_nan(hist_df["binanceus:BTC/USDT:high"])
+
+    # cleanup for test 2
+    os.remove(filename)
+
+    # test 2: get hist_df via a single high-level instr
+    hist_df = pq_data_factory.get_hist_df()
+    assert os.path.getsize(filename) > 500
+    assert len(hist_df) == n_pts
+    if np.isnan(ohlcv_val):
+        assert all_nan(hist_df["binanceus:BTC/USDT:high"])
+    else:
+        assert not has_nan(hist_df["binanceus:BTC/USDT:high"])
 
 
 @enforce_types

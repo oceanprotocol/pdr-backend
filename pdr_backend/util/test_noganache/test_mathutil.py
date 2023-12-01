@@ -10,6 +10,7 @@ from pdr_backend.util.mathutil import (
     Range,
     randunif,
     round_sig,
+    all_nan,
     has_nan,
     fill_nans,
     nmse,
@@ -140,6 +141,63 @@ def test_round_sig():
     assert round_sig(1.23456e9, 4) == 1.23500e9
     assert round_sig(1.23456e9, 5) == 1.23460e9
     assert round_sig(1.23456e9, 6) == 1.23456e9
+
+
+@enforce_types
+def test_all_nan__or_None():
+    # 1d array
+    assert not all_nan(np.array([1.0, 2.0, 3.0, 4.0]))
+    assert not all_nan(np.array([1.0, None, 3.0, 4.0]))
+    assert not all_nan(np.array([1.0, 2.0, np.nan, 4.0]))
+    assert not all_nan(np.array([1.0, None, np.nan, 4.0]))
+    assert all_nan(np.array([None, None, None, None]))
+    assert all_nan(np.array([np.nan, np.nan, np.nan, None]))
+    assert all_nan(np.array([np.nan, np.nan, np.nan, np.nan]))
+
+    # 2d array
+    assert not all_nan(np.array([[1.0, 2.0], [3.0, 4.0]]))
+    assert not all_nan(np.array([[1.0, None], [3.0, 4.0]]))
+    assert not all_nan(np.array([[1.0, 2.0], [np.nan, 4.0]]))
+    assert not all_nan(np.array([[1.0, None], [np.nan, 4.0]]))
+    assert all_nan(np.array([[None, None], [None, None]]))
+    assert all_nan(np.array([[np.nan, np.nan], [np.nan, None]]))
+    assert all_nan(np.array([[np.nan, np.nan], [np.nan, np.nan]]))
+
+    # pd Series
+    assert not all_nan(pd.Series([1.0, 2.0, 3.0, 4.0]))
+    assert not all_nan(pd.Series([1.0, None, 3.0, 4.0]))
+    assert not all_nan(pd.Series([1.0, 2.0, np.nan, 4.0]))
+    assert not all_nan(pd.Series([1.0, None, np.nan, 4.0]))
+    assert all_nan(pd.Series([None, None, None, None]))
+    assert all_nan(pd.Series([np.nan, np.nan, np.nan, None]))
+    assert all_nan(pd.Series([np.nan, np.nan, np.nan, np.nan]))
+
+    # pd DataFrame
+    assert not all_nan(pd.DataFrame({"A": [1.0, 2.0], "B": [3.0, 4.0]}))
+    assert not all_nan(pd.DataFrame({"A": [1.0, None], "B": [3.0, 4.0]}))
+    assert not all_nan(pd.DataFrame({"A": [1.0, 2.0], "B": [np.nan, 4.0]}))
+    assert not all_nan(pd.DataFrame({"A": [1.0, None], "B": [np.nan, 4.0]}))
+    assert all_nan(pd.DataFrame({"A": [None, None], "B": [None, None]}))
+    assert all_nan(pd.DataFrame({"A": [np.nan, np.nan], "B": [np.nan, None]}))
+    assert all_nan(pd.DataFrame({"A": [np.nan, np.nan], "B": [np.nan, np.nan]}))
+
+    # pl Series
+    assert not all_nan(pl.Series([1.0, 2.0, 3.0, 4.0]))
+    assert not all_nan(pl.Series([1.0, None, 3.0, 4.0]))
+    assert not all_nan(pl.Series([1.0, 2.0, np.nan, 4.0]))
+    assert not all_nan(pl.Series([1.0, None, np.nan, 4.0]))
+    assert all_nan(pl.Series([None, None, None, None]))
+    assert all_nan(pl.Series([np.nan, np.nan, np.nan, None]))
+    assert all_nan(pl.Series([np.nan, np.nan, np.nan, np.nan]))
+
+    # pl DataFrame
+    assert not all_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [3.0, 4.0]}))
+    assert not all_nan(pl.DataFrame({"A": [1.0, None], "B": [3.0, 4.0]}))
+    assert not all_nan(pl.DataFrame({"A": [1.0, 2.0], "B": [np.nan, 4.0]}))
+    assert not all_nan(pl.DataFrame({"A": [1.0, None], "B": [np.nan, 4.0]}))
+    assert all_nan(pl.DataFrame({"A": [None, None], "B": [None, None]}))
+    assert all_nan(pl.DataFrame({"A": [np.nan, np.nan], "B": [np.nan, None]}))
+    assert all_nan(pl.DataFrame({"A": [np.nan, np.nan], "B": [np.nan, np.nan]}))
 
 
 @enforce_types

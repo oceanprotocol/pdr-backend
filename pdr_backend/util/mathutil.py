@@ -51,6 +51,25 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
 
 
 @enforce_types
+def all_nan(
+    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
+) -> bool:
+    """Returns True if all entries in x have a nan _or_ a None"""
+    if type(x) == np.ndarray:
+        x = np.array(x, dtype=float)
+        return np.isnan(x).all()
+    if type(x) == pd.Series:
+        x = x.fillna(value=np.nan, inplace=False)
+        return x.isnull().all()
+    if type(x) == pd.DataFrame:
+        x = x.fillna(value=np.nan)
+        return x.isnull().all().all()
+    if type(x) in [pl.Series, pl.DataFrame]:
+        return all_nan(x.to_numpy())  # type: ignore[union-attr]
+    raise ValueError(f"Can't handle type {type(x)}")
+
+
+@enforce_types
 def has_nan(
     x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
 ) -> bool:
