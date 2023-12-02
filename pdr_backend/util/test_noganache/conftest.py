@@ -131,5 +131,5 @@ def sample_second_predictions():
             payout=0.0500,
             slot=1701675900,
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        )
+        ),
     ]

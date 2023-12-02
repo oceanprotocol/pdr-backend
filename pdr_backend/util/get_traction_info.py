@@ -9,7 +9,7 @@ from pdr_backend.util.predictoor_stats import (
     get_slot_statistics,
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
-    plot_slot_daily_statistics
+    plot_slot_daily_statistics,
 )
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,

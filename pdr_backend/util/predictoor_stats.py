@@ -248,9 +248,7 @@ def get_traction_statistics(
 
 
 @enforce_types
-def plot_traction_daily_statistics(
-    stats_df: pl.DataFrame, pq_dir: str
-) -> None:
+def plot_traction_daily_statistics(stats_df: pl.DataFrame, pq_dir: str) -> None:
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
 
@@ -319,18 +317,16 @@ def get_slot_statistics(
     slots_df = (
         preds_df.with_columns(
             [
-                (
-                    pl.col("pair").cast(str)
-                    + "-"
-                    + pl.col("timeframe").cast(str)
-                ).alias("pair_timeframe"),
+                (pl.col("pair").cast(str) + "-" + pl.col("timeframe").cast(str)).alias(
+                    "pair_timeframe"
+                ),
                 (
                     pl.col("pair").cast(str)
                     + "-"
                     + pl.col("timeframe").cast(str)
                     + "-"
                     + pl.col("slot").cast(str)
-                ).alias("pair_timeframe_slot")
+                ).alias("pair_timeframe_slot"),
             ]
         )
         .group_by("pair_timeframe_slot")
@@ -342,9 +338,13 @@ def get_slot_statistics(
                 pl.col("pair_timeframe").first(),
                 # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
                 pl.from_epoch("timestamp", time_unit="s")
-                .first().dt.strftime("%Y-%m-%d")
+                .first()
+                .dt.strftime("%Y-%m-%d")
                 .alias("datetime"),
-                pl.col("user").unique().count().alias("n_predictoors"),  # n unique predictoors
+                pl.col("user")
+                .unique()
+                .count()
+                .alias("n_predictoors"),  # n unique predictoors
                 pl.col("payout").sum().alias("slot_payout"),  # Sum of slot payout
                 pl.col("stake").sum().alias("slot_stake"),  # Sum of slot stake
             ]
@@ -359,33 +359,43 @@ def calculate_slot_daily_statistics(
     slots_df: pl.DataFrame,
 ) -> pl.DataFrame:
     def get_mean_slots_slots_df(slots_df: pl.DataFrame) -> pl.DataFrame:
-        return slots_df.select([
-            pl.col("pair_timeframe").first(),
-            pl.col("datetime").first(),
-            pl.col("slot_stake").mean().alias("mean_stake"),
-            pl.col("slot_payout").mean().alias("mean_payout"),
-            pl.col("n_predictoors").mean().alias("mean_n_predictoors"),
-        ])
+        return slots_df.select(
+            [
+                pl.col("pair_timeframe").first(),
+                pl.col("datetime").first(),
+                pl.col("slot_stake").mean().alias("mean_stake"),
+                pl.col("slot_payout").mean().alias("mean_payout"),
+                pl.col("n_predictoors").mean().alias("mean_n_predictoors"),
+            ]
+        )
 
     # for each <pair_timeframe,datetime> take a sample of up-to 5
     # then for each <pair_timeframe,datetime> calc daily mean_stake, mean_payout, ...
     # then for each <datetime> sum those numbers across all feeds
-    slots_daily_df = slots_df.group_by(["pair_timeframe","datetime"]).map_groups(
-        lambda df:
-            get_mean_slots_slots_df(df.sample(5)) if len(df) > 5
+    slots_daily_df = (
+        slots_df.group_by(["pair_timeframe", "datetime"])
+        .map_groups(
+            lambda df: get_mean_slots_slots_df(df.sample(5))
+            if len(df) > 5
             else get_mean_slots_slots_df(df)
-    ).group_by("datetime").agg([
-        pl.col("mean_stake").sum().alias("daily_average_stake"),
-        pl.col("mean_payout").sum().alias("daily_average_payout"),
-        pl.col("mean_n_predictoors").mean().alias("daily_average_predictoor_count"),
-    ]).sort("datetime")
+        )
+        .group_by("datetime")
+        .agg(
+            [
+                pl.col("mean_stake").sum().alias("daily_average_stake"),
+                pl.col("mean_payout").sum().alias("daily_average_payout"),
+                pl.col("mean_n_predictoors")
+                .mean()
+                .alias("daily_average_predictoor_count"),
+            ]
+        )
+        .sort("datetime")
+    )
 
     return slots_daily_df
 
 
-def plot_slot_daily_statistics(
-    slots_df: pl.DataFrame, pq_dir: str
-) -> None:
+def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     assert "pair_timeframe" in slots_df.columns
     assert "slot" in slots_df.columns
     assert "n_predictoors" in slots_df.columns

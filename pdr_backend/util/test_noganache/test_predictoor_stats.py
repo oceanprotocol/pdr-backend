@@ -4,10 +4,6 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.util.csvs import (
-    get_plots_dir,
-)
-
 from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
@@ -23,7 +19,9 @@ from pdr_backend.util.predictoor_stats import (
 
 @enforce_types
 def test_aggregate_prediction_statistics(sample_first_predictions):
-    stats, correct_predictions = aggregate_prediction_statistics(sample_first_predictions)
+    stats, correct_predictions = aggregate_prediction_statistics(
+        sample_first_predictions
+    )
     assert isinstance(stats, dict)
     assert "pair_timeframe" in stats
     assert "predictor" in stats
@@ -73,11 +71,9 @@ def test_get_cli_statistics(capsys, sample_first_predictions):
 
 
 @enforce_types
-@patch('matplotlib.pyplot.savefig')
+@patch("matplotlib.pyplot.savefig")
 def test_get_traction_statistics(
-    mock_savefig, 
-    sample_first_predictions, 
-    sample_second_predictions
+    mock_savefig, sample_first_predictions, sample_second_predictions
 ):
     predictions = sample_first_predictions + sample_second_predictions
     stats_df = get_traction_statistics(predictions)
@@ -118,11 +114,9 @@ def test_get_slot_statistics(sample_first_predictions, sample_second_predictions
 
 
 @enforce_types
-@patch('matplotlib.pyplot.savefig')
+@patch("matplotlib.pyplot.savefig")
 def test_plot_slot_statistics(
-    mock_savefig, 
-    sample_first_predictions, 
-    sample_second_predictions
+    mock_savefig, sample_first_predictions, sample_second_predictions
 ):
     predictions = sample_first_predictions + sample_second_predictions
     slots_df = get_slot_statistics(predictions)
@@ -132,13 +126,17 @@ def test_plot_slot_statistics(
         "datetime",
         "daily_average_stake",
         "daily_average_payout",
-        "daily_average_predictoor_count"
+        "daily_average_predictoor_count",
     ]:
         assert key in slot_daily_df.columns
 
     assert slot_daily_df["daily_average_stake"].round(2).to_list() == [0.1, 0.1, 0.15]
     assert slot_daily_df["daily_average_payout"].round(2).to_list() == [0.0, 0.05, 0.15]
-    assert slot_daily_df["daily_average_predictoor_count"].round(2).to_list() == [1.0, 1.0, 1.0]
+    assert slot_daily_df["daily_average_predictoor_count"].round(2).to_list() == [
+        1.0,
+        1.0,
+        1.0,
+    ]
 
     pq_dir = "parquet_data/"
     plot_slot_daily_statistics(slots_df, pq_dir)

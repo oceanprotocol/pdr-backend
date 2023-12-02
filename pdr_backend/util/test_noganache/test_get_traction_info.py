@@ -25,7 +25,9 @@ def test_get_traction_info_main_mainnet(
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
     mock_fetch_filtered_predictions.return_value = sample_first_predictions
 
-    get_traction_info_main(mock_ppss, "0x123", "2023-01-01", "2023-01-02", "parquet_data/")
+    get_traction_info_main(
+        mock_ppss, "0x123", "2023-01-01", "2023-01-02", "parquet_data/"
+    )
 
     mock_fetch_filtered_predictions.assert_called_with(
         1672531200,
