@@ -32,7 +32,7 @@ def test_get_predictoors_info_main_mainnet(
         "0x123",
         "2023-01-01",
         "2023-01-02",
-        "/path/to/csv",
+        "parquet_data/",
     )
 
     mock_fetch_filtered_predictions.assert_called_with(
@@ -42,5 +42,5 @@ def test_get_predictoors_info_main_mainnet(
         "mainnet",
         FilterMode.PREDICTOOR,
     )
-    mock_save_prediction_csv.assert_called_with([], "/path/to/csv")
+    mock_save_prediction_csv.assert_called_with([], "parquet_data/")
     mock_get_cli_statistics.assert_called_with([])

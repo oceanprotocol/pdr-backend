@@ -19,7 +19,7 @@ def get_predictions_info_main(
     feed_addrs_str: Union[str, None],
     start_timestr: str,
     end_timestr: str,
-    csvs_dir: str,
+    pq_dir: str,
 ):
     # get network
     if "main" in ppss.web3_pp.network:
@@ -58,6 +58,6 @@ def get_predictions_info_main(
         print("No records found. Please adjust start and end times.")
         return
 
-    save_analysis_csv(predictions, csvs_dir)
+    save_analysis_csv(predictions, pq_dir)
 
     get_cli_statistics(predictions)

@@ -21,7 +21,7 @@ from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 @enforce_types
 def get_traction_info_main(
-    ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, csvs_dir: str
+    ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, pq_dir: str
 ):
     # get network
     if "main" in ppss.web3_pp.network:
@@ -70,9 +70,9 @@ def get_traction_info_main(
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions)
-    plot_traction_cum_sum_statistics(csvs_dir, stats_df)
-    plot_traction_daily_statistics(csvs_dir, stats_df)
+    plot_traction_cum_sum_statistics(stats_df, pq_dir)
+    plot_traction_daily_statistics(stats_df, pq_dir)
 
     # calculate slot statistics and draw plots
     slots_df = get_slot_statistics(predictions)
-    plot_slot_daily_statistics(csvs_dir, slots_df)
+    plot_slot_daily_statistics(slots_df, pq_dir)

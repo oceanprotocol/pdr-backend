@@ -1,7 +1,12 @@
 from typing import List
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
 import polars as pl
+
+from pdr_backend.util.csvs import (
+    get_plots_dir,
+)
 
 from pdr_backend.util.predictoor_stats import (
     aggregate_prediction_statistics,
@@ -9,8 +14,10 @@ from pdr_backend.util.predictoor_stats import (
     get_cli_statistics,
     get_traction_statistics,
     get_slot_statistics,
-    plot_slot_daily_statistics,
     calculate_slot_daily_statistics,
+    plot_traction_daily_statistics,
+    plot_traction_cum_sum_statistics,
+    plot_slot_daily_statistics,
 )
 
 
@@ -66,7 +73,12 @@ def test_get_cli_statistics(capsys, sample_first_predictions):
 
 
 @enforce_types
-def test_get_traction_statistics(sample_first_predictions, sample_second_predictions):
+@patch('matplotlib.pyplot.savefig')
+def test_get_traction_statistics(
+    mock_savefig, 
+    sample_first_predictions, 
+    sample_second_predictions
+):
     predictions = sample_first_predictions + sample_second_predictions
     stats_df = get_traction_statistics(predictions)
     assert isinstance(stats_df, pl.DataFrame)
@@ -75,13 +87,19 @@ def test_get_traction_statistics(sample_first_predictions, sample_second_predict
     assert "daily_unique_predictoors_count" in stats_df.columns
     assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 4]
 
+    pq_dir = "parquet_data/"
+    plot_traction_daily_statistics(stats_df, pq_dir)
+    plot_traction_cum_sum_statistics(stats_df, pq_dir)
+
+    assert mock_savefig.call_count == 2
+
 
 @enforce_types
 def test_get_slot_statistics(sample_first_predictions, sample_second_predictions):
     predictions = sample_first_predictions + sample_second_predictions
-    stats_df = get_slot_statistics(predictions)
-    assert isinstance(stats_df, pl.DataFrame)
-    assert stats_df.shape == (7, 9)
+    slots_df = get_slot_statistics(predictions)
+    assert isinstance(slots_df, pl.DataFrame)
+    assert slots_df.shape == (7, 9)
 
     for key in [
         "datetime",
@@ -93,20 +111,22 @@ def test_get_slot_statistics(sample_first_predictions, sample_second_predictions
         "slot_stake",
         "slot_payout",
     ]:
-        assert key in stats_df.columns
+        assert key in slots_df.columns
 
-    print(stats_df["slot_payout"].to_list())
-    print(stats_df["slot_stake"].to_list())
-
-    assert stats_df["slot_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.1]
-    assert stats_df["slot_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.1]
+    assert slots_df["slot_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.1]
+    assert slots_df["slot_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.1]
 
 
 @enforce_types
-def test_plot_slot_statistics(sample_first_predictions, sample_second_predictions):
+@patch('matplotlib.pyplot.savefig')
+def test_plot_slot_statistics(
+    mock_savefig, 
+    sample_first_predictions, 
+    sample_second_predictions
+):
     predictions = sample_first_predictions + sample_second_predictions
-    stats_df = get_slot_statistics(predictions)
-    daily_stats_df = calculate_slot_daily_statistics(stats_df)
+    slots_df = get_slot_statistics(predictions)
+    slot_daily_df = calculate_slot_daily_statistics(slots_df)
 
     for key in [
         "datetime",
@@ -114,8 +134,13 @@ def test_plot_slot_statistics(sample_first_predictions, sample_second_prediction
         "daily_average_payout",
         "daily_average_predictoor_count"
     ]:
-        assert key in daily_stats_df.columns
+        assert key in slot_daily_df.columns
 
-    assert daily_stats_df["daily_average_stake"].round(2).to_list() == [0.1, 0.1, 0.15]
-    assert daily_stats_df["daily_average_payout"].round(2).to_list() == [0.0, 0.05, 0.15]
-    assert daily_stats_df["daily_average_predictoor_count"].round(2).to_list() == [1.0, 1.0, 1.0]
+    assert slot_daily_df["daily_average_stake"].round(2).to_list() == [0.1, 0.1, 0.15]
+    assert slot_daily_df["daily_average_payout"].round(2).to_list() == [0.0, 0.05, 0.15]
+    assert slot_daily_df["daily_average_predictoor_count"].round(2).to_list() == [1.0, 1.0, 1.0]
+
+    pq_dir = "parquet_data/"
+    plot_slot_daily_statistics(slots_df, pq_dir)
+
+    assert mock_savefig.call_count == 2
