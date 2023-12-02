@@ -19,11 +19,11 @@ def test_get_traction_info_main_mainnet(
     mock_get_all_contract_ids_by_owner,
     mock_get_traction_statistics,
     mock_ppss,
-    sample_predictions,
+    sample_first_predictions,
 ):
     mock_ppss.web3_pp.network = "main"
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
-    mock_fetch_filtered_predictions.return_value = sample_predictions
+    mock_fetch_filtered_predictions.return_value = sample_first_predictions
 
     get_traction_info_main(mock_ppss, "0x123", "2023-01-01", "2023-01-02", "csvs/")
 
@@ -36,6 +36,6 @@ def test_get_traction_info_main_mainnet(
         payout_only=False,
         trueval_only=False,
     )
-    mock_get_traction_statistics.assert_called_with(sample_predictions)
+    mock_get_traction_statistics.assert_called_with(sample_first_predictions)
     mock_plot_traction_cum_sum_statistics.assert_called()
     mock_plot_traction_daily_statistics.assert_called()

@@ -15,11 +15,11 @@ def test_get_predictions_info_main_mainnet(
     mock_get_all_contract_ids_by_owner,
     mock_get_cli_statistics,
     mock_ppss,
-    sample_predictions,
+    sample_first_predictions,
 ):
     mock_ppss.web3_pp.network = "main"
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
-    mock_fetch_filtered_predictions.return_value = sample_predictions
+    mock_fetch_filtered_predictions.return_value = sample_first_predictions
 
     get_predictions_info_main(mock_ppss, "0x123", "2023-01-01", "2023-01-02", "csvs/")
 
@@ -32,4 +32,4 @@ def test_get_predictions_info_main_mainnet(
         payout_only=True,
         trueval_only=True,
     )
-    mock_get_cli_statistics.assert_called_with(sample_predictions)
+    mock_get_cli_statistics.assert_called_with(sample_first_predictions)

@@ -208,7 +208,7 @@ def get_traction_statistics(
     preds_df = pl.DataFrame(preds_dicts)
 
     # Calculate predictoor traction statistics
-    # Predictoor addresses are aggergated historically
+    # Predictoor addresses are aggregated historically
     stats_df = (
         preds_df.with_columns(
             [
@@ -248,53 +248,9 @@ def get_traction_statistics(
 
 
 @enforce_types
-def get_slot_statistics(
-    all_predictions: List[Prediction],
-) -> pl.DataFrame:
-    # Get all predictions into a dataframe
-    preds_dicts = [pred.__dict__ for pred in all_predictions]
-    preds_df = pl.DataFrame(preds_dicts)
-
-    # Create a <pair-timeframe-slot> key to group predictions
-    stats_df = (
-        preds_df.with_columns(
-            [
-                (
-                    pl.col("pair").cast(str)
-                    + "-"
-                    + pl.col("timeframe").cast(str)
-                    + "-"
-                    + pl.col("slot").cast(str)
-                ).alias("pair_timeframe_slot")
-            ]
-        )
-        .group_by("pair_timeframe_slot")
-        .agg(
-            [
-                pl.col("pair").first(),
-                pl.col("timeframe").first(),
-                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
-                pl.from_epoch("timestamp", time_unit="s")
-                .first()
-                .dt.strftime("%Y-%m-%d")
-                .alias("datetime"),
-                pl.col("slot").first(),
-                pl.col("user")
-                .unique()
-                .count()
-                .alias("n_predictoors"),  # n unique predictoors
-                pl.col("payout").sum().alias("sum_payout"),  # Sum of stake
-                pl.col("stake").sum().alias("sum_stake"),  # Sum of stake
-            ]
-        )
-        .sort(["pair", "timeframe", "slot"])
-    )
-
-    return stats_df
-
-
-@enforce_types
-def plot_traction_daily_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> None:
+def plot_traction_daily_statistics(
+    csvs_dir: str, stats_df: pl.DataFrame
+) -> None:
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
 
@@ -344,6 +300,130 @@ def plot_traction_cum_sum_statistics(csvs_dir: str, stats_df: pl.DataFrame) -> N
     plt.xlabel("Date")
     plt.ylabel("# Unique Predictoor Addresses")
     plt.title("Cumulative # Unique Predictoor Addresses")
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+    print("Chart created:", chart_path)
+
+
+@enforce_types
+def get_slot_statistics(
+    all_predictions: List[Prediction],
+) -> pl.DataFrame:
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in all_predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # Create a <pair-timeframe-slot> key to group predictions
+    stats_df = (
+        preds_df.with_columns(
+            [
+                (
+                    pl.col("pair").cast(str)
+                    + "-"
+                    + pl.col("timeframe").cast(str)
+                ).alias("pair_timeframe"),
+                (
+                    pl.col("pair").cast(str)
+                    + "-"
+                    + pl.col("timeframe").cast(str)
+                    + "-"
+                    + pl.col("slot").cast(str)
+                ).alias("pair_timeframe_slot")
+            ]
+        )
+        .group_by("pair_timeframe_slot")
+        .agg(
+            [
+                pl.col("pair").first(),
+                pl.col("timeframe").first(),
+                pl.col("slot").first(),
+                pl.col("pair_timeframe").first(),
+                # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
+                pl.from_epoch("timestamp", time_unit="s").first().dt.strftime("%Y-%m-%d").alias("datetime"),
+                pl.col("user").unique().count().alias("n_predictoors"),  # n unique predictoors
+                pl.col("payout").sum().alias("slot_payout"),  # Sum of slot payout
+                pl.col("stake").sum().alias("slot_stake"),  # Sum of slot stake
+            ]
+        )
+        .sort(["pair", "timeframe", "slot"])
+    )
+
+    return stats_df
+
+
+def calculate_slot_daily_statistics(
+    stats_df: pl.DataFrame,
+) -> pl.DataFrame:
+    def get_mean_slots_stats_df(stats_df: pl.DataFrame) -> pl.DataFrame:
+        return stats_df.select([
+            pl.col("pair_timeframe").first(),
+            pl.col("datetime").first(),
+            pl.col("slot_stake").mean().alias("mean_stake"),
+            pl.col("slot_payout").mean().alias("mean_payout"),
+            pl.col("n_predictoors").mean().alias("mean_n_predictoors"),
+        ])
+
+    # for each <pair_timeframe,datetime> take a sample of up-to 5
+    # then for each <pair_timeframe,datetime> calc daily mean_stake, mean_payout, ...
+    # then for each <datetime> sum those numbers across all feeds 
+    stats_df = stats_df.group_by(["pair_timeframe","datetime"]).map_groups(
+        lambda df: get_mean_slots_stats_df(df.sample(5)) if len(df) > 5 else get_mean_slots_stats_df(df)
+    ).group_by("datetime").agg([
+        pl.col("mean_stake").sum().alias("daily_average_stake"),
+        pl.col("mean_payout").sum().alias("daily_average_payout"),
+        pl.col("mean_n_predictoors").mean().alias("daily_average_predictoor_count"),
+    ]).sort("datetime")
+
+    return stats_df
+
+
+def plot_slot_daily_statistics(
+    csvs_dir: str, stats_df: pl.DataFrame
+) -> None:
+    assert "pair_timeframe" in stats_df.columns
+    assert "slot" in stats_df.columns
+    assert "n_predictoors" in stats_df.columns
+    
+    # calculate slot daily statistics
+    stats_df = calculate_slot_daily_statistics(stats_df)
+
+    charts_dir = get_charts_dir(csvs_dir)
+
+    dates = stats_df["datetime"].to_list()
+    ticks = int(len(dates) / 5) if len(dates) > 5 else 2
+
+    # draw daily predictoor stake in $OCEAN
+    chart_path = os.path.join(charts_dir, "daily_slot_average_stake.png")
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["daily_average_stake"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("Average $OCEAN Staked")
+    plt.title("Daily Average $OCEAN Staked")
+    plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
+    plt.tight_layout()
+    plt.savefig(chart_path)
+    plt.close()
+    print("Chart created:", chart_path)
+
+    # draw daily predictoor payouts in $OCEAN
+    chart_path = os.path.join(charts_dir, "daily_slot_average_predictoors.png")
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        stats_df["datetime"].to_pandas(),
+        stats_df["daily_average_predictoor_count"],
+        marker="o",
+        linestyle="-",
+    )
+    plt.xlabel("Date")
+    plt.ylabel("Average Predictoors")
+    plt.title("Daily Average Predictoors")
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)

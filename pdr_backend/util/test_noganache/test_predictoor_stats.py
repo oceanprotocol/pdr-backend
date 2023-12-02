@@ -9,12 +9,13 @@ from pdr_backend.util.predictoor_stats import (
     get_cli_statistics,
     get_traction_statistics,
     get_slot_statistics,
+    plot_slot_daily_statistics,
 )
 
 
 @enforce_types
-def test_aggregate_prediction_statistics(sample_predictions):
-    stats, correct_predictions = aggregate_prediction_statistics(sample_predictions)
+def test_aggregate_prediction_statistics(sample_first_predictions):
+    stats, correct_predictions = aggregate_prediction_statistics(sample_first_predictions)
     assert isinstance(stats, dict)
     assert "pair_timeframe" in stats
     assert "predictor" in stats
@@ -22,9 +23,9 @@ def test_aggregate_prediction_statistics(sample_predictions):
 
 
 @enforce_types
-def test_get_endpoint_statistics(sample_predictions):
+def test_get_endpoint_statistics(sample_first_predictions):
     accuracy, pair_timeframe_stats, predictoor_stats = get_endpoint_statistics(
-        sample_predictions
+        sample_first_predictions
     )
     assert isinstance(accuracy, float)
     assert isinstance(pair_timeframe_stats, List)  # List[PairTimeframeStat]
@@ -54,8 +55,8 @@ def test_get_endpoint_statistics(sample_predictions):
 
 
 @enforce_types
-def test_get_cli_statistics(capsys, sample_predictions):
-    get_cli_statistics(sample_predictions)
+def test_get_cli_statistics(capsys, sample_first_predictions):
+    get_cli_statistics(sample_first_predictions)
     captured = capsys.readouterr()
     output = captured.out
     assert "Overall Accuracy" in output
@@ -64,8 +65,8 @@ def test_get_cli_statistics(capsys, sample_predictions):
 
 
 @enforce_types
-def test_get_traction_statistics(sample_predictions, extra_predictions):
-    predictions = sample_predictions + extra_predictions
+def test_get_traction_statistics(sample_first_predictions, sample_second_predictions):
+    predictions = sample_first_predictions + sample_second_predictions
     stats_df = get_traction_statistics(predictions)
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
@@ -75,22 +76,31 @@ def test_get_traction_statistics(sample_predictions, extra_predictions):
 
 
 @enforce_types
-def test_get_slot_statistics(sample_predictions, extra_predictions):
-    predictions = sample_predictions + extra_predictions
+def test_get_slot_statistics(sample_first_predictions, sample_second_predictions):
+    predictions = sample_first_predictions + sample_second_predictions
     stats_df = get_slot_statistics(predictions)
     assert isinstance(stats_df, pl.DataFrame)
-    assert stats_df.shape == (7, 8)
+    assert stats_df.shape == (7, 9)
 
     for key in [
         "datetime",
         "pair",
         "timeframe",
         "slot",
+        "pair_timeframe",
         "n_predictoors",
-        "sum_stake",
-        "sum_payout",
+        "slot_stake",
+        "slot_payout",
     ]:
         assert key in stats_df.columns
 
-    assert stats_df["sum_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.05]
-    assert stats_df["sum_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.05]
+    assert stats_df["slot_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.05]
+    assert stats_df["slot_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.05]
+
+
+@enforce_types
+def test_plot_slot_statistics(sample_first_predictions, sample_second_predictions, sample_third_predictions):
+    predictions = sample_first_predictions + sample_second_predictions + sample_first_predictions
+    stats_df = get_slot_statistics(predictions)
+    
+    plot_slot_daily_statistics("csvs/", stats_df)

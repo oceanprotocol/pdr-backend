@@ -6,8 +6,10 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.predictoor_stats import (
     get_traction_statistics,
+    get_slot_statistics,
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
+    plot_slot_daily_statistics
 )
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
@@ -66,8 +68,11 @@ def get_traction_info_main(
         print("No records found. Please adjust start and end times.")
         return
 
-    # calculate statistics and draw plots
+    # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions)
-
     plot_traction_cum_sum_statistics(csvs_dir, stats_df)
     plot_traction_daily_statistics(csvs_dir, stats_df)
+
+    # calculate slot statistics and draw plots
+    slots_df = get_slot_statistics(predictions)
+    plot_slot_daily_statistics(csvs_dir, slots_df)
