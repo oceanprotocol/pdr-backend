@@ -10,6 +10,7 @@ from pdr_backend.util.predictoor_stats import (
     get_traction_statistics,
     get_slot_statistics,
     plot_slot_daily_statistics,
+    calculate_slot_daily_statistics,
 )
 
 
@@ -94,13 +95,27 @@ def test_get_slot_statistics(sample_first_predictions, sample_second_predictions
     ]:
         assert key in stats_df.columns
 
-    assert stats_df["slot_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.05]
-    assert stats_df["slot_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.05]
+    print(stats_df["slot_payout"].to_list())
+    print(stats_df["slot_stake"].to_list())
+
+    assert stats_df["slot_payout"].to_list() == [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.1]
+    assert stats_df["slot_stake"].to_list() == [0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.1]
 
 
 @enforce_types
-def test_plot_slot_statistics(sample_first_predictions, sample_second_predictions, sample_third_predictions):
-    predictions = sample_first_predictions + sample_second_predictions + sample_first_predictions
+def test_plot_slot_statistics(sample_first_predictions, sample_second_predictions):
+    predictions = sample_first_predictions + sample_second_predictions
     stats_df = get_slot_statistics(predictions)
-    
-    plot_slot_daily_statistics("csvs/", stats_df)
+    daily_stats_df = calculate_slot_daily_statistics(stats_df)
+
+    for key in [
+        "datetime",
+        "daily_average_stake",
+        "daily_average_payout",
+        "daily_average_predictoor_count"
+    ]:
+        assert key in daily_stats_df.columns
+
+    assert daily_stats_df["daily_average_stake"].round(2).to_list() == [0.1, 0.1, 0.15]
+    assert daily_stats_df["daily_average_payout"].round(2).to_list() == [0.0, 0.05, 0.15]
+    assert daily_stats_df["daily_average_predictoor_count"].round(2).to_list() == [1.0, 1.0, 1.0]
