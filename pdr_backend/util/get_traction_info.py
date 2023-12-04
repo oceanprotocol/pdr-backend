@@ -6,8 +6,10 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.predictoor_stats import (
     get_traction_statistics,
+    get_slot_statistics,
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
+    plot_slot_daily_statistics,
 )
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
@@ -19,7 +21,7 @@ from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 @enforce_types
 def get_traction_info_main(
-    ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, csvs_dir: str
+    ppss: PPSS, addrs_str: str, start_timestr: str, end_timestr: str, pq_dir: str
 ):
     # get network
     if "main" in ppss.web3_pp.network:
@@ -66,8 +68,11 @@ def get_traction_info_main(
         print("No records found. Please adjust start and end times.")
         return
 
-    # calculate statistics and draw plots
+    # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions)
+    plot_traction_cum_sum_statistics(stats_df, pq_dir)
+    plot_traction_daily_statistics(stats_df, pq_dir)
 
-    plot_traction_cum_sum_statistics(csvs_dir, stats_df)
-    plot_traction_daily_statistics(csvs_dir, stats_df)
+    # calculate slot statistics and draw plots
+    slots_df = get_slot_statistics(predictions)
+    plot_slot_daily_statistics(slots_df, pq_dir)

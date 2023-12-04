@@ -19,7 +19,7 @@ def mock_ppss(tmpdir_factory):
 
 @enforce_types
 @pytest.fixture(scope="session")
-def sample_predictions():
+def sample_first_predictions():
     return [
         Prediction(
             id="1",
@@ -52,7 +52,7 @@ def sample_predictions():
 
 @enforce_types
 @pytest.fixture(scope="session")
-def extra_predictions():
+def sample_second_predictions():
     return [
         Prediction(
             id="3",
@@ -118,5 +118,18 @@ def extra_predictions():
             payout=0.0,
             slot=1701589500,
             user="0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
+        ),
+        Prediction(
+            id="8",
+            pair="ETH/USDT",
+            timeframe="5m",
+            prediction=True,
+            stake=0.0500,
+            trueval=True,
+            timestamp=1701675800,
+            source="binance",
+            payout=0.0500,
+            slot=1701675900,
+            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
     ]

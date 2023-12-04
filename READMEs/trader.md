@@ -52,7 +52,7 @@ pdr sim my_ppss.yaml
 
 What it does:
 1. Set simulation parameters.
-1. Grab historical price data from exchanges and stores in `csvs/` dir. It re-uses any previously saved data.
+1. Grab historical price data from exchanges and stores in `parquet_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
    - Build a model
    - Predict up/down

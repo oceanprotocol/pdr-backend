@@ -7,11 +7,11 @@ from pdr_backend.util.subgraph_predictions import Prediction
 
 
 @enforce_types
-def get_charts_dir(csvs_dir: str):
-    charts_dir = os.path.join(csvs_dir, "charts")
-    if not os.path.exists(charts_dir):
-        os.makedirs(charts_dir)
-    return charts_dir
+def get_plots_dir(pq_dir: str):
+    plots_dir = os.path.join(pq_dir, "plots")
+    if not os.path.exists(plots_dir):
+        os.makedirs(plots_dir)
+    return plots_dir
 
 
 @enforce_types
