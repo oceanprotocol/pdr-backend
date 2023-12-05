@@ -11,7 +11,8 @@
 
 ### 1.1 Create a Wallet
 
-For optimal support and the ability to transfer ROSE between paratimes, we recommended to use Oasis Wallet extension for Chrome.
+For optimal support and the ability to transfer ROSE between paratimes, we recommend to use Oasis Wallet extension for Chrome.
+
 - To install and set up, go to [Oasis Wallet extension documentation](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) and follow its instructions.
 
 ### 1.2 Purchase OCEAN
