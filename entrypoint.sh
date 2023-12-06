@@ -25,4 +25,4 @@ echo "Delaying startup for ${DELAY} seconds.."
 sleep $DELAY
 
 echo "Running $MODULE_NAME..."
-python /app/pdr_backend/pdr $@
+python /app/pdr $@
