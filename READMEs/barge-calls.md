@@ -34,3 +34,6 @@ How:
 - also, change envvar setup as needed. Eg in compose file, remove `RPC_URL` and `ADDRESS_FILE` entry.
 - ultimately, ask: "does Docker have everything it needs to succesfully run the component?"
 
+### Related 
+
+See [barge.md](barge.md)
