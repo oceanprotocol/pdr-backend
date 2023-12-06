@@ -1,4 +1,3 @@
-import os
 import sys
 
 from enforce_typing import enforce_types
