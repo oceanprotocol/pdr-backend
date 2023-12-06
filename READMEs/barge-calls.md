@@ -19,11 +19,9 @@ From getting barge going, here's how it calls specific pdr-backend components an
   - then, `start_ocean.sh` runs docker-compose including all `$COMPOSE_FILES`:
     - `eval docker-compose "$DOCKER_COMPOSE_EXTRA_OPTS" --project-name=$PROJECT_NAME "$COMPOSE_FILES" up --remove-orphans`
     - it executes each of the `"command"` entries in compose files.
-       - (Eg for pdr-publisher.yml, its `"command" = "publisher"`)
-       - (or we could have eg `"command" = "publisher ppss.yaml development"`)
+       - (Eg for pdr-publisher.yml, `"command" = "publisher ppss.yaml development"`)
        - Which then goes to `pdr-backend/entrypoint.sh` via `"python /app/pdr_backend/pdr $@"`
-         - (where `@` is unpacked as eg `publisher`) [Ref](https://superuser.com/questions/1586997/what-does-symbol-mean-in-the-context-of#:).
-         - (or `@` is unpacked as eg `publisher ppss.yaml development`)
+         - (where `@` is unpacked as eg `publisher ppss.yaml development`) [Ref](https://superuser.com/questions/1586997/what-does-symbol-mean-in-the-context-of#:).
 	 - Then it goes through the usual CLI at `pdr-backend/pdr_backend/util/cli_module.py`
 
 
