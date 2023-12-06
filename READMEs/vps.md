@@ -154,7 +154,11 @@ export GANACHE_BLOCKTIME=5
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
-Wait.
+Track progress until the addresses are published:
+- open a new console
+- ssh into the VPS
+- then: `docker logs -f ocean_pdr-publisher_1`. Monitor until it says it's published.
+- then: `Ctrl-C`, and confirm via: `cat .ocean/ocean-contracts/artifacts/address.json |grep dev`. It should give one line.
 
 Then, copy VPS' `address.json` file to local. In local console:
 ```console
