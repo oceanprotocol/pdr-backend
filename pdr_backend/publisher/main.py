@@ -21,7 +21,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
     if web3_config.w3.eth.chain_id == DEVELOPMENT_CHAINID:
         print("Funding dev accounts and publishing pairs on local network...")
         ocean_address = get_address(web3_pp, "Ocean")
-        OCEAN = Token(web3_config, ocean_address)
+        OCEAN = Token(web3_pp, ocean_address)
         accounts_to_fund = [
             #    account_key_env,   OCEAN_to_send
             ("PREDICTOOR_PRIVATE_KEY", 2000.0),
