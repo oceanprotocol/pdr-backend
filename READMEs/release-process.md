@@ -65,7 +65,7 @@ First, build your image locally with a custom label, eg `yaml-cli2`.
 
 ```console
 cd ~/code/pdr-backend
-docker build -t 'oceanprotocol/pdr-backend:yaml-cli2' .
+docker build . -t 'oceanprotocol/pdr-backend:yaml-cli2' .
 ```
 
 Then, start barge, using the custom label:
