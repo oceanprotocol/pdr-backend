@@ -138,7 +138,7 @@ In VPS console:
 cd ~/code/barge
 ./cleanup.sh
 rm -rf ~/.ocean
-docker system prune -a --volumes
+docker system prune -a -f --volumes
 
 # run barge...
 # set ganache block time to 5 seconds, try increasing this value if barge is lagging
