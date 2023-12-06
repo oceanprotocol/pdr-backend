@@ -51,7 +51,7 @@ To elaborate: we have an automated docker build for pdr-backend `main` branch an
 
 If you want to add Docker branches, go to https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit
 
-Then: on "Build rules", add your branch. Below is an example, where Alex is buildint "pdr-backend: alex" from branch "feature/alex".
+Then: on "Build rules", add your branch. Below is an example, where Alex is building "pdr-backend: alex" from branch "feature/alex".
 
 ![](./images/dockerbranch.png)
 
