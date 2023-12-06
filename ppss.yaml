@@ -106,7 +106,7 @@ web3_pp:
     rpc_url: http://4.245.224.119:8545 # from VPS 
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
     # get by: grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'
-    stake_token: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1" # this value is just a placeholder; set it with above
+    stake_token: "0x2473f4F7bf40ed9310838edFCA6262C17A59DF64" # this value is just a placeholder; set it with above
     owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
   barge-pytest:
