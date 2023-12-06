@@ -3,23 +3,13 @@
 From getting barge going, here's how it calls specific pdr-backend components and passes arguments.
 
 - user calls `/barge/start_ocean.sh` to get barge going
-  - it sets `NETWORK_RPC_URL` as follows
-    ```
-    if [ ${IP} = "localhost" ]; then
-        export NETWORK_RPC_HOST="172.15.0.3"
-    else
-        export NETWORK_RPC_HOST=${IP}
-    fi
-    export NETWORK_RPC_PORT="8545"
-    export NETWORK_RPC_URL="http://"${NETWORK_RPC_HOST}:${NETWORK_RPC_PORT}
-    ```
   - then, `start_ocean.sh` fills `COMPOSE_FILES` incrementally. Eg `COMPOSE_FILES+=" -f ${COMPOSE_DIR}/pdr-publisher.yml"`
      - `barge/compose-files/pdr-publisher.yml` sets:
        - `pdr-publisher: image: oceanprotocol/pdr-backend:${PDR_BACKEND_VERSION:-latest}`
        - `pdr-publisher: command: publisher`
        - `pdr-publisher: networks: backend: ipv4_address: 172.15.0.43`
        - `pdr-publisher: environment:`
-         - `RPC_URL: ${NETWORK_RPC_URL}`
+         - `RPC_URL: ${NETWORK_RPC_URL}` (= `http://localhost:8545` via `start_ocean.sh`)
          - `ADDRESS_FILE: /root/.ocean/ocean-contracts/artifacts/address.json`
 	 - (many `PRIVATE_KEY_*`)
 	    
