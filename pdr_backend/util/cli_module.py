@@ -44,7 +44,6 @@ from pdr_backend.util.topup import topup_main
 
 @enforce_types
 def _do_main():
-    os.environ.pop("NETWORK_OVERRIDE", None)  # disallow override in CLI
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
         do_help_long(0)
 
