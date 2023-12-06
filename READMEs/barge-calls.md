@@ -2,22 +2,21 @@
 
 From getting barge going, here's how it calls specific pdr-backend components and passes arguments.
 
-- user calls /barge/start_ocean.sh to get barge going
-  - it fills `COMPOSE_FILES`
-     eg `COMPOSE_FILES+=" -f ${COMPOSE_DIR}/pdr-publisher.yml"`
+- user calls `/barge/start_ocean.sh` to get barge going
+  - then, `start_ocean.sh` fills `COMPOSE_FILES` incrementally. Eg `COMPOSE_FILES+=" -f ${COMPOSE_DIR}/pdr-publisher.yml"`
      - `barge/compose-files/pdr-publisher.yml` sets:
        - `pdr-publisher: image: oceanprotocol/pdr-backend:${PDR_BACKEND_VERSION:-latest}`
        - `pdr-publisher: command: publisher`
-       - `pdr-publisher: networks: backend: ipv4_address: 172.15.0.43 (change this?)`
+       - `pdr-publisher: networks: backend: ipv4_address: 172.15.0.43`
        - `pdr-publisher: environment:`
-         - `RPC_URL: ${NETWORK_RPC_URL}`
+         - `RPC_URL: ${NETWORK_RPC_URL}` (= `http://localhost:8545` via `start_ocean.sh`)
          - `ADDRESS_FILE: /root/.ocean/ocean-contracts/artifacts/address.json`
 	 - (many `PRIVATE_KEY_*`)
 	    
-  - then it pulls the `$COMPOSE_FILES` as needed:
+  - then, `start_ocean.sh` pulls the `$COMPOSE_FILES` as needed:
     - `[ ${FORCEPULL} = "true" ] && eval docker-compose "$DOCKER_COMPOSE_EXTRA_OPTS" --project-name=$PROJECT_NAME "$COMPOSE_FILES" pull`
      
-  - then it runs docker-compose including all `$COMPOSE_FILES`:
+  - then, `start_ocean.sh` runs docker-compose including all `$COMPOSE_FILES`:
     - `eval docker-compose "$DOCKER_COMPOSE_EXTRA_OPTS" --project-name=$PROJECT_NAME "$COMPOSE_FILES" up --remove-orphans`
     - it executes each of the `"command"` entries in compose files.
        - (Eg for pdr-publisher.yml, its `"command" = "publisher"`)
