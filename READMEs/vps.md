@@ -136,6 +136,7 @@ In VPS console:
 ```console
 # cleanup past barge
 cd ~/code/barge
+docker stop $(docker ps -a -q)
 ./cleanup.sh
 rm -rf ~/.ocean
 docker system prune -a -f --volumes
