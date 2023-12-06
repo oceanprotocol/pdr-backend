@@ -41,7 +41,6 @@ Main tools:
 ...
 ```
 
-
 ## Atomic READMEs
 
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
