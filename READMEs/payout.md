@@ -9,7 +9,9 @@ This README describes how you can claim the $ based on running a predictoor bot.
 
 First, congratulations on your participation and progress in making predictions! Whether you've made accurate or erroneous predictions, it's now time to claim your earnings from correct predictions.
 
-### Steps to Request Payout
+There are two sections below: to claim OCEAN payout, and ROSE payout, respectively.
+
+### Steps to Request OCEAN Rewards
 
 #### 1. Preparation
 
