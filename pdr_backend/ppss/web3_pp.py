@@ -104,7 +104,7 @@ class Web3PP(StrMixin):
         """
         contracts = {}
         for addr in feed_addrs:
-            contracts[addr] = PredictoorContract(web3_config, addr)
+            contracts[addr] = PredictoorContract(self, addr)
         return contracts
 
     # keep off. @enforce_types
