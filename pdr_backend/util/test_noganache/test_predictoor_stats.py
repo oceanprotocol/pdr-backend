@@ -76,7 +76,12 @@ def test_get_traction_statistics(
     mock_savefig, sample_first_predictions, sample_second_predictions
 ):
     predictions = sample_first_predictions + sample_second_predictions
-    stats_df = get_traction_statistics(predictions)
+
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    stats_df = get_traction_statistics(preds_df)
     assert isinstance(stats_df, pl.DataFrame)
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns
@@ -93,7 +98,13 @@ def test_get_traction_statistics(
 @enforce_types
 def test_get_slot_statistics(sample_first_predictions, sample_second_predictions):
     predictions = sample_first_predictions + sample_second_predictions
-    slots_df = get_slot_statistics(predictions)
+    
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # calculate slot stats
+    slots_df = get_slot_statistics(preds_df)
     assert isinstance(slots_df, pl.DataFrame)
     assert slots_df.shape == (7, 9)
 
@@ -119,7 +130,13 @@ def test_plot_slot_statistics(
     mock_savefig, sample_first_predictions, sample_second_predictions
 ):
     predictions = sample_first_predictions + sample_second_predictions
-    slots_df = get_slot_statistics(predictions)
+    
+    # Get all predictions into a dataframe
+    preds_dicts = [pred.__dict__ for pred in predictions]
+    preds_df = pl.DataFrame(preds_dicts)
+
+    # calculate slot stats
+    slots_df = get_slot_statistics(preds_df)
     slot_daily_df = calculate_slot_daily_statistics(slots_df)
 
     for key in [

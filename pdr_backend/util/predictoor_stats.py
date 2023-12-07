@@ -200,13 +200,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_traction_statistics(
-    all_predictions: List[Prediction],
-) -> pl.DataFrame:
-    # Get all predictions into a dataframe
-    preds_dicts = [pred.__dict__ for pred in all_predictions]
-    preds_df = pl.DataFrame(preds_dicts)
-
+def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
     # Calculate predictoor traction statistics
     # Predictoor addresses are aggregated historically
     stats_df = (
@@ -306,13 +300,7 @@ def plot_traction_cum_sum_statistics(stats_df: pl.DataFrame, pq_dir: str) -> Non
 
 
 @enforce_types
-def get_slot_statistics(
-    all_predictions: List[Prediction],
-) -> pl.DataFrame:
-    # Get all predictions into a dataframe
-    preds_dicts = [pred.__dict__ for pred in all_predictions]
-    preds_df = pl.DataFrame(preds_dicts)
-
+def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
     # Create a <pair-timeframe-slot> key to group predictions
     slots_df = (
         preds_df.with_columns(

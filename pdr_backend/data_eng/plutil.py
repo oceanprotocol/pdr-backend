@@ -164,6 +164,17 @@ def newest_ut(filename: str) -> int:
 
 
 @enforce_types
+def newest_ut_ms(filename: str) -> int:
+    """
+    Return the timestamp for the youngest entry in the file.
+    The latest date should be the tail (row = n), or last entry in the file/dataframe
+    """
+    df = _get_tail_df(filename, n=1)
+    ut = int(df["timestamp_ms"][0])
+    return ut
+
+
+@enforce_types
 def _get_tail_df(filename: str, n: int = 5) -> pl.DataFrame:
     """Returns the last record in a parquet file, as a list"""
 
@@ -182,6 +193,17 @@ def oldest_ut(filename: str) -> int:
     """
     df = _get_head_df(filename, n=1)
     ut = int(df["timestamp"][0])
+    return ut
+
+
+@enforce_types
+def oldest_ut_ms(filename: str) -> int:
+    """
+    Return the timestamp_ms for the oldest entry in the parquet file.
+    The oldest date should be the head (row = 0), or the first entry in the file/dataframe
+    """
+    df = _get_head_df(filename, n=1)
+    ut = int(df["timestamp_ms"][0])
     return ut
 
 

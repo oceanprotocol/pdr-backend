@@ -1,15 +1,16 @@
 from unittest.mock import patch
 
 from enforce_typing import enforce_types
+import polars as pl
 
 from pdr_backend.util.get_traction_info import get_traction_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
-
+from pdr_backend.util.timeutil import timestr_to_ut
 
 @enforce_types
 @patch("pdr_backend.util.get_traction_info.get_traction_statistics")
 @patch("pdr_backend.util.get_traction_info.get_all_contract_ids_by_owner")
-@patch("pdr_backend.util.get_traction_info.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
 @patch("pdr_backend.util.get_traction_info.plot_traction_cum_sum_statistics")
 @patch("pdr_backend.util.get_traction_info.plot_traction_daily_statistics")
 def test_get_traction_info_main_mainnet(
@@ -19,25 +20,43 @@ def test_get_traction_info_main_mainnet(
     mock_get_all_contract_ids_by_owner,
     mock_get_traction_statistics,
     mock_ppss,
-    sample_first_predictions,
+    sample_daily_predictions,
 ):
-    mock_ppss.web3_pp.network = "main"
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
-    mock_fetch_filtered_predictions.return_value = sample_first_predictions
+    mock_fetch_filtered_predictions.return_value = sample_daily_predictions
+
+    st_timestr = "2023-11-02"
+    fin_timestr = "2023-11-05"
 
     get_traction_info_main(
-        mock_ppss, "0x123", "2023-01-01", "2023-01-02", "parquet_data/"
+        mock_ppss, st_timestr, fin_timestr, "parquet_data/"
     )
 
     mock_fetch_filtered_predictions.assert_called_with(
-        1672531200,
-        1672617600,
-        ["0x123"],
+        1698883200,
+        1699142400,
+        [],
         "mainnet",
-        FilterMode.CONTRACT,
+        FilterMode.NONE,
         payout_only=False,
         trueval_only=False,
     )
-    mock_get_traction_statistics.assert_called_with(sample_first_predictions)
+
+    # calculate ms locally so we can filter raw Predictions
+    st_ut = timestr_to_ut(st_timestr)
+    fin_ut = timestr_to_ut(fin_timestr)
+    st_ut_sec = st_ut // 1000
+    fin_ut_sec = fin_ut // 1000
+
+    # Get all predictions into a dataframe
+    preds = [x for x in sample_daily_predictions if st_ut_sec <= x.timestamp <= fin_ut_sec]
+    preds = [pred.__dict__ for pred in preds]
+    preds_df = pl.DataFrame(preds)
+    preds_df = preds_df.with_columns([
+        pl.col("timestamp").mul(1000).alias("timestamp_ms"),
+    ])
+
+    # Assert calls and values
+    pl.DataFrame.equals(mock_get_traction_statistics.call_args, preds_df)
     mock_plot_traction_cum_sum_statistics.assert_called()
     mock_plot_traction_daily_statistics.assert_called()

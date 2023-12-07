@@ -67,7 +67,7 @@ def fetch_filtered_predictions(
 
     # pylint: disable=line-too-long
     if filter_mode == FilterMode.NONE:
-        where_clause = f", where: {{slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
     elif filter_mode == FilterMode.CONTRACT:
         where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.PREDICTOOR:

@@ -371,32 +371,3 @@ def test_get_hist_df_calls(tmpdir):
     assert mock_update_parquet.called
     assert mock_load_parquet.called
     assert mock_merge_parquet_dfs.called
-
-
-@enforce_types
-def test_get_hist_df_fns(tmpdir):
-    """Test DataFactory get_hist_df functions are being called"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-
-    # setup mock objects
-    def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_update_parquet.called = True
-
-    def mock_load_parquet(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_load_parquet.called = True
-
-    def mock_merge_parquet_dfs(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_merge_parquet_dfs.called = True
-        return pl.DataFrame([1, 2, 3])
-
-    pq_data_factory._update_parquet = mock_update_parquet
-    pq_data_factory._load_parquet = mock_load_parquet
-    pq_data_factory._merge_parquet_dfs = mock_merge_parquet_dfs
-
-    # call and assert
-    hist_df = pq_data_factory.get_hist_df()
-    assert len(hist_df) == 3
-
-    assert mock_update_parquet.called
-    assert mock_load_parquet.called
-    assert mock_merge_parquet_dfs.called
