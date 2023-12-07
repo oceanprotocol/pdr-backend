@@ -34,6 +34,8 @@ How:
 - also, change envvar setup as needed. Eg in compose file, remove `RPC_URL` and `ADDRESS_FILE` entry.
 - ultimately, ask: "does Docker have everything it needs to succesfully run the component?"
 
-### Related 
+### All Barge READMEs
 
-See [barge.md](barge.md)
+- [barge.md](barge.md): the main Barge README
+- [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
+- [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.

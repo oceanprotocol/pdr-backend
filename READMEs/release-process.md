@@ -84,6 +84,9 @@ Pros of local testing:
 - no need of access to dockerhub
 - dockerhub should be used for production ready images only
 
-### Barge flow of calls
+### All Barge READMEs
 
-[See here](barge-calls.md)
+- [barge.md](barge.md): the main Barge README
+- [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
+- [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.
+

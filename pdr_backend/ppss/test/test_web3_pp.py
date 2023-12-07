@@ -177,10 +177,13 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
 
 
 @enforce_types
-def test_mock_web3_pp():
+def test_mock_web3_pp(monkeypatch):
+    if os.getenv("NETWORK_OVERRIDE"):
+        monkeypatch.delenv("NETWORK_OVERRIDE")
+
     web3_pp = mock_web3_pp("development")
     assert isinstance(web3_pp, Web3PP)
     assert web3_pp.network == "development"
 
     web3_pp = mock_web3_pp("sapphire-mainnet")
-    assert web3_pp.network == "sapphire_mainnet"
+    assert web3_pp.network == "sapphire-mainnet"

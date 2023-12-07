@@ -95,8 +95,8 @@ And for Barge core functionality, make changes to the [barge repo](https://githu
 
 More info: [Barge flow of calls](barge-calls.md)
 
-## Other READMEs
+## All Barge READMEs
 
-- [Parent predictoor README: predictoor.md](./predictoor.md)
-- [Parent trader README: trader.md](./trader.md)
-- [Root README](../README.md)
+- [barge.md](barge.md): the main Barge README
+- [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
+- [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.
