@@ -2,7 +2,6 @@ from unittest.mock import Mock
 import os
 
 from argparse import Namespace
-
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS

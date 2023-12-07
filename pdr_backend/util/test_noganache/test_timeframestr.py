@@ -2,9 +2,34 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.util.timeframestr import (
+    Timeframe,
     pack_timeframe_str_list,
     verify_timeframe_str,
 )
+
+
+@enforce_types
+def test_timeframe_class_5m():
+    t = Timeframe("5m")
+    assert t.timeframe_str == "5m"
+    assert t.m == 5
+    assert t.s == 5 * 60
+    assert t.ms == 5 * 60 * 1000
+
+
+@enforce_types
+def test_timeframe_class_1h():
+    t = Timeframe("1h")
+    assert t.timeframe_str == "1h"
+    assert t.m == 60
+    assert t.s == 60 * 60
+    assert t.ms == 60 * 60 * 1000
+
+
+@enforce_types
+def test_timeframe_class_bad():
+    with pytest.raises(ValueError):
+        Timeframe("foo")
 
 
 @enforce_types

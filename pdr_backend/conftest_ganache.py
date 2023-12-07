@@ -4,7 +4,7 @@ from pdr_backend.models.token import Token
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.publisher.publish import publish
+from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.contract import get_address
 
 CHAIN_ID = 8996
@@ -59,7 +59,7 @@ def ocean_token() -> Token:
 def predictoor_contract():
     w3p = _web3_pp()
     w3c = w3p.web3_config
-    _, _, _, _, logs = publish(
+    _, _, _, _, logs = publish_asset(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
         base="ETH",
@@ -80,7 +80,7 @@ def predictoor_contract():
 def predictoor_contract2():
     w3p = _web3_pp()
     w3c = w3p.web3_config
-    _, _, _, _, logs = publish(
+    _, _, _, _, logs = publish_asset(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
         base="ETH",

@@ -163,3 +163,19 @@ class Web3PP(StrMixin):
             timeframe_filter=timeframe_filter,
             source_filter=source_filter,
         )
+
+
+@enforce_types
+def mock_web3_pp(network: str) -> Web3PP:
+    """For unit tests"""
+    D1 = {
+        "address_file": "address.json 1",
+        "rpc_url": "rpc url 1",
+        "subgraph_url": "subgraph url 1",
+        "stake_token": "0xStake1",
+        "owner_addrs": "0xOwner1",
+    }
+    D = {
+        network: D1,
+    }
+    return Web3PP(D, network)

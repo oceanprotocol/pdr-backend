@@ -6,7 +6,7 @@ import pytest
 from web3 import Web3
 
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.ppss.web3_pp import mock_web3_pp, Web3PP
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
@@ -174,3 +174,13 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
         contracts = web3_pp.get_contracts(feed_addrs)
     assert list(contracts.keys()) == feed_addrs
     assert contracts[ADDR].contract_address == ADDR
+
+
+@enforce_types
+def test_mock_web3_pp():
+    web3_pp = mock_web3_pp("development")
+    assert isinstance(web3_pp, Web3PP)
+    assert web3_pp.network == "development"
+
+    web3_pp = mock_web3_pp("sapphire-mainnet")
+    assert web3_pp.network == "sapphire_mainnet"

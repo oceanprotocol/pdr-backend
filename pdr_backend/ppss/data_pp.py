@@ -6,7 +6,7 @@ import numpy as np
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
-from pdr_backend.util.timeframestr import verify_timeframe_str
+from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
 
 
 class DataPP:
@@ -49,21 +49,17 @@ class DataPP:
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return self.timeframe_m * 60 * 1000
+        return Timeframe(self.timeframe).ms
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return self.timeframe_m * 60
+        return Timeframe(self.timeframe).s
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        if self.timeframe == "5m":
-            return 5
-        if self.timeframe == "1h":
-            return 60
-        raise ValueError("need to support timeframe={self.timeframe}")
+        return Timeframe(self.timeframe).m
 
     @property
     def predict_feed_tups(self) -> List[Tuple[str, str, str]]:

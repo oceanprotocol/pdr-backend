@@ -1,20 +1,20 @@
-# comment out until more fleshed out
-# from pdr_backend.publisher.publish import fund_dev_accounts, publish
-
+from enforce_typing import enforce_types
 from pytest import approx
+
 from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.publisher.publish import publish
+from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.contract import get_address
 
 
-def test_publisher_publish(web3_pp, web3_config):
+@enforce_types
+def test_publish_asset(web3_pp, web3_config):
     base = "ETH"
     quote = "USDT"
     source = "kraken"
     timeframe = "5m"
     seconds_per_epoch = 300
     seconds_per_subscription = 60 * 60 * 24
-    nft_data, _, _, _, logs_erc = publish(
+    nft_data, _, _, _, logs_erc = publish_asset(
         s_per_epoch=seconds_per_epoch,
         s_per_subscription=seconds_per_subscription,
         base=base,

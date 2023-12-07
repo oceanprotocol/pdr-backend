@@ -1,4 +1,5 @@
 from enforce_typing import enforce_types
+
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -16,3 +17,9 @@ class PublisherSS(StrMixin):
         Returns the address of FeeCollector of the current network
         """
         return self.d[self.network]["fee_collector_address"]
+
+
+@enforce_types
+def mock_publisher_ss() -> PublisherSS:
+    d = {"developer": {"fee_collector_address": "0x1"}}
+    return PublisherSS("developer", d)

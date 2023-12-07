@@ -1,12 +1,9 @@
-import os
-from typing import List, Union
+from typing import Union
 
 from enforce_typing import enforce_types
-from eth_account import Account
 
 from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.erc721_factory import ERC721Factory
-from pdr_backend.models.token import Token
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
 
@@ -14,22 +11,7 @@ MAX_UINT256 = 2**256 - 1
 
 
 @enforce_types
-def fund_dev_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
-    for private_key_name, amount in accounts_to_fund:
-        if private_key_name in os.environ:
-            private_key = os.getenv(private_key_name)
-            account = Account.from_key(  # pylint: disable=no-value-for-parameter
-                private_key
-            )
-            print(
-                f"Sending OCEAN to account defined by envvar {private_key_name}"
-                f", with address {account.address}"
-            )
-            token.transfer(account.address, amount * 1e18, owner)
-
-
-@enforce_types
-def publish(
+def publish_asset(
     s_per_epoch: int,
     s_per_subscription: int,
     base: str,
@@ -42,6 +24,7 @@ def publish(
     cut: Union[int, float],
     web3_pp: Web3PP,
 ):
+    """Publish one specific asset to chain."""
     web3_config = web3_pp.web3_config
     pair = base + "/" + quote
     trueval_timeout = 60 * 60 * 24 * 3

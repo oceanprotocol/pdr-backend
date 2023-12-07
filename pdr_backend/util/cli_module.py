@@ -4,18 +4,18 @@ from enforce_typing import enforce_types
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.publisher.main import publish_assets
+from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
-
 from pdr_backend.trueval.trueval_agent_base import get_trueval
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.util.check_network import check_network_main
+from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
 
 from pdr_backend.util.cli_arguments import (
     ClaimOceanArgParser,
@@ -220,6 +220,8 @@ def do_publisher():
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    if ppss.web3_pp.network == "development":
+        fund_accounts_with_OCEAN(ppss.web3_pp)
     publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 
