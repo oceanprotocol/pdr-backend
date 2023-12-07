@@ -30,6 +30,7 @@ from pdr_backend.util.cli_arguments import (
     print_args,
     PublisherArgParser,
     SimArgParser,
+    TopupArgParser,
     TraderArgParser,
     TruevalArgParser,
 )
@@ -118,7 +119,7 @@ def do_claim_OCEAN():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire_mainnet")
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_ocean_payout(ppss)
 
 
@@ -128,7 +129,7 @@ def do_claim_ROSE():
     args = parser.parse_args()
     print_args(args)
 
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire_mainnet")
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_rose_payout(ppss)
 
 
@@ -224,9 +225,7 @@ def do_publisher():
 
 @enforce_types
 def do_topup():
-    parser = CheckNetworkArgParser(
-        "Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"
-    )
+    parser = TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup")
     args = parser.parse_args()
     print_args(args)
 

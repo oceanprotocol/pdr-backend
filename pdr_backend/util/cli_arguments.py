@@ -26,7 +26,7 @@ Utilities:
 Transactions are signed with envvar 'PRIVATE_KEY`.
 
 Tools for core team:
-  pdr trueval PPSS_FILE NETWORK
+  pdr trueval APPROACH PPSS_FILE NETWORK
   pdr dfbuyer PPSS_FILE NETWORK
   pdr publisher PPSS_FILE NETWORK
   pdr topup PPSS_FILE NETWORK
