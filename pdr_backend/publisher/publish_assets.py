@@ -13,19 +13,8 @@ _CUT = 0.2
 _RATE = 3 / (1 + _CUT + 0.001)  # token price
 _S_PER_SUBSCRIPTION = 60 * 60 * 24
 
-_TIMEFRAME_STRS = {
-    "development": ["5m"],
-    "sapphire-testnet": ["5m", "1h"],
-    "sapphire-mainnet": ["5m", "1h"],
-}
-
 _SOME = "BTC/USDT ETH/USDT XRP/USDT"
 _ALL = "BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT"
-_FEEDS_STRS = {
-    "development": [f"binance c {_SOME}"],
-    "sapphire-testnet": [f"binance c {_ALL}"],
-    "sapphire-mainnet": [f"binance c {_ALL}"],
-}
 
 
 @enforce_types
@@ -36,17 +25,21 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
     Meant to be used from CLI.
     """
     print(f"Publish on network = {web3_pp.network}")
-    if web3_pp.network == "development":
+    if web3_pp.network == "development" or "barge" in web3_pp.network:
         trueval_submitter_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
         fee_collector_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
+        timeframe_strs = ["5m"]
+        feeds_strs = [f"binance c {_SOME}"]
     elif "sapphire" in web3_pp.network:
         trueval_submitter_addr = get_address(web3_pp, "PredictoorHelper")
         fee_collector_addr = publisher_ss.fee_collector_address
+        timeframe_strs = ["5m", "1h"]
+        feeds_strs = [f"binance c {_ALL}"]
     else:
         raise ValueError(web3_pp.network)
 
-    for timeframe_str in _TIMEFRAME_STRS[web3_pp.network]:
-        feed_tups = unpack_feeds_strs(_FEEDS_STRS[web3_pp.network])
+    for timeframe_str in timeframe_strs:
+        feed_tups = unpack_feeds_strs(feeds_strs)
         for exchange_str, _, pair_str in feed_tups:
             base_str, quote_str = unpack_pair_str(pair_str)
             publish_asset(

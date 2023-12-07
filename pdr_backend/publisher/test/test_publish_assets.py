@@ -10,9 +10,21 @@ from pdr_backend.publisher.publish_assets import publish_assets
 _PATH = "pdr_backend.publisher.publish_assets"
 
 
+def test_publish_assets_development(monkeypatch):
+    _test_barge("development", monkeypatch)
+
+
+def test_publish_assets_barge_pytest(monkeypatch):
+    _test_barge("barge-pytest", monkeypatch)
+
+
+def test_publish_assets_barge_pdr_bot(monkeypatch):
+    _test_barge("barge-predictoor-bot", monkeypatch)
+
+
 @enforce_types
-def test_publish_assets_dev(monkeypatch):
-    mock_publish_asset, web3_pp = _setup_and_publish("development", monkeypatch)
+def _test_barge(network, monkeypatch):
+    mock_publish_asset, web3_pp = _setup_and_publish(network, monkeypatch)
 
     n_calls = len(mock_publish_asset.call_args_list)
     assert n_calls == 1 * 3
@@ -32,9 +44,17 @@ def test_publish_assets_dev(monkeypatch):
     )
 
 
+def test_publish_assets_sapphire_testnet(monkeypatch):
+    _test_sapphire("sapphire-testnet", monkeypatch)
+
+
+def test_publish_assets_sapphire_mainnet(monkeypatch):
+    _test_sapphire("sapphire-mainnet", monkeypatch)
+
+
 @enforce_types
-def test_publish_assets_sapphire(monkeypatch):
-    mock_publish_asset, _ = _setup_and_publish("sapphire-mainnet", monkeypatch)
+def _test_sapphire(network, monkeypatch):
+    mock_publish_asset, _ = _setup_and_publish(network, monkeypatch)
 
     n_calls = len(mock_publish_asset.call_args_list)
     assert n_calls == 2 * 10
