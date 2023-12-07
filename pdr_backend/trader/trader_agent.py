@@ -19,23 +19,24 @@ class TraderAgent:
         _do_trade: Optional[Callable[[Feed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
+        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
+
         self.ppss = ppss
         self._do_trade = _do_trade if _do_trade else self.do_trade
 
-        self.feeds: Dict[str, Feed] = self.ppss.web3_pp.get_feeds(
-            pair_filters=self.ppss.data_pp.pair_strs,
-            timeframe_filters=[self.ppss.data_pp.timeframe],
-            source_filters=self.ppss.data_pp.exchange_strs,
+        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
+        cand_feeds = web3_pp.get_feeds(
+            data_pp.pair_strs,
+            [data_pp.timeframe],
+            data_pp.exchange_strs,
         )
-
-        if not self.feeds:
+        if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
+        self.feeds: Dict[str, Feed] = cand_feeds
 
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.ppss.web3_pp.get_contracts(
-            feed_addrs
-        )  # [addr] : contract
+        self.contracts = web3_pp.get_contracts(feed_addrs)  # [addr] : contract
 
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0

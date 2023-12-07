@@ -33,25 +33,23 @@ class BasePredictoorAgent(ABC):
             assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
 
         # set config, ppss, and related
+        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
         self.ppss = ppss
 
         # set self.feeds
-        self.feeds: Dict[str, Feed] = {}
-
-        x = list(self.ppss.data_pp.pair_strs)
-        y = list([self.ppss.data_pp.timeframe])
-        z = list(self.ppss.data_pp.exchange_strs)
-        cand_feeds = self.ppss.web3_pp.get_feeds(x, y, z)
-        #     pair_filters=self.ppss.data_pp.pair_strs,
-        #     timeframe_filters=[self.ppss.data_pp.timeframe],
-        #     source_filters=self.ppss.data_pp.exchange_strs,
-        # )
+        cand_feeds = web3_pp.get_feeds(
+            data_pp.pair_strs,
+            [data_pp.timeframe],
+            data_pp.exchange_strs,
+        )
         if not cand_feeds:
             print("No feeds found. Exiting")
             sys.exit()
+
+        self.feeds: Dict[str, Feed] = {}
         for feed in cand_feeds.values():
             feed_tup = (feed.source, "close", feed.pair)
-            if feed_tup in self.ppss.data_pp.predict_feed_tups:
+            if feed_tup in data_pp.predict_feed_tups:
                 self.feeds[feed.address] = feed
 
         if not self.feeds:
@@ -60,9 +58,7 @@ class BasePredictoorAgent(ABC):
 
         # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = self.ppss.web3_pp.get_contracts(
-            feed_addrs
-        )  # [addr] : contract
+        self.contracts = web3_pp.get_contracts(feed_addrs)  # [addr] : contract
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0
