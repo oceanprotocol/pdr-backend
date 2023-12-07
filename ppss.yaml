@@ -5,7 +5,7 @@ data_pp:
   predict_feeds:
     - binance c BTC/USDT
   sim_only:
-    test_n : 200
+    test_n : 200 # number of epochs to simulate
 
 data_ss:
   input_feeds :
@@ -13,10 +13,10 @@ data_ss:
 #    - binance c ETH/USDT,TRX/USDT,ADA/USDT
 #    - binance c DOT/USDT
 #    - kraken ohlcv BTC/USDT
-  st_timestr: 2023-06-01_00:00
-  fin_timestr: now
-  max_n_train: 5000
-  autoregressive_n : 10
+  st_timestr: 2023-06-01_00:00 # starting date for data
+  fin_timestr: now # ending date for data
+  max_n_train: 5000 # no. epochs to train model on
+  autoregressive_n : 10 # no. epochs that model looks back, to predict next
   parquet_dir: parquet_data
 
 model_ss:
@@ -24,13 +24,13 @@ model_ss:
   
 predictoor_ss:
   bot_only:
-    s_until_epoch_end: 60
-    stake_amount: 1 # in OCEAN
+    s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
+    stake_amount: 1 # stake this amount with each prediction. In OCEAN
   approach3:
 
 trader_pp:
   sim_only:
-    fee_percent: 0.0
+    fee_percent: 0.0 # simulated % fee
     init_holdings:
       - 100000 USDT
       - 0 BTC
@@ -38,11 +38,11 @@ trader_pp:
 
 trader_ss:
   sim_only:
-    buy_amt: 10 USD
+    buy_amt: 10 USD # buy this amount in each epoch
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
-    position_size: 3
+    position_size: 3 # buy/sell this amount in each epoch
 
 sim_ss: # sim only
   do_plot: True

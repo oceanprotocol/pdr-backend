@@ -1,4 +1,3 @@
-import os
 from unittest.mock import Mock, patch
 
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
@@ -26,17 +25,6 @@ def slot():
         feed=feed,
         slot_number=1692943200,
     )
-
-
-@pytest.fixture(autouse=True)
-def set_env_vars():
-    original_value = os.environ.get("OWNER_ADDRS", None)
-    os.environ["OWNER_ADDRS"] = "0xBE5449a6A97aD46c8558A3356267Ee5D2731ab5e"
-    yield
-    if original_value is not None:
-        os.environ["OWNER_ADDRS"] = original_value
-    else:
-        os.environ.pop("OWNER_ADDRS", None)
 
 
 @pytest.fixture()

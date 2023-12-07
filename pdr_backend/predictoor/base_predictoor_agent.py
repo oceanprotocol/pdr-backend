@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import sys
-from os import getenv
 import time
 from typing import Dict, List, Tuple
 
@@ -8,13 +7,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.ppss.ppss import PPSS
-
-_UNWANTED_ENVVARS = [
-    "PAIR_FILTER",
-    "TIMEFRAME_FILTER",
-    "SOURCE_FILTER",
-    "STAKE_AMOUNT",
-]
 
 
 @enforce_types
@@ -28,10 +20,6 @@ class BasePredictoorAgent(ABC):
     """
 
     def __init__(self, ppss: PPSS):
-        # preconditions
-        for envvar in _UNWANTED_ENVVARS:
-            assert getenv(envvar) is None, f"Must 'unset {envvar}'. Set yaml."
-
         # set config, ppss, and related
         web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
         self.ppss = ppss

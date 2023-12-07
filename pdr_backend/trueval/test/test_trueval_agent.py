@@ -117,24 +117,13 @@ def test_get_trueval_slot_too_many_requests_retry(
 
 @enforce_types
 def test_take_step(slot, agent):
-    mocked_env = {
-        "SLEEP_TIME": "1",
-        "BATCH_SIZE": "1",
-    }
-
     mocked_web3_config = MagicMock(spec=Web3PP)
     mocked_web3_config.get_pending_slots = Mock()
     mocked_web3_config.get_pending_slots.return_value = [slot]
 
-    with patch.dict("os.environ", mocked_env), patch.object(
-        agent.ppss, "web3_pp", new=mocked_web3_config
-    ), patch(
+    with patch.object(agent.ppss, "web3_pp", new=mocked_web3_config), patch(
         "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
-    ), patch(
-        "time.sleep"
-    ), patch.object(
-        TruevalAgentSingle, "process_slot"
-    ) as ps_mock:
+    ), patch("time.sleep"), patch.object(TruevalAgentSingle, "process_slot") as ps_mock:
         agent.take_step()
 
     ps_mock.assert_called_once_with(slot)
@@ -142,24 +131,13 @@ def test_take_step(slot, agent):
 
 @enforce_types
 def test_run(slot, agent):
-    mocked_env = {
-        "SLEEP_TIME": "1",
-        "BATCH_SIZE": "1",
-    }
-
     mocked_web3_config = MagicMock(spec=Web3PP)
     mocked_web3_config.get_pending_slots = Mock()
     mocked_web3_config.get_pending_slots.return_value = [slot]
 
-    with patch.dict("os.environ", mocked_env), patch.object(
-        agent.ppss, "web3_pp", new=mocked_web3_config
-    ), patch(
+    with patch.object(agent.ppss, "web3_pp", new=mocked_web3_config), patch(
         "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
-    ), patch(
-        "time.sleep"
-    ), patch.object(
-        TruevalAgentSingle, "process_slot"
-    ) as ps_mock:
+    ), patch("time.sleep"), patch.object(TruevalAgentSingle, "process_slot") as ps_mock:
         agent.run(True)
 
     ps_mock.assert_called_once_with(slot)
