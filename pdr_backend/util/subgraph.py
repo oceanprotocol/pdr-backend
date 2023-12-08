@@ -138,46 +138,28 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
 
 
 @enforce_types
-def query_feed_contracts(  # pylint: disable=too-many-statements
+def query_feed_contracts(
     subgraph_url: str,
-    pairs_string: Optional[str] = None,
-    timeframes_string: Optional[str] = None,
-    sources_string: Optional[str] = None,
     owners_string: Optional[str] = None,
-) -> Dict[str, dict]:
+) -> Dict[str, Feed]:
     """
     @description
-      Query the chain for prediction feed contracts, then filter down
-      according to pairs, timeframes, sources, or owners.
+      Query the chain for prediction feed contracts.
 
     @arguments
       subgraph_url -- e.g.
-      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None/"", allow all
-      timeframes -- E.g. filter to "5m,15m". If None/"", allow all
-      sources -- E.g. filter to "binance,kraken". If None/"", allow all
-      owners -- E.g. filter to "0x123,0x124". If None/"", allow all
+      owners -- E.g. filter to "0x123,0x124". If None or "", allow all
 
     @return
-      feed_dicts -- dict of [contract_id] : feed_dict
-        where feed_dict is a dict with fields name, address, symbol, ..
+      feeds -- dict of [feed_addr] : Feed
     """
-    pairs = None
-    timeframes = None
-    sources = None
     owners = None
-
-    if pairs_string:
-        pairs = pairs_string.split(",")
-    if timeframes_string:
-        timeframes = timeframes_string.split(",")
-    if sources_string:
-        sources = sources_string.split(",")
     if owners_string:
         owners = owners_string.lower().split(",")
 
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    feed_dicts = {}
+    feeds: Dict[str, Feed] = {}
 
     while True:
         query = """
@@ -214,40 +196,34 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
             if not contract_list:
                 break
             for contract in contract_list:
-                info725 = contract["token"]["nft"]["nftData"]
-                info = info_from_725(info725)  # {"pair": "ETH/USDT", "base":...}
+                _info725 = contract["token"]["nft"]["nftData"]
+                _info = info_from_725(_info725)  # {"pair": "ETH/USDT", "base":...}
+                pair, timeframe, source = (
+                    _info["pair"],
+                    _info["timeframe"],
+                    _info["source"],
+                )
+                if None in (pair, timeframe, source):
+                    continue
 
                 # filter out unwanted
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
                     continue
 
-                pair = info["pair"]
-                if pair and pairs and (pair not in pairs):
-                    continue
-
-                timeframe = info["timeframe"]
-                if timeframe and timeframes and (timeframe not in timeframes):
-                    continue
-
-                source = info["source"]
-                if source and sources and (source not in sources):
-                    continue
-
                 # ok, add this one
-                addr = contract["id"]
-                feed_dict = {
-                    "name": contract["token"]["name"],
-                    "address": contract["id"],
-                    "symbol": contract["token"]["symbol"],
-                    "seconds_per_epoch": int(contract["secondsPerEpoch"]),
-                    "seconds_per_subscription": int(contract["secondsPerSubscription"]),
-                    "trueval_submit_timeout": int(contract["truevalSubmitTimeout"]),
-                    "owner": owner_id,
-                    "last_submited_epoch": 0,
-                }
-                feed_dict.update(info)
-                feed_dicts[addr] = feed_dict
+                feed = Feed(
+                    name=contract["token"]["name"],
+                    address=contract["id"],
+                    symbol=contract["token"]["symbol"],
+                    seconds_per_subscription=int(contract["secondsPerSubscription"]),
+                    trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
+                    owner=owner_id,
+                    pair=pair,
+                    timeframe=timeframe,
+                    source=source,
+                )
+                feeds[feed.address] = feed
 
         except Exception as e:
             e_str = str(e)
@@ -266,7 +242,10 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
                 print("Future errors like this will be hidden")
             return {}
 
-    return feed_dicts
+    # postconditions
+    for feed in feeds.values():
+        assert isinstance(feed, Feed)
+    return feeds
 
 
 def get_pending_slots(
@@ -363,7 +342,6 @@ def get_pending_slots(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
-                    seconds_per_epoch=int(contract["secondsPerEpoch"]),
                     seconds_per_subscription=int(contract["secondsPerSubscription"]),
                     trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
                     owner=contract["token"]["nft"]["owner"]["id"],

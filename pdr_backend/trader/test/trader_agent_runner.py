@@ -13,25 +13,18 @@ def mock_feed():
     feed.name = "test feed"
     feed.address = "0xtestfeed"
     feed.seconds_per_epoch = 60
+    feed.source = "binance"
+    feed.pair = "BTC/USDT"
     return feed
 
 
 @enforce_types
-def mock_ppss(predictoor_contract, tmpdir):
-    yaml_str = fast_test_yaml_str(tmpdir)
+def mock_ppss():
+    yaml_str = fast_test_yaml_str(tmpdir=None)
     ppss = PPSS(yaml_str=yaml_str, network="development")
 
     ppss.data_pp.set_timeframe("5m")
-    ppss.data_pp.set_predict_feeds(["mexc c BTC/USDT"])
-
-    ppss.web3_pp.get_feeds = Mock()
-    ppss.web3_pp.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
-    ppss.web3_pp.get_contracts = Mock()
-    ppss.web3_pp.get_contracts.return_value = {
-        "0x0000000000000000000000000000000000000000": predictoor_contract
-    }
+    ppss.data_pp.set_predict_feeds(["binance c BTC/USDT"])
 
     ppss.trader_ss.set_max_tries(10)
     ppss.trader_ss.set_position_size(10.0)
@@ -41,12 +34,10 @@ def mock_ppss(predictoor_contract, tmpdir):
 
 
 @enforce_types
-def run_no_feeds(tmpdir, agent_class):
-    yaml_str = fast_test_yaml_str(tmpdir)
+def run_no_feeds(agent_class):
+    yaml_str = fast_test_yaml_str()
     ppss = PPSS(yaml_str=yaml_str, network="development")
     ppss.data_pp.set_predict_feeds([])
-    ppss.web3_pp.get_feeds = Mock()
-    ppss.web3_pp.get_feeds.return_value = {}
 
     with pytest.raises(ValueError):
         agent_class(ppss)

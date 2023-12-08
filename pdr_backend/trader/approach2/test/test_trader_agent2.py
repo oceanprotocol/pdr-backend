@@ -14,9 +14,9 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
+def test_new_agent(check_subscriptions_and_subscribe_mock):
     # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss = mock_ppss()
 
     # agent
     agent = TraderAgent2(ppss)
@@ -24,20 +24,19 @@ def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, 
     check_subscriptions_and_subscribe_mock.assert_called_once()
 
     # when no feeds
-    run_no_feeds(tmpdir, TraderAgent2)
+    run_no_feeds(TraderAgent2)
 
 
 @enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-async def test_do_trade(
+async def test_do_trade(  # pylint: disable=unused-argument
     check_subscriptions_and_subscribe_mock,
     predictoor_contract,
     web3_config,
-    tmpdir,
 ):
     # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss = mock_ppss()
     ppss.web3_pp.set_web3_config(web3_config)
 
     # agent
@@ -72,9 +71,11 @@ async def test_do_trade(
 # Test for TraderAgent2.update_positions
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_update_positions(predictoor_contract, web3_config, tmpdir):
+def test_update_positions(  # pylint: disable=unused-argument
+    predictoor_contract, web3_config
+):
     # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss = mock_ppss()
     ppss.web3_pp.set_web3_config(web3_config)
 
     # agent
@@ -111,9 +112,11 @@ def test_update_positions(predictoor_contract, web3_config, tmpdir):
 # Test for TraderAgent2.should_close
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_should_close(predictoor_contract, web3_config, tmpdir):
+def test_should_close(  # pylint: disable=unused-argument
+    predictoor_contract, web3_config
+):
     # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
+    ppss = mock_ppss()
     ppss.web3_pp.set_web3_config(web3_config)
     ppss.data_pp.set_timeframe("5m")
 

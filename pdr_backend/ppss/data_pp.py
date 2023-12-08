@@ -1,8 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 import numpy as np
 
+from pdr_backend.models.feed import Feed
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
@@ -116,6 +117,29 @@ class DataPP:
         return unpack_pair_str(self.pair_str)[1]
 
     @enforce_types
+    def filter_feeds(self, cand_feeds: Dict[str, Feed]) -> Dict[str, Feed]:
+        """
+        @description
+          Filter to feeds that fit self.predict_feed_tups'
+            (exchange_str, pair) combos
+
+        @arguments
+          cand_feeds -- dict of [feed_addr] : Feed
+
+        @return
+          final_feeds -- dict of [feed_addr] : Feed
+        """
+        final_feeds: Dict[str, Feed] = {}
+        tups = set()  # to avoid duplicates
+        for feed in cand_feeds.values():
+            assert isinstance(feed, Feed)
+            feed_tup = (feed.source, "close", feed.pair)
+            if feed_tup in self.predict_feed_tups and feed_tup not in tups:
+                final_feeds[feed.address] = feed
+                tups.add(feed_tup)
+        return final_feeds
+
+    @enforce_types
     def __str__(self) -> str:
         s = "DataPP:\n"
         s += f"  timeframe={self.timeframe}\n"
@@ -123,3 +147,15 @@ class DataPP:
         s += f"  test_n={self.test_n}\n"
         s += "-" * 10 + "\n"
         return s
+
+
+@enforce_types
+def mock_data_pp(timeframe_str: str, predict_feeds: List[str]) -> DataPP:
+    data_pp = DataPP(
+        {
+            "timeframe": timeframe_str,
+            "predict_feeds": predict_feeds,
+            "sim_only": {"test_n": 2},
+        }
+    )
+    return data_pp

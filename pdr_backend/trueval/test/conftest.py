@@ -12,13 +12,12 @@ def slot():
         name="ETH-USDT",
         address="0xBE5449a6A97aD46c8558A3356267Ee5D2731ab5e",
         symbol="ETH-USDT",
-        seconds_per_epoch=60,
         seconds_per_subscription=500,
+        trueval_submit_timeout=100,
+        owner="0xowner",
         pair="eth-usdt",
         source="kraken",
         timeframe="5m",
-        trueval_submit_timeout=100,
-        owner="0xowner",
     )
 
     return Slot(

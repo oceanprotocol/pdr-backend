@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Callable
 import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.data_eng.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.models.slot import Slot
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.feed import Feed
@@ -86,7 +87,7 @@ class TruevalAgentBase(ABC):
 
 @enforce_types
 def get_trueval(
-    feed: Feed, initial_timestamp: int, end_timestamp: int
+    feed: Feed, init_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
     """
     @description
@@ -95,11 +96,12 @@ def get_trueval(
 
     @arguments
         feed -- Feed -- The feed object containing pair details
-        initial_timestamp -- int -- The starting timestamp.
+        init_timestamp -- int -- The starting timestamp.
         end_timestamp -- int -- The ending timestamp.
 
     @return
-        Tuple[bool, bool] -- The trueval and a boolean indicating if the round should be canceled.
+        trueval -- did price rise y/n?
+        cancel_round -- should we cancel the round y/n?
     """
     symbol = feed.pair
     symbol = symbol.replace("-", "/")
@@ -107,20 +109,30 @@ def get_trueval(
 
     # since we will get close price
     # we need to go back 1 candle
-    initial_timestamp -= feed.seconds_per_epoch
+    init_timestamp -= feed.seconds_per_epoch
     end_timestamp -= feed.seconds_per_epoch
 
     # convert seconds to ms
-    initial_timestamp = int(initial_timestamp * 1000)
+    init_timestamp = int(init_timestamp * 1000)
     end_timestamp = int(end_timestamp * 1000)
 
     exchange_class = getattr(ccxt, feed.source)
     exchange = exchange_class()
-    price_data = exchange.fetch_ohlcv(
-        symbol, feed.timeframe, since=initial_timestamp, limit=2
+    tohlcvs = safe_fetch_ohlcv(
+        exchange, symbol, feed.timeframe, since=init_timestamp, limit=2
     )
-    if price_data[0][0] != initial_timestamp or price_data[1][0] != end_timestamp:
-        raise Exception("Timestamp mismatch")
-    if price_data[1][4] == price_data[0][4]:
-        return (False, True)
-    return (price_data[1][4] >= price_data[0][4], False)
+    assert len(tohlcvs) == 2, f"expected exactly 2 tochlv tuples. {tohlcvs}"
+    init_tohlcv, end_tohlcv = tohlcvs[0], tohlcvs[1]
+
+    assert init_tohlcv[0] == init_timestamp, (init_tohlcv[0], init_timestamp)
+    assert end_tohlcv[0] == end_timestamp, (end_tohlcv[0], end_timestamp)
+
+    init_c, end_c = init_tohlcv[4], end_tohlcv[4]  # c = closing price
+    if end_c == init_c:
+        trueval = False
+        cancel_round = True
+        return trueval, cancel_round
+
+    trueval = end_c > init_c
+    cancel_round = False
+    return trueval, cancel_round

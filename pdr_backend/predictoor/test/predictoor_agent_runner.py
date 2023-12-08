@@ -9,10 +9,10 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
+from pdr_backend.models.feed import mock_feed
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.util.constants import S_PER_DAY
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 FEED_ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"
@@ -23,27 +23,17 @@ INIT_BLOCK_NUMBER = 13
 
 class MockQuery:
     def __init__(self, data_pp):
-        feed_s = f"{data_pp.exchange_str}|{data_pp.pair_str}|{data_pp.timeframe}"
-        feed_dict = {  # info inside a predictoor contract
-            "name": f"Feed of {feed_s}",
-            "address": FEED_ADDR,
-            "symbol": f"FEED:{feed_s}",
-            "seconds_per_epoch": data_pp.timeframe_s,
-            "seconds_per_subscription": 1 * S_PER_DAY,
-            "trueval_submit_timeout": 15,
-            "owner": OWNER_ADDR,
-            "pair": data_pp.pair_str,
-            "timeframe": data_pp.timeframe,
-            "source": data_pp.exchange_str,
-        }
-        self.feed_dict = feed_dict
+        self.feed = mock_feed(
+            timeframe_str=data_pp.timeframe,
+            exchange_str=data_pp.exchange_str,
+            pair_str=data_pp.pair_str,
+        )
 
     # mock query_feed_contracts()
     def mock_query_feed_contracts(
         self, *args, **kwargs
     ):  # pylint: disable=unused-argument
-        feed_dicts = {self.feed_dict["address"]: self.feed_dict}
-        return feed_dicts
+        return {self.feed.address: self.feed}
 
 
 # mock w3.eth.block_number, w3.eth.get_block()

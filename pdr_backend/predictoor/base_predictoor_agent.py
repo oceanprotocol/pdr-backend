@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-import sys
 import time
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.models.feed import print_feeds
 
 
 @enforce_types
@@ -20,33 +19,25 @@ class BasePredictoorAgent(ABC):
     """
 
     def __init__(self, ppss: PPSS):
-        # set config, ppss, and related
-        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
+        # ppss
         self.ppss = ppss
+        print("\n" + "-" * 80)
+        print(self.ppss)
 
         # set self.feeds
-        cand_feeds = web3_pp.get_feeds(
-            data_pp.pair_strs,
-            [data_pp.timeframe],
-            data_pp.exchange_strs,
-        )
-        if not cand_feeds:
-            print("No feeds found. Exiting")
-            sys.exit()
+        cand_feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        self.feeds: Dict[str, Feed] = {}
-        for feed in cand_feeds.values():
-            feed_tup = (feed.source, "close", feed.pair)
-            if feed_tup in data_pp.predict_feed_tups:
-                self.feeds[feed.address] = feed
+        print(f"Filter by predict_feeds: {ppss.data_pp.predict_feeds_strs}")
+        self.feeds = ppss.data_pp.filter_feeds(cand_feeds)
+        print_feeds(self.feeds, "filtered feeds")
 
         if not self.feeds:
-            print("No feeds left after filtering. Exiting")
-            sys.exit()
+            raise ValueError("No feeds found.")
 
         # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = web3_pp.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = ppss.web3_pp.get_contracts(feed_addrs)
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0
@@ -54,20 +45,6 @@ class BasePredictoorAgent(ABC):
         self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
             addr: [] for addr in self.feeds
         }
-
-        # print
-        print("\n" + "-" * 80)
-        print(self.ppss)
-
-        print("\n" + "." * 80)
-        print("Feeds (detailed):")
-        for feed in self.feeds.values():
-            print(f"  {feed.longstr()}")
-
-        print("\n" + "." * 80)
-        print("Feeds (succinct):")
-        for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
 
     def run(self):
         print("Starting main loop...")

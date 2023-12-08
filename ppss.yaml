@@ -102,7 +102,7 @@ web3_pp:
 
   barge-predictoor-bot:
     address_file: "~/barge-predictoor-bot.address.json"
-    private_key: "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
+    private_key: "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # address is 0xe2DD...
     rpc_url: http://4.245.224.119:8545 # from VPS 
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
     # get by: grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'

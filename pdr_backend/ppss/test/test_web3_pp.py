@@ -5,25 +5,11 @@ from enforce_typing import enforce_types
 import pytest
 from web3 import Web3
 
+from pdr_backend.models.feed import mock_feed
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.ppss.web3_pp import mock_web3_pp, Web3PP
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
-
-ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
-
-FEED_DICT = {  # info inside a predictoor contract
-    "name": "Contract Name",
-    "address": ADDR,
-    "symbol": "test",
-    "seconds_per_epoch": 300,
-    "seconds_per_subscription": 60,
-    "trueval_submit_timeout": 15,
-    "owner": "0xowner",
-    "pair": "BTC-ETH",
-    "timeframe": "1h",
-    "source": "binance",
-}
 
 _D1 = {
     "address_file": "address.json 1",
@@ -142,7 +128,7 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 
 @enforce_types
-def test_web3_pp__get_feeds__get_contracts(monkeypatch):
+def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
     if os.getenv("NETWORK_OVERRIDE"):
         monkeypatch.delenv("NETWORK_OVERRIDE")
 
@@ -150,30 +136,32 @@ def test_web3_pp__get_feeds__get_contracts(monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
+    feed = mock_feed("5m", "binance", "BTC/USDT")
+
     # test get_feeds(). Uses results from get_feeds
-    def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
-        feed_dicts = {ADDR: FEED_DICT}
-        return feed_dicts
+    def _mock_subgraph_query_feed_contracts(
+        *args, **kwargs
+    ):  # pylint: disable=unused-argument
+        return {feed.address: feed}
 
     with patch(
         "pdr_backend.ppss.web3_pp.query_feed_contracts",
-        _mock_query_feed_contracts,
+        _mock_subgraph_query_feed_contracts,
     ):
-        feeds = web3_pp.get_feeds()
+        feeds = web3_pp.query_feed_contracts()
 
-    feed_addrs = list(feeds.keys())
-    assert feed_addrs == [ADDR]
+    assert list(feeds.keys()) == [feed.address]
 
     # test get_contracts(). Uses results from get_feeds
     def _mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
         m = Mock()
-        m.contract_address = ADDR
+        m.contract_address = feed.address
         return m
 
     with patch("pdr_backend.ppss.web3_pp.PredictoorContract", _mock_contract):
-        contracts = web3_pp.get_contracts(feed_addrs)
-    assert list(contracts.keys()) == feed_addrs
-    assert contracts[ADDR].contract_address == ADDR
+        contracts = web3_pp.get_contracts([feed.address])
+    assert list(contracts.keys()) == [feed.address]
+    assert contracts[feed.address].contract_address == feed.address
 
 
 @enforce_types

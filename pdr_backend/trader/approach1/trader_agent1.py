@@ -91,6 +91,10 @@ class TraderAgent1(TraderAgent):
         pred_nom, pred_denom = prediction
         print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
 
+        if pred_denom == 0:
+            print("  There's no stake on this, one way or the other. Exiting.")
+            return
+
         pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 

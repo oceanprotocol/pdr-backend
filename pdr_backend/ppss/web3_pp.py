@@ -5,13 +5,10 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.models.feed import dictToFeed, Feed, feed_dict_ok
+from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
-from pdr_backend.util.exchangestr import pack_exchange_str_list
 from pdr_backend.util.strutil import StrMixin
-from pdr_backend.util.pairstr import pack_pair_str_list
-from pdr_backend.util.timeframestr import pack_timeframe_str_list
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
@@ -91,6 +88,24 @@ class Web3PP(StrMixin):
     # --------------------------------
     # onchain feed data
     @enforce_types
+    def query_feed_contracts(self) -> Dict[str, Feed]:
+        """
+        @description
+          Gets all feeds, only filtered by self.owner_addrs
+
+        @return
+          feeds -- dict of [feed_addr] : Feed
+        """
+        feeds = query_feed_contracts(
+            subgraph_url=self.subgraph_url,
+            owners_string=self.owner_addrs,
+        )
+        # postconditions
+        for feed in feeds.values():
+            assert isinstance(feed, Feed)
+        return feeds
+
+    @enforce_types
     def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
         """
         @description
@@ -100,45 +115,12 @@ class Web3PP(StrMixin):
           feed_addrs -- which feeds we want
 
         @return
-          contract -- dict of [feed_addr] : PredictoorContract
+          contracts -- dict of [feed_addr] : PredictoorContract
         """
         contracts = {}
         for addr in feed_addrs:
             contracts[addr] = PredictoorContract(self, addr)
         return contracts
-
-    # keep off. @enforce_types
-    def get_feeds(
-        self,
-        pair_filters: Optional[List[str]] = None,
-        timeframe_filters: Optional[List[str]] = None,
-        source_filters: Optional[List[str]] = None,
-    ) -> Dict[str, Feed]:
-        """
-        @description
-          Query chain to get Feeds
-
-        @arguments
-          pair_filters -- filter to these pairs. eg ["BTC/USDT", "ETH/USDT"]
-          timeframe_filters -- filter to just these timeframes. eg ["5m", "1h"]
-          source_filters -- filter to just these exchanges. eg ["binance"]
-
-        @return
-          feeds -- dict of [feed_addr] : Feed
-        """
-        feed_dicts = query_feed_contracts(
-            subgraph_url=self.subgraph_url,
-            pairs_string=pack_pair_str_list(pair_filters),
-            timeframes_string=pack_timeframe_str_list(timeframe_filters),
-            sources_string=pack_exchange_str_list(source_filters),
-            owners_string=self.owner_addrs,
-        )
-        feeds = {
-            addr: dictToFeed(feed_dict)
-            for addr, feed_dict in feed_dicts.items()
-            if feed_dict_ok(feed_dict)
-        }
-        return feeds
 
     @enforce_types
     def get_pending_slots(

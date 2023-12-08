@@ -9,6 +9,15 @@ from pdr_backend.util.timeframestr import (
 
 
 @enforce_types
+def test_timeframe_class_1m():
+    t = Timeframe("1m")
+    assert t.timeframe_str == "1m"
+    assert t.m == 1
+    assert t.s == 1 * 60
+    assert t.ms == 1 * 60 * 1000
+
+
+@enforce_types
 def test_timeframe_class_5m():
     t = Timeframe("5m")
     assert t.timeframe_str == "5m"
