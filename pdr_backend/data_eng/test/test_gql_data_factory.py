@@ -24,7 +24,14 @@ from pdr_backend.util.subgraph_predictions import (
 
 
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
-def test_update_gql1(mock_fetch_filtered_predictions, tmpdir, sample_daily_predictions):
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+def test_update_gql1(
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
+):
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
         tmpdir,
@@ -36,7 +43,14 @@ def test_update_gql1(mock_fetch_filtered_predictions, tmpdir, sample_daily_predi
 
 
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
-def test_update_gql2(mock_fetch_filtered_predictions, tmpdir, sample_daily_predictions):
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+def test_update_gql2(
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
+):
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
         tmpdir,
@@ -48,7 +62,14 @@ def test_update_gql2(mock_fetch_filtered_predictions, tmpdir, sample_daily_predi
 
 
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
-def test_update_gql3(mock_fetch_filtered_predictions, tmpdir, sample_daily_predictions):
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+def test_update_gql3(
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
+):
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
         tmpdir,
@@ -60,9 +81,14 @@ def test_update_gql3(mock_fetch_filtered_predictions, tmpdir, sample_daily_predi
 
 
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql_multiple(
-    mock_fetch_filtered_predictions, tmpdir, sample_daily_predictions
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
 ):
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
         tmpdir,
@@ -143,9 +169,9 @@ def _test_update_gql(
     mock_fetch_filtered_predictions.assert_called_with(
         st_ut_sec,
         fin_ut_sec,
-        [],
+        ["0x123"],
         "mainnet",
-        FilterMode.NONE,
+        FilterMode.CONTRACT_TS,
         payout_only=False,
         trueval_only=False,
     )
@@ -153,8 +179,8 @@ def _test_update_gql(
     # read parquet and columns
     def _preds_in_parquet(filename: str) -> List[int]:
         df = pl.read_parquet(filename)
-        assert df.drop("timestamp_ms").schema == predictions_schema
-        return df["timestamp_ms"].to_list()
+        assert df.schema == predictions_schema
+        return df["timestamp"].to_list()
 
     # assert expected length of preds in parquet
     preds: List[int] = _preds_in_parquet(filename)
@@ -168,17 +194,23 @@ def _test_update_gql(
     assert preds[-1] != fin_ut
 
     # assert all target_preds are registered in parquet
-    target_preds_ts_ms = [pred.__dict__["timestamp"] * 1000 for pred in target_preds]
-    for target_pred in target_preds_ts_ms:
-        assert target_pred in preds
+    target_preds_ts = [pred.__dict__["timestamp"] for pred in target_preds]
+    for target_pred in target_preds_ts:
+        assert target_pred * 1000 in preds
 
 
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_load_and_verify_schema(
-    mock_fetch_filtered_predictions, tmpdir, sample_daily_predictions
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
 ):
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
+
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
 
     _test_update_gql(
         mock_fetch_filtered_predictions,
@@ -201,7 +233,7 @@ def test_load_and_verify_schema(
 
     assert len(gql_dfs) == 1
     assert len(gql_dfs["raw_predictions"]) == 5
-    assert gql_dfs["raw_predictions"].drop("timestamp_ms").schema == predictions_schema
+    assert gql_dfs["raw_predictions"].schema == predictions_schema
 
 
 # ====================================================================
@@ -209,10 +241,15 @@ def test_load_and_verify_schema(
 
 
 @enforce_types
-def test_get_gql_dfs_calls(tmpdir, sample_daily_predictions):
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+def test_get_gql_dfs_calls(
+    mock_get_all_contract_ids_by_owner, tmpdir, sample_daily_predictions
+):
     """Test core DataFactory functions are being called"""
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
+
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
 
     _, _, _, _, _, gql_data_factory = _data_gql_sources(
         tmpdir,
@@ -242,7 +279,7 @@ def test_get_gql_dfs_calls(tmpdir, sample_daily_predictions):
         preds = pl.DataFrame([x.__dict__ for x in preds])
         preds = preds.with_columns(
             [
-                pl.col("timestamp").mul(1000).alias("timestamp_ms"),
+                pl.col("timestamp").mul(1000).alias("timestamp"),
             ]
         )
 

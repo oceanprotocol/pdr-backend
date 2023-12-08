@@ -12,11 +12,12 @@ from pdr_backend.util.timeutil import pretty_timestr, current_ut, ms_to_seconds
 
 from pdr_backend.data_eng.plutil import (
     has_data,
-    oldest_ut_ms,
-    newest_ut_ms,
+    oldest_ut,
+    newest_ut,
 )
 
 from pdr_backend.util.subgraph_predictions import (
+    get_all_contract_ids_by_owner,
     fetch_filtered_predictions,
     FilterMode,
 )
@@ -38,7 +39,6 @@ predictions_schema = {
 }
 
 
-# TO DO: abstract sync operations => factory_config["update_fn"]()
 # mypy: disable-error-code=operator
 @enforce_types
 class GQLDataFactory:
@@ -46,7 +46,7 @@ class GQLDataFactory:
     Roles:
     - From each GQL API, fill >=1 parquet_dfs -> parquet files data lake
     - From parquet_dfs, calculate stats and other dfs
-    - GQLDataFactory expects "timestamp_ms" column to be injected into all raw dfs
+    - All timestamps, after fetching, are transformed into milliseconds wherever appropriate
 
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
@@ -58,11 +58,27 @@ class GQLDataFactory:
         self.ss = ss
         self.web3 = web3
 
+        # get network
+        if "main" in self.web3.network:
+            network = "mainnet"
+        elif "test" in self.web3.network:
+            network = "testnet"
+        else:
+            raise ValueError(self.web3.network)
+
+        # filter by feed contract address
+        contract_list = get_all_contract_ids_by_owner(
+            owner_address=self.web3.owner_addrs,
+            network=network,
+        )
+        contract_list = [f.lower() for f in contract_list]
+
         # TO-DO: Roll into yaml config
         self.factory_config = {
             "raw_predictions": {
                 "update_fn": self._update_hist_predictions,
                 "schema": predictions_schema,
+                "contract_list": contract_list,
             },
         }
 
@@ -151,11 +167,7 @@ class GQLDataFactory:
             os.remove(filename)
             return self.ss.st_timestamp
 
-        # gql data is in seconds, not ms
-        file_ut0, file_utN = oldest_ut_ms(filename), newest_ut_ms(filename)
-        print(f"      Oldest record: {pretty_timestr(file_ut0)}")
-        print(f"      Latest record: {pretty_timestr(file_utN)}")
-        print(f"      Resume from latest + 1 sec: {pretty_timestr(file_utN + 1000)}")
+        file_utN = newest_ut(filename)
         return file_utN + 1000
 
     def _load_parquet(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
@@ -179,7 +191,7 @@ class GQLDataFactory:
             # load all data from file
             parquet_df = pl.read_parquet(filename)
             parquet_df = parquet_df.filter(
-                (pl.col("timestamp_ms") >= st_ut) & (pl.col("timestamp_ms") <= fin_ut)
+                (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
             )
 
             # postcondition
@@ -187,14 +199,9 @@ class GQLDataFactory:
                 "timestamp" in parquet_df.columns
                 and parquet_df["timestamp"].dtype == pl.Int64
             )
-            assert (
-                "timestamp_ms" in parquet_df.columns
-                and parquet_df["timestamp_ms"].dtype == pl.Int64
-            )
 
             # timestmap_ms should be the only extra column
-            assert parquet_df.drop("timestamp_ms").schema == config["schema"]
-
+            assert parquet_df.schema == config["schema"]
             gql_dfs[k] = parquet_df
 
         return gql_dfs
@@ -218,10 +225,10 @@ class GQLDataFactory:
         filename = os.path.join(gql_dir, basename)
         return filename
 
-    def _transform_timestamp(self, df: pl.DataFrame) -> pl.DataFrame:
+    def _transform_timestamp_to_ms(self, df: pl.DataFrame) -> pl.DataFrame:
         df = df.with_columns(
             [
-                pl.col("timestamp").mul(1000).alias("timestamp_ms"),
+                pl.col("timestamp").mul(1000).alias("timestamp"),
             ]
         )
         return df
@@ -233,7 +240,7 @@ class GQLDataFactory:
         @description
             Fetch raw predictions from subgraph, and save to parquet file.
 
-            Update function for graphql query, returns raw data + timestamp_ms
+            Update function for graphql query, returns raw data + transforms timestamp into ms
             such that the rest of gql_data_factory can work with ms
         """
         # get network
@@ -248,9 +255,9 @@ class GQLDataFactory:
         predictions = fetch_filtered_predictions(
             ms_to_seconds(st_ut),
             ms_to_seconds(fin_ut),
-            [],
+            config["contract_list"],
             network,
-            FilterMode.NONE,
+            FilterMode.CONTRACT_TS,
             payout_only=False,
             trueval_only=False,
         )
@@ -259,9 +266,9 @@ class GQLDataFactory:
             print("      No predictions to fetch. Exit.")
             return
 
-        # convert predictions to df and calculate timestamp_ms
+        # convert predictions to df and transform timestamp into ms
         predictions_df = self._object_list_to_df(predictions, config["schema"])
-        predictions_df = self._transform_timestamp(predictions_df)
+        predictions_df = self._transform_timestamp_to_ms(predictions_df)
 
         # output to parquet
         self._save_parquet(filename, predictions_df)
@@ -286,13 +293,16 @@ class GQLDataFactory:
 
         # precondition
         assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
-        assert "timestamp_ms" in df.columns and df["timestamp_ms"].dtype == pl.Int64
 
-        if os.path.exists(filename):  # append existing file
-            # TO DO: Implement parquet-append with pyarrow
+        if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
             df.write_parquet(filename)
+
+            duplicate_rows = df.filter(pl.struct("id").is_duplicated())
+            if len(duplicate_rows) > 0:
+                print(f"Duplicate rows found. {len(duplicate_rows)} rows:")
+
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")
         else:  # write new file

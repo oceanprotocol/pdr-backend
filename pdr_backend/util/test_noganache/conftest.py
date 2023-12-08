@@ -35,7 +35,7 @@ def _web3_pp():
         {
             "sapphire-mainnet": {
                 "subgraph_url": "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
-                "owner_addrs": "0x123",
+                "owner_addrs": "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703",
             }
         },
         network="sapphire-mainnet",

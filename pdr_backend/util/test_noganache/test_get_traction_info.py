@@ -13,7 +13,9 @@ from pdr_backend.util.timeutil import timestr_to_ut
 @patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
 @patch("pdr_backend.util.get_traction_info.plot_traction_cum_sum_statistics")
 @patch("pdr_backend.util.get_traction_info.plot_traction_daily_statistics")
+@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_get_traction_info_main_mainnet(
+    mock_get_all_contract_ids_by_owner,
     mock_plot_traction_daily_statistics,
     mock_plot_traction_cum_sum_statistics,
     mock_fetch_filtered_predictions,
@@ -21,6 +23,7 @@ def test_get_traction_info_main_mainnet(
     mock_ppss_web3,
     sample_daily_predictions,
 ):
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     mock_fetch_filtered_predictions.return_value = sample_daily_predictions
 
     st_timestr = "2023-11-02"
@@ -31,9 +34,9 @@ def test_get_traction_info_main_mainnet(
     mock_fetch_filtered_predictions.assert_called_with(
         1698883200,
         1699142400,
-        [],
+        ["0x123"],
         "mainnet",
-        FilterMode.NONE,
+        FilterMode.CONTRACT_TS,
         payout_only=False,
         trueval_only=False,
     )
@@ -52,7 +55,7 @@ def test_get_traction_info_main_mainnet(
     preds_df = pl.DataFrame(preds)
     preds_df = preds_df.with_columns(
         [
-            pl.col("timestamp").mul(1000).alias("timestamp_ms"),
+            pl.col("timestamp").mul(1000).alias("timestamp"),
         ]
     )
 
