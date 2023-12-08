@@ -74,6 +74,7 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
     )
 
 
+# pylint: disable=line-too-long
 @enforce_types
 def _web3_pp():
     return Web3PP(
@@ -82,7 +83,7 @@ def _web3_pp():
                 "subgraph_url": "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
             }
         },
-        network="sapphire-mainnet"
+        network="sapphire-mainnet",
     )
 
 

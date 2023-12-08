@@ -14,20 +14,31 @@ def mock_ppss(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp("my_tmpdir")
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
+    ppss.web3_pp = Mock()
+    return ppss
+
+
+@enforce_types
+@pytest.fixture(scope="session")
+def mock_ppss_web3(tmpdir_factory):
+    tmpdir = tmpdir_factory.mktemp("my_tmpdir")
+    s = fast_test_yaml_str(tmpdir)
+    ppss = PPSS(yaml_str=s, network="development")
     ppss.web3_pp = _web3_pp()
     return ppss
 
 
+# pylint: disable=line-too-long
 @enforce_types
 def _web3_pp():
     return Web3PP(
         {
             "sapphire-mainnet": {
                 "subgraph_url": "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
-                "owner_addrs": "0x123"
+                "owner_addrs": "0x123",
             }
         },
-        network="sapphire-mainnet"
+        network="sapphire-mainnet",
     )
 
 
@@ -148,6 +159,7 @@ def sample_second_predictions():
         ),
     ]
 
+
 @enforce_types
 @pytest.fixture(scope="session")
 def sample_daily_predictions():
@@ -162,7 +174,7 @@ def sample_daily_predictions():
             timestamp=1698865200,
             source="binance",
             payout=0.0500,
-            slot=1698865200, #Nov 01
+            slot=1698865200,  # Nov 01
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -175,7 +187,7 @@ def sample_daily_predictions():
             timestamp=1698951600,
             source="binance",
             payout=0.0,
-            slot=1698951600, #Nov 02
+            slot=1698951600,  # Nov 02
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -188,7 +200,7 @@ def sample_daily_predictions():
             timestamp=1699038000,
             source="binance",
             payout=0.0500,
-            slot=1699038000, #Nov 03
+            slot=1699038000,  # Nov 03
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -201,7 +213,7 @@ def sample_daily_predictions():
             timestamp=1699124400,
             source="kraken",
             payout=0.0500,
-            slot=1699124400, #Nov 04
+            slot=1699124400,  # Nov 04
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -214,7 +226,7 @@ def sample_daily_predictions():
             timestamp=1699214400,
             source="binance",
             payout=0.0,
-            slot=1701589500, #Nov 05
+            slot=1701589500,  # Nov 05
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -227,7 +239,7 @@ def sample_daily_predictions():
             timestamp=1699300800,
             source="binance",
             payout=0.0500,
-            slot=1699300800, #Nov 06
+            slot=1699300800,  # Nov 06
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
     ]

@@ -11,21 +11,12 @@ from pdr_backend.util.predictoor_stats import (
     plot_traction_daily_statistics,
     plot_slot_daily_statistics,
 )
-from pdr_backend.util.subgraph_predictions import (
-    get_all_contract_ids_by_owner,
-    fetch_filtered_predictions,
-    FilterMode,
-)
-from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 from pdr_backend.data_eng.gql_data_factory import GQLDataFactory
 
 
 @enforce_types
 def get_traction_info_main(
-    ppss: PPSS,
-    start_timestr: str,
-    end_timestr: str,
-    pq_dir: str
+    ppss: PPSS, start_timestr: str, end_timestr: str, pq_dir: str
 ):
     data_ss = ppss.data_ss
     data_ss.d["st_timestr"] = start_timestr
@@ -41,7 +32,6 @@ def get_traction_info_main(
     predictions_df = gql_dfs["raw_predictions"]
 
     # calculate predictoor traction statistics and draw plots
-    print(">>>> predictions_df:", predictions_df)
     stats_df = get_traction_statistics(predictions_df)
     plot_traction_cum_sum_statistics(stats_df, pq_dir)
     plot_traction_daily_statistics(stats_df, pq_dir)

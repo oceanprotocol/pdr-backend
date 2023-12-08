@@ -1,14 +1,13 @@
 import os
-import sys
 from typing import Dict, List
 
 from enforce_typing import enforce_types
 import polars as pl
+from polars import Utf8, Int64, Float64, Boolean
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.mathutil import has_nan, fill_nans
 from pdr_backend.util.timeutil import pretty_timestr, current_ut, ms_to_seconds
 
 from pdr_backend.data_eng.plutil import (
@@ -22,25 +21,25 @@ from pdr_backend.util.subgraph_predictions import (
     FilterMode,
 )
 
-from polars import Utf8, Int64, Float64, Boolean, Utf8
-
 
 # RAW_PREDICTIONS_SCHEMA
 predictions_schema = {
-    'id': Utf8,
-    'pair': Utf8,
-    'timeframe': Utf8,
-    'prediction': Boolean,
-    'stake': Float64,
-    'trueval': Boolean,
-    'timestamp': Int64,
-    'source': Utf8,
-    'payout': Float64,
-    'slot': Int64,
-    'user': Utf8
+    "id": Utf8,
+    "pair": Utf8,
+    "timeframe": Utf8,
+    "prediction": Boolean,
+    "stake": Float64,
+    "trueval": Boolean,
+    "timestamp": Int64,
+    "source": Utf8,
+    "payout": Float64,
+    "slot": Int64,
+    "user": Utf8,
 }
 
 
+# TO DO: abstract sync operations => factory_config["update_fn"]()
+# mypy: disable-error-code=operator
 @enforce_types
 class GQLDataFactory:
     """
@@ -48,7 +47,7 @@ class GQLDataFactory:
     - From each GQL API, fill >=1 parquet_dfs -> parquet files data lake
     - From parquet_dfs, calculate stats and other dfs
     - GQLDataFactory expects "timestamp_ms" column to be injected into all raw dfs
-    
+
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
        - "datetime" values ares python datetime.datetime, UTC
@@ -60,14 +59,14 @@ class GQLDataFactory:
         self.web3 = web3
 
         # TO-DO: Roll into yaml config
-        self.gql_config = {
+        self.factory_config = {
             "raw_predictions": {
                 "update_fn": self._update_hist_predictions,
                 "schema": predictions_schema,
             },
         }
 
-    def get_gql_dfs(self) -> pl.DataFrame:
+    def get_gql_dfs(self) -> Dict[str, pl.DataFrame]:
         """
         @description
           Get historical dataframes across many feeds and timeframes.
@@ -116,8 +115,8 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
-        
-        for k, config in self.gql_config.items():
+
+        for k, config in self.factory_config.items():
             filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
@@ -129,12 +128,12 @@ class GQLDataFactory:
 
             print(f"    Fetching {k}")
             config["update_fn"](st_ut, fin_ut, filename, config)
- 
+
     def _calc_start_ut(self, filename: str) -> int:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
-            its data starts. If file exists, you can only append to end. 
+            its data starts. If file exists, you can only append to end.
 
         @arguments
           filename - parquet file with data. May or may not exist.
@@ -159,7 +158,7 @@ class GQLDataFactory:
         print(f"      Resume from latest + 1 sec: {pretty_timestr(file_utN + 1000)}")
         return file_utN + 1000
 
-    def _load_parquet(self, fin_ut: int) -> Dict[str, Dict[str, pl.DataFrame]]:
+    def _load_parquet(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
         """
         @arguments
           fin_ut -- finish timestamp
@@ -172,22 +171,30 @@ class GQLDataFactory:
         st_ut = self.ss.st_timestamp
 
         gql_dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
-        
-        for k, config in self.gql_config.items():
+
+        for k, config in self.factory_config.items():
             filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
             # load all data from file
             parquet_df = pl.read_parquet(filename)
-            parquet_df = parquet_df.filter((pl.col("timestamp_ms") >= st_ut) & (pl.col("timestamp_ms") <= fin_ut))
+            parquet_df = parquet_df.filter(
+                (pl.col("timestamp_ms") >= st_ut) & (pl.col("timestamp_ms") <= fin_ut)
+            )
 
             # postcondition
-            assert "timestamp" in parquet_df.columns and parquet_df["timestamp"].dtype == pl.Int64
-            assert "timestamp_ms" in parquet_df.columns and parquet_df["timestamp_ms"].dtype == pl.Int64
-            
+            assert (
+                "timestamp" in parquet_df.columns
+                and parquet_df["timestamp"].dtype == pl.Int64
+            )
+            assert (
+                "timestamp_ms" in parquet_df.columns
+                and parquet_df["timestamp_ms"].dtype == pl.Int64
+            )
+
             # timestmap_ms should be the only extra column
             assert parquet_df.drop("timestamp_ms").schema == config["schema"]
-            
+
             gql_dfs[k] = parquet_df
 
         return gql_dfs
@@ -199,29 +206,33 @@ class GQLDataFactory:
 
         @arguments
           filename_str -- eg "subgraph_predictions"
-          
+
         @return
           parquet_filename -- name for parquet file.
         """
         gql_dir = os.path.join(self.ss.parquet_dir, "gql")
         if not os.path.exists(gql_dir):
             os.makedirs(gql_dir)
-        
+
         basename = f"{filename_str}.parquet"
         filename = os.path.join(gql_dir, basename)
         return filename
 
     def _transform_timestamp(self, df: pl.DataFrame) -> pl.DataFrame:
-        df = df.with_columns([
-            pl.col("timestamp").mul(1000).alias("timestamp_ms"),
-        ])
+        df = df.with_columns(
+            [
+                pl.col("timestamp").mul(1000).alias("timestamp_ms"),
+            ]
+        )
         return df
 
-    def _update_hist_predictions(self, st_ut: int, fin_ut: int, filename: str, config: Dict):
+    def _update_hist_predictions(
+        self, st_ut: int, fin_ut: int, filename: str, config: Dict
+    ):
         """
         @description
             Fetch raw predictions from subgraph, and save to parquet file.
-            
+
             Update function for graphql query, returns raw data + timestamp_ms
             such that the rest of gql_data_factory can work with ms
         """
@@ -244,13 +255,10 @@ class GQLDataFactory:
             trueval_only=False,
         )
 
-        if(len(predictions) == 0):
+        if len(predictions) == 0:
             print("      No predictions to fetch. Exit.")
             return
-        else:
-            print(f"      Fetched {len(predictions)} predictions.")
-            print(f"      Predictions: {predictions[0].__dict__}")
-        
+
         # convert predictions to df and calculate timestamp_ms
         predictions_df = self._object_list_to_df(predictions, config["schema"])
         predictions_df = self._transform_timestamp(predictions_df)
@@ -269,7 +277,7 @@ class GQLDataFactory:
         assert obj_df.schema == schema
 
         return obj_df
-    
+
     @enforce_types
     def _save_parquet(self, filename: str, df: pl.DataFrame):
         """write to parquet file

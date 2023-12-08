@@ -98,7 +98,7 @@ def test_get_traction_statistics(
 @enforce_types
 def test_get_slot_statistics(sample_first_predictions, sample_second_predictions):
     predictions = sample_first_predictions + sample_second_predictions
-    
+
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in predictions]
     preds_df = pl.DataFrame(preds_dicts)
@@ -130,7 +130,7 @@ def test_plot_slot_statistics(
     mock_savefig, sample_first_predictions, sample_second_predictions
 ):
     predictions = sample_first_predictions + sample_second_predictions
-    
+
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in predictions]
     preds_df = pl.DataFrame(preds_dicts)

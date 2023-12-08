@@ -11,6 +11,7 @@ def model_factory():
     model_ss = ModelSS({"approach": "LIN"})
     return ModelFactory(model_ss)
 
+
 @enforce_types
 @pytest.fixture(scope="session")
 def sample_first_predictions():
@@ -128,6 +129,7 @@ def sample_second_predictions():
         ),
     ]
 
+
 @enforce_types
 @pytest.fixture(scope="session")
 def sample_daily_predictions():
@@ -142,7 +144,7 @@ def sample_daily_predictions():
             timestamp=1698865200,
             source="binance",
             payout=0.0500,
-            slot=1698865200, #Nov 01
+            slot=1698865200,  # Nov 01
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -155,7 +157,7 @@ def sample_daily_predictions():
             timestamp=1698951600,
             source="binance",
             payout=0.0,
-            slot=1698951600, #Nov 02
+            slot=1698951600,  # Nov 02
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -168,7 +170,7 @@ def sample_daily_predictions():
             timestamp=1699038000,
             source="binance",
             payout=0.0500,
-            slot=1699038000, #Nov 03
+            slot=1699038000,  # Nov 03
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -181,7 +183,7 @@ def sample_daily_predictions():
             timestamp=1699124400,
             source="kraken",
             payout=0.0500,
-            slot=1699124400, #Nov 04
+            slot=1699124400,  # Nov 04
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -194,7 +196,7 @@ def sample_daily_predictions():
             timestamp=1699214400,
             source="binance",
             payout=0.0,
-            slot=1701589500, #Nov 05
+            slot=1701589500,  # Nov 05
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
         Prediction(
@@ -207,7 +209,7 @@ def sample_daily_predictions():
             timestamp=1699300800,
             source="binance",
             payout=0.0500,
-            slot=1699300800, #Nov 06
+            slot=1699300800,  # Nov 06
             user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         ),
     ]
