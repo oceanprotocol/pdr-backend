@@ -15,7 +15,7 @@ This example uses Sapphire testnet; you can modify envvars to run on Sapphire ma
 1. Setup
     - [Get tokens](#get-tokens)
     - [Pre-requisites](#pre-requisites)
-    - [Install bot](#install)
+    - [Install bot](#install-bot)
 2. [Build a container image](#build-a-container-image)
 2. [Setup & run bot on Azure](#run-bot-on-azure)
     - [Install Azure CLI](#install-azure-cli)
