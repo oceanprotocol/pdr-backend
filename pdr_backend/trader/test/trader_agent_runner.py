@@ -1,43 +1,91 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import mock_feed_ppss
+from pdr_backend.ppss.web3_pp import (
+    inplace_mock_feedgetters,
+    inplace_mock_w3_and_contract_with_tracking,
+)
+
+INIT_TIMESTAMP = 107
+INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
-def mock_feed():
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.address = "0xtestfeed"
-    feed.seconds_per_epoch = 60
-    feed.source = "binance"
-    feed.pair = "BTC/USDT"
-    return feed
+def do_constructor(agent_class, check_subscriptions_and_subscribe_mock):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
+    # 1 predict feed
+    assert ppss.data_pp.predict_feeds_strs
+    agent = agent_class(ppss)
+    assert agent.ppss == ppss
+    assert agent.feeds
+    check_subscriptions_and_subscribe_mock.assert_called_once()
 
-@enforce_types
-def mock_ppss():
-    yaml_str = fast_test_yaml_str(tmpdir=None)
-    ppss = PPSS(yaml_str=yaml_str, network="development")
-
-    ppss.data_pp.set_timeframe("5m")
-    ppss.data_pp.set_predict_feeds(["binance c BTC/USDT"])
-
-    ppss.trader_ss.set_max_tries(10)
-    ppss.trader_ss.set_position_size(10.0)
-    ppss.trader_ss.set_min_buffer(20)
-
-    return ppss
-
-
-@enforce_types
-def run_no_feeds(agent_class):
-    yaml_str = fast_test_yaml_str()
-    ppss = PPSS(yaml_str=yaml_str, network="development")
+    # 0 predict feeds
     ppss.data_pp.set_predict_feeds([])
-
     with pytest.raises(ValueError):
         agent_class(ppss)
+
+
+@enforce_types
+def do_run(  # pylint: disable=unused-argument
+    agent_class,
+    check_subscriptions_and_subscribe_mock,
+):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
+
+    agent = agent_class(ppss)
+
+    with patch.object(agent, "take_step") as mock_stake_step:
+        agent.run(True)
+    mock_stake_step.assert_called_once()
+
+
+@enforce_types
+def setup_take_step(  # pylint: disable=unused-argument
+    agent_class,
+    check_subscriptions_and_subscribe_mock,
+    monkeypatch,
+):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
+    _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
+        ppss.web3_pp,
+        INIT_TIMESTAMP,
+        INIT_BLOCK_NUMBER,
+        ppss.data_pp.timeframe_s,
+        feed.address,
+        monkeypatch,
+    )
+
+    agent = agent_class(ppss)
+
+    # Create async mock fn so we can await asyncio.gather(*tasks)
+    async def _process_block_at_feed(
+        addr, timestamp
+    ):  # pylint: disable=unused-argument
+        return (-1, [])
+
+    agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
+
+    return agent
+
+
+@enforce_types
+def setup_trade(  # pylint: disable=unused-argument
+    agent_class, check_subscriptions_and_subscribe_mock
+):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
+
+    agent = agent_class(ppss)
+
+    agent.exchange = Mock()
+    agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
+
+    return agent, feed

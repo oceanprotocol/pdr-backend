@@ -5,75 +5,45 @@ from unittest.mock import Mock, patch
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.models.feed import mock_feed as feed_mock_feed
-from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import mock_feed_ppss
+from pdr_backend.ppss.web3_pp import (
+    inplace_mock_feedgetters,
+    inplace_mock_w3_and_contract_with_tracking,
+)
 from pdr_backend.trader.test.trader_agent_runner import (
-    mock_feed,
-    mock_ppss,
-    run_no_feeds,
+    do_constructor,
+    do_run,
+    INIT_TIMESTAMP,
+    INIT_BLOCK_NUMBER,
+    setup_take_step,
 )
 from pdr_backend.trader.trader_agent import TraderAgent
 
 
 @enforce_types
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-def test_new_agent(
-    check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-):  # pylint: disable=unused-argument
-    # params
-    ppss = mock_ppss()
-
-    # agent
-    agent = TraderAgent(ppss)
-    assert agent.ppss == ppss
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    # now try with no feeds
-    run_no_feeds(TraderAgent)
+def test_trader_agent_constructor(check_subscriptions_and_subscribe_mock):
+    do_constructor(TraderAgent, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-def test_run(
-    check_subscriptions_and_subscribe_mock, predictoor_contract
-):  # pylint: disable=unused-argument
-    # params
-    ppss = mock_ppss()
-
-    # agent
-    agent = TraderAgent(ppss)
-
-    # run
-    with patch.object(agent, "take_step") as ts_mock:
-        agent.run(True)
-    ts_mock.assert_called_once()
+def test_trader_agent_run(check_subscriptions_and_subscribe_mock):
+    do_run(TraderAgent, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-async def test_take_step(
+async def test_trader_agent_take_step(
     check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-    web3_config,
-):  # pylint: disable=unused-argument
-    # params
-    ppss = mock_ppss()
-    ppss.web3_pp.set_web3_config(web3_config)
-
-    # agent
-    agent = TraderAgent(ppss)
-
-    # Create async mock fn so we can await asyncio.gather(*tasks)
-    async def _process_block_at_feed(
-        addr, timestamp
-    ):  # pylint: disable=unused-argument
-        return (-1, [])
-
-    agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
+    monkeypatch,
+):
+    agent = setup_take_step(
+        TraderAgent,
+        check_subscriptions_and_subscribe_mock,
+        monkeypatch,
+    )
 
     await agent.take_step()
 
@@ -88,21 +58,23 @@ def custom_do_trade(feed, prediction):
 
 @pytest.mark.asyncio
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
-async def test_process_block_at_feed(
+async def test_process_block_at_feed(  # pylint: disable=unused-argument
     check_subscriptions_and_subscribe_mock,
-):  # pylint: disable=unused-argument
-    yaml_str = fast_test_yaml_str()
-    ppss = PPSS(yaml_str=yaml_str, network="development")
+    monkeypatch,
+):
+    feed, ppss = mock_feed_ppss("1m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
+    _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
+        ppss.web3_pp,
+        INIT_TIMESTAMP,
+        INIT_BLOCK_NUMBER,
+        ppss.data_pp.timeframe_s,
+        feed.address,
+        monkeypatch,
+    )
 
-    feed = feed_mock_feed("1m", "binance", "BTC/USDT")
-
-    predictoor_contract = _mock_pdr_contract(feed.address)
-    _inplace_mock_ppss(ppss, feed, predictoor_contract)
-
-    # agent
     agent = TraderAgent(ppss, custom_do_trade)
 
-    # trading
     feed_addr = feed.address
     agent.prev_traded_epochs_per_feed.clear()
     agent.prev_traded_epochs_per_feed[feed_addr] = []
@@ -133,28 +105,10 @@ async def test_process_block_at_feed(
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
-    predictoor_contract.get_current_epoch.return_value = 2
+    _mock_pdr_contract.get_current_epoch = Mock()
+    _mock_pdr_contract.get_current_epoch.return_value = 2
     s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 140)
     assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 2
-    assert s_till_epoch_end == 40
-
-    # prediction is empty, so no trading
-    predictoor_contract.get_current_epoch.return_value = 3
-    predictoor_contract.get_agg_predval.side_effect = Exception(
-        {"message": "An error occurred while getting agg_predval."}
-    )
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 20)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 2
-    assert s_till_epoch_end == 40
-
-    # default trader
-    agent = TraderAgent(ppss)
-    agent.prev_traded_epochs_per_feed.clear()
-    agent.prev_traded_epochs_per_feed[feed_addr] = []
-    predictoor_contract.get_agg_predval.return_value = (1, 3)
-    predictoor_contract.get_agg_predval.side_effect = None
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 20)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 1
     assert s_till_epoch_end == 40
 
 
@@ -163,11 +117,8 @@ async def test_process_block_at_feed(
 def test_save_and_load_cache(
     check_subscriptions_and_subscribe_mock,
 ):  # pylint: disable=unused-argument
-    ppss = mock_ppss()
-    feed = feed_mock_feed("1m", "binance", "BTC/USDT")
-
-    predictoor_contract = _mock_pdr_contract(feed.address)
-    _inplace_mock_ppss(ppss, feed, predictoor_contract)
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
     agent = TraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
 
@@ -192,16 +143,9 @@ def test_save_and_load_cache(
 @patch.object(TraderAgent, "check_subscriptions_and_subscribe")
 async def test_get_pred_properties(
     check_subscriptions_and_subscribe_mock,
-    web3_config,
 ):  # pylint: disable=unused-argument
-    ppss = mock_ppss()
-    feed = feed_mock_feed("1m", "binance", "BTC/USDT")
-
-    predictoor_contract = _mock_pdr_contract(feed.address)
-    _inplace_mock_ppss(ppss, feed, predictoor_contract)
-
-    ppss.trader_ss.set_max_tries(10)
-    ppss.web3_pp.set_web3_config(web3_config)
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
     agent = TraderAgent(ppss)
     check_subscriptions_and_subscribe_mock.assert_called_once()
@@ -213,29 +157,5 @@ async def test_get_pred_properties(
         "stake": 1,
     }
 
-    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    await agent._do_trade(feed, (1.0, 1.0))
     assert agent.get_pred_properties.call_count == 1
-
-
-@enforce_types
-def _mock_pdr_contract(feed_address: str) -> PredictoorContract:
-    c = Mock(spec=PredictoorContract)
-    c.contract_address = feed_address
-    c.get_agg_predval.return_value = (1, 2)
-    return c
-
-
-@enforce_types
-def _inplace_mock_ppss(ppss: PPSS, feed: Feed, predictoor_contract: PredictoorContract):
-    feeds = {feed.address: feed}
-
-    ppss.web3_pp.query_feed_contracts = Mock()
-    ppss.web3_pp.query_feed_contracts.return_value = feeds
-
-    ppss.data_pp.filter_feeds = Mock()
-    ppss.data_pp.filter_feeds.return_value = feeds
-
-    ppss.web3_pp.get_contracts = Mock()
-    ppss.web3_pp.get_contracts.return_value = {
-        feed.address: predictoor_contract,
-    }

@@ -1,4 +1,5 @@
 from typing import List, Tuple
+from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 from eth_keys import KeyAPI
@@ -346,3 +347,18 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def erc721_addr(self) -> str:
         return self.contract_instance.functions.getERC721Address().call()
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def mock_predictoor_contract(
+    contract_address: str,
+    agg_predval: tuple = (1, 2),
+) -> PredictoorContract:
+    c = Mock(spec=PredictoorContract)
+    c.contract_address = contract_address
+    c.get_agg_predval.return_value = agg_predval
+    return c

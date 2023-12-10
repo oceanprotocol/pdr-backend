@@ -4,6 +4,7 @@ from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.token import Token
+from pdr_backend.models.predictoor_contract import mock_predictoor_contract
 from pdr_backend.util.contract import get_address
 
 
@@ -75,6 +76,7 @@ def test_get_current_epoch(predictoor_contract):
     assert current_epoch == int(now // S_PER_EPOCH)
 
 
+@enforce_types
 def test_get_current_epoch_ts(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     now = predictoor_contract.config.get_block("latest").timestamp
@@ -151,6 +153,7 @@ def test_redeem_unused_slot_revenue(predictoor_contract):
     assert receipt["status"] == 1
 
 
+@enforce_types
 @pytest.mark.parametrize(
     "input_data,expected_output",
     [
@@ -167,3 +170,10 @@ def test_string_to_bytes32(input_data, expected_output, predictoor_contract):
     assert (
         result == expected_output
     ), f"For {input_data}, expected {expected_output}, but got {result}"
+
+
+@enforce_types
+def test_mock_predictoor_contract():
+    c = mock_predictoor_contract("0x123", (3, 4))
+    assert c.contract_address == "0x123"
+    assert c.get_agg_predval() == (3, 4)

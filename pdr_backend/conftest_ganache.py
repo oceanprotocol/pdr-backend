@@ -55,7 +55,7 @@ def ocean_token() -> Token:
     return Token(_web3_pp(), token_address)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def predictoor_contract():
     w3p = _web3_pp()
     w3c = w3p.web3_config

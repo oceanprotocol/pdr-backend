@@ -2,7 +2,13 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import (
+    fast_test_yaml_str,
+    mock_ppss,
+    mock_feed_ppss,
+    PPSS,
+)
+from pdr_backend.ppss.web3_pp import del_network_override
 
 
 @enforce_types
@@ -53,3 +59,36 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert "trader_ss" in s
     assert "trueval_ss" in s
     assert "web3_pp" in s
+
+
+@enforce_types
+def test_mock_feed_ppss(monkeypatch):
+    del_network_override(monkeypatch)
+
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT", "sapphire-mainnet")
+
+    assert feed.timeframe == "5m"
+    assert feed.source == "binance"
+    assert feed.pair == "BTC/USDT"
+
+    assert ppss.data_pp.timeframe == "5m"
+    assert ppss.data_pp.predict_feeds_strs == ["binance c BTC/USDT"]
+    assert ppss.data_ss.input_feeds_strs == ["binance c BTC/USDT"]
+    assert ppss.web3_pp.network == "sapphire-mainnet"
+
+
+@enforce_types
+def test_mock_ppss(monkeypatch):
+    del_network_override(monkeypatch)
+    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet")
+    assert ppss.data_pp.timeframe == "5m"
+    assert ppss.data_pp.predict_feeds_strs == ["binance c BTC/USDT"]
+    assert ppss.data_ss.input_feeds_strs == ["binance c BTC/USDT"]
+    assert ppss.web3_pp.network == "sapphire-mainnet"
+
+
+@enforce_types
+def test_mock_ppss_default_network_development(monkeypatch):
+    del_network_override(monkeypatch)
+    ppss = mock_ppss("5m", ["binance c BTC/USDT"])
+    assert ppss.web3_pp.network == "development"

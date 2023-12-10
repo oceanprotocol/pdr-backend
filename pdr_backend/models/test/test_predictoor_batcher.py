@@ -1,8 +1,15 @@
+from unittest.mock import Mock
+
+from enforce_typing import enforce_types
 from web3.types import RPCEndpoint
+
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.data_nft import DataNft
+from pdr_backend.models.predictoor_batcher import mock_predictoor_batcher
+from pdr_backend.ppss.web3_pp import Web3PP
 
 
+@enforce_types
 def test_submit_truevals(predictoor_contract, web3_pp, predictoor_batcher):
     web3_config = web3_pp.web3_config
     current_epoch = predictoor_contract.get_current_epoch_ts()
@@ -44,6 +51,7 @@ def test_submit_truevals(predictoor_contract, web3_pp, predictoor_batcher):
         assert trueval is True
 
 
+@enforce_types
 def test_submit_truevals_contracts(
     predictoor_contract,
     predictoor_contract2,
@@ -118,6 +126,7 @@ def test_submit_truevals_contracts(
         assert trueval is True
 
 
+@enforce_types
 def test_consume_multiple(predictoor_contract, ocean_token, predictoor_batcher):
     owner = ocean_token.config.owner
 
@@ -136,3 +145,11 @@ def test_consume_multiple(predictoor_contract, ocean_token, predictoor_batcher):
 
     balance_after = ocean_token.balanceOf(owner)
     assert balance_after + cost == balance_before
+
+
+@enforce_types
+def test_mock_predictoor_batcher():
+    web3_pp = Mock(spec=Web3PP)
+    b = mock_predictoor_batcher(web3_pp)
+    assert id(b.web3_pp) == id(web3_pp)
+    assert b.contract_address == "0xPdrBatcherAddr"

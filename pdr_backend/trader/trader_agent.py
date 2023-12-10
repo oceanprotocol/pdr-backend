@@ -79,7 +79,8 @@ class TraderAgent:
                 break
 
     async def take_step(self):
-        w3 = self.ppss.web3_pp.w3
+        web3_config = self.ppss.web3_pp.web3_config
+        w3 = web3_config.w3
 
         # at new block number yet?
         block_number = w3.eth.block_number
@@ -89,9 +90,7 @@ class TraderAgent:
         self.prev_block_number = block_number
 
         # is new block ready yet?
-        block = self.ppss.web3_pp.web3_config.get_block(
-            block_number, full_transactions=False
-        )
+        block = web3_config.get_block(block_number, full_transactions=False)
         if not block:
             return
 

@@ -6,8 +6,16 @@ import pytest
 from web3 import Web3
 
 from pdr_backend.models.feed import mock_feed
+from pdr_backend.models.predictoor_contract import mock_predictoor_contract
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.ppss.web3_pp import mock_web3_pp, Web3PP
+from pdr_backend.ppss.web3_pp import (
+    del_network_override,
+    inplace_mock_feedgetters,
+    inplace_mock_get_contracts,
+    inplace_mock_query_feed_contracts,
+    mock_web3_pp,
+    Web3PP,
+)
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
@@ -32,24 +40,8 @@ _D = {
 
 
 @enforce_types
-def test_web3_pp__network_override(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
-
-    # does it do what we want with no override?
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network1"
-
-    # does it do what we want _with_ override?
-    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network2"
-
-
-@enforce_types
 def test_web3_pp__bad_network(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
@@ -57,8 +49,7 @@ def test_web3_pp__bad_network(monkeypatch):
 
 @enforce_types
 def test_web3_pp__yaml_dict(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     pp = Web3PP(_D, "network1")
 
@@ -79,8 +70,7 @@ def test_web3_pp__yaml_dict(monkeypatch):
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
@@ -110,8 +100,8 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
+
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -129,8 +119,7 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 @enforce_types
 def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
@@ -164,10 +153,36 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
     assert contracts[feed.address].contract_address == feed.address
 
 
+# =========================================================================
+# test utilities for testing
+
+
+@enforce_types
+def test_web3_pp__NETWORK_OVERRIDE(monkeypatch):
+    del_network_override(monkeypatch)
+
+    # does it do what we want with no override?
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network1"
+
+    # does it do what we want _with_ override?
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network2"
+
+
+@enforce_types
+def test_web3_pp__del_network_override(monkeypatch):
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    assert os.getenv("NETWORK_OVERRIDE") == "network2"
+
+    del_network_override(monkeypatch)
+    assert os.getenv("NETWORK_OVERRIDE") is None
+
+
 @enforce_types
 def test_mock_web3_pp(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     web3_pp = mock_web3_pp("development")
     assert isinstance(web3_pp, Web3PP)
@@ -175,3 +190,18 @@ def test_mock_web3_pp(monkeypatch):
 
     web3_pp = mock_web3_pp("sapphire-mainnet")
     assert web3_pp.network == "sapphire-mainnet"
+
+
+@enforce_types
+def test_inplace_mocks(monkeypatch):
+    del_network_override(monkeypatch)
+
+    web3_pp = mock_web3_pp("development")
+    feed = mock_feed("5m", "binance", "BTC/USDT")
+
+    # basic sanity test: can we call it without a fail?
+    inplace_mock_feedgetters(web3_pp, feed)
+    inplace_mock_query_feed_contracts(web3_pp, feed)
+
+    c = mock_predictoor_contract(feed.address)
+    inplace_mock_get_contracts(web3_pp, feed, c)

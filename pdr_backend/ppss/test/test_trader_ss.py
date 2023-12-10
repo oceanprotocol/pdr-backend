@@ -1,17 +1,18 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.trader_ss import TraderSS
+from pdr_backend.ppss.trader_ss import inplace_make_trader_fast, TraderSS
+
+_D = {
+    "sim_only": {
+        "buy_amt": "10 USD",
+    },
+    "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
+}
 
 
 @enforce_types
 def test_trader_ss():
-    d = {
-        "sim_only": {
-            "buy_amt": "10 USD",
-        },
-        "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
-    }
-    ss = TraderSS(d)
+    ss = TraderSS(_D)
 
     # yaml properties
     assert ss.buy_amt_str == "10 USD"
@@ -34,3 +35,13 @@ def test_trader_ss():
 
     # str
     assert "TraderSS" in str(ss)
+
+
+@enforce_types
+def test_inplace_make_trader_fast():
+    ss = TraderSS(_D)
+    inplace_make_trader_fast(ss)
+
+    assert ss.max_tries == 10
+    assert ss.position_size == 10.0
+    assert ss.min_buffer == 20

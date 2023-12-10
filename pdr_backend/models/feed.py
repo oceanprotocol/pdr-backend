@@ -64,6 +64,10 @@ def print_feeds(feeds: Dict[str, Feed], label: Optional[str] = None):
         print(f"  {feed}")
 
 
+# =========================================================================
+# utilities for testing
+
+
 @enforce_types
 def _rnd_eth_addr() -> str:
     """Generate a random address with Ethereum format."""
