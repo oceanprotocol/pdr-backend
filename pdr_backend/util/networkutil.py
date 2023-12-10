@@ -2,8 +2,9 @@ from enforce_typing import enforce_types
 from sapphirepy import wrapper
 
 from pdr_backend.util.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
+    GAS_PRICE_NON_DEVELOPMENT,
     SAPPHIRE_MAINNET_CHAINID,
+    SAPPHIRE_TESTNET_CHAINID,
 )
 
 
@@ -58,3 +59,13 @@ def get_subgraph_url(network: str) -> str:
 
     # pylint: disable=line-too-long
     return f"https://v4.subgraph.sapphire-{network}.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+
+@enforce_types
+def get_gas_price(network: str) -> int:
+    """Return gas price for use in call_params of transaction calls."""
+    
+    if network in ["sapphire-testnet", "sapphire-mainnet"]:
+        return GAS_PRICE_NON_DEVELOPMENT # eg 100000000000
+    if network in ["development", "barge-predictoor-bot", "barge-pytest"]:
+        return 0
+    raise ValueError(f"Unknown network {network}")

@@ -9,6 +9,7 @@ from pdr_backend.util.constants import (
     SAPPHIRE_MAINNET_CHAINID,
 )
 from pdr_backend.util.networkutil import (
+    get_gas_price,
     is_sapphire_network,
     send_encrypted_tx,
 )
@@ -76,3 +77,13 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
     mock_function = Mock(return_value=(0, "dummy_tx_hash"))
     monkeypatch.setattr("sapphirepy.wrapper.send_encrypted_sapphire_tx", mock_function)
     return mock_function
+
+
+@enforce_types
+def test_get_gas_price():
+    assert get_gas_price("sapphire-testnet") == 100000000000
+    assert get_gas_price("sapphire-mainnet") == 100000000000
+    assert get_gas_price("development") == 0
+    assert get_gas_price("barge-predictoor-bot") == 0
+    assert get_gas_price("barge-pytest") == 0
+    
