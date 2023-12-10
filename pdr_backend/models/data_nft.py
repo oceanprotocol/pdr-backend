@@ -19,7 +19,7 @@ class DataNft(BaseContract):
         """Set key/value data via ERC725, with strings for key/value"""
         field_label_hash = Web3.keccak(text=field_label)  # to keccak256 hash
         field_value_bytes = field_value.encode()  # to array of bytes
-        
+
         call_params = self._call_params()
         call_params["gas"] = 100000
         tx = self.contract_instance.functions.setNewData(
@@ -58,14 +58,15 @@ class DataNft(BaseContract):
     def add_to_create_erc20_list(
         self, addr: str, wait_for_receipt=True
     ) -> Union[HexBytes, TxReceipt]:
-        
         call_params = self._call_params()
-        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(call_params)
+        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
+            call_params
+        )
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
-    def _call_params(self) -> Dict[str,Any]:
+    def _call_params(self) -> Dict[str, Any]:
         return {
             "from": self.config.owner,
             "gasPrice": get_gas_price(self.web3_pp.network),

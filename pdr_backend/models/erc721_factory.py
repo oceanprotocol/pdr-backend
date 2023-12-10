@@ -21,7 +21,8 @@ class ERC721Factory(BaseContract):
         }
 
         tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
-            NftCreateData, ErcCreateData, FixedData).transact(call_params)
+            NftCreateData, ErcCreateData, FixedData
+        ).transact(call_params)
         receipt = self.config.w3.eth.wait_for_transaction_receipt(tx)
         if receipt["status"] != 1:
             raise ValueError(f"createNftWithErc20WithFixedRate failed in {tx.hex()}")

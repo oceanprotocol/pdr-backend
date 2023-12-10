@@ -86,4 +86,3 @@ def test_get_gas_price():
     assert get_gas_price("development") == 0
     assert get_gas_price("barge-predictoor-bot") == 0
     assert get_gas_price("barge-pytest") == 0
-    
