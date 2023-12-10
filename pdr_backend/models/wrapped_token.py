@@ -1,4 +1,5 @@
 from pdr_backend.models.token import Token
+from pdr_backend.util.networkutil import tx_call_params
 
 
 class WrappedToken(Token):
@@ -23,10 +24,9 @@ class WrappedToken(Token):
         """
         Converts Wrapped Token to Token, amount is in wei.
         """
-        gas_price = self.config.w3.eth.gas_price
-
+        call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance_wrapped.functions.withdraw(amount).transact(
-            {"from": self.config.owner, "gasPrice": gas_price}
+            call_params
         )
         if not wait_for_receipt:
             return tx

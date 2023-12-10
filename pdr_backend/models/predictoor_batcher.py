@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.networkutil import get_gas_price
+from pdr_backend.util.networkutil import tx_call_params
 
 
 class PredictoorBatcher(BaseContract):
@@ -21,10 +21,6 @@ class PredictoorBatcher(BaseContract):
     def w3(self):
         return self.web3_config.w3
 
-    @property
-    def gas_price(self):
-        return get_gas_price(self.web3_pp.network)
-
     @enforce_types
     def consume_multiple(
         self,
@@ -33,15 +29,10 @@ class PredictoorBatcher(BaseContract):
         token_addr: str,
         wait_for_receipt=True,
     ):
+        call_params = tx_call_params(self.web3_pp, gas=14_000_000)
         tx = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
-        ).transact(
-            {
-                "from": self.web3_config.owner,
-                "gasPrice": self.gas_price,
-                "gas": 14_000_000,
-            }
-        )
+        ).transact(call_params)
         if not wait_for_receipt:
             return tx
         return self.w3.eth.wait_for_transaction_receipt(tx)
@@ -55,9 +46,10 @@ class PredictoorBatcher(BaseContract):
         cancelRounds: List[List[bool]],
         wait_for_receipt=True,
     ):
+        call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance.functions.submitTruevalContracts(
             contract_addrs, epoch_starts, trueVals, cancelRounds
-        ).transact({"from": self.web3_config.owner, "gasPrice": self.gas_price})
+        ).transact(call_params)
         if not wait_for_receipt:
             return tx
         return self.w3.eth.wait_for_transaction_receipt(tx)
@@ -71,9 +63,10 @@ class PredictoorBatcher(BaseContract):
         cancelRounds: List[bool],
         wait_for_receipt=True,
     ):
+        call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance.functions.submitTruevals(
             contract_addr, epoch_starts, trueVals, cancelRounds
-        ).transact({"from": self.web3_config.owner, "gasPrice": self.gas_price})
+        ).transact(call_params)
         if not wait_for_receipt:
             return tx
         return self.w3.eth.wait_for_transaction_receipt(tx)

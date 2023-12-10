@@ -2,8 +2,9 @@ import time
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.contract import get_address
 from pdr_backend.models.token import Token
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.networkutil import tx_call_params
 
 
 @enforce_types
@@ -15,9 +16,8 @@ def test_token(web3_pp, web3_config):
     owner_addr = web3_config.owner
     alice = accounts[1]
 
-    token.contract_instance.functions.mint(owner_addr, 1000000000).transact(
-        {"from": owner_addr, "gasPrice": web3_config.w3.eth.gas_price}
-    )
+    call_params = tx_call_params(web3_pp)
+    token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
 
     allowance_start = token.allowance(owner_addr, alice)
     token.approve(alice, allowance_start + 100, True)

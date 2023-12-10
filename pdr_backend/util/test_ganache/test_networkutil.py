@@ -9,9 +9,10 @@ from pdr_backend.util.constants import (
     SAPPHIRE_MAINNET_CHAINID,
 )
 from pdr_backend.util.networkutil import (
-    get_gas_price,
     is_sapphire_network,
     send_encrypted_tx,
+    tx_call_params,
+    tx_gas_price,
 )
 
 
@@ -80,9 +81,30 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
 
 
 @enforce_types
-def test_get_gas_price():
-    assert get_gas_price("sapphire-testnet") == 100000000000
-    assert get_gas_price("sapphire-mainnet") == 100000000000
-    assert get_gas_price("development") == 0
-    assert get_gas_price("barge-predictoor-bot") == 0
-    assert get_gas_price("barge-pytest") == 0
+def test_tx_gas_price__and__tx_call_params():
+    web3_pp = Mock()
+    web3_pp.web3_config = Mock()
+    web3_pp.web3_config.owner = "0xowner"
+    web3_pp.web3_config.w3 = Mock()
+    web3_pp.web3_config.w3.eth = Mock()
+    web3_pp.web3_config.w3.eth.gas_price = 12
+
+    web3_pp.network = "sapphire-testnet"
+    assert tx_gas_price(web3_pp) == 12
+    assert tx_call_params(web3_pp) == {"from": "0xowner", "gasPrice": 12}
+
+    web3_pp.network = "sapphire-mainnet"
+    assert tx_gas_price(web3_pp) == 12
+
+    web3_pp.network = "development"
+    assert tx_gas_price(web3_pp) == 0
+    assert tx_call_params(web3_pp) == {"from": "0xowner", "gasPrice": 0}
+
+    web3_pp.network = "barge-pytest"
+    assert tx_gas_price(web3_pp) == 0
+
+    web3_pp.network = "foo"
+    with pytest.raises(ValueError):
+        tx_gas_price(web3_pp)
+    with pytest.raises(ValueError):
+        tx_call_params(web3_pp)

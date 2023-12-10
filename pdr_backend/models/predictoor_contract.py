@@ -10,7 +10,11 @@ from pdr_backend.models.fixed_rate import FixedRate
 from pdr_backend.models.token import Token
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
-from pdr_backend.util.networkutil import is_sapphire_network, send_encrypted_tx
+from pdr_backend.util.networkutil import (
+    is_sapphire_network,
+    send_encrypted_tx,
+    tx_call_params,
+)
 
 _KEYS = KeyAPI(NativeECCBackend)
 
@@ -102,7 +106,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         self.token.approve(self.contract_instance.address, baseTokenAmount)
 
         # buy 1 DT
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         provider_fees = self.get_empty_provider_fee()
         try:
             orderParams = (
@@ -127,11 +131,6 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 0,
                 ZERO_ADDRESS,
             )
-            call_params = {
-                "from": self.config.owner,
-                "gasPrice": gasPrice,
-                # 'nonce': self.config.w3.eth.get_transaction_count(self.config.owner),
-            }
             if gasLimit is None:
                 try:
                     gasLimit = self.contract_instance.functions.buyFromFreAndOrder(
@@ -204,11 +203,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def payout_multiple(self, slots: List[int], wait_for_receipt=True):
         """Claims the payout for given slots"""
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         try:
             tx = self.contract_instance.functions.payoutMultiple(
                 slots, self.config.owner
-            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+            ).transact(call_params)
             if not wait_for_receipt:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
@@ -218,11 +217,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def payout(self, slot, wait_for_receipt=False):
         """Claims the payout for a slot"""
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         try:
             tx = self.contract_instance.functions.payout(
                 slot, self.config.owner
-            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+            ).transact(call_params)
             if not wait_for_receipt:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
@@ -271,7 +270,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 print("Error while approving the contract to spend tokens:", e)
                 return None
 
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         try:
             txhash = None
             if is_sapphire_network(self.config.w3.eth.chain_id):
@@ -299,7 +298,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             else:
                 tx = self.contract_instance.functions.submitPredval(
                     predicted_value, amount_wei, prediction_ts
-                ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+                ).transact(call_params)
                 txhash = tx.hex()
             self.last_allowance -= amount_wei
             print(f"Submitted prediction, txhash: {txhash}")
@@ -320,21 +319,21 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         ).call({"from": self.config.owner})
 
     def submit_trueval(self, trueval, timestamp, cancel_round, wait_for_receipt=True):
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance.functions.submitTrueVal(
             timestamp, trueval, cancel_round
-        ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+        ).transact(call_params)
         print(f"Submitted trueval, txhash: {tx.hex()}")
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
-        gasPrice = self.config.w3.eth.gas_price
+        call_params = tx_call_params(self.web3_pp)
         try:
             tx = self.contract_instance.functions.redeemUnusedSlotRevenue(
                 timestamp
-            ).transact({"from": self.config.owner, "gasPrice": gasPrice})
+            ).transact(call_params)
             if not wait_for_receipt:
                 return tx
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
