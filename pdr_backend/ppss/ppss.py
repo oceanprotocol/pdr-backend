@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import List, Optional, Tuple
 
 from enforce_typing import enforce_types
@@ -105,6 +106,8 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "data_ss")
+    if tmpdir is None:
+        tmpdir = tempfile.mkdtemp()
     ppss.data_ss = DataSS(
         {
             "input_feeds": predict_feeds,
