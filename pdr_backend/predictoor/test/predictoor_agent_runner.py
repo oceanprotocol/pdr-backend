@@ -23,7 +23,7 @@ INIT_BLOCK_NUMBER = 13
 @enforce_types
 def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT", tmpdir=tmpdir)
+    feed, ppss = mock_feed_ppss("5m", "binanceus", "BTC/USDT", tmpdir=tmpdir)
     inplace_mock_query_feed_contracts(ppss.web3_pp, feed)
 
     _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
