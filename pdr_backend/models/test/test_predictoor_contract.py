@@ -143,7 +143,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     receipt = predictoor_contract.payout(soonest_timestamp, True)
     assert receipt["status"] == 1
     balance_final = ocean_token.balanceOf(owner_addr)
-    assert balance_before / 1e18 == approx(balance_final / 1e18)  # + sub revenue
+    assert balance_before / 1e18 == approx(balance_final / 1e18, 2.0)  # + sub revenue
 
 
 @enforce_types

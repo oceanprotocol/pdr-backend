@@ -108,7 +108,7 @@ def mock_ppss(
     ppss.data_ss = DataSS(
         {
             "input_feeds": predict_feeds,
-            "parquet_dir": os.path.join("parquet_data"),
+            "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-06-21",
             "max_n_train": 100,
