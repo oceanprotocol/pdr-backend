@@ -2,10 +2,10 @@ from typing import List
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
-from eth_typing import ChecksumAddress
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.util.networkutil import get_gas_price
 
 
 class PredictoorBatcher(BaseContract):
@@ -23,12 +23,12 @@ class PredictoorBatcher(BaseContract):
 
     @property
     def gas_price(self):
-        return self.w3.eth.gas_price
+        return get_gas_price(self.web3_pp.network)
 
     @enforce_types
     def consume_multiple(
         self,
-        addresses: List[ChecksumAddress],
+        addresses: List[str],
         times: List[int],
         token_addr: str,
         wait_for_receipt=True,
@@ -49,7 +49,7 @@ class PredictoorBatcher(BaseContract):
     @enforce_types
     def submit_truevals_contracts(
         self,
-        contract_addrs: List[ChecksumAddress],
+        contract_addrs: List[str],
         epoch_starts: List[List[int]],
         trueVals: List[List[bool]],
         cancelRounds: List[List[bool]],
@@ -65,7 +65,7 @@ class PredictoorBatcher(BaseContract):
     @enforce_types
     def submit_truevals(
         self,
-        contract_addr: ChecksumAddress,
+        contract_addr: str,
         epoch_starts: List[int],
         trueVals: List[bool],
         cancelRounds: List[bool],
