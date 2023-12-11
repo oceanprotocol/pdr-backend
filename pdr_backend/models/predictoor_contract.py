@@ -119,14 +119,16 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             return None
 
     def buy_many(self, n_to_buy: int, gasLimit=None, wait_for_receipt=False):
-        """Buys multiple accesses and returns tx hashes"""
+        """Buys multiple subscriptions and returns tx hashes"""
         if n_to_buy < 1:
             return None
-        print(f"Buying {n_to_buy} accesses....")
+        print(f"Purchase {n_to_buy}  subscriptions for this feed: begin")
         txs = []
-        for _ in range(0, n_to_buy):
+        for i in range(n_to_buy):
+            print(f"Purchase access #{i+1}/{n_to_buy} for this feed")
             tx = self.buy_and_start_subscription(gasLimit, wait_for_receipt)
             txs.append(tx)
+        print(f"Purchase {n_to_buy}  subscriptions for this feed: done")
         return txs
 
     def get_exchanges(self) -> List[Tuple[str, str]]:
