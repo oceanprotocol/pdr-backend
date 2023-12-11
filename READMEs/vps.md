@@ -57,6 +57,7 @@ Running Barge, the VPS exposes these urls:
 - Subgraph is at:
   - http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
   - or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+  - Go there, then copy & paste in the query from [subgraph.md](subgraph.md)
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
@@ -157,7 +158,7 @@ export GANACHE_BLOCKTIME=5
 Track progress until the addresses are published:
 - open a new console
 - ssh into the VPS
-- then: `docker logs -f ocean_pdr-publisher_1`. Monitor until it says it's published.
+- then: `docker logs -f ocean_ocean-contracts_1`. Monitor until it says it's published.
 - then: `Ctrl-C`, and confirm via: `cat .ocean/ocean-contracts/artifacts/address.json |grep dev`. It should give one line.
 
 Then, copy VPS' `address.json` file to local. In local console:
@@ -187,6 +188,14 @@ It should return:
 
 If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
 
+Further debugging:
+- List live docker processes: `docker ps`
+- List all docker processes: `docker ps -a`
+- List names of processes: `docker ps -a | cut -c 347-`. It lists `ocean_pdr-publisher_1`, `ocean_ocean-contracts_1`, ` ocean_pdr-publisher_1`, ..
+- See log for publishing Ocean contracts: `docker logs ocean_ocean-contracts_1`. With realtime update: `docker logs -f ocean_ocean-contracts_1`
+- See log for publishing prediction feeds: `docker logs ocean_pdr-publisher_1`. With realtime update: `docker logs -f ocean_pdr-publisher_1`
+- Get detailed info about pdr-publisher image: `docker inspect ocean_pdr-publisher_1`
+ 
 ## 4. Locally, Run Predictoor Bot (OPTION 1)
 
 ### Set envvars
