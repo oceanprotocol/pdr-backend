@@ -14,7 +14,7 @@ class FixedRate(BaseContract):
     def get_dt_price(self, exchangeId) -> Tuple[int, int, int, int]:
         """
         @description
-          Give price to buy 1 datatoken. For pdr, typically priced as # OCEAN.
+          # OCEAN needed to buy 1 datatoken
 
         @arguments
            exchangeId - a unique exchange identifier. Typically a string.
@@ -24,7 +24,9 @@ class FixedRate(BaseContract):
            oceanFeeAmt_wei - fee to Ocean Protocol Community (OPC)
            publishMktFeeAmt_wei - fee to publish market
            consumeMktFeeAmt_wei - fee to consume market
-        );
+
+        @notes
+           Assumes consumeMktSwapFeeAmt = 0
         """
         return self.calcBaseInGivenOutDT(
             exchangeId,
@@ -41,7 +43,7 @@ class FixedRate(BaseContract):
         """
         @description
            Given an exact target # datatokens, calculates # basetokens
-           (eg OCEAN) needed to get it, and fee amounts too.
+           (OCEAN) needed to get it, and fee amounts too.
 
         @arguments
            exchangeId - a unique exchange identifier. Typically a string.
@@ -49,7 +51,7 @@ class FixedRate(BaseContract):
            consumeMktSwapFeeAmt - fee amount for consume market
 
         @return
-           baseTokenAmt_wei - # basetokens needed
+           baseTokenAmt_wei - # OCEAN needed, in wei
            oceanFeeAmt_wei - fee to Ocean community (OPC)
            publishMktFeeAmt_wei - fee to publish market
            consumeMktFeeAmt_wei - fee to consume market
