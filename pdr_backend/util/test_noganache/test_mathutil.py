@@ -18,6 +18,7 @@ from pdr_backend.util.mathutil import (
     to_wei,
     str_with_wei,
     string_to_bytes32,
+    sole_value,
 )
 
 
@@ -329,3 +330,13 @@ def test_string_to_bytes32_3(input_data, expected_output):
     assert (
         result == expected_output
     ), f"For {input_data}, expected {expected_output}, but got {result}"
+
+
+@enforce_types
+def test_sole_value():
+    assert sole_value({"b": 3}) == 3
+    assert sole_value({5: "foo"}) == "foo"
+    with pytest.raises(ValueError):
+        sole_value({})
+    with pytest.raises(ValueError):
+        sole_value({"a": 1, "b": 2})

@@ -13,14 +13,13 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 @enforce_types
 class PredictoorAgent3(BasePredictoorAgent):
     def get_prediction(
-        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+        self, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
-          Given a feed, let's predict for a given timestamp.
+          Predict for a given timestamp.
 
         @arguments
-          addr -- str -- address of the trading pair. Info in self.feeds[addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return
@@ -28,7 +27,7 @@ class PredictoorAgent3(BasePredictoorAgent):
           stake -- int -- amount to stake, in units of Eth
         """
         # Compute data_ss
-        feed = self.feeds[addr]
+        feed = self.feed
         d = copy.deepcopy(self.ppss.data_pp.d)
         d["predict_feeds"] = [f"{feed.source} c {feed.pair}"]
         data_pp = DataPP(d)

@@ -41,12 +41,12 @@ def run_agent_test(tmpdir, monkeypatch, predictoor_agent_class):
     agent = predictoor_agent_class(ppss)
 
     # real work: main iterations
-    for _ in range(100):
+    for _ in range(500):
         agent.take_step()
 
     # log some final results for debubbing / inspection
     mock_w3 = ppss.web3_pp.web3_config.w3
-    print("\n" + "=" * 80)
+    print("\n" + "/" * 160)
     print("Done iterations")
     print(
         f"init block_number = {INIT_BLOCK_NUMBER}"

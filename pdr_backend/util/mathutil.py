@@ -190,3 +190,10 @@ def string_to_bytes32(data) -> bytes:
     else:
         myBytes32 = data.ljust(32, "0")
     return bytes(myBytes32, "utf-8")
+
+
+@enforce_types
+def sole_value(d: dict):
+    if len(d) != 1:
+        raise ValueError(len(d))
+    return list(d.values())[0]
