@@ -26,7 +26,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         self.last_allowance = 0
 
     def is_valid_subscription(self):
-        """Is there a valid subscription?"""
+        """Does this account have a subscription to this feed yet?"""
         return self.contract_instance.functions.isValidSubscription(
             self.config.owner
         ).call()
@@ -35,87 +35,98 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """Return the ID of this contract."""
         return self.contract_instance.functions.getId().call()
 
-    def get_empty_provider_fee(self):
-        return {
-            "providerFeeAddress": ZERO_ADDRESS,
-            "providerFeeToken": ZERO_ADDRESS,
-            "providerFeeAmount": 0,
-            "v": 0,
-            "r": 0,
-            "s": 0,
-            "validUntil": 0,
-            "providerData": 0,
-        }
-
     def buy_and_start_subscription(self, gasLimit=None, wait_for_receipt=True):
-        """Buys 1 datatoken and starts a subscription"""
-        fixed_rates = self.get_exchanges()
-        if not fixed_rates:
-            return None
+        """
+        @description
+          Buys 1 datatoken and starts a subscription.
 
-        (fixed_rate_address, exchange_str) = fixed_rates[0]
+        @return
+          tx - transaction hash. Or, returns None if an error while transacting
+        """
+        exchanges = self.get_exchanges()
+        if not exchanges:
+            raise ValueError("No exchanges available")
+
+        (exchange_addr, exchangeId) = exchanges[0]
 
         # get datatoken price
-        exchange = FixedRate(self.web3_pp, fixed_rate_address)
-        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
+        exchange = FixedRate(self.web3_pp, exchange_addr)
+        (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
+        print(f"  Price of feed: {from_wei(baseTokenAmt_wei)} OCEAN")
 
         # approve
-        self.token.approve(self.contract_instance.address, baseTokenAmount)
+        print("  Approve spend OCEAN: begin")
+        self.token.approve(self.contract_instance.address, baseTokenAmt_wei)
+        print("  Approve spend OCEAN: done")
 
         # buy 1 DT
         call_params = tx_call_params(self.web3_pp)
-        provider_fees = self.get_empty_provider_fee()
-        try:
-            orderParams = (
-                self.config.owner,
-                0,
-                (
-                    ZERO_ADDRESS,
-                    ZERO_ADDRESS,
-                    0,
-                    0,
-                    string_to_bytes32(""),
-                    string_to_bytes32(""),
-                    provider_fees["validUntil"],
-                    self.config.w3.to_bytes(b""),
-                ),
-                (ZERO_ADDRESS, ZERO_ADDRESS, 0),
-            )
-            freParams = (
-                self.config.w3.to_checksum_address(fixed_rate_address),
-                self.config.w3.to_bytes(exchange_str),
-                baseTokenAmount,
-                0,
+        orderParams = (  # OrderParams
+            self.config.owner,  # consumer
+            0,  # serviceIndex
+            (  # providerFee, with zeroed values
                 ZERO_ADDRESS,
-            )
-            if gasLimit is None:
-                try:
-                    gasLimit = self.contract_instance.functions.buyFromFreAndOrder(
-                        orderParams, freParams
-                    ).estimate_gas(call_params)
-                except Exception as e:
-                    print("Estimate gas failed")
-                    print(e)
-                    gasLimit = get_max_gas(self.config)
-            call_params["gas"] = gasLimit + 1
+                ZERO_ADDRESS,
+                0,
+                0,
+                string_to_bytes32(""),
+                string_to_bytes32(""),
+                0,
+                self.config.w3.to_bytes(b""),
+            ),
+            (  # consumeMarketFee, with zeroed values
+                ZERO_ADDRESS,
+                ZERO_ADDRESS,
+                0,
+            ),
+        )
+        freParams = (  # FreParams
+            self.config.w3.to_checksum_address(exchange_addr),  # exchangeContract
+            self.config.w3.to_bytes(exchangeId),  # exchangeId
+            baseTokenAmt_wei,  # maxBaseTokenAmount
+            0,  # swapMarketFee
+            ZERO_ADDRESS,  # marketFeeAddress
+        )
+
+        if gasLimit is None:
+            try:
+                print("  Estimate gasLimit: begin")
+                gasLimit = self.contract_instance.functions.buyFromFreAndOrder(
+                    orderParams, freParams
+                ).estimate_gas(call_params)
+            except Exception as e:
+                print("  Estimate gas, so use get_max_gas() workaround")
+                print(e)
+                gasLimit = get_max_gas(self.config)
+        assert gasLimit is not None, "should have non-None gasLimit by now"
+        print(f"  Estimate gasLimit: done. gasLimit={gasLimit}")
+        call_params["gas"] = gasLimit + 1
+
+        try:
+            print("  buyFromFreAndOrder: begin")
             tx = self.contract_instance.functions.buyFromFreAndOrder(
                 orderParams, freParams
             ).transact(call_params)
             if not wait_for_receipt:
+                print("  buyFromFreAndOrder: WIP, didn't wait around")
                 return tx
-            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+            tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
+            print("  buyFromFreAndOrder: waited around, it's done")
+            return tx
         except Exception as e:
+            print("  buyFromFreAndOrder hit an error:")
             print(e)
             return None
 
-    def buy_many(self, how_many, gasLimit=None, wait_for_receipt=False):
+    def buy_many(self, n_to_buy: int, gasLimit=None, wait_for_receipt=False):
         """Buys multiple accesses and returns tx hashes"""
-        txs = []
-        if how_many < 1:
+        if n_to_buy < 1:
             return None
-        print(f"Buying {how_many} accesses....")
-        for _ in range(0, how_many):
-            txs.append(self.buy_and_start_subscription(gasLimit, wait_for_receipt))
+        print(f"Buying {n_to_buy} accesses....")
+        txs = []
+        for _ in range(0, n_to_buy):
+            tx = self.buy_and_start_subscription(gasLimit, wait_for_receipt)
+            txs.append(tx)
         return txs
 
     def get_exchanges(self) -> List[Tuple[str, str]]:
@@ -133,15 +144,24 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         return self.contract_instance.functions.stakeToken().call()
 
     def get_price(self) -> int:
+        """
+        @description
+          # OCEAN needed to buy 1 datatoken
+
+        @return
+           baseTokenAmt_wei - # OCEAN needed, in wei
+
+        @notes
+           Assumes consumeMktSwapFeeAmt = 0
+        """
         exchanges = self.get_exchanges()  # fixed rate exchanges
         if not exchanges:
-            return 0
-        (fixed_rate_address, exchange_id) = exchanges[0]
+            raise ValueError("No exchanges available")
+        (exchange_addr, exchangeId) = exchanges[0]
 
-        # get datatoken price
-        exchange = FixedRate(self.web3_pp, fixed_rate_address)
-        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
-        return baseTokenAmount
+        exchange = FixedRate(self.web3_pp, exchange_addr)
+        (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
+        return baseTokenAmt_wei
 
     def get_current_epoch(self) -> int:
         """
