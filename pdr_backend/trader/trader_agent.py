@@ -56,8 +56,12 @@ class TraderAgent:
         for addr, feed in self.feeds.items():
             contract = PredictoorContract(self.ppss.web3_pp, addr)
             if not contract.is_valid_subscription():
-                print(f"Purchasing new subscription for feed: {feed}")
-                contract.buy_and_start_subscription(None, True)
+                print(f"Purchase subscription for feed {feed}: begin")
+                contract.buy_and_start_subscription(
+                    gasLimit=None,
+                    wait_for_receipt=True,
+                )
+                print(f"Purchase new subscription for feed {feed}: done")
         time.sleep(1)
 
     def update_cache(self):
