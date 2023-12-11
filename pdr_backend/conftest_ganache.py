@@ -11,7 +11,7 @@ CHAIN_ID = 8996
 S_PER_EPOCH = 300
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session")  # "session" = invoke once, across all tests
 def chain_id():
     return CHAIN_ID
 
@@ -55,7 +55,7 @@ def ocean_token() -> Token:
     return Token(_web3_pp(), token_address)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module")  # "module" = invoke once per test module
 def predictoor_contract():
     w3p = _web3_pp()
     w3c = w3p.web3_config
