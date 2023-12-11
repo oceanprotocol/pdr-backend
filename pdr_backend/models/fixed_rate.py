@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
@@ -8,7 +10,53 @@ class FixedRate(BaseContract):
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "FixedRateExchange")
 
-    def get_dt_price(self, exchangeId):
+    def get_dt_price(self, exchangeId) -> Tuple[int, int, int, int]:
+        """
+        @description
+          Give price to buy 1 datatoken. For pdr, typically priced as # OCEAN.
+
+        @arguments
+           exchangeId - a unique exchange identifier. Typically a string.
+
+        @return
+           baseTokenAmt_wei - # basetokens needed
+           oceanFeeAmt_wei - fee to Ocean Protocol Community (OPC)
+           publishMktFeeAmt_wei - fee to publish market
+           consumeMktFeeAmt_wei - fee to consume market
+        );
+        """
+        datatokenAmt_wei = self.config.w3.to_wei("1", "ether")
+        consumeMktSwapFeeAmt_wei = 0
+        return self.calcBaseInGivenOutDT(
+            exchangeId,
+            datatokenAmt_wei,
+            consumeMktSwapFeeAmt_wei,
+        )
+
+    def calcBaseInGivenOutDT(
+        self,
+        exchangeId,
+        datatokenAmt_wei: int,
+        consumeMktSwapFeeAmt_wei: int,
+    ) -> Tuple[int, int, int, int]:
+        """
+        @description
+           Given an exact target # datatokens, calculates # basetokens
+           (eg OCEAN) needed to get it, and fee amounts too.
+
+        @arguments
+           exchangeId - a unique exchange identifier. Typically a string.
+           datatokenAmt_wei - # datatokens to be exchanged
+           consumeMktSwapFeeAmt - fee amount for consume market
+
+        @return
+           baseTokenAmt_wei - # basetokens needed
+           oceanFeeAmt_wei - fee to Ocean community (OPC)
+           publishMktFeeAmt_wei - fee to publish market
+           consumeMktFeeAmt_wei - fee to consume market
+        """
         return self.contract_instance.functions.calcBaseInGivenOutDT(
-            exchangeId, self.config.w3.to_wei("1", "ether"), 0
+            exchangeId,
+            datatokenAmt_wei,
+            consumeMktSwapFeeAmt_wei,
         ).call()
