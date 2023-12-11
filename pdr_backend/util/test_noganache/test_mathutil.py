@@ -14,6 +14,10 @@ from pdr_backend.util.mathutil import (
     has_nan,
     fill_nans,
     nmse,
+    from_wei,
+    to_wei,
+    str_with_wei,
+    string_to_bytes32,
 )
 
 
@@ -279,3 +283,49 @@ def test_nmse():
     ymin, ymax = 10.0, 20.0
     e = nmse(yhat, y, ymin, ymax)
     assert 0.035 <= e <= 0.036
+
+
+@enforce_types
+def test_wei():
+    assert from_wei(int(1234 * 1e18)) == 1234
+    assert from_wei(int(12.34 * 1e18)) == 12.34
+    assert from_wei(int(0.1234 * 1e18)) == 0.1234
+
+    assert to_wei(1234) == 1234 * 1e18 and type(to_wei(1234)) == int
+    assert to_wei(12.34) == 12.34 * 1e18 and type(to_wei(12.34)) == int
+    assert to_wei(0.1234) == 0.1234 * 1e18 and type(to_wei(0.1234)) == int
+
+    assert str_with_wei(int(12.34 * 1e18)) == "12.34 (12340000000000000000 wei)"
+
+
+@enforce_types
+def test_string_to_bytes32_1_short():
+    data = "hello"
+    data_bytes32 = string_to_bytes32(data)
+    assert data_bytes32 == b"hello000000000000000000000000000"
+
+
+@enforce_types
+def test_string_to_bytes32_2_long():
+    data = "hello" + "a" * 50
+    data_bytes32 = string_to_bytes32(data)
+    assert data_bytes32 == b"helloaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+
+@enforce_types
+@pytest.mark.parametrize(
+    "input_data,expected_output",
+    [
+        ("short", b"short" + b"0" * 27),
+        ("this is exactly 32 chars", b"this is exactly 32 chars00000000"),
+        (
+            "this is a very long string which is more than 32 chars",
+            b"this is a very long string which",
+        ),
+    ],
+)
+def test_string_to_bytes32_3(input_data, expected_output):
+    result = string_to_bytes32(input_data)
+    assert (
+        result == expected_output
+    ), f"For {input_data}, expected {expected_output}, but got {result}"

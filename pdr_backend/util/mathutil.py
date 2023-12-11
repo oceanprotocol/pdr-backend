@@ -166,3 +166,27 @@ def nmse(yhat, y, ymin=None, ymax=None) -> float:
     nmse_result = mse_xy / mse_x
 
     return nmse_result
+
+
+@enforce_types
+def from_wei(amt_wei: int):
+    return float(amt_wei / 1e18)
+
+
+@enforce_types
+def to_wei(amt_eth) -> int:
+    return int(amt_eth * 1e18)
+
+
+@enforce_types
+def str_with_wei(amt_wei: int) -> str:
+    return f"{from_wei(amt_wei)} ({amt_wei} wei)"
+
+
+@enforce_types
+def string_to_bytes32(data) -> bytes:
+    if len(data) > 32:
+        myBytes32 = data[:32]
+    else:
+        myBytes32 = data.ljust(32, "0")
+    return bytes(myBytes32, "utf-8")

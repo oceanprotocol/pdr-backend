@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.networkutil import tx_call_params
 
 
@@ -20,10 +21,11 @@ class DFRewards(BaseContract):
 
     def get_claimable_rewards(self, user_addr: str, token_addr: str) -> float:
         """
-        Returns the amount of claimable rewards in units of ETH
+        @return
+          claimable -- # claimable rewards (in units of ETH, not wei)
         """
         claimable_wei = self.contract_instance.functions.claimable(
             user_addr, token_addr
         ).call()
-        claimable_rewards = self.config.w3.from_wei(claimable_wei, "ether")
-        return float(claimable_rewards)
+        claimable = from_wei(claimable_wei)
+        return claimable

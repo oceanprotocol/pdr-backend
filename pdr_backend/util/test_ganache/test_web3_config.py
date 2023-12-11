@@ -62,3 +62,13 @@ def test_Web3Config_get_block_0(rpc_url):
     block = c.get_block(0)
     assert block
     assert block["timestamp"] > 0
+
+
+@enforce_types
+def test_Web3Config_get_auth_signature(rpc_url):
+    private_key = os.getenv("PRIVATE_KEY")
+    c = Web3Config(rpc_url=rpc_url, private_key=private_key)
+    auth = c.get_auth_signature()
+
+    # just a super basic test
+    assert sorted(auth.keys()) == sorted(["userAddress", "v", "r", "s", "validUntil"])

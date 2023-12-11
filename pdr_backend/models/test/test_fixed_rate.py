@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 from pytest import approx
 
 from pdr_backend.models.fixed_rate import FixedRate
-from pdr_backend.util.wei import from_wei, to_wei
+from pdr_backend.util.mathutil import from_wei, to_wei
 
 
 @enforce_types

@@ -81,3 +81,12 @@ def tx_call_params(web3_pp, gas=None) -> dict:
     if gas is not None:
         call_params["gas"] = gas
     return call_params
+
+
+@enforce_types
+def get_max_gas(web3_config) -> int:
+    """Returns max block gas"""
+    block = web3_config.get_block(
+        web3_config.w3.eth.block_number, full_transactions=False
+    )
+    return int(block["gasLimit"] * 0.99)

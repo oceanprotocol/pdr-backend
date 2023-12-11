@@ -3,7 +3,7 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
-from pdr_backend.util.wei import to_wei
+from pdr_backend.util.mathutil import to_wei
 
 
 @enforce_types
