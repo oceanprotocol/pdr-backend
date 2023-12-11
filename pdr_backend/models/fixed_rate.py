@@ -3,6 +3,7 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.util.wei import to_wei
 
 
 @enforce_types
@@ -25,12 +26,10 @@ class FixedRate(BaseContract):
            consumeMktFeeAmt_wei - fee to consume market
         );
         """
-        datatokenAmt_wei = self.config.w3.to_wei("1", "ether")
-        consumeMktSwapFeeAmt_wei = 0
         return self.calcBaseInGivenOutDT(
             exchangeId,
-            datatokenAmt_wei,
-            consumeMktSwapFeeAmt_wei,
+            datatokenAmt_wei=to_wei(1),
+            consumeMktSwapFeeAmt_wei=0,
         )
 
     def calcBaseInGivenOutDT(
