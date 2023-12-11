@@ -161,20 +161,28 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             txs.append(self.buy_and_start_subscription(gasLimit, wait_for_receipt))
         return txs
 
-    def get_exchanges(self):
+    def get_exchanges(self) -> List[Tuple[str, str]]:
+        """
+        @description
+          Returns the fixed-rate exchanges created for this datatoken
+
+        @return
+          exchanges - list of (exchange_addr:str, exchangeId: str)
+        """
         return self.contract_instance.functions.getFixedRates().call()
 
     def get_stake_token(self):
         return self.contract_instance.functions.stakeToken().call()
 
     def get_price(self) -> int:
-        fixed_rates = self.get_exchanges()
-        if not fixed_rates:
+        exchanges = self.get_exchanges()  # fixed rate exchanges
+        if not exchanges:
             return 0
-        (fixed_rate_address, exchange_str) = fixed_rates[0]
+        (fixed_rate_address, exchange_id) = exchanges[0]
+
         # get datatoken price
         exchange = FixedRate(self.web3_pp, fixed_rate_address)
-        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_str)
+        (baseTokenAmount, _, _, _) = exchange.get_dt_price(exchange_id)
         return baseTokenAmount
 
     def get_current_epoch(self) -> int:
