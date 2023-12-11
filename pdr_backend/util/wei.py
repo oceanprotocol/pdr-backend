@@ -1,5 +1,6 @@
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def from_wei(amt_wei: int):
     return float(amt_wei / 1e18)

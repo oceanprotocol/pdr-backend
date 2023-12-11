@@ -6,6 +6,7 @@ from pdr_backend.util.wei import (
     str_with_wei,
 )
 
+
 @enforce_types
 def test_wei():
     assert from_wei(int(1234 * 1e18)) == 1234
