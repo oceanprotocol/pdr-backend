@@ -22,6 +22,7 @@ def get_predictions_info_main(
     pq_dir: str,
 ):
     # get network
+    # TO DO: This code has DRY problems. Reduce.
     if "main" in ppss.web3_pp.network:
         network = "mainnet"
     elif "test" in ppss.web3_pp.network:

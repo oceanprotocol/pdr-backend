@@ -11,7 +11,7 @@ from pdr_backend.util.timeutil import (
     timestr_to_ut,
 )
 
-from pdr_backend.data_eng.gql_data_factory import (
+from pdr_backend.data_eng.gql.predictoor.predictions import (
     predictions_schema,
 )
 
@@ -21,9 +21,10 @@ from pdr_backend.util.subgraph_predictions import (
 
 # ====================================================================
 # test parquet updating
+pdr_predictions_record = "pdr_predictions"
 
 
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql1(
     mock_get_all_contract_ids_by_owner,
@@ -42,7 +43,7 @@ def test_update_gql1(
     )
 
 
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql2(
     mock_get_all_contract_ids_by_owner,
@@ -61,7 +62,7 @@ def test_update_gql2(
     )
 
 
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql3(
     mock_get_all_contract_ids_by_owner,
@@ -80,7 +81,7 @@ def test_update_gql3(
     )
 
 
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql_multiple(
     mock_get_all_contract_ids_by_owner,
@@ -140,7 +141,7 @@ def _test_update_gql(
 
     # setup: filename
     # everything will be inside the gql folder
-    filename = gql_data_factory._parquet_filename("raw_predictions")
+    filename = gql_data_factory._parquet_filename(pdr_predictions_record)
     assert "/gql/" in filename
     assert ".parquet" in filename
 
@@ -158,12 +159,7 @@ def _test_update_gql(
     mock_fetch_filtered_predictions.return_value = target_preds
 
     # work 1: update parquet
-    gql_data_factory._update_hist_predictions(
-        st_ut,
-        fin_ut,
-        filename,
-        gql_data_factory.factory_config["raw_predictions"],
-    )
+    gql_data_factory._update(fin_ut)
 
     # assert params
     mock_fetch_filtered_predictions.assert_called_with(
@@ -199,7 +195,7 @@ def _test_update_gql(
         assert target_pred * 1000 in preds
 
 
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_load_and_verify_schema(
     mock_get_all_contract_ids_by_owner,
@@ -232,8 +228,8 @@ def test_load_and_verify_schema(
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
 
     assert len(gql_dfs) == 1
-    assert len(gql_dfs["raw_predictions"]) == 5
-    assert gql_dfs["raw_predictions"].schema == predictions_schema
+    assert len(gql_dfs[pdr_predictions_record]) == 5
+    assert gql_dfs[pdr_predictions_record].schema == predictions_schema
 
 
 # ====================================================================
@@ -242,8 +238,14 @@ def test_load_and_verify_schema(
 
 @enforce_types
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.data_eng.gql_data_factory.GQLDataFactory._update")
+@patch("pdr_backend.data_eng.gql_data_factory.GQLDataFactory._load_parquet")
 def test_get_gql_dfs_calls(
-    mock_get_all_contract_ids_by_owner, tmpdir, sample_daily_predictions
+    mock_load_parquet,
+    mock_update,
+    mock_get_all_contract_ids_by_owner,
+    tmpdir,
+    sample_daily_predictions,
 ):
     """Test core DataFactory functions are being called"""
     st_timestr = "2023-11-02_0:00"
@@ -264,35 +266,22 @@ def test_get_gql_dfs_calls(
     st_ut_sec = st_ut // 1000
     fin_ut_sec = fin_ut // 1000
 
-    # setup mock objects
-    def mock_update_parquet(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_update_parquet.called = True
-
-    def mock_load_parquet(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_load_parquet.called = True
-
-        preds = [
-            x
-            for x in sample_daily_predictions
-            if st_ut_sec <= x.timestamp <= fin_ut_sec
-        ]
-        preds = pl.DataFrame([x.__dict__ for x in preds])
-        preds = preds.with_columns(
+    # mock_load_parquet should return the values from a simple code block
+    mock_load_parquet.return_value = {
+        pdr_predictions_record: pl.DataFrame(
             [
-                pl.col("timestamp").mul(1000).alias("timestamp"),
+                x.__dict__
+                for x in sample_daily_predictions
+                if st_ut_sec <= x.timestamp <= fin_ut_sec
             ]
-        )
-
-        return {"raw_predictions": preds}
-
-    gql_data_factory._update_parquet = mock_update_parquet
-    gql_data_factory._load_parquet = mock_load_parquet
+        ).with_columns([pl.col("timestamp").mul(1000).alias("timestamp")])
+    }
 
     # call and assert
     gql_dfs = gql_data_factory.get_gql_dfs()
     assert isinstance(gql_dfs, dict)
-    assert isinstance(gql_dfs["raw_predictions"], pl.DataFrame)
-    assert len(gql_dfs["raw_predictions"]) == 5
+    assert isinstance(gql_dfs[pdr_predictions_record], pl.DataFrame)
+    assert len(gql_dfs[pdr_predictions_record]) == 5
 
-    assert mock_update_parquet.called
-    assert mock_load_parquet.called
+    mock_update.assert_called_once()
+    mock_load_parquet.assert_called_once()

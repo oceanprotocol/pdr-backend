@@ -1,45 +1,29 @@
 import os
-from typing import Dict, List
+from typing import Dict, Callable
 
 from enforce_typing import enforce_types
 import polars as pl
-from polars import Utf8, Int64, Float64, Boolean
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.timeutil import pretty_timestr, current_ut, ms_to_seconds
+from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 from pdr_backend.data_eng.plutil import (
     has_data,
-    oldest_ut,
     newest_ut,
 )
 
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
-    fetch_filtered_predictions,
-    FilterMode,
+)
+
+from pdr_backend.data_eng.gql.predictoor.predictions import (
+    predictions_schema,
+    get_predictoor_predictions_df,
 )
 
 
-# RAW_PREDICTIONS_SCHEMA
-predictions_schema = {
-    "id": Utf8,
-    "pair": Utf8,
-    "timeframe": Utf8,
-    "prediction": Boolean,
-    "stake": Float64,
-    "trueval": Boolean,
-    "timestamp": Int64,
-    "source": Utf8,
-    "payout": Float64,
-    "slot": Int64,
-    "user": Utf8,
-}
-
-
-# mypy: disable-error-code=operator
 @enforce_types
 class GQLDataFactory:
     """
@@ -58,6 +42,11 @@ class GQLDataFactory:
         self.ss = ss
         self.web3 = web3
 
+        # TO DO: Solve duplicates from subgraph.
+        # Method 1: Cull anything returned outside st_ut, fin_ut
+        self.debug_duplicate = False
+
+        # TO DO: This code has DRY problems. Reduce.
         # get network
         if "main" in self.web3.network:
             network = "mainnet"
@@ -74,11 +63,13 @@ class GQLDataFactory:
         contract_list = [f.lower() for f in contract_list]
 
         # TO-DO: Roll into yaml config
-        self.factory_config = {
-            "raw_predictions": {
-                "update_fn": self._update_hist_predictions,
+        self.record_config = {
+            "pdr_predictions": {
+                "fetch_fn": get_predictoor_predictions_df,
                 "schema": predictions_schema,
-                "contract_list": contract_list,
+                "config": {
+                    "contract_list": contract_list,
+                },
             },
         }
 
@@ -100,7 +91,7 @@ class GQLDataFactory:
         print(f"  Data start: {pretty_timestr(self.ss.st_timestamp)}")
         print(f"  Data fin: {pretty_timestr(fin_ut)}")
 
-        self._update_parquet(fin_ut)
+        self._update(fin_ut)
         gql_dfs = self._load_parquet(fin_ut)
 
         print("Get historical data across many subgraphs. Done.")
@@ -112,14 +103,10 @@ class GQLDataFactory:
 
         return gql_dfs
 
-    def _update_parquet(self, fin_ut: int):
-        print("  Update parquet.")
-        self._update_hist_parquet(fin_ut)
-
-    def _update_hist_parquet(self, fin_ut: int):
+    def _update(self, fin_ut: int):
         """
         @description
-            Update raw data for:
+            Iterate across all gql queries and update their parquet files:
             - Predictoors
             - Slots
             - Claims
@@ -132,7 +119,7 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
-        for k, config in self.factory_config.items():
+        for k, record in self.record_config.items():
             filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
@@ -142,8 +129,18 @@ class GQLDataFactory:
                 print("      Given start time, no data to gather. Exit.")
                 continue
 
+            # to satisfy mypy, get an explicit function pointer
+            gql_fn: Callable[[str, int, int, Dict], pl.DataFrame] = record["fetch_fn"]
+
+            # call the function
             print(f"    Fetching {k}")
-            config["update_fn"](st_ut, fin_ut, filename, config)
+            gql_df = gql_fn(self.web3.network, st_ut, fin_ut, record["config"])
+
+            # postcondition
+            assert gql_df.schema == record["schema"]
+
+            # save to parquet
+            self._save_parquet(filename, gql_df)
 
     def _calc_start_ut(self, filename: str) -> int:
         """
@@ -184,7 +181,7 @@ class GQLDataFactory:
 
         gql_dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
 
-        for k, config in self.factory_config.items():
+        for k, record in self.record_config.items():
             filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
@@ -195,13 +192,7 @@ class GQLDataFactory:
             )
 
             # postcondition
-            assert (
-                "timestamp" in parquet_df.columns
-                and parquet_df["timestamp"].dtype == pl.Int64
-            )
-
-            # timestmap_ms should be the only extra column
-            assert parquet_df.schema == config["schema"]
+            assert parquet_df.schema == record["schema"]
             gql_dfs[k] = parquet_df
 
         return gql_dfs
@@ -225,66 +216,6 @@ class GQLDataFactory:
         filename = os.path.join(gql_dir, basename)
         return filename
 
-    def _transform_timestamp_to_ms(self, df: pl.DataFrame) -> pl.DataFrame:
-        df = df.with_columns(
-            [
-                pl.col("timestamp").mul(1000).alias("timestamp"),
-            ]
-        )
-        return df
-
-    def _update_hist_predictions(
-        self, st_ut: int, fin_ut: int, filename: str, config: Dict
-    ):
-        """
-        @description
-            Fetch raw predictions from subgraph, and save to parquet file.
-
-            Update function for graphql query, returns raw data + transforms timestamp into ms
-            such that the rest of gql_data_factory can work with ms
-        """
-        # get network
-        if "main" in self.web3.network:
-            network = "mainnet"
-        elif "test" in self.web3.network:
-            network = "testnet"
-        else:
-            raise ValueError(self.web3.network)
-
-        # fetch predictions
-        predictions = fetch_filtered_predictions(
-            ms_to_seconds(st_ut),
-            ms_to_seconds(fin_ut),
-            config["contract_list"],
-            network,
-            FilterMode.CONTRACT_TS,
-            payout_only=False,
-            trueval_only=False,
-        )
-
-        if len(predictions) == 0:
-            print("      No predictions to fetch. Exit.")
-            return
-
-        # convert predictions to df and transform timestamp into ms
-        predictions_df = self._object_list_to_df(predictions, config["schema"])
-        predictions_df = self._transform_timestamp_to_ms(predictions_df)
-
-        # output to parquet
-        self._save_parquet(filename, predictions_df)
-
-    def _object_list_to_df(self, objects: List[object], schema: Dict) -> pl.DataFrame:
-        """
-        @description
-            Convert list objects to a dataframe using their __dict__ structure.
-        """
-        # Get all predictions into a dataframe
-        obj_dicts = [object.__dict__ for object in objects]
-        obj_df = pl.DataFrame(obj_dicts, schema=schema)
-        assert obj_df.schema == schema
-
-        return obj_df
-
     @enforce_types
     def _save_parquet(self, filename: str, df: pl.DataFrame):
         """write to parquet file
@@ -293,15 +224,41 @@ class GQLDataFactory:
 
         # precondition
         assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
+        assert len(df) > 0
+        if len(df) > 1:
+            assert (
+                df.head(1)["timestamp"].to_list()[0]
+                < df.tail(1)["timestamp"].to_list()[0]
+            )
 
         if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
+
+            if self.debug_duplicate is True:
+                print(">>> Existing rows")
+                print(f"HEAD: {cur_df.head(2)}")
+                print(f"TAIL: {cur_df.tail(2)}")
+
+                print(">>> Appending rows")
+                print(f"HEAD: {df.head(2)}")
+                print(f"TAIL: {df.tail(2)}")
+
             df = pl.concat([cur_df, df])
             df.write_parquet(filename)
 
             duplicate_rows = df.filter(pl.struct("id").is_duplicated())
-            if len(duplicate_rows) > 0:
-                print(f"Duplicate rows found. {len(duplicate_rows)} rows:")
+            if len(duplicate_rows) > 0 and self.debug_duplicate is True:
+                print(f">>>> Duplicate rows found. {len(duplicate_rows)} rows:")
+                print(f"HEAD: {duplicate_rows.head(2)}")
+                print(f"TAIL: {duplicate_rows.tail(2)}")
+
+                # log duplicate rows to log file
+                log_filename = "debug.log"
+                with open(log_filename, "a") as f:
+                    f.write(
+                        f">>>>>>>> Duplicate rows found. {len(duplicate_rows)} rows:"
+                    )
+                    f.write(str(duplicate_rows))
 
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")

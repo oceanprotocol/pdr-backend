@@ -20,6 +20,7 @@ def get_predictoors_info_main(
     end_timestr: str,
     csv_output_dir: str,
 ):
+    # TO DO: This code has DRY problems. Reduce.
     if "main" in ppss.web3_pp.network:
         network = "mainnet"
     elif "test" in ppss.web3_pp.network:

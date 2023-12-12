@@ -140,6 +140,7 @@ class Web3PP(StrMixin):
         }
         return feeds
 
+    # TO DO: This should use web3 not subgraph
     @enforce_types
     def get_pending_slots(
         self,
