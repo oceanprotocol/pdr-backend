@@ -346,7 +346,9 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=False)
+    X, y, x_df = model_data_factory.create_xy(
+        mergedohlcv_df, testshift=0, do_fill_nans=False
+    )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -354,7 +356,9 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=True)
+    X, y, x_df = model_data_factory.create_xy(
+        mergedohlcv_df, testshift=0, do_fill_nans=True
+    )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
