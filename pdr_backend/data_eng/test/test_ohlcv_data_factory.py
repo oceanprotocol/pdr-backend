@@ -1,6 +1,7 @@
 import os
 import time
 from typing import List
+from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -89,7 +90,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
             uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
-    _, ss, pq_data_factory, _ = _data_pp_ss_1feed(
+    _, ss, factory, _ = _data_pp_ss_1feed(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr,
@@ -100,19 +101,19 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
     # setup: filename
     #   it's ok for input pair_str to have '/' or '-', it handles it
     #   but the output filename should not have '/' its pairstr part
-    filename = pq_data_factory._rawohlcv_filename("binanceus", "ETH/USDT")
-    filename2 = pq_data_factory._rawohlcv_filename("binanceus", "ETH-USDT")
+    filename = factory._rawohlcv_filename("binanceus", "ETH/USDT")
+    filename2 = factory._rawohlcv_filename("binanceus", "ETH-USDT")
     assert filename == filename2
     assert "ETH-USDT" in filename and "ETH/USDT" not in filename
 
     # ensure we check for unwanted "-". (Everywhere but filename, it's '/')
     with pytest.raises(AssertionError):
-        pq_data_factory._update_rawohlcv_files_at_exch_and_pair(
+        factory._update_rawohlcv_files_at_exch_and_pair(
             "binanceus", "ETH-USDT", ss.fin_timestamp
         )
 
     # work 1: new rawohlcv file
-    pq_data_factory._update_rawohlcv_files_at_exch_and_pair(
+    factory._update_rawohlcv_files_at_exch_and_pair(
         "binanceus", "ETH/USDT", ss.fin_timestamp
     )
 
@@ -132,7 +133,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
     # work 2: two more epochs at end --> it'll append existing file
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
-    pq_data_factory._update_rawohlcv_files_at_exch_and_pair(
+    factory._update_rawohlcv_files_at_exch_and_pair(
         "binanceus", "ETH/USDT", ss.fin_timestamp
     )
     uts2 = _uts_in_rawohlcv_file(filename)
@@ -141,7 +142,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
     # work 3: two more epochs at beginning *and* end --> it'll create new file
     ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
-    pq_data_factory._update_rawohlcv_files_at_exch_and_pair(
+    factory._update_rawohlcv_files_at_exch_and_pair(
         "binanceus", "ETH/USDT", ss.fin_timestamp
     )
     uts3 = _uts_in_rawohlcv_file(filename)
@@ -185,10 +186,10 @@ def _test_get_mergedohlcv_df_happypath(tmpdir):
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
-    pq_data_factory = OhlcvDataFactory(pp, ss)
+    factory = OhlcvDataFactory(pp, ss)
 
     # call and assert
-    mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+    mergedohlcv_df = factory.get_mergedohlcv_df()
 
     # 289 records created
     assert len(mergedohlcv_df) == 289
@@ -223,10 +224,10 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     """
 
     # setup
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h BTC/USDT")
-    filename = pq_data_factory._rawohlcv_filename("binanceus", "BTC/USDT")
-    st_ut = pq_data_factory.ss.st_timestamp
-    fin_ut = pq_data_factory.ss.fin_timestamp
+    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h BTC/USDT")
+    filename = factory._rawohlcv_filename("binanceus", "BTC/USDT")
+    st_ut = factory.ss.st_timestamp
+    fin_ut = factory.ss.fin_timestamp
 
     # mock
     n_pts = 20
@@ -242,18 +243,18 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         df = transform_df(df)  # add "datetime" col, more
         save_rawohlcv_file(filename, df)
 
-    pq_data_factory._update_rawohlcv_files_at_exch_and_pair = mock_update
+    factory._update_rawohlcv_files_at_exch_and_pair = mock_update
 
     # test 1: get mergedohlcv_df via several low-level instrs, as get_mergedohlcv_df() does
-    pq_data_factory._update_rawohlcv_files(fin_ut)
+    factory._update_rawohlcv_files(fin_ut)
     assert os.path.getsize(filename) > 500
 
     df0 = pl.read_parquet(filename, columns=["high"])
     df1 = load_rawohlcv_file(filename, ["high"], st_ut, fin_ut)
     rawohlcv_dfs = (  # pylint: disable=assignment-from-no-return
-        pq_data_factory._load_rawohlcv_files(fin_ut)
+        factory._load_rawohlcv_files(fin_ut)
     )
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(rawohlcv_dfs)
+    mergedohlcv_df = factory._merge_rawohlcv_dfs(rawohlcv_dfs)
 
     assert len(df0) == len(df1) == len(df1["high"]) == len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
@@ -269,7 +270,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     os.remove(filename)
 
     # test 2: get mergedohlcv_df via a single high-level instr
-    mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+    mergedohlcv_df = factory.get_mergedohlcv_df()
     assert os.path.getsize(filename) > 500
     assert len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
@@ -281,7 +282,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
 @enforce_types
 def test_exchange_hist_overlap(tmpdir):
     """DataFactory get_mergedohlcv_df() and concat is executing e2e correctly"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(
+    _, _, factory, _ = _data_pp_ss_1feed(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr="2023-06-18",
@@ -289,7 +290,7 @@ def test_exchange_hist_overlap(tmpdir):
     )
 
     # call and assert
-    mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+    mergedohlcv_df = factory.get_mergedohlcv_df()
 
     # 289 records created
     assert len(mergedohlcv_df) == 289
@@ -300,13 +301,13 @@ def test_exchange_hist_overlap(tmpdir):
     assert head_timestamp < tail_timestamp
 
     # let's get more data from exchange with overlap
-    _, _, pq_data_factory2, _ = _data_pp_ss_1feed(
+    _, _, factory2, _ = _data_pp_ss_1feed(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr="2023-06-18",  # same
         fin_timestr="2023-06-20",  # different
     )
-    mergedohlcv_df2 = pq_data_factory2.get_mergedohlcv_df()
+    mergedohlcv_df2 = factory2.get_mergedohlcv_df()
 
     # assert on expected values
     # another 288 records appended
@@ -320,8 +321,8 @@ def test_exchange_hist_overlap(tmpdir):
 
 @enforce_types
 def test_mergedohlcv_df_shape(tmpdir):
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    mergedohlcv_df = factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert mergedohlcv_df.columns == [
         "timestamp",
@@ -339,64 +340,18 @@ def test_mergedohlcv_df_shape(tmpdir):
     )
 
 
-# ====================================================================
-# test if appropriate calls are made
-
-
 @enforce_types
 def test_get_mergedohlcv_df_calls(tmpdir):
-    """Test core DataFactory functions are being called"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
 
-    # setup mock objects
-    def mock_update(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_update.called = True
+    factory._update_rawohlcv_files = Mock(return_value=None)
+    factory._load_rawohlcv_files = Mock(return_value=None)
+    factory._merge_rawohlcv_dfs = Mock(return_value=Mock(spec=pl.DataFrame))
 
-    def mock_load(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_load.called = True
+    mergedohlcv_df = factory.get_mergedohlcv_df()
 
-    def mock_merge(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_merge.called = True
-        return pl.DataFrame([1, 2, 3])
-
-    pq_data_factory._update_rawohlcv_files = mock_update
-    pq_data_factory._load_rawohlcv_files = mock_load
-    pq_data_factory._merge_rawohlcv_dfs = mock_merge
-
-    # call and assert
-    mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert len(mergedohlcv_df) == 3
 
-    assert mock_update.called
-    assert mock_load.called
-    assert mock_merge.called
-
-
-@enforce_types
-def test_get_mergedohlcv_df_fns(tmpdir):
-    """Test DataFactory get_mergedohlcv_df functions are being called"""
-    _, _, pq_data_factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-
-    # setup mock objects
-    def mock_update(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_update.called = True
-
-    def mock_load(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_load.called = True
-
-    def mock_merge(*args, **kwargs):  # pylint: disable=unused-argument
-        mock_merge.called = True
-        return pl.DataFrame([1, 2, 3])
-
-    pq_data_factory._update_rawohlcv_files = mock_update
-    pq_data_factory._load_rawohlcv_files = mock_load
-    pq_data_factory._merge_rawohlcv_dfs = mock_merge
-
-    # call and assert
-    mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
-    assert len(mergedohlcv_df) == 3
-
-    assert mock_update.called
-    assert mock_load.called
-    assert mock_merge.called
+    factory._update_rawohlcv_files.assert_called()
+    factory._load_rawohlcv_files.assert_called()
+    factory._merge_rawohlcv_dfs.assert_called()
