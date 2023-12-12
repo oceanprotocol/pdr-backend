@@ -229,11 +229,15 @@ def test_has_data(tmpdir):
     assert not has_data(filename0)
 
     filename1 = os.path.join(tmpdir, "f1.parquet")
-    save_rawohlcv_file(filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)))
+    save_rawohlcv_file(
+        filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
+    )
     assert has_data(filename1)
 
     filename4 = os.path.join(tmpdir, "f4.parquet")
-    save_rawohlcv_file(filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)))
+    save_rawohlcv_file(
+        filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
+    )
     assert has_data(filename4)
 
 
