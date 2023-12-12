@@ -129,14 +129,19 @@ class DataPP:
         @return
           final_feeds -- dict of [feed_addr] : Feed
         """
+        allowed_tups = [
+            (self.timeframe, exchange, pair)
+            for exchange, _, pair in self.predict_feed_tups
+        ]
+
         final_feeds: Dict[str, Feed] = {}
-        tups = set()  # to avoid duplicates
+        found_tups = set()  # to avoid duplicates
         for feed in cand_feeds.values():
             assert isinstance(feed, Feed)
-            feed_tup = (feed.source, "close", feed.pair)
-            if feed_tup in self.predict_feed_tups and feed_tup not in tups:
+            feed_tup = (feed.timeframe, feed.source, feed.pair)
+            if feed_tup in allowed_tups and feed_tup not in found_tups:
                 final_feeds[feed.address] = feed
-                tups.add(feed_tup)
+                found_tups.add(feed_tup)
         return final_feeds
 
     @enforce_types

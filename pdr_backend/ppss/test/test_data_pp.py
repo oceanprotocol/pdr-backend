@@ -3,6 +3,7 @@ import pytest
 
 from pdr_backend.models.feed import mock_feed
 from pdr_backend.ppss.data_pp import DataPP, mock_data_pp
+from pdr_backend.util.mathutil import sole_value
 
 
 @enforce_types
@@ -89,18 +90,74 @@ def test_pp_5m_vs_1h():
     assert pp.timeframe_m == 60
 
 
-@enforce_types
-def test_filter_feeds1():
-    _test_filter_feeds("/")
+def _triplet(feed) -> tuple:
+    return (feed.timeframe, feed.source, feed.pair)
 
 
 @enforce_types
-def test_filter_feeds2():
-    _test_filter_feeds("-")
+def test_filter_feeds_1allowed():
+    # setup
+    pp = mock_data_pp("5m", ["binance c BTC/USDT"])
+    ok = [
+        mock_feed("5m", "binance", "BTC/USDT"),
+    ]
+    not_ok = [
+        mock_feed("1h", "binance", "BTC/USDT"),
+        mock_feed("5m", "kraken", "BTC/USDT"),
+        mock_feed("5m", "binance", "ETH/USDT"),
+    ]
+    cand_feeds = {f.address: f for f in ok + not_ok}
+    ok_feed = ok[0]
+
+    # work
+    feeds = pp.filter_feeds(cand_feeds)
+
+    # verify
+    assert len(feeds) == 1
+    assert list(feeds.keys())[0] == ok_feed.address
+
+    feed = sole_value(feeds)
+    assert _triplet(feed) == ("5m", "binance", "BTC/USDT")
 
 
 @enforce_types
-def _test_filter_feeds(join_str):
+def test_filter_feeds_3allowed():
+    # setup
+    pp = mock_data_pp(
+        "5m",
+        ["binance c BTC/USDT,ETH/USDT", "kraken c BTC/USDT"],
+    )
+    ok = [
+        mock_feed("5m", "binance", "BTC/USDT"),
+        mock_feed("5m", "binance", "ETH/USDT"),
+        mock_feed("5m", "kraken", "BTC/USDT"),
+    ]
+    not_ok = [
+        mock_feed("5m", "binance", "XRP/USDT"),
+        mock_feed("1h", "binance", "BTC/USDT"),
+        mock_feed("5m", "kraken", "ETH/USDT"),
+        mock_feed("1h", "kraken", "BTC/USDT"),
+    ]
+    cand_feeds = {f.address: f for f in ok + not_ok}
+    ok_triplets = {_triplet(feed) for feed in ok}
+
+    # work
+    feeds = pp.filter_feeds(cand_feeds)
+
+    # verify
+    assert len(feeds) == 3
+    triplets = {_triplet(feed) for feed in feeds.values()}
+    assert triplets == ok_triplets
+
+
+@enforce_types
+def test_filter_feeds_joiner():
+    _test_filter_feeds_joiner("/")
+    _test_filter_feeds_joiner("-")
+
+
+@enforce_types
+def _test_filter_feeds_joiner(join_str):
     pp = mock_data_pp("5m", ["binance c ETH/USDT"])
 
     f1 = mock_feed("5m", "binance", f"BTC{join_str}USDT")
