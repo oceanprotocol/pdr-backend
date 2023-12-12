@@ -15,11 +15,10 @@ class TruevalAgentSingle(TruevalAgentBase):
         )
         pending_slots = self.get_batch()
 
+        sleep_time = self.ppss.trueval_ss.sleep_time
         if len(pending_slots) == 0:
-            print(
-                f"No pending slots, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-            )
-            time.sleep(self.ppss.trueval_ss.sleep_time)
+            print(f"No pending slots, sleeping for {sleep_time} seconds...")
+            time.sleep(sleep_time)
             return
 
         for slot in pending_slots:
@@ -29,10 +28,9 @@ class TruevalAgentSingle(TruevalAgentBase):
                 self.process_slot(slot)
             except Exception as e:
                 print(f"An error occured: {e}")
-        print(
-            f"Done processing, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
-        )
-        time.sleep(self.ppss.trueval_ss.sleep_time)
+            
+        print(f"Done processing, sleeping for {sleep_time} seconds...")
+        time.sleep(sleep_time)
 
     def process_slot(self, slot: Slot) -> dict:
         predictoor_contract, _ = self.get_contract_info(slot.feed.address)
@@ -43,17 +41,24 @@ class TruevalAgentSingle(TruevalAgentBase):
         slot: Slot,
         predictoor_contract: PredictoorContract,
     ) -> dict:
-        try:
-            (trueval, cancel) = self.get_trueval_slot(slot)
+        # (don't wrap with try/except because the called func already does)
+        (trueval, cancel_round) = self.get_trueval_slot(slot)
 
-            # pylint: disable=line-too-long
-            print(
-                f"{slot.feed} - Submitting trueval {trueval} and slot:{slot.slot_number}"
-            )
+        print(
+            f"Submit trueval: begin. For slot_number {slot.slot_number}"
+            f" of {slot.feed}. Submitting trueval={trueval}"
+        )
+        try:
+            wait_for_receipt = True
             tx = predictoor_contract.submit_trueval(
-                trueval, slot.slot_number, cancel, True
+                trueval,
+                slot.slot_number,
+                cancel_round,
+                wait_for_receipt,
             )
-            return tx
         except Exception as e:
-            print("Error while getting trueval:", e)
-        return {}
+            print(f"Error while submitting trueval: {e}")
+            return {}
+
+        print("Submit trueval: done")
+        return tx

@@ -97,10 +97,9 @@ class TruevalAgentBatch(TruevalAgentBase):
         return tx["transactionHash"].hex()
 
     def process_trueval_slot(self, slot: TruevalSlot):
-        try:
-            (trueval, cancel) = self.get_trueval_slot(slot)
-            slot.set_trueval(trueval)
-            if cancel:
-                slot.set_cancel(True)
-        except Exception as e:
-            print("An error occured while getting processing slot:", e)
+        # (don't wrap with try/except because the called func already does)
+        (trueval, cancel_round) = self.get_trueval_slot(slot)
+
+        slot.set_trueval(trueval)
+        if cancel_round:
+            slot.set_cancel(True)

@@ -68,21 +68,38 @@ class TruevalAgentBase(ABC):
         return initial_ts, end_ts
 
     def get_trueval_slot(self, slot: Slot):
-        _, seconds_per_epoch = self.get_contract_info(slot.feed.address)
-        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, seconds_per_epoch)
+        """
+        @description
+          Get trueval at the specified slot
+
+        @arguments
+          slot
+
+        @return
+          trueval: bool
+          cancel_round: bool
+        """
+        _, s_per_epoch = self.get_contract_info(slot.feed.address)
+        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, s_per_epoch)
+
+        print(
+            f"Get trueval slot: begin. For slot_number {slot.slot_number}"
+            f" of {slot.feed}"
+        )
         try:
-            (trueval, cancel) = self.get_trueval(slot.feed, init_ts, end_ts)
-            return trueval, cancel
+            # calls to get_trueval() func below, via Callable attribute on self
+            (trueval, cancel_round) = self.get_trueval(slot.feed, init_ts, end_ts)
         except Exception as e:
             if "Too many requests" in str(e):
-                print("Too many requests, waiting for a minute")
+                print("Get trueval slot: too many requests, wait for a minute")
                 time.sleep(60)
                 return self.get_trueval_slot(slot)
 
             # pylint: disable=line-too-long
-            raise Exception(
-                f"An error occured: {e}, while getting trueval for: {slot.feed.address} {slot.feed.pair} {slot.slot_number}"
-            ) from e
+            raise Exception(f"An error occured: {e}") from e
+
+        print(f"Get trueval slot: done. trueval={trueval}, cancel_round={cancel_round}")
+        return (trueval, cancel_round)
 
 
 @enforce_types
@@ -124,8 +141,16 @@ def get_trueval(
     assert len(tohlcvs) == 2, f"expected exactly 2 tochlv tuples. {tohlcvs}"
     init_tohlcv, end_tohlcv = tohlcvs[0], tohlcvs[1]
 
-    assert init_tohlcv[0] == init_timestamp, (init_tohlcv[0], init_timestamp)
-    assert end_tohlcv[0] == end_timestamp, (end_tohlcv[0], end_timestamp)
+    if init_tohlcv[0] != init_timestamp:
+        raise Exception(
+            f"exchange's init_tohlcv[0]={init_tohlcv[0]} should have matched"
+            f" target init_timestamp={init_timestamp}"
+        )
+    if end_tohlcv[0] != end_timestamp:
+        raise Exception(
+            f"exchange's end_tohlcv[0]={end_tohlcv[0]} should have matched"
+            f" target end_timestamp={end_timestamp}"
+        )
 
     init_c, end_c = init_tohlcv[4], end_tohlcv[4]  # c = closing price
     if end_c == init_c:
