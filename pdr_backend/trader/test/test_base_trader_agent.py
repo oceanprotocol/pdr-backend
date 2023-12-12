@@ -17,30 +17,30 @@ from pdr_backend.trader.test.trader_agent_runner import (
     INIT_BLOCK_NUMBER,
     setup_take_step,
 )
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 def test_trader_agent_constructor(check_subscriptions_and_subscribe_mock):
-    do_constructor(TraderAgent, check_subscriptions_and_subscribe_mock)
+    do_constructor(BaseTraderAgent, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 def test_trader_agent_run(check_subscriptions_and_subscribe_mock):
-    do_run(TraderAgent, check_subscriptions_and_subscribe_mock)
+    do_run(BaseTraderAgent, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
 @pytest.mark.asyncio
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 async def test_trader_agent_take_step(
     check_subscriptions_and_subscribe_mock,
     monkeypatch,
 ):
     agent = setup_take_step(
-        TraderAgent,
+        BaseTraderAgent,
         check_subscriptions_and_subscribe_mock,
         monkeypatch,
     )
@@ -57,7 +57,7 @@ def custom_do_trade(feed, prediction):
 
 
 @pytest.mark.asyncio
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 async def test_process_block_at_feed(  # pylint: disable=unused-argument
     check_subscriptions_and_subscribe_mock,
     monkeypatch,
@@ -73,7 +73,7 @@ async def test_process_block_at_feed(  # pylint: disable=unused-argument
         monkeypatch,
     )
 
-    agent = TraderAgent(ppss, custom_do_trade)
+    agent = BaseTraderAgent(ppss, custom_do_trade)
 
     feed_addr = feed.address
     agent.prev_traded_epochs_per_feed.clear()
@@ -113,14 +113,14 @@ async def test_process_block_at_feed(  # pylint: disable=unused-argument
 
 
 @enforce_types
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 def test_save_and_load_cache(
     check_subscriptions_and_subscribe_mock,
 ):  # pylint: disable=unused-argument
     feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
     inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
-    agent = TraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
+    agent = BaseTraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
 
     agent.prev_traded_epochs_per_feed = {
         feed.address: [1, 2, 3],
@@ -128,7 +128,7 @@ def test_save_and_load_cache(
 
     agent.update_cache()
 
-    agent_new = TraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
+    agent_new = BaseTraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
     assert agent_new.prev_traded_epochs_per_feed[feed.address] == [3]
     cache_dir_path = (
         Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
@@ -140,14 +140,14 @@ def test_save_and_load_cache(
 
 
 @pytest.mark.asyncio
-@patch.object(TraderAgent, "check_subscriptions_and_subscribe")
+@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
 async def test_get_pred_properties(
     check_subscriptions_and_subscribe_mock,
 ):  # pylint: disable=unused-argument
     feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
     inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
-    agent = TraderAgent(ppss)
+    agent = BaseTraderAgent(ppss)
     check_subscriptions_and_subscribe_mock.assert_called_once()
 
     agent.get_pred_properties = Mock()

@@ -6,14 +6,14 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-class TraderAgent1(TraderAgent):
+class TraderAgent1(BaseTraderAgent):
     """
     @description
-        TraderAgent Naive CCXT
+        Naive trader agent.
         - Market order buy-only
         - Doesn't save client state or manage pending open trades
         - Only works with MEXC. How to improve:

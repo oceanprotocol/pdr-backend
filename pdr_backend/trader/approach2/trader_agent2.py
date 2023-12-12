@@ -12,25 +12,14 @@ from pdr_backend.trader.approach2.portfolio import (
     Order,
     create_order,
 )
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-class TraderAgent2(TraderAgent):
+class TraderAgent2(BaseTraderAgent):
     """
     @description
-        TraderAgent Naive CCXT
-
-        This is a naive algorithm. It will simply:
-        1. If open position, close it
-        2. If new prediction up, open long
-        3. If new prediction down, open short
-
-        You can improve this by:
-        1. Improving the type of method to buy/exit (i.e. limit)
-        2. Improving the buy Conditional statement
-        3. Enabling buying and shorting
-        4. Using SL and TP
+        Trader agent that's slightly less naive than agent 1.
     """
 
     def __init__(self, ppss: PPSS):

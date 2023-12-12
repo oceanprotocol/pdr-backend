@@ -9,7 +9,7 @@ from pdr_backend.util.cache import Cache
 
 
 # pylint: disable=too-many-instance-attributes
-class TraderAgent:
+class BaseTraderAgent:
     def __init__(
         self,
         ppss: PPSS,
