@@ -5,9 +5,9 @@ import polars as pl
 import pytest
 
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
+from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.data_eng.test.resources import (
-    _hist_df_ETHUSDT,
+    _mergedohlcv_df_ETHUSDT,
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,
@@ -16,7 +16,7 @@ from pdr_backend.data_eng.test.resources import (
     BINANCE_BTC_DATA,
     KRAKEN_ETH_DATA,
     KRAKEN_BTC_DATA,
-    ETHUSDT_PARQUET_DFS,
+    ETHUSDT_RAWOHLCV_DFS,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -42,7 +42,7 @@ def test_create_xy__0(tmpdir):
             "autoregressive_n": 2,
         }
     )
-    hist_df = pl.DataFrame(
+    mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
             "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by ModelDataFactory
@@ -73,7 +73,7 @@ def test_create_xy__0(tmpdir):
     )
 
     model_data_factory = ModelDataFactory(data_pp, data_ss)
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(data_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -86,7 +86,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     _, ss, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
         tmpdir, "binanceus h ETH/USDT"
     )
-    hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
+    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
     target_X = np.array(
@@ -122,7 +122,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -162,7 +162,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=1)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -192,7 +192,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert "max_n_train" in ss.d
     ss.d["max_n_train"] = 5
 
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -204,7 +204,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     parquet_dir = str(tmpdir)
 
-    parquet_dfs = {
+    rawohlcv_dfs = {
         "binanceus": {
             "BTC/USDT": _df_from_raw_data(BINANCE_BTC_DATA),
             "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
@@ -223,11 +223,11 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert ss.autoregressive_n == 3
     assert ss.n == (4 + 4) * 3
 
-    pq_data_factory = ParquetDataFactory(pp, ss)
-    hist_df = pq_data_factory._merge_parquet_dfs(parquet_dfs)
+    pq_data_factory = OhlcvDataFactory(pp, ss)
+    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(rawohlcv_dfs)
 
     model_data_factory = ModelDataFactory(pp, ss)
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
@@ -289,76 +289,76 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
 
 @enforce_types
 def test_create_xy__check_timestamp_order(tmpdir):
-    hist_df, model_data_factory = _hist_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, model_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     # timestamps should be descending order
-    uts = hist_df["timestamp"].to_list()
+    uts = mergedohlcv_df["timestamp"].to_list()
     assert uts == sorted(uts, reverse=False)
 
     # happy path
-    model_data_factory.create_xy(hist_df, testshift=0)
+    model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     # failure path
     bad_uts = sorted(uts, reverse=True)  # bad order
-    bad_hist_df = hist_df.with_columns(pl.Series("timestamp", bad_uts))
+    bad_mergedohlcv_df = mergedohlcv_df.with_columns(pl.Series("timestamp", bad_uts))
     with pytest.raises(AssertionError):
-        model_data_factory.create_xy(bad_hist_df, testshift=0)
+        model_data_factory.create_xy(bad_mergedohlcv_df, testshift=0)
 
 
 @enforce_types
 def test_create_xy__input_type(tmpdir):
-    hist_df, model_data_factory = _hist_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, model_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
-    assert isinstance(hist_df, pl.DataFrame)
+    assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(model_data_factory, ModelDataFactory)
 
     # create_xy() input should be pl
-    model_data_factory.create_xy(hist_df, testshift=0)
+    model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     # create_xy() inputs shouldn't be pd
     with pytest.raises(AssertionError):
-        model_data_factory.create_xy(hist_df.to_pandas(), testshift=0)
+        model_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
 
 
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
-    # create hist_df
+    # create mergedohlcv_df
     __, __, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
         tmpdir, "binanceus h ETH/USDT"
     )
-    hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
+    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
-    # initial hist_df should be ok
-    assert not has_nan(hist_df)
+    # initial mergedohlcv_df should be ok
+    assert not has_nan(mergedohlcv_df)
 
-    # now, corrupt hist_df with NaN values
+    # now, corrupt mergedohlcv_df with NaN values
     nan_indices = [1686805800000, 1686806700000, 1686808800000]
-    hist_df = hist_df.with_columns(
+    mergedohlcv_df = mergedohlcv_df.with_columns(
         [
-            pl.when(hist_df["timestamp"].is_in(nan_indices))
+            pl.when(mergedohlcv_df["timestamp"].is_in(nan_indices))
             .then(pl.lit(None, pl.Float64))
-            .otherwise(hist_df["binanceus:ETH/USDT:high"])
+            .otherwise(mergedohlcv_df["binanceus:ETH/USDT:high"])
             .alias("binanceus:ETH/USDT:high")
         ]
     )
-    assert has_nan(hist_df)
+    assert has_nan(mergedohlcv_df)
 
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0, do_fill_nans=False)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=False)
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
-    hist_df2 = fill_nans(hist_df)
-    assert not has_nan(hist_df2)
+    mergedohlcv_df2 = fill_nans(mergedohlcv_df)
+    assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0, do_fill_nans=True)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=True)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = model_data_factory.create_xy(hist_df, testshift=0)
+    X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 

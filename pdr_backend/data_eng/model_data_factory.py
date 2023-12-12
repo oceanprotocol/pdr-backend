@@ -15,10 +15,10 @@ from pdr_backend.util.mathutil import has_nan, fill_nans
 class ModelDataFactory:
     """
     Roles:
-    - From hist_df, create (X, y, x_df) for model building
+    - From mergedohlcv_df, create (X, y, x_df) for model building
 
     Where
-      parquet files -> parquet_dfs -> hist_df, via parquet_data_factory
+      parquet files -> parquet_dfs -> mergedohlcv_df, via ohlcv_data_factory
 
       X -- 2d array of [sample_i, var_i] : value -- inputs for model
       y -- 1d array of [sample_i] -- target outputs for model
@@ -45,16 +45,16 @@ class ModelDataFactory:
 
     def create_xy(
         self,
-        hist_df: pl.DataFrame,
+        mergedohlcv_df: pl.DataFrame,
         testshift: int,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
         """
         @arguments
-          hist_df -- *polars* DataFrame. See class docstring
+          mergedohlcv_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
-            If you turn this off and hist_df has nans, then X/y/etc gets nans
+            If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
         @return --
           X -- 2d array of [sample_i, var_i] : value -- inputs for model
@@ -62,18 +62,18 @@ class ModelDataFactory:
           x_df -- *pandas* DataFrame. See class docstring.
         """
         # preconditions
-        assert isinstance(hist_df, pl.DataFrame), pl.__class__
-        assert "timestamp" in hist_df.columns
-        assert "datetime" in hist_df.columns
+        assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
+        assert "timestamp" in mergedohlcv_df.columns
+        assert "datetime" in mergedohlcv_df.columns
 
         # every column should be ordered with oldest first, youngest last.
         # let's verify! The timestamps should be in ascending order
-        uts = hist_df["timestamp"].to_list()
+        uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
 
         # condition inputs
-        if do_fill_nans and has_nan(hist_df):
-            hist_df = fill_nans(hist_df)
+        if do_fill_nans and has_nan(mergedohlcv_df):
+            mergedohlcv_df = fill_nans(mergedohlcv_df)
         ss = self.ss
 
         # main work
@@ -85,8 +85,8 @@ class ModelDataFactory:
         ]
 
         for hist_col in target_hist_cols:
-            assert hist_col in hist_df.columns, f"missing data col: {hist_col}"
-            z = hist_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
+            assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
+            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
@@ -111,7 +111,7 @@ class ModelDataFactory:
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
         pp = self.pp
         hist_col = f"{pp.exchange_str}:{pp.pair_str}:{pp.signal_str}"
-        z = hist_df[hist_col].to_list()
+        z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions

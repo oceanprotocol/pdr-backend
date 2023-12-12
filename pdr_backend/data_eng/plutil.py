@@ -62,7 +62,7 @@ def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
 
 
 @enforce_types
-def save_parquet(filename: str, df: pl.DataFrame):
+def save_rawohlcv_file(filename: str, df: pl.DataFrame):
     """write to parquet file
     parquet only supports appending via the pyarrow engine
     """
@@ -88,7 +88,7 @@ def save_parquet(filename: str, df: pl.DataFrame):
 
 
 @enforce_types
-def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
+def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
     """Load parquet file as a dataframe.
 
     Features:
@@ -109,7 +109,7 @@ def load_parquet(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
       Polars does not have an index. "timestamp" is a regular col and required for "datetime"
       (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
 
-      TO DO: Fix (1), save_parquet already saves out dataframe.
+      TO DO: Fix (1), save_rawohlcv_file already saves out dataframe.
       Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
     """
     # handle cols

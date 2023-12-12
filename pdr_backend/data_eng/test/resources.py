@@ -6,7 +6,7 @@ import polars as pl
 
 from pdr_backend.data_eng.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
+from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.data_eng.plutil import (
     concat_next_df,
     initialize_df,
@@ -17,12 +17,12 @@ from pdr_backend.ppss.data_ss import DataSS
 
 
 @enforce_types
-def _hist_df_ETHUSDT(tmpdir):
+def _mergedohlcv_df_ETHUSDT(tmpdir):
     _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
         tmpdir, "binanceus h ETH/USDT"
     )
-    hist_df = pq_data_factory._merge_parquet_dfs(ETHUSDT_PARQUET_DFS)
-    return hist_df, model_data_factory
+    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    return mergedohlcv_df, model_data_factory
 
 
 @enforce_types
@@ -30,7 +30,7 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    pq_data_factory = ParquetDataFactory(pp, ss)
+    pq_data_factory = OhlcvDataFactory(pp, ss)
     model_data_factory = ModelDataFactory(pp, ss)
     return pp, ss, pq_data_factory, model_data_factory
 
@@ -62,7 +62,7 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
 
 @enforce_types
 def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
-    """Return a df for use in parquet_dfs"""
+    """Return a df for use in rawohlcv_dfs"""
     df = initialize_df(TOHLCV_COLS)
 
     next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL)
@@ -105,7 +105,7 @@ BINANCE_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0)
 KRAKEN_ETH_DATA = _addval(BINANCE_ETH_DATA, 0.0001)
 KRAKEN_BTC_DATA = _addval(BINANCE_ETH_DATA, 10000.0 + 0.0001)
 
-ETHUSDT_PARQUET_DFS = {
+ETHUSDT_RAWOHLCV_DFS = {
     "binanceus": {
         "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
     }
