@@ -116,6 +116,12 @@ class DataPP:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
         return unpack_pair_str(self.pair_str)[1]
 
+    @property
+    def filter_feeds_s(self) -> str:
+        """Return a string describing how feeds are filtered by,
+        when using filter_feeds()"""
+        return f"{self.timeframe} {self.predict_feeds_strs}"
+
     @enforce_types
     def filter_feeds(self, cand_feeds: Dict[str, Feed]) -> Dict[str, Feed]:
         """

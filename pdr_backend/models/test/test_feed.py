@@ -31,6 +31,11 @@ def test_feed():
     assert feed.quote == "USDT"
     assert feed.base == "BTC"
 
+    assert str(feed) == feed.shortstr()
+    s = str(feed)
+    for want_s in ["Feed", "5m", "BTC/USDT", "binance", feed.address]:
+        assert want_s in s
+
 
 @enforce_types
 def test_mock_feed():

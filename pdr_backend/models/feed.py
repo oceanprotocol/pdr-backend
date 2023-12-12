@@ -46,7 +46,7 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @enforce_types
     def shortstr(self) -> str:
-        return f"[Feed {self.address[:7]} {self.pair}|{self.source}|{self.timeframe}]"
+        return f"Feed: {self.timeframe} {self.source} {self.pair} {self.address}"
 
     @enforce_types
     def __str__(self) -> str:
