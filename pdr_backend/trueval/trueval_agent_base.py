@@ -53,7 +53,7 @@ class TruevalAgentBase(ABC):
             ]
         else:
             predictoor_contract = PredictoorContract(
-                self.ppss.web3_pp.web3_config, contract_address
+                self.ppss.web3_pp, contract_address
             )
             seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
             self.contract_cache[contract_address] = (
