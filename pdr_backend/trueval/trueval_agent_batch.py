@@ -8,7 +8,7 @@ from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
+from pdr_backend.trueval.base_trueval_agent import BaseTruevalAgent
 from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 
 
@@ -27,7 +27,7 @@ class TruevalSlot(Slot):
 
 
 @enforce_types
-class TruevalAgentBatch(TruevalAgentBase):
+class TruevalAgentBatch(BaseTruevalAgent):
     def __init__(
         self,
         ppss: PPSS,

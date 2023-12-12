@@ -3,12 +3,12 @@ from enforce_typing import enforce_types
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.slot import Slot
 
-from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
+from pdr_backend.trueval.base_trueval_agent import BaseTruevalAgent
 from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 
 
 @enforce_types
-class TruevalAgentSingle(TruevalAgentBase):
+class TruevalAgentSingle(BaseTruevalAgent):
     def take_step(self):
         wait_until_subgraph_syncs(
             self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
@@ -28,7 +28,7 @@ class TruevalAgentSingle(TruevalAgentBase):
                 self.process_slot(slot)
             except Exception as e:
                 print(f"An error occured: {e}")
-            
+
         print(f"Done processing, sleeping for {sleep_time} seconds...")
         time.sleep(sleep_time)
 

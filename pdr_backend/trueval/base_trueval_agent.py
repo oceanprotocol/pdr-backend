@@ -13,7 +13,7 @@ from pdr_backend.ppss.ppss import PPSS
 
 
 @enforce_types
-class TruevalAgentBase(ABC):
+class BaseTruevalAgent(ABC):
     def __init__(
         self,
         ppss: PPSS,

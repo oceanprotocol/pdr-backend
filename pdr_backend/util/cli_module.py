@@ -11,7 +11,7 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
-from pdr_backend.trueval.trueval_agent_base import get_trueval
+from pdr_backend.trueval.base_trueval_agent import get_trueval
 from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 from pdr_backend.util.check_network import check_network_main
