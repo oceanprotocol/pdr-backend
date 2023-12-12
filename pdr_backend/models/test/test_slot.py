@@ -7,7 +7,6 @@ def test_slot_initialization():
         "Contract Name",
         "0x12345",
         "test",
-        300,
         60,
         15,
         "0xowner",

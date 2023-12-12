@@ -4,7 +4,7 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
+from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.data_eng.model_factory import ModelFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
@@ -13,14 +13,13 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 @enforce_types
 class PredictoorAgent3(BasePredictoorAgent):
     def get_prediction(
-        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+        self, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
-          Given a feed, let's predict for a given timestamp.
+          Predict for a given timestamp.
 
         @arguments
-          addr -- str -- address of the trading pair. Info in self.feeds[addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return
@@ -28,18 +27,18 @@ class PredictoorAgent3(BasePredictoorAgent):
           stake -- int -- amount to stake, in units of Eth
         """
         # Compute data_ss
-        feed = self.feeds[addr]
+        feed = self.feed
         d = copy.deepcopy(self.ppss.data_pp.d)
         d["predict_feeds"] = [f"{feed.source} c {feed.pair}"]
         data_pp = DataPP(d)
         data_ss = self.ppss.data_ss.copy_with_yval(data_pp)
 
         # From data_ss, build X/y
-        pq_data_factory = ParquetDataFactory(data_pp, data_ss)
-        hist_df = pq_data_factory.get_hist_df()
+        pq_data_factory = OhlcvDataFactory(data_pp, data_ss)
+        mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
         model_data_factory = ModelDataFactory(data_pp, data_ss)
-        X, y, _ = model_data_factory.create_xy(hist_df, testshift=0)
+        X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data
         st, fin = 0, X.shape[0] - 1

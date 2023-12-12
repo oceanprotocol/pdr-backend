@@ -4,7 +4,7 @@
 """
 import time
 from collections import defaultdict
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 import requests
@@ -20,47 +20,99 @@ _N_THR = 3
 
 
 @enforce_types
-def key_to_725(key: str):
+def key_to_key725(key: str):
     key725 = Web3.keccak(key.encode("utf-8")).hex()
     return key725
 
 
 @enforce_types
-def value_to_725(value: str):
-    value725 = Web3.to_hex(text=value)
+def value_to_value725(value: Union[str, None]):
+    if value is None:
+        value725 = None
+    else:
+        value725 = Web3.to_hex(text=value)
     return value725
 
 
 @enforce_types
-def value_from_725(value725) -> str:
-    value = Web3.to_text(hexstr=value725)
+def value725_to_value(value725) -> Union[str, None]:
+    if value725 is None:
+        value = None
+    else:
+        value = Web3.to_text(hexstr=value725)
     return value
 
 
 @enforce_types
-def info_from_725(info725_list: list) -> Dict[str, Optional[str]]:
+def info_to_info725(info: Dict[str, Union[str, None]]) -> list:
     """
     @arguments
-      info725_list -- eg [{"key":encoded("pair"), "value":encoded("ETH/USDT")},
+      info -- eg {
+        "pair": "ETH/USDT",
+        "timeframe": "5m",
+        "source": None,
+        "extra1" : "extra1_value",
+        "extra2" : None,
+      }
+      where info may/may not have keys for "pair", "timeframe", source"
+      and may have extra keys
+
+    @return
+      info725 -- eg [
+        {"key":encoded("pair"), "value":encoded("ETH/USDT")},
+        {"key":encoded("timeframe"), "value":encoded("5m") },
+        ...
+      ]
+      Where info725 may or may not have each of these keys:
+        "pair", "timeframe", "source"
+    """
+    keys = ["pair", "timeframe", "source"]
+    info_keys = list(info.keys())
+    for info_key in info_keys:
+        if info_key not in keys:
+            keys.append(info_key)
+
+    info725 = []
+    for key in keys:
+        if key in info_keys:
+            value = info[key]
+        else:
+            value = None
+        key725 = key_to_key725(key)
+        value725 = value_to_value725(value)
+        info725.append({"key": key725, "value": value725})
+
+    return info725
+
+
+@enforce_types
+def info725_to_info(info725: list) -> Dict[str, Optional[str]]:
+    """
+    @arguments
+      info725 -- eg [{"key":encoded("pair"), "value":encoded("ETH/USDT")},
                           {"key":encoded("timeframe"), "value":encoded("5m") },
                            ... ]
+      where info725 may/may not have keys for "pair", "timeframe", source"
+      and may have extra keys
+
     @return
-      info_dict -- e.g. {"pair": "ETH/USDT",
+      info -- e.g. {"pair": "ETH/USDT",
                          "timeframe": "5m",
-                          ... }
+                         "source": None}
+      where info always has keys "pair", "timeframe", "source"
     """
-    target_keys = ["pair", "timeframe", "source", "base", "quote"]
-    info_dict: Dict[str, Optional[str]] = {}
+    info: Dict[str, Optional[str]] = {}
+    target_keys = ["pair", "timeframe", "source"]
     for key in target_keys:
-        info_dict[key] = None
-        for item725 in info725_list:
+        info[key] = None
+        for item725 in info725:
             key725, value725 = item725["key"], item725["value"]
-            if key725 == key_to_725(key):
-                value = value_from_725(value725)
-                info_dict[key] = value
+            if key725 == key_to_key725(key):
+                value = value725_to_value(value725)
+                info[key] = value
                 break
 
-    return info_dict
+    return info
 
 
 @enforce_types
@@ -138,46 +190,28 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
 
 
 @enforce_types
-def query_feed_contracts(  # pylint: disable=too-many-statements
+def query_feed_contracts(
     subgraph_url: str,
-    pairs_string: Optional[str] = None,
-    timeframes_string: Optional[str] = None,
-    sources_string: Optional[str] = None,
     owners_string: Optional[str] = None,
-) -> Dict[str, dict]:
+) -> Dict[str, Feed]:
     """
     @description
-      Query the chain for prediction feed contracts, then filter down
-      according to pairs, timeframes, sources, or owners.
+      Query the chain for prediction feed contracts.
 
     @arguments
       subgraph_url -- e.g.
-      pairs -- E.g. filter to "BTC/USDT,ETH/USDT". If None/"", allow all
-      timeframes -- E.g. filter to "5m,15m". If None/"", allow all
-      sources -- E.g. filter to "binance,kraken". If None/"", allow all
-      owners -- E.g. filter to "0x123,0x124". If None/"", allow all
+      owners -- E.g. filter to "0x123,0x124". If None or "", allow all
 
     @return
-      feed_dicts -- dict of [contract_id] : feed_dict
-        where feed_dict is a dict with fields name, address, symbol, ..
+      feeds -- dict of [feed_addr] : Feed
     """
-    pairs = None
-    timeframes = None
-    sources = None
     owners = None
-
-    if pairs_string:
-        pairs = pairs_string.split(",")
-    if timeframes_string:
-        timeframes = timeframes_string.split(",")
-    if sources_string:
-        sources = sources_string.split(",")
     if owners_string:
         owners = owners_string.lower().split(",")
 
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    feed_dicts = {}
+    feeds: Dict[str, Feed] = {}
 
     while True:
         query = """
@@ -215,39 +249,32 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
                 break
             for contract in contract_list:
                 info725 = contract["token"]["nft"]["nftData"]
-                info = info_from_725(info725)  # {"pair": "ETH/USDT", "base":...}
+                info = info725_to_info(info725)  # {"pair": "ETH/USDT", }
+
+                pair = info["pair"]
+                timeframe = info["timeframe"]
+                source = info["source"]
+                if None in (pair, timeframe, source):
+                    continue
 
                 # filter out unwanted
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
                     continue
 
-                pair = info["pair"]
-                if pair and pairs and (pair not in pairs):
-                    continue
-
-                timeframe = info["timeframe"]
-                if timeframe and timeframes and (timeframe not in timeframes):
-                    continue
-
-                source = info["source"]
-                if source and sources and (source not in sources):
-                    continue
-
                 # ok, add this one
-                addr = contract["id"]
-                feed_dict = {
-                    "name": contract["token"]["name"],
-                    "address": contract["id"],
-                    "symbol": contract["token"]["symbol"],
-                    "seconds_per_epoch": int(contract["secondsPerEpoch"]),
-                    "seconds_per_subscription": int(contract["secondsPerSubscription"]),
-                    "trueval_submit_timeout": int(contract["truevalSubmitTimeout"]),
-                    "owner": owner_id,
-                    "last_submited_epoch": 0,
-                }
-                feed_dict.update(info)
-                feed_dicts[addr] = feed_dict
+                feed = Feed(
+                    name=contract["token"]["name"],
+                    address=contract["id"],
+                    symbol=contract["token"]["symbol"],
+                    seconds_per_subscription=int(contract["secondsPerSubscription"]),
+                    trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
+                    owner=owner_id,
+                    pair=pair,
+                    timeframe=timeframe,
+                    source=source,
+                )
+                feeds[feed.address] = feed
 
         except Exception as e:
             e_str = str(e)
@@ -266,7 +293,10 @@ def query_feed_contracts(  # pylint: disable=too-many-statements
                 print("Future errors like this will be hidden")
             return {}
 
-    return feed_dicts
+    # postconditions
+    for feed in feeds.values():
+        assert isinstance(feed, Feed)
+    return feeds
 
 
 def get_pending_slots(
@@ -341,35 +371,38 @@ def get_pending_slots(
 
                 contract = slot["predictContract"]
                 info725 = contract["token"]["nft"]["nftData"]
-                info = info_from_725(info725)
-                assert info["pair"], "need a pair"
-                assert info["timeframe"], "need a timeframe"
-                assert info["source"], "need a source"
+                info = info725_to_info(info725)
+
+                pair = info["pair"]
+                timeframe = info["timeframe"]
+                source = info["source"]
+                assert pair, "need a pair"
+                assert timeframe, "need a timeframe"
+                assert source, "need a source"
 
                 owner_id = contract["token"]["nft"]["owner"]["id"]
                 if owners and (owner_id not in owners):
                     continue
 
-                if pair_filter and (info["pair"] not in pair_filter):
+                if pair_filter and (pair not in pair_filter):
                     continue
 
-                if timeframe_filter and (info["timeframe"] not in timeframe_filter):
+                if timeframe_filter and (timeframe not in timeframe_filter):
                     continue
 
-                if source_filter and (info["source"] not in source_filter):
+                if source_filter and (source not in source_filter):
                     continue
 
                 feed = Feed(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
-                    seconds_per_epoch=int(contract["secondsPerEpoch"]),
                     seconds_per_subscription=int(contract["secondsPerSubscription"]),
                     trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
                     owner=contract["token"]["nft"]["owner"]["id"],
-                    pair=info["pair"],
-                    timeframe=info["timeframe"],
-                    source=info["source"],
+                    pair=pair,
+                    timeframe=timeframe,
+                    source=source,
                 )
 
                 slot_number = int(slot["slot"])

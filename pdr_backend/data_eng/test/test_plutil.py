@@ -15,8 +15,8 @@ from pdr_backend.data_eng.plutil import (
     initialize_df,
     transform_df,
     concat_next_df,
-    save_parquet,
-    load_parquet,
+    save_rawohlcv_file,
+    load_rawohlcv_file,
     has_data,
     oldest_ut,
     newest_ut,
@@ -125,24 +125,24 @@ def test_load_basic(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     df = transform_df(df)
-    save_parquet(filename, df)
+    save_rawohlcv_file(filename, df)
 
     # simplest specification. Don't specify cols, st or fin
-    df2 = load_parquet(filename)
+    df2 = load_rawohlcv_file(filename)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
     # explicitly specify cols, but not st or fin
-    df2 = load_parquet(filename, OHLCV_COLS)
+    df2 = load_rawohlcv_file(filename, OHLCV_COLS)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
     # explicitly specify cols, st, fin
-    df2 = load_parquet(filename, OHLCV_COLS, st=None, fin=None)
+    df2 = load_rawohlcv_file(filename, OHLCV_COLS, st=None, fin=None)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
-    df2 = load_parquet(filename, OHLCV_COLS, st=0, fin=np.inf)
+    df2 = load_rawohlcv_file(filename, OHLCV_COLS, st=0, fin=np.inf)
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
@@ -155,23 +155,23 @@ def test_load_append(tmpdir):
 
     # saving tohlcv w/o datetime throws an error
     with pytest.raises(Exception):
-        save_parquet(filename, df_4_rows)  # write new file
+        save_rawohlcv_file(filename, df_4_rows)  # write new file
 
     # transform then save
     df_4_rows = transform_df(df_4_rows)
-    save_parquet(filename, df_4_rows)  # write new file
+    save_rawohlcv_file(filename, df_4_rows)  # write new file
 
     # append 1 row to parquet
     df_1_row = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
     df_1_row = transform_df(df_1_row)
-    save_parquet(filename, df_1_row)  # will append existing file
+    save_rawohlcv_file(filename, df_1_row)  # will append existing file
 
     # test that us doing a manual concat is the same as the load
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     df_5_rows = concat_next_df(
         df_4_rows, transform_df(pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema))
     )
-    df_5_rows_loaded = load_parquet(filename)
+    df_5_rows_loaded = load_rawohlcv_file(filename)
 
     # we don't need to transform
     _assert_TOHLCVd_cols_and_types(df_5_rows_loaded)
@@ -186,14 +186,14 @@ def test_load_filtered(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     df = transform_df(df)
-    save_parquet(filename, df)
+    save_rawohlcv_file(filename, df)
 
     # load with filters on rows & columns
     cols = OHLCV_COLS[:2]  # ["open", "high"]
     timestamps = [row[0] for row in FOUR_ROWS_RAW_TOHLCV_DATA]
     st = timestamps[1]  # 1686806400000
     fin = timestamps[2]  # 1686806700000
-    df2 = load_parquet(filename, cols, st, fin)
+    df2 = load_rawohlcv_file(filename, cols, st, fin)
 
     # test entries
     assert len(df2) == 2
@@ -225,15 +225,19 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
 @enforce_types
 def test_has_data(tmpdir):
     filename0 = os.path.join(tmpdir, "f0.parquet")
-    save_parquet(filename0, transform_df(_df_from_raw_data([])))
+    save_rawohlcv_file(filename0, transform_df(_df_from_raw_data([])))
     assert not has_data(filename0)
 
     filename1 = os.path.join(tmpdir, "f1.parquet")
-    save_parquet(filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)))
+    save_rawohlcv_file(
+        filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
+    )
     assert has_data(filename1)
 
     filename4 = os.path.join(tmpdir, "f4.parquet")
-    save_parquet(filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)))
+    save_rawohlcv_file(
+        filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
+    )
     assert has_data(filename4)
 
 
@@ -244,7 +248,7 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
     # write out four rows
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     df = transform_df(df)
-    save_parquet(filename, df)
+    save_rawohlcv_file(filename, df)
 
     # assert head == oldest and tail == latest
     ut0 = oldest_ut(filename)
@@ -256,7 +260,7 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
     # append and check newest/oldest
     df = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
     df = transform_df(df)
-    save_parquet(filename, df)
+    save_rawohlcv_file(filename, df)
 
     ut0 = oldest_ut(filename)
     utN = newest_ut(filename)
@@ -270,7 +274,7 @@ def test_oldest_ut_and_newest_ut__no_data(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data([])
     df = transform_df(df)
-    save_parquet(filename, df)
+    save_rawohlcv_file(filename, df)
 
     with pytest.raises(ValueError):
         oldest_ut(filename)

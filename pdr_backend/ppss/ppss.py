@@ -1,9 +1,11 @@
 import os
-from typing import Optional
+import tempfile
+from typing import List, Optional, Tuple
 
 from enforce_typing import enforce_types
 import yaml
 
+from pdr_backend.models.feed import Feed, mock_feed
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
@@ -68,7 +70,55 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         return s
 
 
+# =========================================================================
+# utilities for testing
 _CACHED_YAML_FILE_S = None
+
+
+@enforce_types
+def mock_feed_ppss(
+    timeframe,
+    exchange,
+    pair,
+    network: Optional[str] = None,
+    tmpdir=None,
+) -> Tuple[Feed, PPSS]:
+    feed = mock_feed(timeframe, exchange, pair)
+    ppss = mock_ppss(timeframe, [f"{exchange} c {pair}"], network, tmpdir)
+    return (feed, ppss)
+
+
+@enforce_types
+def mock_ppss(
+    timeframe: str, predict_feeds: List[str], network: Optional[str] = None, tmpdir=None
+) -> PPSS:
+    network = network or "development"
+    yaml_str = fast_test_yaml_str(tmpdir)
+    ppss = PPSS(yaml_str=yaml_str, network=network)
+
+    assert hasattr(ppss, "data_pp")
+    ppss.data_pp = DataPP(
+        {
+            "timeframe": timeframe,
+            "predict_feeds": predict_feeds,
+            "sim_only": {"test_n": 10},
+        }
+    )
+
+    assert hasattr(ppss, "data_ss")
+    if tmpdir is None:
+        tmpdir = tempfile.mkdtemp()
+    ppss.data_ss = DataSS(
+        {
+            "input_feeds": predict_feeds,
+            "parquet_dir": os.path.join(tmpdir, "parquet_data"),
+            "st_timestr": "2023-06-18",
+            "fin_timestr": "2023-06-21",
+            "max_n_train": 100,
+            "autoregressive_n": 2,
+        }
+    )
+    return ppss
 
 
 @enforce_types

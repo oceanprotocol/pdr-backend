@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.trueval.trueval_agent_base import get_trueval
+from pdr_backend.trueval.base_trueval_agent import get_trueval
 from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
 
 
@@ -31,9 +31,7 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
     assert predictoor_contract_mock.call_count == 1
-    predictoor_contract_mock.assert_called_once_with(
-        agent.ppss.web3_pp.web3_config, "0x1"
-    )
+    predictoor_contract_mock.assert_called_once_with(agent.ppss.web3_pp, "0x1")
 
 
 @enforce_types

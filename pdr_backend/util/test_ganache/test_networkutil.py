@@ -7,11 +7,16 @@ import pytest
 from pdr_backend.util.constants import (
     SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,
+    MAX_UINT,
 )
 from pdr_backend.util.networkutil import (
     is_sapphire_network,
     send_encrypted_tx,
+    tx_call_params,
+    tx_gas_price,
+    get_max_gas,
 )
+from pdr_backend.util.web3_config import Web3Config
 
 
 @enforce_types
@@ -76,3 +81,44 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
     mock_function = Mock(return_value=(0, "dummy_tx_hash"))
     monkeypatch.setattr("sapphirepy.wrapper.send_encrypted_sapphire_tx", mock_function)
     return mock_function
+
+
+@enforce_types
+def test_tx_gas_price__and__tx_call_params():
+    web3_pp = Mock()
+    web3_pp.web3_config = Mock()
+    web3_pp.web3_config.owner = "0xowner"
+    web3_pp.web3_config.w3 = Mock()
+    web3_pp.web3_config.w3.eth = Mock()
+    web3_pp.web3_config.w3.eth.gas_price = 12
+
+    web3_pp.network = "sapphire-testnet"
+    assert tx_gas_price(web3_pp) == 12
+    assert tx_call_params(web3_pp) == {"from": "0xowner", "gasPrice": 12}
+
+    web3_pp.network = "sapphire-mainnet"
+    assert tx_gas_price(web3_pp) == 12
+
+    web3_pp.network = "development"
+    assert tx_gas_price(web3_pp) == 0
+    assert tx_call_params(web3_pp) == {"from": "0xowner", "gasPrice": 0}
+
+    web3_pp.network = "barge-pytest"
+    assert tx_gas_price(web3_pp) == 0
+
+    web3_pp.network = "foo"
+    with pytest.raises(ValueError):
+        tx_gas_price(web3_pp)
+    with pytest.raises(ValueError):
+        tx_call_params(web3_pp)
+
+
+@enforce_types
+def test_get_max_gas(rpc_url):
+    private_key = os.getenv("PRIVATE_KEY")
+    web3_config = Web3Config(rpc_url=rpc_url, private_key=private_key)
+    max_gas = get_max_gas(web3_config)
+    assert 0 < max_gas < MAX_UINT
+
+    target_max_gas = int(web3_config.get_block("latest").gasLimit * 0.99)
+    assert max_gas == target_max_gas

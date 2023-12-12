@@ -10,7 +10,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
 from pdr_backend.data_eng.model_factory import ModelFactory
-from pdr_backend.data_eng.parquet_data_factory import ParquetDataFactory
+from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
@@ -83,10 +83,10 @@ class SimEngine:
         log("Start run")
 
         # main loop!
-        pq_data_factory = ParquetDataFactory(self.ppss.data_pp, self.ppss.data_ss)
-        hist_df: pl.DataFrame = pq_data_factory.get_hist_df()
+        pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
         for test_i in range(self.ppss.data_pp.test_n):
-            self.run_one_iter(test_i, hist_df)
+            self.run_one_iter(test_i, mergedohlcv_df)
             self._plot(test_i, self.ppss.data_pp.test_n)
 
         log("Done all iters.")
@@ -96,11 +96,11 @@ class SimEngine:
         log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
 
     @enforce_types
-    def run_one_iter(self, test_i: int, hist_df: pl.DataFrame):
+    def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = ModelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
-        X, y, _ = model_data_factory.create_xy(hist_df, testshift)
+        X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
@@ -115,7 +115,7 @@ class SimEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        recent_ut = int(hist_df["timestamp"].to_list()[-1])
+        recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
         ut = recent_ut - testshift * self.ppss.data_pp.timeframe_ms
 
         # current price

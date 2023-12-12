@@ -8,7 +8,7 @@ from pdr_backend.models.feed import Feed
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.trueval.trueval_agent_base import TruevalAgentBase
+from pdr_backend.trueval.base_trueval_agent import BaseTruevalAgent
 from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 
 
@@ -27,7 +27,7 @@ class TruevalSlot(Slot):
 
 
 @enforce_types
-class TruevalAgentBatch(TruevalAgentBase):
+class TruevalAgentBatch(BaseTruevalAgent):
     def __init__(
         self,
         ppss: PPSS,
@@ -97,10 +97,9 @@ class TruevalAgentBatch(TruevalAgentBase):
         return tx["transactionHash"].hex()
 
     def process_trueval_slot(self, slot: TruevalSlot):
-        try:
-            (trueval, cancel) = self.get_trueval_slot(slot)
-            slot.set_trueval(trueval)
-            if cancel:
-                slot.set_cancel(True)
-        except Exception as e:
-            print("An error occured while getting processing slot:", e)
+        # (don't wrap with try/except because the called func already does)
+        (trueval, cancel_round) = self.get_trueval_slot(slot)
+
+        slot.set_trueval(trueval)
+        if cancel_round:
+            slot.set_cancel(True)

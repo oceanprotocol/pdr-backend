@@ -28,11 +28,13 @@ class Timeframe:
     @property
     def m(self) -> int:
         """Returns timeframe, in minutes"""
+        if self.timeframe_str == "1m":
+            return 1
         if self.timeframe_str == "5m":
             return 5
         if self.timeframe_str == "1h":
             return 60
-        raise ValueError("need to support timeframe={self.timeframe_str}")
+        raise ValueError(f"need to support timeframe={self.timeframe_str}")
 
 
 @enforce_types

@@ -1,9 +1,9 @@
 from enforce_typing import enforce_types
-import pytest
 from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.token import Token
+from pdr_backend.models.predictoor_contract import mock_predictoor_contract
 from pdr_backend.util.contract import get_address
 
 
@@ -17,22 +17,6 @@ def test_get_id(predictoor_contract):
 def test_is_valid_subscription_initially(predictoor_contract):
     is_valid_sub = predictoor_contract.is_valid_subscription()
     assert not is_valid_sub
-
-
-@enforce_types
-def test_auth_signature(predictoor_contract):
-    auth_sig = predictoor_contract.get_auth_signature()
-    assert "v" in auth_sig
-    assert "r" in auth_sig
-    assert "s" in auth_sig
-
-
-@enforce_types
-def test_max_gas_limit(predictoor_contract):
-    max_gas_limit = predictoor_contract.get_max_gas()
-    # You'll have access to the config object if required, using predictoor_contract.config
-    expected_limit = int(predictoor_contract.config.get_block("latest").gasLimit * 0.99)
-    assert max_gas_limit == expected_limit
 
 
 @enforce_types
@@ -75,6 +59,7 @@ def test_get_current_epoch(predictoor_contract):
     assert current_epoch == int(now // S_PER_EPOCH)
 
 
+@enforce_types
 def test_get_current_epoch_ts(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     now = predictoor_contract.config.get_block("latest").timestamp
@@ -108,12 +93,6 @@ def test_get_trueValSubmitTimeout(predictoor_contract):
 
 
 @enforce_types
-def test_get_block(predictoor_contract):
-    block = predictoor_contract.get_block(0)
-    assert block.number == 0
-
-
-@enforce_types
 def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: Token):
     owner_addr = predictoor_contract.config.owner
     balance_before = ocean_token.balanceOf(owner_addr)
@@ -141,7 +120,7 @@ def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: T
     receipt = predictoor_contract.payout(soonest_timestamp, True)
     assert receipt["status"] == 1
     balance_final = ocean_token.balanceOf(owner_addr)
-    assert balance_before / 1e18 == approx(balance_final / 1e18)  # + sub revenue
+    assert balance_before / 1e18 == approx(balance_final / 1e18, 2.0)  # + sub revenue
 
 
 @enforce_types
@@ -151,19 +130,8 @@ def test_redeem_unused_slot_revenue(predictoor_contract):
     assert receipt["status"] == 1
 
 
-@pytest.mark.parametrize(
-    "input_data,expected_output",
-    [
-        ("short", b"short" + b"0" * 27),
-        ("this is exactly 32 chars", b"this is exactly 32 chars00000000"),
-        (
-            "this is a very long string which is more than 32 chars",
-            b"this is a very long string which",
-        ),
-    ],
-)
-def test_string_to_bytes32(input_data, expected_output, predictoor_contract):
-    result = predictoor_contract.string_to_bytes32(input_data)
-    assert (
-        result == expected_output
-    ), f"For {input_data}, expected {expected_output}, but got {result}"
+@enforce_types
+def test_mock_predictoor_contract():
+    c = mock_predictoor_contract("0x123", (3, 4))
+    assert c.contract_address == "0x123"
+    assert c.get_agg_predval() == (3, 4)

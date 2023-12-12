@@ -2,6 +2,8 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
+from eth_keys import KeyAPI
+from eth_keys.backends import NativeECCBackend
 from eth_typing import BlockIdentifier
 from web3 import Web3
 from web3.middleware import (
@@ -11,6 +13,8 @@ from web3.middleware import (
 from web3.types import BlockData
 
 from pdr_backend.util.constants import WEB3_MAX_TRIES
+
+_KEYS = KeyAPI(NativeECCBackend)
 
 
 @enforce_types
@@ -40,3 +44,35 @@ class Web3Config:
                 print("Trying again...")
                 return self.get_block(block, full_transactions, tries + 1)
             raise Exception("Couldn't get block") from e
+
+    def get_auth_signature(self):
+        """
+        @description
+          Digitally sign
+
+        @return
+          auth -- dict with keys "userAddress", "v", "r", "s", "validUntil"
+        """
+        valid_until = self.get_block("latest").timestamp + 3600
+        message_hash = self.w3.solidity_keccak(
+            ["address", "uint256"],
+            [self.owner, valid_until],
+        )
+        pk = _KEYS.PrivateKey(self.account.key)
+        prefix = "\x19Ethereum Signed Message:\n32"
+        signable_hash = self.w3.solidity_keccak(
+            ["bytes", "bytes"],
+            [
+                self.w3.to_bytes(text=prefix),
+                self.w3.to_bytes(message_hash),
+            ],
+        )
+        signed = _KEYS.ecdsa_sign(message_hash=signable_hash, private_key=pk)
+        auth = {
+            "userAddress": self.owner,
+            "v": (signed.v + 27) if signed.v <= 1 else signed.v,
+            "r": self.w3.to_hex(self.w3.to_bytes(signed.r).rjust(32, b"\0")),
+            "s": self.w3.to_hex(self.w3.to_bytes(signed.s).rjust(32, b"\0")),
+            "validUntil": valid_until,
+        }
+        return auth

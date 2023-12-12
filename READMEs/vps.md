@@ -23,6 +23,7 @@ cd pdr-backend
 # Create & activate virtualenv
 python -m venv venv
 source venv/bin/activate
+export PATH=$PATH:.
 
 # Install modules in the environment
 pip install -r requirements.txt
@@ -57,6 +58,7 @@ Running Barge, the VPS exposes these urls:
 - Subgraph is at:
   - http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
   - or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+  - Go there, then copy & paste in the query from [subgraph.md](subgraph.md)
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
 - Go to Azure Portal for your group
@@ -157,7 +159,7 @@ export GANACHE_BLOCKTIME=5
 Track progress until the addresses are published:
 - open a new console
 - ssh into the VPS
-- then: `docker logs -f ocean_pdr-publisher_1`. Monitor until it says it's published.
+- then: `docker logs -f ocean_ocean-contracts_1`. Monitor until it says it's published.
 - then: `Ctrl-C`, and confirm via: `cat .ocean/ocean-contracts/artifacts/address.json |grep dev`. It should give one line.
 
 Then, copy VPS' `address.json` file to local. In local console:
@@ -187,6 +189,14 @@ It should return:
 
 If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
 
+Further debugging:
+- List live docker processes: `docker ps`
+- List all docker processes: `docker ps -a`
+- List names of processes: `docker ps -a | cut -c 347-`. It lists `ocean_pdr-publisher_1`, `ocean_ocean-contracts_1`, ` ocean_pdr-publisher_1`, ..
+- See log for publishing Ocean contracts: `docker logs ocean_ocean-contracts_1`. With realtime update: `docker logs -f ocean_ocean-contracts_1`
+- See log for publishing prediction feeds: `docker logs ocean_pdr-publisher_1`. With realtime update: `docker logs -f ocean_pdr-publisher_1`
+- Get detailed info about pdr-publisher image: `docker inspect ocean_pdr-publisher_1`
+ 
 ## 4. Locally, Run Predictoor Bot (OPTION 1)
 
 ### Set envvars
@@ -196,6 +206,7 @@ In local console:
 # set up virtualenv (if needed)
 cd ~/code/pdr-backend
 source venv/bin/activate
+export PATH=$PATH:.
 
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
 ```
@@ -244,6 +255,7 @@ In local console:
 # set up virtualenv (if needed)
 cd ~/code/pdr-backend
 source venv/bin/activate
+export PATH=$PATH:.
 
 # same private key as 'run predictoor bot'
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260

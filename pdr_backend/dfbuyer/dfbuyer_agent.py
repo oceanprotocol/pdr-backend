@@ -8,6 +8,7 @@ from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.token import Token
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.models.feed import print_feeds
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.subgraph import (
     get_consume_so_far_per_contract,
@@ -20,46 +21,41 @@ WEEK = 7 * 86400
 @enforce_types
 class DFBuyerAgent:
     def __init__(self, ppss: PPSS):
-        self.feeds = ppss.web3_pp.get_feeds()
-        if not self.feeds:
-            print("No feeds found")
-            return
+        # ppss
+        self.ppss = ppss
+        print("\n" + "-" * 80)
+        print(self.ppss)
 
-        self.ppss: PPSS = ppss
+        # set self.feeds
+        self.feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(self.feeds, f"all feeds, owner={ppss.web3_pp.owner_addrs}")
+
+        if not self.feeds:
+            raise ValueError("No feeds found.")
+
+        # addresses
+        batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
+        self.OCEAN_addr = get_address(ppss.web3_pp, "Ocean")
+
+        # set attribs to track progress
         self.last_consume_ts = 0
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
             ppss.web3_pp,
-            get_address(ppss.web3_pp, "PredictoorHelper"),
+            batcher_addr,
         )
-        self.token_addr = get_address(ppss.web3_pp, "Ocean")
         self.fail_counter = 0
         self.batch_size = ppss.dfbuyer_ss.batch_size
 
-        print("-" * 80)
-        print("Config:")
-        print(ppss)
-
-        print("\n" + "." * 80)
-        print("Feeds (detailed):")
-        for feed in self.feeds.values():
-            print(f"  {feed.longstr()}")
-
-        print("\n" + "." * 80)
-        print("Feeds (succinct):")
-        for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
-
-        token = Token(self.ppss.web3_pp, self.token_addr)
-
         # Check allowance and approve if necessary
         print("Checking allowance...")
-        allowance = token.allowance(
-            self.ppss.web3_pp.web3_config.owner,
+        OCEAN = Token(ppss.web3_pp, self.OCEAN_addr)
+        allowance = OCEAN.allowance(
+            ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
             print("Approving tokens for predictoor_batcher")
-            tx = token.approve(
+            tx = OCEAN.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
             print(f"Done: {tx['transactionHash'].hex()}")
@@ -98,10 +94,11 @@ class DFBuyerAgent:
             print("One or more consumes have failed...")
             self.fail_counter += 1
 
-            if self.fail_counter > 3 and self.batch_size > 6:
-                self.batch_size = self.batch_size * 2 // 3
+            batch_size = self.ppss.dfbuyer_ss.batch_size
+            if self.fail_counter > 3 and batch_size > 6:
+                self.batch_size = batch_size * 2 // 3
                 print(
-                    f"Seems like we keep failing, adjusting batch size to: {self.batch_size}"
+                    f"Seems like we keep failing, adjusting batch size to: {batch_size}"
                 )
                 self.fail_counter = 0
 
@@ -148,6 +145,8 @@ class DFBuyerAgent:
     def _prepare_batches(
         self, consume_times: Dict[str, int]
     ) -> List[Tuple[List[str], List[int]]]:
+        batch_size = self.ppss.dfbuyer_ss.batch_size
+
         max_no_of_addresses_in_batch = 3  # to avoid gas issues
         batches: List[Tuple[List[str], List[int]]] = []
         addresses_to_consume: List[str] = []
@@ -155,7 +154,7 @@ class DFBuyerAgent:
         for address, times in consume_times.items():
             while times > 0:
                 current_times_to_consume = min(
-                    times, self.batch_size - sum(times_to_consume)
+                    times, batch_size - sum(times_to_consume)
                 )
                 if current_times_to_consume > 0:
                     addresses_to_consume.append(
@@ -164,7 +163,7 @@ class DFBuyerAgent:
                     times_to_consume.append(current_times_to_consume)
                     times -= current_times_to_consume
                 if (
-                    sum(times_to_consume) == self.batch_size
+                    sum(times_to_consume) == batch_size
                     or address == list(consume_times.keys())[-1]
                     or len(addresses_to_consume) == max_no_of_addresses_in_batch
                 ):
@@ -179,7 +178,7 @@ class DFBuyerAgent:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.token_addr,
+                    self.OCEAN_addr,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()

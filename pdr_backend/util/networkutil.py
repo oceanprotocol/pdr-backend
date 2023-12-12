@@ -2,8 +2,8 @@ from enforce_typing import enforce_types
 from sapphirepy import wrapper
 
 from pdr_backend.util.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
     SAPPHIRE_MAINNET_CHAINID,
+    SAPPHIRE_TESTNET_CHAINID,
 )
 
 
@@ -58,3 +58,35 @@ def get_subgraph_url(network: str) -> str:
 
     # pylint: disable=line-too-long
     return f"https://v4.subgraph.sapphire-{network}.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+
+
+@enforce_types
+def tx_gas_price(web3_pp) -> int:
+    """Return gas price for use in call_params of transaction calls."""
+    network = web3_pp.network
+    if network in ["sapphire-testnet", "sapphire-mainnet"]:
+        return web3_pp.web3_config.w3.eth.gas_price
+        # return 100000000000
+    if network in ["development", "barge-predictoor-bot", "barge-pytest"]:
+        return 0
+    raise ValueError(f"Unknown network {network}")
+
+
+@enforce_types
+def tx_call_params(web3_pp, gas=None) -> dict:
+    call_params = {
+        "from": web3_pp.web3_config.owner,
+        "gasPrice": tx_gas_price(web3_pp),
+    }
+    if gas is not None:
+        call_params["gas"] = gas
+    return call_params
+
+
+@enforce_types
+def get_max_gas(web3_config) -> int:
+    """Returns max block gas"""
+    block = web3_config.get_block(
+        web3_config.w3.eth.block_number, full_transactions=False
+    )
+    return int(block["gasLimit"] * 0.99)

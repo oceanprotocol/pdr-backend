@@ -6,14 +6,14 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import Feed
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-class TraderAgent1(TraderAgent):
+class TraderAgent1(BaseTraderAgent):
     """
     @description
-        TraderAgent Naive CCXT
+        Naive trader agent.
         - Market order buy-only
         - Doesn't save client state or manage pending open trades
         - Only works with MEXC. How to improve:
@@ -89,6 +89,10 @@ class TraderAgent1(TraderAgent):
         ### Create new order if prediction meets our criteria
         pred_nom, pred_denom = prediction
         print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
+
+        if pred_denom == 0:
+            print("  There's no stake on this, one way or the other. Exiting.")
+            return
 
         pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")

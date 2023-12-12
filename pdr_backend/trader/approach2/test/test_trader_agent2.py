@@ -4,88 +4,54 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 import pytest
 
+from pdr_backend.ppss.ppss import mock_feed_ppss
+from pdr_backend.ppss.web3_pp import inplace_mock_feedgetters
 from pdr_backend.trader.test.trader_agent_runner import (
-    mock_feed,
-    mock_ppss,
-    run_no_feeds,
+    do_constructor,
+    do_run,
+    setup_trade,
 )
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract, tmpdir):
-    # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
+def test_trader_agent2_constructor(check_subscriptions_and_subscribe_mock):
+    do_constructor(TraderAgent2, check_subscriptions_and_subscribe_mock)
 
-    # agent
-    agent = TraderAgent2(ppss)
-    assert agent.ppss == ppss
-    check_subscriptions_and_subscribe_mock.assert_called_once()
 
-    # when no feeds
-    run_no_feeds(tmpdir, TraderAgent2)
+@enforce_types
+@patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
+def test_trader_agent2_run(check_subscriptions_and_subscribe_mock):
+    do_run(TraderAgent2, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-async def test_do_trade(
-    check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-    web3_config,
-    tmpdir,
-):
-    # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
-    ppss.web3_pp.set_web3_config(web3_config)
+async def test_trader_agent2_do_trade(check_subscriptions_and_subscribe_mock):
+    agent, feed = setup_trade(
+        TraderAgent2,
+        check_subscriptions_and_subscribe_mock,
+    )
 
-    # agent
-    agent = TraderAgent2(ppss)
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    # trading: mock objects and functions
-    agent.exchange = Mock()
-    agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
-
-    agent.portfolio = Mock()
-    agent.update_positions = Mock()
-    agent.update_cache = Mock()
-
-    agent.get_pred_properties = Mock()
-    agent.get_pred_properties.return_value = {
-        "confidence": 100.0,
-        "dir": 1,
-        "stake": 1,
-    }
-
-    # trading: doing a trade and checking the call counts of the methods
-    await agent._do_trade(mock_feed(), (1.0, 1.0))
-
-    assert agent.get_pred_properties.call_count == 1
+    await agent._do_trade(feed, (1.0, 1.0))
     assert agent.exchange.create_market_buy_order.call_count == 1
-    assert agent.update_positions.call_count == 1
-    assert agent.portfolio.open_position.call_count == 1
-    assert agent.update_cache.call_count == 1
 
 
-# Test for TraderAgent2.update_positions
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_update_positions(predictoor_contract, web3_config, tmpdir):
-    # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
-    ppss.web3_pp.set_web3_config(web3_config)
+def test_trader_agent2_update_positions(  # pylint: disable=unused-argument
+    check_subscriptions_and_subscribe_mock,
+):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
-    # agent
     agent = TraderAgent2(ppss)
 
-    # Creating mock objects and functions
     agent.exchange = Mock()
     agent.exchange.create_market_sell_order.return_value = {"info": {"origQty": 1}}
 
-    agent.feeds = Mock()
-    agent.feeds.keys.return_value = ["0x0000000000000000000000000000000000000000"]
     agent.portfolio = Mock()
     mock_sheet = Mock()
     mock_sheet.open_positions = [Mock(), Mock()]
@@ -96,28 +62,25 @@ def test_update_positions(predictoor_contract, web3_config, tmpdir):
     agent.close_position = Mock()
     agent.update_cache = Mock()
 
-    # Update agent positions
     agent.update_positions()
 
     assert agent.portfolio.get_sheet.call_count == 1
     assert agent.exchange.create_market_sell_order.call_count == 2
     assert agent.portfolio.close_position.call_count == 2
     assert agent.portfolio.close_position.call_args == (
-        ("0x0000000000000000000000000000000000000000", {"info": {"origQty": 1}}),
+        (feed.address, {"info": {"origQty": 1}}),
     )
     assert agent.update_cache.call_count == 2
 
 
-# Test for TraderAgent2.should_close
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
-def test_should_close(predictoor_contract, web3_config, tmpdir):
-    # params
-    ppss = mock_ppss(predictoor_contract, tmpdir)
-    ppss.web3_pp.set_web3_config(web3_config)
-    ppss.data_pp.set_timeframe("5m")
+def test_trader_agent2_should_close(  # pylint: disable=unused-argument
+    check_subscriptions_and_subscribe_mock,
+):
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
-    # agent
     agent = TraderAgent2(ppss)
 
     # test 1 - creating mock objects and functions to handle should_close

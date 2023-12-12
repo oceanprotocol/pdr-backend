@@ -1,8 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 import numpy as np
 
+from pdr_backend.models.feed import Feed
 from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
@@ -115,6 +116,40 @@ class DataPP:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
         return unpack_pair_str(self.pair_str)[1]
 
+    @property
+    def filter_feeds_s(self) -> str:
+        """Return a string describing how feeds are filtered by,
+        when using filter_feeds()"""
+        return f"{self.timeframe} {self.predict_feeds_strs}"
+
+    @enforce_types
+    def filter_feeds(self, cand_feeds: Dict[str, Feed]) -> Dict[str, Feed]:
+        """
+        @description
+          Filter to feeds that fit self.predict_feed_tups'
+            (exchange_str, pair) combos
+
+        @arguments
+          cand_feeds -- dict of [feed_addr] : Feed
+
+        @return
+          final_feeds -- dict of [feed_addr] : Feed
+        """
+        allowed_tups = [
+            (self.timeframe, exchange, pair)
+            for exchange, _, pair in self.predict_feed_tups
+        ]
+
+        final_feeds: Dict[str, Feed] = {}
+        found_tups = set()  # to avoid duplicates
+        for feed in cand_feeds.values():
+            assert isinstance(feed, Feed)
+            feed_tup = (feed.timeframe, feed.source, feed.pair)
+            if feed_tup in allowed_tups and feed_tup not in found_tups:
+                final_feeds[feed.address] = feed
+                found_tups.add(feed_tup)
+        return final_feeds
+
     @enforce_types
     def __str__(self) -> str:
         s = "DataPP:\n"
@@ -123,3 +158,15 @@ class DataPP:
         s += f"  test_n={self.test_n}\n"
         s += "-" * 10 + "\n"
         return s
+
+
+@enforce_types
+def mock_data_pp(timeframe_str: str, predict_feeds: List[str]) -> DataPP:
+    data_pp = DataPP(
+        {
+            "timeframe": timeframe_str,
+            "predict_feeds": predict_feeds,
+            "sim_only": {"test_n": 2},
+        }
+    )
+    return data_pp

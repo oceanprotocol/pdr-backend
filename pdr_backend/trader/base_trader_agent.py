@@ -1,43 +1,45 @@
-import sys
 import time
 import asyncio
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from enforce_typing import enforce_types
-
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import Feed, print_feeds
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.cache import Cache
 
 
 # pylint: disable=too-many-instance-attributes
-class TraderAgent:
+class BaseTraderAgent:
     def __init__(
         self,
         ppss: PPSS,
         _do_trade: Optional[Callable[[Feed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
-        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
-
+        # ppss
         self.ppss = ppss
-        self._do_trade = _do_trade if _do_trade else self.do_trade
+        print("\n" + "-" * 80)
+        print(self.ppss)
 
-        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
-        cand_feeds = web3_pp.get_feeds(
-            data_pp.pair_strs,
-            [data_pp.timeframe],
-            data_pp.exchange_strs,
-        )
-        if not cand_feeds:
-            print("No feeds found. Exiting")
-            sys.exit()
-        self.feeds: Dict[str, Feed] = cand_feeds
+        # _do_trade
+        self._do_trade = _do_trade or self.do_trade
 
+        # set self.feeds
+        cand_feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
+
+        print(f"Filter by predict_feeds: {ppss.data_pp.filter_feeds_s}")
+        self.feeds = ppss.data_pp.filter_feeds(cand_feeds)
+        print_feeds(self.feeds, "filtered feeds")
+
+        if not self.feeds:
+            raise ValueError("No feeds found.")
+
+        # set self.contracts
         feed_addrs = list(self.feeds.keys())
-        self.contracts = web3_pp.get_contracts(feed_addrs)  # [addr] : contract
+        self.contracts = ppss.web3_pp.get_contracts(feed_addrs)
 
+        # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
 
@@ -48,27 +50,18 @@ class TraderAgent:
         self.cache = Cache(cache_dir=cache_dir)
         self.load_cache()
 
-        print("-" * 80)
-        print(self.ppss)
-
-        print("\n" + "." * 80)
-        print("Feeds (detailed):")
-        for feed in self.feeds.values():
-            print(f"  {feed.longstr()}")
-
-        print("\n" + "." * 80)
-        print("Feeds (succinct):")
-        for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
-
         self.check_subscriptions_and_subscribe()
 
     def check_subscriptions_and_subscribe(self):
         for addr, feed in self.feeds.items():
             contract = PredictoorContract(self.ppss.web3_pp, addr)
             if not contract.is_valid_subscription():
-                print(f"Purchasing new subscription for feed: {feed}")
-                contract.buy_and_start_subscription(None, True)
+                print(f"Purchase subscription for feed {feed}: begin")
+                contract.buy_and_start_subscription(
+                    gasLimit=None,
+                    wait_for_receipt=True,
+                )
+                print(f"Purchase new subscription for feed {feed}: done")
         time.sleep(1)
 
     def update_cache(self):
@@ -83,7 +76,6 @@ class TraderAgent:
             if last_epoch is not None:
                 self.prev_traded_epochs_per_feed[feed].append(last_epoch)
 
-    @enforce_types
     def run(self, testing: bool = False):
         while True:
             asyncio.run(self.take_step())
@@ -91,7 +83,8 @@ class TraderAgent:
                 break
 
     async def take_step(self):
-        w3 = self.ppss.web3_pp.w3
+        web3_config = self.ppss.web3_pp.web3_config
+        w3 = web3_config.w3
 
         # at new block number yet?
         block_number = w3.eth.block_number
@@ -101,9 +94,7 @@ class TraderAgent:
         self.prev_block_number = block_number
 
         # is new block ready yet?
-        block = self.ppss.web3_pp.web3_config.get_block(
-            block_number, full_transactions=False
-        )
+        block = web3_config.get_block(block_number, full_transactions=False)
         if not block:
             return
 
@@ -131,11 +122,11 @@ class TraderAgent:
         time.sleep(sleep_time)
 
     async def _process_block_at_feed(
-        self, addr: str, timestamp: int, tries: int = 0
+        self, feed_addr: str, timestamp: int, tries: int = 0
     ) -> Tuple[int, List[str]]:
         """
         @param:
-            addr - contract address of the feed
+            feed_addr - contract address of the feed
             timestamp - timestamp/epoch to process
             [tries] - number of attempts made in case of an error, 0 by default
         @return:
@@ -143,16 +134,17 @@ class TraderAgent:
             logs - list of strings of function logs
         """
         logs = []
-        feed, predictoor_contract = self.feeds[addr], self.contracts[addr]
+        feed = self.feeds[feed_addr]
+        predictoor_contract = self.contracts[feed_addr]
         s_per_epoch = feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
         logs.append(f"{'-'*40} Processing {feed} {'-'*40}\nEpoch {epoch}")
-        logs.append("Seconds remaining in epoch: {epoch_s_left}")
+        logs.append(f"Seconds remaining in epoch: {epoch_s_left}")
 
         if (
-            self.prev_traded_epochs_per_feed.get(addr)
-            and epoch == self.prev_traded_epochs_per_feed[addr][-1]
+            self.prev_traded_epochs_per_feed.get(feed_addr)
+            and epoch == self.prev_traded_epochs_per_feed[feed_addr][-1]
         ):
             logs.append("      Done feed: already traded this epoch")
             return epoch_s_left, logs
@@ -182,14 +174,16 @@ class TraderAgent:
                         )  # -1 means the subscription has expired for this pair
                 logs.append("      Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)
-                return await self._process_block_at_feed(addr, timestamp, tries + 1)
+                return await self._process_block_at_feed(
+                    feed_addr, timestamp, tries + 1
+                )
             logs.append(
                 f"      Done feed: aggpredval not available, an error occured: {e}"
             )
             return epoch_s_left, logs
 
         await self._do_trade(feed, prediction)
-        self.prev_traded_epochs_per_feed[addr].append(epoch)
+        self.prev_traded_epochs_per_feed[feed_addr].append(epoch)
         self.update_cache()
         return epoch_s_left, logs
 

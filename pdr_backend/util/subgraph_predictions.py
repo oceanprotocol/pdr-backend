@@ -3,7 +3,7 @@ import json
 from enum import Enum
 from enforce_typing import enforce_types
 
-from pdr_backend.util.subgraph import query_subgraph, info_from_725
+from pdr_backend.util.subgraph import query_subgraph, info725_to_info
 from pdr_backend.models.prediction import Prediction
 from pdr_backend.util.networkutil import get_subgraph_url
 
@@ -128,8 +128,8 @@ def fetch_filtered_predictions(
 
         for prediction in data:
             info725 = prediction["slot"]["predictContract"]["token"]["nft"]["nftData"]
-            info = info_from_725(info725)
-            pair_name = info["pair"]
+            info = info725_to_info(info725)
+            pair = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
             timestamp = prediction["timestamp"]
@@ -155,7 +155,7 @@ def fetch_filtered_predictions(
 
             prediction_obj = Prediction(
                 id=prediction["id"],
-                pair=pair_name,
+                pair=pair,
                 timeframe=timeframe,
                 prediction=predicted_value,
                 stake=stake,

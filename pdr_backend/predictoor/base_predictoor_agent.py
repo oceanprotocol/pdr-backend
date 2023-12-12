@@ -1,15 +1,14 @@
 from abc import ABC, abstractmethod
-import sys
 import time
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.models.feed import print_feeds
+from pdr_backend.util.mathutil import sole_value
 
 
-@enforce_types
 class BasePredictoorAgent(ABC):
 
     """
@@ -19,131 +18,137 @@ class BasePredictoorAgent(ABC):
     - When a value can be predicted, call get_prediction()
     """
 
+    @enforce_types
     def __init__(self, ppss: PPSS):
-        # set config, ppss, and related
-        web3_pp, data_pp = ppss.web3_pp, ppss.data_pp
+        # ppss
         self.ppss = ppss
+        print("\n" + "-" * 180)
+        print(self.ppss)
 
         # set self.feeds
-        cand_feeds = web3_pp.get_feeds(
-            data_pp.pair_strs,
-            [data_pp.timeframe],
-            data_pp.exchange_strs,
-        )
-        if not cand_feeds:
-            print("No feeds found. Exiting")
-            sys.exit()
+        cand_feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        self.feeds: Dict[str, Feed] = {}
-        for feed in cand_feeds.values():
-            feed_tup = (feed.source, "close", feed.pair)
-            if feed_tup in data_pp.predict_feed_tups:
-                self.feeds[feed.address] = feed
+        print(f"Filter by predict_feeds: {ppss.data_pp.filter_feeds_s}")
+        feeds = ppss.data_pp.filter_feeds(cand_feeds)
+        print_feeds(feeds, "filtered feeds")
+        if not feeds:
+            raise ValueError("No feeds found.")
+        contracts = ppss.web3_pp.get_contracts(list(feeds.keys()))
 
-        if not self.feeds:
-            print("No feeds left after filtering. Exiting")
-            sys.exit()
-
-        # set self.contracts
-        feed_addrs = list(self.feeds.keys())
-        self.contracts = web3_pp.get_contracts(feed_addrs)  # [addr] : contract
+        # set feed, contract
+        self.feed = sole_value(feeds)
+        self.feed_contract = sole_value(contracts)
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
-        self.prev_submit_epochs_per_feed: Dict[str, List[int]] = {
-            addr: [] for addr in self.feeds
-        }
+        self.prev_submit_epochs: List[int] = []
 
-        # print
-        print("\n" + "-" * 80)
-        print(self.ppss)
-
-        print("\n" + "." * 80)
-        print("Feeds (detailed):")
-        for feed in self.feeds.values():
-            print(f"  {feed.longstr()}")
-
-        print("\n" + "." * 80)
-        print("Feeds (succinct):")
-        for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
-
+    @enforce_types
     def run(self):
-        print("Starting main loop...")
+        print("Starting main loop.")
+        print(self.status_str())
+        print("Waiting...", end="")
         while True:
             self.take_step()
 
+    @enforce_types
     def take_step(self):
-        w3 = self.ppss.web3_pp.w3
-        print("\n" + "-" * 80)
-        print("Take_step() begin.")
-
-        # new block?
-        block_number = w3.eth.block_number
-        print(f"  block_number={block_number}, prev={self.prev_block_number}")
-        if block_number <= self.prev_block_number:
-            print("  Done step: block_number hasn't advanced yet. So sleep.")
+        # at new block number yet?
+        if self.cur_block_number <= self.prev_block_number:
+            print(".", end="", flush=True)
             time.sleep(1)
             return
-        block = self.ppss.web3_pp.web3_config.get_block(
-            block_number, full_transactions=False
-        )
-        if not block:
-            print("  Done step: block not ready yet")
+
+        # is new block ready yet?
+        if not self.cur_block:
             return
-        self.prev_block_number = block_number
-        self.prev_block_timestamp = block["timestamp"]
-
-        # do work at new block
-        print(f"  Got new block. Timestamp={block['timestamp']}")
-        for addr in self.feeds:
-            self._process_block_at_feed(addr, block["timestamp"])
-
-    def _process_block_at_feed(self, addr: str, timestamp: int) -> tuple:
-        """Returns (predval, stake, submitted)"""
-        # base data
-        feed, contract = self.feeds[addr], self.contracts[addr]
-        epoch = contract.get_current_epoch()
-        s_per_epoch = feed.seconds_per_epoch
-        epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
-
-        # print status
-        print(f"    Process {feed} at epoch={epoch}")
+        self.prev_block_number = self.cur_block_number
+        self.prev_block_timestamp = self.cur_timestamp
 
         # within the time window to predict?
-        s_until_epoch_end = self.ppss.predictoor_ss.s_until_epoch_end
-        print(
-            f"      {epoch_s_left} s left in epoch"
-            f" (predict if <= {s_until_epoch_end} s left)"
-        )
-        too_early = epoch_s_left > s_until_epoch_end
-        if too_early:
-            print("      Done feed: too early to predict")
-            return (None, None, False)
+        if self.cur_epoch_s_left > self.epoch_s_thr:
+            return
+
+        print()
+        print(self.status_str())
 
         # compute prediction; exit if no good
-        target_time = (epoch + 2) * s_per_epoch
-        print(f"      Predict for time slot = {target_time}...")
+        submit_epoch, target_slot = self.cur_epoch, self.target_slot
+        print(f"Predict for time slot = {self.target_slot}...")
 
-        predval, stake = self.get_prediction(addr, target_time)
-        print(f"      -> Predict result: predval={predval}, stake={stake}")
+        predval, stake = self.get_prediction(target_slot)
+        print(f"-> Predict result: predval={predval}, stake={stake}")
         if predval is None or stake <= 0:
-            print("      Done feed: can't use predval/stake")
-            return (None, None, False)
+            print("Done: can't use predval/stake")
+            return
 
         # submit prediction to chain
-        print("      Submit predict tx chain...")
-        contract.submit_prediction(predval, stake, target_time, True)
-        self.prev_submit_epochs_per_feed[addr].append(epoch)
-        print("      " + "=" * 80)
-        print("      -> Submit predict tx result: success.")
-        print("      " + "=" * 80)
-        print("      Done feed: success.")
-        return (predval, stake, True)
+        print("Submit predict tx to chain...")
+        self.feed_contract.submit_prediction(predval, stake, target_slot, True)
+        self.prev_submit_epochs.append(submit_epoch)
+        print("-> Submit predict tx result: success.")
+        print("" + "=" * 180)
+
+        # start printing for next round
+        print(self.status_str())
+        print("Waiting...", end="")
+
+    @property
+    def cur_epoch(self) -> int:
+        return self.feed_contract.get_current_epoch()
+
+    @property
+    def cur_block(self):
+        return self.ppss.web3_pp.web3_config.get_block(
+            self.cur_block_number, full_transactions=False
+        )
+
+    @property
+    def cur_block_number(self) -> int:
+        return self.ppss.web3_pp.w3.eth.block_number
+
+    @property
+    def cur_timestamp(self) -> int:
+        return self.cur_block["timestamp"]
+
+    @property
+    def epoch_s_thr(self):
+        """Start predicting if there's > this time left"""
+        return self.ppss.predictoor_ss.s_until_epoch_end
+
+    @property
+    def s_per_epoch(self) -> int:
+        return self.feed.seconds_per_epoch
+
+    @property
+    def next_slot(self) -> int:  # a timestamp
+        return (self.cur_epoch + 1) * self.s_per_epoch
+
+    @property
+    def target_slot(self) -> int:  # a timestamp
+        return (self.cur_epoch + 2) * self.s_per_epoch
+
+    @property
+    def cur_epoch_s_left(self) -> int:
+        return self.next_slot - self.cur_timestamp
+
+    def status_str(self) -> str:
+        s = ""
+        s += f"cur_epoch={self.cur_epoch}"
+        s += f", cur_block_number={self.cur_block_number}"
+        s += f", cur_timestamp={self.cur_timestamp}"
+        s += f", next_slot={self.next_slot}"
+        s += f", target_slot={self.target_slot}"
+        s += f". {self.cur_epoch_s_left} s left in epoch"
+        s += f" (predict if <= {self.epoch_s_thr} s left)"
+        s += f". s_per_epoch={self.s_per_epoch}"
+        return s
 
     @abstractmethod
     def get_prediction(
-        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+        self,
+        timestamp: int,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         pass

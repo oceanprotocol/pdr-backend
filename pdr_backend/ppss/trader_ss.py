@@ -56,3 +56,14 @@ class TraderSS(StrMixin):
     def buy_amt_usd(self):
         amt_s, _ = self.buy_amt_str.split()
         return float(amt_s)
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def inplace_make_trader_fast(trader_ss: TraderSS):
+    trader_ss.set_max_tries(10)
+    trader_ss.set_position_size(10.0)
+    trader_ss.set_min_buffer(20)

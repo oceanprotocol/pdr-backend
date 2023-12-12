@@ -26,7 +26,8 @@ def request_payout_batches(
 
         while retries < 5 and not success:
             try:
-                predictoor_contract.payout_multiple(batch, True)
+                wait_for_receipt = True
+                predictoor_contract.payout_multiple(batch, wait_for_receipt)
                 print(".", end="", flush=True)
                 success = True
             except Exception as e:
@@ -58,7 +59,7 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
 
     for pdr_contract_addr in pending_payouts:
         print(f"Claiming payouts for {pdr_contract_addr}")
-        pdr_contract = PredictoorContract(web3_config, pdr_contract_addr)
+        pdr_contract = PredictoorContract(ppss.web3_pp, pdr_contract_addr)
         request_payout_batches(
             pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
         )

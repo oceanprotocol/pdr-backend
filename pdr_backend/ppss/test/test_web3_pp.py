@@ -5,25 +5,19 @@ from enforce_typing import enforce_types
 import pytest
 from web3 import Web3
 
+from pdr_backend.models.feed import mock_feed
+from pdr_backend.models.predictoor_contract import mock_predictoor_contract
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.ppss.web3_pp import mock_web3_pp, Web3PP
+from pdr_backend.ppss.web3_pp import (
+    del_network_override,
+    inplace_mock_feedgetters,
+    inplace_mock_get_contracts,
+    inplace_mock_query_feed_contracts,
+    mock_web3_pp,
+    Web3PP,
+)
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
-
-ADDR = "0xe8933f2950aec1080efad1ca160a6bb641ad245d"  # predictoor contract addr
-
-FEED_DICT = {  # info inside a predictoor contract
-    "name": "Contract Name",
-    "address": ADDR,
-    "symbol": "test",
-    "seconds_per_epoch": 300,
-    "seconds_per_subscription": 60,
-    "trueval_submit_timeout": 15,
-    "owner": "0xowner",
-    "pair": "BTC-ETH",
-    "timeframe": "1h",
-    "source": "binance",
-}
 
 _D1 = {
     "address_file": "address.json 1",
@@ -46,24 +40,8 @@ _D = {
 
 
 @enforce_types
-def test_web3_pp__network_override(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
-
-    # does it do what we want with no override?
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network1"
-
-    # does it do what we want _with_ override?
-    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network2"
-
-
-@enforce_types
 def test_web3_pp__bad_network(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
@@ -71,8 +49,7 @@ def test_web3_pp__bad_network(monkeypatch):
 
 @enforce_types
 def test_web3_pp__yaml_dict(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     pp = Web3PP(_D, "network1")
 
@@ -93,8 +70,7 @@ def test_web3_pp__yaml_dict(monkeypatch):
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
@@ -124,8 +100,8 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
+
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -142,44 +118,71 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 
 @enforce_types
-def test_web3_pp__get_feeds__get_contracts(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
+    del_network_override(monkeypatch)
 
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
+    feed = mock_feed("5m", "binance", "BTC/USDT")
+
     # test get_feeds(). Uses results from get_feeds
-    def _mock_query_feed_contracts(*args, **kwargs):  # pylint: disable=unused-argument
-        feed_dicts = {ADDR: FEED_DICT}
-        return feed_dicts
+    def _mock_subgraph_query_feed_contracts(
+        *args, **kwargs
+    ):  # pylint: disable=unused-argument
+        return {feed.address: feed}
 
     with patch(
         "pdr_backend.ppss.web3_pp.query_feed_contracts",
-        _mock_query_feed_contracts,
+        _mock_subgraph_query_feed_contracts,
     ):
-        feeds = web3_pp.get_feeds()
+        feeds = web3_pp.query_feed_contracts()
 
-    feed_addrs = list(feeds.keys())
-    assert feed_addrs == [ADDR]
+    assert list(feeds.keys()) == [feed.address]
 
     # test get_contracts(). Uses results from get_feeds
     def _mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
         m = Mock()
-        m.contract_address = ADDR
+        m.contract_address = feed.address
         return m
 
     with patch("pdr_backend.ppss.web3_pp.PredictoorContract", _mock_contract):
-        contracts = web3_pp.get_contracts(feed_addrs)
-    assert list(contracts.keys()) == feed_addrs
-    assert contracts[ADDR].contract_address == ADDR
+        contracts = web3_pp.get_contracts([feed.address])
+    assert list(contracts.keys()) == [feed.address]
+    assert contracts[feed.address].contract_address == feed.address
+
+
+# =========================================================================
+# test utilities for testing
+
+
+@enforce_types
+def test_web3_pp__NETWORK_OVERRIDE(monkeypatch):
+    del_network_override(monkeypatch)
+
+    # does it do what we want with no override?
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network1"
+
+    # does it do what we want _with_ override?
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    pp = Web3PP(_D, "network1")
+    assert pp.network == "network2"
+
+
+@enforce_types
+def test_web3_pp__del_network_override(monkeypatch):
+    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
+    assert os.getenv("NETWORK_OVERRIDE") == "network2"
+
+    del_network_override(monkeypatch)
+    assert os.getenv("NETWORK_OVERRIDE") is None
 
 
 @enforce_types
 def test_mock_web3_pp(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
+    del_network_override(monkeypatch)
 
     web3_pp = mock_web3_pp("development")
     assert isinstance(web3_pp, Web3PP)
@@ -187,3 +190,18 @@ def test_mock_web3_pp(monkeypatch):
 
     web3_pp = mock_web3_pp("sapphire-mainnet")
     assert web3_pp.network == "sapphire-mainnet"
+
+
+@enforce_types
+def test_inplace_mocks(monkeypatch):
+    del_network_override(monkeypatch)
+
+    web3_pp = mock_web3_pp("development")
+    feed = mock_feed("5m", "binance", "BTC/USDT")
+
+    # basic sanity test: can we call it without a fail?
+    inplace_mock_feedgetters(web3_pp, feed)
+    inplace_mock_query_feed_contracts(web3_pp, feed)
+
+    c = mock_predictoor_contract(feed.address)
+    inplace_mock_get_contracts(web3_pp, feed, c)

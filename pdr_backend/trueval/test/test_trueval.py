@@ -2,97 +2,41 @@ from enforce_typing import enforce_types
 
 import pytest
 
-from pdr_backend.trueval.trueval_agent_base import get_trueval
-from pdr_backend.models.feed import Feed
-
-
-def mock_fetch_ohlcv(*args, **kwargs):  # pylint: disable=unused-argument
-    since = kwargs.get("since")
-    if since == 0:
-        return [[0, 0, 0, 0, 100], [60000, 0, 0, 0, 200]]
-    raise ValueError("Invalid timestamp")
-
-
-def mock_fetch_ohlcv_fail(*args, **kwargs):  # pylint: disable=unused-argument
-    return [[0, 0, 0, 0, 0]]
+from pdr_backend.trueval.base_trueval_agent import get_trueval
+from pdr_backend.models.feed import mock_feed
 
 
 @enforce_types
 def test_get_trueval_success(monkeypatch):
-    feed = Feed(
-        name="ETH-USDT",
-        address="0x1",
-        symbol="ETH-USDT",
-        seconds_per_epoch=60,
-        seconds_per_subscription=500,
-        pair="eth-usdt",
-        source="kraken",
-        timeframe="5m",
-        trueval_submit_timeout=100,
-        owner="0xowner",
-    )
+    def mock_fetch_ohlcv(*args, **kwargs):  # pylint: disable=unused-argument
+        since = kwargs.get("since")
+        if since == 0:
+            return [[0, 0, 0, 0, 100], [300000, 0, 0, 0, 200]]
+        raise ValueError(f"Invalid timestamp: since={since}")
 
-    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv)
+    path = "pdr_backend.trueval.base_trueval_agent"
+    monkeypatch.setattr(f"{path}.safe_fetch_ohlcv", mock_fetch_ohlcv)
 
-    result = get_trueval(feed, 60, 120)
+    feed = mock_feed("5m", "kraken", "ETH/USDT")
+
+    init_ts = feed.seconds_per_epoch
+    end_ts = init_ts + feed.seconds_per_epoch
+    result = get_trueval(feed, init_ts, end_ts)
     assert result == (True, False)
 
 
 @enforce_types
-def test_get_trueval_live_lowercase_slash_5m():
-    feed = Feed(
-        name="ETH-USDT",
-        address="0x1",
-        symbol="ETH-USDT",
-        seconds_per_epoch=300,
-        seconds_per_subscription=500,
-        pair="btc/usdt",
-        source="kucoin",
-        timeframe="5m",
-        trueval_submit_timeout=100,
-        owner="0xowner",
-    )
-
-    result = get_trueval(feed, 1692943200, 1692943200 + 5 * 60)
-    assert result == (False, False)
-
-
-@enforce_types
-def test_get_trueval_live_lowercase_dash_1h():
-    feed = Feed(
-        name="ETH-USDT",
-        address="0x1",
-        symbol="ETH-USDT",
-        seconds_per_epoch=3600,
-        seconds_per_subscription=500,
-        pair="btc-usdt",
-        source="kucoin",
-        timeframe="1h",
-        trueval_submit_timeout=100,
-        owner="0xowner",
-    )
-
-    result = get_trueval(feed, 1692943200, 1692943200 + 1 * 60 * 60)
-    assert result == (False, False)
-
-
-@enforce_types
 def test_get_trueval_fail(monkeypatch):
-    feed = Feed(
-        name="ETH-USDT",
-        address="0x1",
-        symbol="ETH-USDT",
-        seconds_per_epoch=60,
-        seconds_per_subscription=500,
-        pair="eth-usdt",
-        source="kraken",
-        timeframe="5m",
-        trueval_submit_timeout=100,
-        owner="0xowner",
-    )
+    def mock_fetch_ohlcv_fail(*args, **kwargs):  # pylint: disable=unused-argument
+        return [[0, 0, 0, 0, 0], [300000, 0, 0, 0, 200]]
 
-    monkeypatch.setattr("ccxt.kraken.fetch_ohlcv", mock_fetch_ohlcv_fail)
+    path = "pdr_backend.trueval.base_trueval_agent"
+    monkeypatch.setattr(f"{path}.safe_fetch_ohlcv", mock_fetch_ohlcv_fail)
 
+    feed = mock_feed("5m", "kraken", "eth-usdt")
+
+    init_ts = feed.seconds_per_epoch
+    end_ts = init_ts + feed.seconds_per_epoch
     with pytest.raises(Exception):
-        result = get_trueval(feed, 1, 2)
+        result = get_trueval(feed, init_ts, end_ts)
         assert result == (False, True)  # 2nd True because failed
