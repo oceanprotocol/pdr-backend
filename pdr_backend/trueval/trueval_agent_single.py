@@ -28,7 +28,7 @@ class TruevalAgentSingle(TruevalAgentBase):
             try:
                 self.process_slot(slot)
             except Exception as e:
-                print("An error occured", e)
+                print(f"An error occured: {e}")
         print(
             f"Done processing, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
         )
