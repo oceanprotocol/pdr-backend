@@ -260,8 +260,8 @@ class OhlcvDataFactory:
         """
         # init mergedohlcv_df such that it can do basic operations
         print("  Merge rawohlcv dataframes.")
-        mergedohlcv_df = initialize_df() # grow this
-        mergedohlcv_cols = ["timestamp"] # grow this
+        mergedohlcv_df = initialize_df()  # grow this
+        mergedohlcv_cols = ["timestamp"]  # grow this
         for exch_str in rawohlcv_dfs.keys():
             for pair_str, rawohlcv_df in rawohlcv_dfs[exch_str].items():
                 assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
@@ -287,8 +287,9 @@ class OhlcvDataFactory:
                     rawohlcv_df = rawohlcv_df.drop("datetime")
 
                 # only keep OHCLV cols
-                mergedohlcv_cols = [col for col in mergedohlcv_cols
-                                    if col not in OHLCV_COLS]
+                mergedohlcv_cols = [
+                    col for col in mergedohlcv_cols if col not in OHLCV_COLS
+                ]
 
                 # join rawohclv_df into mergedohlcv_df
                 if mergedohlcv_df.shape[0] == 0:
@@ -316,7 +317,7 @@ class OhlcvDataFactory:
           pair_str -- eg "BTC/USDT" or "BTC-USDT"
 
         @return
-          rawohlcv_filename -- 
+          rawohlcv_filename --
 
         @notes
           If pair_str has '/', it will become '-' in the filename.
