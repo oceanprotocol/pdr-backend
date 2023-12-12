@@ -31,9 +31,7 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
     assert predictoor_contract_mock.call_count == 1
-    predictoor_contract_mock.assert_called_once_with(
-        agent.ppss.web3_pp, "0x1"
-    )
+    predictoor_contract_mock.assert_called_once_with(agent.ppss.web3_pp, "0x1")
 
 
 @enforce_types

@@ -203,7 +203,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         ).call(call_params)
         return from_wei(nom_wei), from_wei(denom_wei)
 
-    def payout_multiple(self, slots: List[int], wait_for_receipt:bool=True):
+    def payout_multiple(self, slots: List[int], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
         call_params = tx_call_params(self.web3_pp)
         try:

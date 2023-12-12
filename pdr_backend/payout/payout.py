@@ -27,7 +27,8 @@ def request_payout_batches(
         while retries < 5 and not success:
             try:
                 predictoor_contract.payout_multiple(
-                    slots=batch, wait_for_receipt=True,
+                    slots=batch,
+                    wait_for_receipt=True,
                 )
                 print(".", end="", flush=True)
                 success = True
