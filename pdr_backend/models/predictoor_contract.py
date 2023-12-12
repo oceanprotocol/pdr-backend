@@ -329,15 +329,17 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """Submit true value for this feed, at the specified time.
         Alternatively, cancel this epoch (round).
         Can only be called by the owner.
+        Returns the hash of the transaction.
         """
         call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance.functions.submitTrueVal(
             timestamp, trueval, cancel_round
         ).transact(call_params)
-        print(f"Submitted trueval, txhash: {tx.hex()}")
+        print(f"Submit trueval: txhash={tx.hex()}")
         if not wait_for_receipt:
             return tx
-        return self.config.w3.eth.wait_for_transaction_receipt(tx)
+        tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
+        return tx
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
         """Redeem unused slot revenue."""
