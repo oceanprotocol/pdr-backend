@@ -17,8 +17,6 @@ _NETWORKS = [
     "sapphire-testnet",
     "sapphire-mainnet",
     "development",
-    "barge-pytest",
-    "barge-predictoor-bot",
 ]
 
 
