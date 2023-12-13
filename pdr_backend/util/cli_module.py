@@ -11,9 +11,7 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
-from pdr_backend.trueval.base_trueval_agent import get_trueval
-from pdr_backend.trueval.trueval_agent_batch import TruevalAgentBatch
-from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
+from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.check_network import check_network_main
 from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
 
@@ -189,15 +187,8 @@ def do_trueval(testing=False):
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-
-    approach = args.APPROACH
-    if approach == 1:
-        agent = TruevalAgentSingle(ppss, get_trueval)
-    elif approach == 2:
-        predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
-        agent = TruevalAgentBatch(ppss, get_trueval, predictoor_batcher_addr)
-    else:
-        raise ValueError(f"Unknown trueval approach {approach}")
+    predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
+    agent = TruevalAgent(ppss, predictoor_batcher_addr)
 
     agent.run(testing)
 

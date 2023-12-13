@@ -26,7 +26,7 @@ Utilities:
 Transactions are signed with envvar 'PRIVATE_KEY`.
 
 Tools for core team:
-  pdr trueval APPROACH PPSS_FILE NETWORK
+  pdr trueval PPSS_FILE NETWORK
   pdr dfbuyer PPSS_FILE NETWORK
   pdr publisher PPSS_FILE NETWORK
   pdr topup PPSS_FILE NETWORK
@@ -252,7 +252,7 @@ GetTractionInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
 
 CheckNetworkArgParser = _ArgParser_PPSS_NETWORK_LOOKBACK
 
-TruevalArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+TruevalArgParser = _ArgParser_PPSS_NETWORK
 
 DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 

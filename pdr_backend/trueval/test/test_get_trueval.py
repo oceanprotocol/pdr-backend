@@ -2,8 +2,10 @@ from enforce_typing import enforce_types
 
 import pytest
 
-from pdr_backend.trueval.base_trueval_agent import get_trueval
+from pdr_backend.trueval.get_trueval import get_trueval
 from pdr_backend.models.feed import mock_feed
+
+_PATH = "pdr_backend.trueval.get_trueval"
 
 
 @enforce_types
@@ -14,8 +16,7 @@ def test_get_trueval_success(monkeypatch):
             return [[0, 0, 0, 0, 100], [300000, 0, 0, 0, 200]]
         raise ValueError(f"Invalid timestamp: since={since}")
 
-    path = "pdr_backend.trueval.base_trueval_agent"
-    monkeypatch.setattr(f"{path}.safe_fetch_ohlcv", mock_fetch_ohlcv)
+    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv", mock_fetch_ohlcv)
 
     feed = mock_feed("5m", "kraken", "ETH/USDT")
 
@@ -30,8 +31,7 @@ def test_get_trueval_fail(monkeypatch):
     def mock_fetch_ohlcv_fail(*args, **kwargs):  # pylint: disable=unused-argument
         return [[0, 0, 0, 0, 0], [300000, 0, 0, 0, 200]]
 
-    path = "pdr_backend.trueval.base_trueval_agent"
-    monkeypatch.setattr(f"{path}.safe_fetch_ohlcv", mock_fetch_ohlcv_fail)
+    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv", mock_fetch_ohlcv_fail)
 
     feed = mock_feed("5m", "kraken", "eth-usdt")
 

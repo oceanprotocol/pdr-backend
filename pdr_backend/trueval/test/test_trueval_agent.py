@@ -1,29 +1,23 @@
+from copy import deepcopy
 from unittest.mock import Mock, patch, MagicMock
 
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.trueval.base_trueval_agent import get_trueval
-from pdr_backend.trueval.trueval_agent_single import TruevalAgentSingle
+from pdr_backend.trueval.trueval_agent import (
+    TruevalSlot,
+    TruevalAgent,
+)
+from pdr_backend.util.constants import ZERO_ADDRESS
+
+PATH = "pdr_backend.trueval.trueval_agent"
 
 
 @enforce_types
-def test_new_agent(mock_ppss):
-    agent_ = TruevalAgentSingle(mock_ppss, get_trueval)
+def test_trueval_agent_constructor(mock_ppss):
+    agent_ = TruevalAgent(mock_ppss, ZERO_ADDRESS)
     assert agent_.ppss == mock_ppss
-
-
-@enforce_types
-def test_process_slot(
-    agent, slot, predictoor_contract_mock
-):  # pylint: disable=unused-argument
-    with patch.object(
-        agent, "get_and_submit_trueval", return_value={"tx": "0x123"}
-    ) as mock_submit:
-        result = agent.process_slot(slot)
-        assert result == {"tx": "0x123"}
-        mock_submit.assert_called()
+    assert agent_.predictoor_batcher.contract_address == ZERO_ADDRESS
 
 
 @enforce_types
@@ -35,66 +29,17 @@ def test_get_contract_info_caching(agent, predictoor_contract_mock):
 
 
 @enforce_types
-def test_submit_trueval_mocked_price_down(agent, slot, predictoor_contract_mock):
-    with patch.object(agent, "get_trueval", return_value=(False, False)):
-        result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value
-        )
-        assert result == {"tx": "0x123"}
-        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
-            False, 1692943200, False, True
-        )
-
-
-@enforce_types
-def test_submit_trueval_mocked_price_up(agent, slot, predictoor_contract_mock):
-    with patch.object(agent, "get_trueval", return_value=(True, False)):
-        result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value
-        )
-        assert result == {"tx": "0x123"}
-        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
-            True, 1692943200, False, True
-        )
-
-
-@enforce_types
-def test_submit_trueval_mocked_cancel(agent, slot, predictoor_contract_mock):
-    with patch.object(agent, "get_trueval", return_value=(True, True)):
-        result = agent.get_and_submit_trueval(
-            slot, predictoor_contract_mock.return_value
-        )
-        assert result == {"tx": "0x123"}
-        predictoor_contract_mock.return_value.submit_trueval.assert_called_once_with(
-            True, 1692943200, True, True
-        )
-
-
-@enforce_types
-def test_get_trueval_slot_up(
+def test_get_trueval_slot(
     agent, slot, predictoor_contract_mock
 ):  # pylint: disable=unused-argument
-    with patch.object(agent, "get_trueval", return_value=(True, True)):
-        result = agent.get_trueval_slot(slot)
-        assert result == (True, True)
-
-
-@enforce_types
-def test_get_trueval_slot_down(
-    agent, slot, predictoor_contract_mock
-):  # pylint: disable=unused-argument
-    with patch.object(agent, "get_trueval", return_value=(False, True)):
-        result = agent.get_trueval_slot(slot)
-        assert result == (False, True)
-
-
-@enforce_types
-def test_get_trueval_slot_cancel(
-    agent, slot, predictoor_contract_mock
-):  # pylint: disable=unused-argument
-    with patch.object(agent, "get_trueval", return_value=(True, False)):
-        result = agent.get_trueval_slot(slot)
-        assert result == (True, False)
+    for trueval, cancel in [
+        (True, True),  # up
+        (False, True),  # down
+        (True, False),  # cancel
+    ]:
+        with patch(f"{PATH}.get_trueval", Mock(return_value=(trueval, cancel))):
+            result = agent.get_trueval_slot(slot)
+            assert result == (trueval, cancel)
 
 
 @enforce_types
@@ -104,7 +49,7 @@ def test_get_trueval_slot_too_many_requests_retry(
     mock_get_trueval = MagicMock(
         side_effect=[Exception("Too many requests"), (True, True)]
     )
-    with patch.object(agent, "get_trueval", mock_get_trueval), patch(
+    with patch(f"{PATH}.get_trueval", mock_get_trueval), patch(
         "time.sleep", return_value=None
     ) as mock_sleep:
         result = agent.get_trueval_slot(slot)
@@ -114,35 +59,16 @@ def test_get_trueval_slot_too_many_requests_retry(
 
 
 @enforce_types
-def test_take_step(slot, agent):
-    mocked_web3_config = MagicMock(spec=Web3PP)
-    mocked_web3_config.get_pending_slots = Mock()
-    mocked_web3_config.get_pending_slots.return_value = [slot]
+def test_trueval_agent_run(agent):
+    mock_take_step = Mock()
+    with patch.object(agent, "take_step", mock_take_step):
+        agent.run(testing=True)
 
-    with patch.object(agent.ppss, "web3_pp", new=mocked_web3_config), patch(
-        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
-    ), patch("time.sleep"), patch.object(TruevalAgentSingle, "process_slot") as ps_mock:
-        agent.take_step()
-
-    ps_mock.assert_called_once_with(slot)
+    mock_take_step.assert_called_once()
 
 
 @enforce_types
-def test_run(slot, agent):
-    mocked_web3_config = MagicMock(spec=Web3PP)
-    mocked_web3_config.get_pending_slots = Mock()
-    mocked_web3_config.get_pending_slots.return_value = [slot]
-
-    with patch.object(agent.ppss, "web3_pp", new=mocked_web3_config), patch(
-        "pdr_backend.trueval.trueval_agent_single.wait_until_subgraph_syncs"
-    ), patch("time.sleep"), patch.object(TruevalAgentSingle, "process_slot") as ps_mock:
-        agent.run(True)
-
-    ps_mock.assert_called_once_with(slot)
-
-
-@enforce_types
-def test_get_init_and_ts(agent):
+def test_trueval_agent_get_init_and_ts(agent):
     ts = 2000
     seconds_per_epoch = 300
 
@@ -151,10 +77,90 @@ def test_get_init_and_ts(agent):
     assert end_ts == ts
 
 
+@enforce_types
+def test_process_trueval_slot(
+    agent, slot, predictoor_contract_mock
+):  # pylint: disable=unused-argument
+    for trueval, cancel in [
+        (True, True),  # up
+        (False, True),  # down
+        (True, False),  # cancel
+    ]:
+        with patch(f"{PATH}.get_trueval", Mock(return_value=(trueval, cancel))):
+            slot = TruevalSlot(slot_number=slot.slot_number, feed=slot.feed)
+            agent.process_trueval_slot(slot)
+
+            assert slot.trueval == trueval
+            assert slot.cancel == cancel
+
+
+@enforce_types
+def test_batch_submit_truevals(agent, slot):
+    times = 3
+    slot.feed.address = "0x0000000000000000000000000000000000c0ffee"
+    trueval_slots = [
+        TruevalSlot(feed=slot.feed, slot_number=i) for i in range(0, times)
+    ]
+    for i in trueval_slots:
+        i.set_trueval(True)
+        i.set_cancel(False)
+
+    slot2 = deepcopy(slot)
+    slot2.feed.address = "0x0000000000000000000000000000000000badbad"
+    trueval_slots_2 = [
+        TruevalSlot(feed=slot2.feed, slot_number=i) for i in range(0, times)
+    ]
+    for i in trueval_slots_2:
+        i.set_trueval(True)
+        i.set_cancel(False)
+
+    trueval_slots.extend(trueval_slots_2)
+
+    contract_addrs = [
+        "0x0000000000000000000000000000000000C0FFEE",
+        "0x0000000000000000000000000000000000baDbad",
+    ]  # checksum
+    epoch_starts = [list(range(0, times))] * 2
+    truevals = [[True] * times, [True] * times]
+    cancels = [[False] * times, [False] * times]
+
+    with patch.object(
+        agent.predictoor_batcher,
+        "submit_truevals_contracts",
+        return_value={"transactionHash": bytes.fromhex("badc0ffeee")},
+    ) as mock:
+        tx = agent.batch_submit_truevals(trueval_slots)
+        assert tx == "badc0ffeee"
+        mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
+
+
+@enforce_types
+def test_trueval_agent_take_step(agent, slot):
+    with patch(f"{PATH}.wait_until_subgraph_syncs"), patch.object(
+        agent, "get_batch", return_value=[slot]
+    ) as mock_get_batch, patch.object(
+        agent, "process_trueval_slot"
+    ) as mock_process_trueval_slot, patch(
+        "time.sleep"
+    ), patch.object(
+        agent, "batch_submit_truevals"
+    ) as mock_batch_submit_truevals:
+        agent.take_step()
+
+        mock_get_batch.assert_called_once()
+        call_args = mock_process_trueval_slot.call_args[0][0]
+        assert call_args.slot_number == slot.slot_number
+        assert call_args.feed == slot.feed
+
+        call_args = mock_batch_submit_truevals.call_args[0][0]
+        assert call_args[0].slot_number == slot.slot_number
+        assert call_args[0].feed == slot.feed
+
+
 # ----------------------------------------------
 # Fixtures
 
 
 @pytest.fixture(name="agent")
 def agent_fixture(mock_ppss):
-    return TruevalAgentSingle(mock_ppss, get_trueval)
+    return TruevalAgent(mock_ppss, ZERO_ADDRESS)
