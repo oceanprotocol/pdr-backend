@@ -90,7 +90,12 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    timeframe: str, predict_feeds: List[str], network: Optional[str] = None, tmpdir=None
+    timeframe: str,
+    predict_feeds: List[str],
+    network: Optional[str] = None,
+    tmpdir: Optional[str] = None,
+    st_timestr: Optional[str] = "2023-06-18",
+    fin_timestr: Optional[str] = "2023-06-21",
 ) -> PPSS:
     network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -112,8 +117,8 @@ def mock_ppss(
         {
             "input_feeds": predict_feeds,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
-            "st_timestr": "2023-06-18",
-            "fin_timestr": "2023-06-21",
+            "st_timestr": st_timestr,
+            "fin_timestr": fin_timestr,
             "max_n_train": 100,
             "autoregressive_n": 2,
         }

@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 import polars as pl
 
 from pdr_backend.data_eng.test.resources import (
-    _data_gql_sources,
+    _gql_data_factory,
 )
 from pdr_backend.util.timeutil import (
     timestr_to_ut,
@@ -132,7 +132,7 @@ def _test_update_gql(
       n_preds -- expected # predictions. Typically int. If '>1K', expect >1000
     """
 
-    _, _, _, _, _, gql_data_factory = _data_gql_sources(
+    _, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr,
@@ -217,7 +217,7 @@ def test_load_and_verify_schema(
         n_preds=5,
     )
 
-    _, _, _, _, _, gql_data_factory = _data_gql_sources(
+    _, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr,
@@ -253,7 +253,7 @@ def test_get_gql_dfs_calls(
 
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
 
-    _, _, _, _, _, gql_data_factory = _data_gql_sources(
+    _, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus h ETH/USDT",
         st_timestr,

@@ -15,7 +15,7 @@ from pdr_backend.data_eng.plutil import (
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
@@ -38,15 +38,11 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
 
 
 @enforce_types
-def _data_gql_sources(tmpdir, feed, st_timestr=None, fin_timestr=None):
-    parquet_dir = str(tmpdir)
-    pp = _data_pp([feed])
-    ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    web3 = _web3_pp()
-    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    model_data_factory = ModelDataFactory(pp, ss)
-    gql_data_factory = GQLDataFactory(pp, ss, web3)
-    return pp, ss, web3, ohlcv_data_factory, model_data_factory, gql_data_factory
+def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
+    network = "mainnet"
+    mock_ppss = mock_ppss("5m", [feed], network, tmpdir, st_timestr, fin_timestr)
+    gql_data_factory = GQLDataFactory(mock_ppss.pp, mock_ppss.ss, mock_ppss.web3)
+    return mock_ppss, gql_data_factory
 
 
 @enforce_types
@@ -71,20 +67,6 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
             "max_n_train": 7,
             "autoregressive_n": 3,
         }
-    )
-
-
-# pylint: disable=line-too-long
-@enforce_types
-def _web3_pp():
-    return Web3PP(
-        {
-            "sapphire-mainnet": {
-                "subgraph_url": "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
-                "owner_addrs": "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703",
-            }
-        },
-        network="sapphire-mainnet",
     )
 
 

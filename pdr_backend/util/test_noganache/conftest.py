@@ -1,10 +1,10 @@
-from unittest.mock import Mock
-
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.ppss.ppss import (
+    mock_ppss as _mock_ppss,
+)
+
 from pdr_backend.util.subgraph_predictions import Prediction
 
 
@@ -12,35 +12,8 @@ from pdr_backend.util.subgraph_predictions import Prediction
 @pytest.fixture(scope="session")
 def mock_ppss(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp("my_tmpdir")
-    s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
-    ppss.web3_pp = Mock()
+    ppss = _mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
     return ppss
-
-
-@enforce_types
-@pytest.fixture(scope="session")
-def mock_ppss_web3(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp("my_tmpdir")
-    s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
-    ppss.web3_pp = _web3_pp()
-    return ppss
-
-
-# pylint: disable=line-too-long
-@enforce_types
-def _web3_pp():
-    return Web3PP(
-        {
-            "sapphire-mainnet": {
-                "subgraph_url": "https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph",
-                "owner_addrs": "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703",
-            }
-        },
-        network="sapphire-mainnet",
-    )
-
 
 @enforce_types
 @pytest.fixture(scope="session")
