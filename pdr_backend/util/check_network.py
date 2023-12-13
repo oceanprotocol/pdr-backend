@@ -66,6 +66,7 @@ def get_expected_consume(for_ts: int, tokens: int):
     return n_intervals * amount_per_feed_per_interval
 
 
+@enforce_types
 def check_network_main(ppss: PPSS, lookback_hours: int):
     subgraph_url = ppss.web3_pp.subgraph_url
     web3_config = ppss.web3_pp.web3_config

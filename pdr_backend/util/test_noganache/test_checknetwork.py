@@ -107,7 +107,6 @@ def test_get_expected_consume():
     assert get_expected_consume(for_ts, tokens) == expected
 
 
-# TO DO - I believe this should be using the common mock_ppss
 @pytest.fixture(name="mock_ppss_")
 def mock_ppss(tmpdir):
     s = fast_test_yaml_str(tmpdir)
