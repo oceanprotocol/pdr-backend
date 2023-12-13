@@ -1,14 +1,15 @@
 from collections import defaultdict
 import time
-from typing import List, Optional, Tuple, Callable
+from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.slot import Slot
+from pdr_backend.models.predictoor_batcher import PredictoorBatcher
+from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.trueval.base_trueval_agent import BaseTruevalAgent
+from pdr_backend.trueval.get_trueval import get_trueval
 from pdr_backend.util.subgraph import wait_until_subgraph_syncs
 
 
@@ -27,17 +28,19 @@ class TruevalSlot(Slot):
 
 
 @enforce_types
-class TruevalAgentBatch(BaseTruevalAgent):
-    def __init__(
-        self,
-        ppss: PPSS,
-        _get_trueval: Callable[[Feed, int, int], Tuple[bool, bool]],
-        predictoor_batcher_addr: str,
-    ):
-        super().__init__(ppss, _get_trueval)
+class TruevalAgent:
+    def __init__(self, ppss: PPSS, predictoor_batcher_addr: str):
+        self.ppss = ppss
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
             self.ppss.web3_pp, predictoor_batcher_addr
         )
+        self.contract_cache: Dict[str, tuple] = {}
+
+    def run(self, testing: bool = False):
+        while True:
+            self.take_step()
+            if testing:
+                break
 
     def take_step(self):
         wait_until_subgraph_syncs(
@@ -71,6 +74,75 @@ class TruevalAgentBatch(BaseTruevalAgent):
         )
 
         time.sleep(self.ppss.trueval_ss.sleep_time)
+
+    def get_batch(self) -> List[Slot]:
+        timestamp = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+        pending_slots = self.ppss.web3_pp.get_pending_slots(
+            timestamp,
+        )
+        print(
+            f"Found {len(pending_slots)} pending slots"
+            f", processing {self.ppss.trueval_ss.batch_size}"
+        )
+        pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
+        return pending_slots
+
+    def get_contract_info(
+        self, contract_address: str
+    ) -> Tuple[PredictoorContract, int]:
+        if contract_address in self.contract_cache:
+            predictoor_contract, seconds_per_epoch = self.contract_cache[
+                contract_address
+            ]
+        else:
+            predictoor_contract = PredictoorContract(
+                self.ppss.web3_pp, contract_address
+            )
+            seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+            self.contract_cache[contract_address] = (
+                predictoor_contract,
+                seconds_per_epoch,
+            )
+        return (predictoor_contract, seconds_per_epoch)
+
+    def get_init_and_ts(self, slot: int, seconds_per_epoch: int) -> Tuple[int, int]:
+        initial_ts = slot - seconds_per_epoch
+        end_ts = slot
+        return initial_ts, end_ts
+
+    def get_trueval_slot(self, slot: Slot):
+        """
+        @description
+          Get trueval at the specified slot
+
+        @arguments
+          slot
+
+        @return
+          trueval: bool
+          cancel_round: bool
+        """
+        _, s_per_epoch = self.get_contract_info(slot.feed.address)
+        init_ts, end_ts = self.get_init_and_ts(slot.slot_number, s_per_epoch)
+
+        print(
+            f"Get trueval slot: begin. For slot_number {slot.slot_number}"
+            f" of {slot.feed}"
+        )
+        try:
+            # calls to get_trueval() func below, via Callable attribute on self
+            (trueval, cancel_round) = get_trueval(slot.feed, init_ts, end_ts)
+        except Exception as e:
+            if "Too many requests" in str(e):
+                print("Get trueval slot: too many requests, wait for a minute")
+                time.sleep(60)
+                return self.get_trueval_slot(slot)
+
+            # pylint: disable=line-too-long
+            raise Exception(f"An error occured: {e}") from e
+
+        print(f"Get trueval slot: done. trueval={trueval}, cancel_round={cancel_round}")
+        return (trueval, cancel_round)
 
     def batch_submit_truevals(self, slots: List[TruevalSlot]) -> str:
         contracts: dict = defaultdict(

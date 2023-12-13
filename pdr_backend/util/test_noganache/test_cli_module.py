@@ -277,10 +277,10 @@ def test_do_trader(monkeypatch):
 def test_do_trueval(monkeypatch):
     monkeypatch.setattr(
         f"{_CLI_PATH}.TruevalArgParser",
-        MockArgParser_APPROACH_PPSS_NETWORK,
+        MockArgParser_PPSS_NETWORK,
     )
 
-    monkeypatch.setattr(f"{_CLI_PATH}.TruevalAgentSingle", MockAgent)
+    monkeypatch.setattr(f"{_CLI_PATH}.TruevalAgent", MockAgent)
 
     do_trueval()
     assert MockAgent.was_run
