@@ -10,7 +10,7 @@ from pdr_backend.util.timeutil import timestr_to_ut
 
 @enforce_types
 @patch("pdr_backend.util.get_traction_info.get_traction_statistics")
-@patch("pdr_backend.data_eng.gql_data_factory.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
 @patch("pdr_backend.util.get_traction_info.plot_traction_cum_sum_statistics")
 @patch("pdr_backend.util.get_traction_info.plot_traction_daily_statistics")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")

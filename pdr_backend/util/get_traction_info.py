@@ -29,7 +29,7 @@ def get_traction_info_main(
         print("No records found. Please adjust start and end times.")
         return
 
-    predictions_df = gql_dfs["raw_predictions"]
+    predictions_df = gql_dfs["pdr_predictions"]
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions_df)
