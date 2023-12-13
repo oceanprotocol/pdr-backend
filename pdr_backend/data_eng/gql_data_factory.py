@@ -18,9 +18,9 @@ from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
 )
 
-from pdr_backend.data_eng.gql.predictoor.predictions import (
+from pdr_backend.data_eng.table_pdr_predictions import (
     predictions_schema,
-    get_predictoor_predictions_df,
+    get_pdr_predictions_df,
 )
 
 
@@ -65,7 +65,7 @@ class GQLDataFactory:
         # TO-DO: Roll into yaml config
         self.record_config = {
             "pdr_predictions": {
-                "fetch_fn": get_predictoor_predictions_df,
+                "fetch_fn": get_pdr_predictions_df,
                 "schema": predictions_schema,
                 "config": {
                     "contract_list": contract_list,

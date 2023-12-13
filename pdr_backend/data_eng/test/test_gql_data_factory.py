@@ -11,7 +11,7 @@ from pdr_backend.util.timeutil import (
     timestr_to_ut,
 )
 
-from pdr_backend.data_eng.gql.predictoor.predictions import (
+from pdr_backend.data_eng.table_pdr_predictions import (
     predictions_schema,
 )
 
@@ -24,7 +24,7 @@ from pdr_backend.util.subgraph_predictions import (
 pdr_predictions_record = "pdr_predictions"
 
 
-@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql1(
     mock_get_all_contract_ids_by_owner,
@@ -43,7 +43,7 @@ def test_update_gql1(
     )
 
 
-@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql2(
     mock_get_all_contract_ids_by_owner,
@@ -62,7 +62,7 @@ def test_update_gql2(
     )
 
 
-@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql3(
     mock_get_all_contract_ids_by_owner,
@@ -81,7 +81,7 @@ def test_update_gql3(
     )
 
 
-@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql_multiple(
     mock_get_all_contract_ids_by_owner,
@@ -195,7 +195,7 @@ def _test_update_gql(
         assert target_pred * 1000 in preds
 
 
-@patch("pdr_backend.data_eng.gql.predictoor.predictions.fetch_filtered_predictions")
+@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_load_and_verify_schema(
     mock_get_all_contract_ids_by_owner,
