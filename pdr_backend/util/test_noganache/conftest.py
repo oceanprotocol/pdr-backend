@@ -15,6 +15,7 @@ def mock_ppss(tmpdir_factory):
     ppss = _mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
     return ppss
 
+
 @enforce_types
 @pytest.fixture(scope="session")
 def sample_first_predictions():

@@ -18,6 +18,7 @@ from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 
+
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
     _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
