@@ -15,8 +15,8 @@ from pdr_backend.data_eng.plutil import (
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
@@ -39,10 +39,11 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
 
 @enforce_types
 def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
-    network = "mainnet"
-    mock_ppss = mock_ppss("5m", [feed], network, tmpdir, st_timestr, fin_timestr)
-    gql_data_factory = GQLDataFactory(mock_ppss.pp, mock_ppss.ss, mock_ppss.web3)
-    return mock_ppss, gql_data_factory
+    network = "sapphire-mainnet"
+    ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
+    web3_pp = mock_web3_pp(network)
+    gql_data_factory = GQLDataFactory(ppss.data_pp, ppss.data_ss, web3_pp)
+    return ppss, gql_data_factory
 
 
 @enforce_types
