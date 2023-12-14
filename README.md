@@ -52,10 +52,11 @@ Main tools:
 
 ## Flows for core team
 
-- Backend dev - for `pdr-backend` itself
-  - [Main backend-dev](READMEs/backend-dev.md)
-  - [VPS backend-dev](READMEs/vps.md)
+- Backend-dev - for `pdr-backend` itself
+  - [Local dev flow](READMEs/dev.md)
+  - [VPS dev flow](READMEs/vps.md)
   - [Release process](READMEs/release-process.md)
+  - [Clean code guidelines](READMEs/clean-code.md)
 - [Run dfbuyer bot](READMEs/dfbuyer.md) - runs Predictoor DF rewards
 - [Run publisher](READMEs/publisher.md) - publish new feeds
 - [Run trueval](READMEs/trueval.md) - run trueval bot
