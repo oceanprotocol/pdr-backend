@@ -83,39 +83,29 @@ def test_update_gql3(
 
 @patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
 @patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
-def test_update_gql_multiple(
+def test_update_gql_iteratively(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
-    _test_update_gql(
-        mock_fetch_filtered_predictions,
-        tmpdir,
-        sample_daily_predictions,
-        "2023-11-02_0:00",
-        "2023-11-04_0:00",
-        n_preds=2,
-    )
-
-    _test_update_gql(
-        mock_fetch_filtered_predictions,
-        tmpdir,
-        sample_daily_predictions,
-        "2023-11-01_0:00",
-        "2023-11-05_0:00",
-        n_preds=3,
-    )
-
-    _test_update_gql(
-        mock_fetch_filtered_predictions,
-        tmpdir,
-        sample_daily_predictions,
-        "2023-11-02_0:00",
-        "2023-11-07_0:00",
-        n_preds=5,
-    )
+    
+    iterations = [
+        ("2023-11-02_0:00", "2023-11-04_0:00", 2),
+        ("2023-11-01_0:00", "2023-11-05_0:00", 3),
+        ("2023-11-02_0:00", "2023-11-07_0:00", 5),
+    ]
+    
+    for st_timestr, fin_timestr, n_preds in iterations:
+        _test_update_gql(
+            mock_fetch_filtered_predictions,
+            tmpdir,
+            sample_daily_predictions,
+            st_timestr,
+            fin_timestr,
+            n_preds=n_preds,
+        )
 
 
 @enforce_types
