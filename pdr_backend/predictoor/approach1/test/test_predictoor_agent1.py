@@ -3,4 +3,4 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 
 
 def test_predictoor_agent1(tmpdir, monkeypatch):
-    run_agent_test(tmpdir, monkeypatch, PredictoorAgent1)
+    run_agent_test(str(tmpdir), monkeypatch, PredictoorAgent1)
