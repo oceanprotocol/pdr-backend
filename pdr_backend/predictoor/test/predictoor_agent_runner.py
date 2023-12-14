@@ -67,31 +67,3 @@ def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
     assert (mock_w3.eth.timestamp + 2 * ppss.data_pp.timeframe_s) >= max(
         _mock_pdr_contract._prediction_slots
     )
-
-
-@enforce_types
-def _ppss(tmpdir) -> PPSS:
-    yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str, network="development")
-
-    assert hasattr(ppss, "data_pp")
-    ppss.data_pp = DataPP(
-        {
-            "timeframe": "5m",
-            "predict_feeds": ["binanceus c BTC/USDT"],
-            "sim_only": {"test_n": 10},
-        }
-    )
-    assert hasattr(ppss, "data_ss")
-    ppss.data_ss = DataSS(
-        {
-            "input_feeds": ["binanceus c BTC/USDT"],
-            "parquet_dir": os.path.join("parquet_data"),
-            "st_timestr": "2023-06-18",
-            "fin_timestr": "2023-07-21",
-            "max_n_train": 100,
-            "autoregressive_n": 2,
-        }
-    )
-
-    return ppss
