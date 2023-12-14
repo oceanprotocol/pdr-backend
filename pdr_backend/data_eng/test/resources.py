@@ -21,10 +21,10 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, pq_data_factory, model_data_factory = _data_pp_ss_1feed(
+    _, _, ohlcv_data_factory, model_data_factory = _data_pp_ss_1feed(
         tmpdir, "binanceus h ETH/USDT"
     )
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    mergedohlcv_df = ohlcv_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, model_data_factory
 
 
@@ -33,9 +33,9 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    pq_data_factory = OhlcvDataFactory(pp, ss)
+    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
     model_data_factory = ModelDataFactory(pp, ss)
-    return pp, ss, pq_data_factory, model_data_factory
+    return pp, ss, ohlcv_data_factory, model_data_factory
 
 
 @enforce_types
