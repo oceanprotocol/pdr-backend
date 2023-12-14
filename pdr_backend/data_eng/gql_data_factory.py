@@ -28,8 +28,8 @@ from pdr_backend.data_eng.table_pdr_predictions import (
 class GQLDataFactory:
     """
     Roles:
-    - From each GQL API, fill >=1 parquet_dfs -> parquet files data lake
-    - From parquet_dfs, calculate stats and other dfs
+    - From each GQL API, fill >=1 gql_dfs -> parquet files data lake
+    - From gql_dfs, calculate other dfs and stats
     - All timestamps, after fetching, are transformed into milliseconds wherever appropriate
 
     Finally:
@@ -120,7 +120,7 @@ class GQLDataFactory:
         """
 
         for k, record in self.record_config.items():
-            filename = self._parquet_filename(k)
+            filename = self._gql_filename(k)
             print(f"      filename={filename}")
 
             st_ut = self._calc_start_ut(filename)
@@ -130,17 +130,17 @@ class GQLDataFactory:
                 continue
 
             # to satisfy mypy, get an explicit function pointer
-            gql_fn: Callable[[str, int, int, Dict], pl.DataFrame] = record["fetch_fn"]
+            do_fetch: Callable[[str, int, int, Dict], pl.DataFrame] = record["fetch_fn"]
 
             # call the function
             print(f"    Fetching {k}")
-            gql_df = gql_fn(self.web3.network, st_ut, fin_ut, record["config"])
+            df = do_fetch(self.web3.network, st_ut, fin_ut, record["config"])
 
             # postcondition
-            assert gql_df.schema == record["schema"]
+            assert df.schema == record["schema"]
 
             # save to parquet
-            self._save_parquet(filename, gql_df)
+            self._save_parquet(filename, df)
 
     def _calc_start_ut(self, filename: str) -> int:
         """
@@ -167,22 +167,22 @@ class GQLDataFactory:
         file_utN = newest_ut(filename)
         return file_utN + 1000
 
-    def _load_parquet(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
+    def _load_gql_df(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
         """
         @arguments
           fin_ut -- finish timestamp
 
         @return
-          parquet_dfs -- dict of [parquet_filename] : df
+          gql_dfs -- dict of [gql_filename] : df
             Where df has columns=GQL_COLS+"datetime", and index=timestamp
         """
         print("  Load parquet.")
         st_ut = self.ss.st_timestamp
 
-        gql_dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
+        gql_dfs: Dict[str, pl.DataFrame] = {}  # [gql_filename] : df
 
         for k, record in self.record_config.items():
-            filename = self._parquet_filename(k)
+            filename = self._gql_filename(k)
             print(f"      filename={filename}")
 
             # load all data from file
@@ -197,7 +197,7 @@ class GQLDataFactory:
 
         return gql_dfs
 
-    def _parquet_filename(self, filename_str: str) -> str:
+    def _gql_filename(self, filename_str: str) -> str:
         """
         @description
           Computes the lake-path for the parquet file.
@@ -217,7 +217,7 @@ class GQLDataFactory:
         return filename
 
     @enforce_types
-    def _save_parquet(self, filename: str, df: pl.DataFrame):
+    def _save_df(self, filename: str, df: pl.DataFrame):
         """write to parquet file
         parquet only supports appending via the pyarrow engine
         """
