@@ -84,7 +84,6 @@ class TraderAgent1(BaseTraderAgent):
             print(f"     [Previous Order] {self.order}")
             print(f"     [Closing Order] {order}")
 
-            # TO DO - Calculate PNL (self.order - order)
             self.order = None
 
         ### Create new order if prediction meets our criteria

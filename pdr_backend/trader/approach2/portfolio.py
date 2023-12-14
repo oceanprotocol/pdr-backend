@@ -64,12 +64,9 @@ class Position:
     """
     @description
         Has an open and and a close order minimum
-        TO DO - Support many buy/sell orders, balance, etc...
     """
 
     def __init__(self, order: Order):
-        # TO DO - Have N open_orders, have N close_orders
-        # TO DO - Move from __init__(order) to open(order)
         self.open_order: Order = order
         self.close_order: Optional[Order] = None
         self.state: OrderState = OrderState.OPEN
@@ -79,7 +76,6 @@ class Position:
     def __str__(self):
         return f"<{self.open_order}, {self.close_order}, {self.__class__}>"
 
-    # TO DO - Only callable by portfolio
     def close(self, order: Order):
         self.close_order = order
         self.state = OrderState.CLOSED
