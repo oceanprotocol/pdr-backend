@@ -42,8 +42,8 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
 def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
     ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
-    web3_pp = mock_web3_pp(network)
-    gql_data_factory = GQLDataFactory(ppss.data_pp, ppss.data_ss, web3_pp)
+    ppss.web3_pp = mock_web3_pp(network)
+    gql_data_factory = GQLDataFactory(ppss)
     return ppss, gql_data_factory
 
 
