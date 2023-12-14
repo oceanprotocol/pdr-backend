@@ -6,6 +6,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.csvs import save_prediction_csv
 from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import (
+    get_sapphire_postfix,
     fetch_filtered_predictions,
     FilterMode,
 )
@@ -20,14 +21,7 @@ def get_predictoors_info_main(
     end_timestr: str,
     csv_output_dir: str,
 ):
-    # TO DO: This code has DRY problems. Reduce.
-    if "main" in ppss.web3_pp.network:
-        network = "mainnet"
-    elif "test" in ppss.web3_pp.network:
-        network = "testnet"
-    else:
-        raise ValueError(ppss.web3_pp.network)
-
+    network = get_sapphire_postfix(ppss.web3_pp.network)
     start_ut: int = ms_to_seconds(timestr_to_ut(start_timestr))
     end_ut: int = ms_to_seconds(timestr_to_ut(end_timestr))
 

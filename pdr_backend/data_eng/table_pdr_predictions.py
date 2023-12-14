@@ -5,6 +5,7 @@ import polars as pl
 from polars import Utf8, Int64, Float64, Boolean
 
 from pdr_backend.util.subgraph_predictions import (
+    get_sapphire_postfix,
     fetch_filtered_predictions,
     FilterMode,
 )
@@ -59,13 +60,7 @@ def get_pdr_predictions_df(
         Update function for graphql query, returns raw data
         + Transforms ts into ms as required for data factory
     """
-    # TO DO: This code has DRY problems. Reduce.
-    if "main" in network:
-        network = "mainnet"
-    elif "test" in network:
-        network = "testnet"
-    else:
-        raise ValueError(network)
+    network = get_sapphire_postfix(network)
 
     # fetch predictions
     predictions = fetch_filtered_predictions(

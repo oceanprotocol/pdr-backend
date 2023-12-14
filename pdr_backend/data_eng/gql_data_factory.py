@@ -13,6 +13,7 @@ from pdr_backend.data_eng.plutil import (
 )
 
 from pdr_backend.util.subgraph_predictions import (
+    get_sapphire_postfix,
     get_all_contract_ids_by_owner,
 )
 
@@ -37,19 +38,11 @@ class GQLDataFactory:
     def __init__(self, ppss: PPSS):
         self.ppss = ppss
 
-        # TO DO: Solve duplicates from subgraph.
         # Method 1: Cull anything returned outside st_ut, fin_ut
         self.debug_duplicate = False
-
-        # TO DO: This code has DRY problems. Reduce.
-        # get network
-        if "main" in self.ppss.web3_pp.network:
-            network = "mainnet"
-        elif "test" in self.ppss.web3_pp.network:
-            network = "testnet"
-        else:
-            raise ValueError(self.ppss.web3_pp.network)
-
+        
+        network = get_sapphire_postfix(ppss.web3_pp.network)
+        
         # filter by feed contract address
         contract_list = get_all_contract_ids_by_owner(
             owner_address=self.ppss.web3_pp.owner_addrs,
@@ -57,7 +50,6 @@ class GQLDataFactory:
         )
         contract_list = [f.lower() for f in contract_list]
 
-        # TO-DO: Roll into yaml config
         self.record_config = {
             "pdr_predictions": {
                 "fetch_fn": get_pdr_predictions_df,
