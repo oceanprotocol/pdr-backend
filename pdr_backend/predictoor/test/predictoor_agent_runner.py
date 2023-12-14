@@ -6,9 +6,7 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_feed_ppss
+from pdr_backend.ppss.ppss import mock_feed_ppss
 from pdr_backend.ppss.web3_pp import (
     inplace_mock_query_feed_contracts,
     inplace_mock_w3_and_contract_with_tracking,
