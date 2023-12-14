@@ -14,7 +14,7 @@ def test_get_predictions_info_main_mainnet(
     mock_fetch_filtered_predictions,
     mock_get_all_contract_ids_by_owner,
     mock_get_cli_statistics,
-    mock_ppss,
+    _mock_ppss,
     sample_first_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
@@ -24,7 +24,7 @@ def test_get_predictions_info_main_mainnet(
     fin_timestr = "2023-11-05"
 
     get_predictions_info_main(
-        mock_ppss, "0x123", st_timestr, fin_timestr, "parquet_data/"
+        _mock_ppss, "0x123", st_timestr, fin_timestr, "parquet_data/"
     )
 
     mock_fetch_filtered_predictions.assert_called_with(

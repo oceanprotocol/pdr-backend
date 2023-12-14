@@ -166,8 +166,8 @@ def del_network_override(monkeypatch):
 def mock_web3_pp(network: str) -> Web3PP:
     D1 = {
         "address_file": "address.json 1",
-        "rpc_url": "rpc url 1",
-        "subgraph_url": "subgraph url 1",
+        "rpc_url": "http://example.com/rpc",
+        "subgraph_url": "http://example.com/subgraph",
         "stake_token": "0xStake1",
         "owner_addrs": "0xOwner1",
     }

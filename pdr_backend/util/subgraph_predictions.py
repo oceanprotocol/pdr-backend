@@ -32,10 +32,10 @@ def get_sapphire_postfix(network: str) -> str:
 
     if "main" in network:
         return "mainnet"
-    elif "test" in network:
+    if "test" in network:
         return "testnet"
-    else:
-        raise ValueError(network, "is not a valid network")
+
+    raise ValueError(network, "is not a valid network")
 
 
 @enforce_types

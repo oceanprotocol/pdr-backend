@@ -20,7 +20,7 @@ def test_get_traction_info_main_mainnet(
     mock_plot_traction_cum_sum_statistics,
     mock_fetch_filtered_predictions,
     mock_get_traction_statistics,
-    mock_ppss,
+    _mock_ppss,
     sample_daily_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
@@ -29,7 +29,7 @@ def test_get_traction_info_main_mainnet(
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
 
-    get_traction_info_main(mock_ppss, st_timestr, fin_timestr, "parquet_data/")
+    get_traction_info_main(_mock_ppss, st_timestr, fin_timestr, "parquet_data/")
 
     mock_fetch_filtered_predictions.assert_called_with(
         1698883200,

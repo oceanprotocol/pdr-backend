@@ -22,6 +22,7 @@ from pdr_backend.data_eng.table_pdr_predictions import (
     get_pdr_predictions_df,
 )
 
+
 @enforce_types
 class GQLDataFactory:
     """
@@ -40,9 +41,9 @@ class GQLDataFactory:
 
         # Method 1: Cull anything returned outside st_ut, fin_ut
         self.debug_duplicate = False
-        
+
         network = get_sapphire_postfix(ppss.web3_pp.network)
-        
+
         # filter by feed contract address
         contract_list = get_all_contract_ids_by_owner(
             owner_address=self.ppss.web3_pp.owner_addrs,

@@ -22,7 +22,7 @@ def get_traction_info_main(
     data_ss.d["st_timestr"] = start_timestr
     data_ss.d["fin_timestr"] = end_timestr
 
-    gql_data_factory = GQLDataFactory(ppss.data_pp, data_ss, ppss.web3_pp)
+    gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
     if len(gql_dfs) == 0:

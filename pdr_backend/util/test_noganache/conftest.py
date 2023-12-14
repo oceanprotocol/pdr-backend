@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.ppss.ppss import (
-    mock_ppss as _mock_ppss,
+    mock_ppss,
 )
 
 from pdr_backend.util.subgraph_predictions import Prediction
@@ -10,9 +10,9 @@ from pdr_backend.util.subgraph_predictions import Prediction
 
 @enforce_types
 @pytest.fixture(scope="session")
-def mock_ppss(tmpdir_factory):
+def _mock_ppss(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp("my_tmpdir")
-    ppss = _mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
     return ppss
 
 

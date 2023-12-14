@@ -90,13 +90,13 @@ def test_update_gql_iteratively(
     sample_daily_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
-    
+
     iterations = [
         ("2023-11-02_0:00", "2023-11-04_0:00", 2),
         ("2023-11-01_0:00", "2023-11-05_0:00", 3),
         ("2023-11-02_0:00", "2023-11-07_0:00", 5),
     ]
-    
+
     for st_timestr, fin_timestr, n_preds in iterations:
         _test_update_gql(
             mock_fetch_filtered_predictions,
