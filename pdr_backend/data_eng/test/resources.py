@@ -33,9 +33,9 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
+    pq_data_factory = OhlcvDataFactory(pp, ss)
     model_data_factory = ModelDataFactory(pp, ss)
-    return pp, ss, ohlcv_data_factory, model_data_factory
+    return pp, ss, pq_data_factory, model_data_factory
 
 
 @enforce_types
