@@ -120,7 +120,7 @@ class GQLDataFactory:
         """
 
         for k, record in self.record_config.items():
-            filename = self._gql_filename(k)
+            filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
             st_ut = self._calc_start_ut(filename)
@@ -167,7 +167,7 @@ class GQLDataFactory:
         file_utN = newest_ut(filename)
         return file_utN + 1000
 
-    def _load_gql_df(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
+    def _load_parquet(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
         """
         @arguments
           fin_ut -- finish timestamp
@@ -179,25 +179,25 @@ class GQLDataFactory:
         print("  Load parquet.")
         st_ut = self.ss.st_timestamp
 
-        gql_dfs: Dict[str, pl.DataFrame] = {}  # [gql_filename] : df
+        dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
 
         for k, record in self.record_config.items():
-            filename = self._gql_filename(k)
+            filename = self._parquet_filename(k)
             print(f"      filename={filename}")
 
             # load all data from file
-            parquet_df = pl.read_parquet(filename)
-            parquet_df = parquet_df.filter(
+            df = pl.read_parquet(filename)
+            df = df.filter(
                 (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
             )
 
             # postcondition
-            assert parquet_df.schema == record["schema"]
-            gql_dfs[k] = parquet_df
+            assert df.schema == record["schema"]
+            dfs[k] = df
 
-        return gql_dfs
+        return dfs
 
-    def _gql_filename(self, filename_str: str) -> str:
+    def _parquet_filename(self, filename_str: str) -> str:
         """
         @description
           Computes the lake-path for the parquet file.
@@ -208,16 +208,12 @@ class GQLDataFactory:
         @return
           parquet_filename -- name for parquet file.
         """
-        gql_dir = os.path.join(self.ss.parquet_dir, "gql")
-        if not os.path.exists(gql_dir):
-            os.makedirs(gql_dir)
-
         basename = f"{filename_str}.parquet"
-        filename = os.path.join(gql_dir, basename)
+        filename = os.path.join(self.ss.parquet_dir, basename)
         return filename
 
     @enforce_types
-    def _save_df(self, filename: str, df: pl.DataFrame):
+    def _save_parquet(self, filename: str, df: pl.DataFrame):
         """write to parquet file
         parquet only supports appending via the pyarrow engine
         """

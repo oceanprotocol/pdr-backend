@@ -142,7 +142,6 @@ def _test_update_gql(
     # setup: filename
     # everything will be inside the gql folder
     filename = gql_data_factory._parquet_filename(pdr_predictions_record)
-    assert "/gql/" in filename
     assert ".parquet" in filename
 
     fin_ut = timestr_to_ut(fin_timestr)
