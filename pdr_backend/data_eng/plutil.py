@@ -75,7 +75,7 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
 
     df = df.select(columns)
 
-    if os.path.exists(filename):  # "append" existing file
+    if os.path.exists(filename):  # append existing file
         cur_df = pl.read_parquet(filename)
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
@@ -108,7 +108,6 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
       Polars does not have an index. "timestamp" is a regular col and required for "datetime"
       (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
 
-      TO DO: Fix (1), save_rawohlcv_file already saves out dataframe.
       Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
     """
     # handle cols
