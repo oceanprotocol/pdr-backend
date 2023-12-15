@@ -7,11 +7,11 @@ from pdr_backend.util.networkutil import tx_call_params
 
 
 @enforce_types
-class ERC721Factory(BaseContract):
+class Erc721Factory(BaseContract):
     def __init__(self, web3_pp):
         address = get_address(web3_pp, "ERC721Factory")
         if not address:
-            raise ValueError("Cannot figure out ERC721Factory address")
+            raise ValueError("Cannot figure out Erc721Factory address")
         super().__init__(web3_pp, address, "ERC721Factory")
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):

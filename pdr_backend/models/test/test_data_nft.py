@@ -6,7 +6,7 @@ from eth_account import Account
 from web3.logs import DISCARD
 
 from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
 
@@ -26,7 +26,7 @@ def test_set_ddo(web3_pp, web3_config):
     owner = Account.from_key(  # pylint:disable=no-value-for-parameter
         private_key=private_key
     )
-    factory = ERC721Factory(web3_pp)
+    factory = Erc721Factory(web3_pp)
     ocean_address = get_address(web3_pp, "Ocean")
     fre_address = get_address(web3_pp, "FixedPrice")
 

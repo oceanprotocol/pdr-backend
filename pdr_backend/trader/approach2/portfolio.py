@@ -36,7 +36,7 @@ class Order:
         return None
 
 
-class MEXCOrder(Order):
+class MexcOrder(Order):
     def __init__(self, order: Dict):  # pylint: disable=useless-parent-delegation
         super().__init__(order)
 
@@ -56,7 +56,7 @@ class MEXCOrder(Order):
 
 def create_order(order: Dict, exchange: ccxt.Exchange) -> Order:
     if exchange in ("mexc"):
-        return MEXCOrder(order)
+        return MexcOrder(order)
     return Order(order)
 
 

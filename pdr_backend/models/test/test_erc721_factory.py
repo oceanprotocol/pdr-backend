@@ -1,12 +1,12 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.util.contract import get_address
 
 
 @enforce_types
-def test_ERC721Factory(web3_pp, web3_config):
-    factory = ERC721Factory(web3_pp)
+def test_Erc721Factory(web3_pp, web3_config):
+    factory = Erc721Factory(web3_pp)
     assert factory is not None
 
     ocean_address = get_address(web3_pp, "Ocean")
