@@ -3,7 +3,7 @@ from typing import Union
 from enforce_typing import enforce_types
 
 from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
 
@@ -31,7 +31,7 @@ def publish_asset(
     owner = web3_config.owner
     ocean_address = get_address(web3_pp, "Ocean")
     fre_address = get_address(web3_pp, "FixedPrice")
-    factory = ERC721Factory(web3_pp)
+    factory = Erc721Factory(web3_pp)
 
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
     trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
