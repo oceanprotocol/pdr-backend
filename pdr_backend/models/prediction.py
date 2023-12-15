@@ -1,7 +1,9 @@
 from typing import Union
+
 from enforce_typing import enforce_types
 
 
+@enforce_types
 class Prediction:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=redefined-builtin

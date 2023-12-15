@@ -11,6 +11,7 @@ from pdr_backend.util.constants import (
 )
 from pdr_backend.util.networkutil import (
     is_sapphire_network,
+    get_sapphire_postfix,
     send_encrypted_tx,
     tx_call_params,
     tx_gas_price,
@@ -24,6 +25,25 @@ def test_is_sapphire_network():
     assert not is_sapphire_network(0)
     assert is_sapphire_network(SAPPHIRE_TESTNET_CHAINID)
     assert is_sapphire_network(SAPPHIRE_MAINNET_CHAINID)
+
+
+@enforce_types
+def test_get_sapphire_postfix():
+    assert get_sapphire_postfix("sapphire-testnet"), "testnet"
+    assert get_sapphire_postfix("sapphire-mainnet"), "mainnet"
+
+    unwanteds = [
+        "oasis_saphire_testnet",
+        "saphire_mainnet",
+        "barge-pytest",
+        "barge-predictoor-bot",
+        "development",
+        "foo",
+        "",
+    ]
+    for unwanted in unwanteds:
+        with pytest.raises(ValueError):
+            assert get_sapphire_postfix(unwanted)
 
 
 @enforce_types

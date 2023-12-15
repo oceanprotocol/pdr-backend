@@ -4,23 +4,18 @@ from typing import Dict, Callable
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.timeutil import pretty_timestr, current_ut
-
 from pdr_backend.data_eng.plutil import (
     has_data,
     newest_ut,
 )
-
-from pdr_backend.util.subgraph_predictions import (
-    get_sapphire_postfix,
-    get_all_contract_ids_by_owner,
-)
-
 from pdr_backend.data_eng.table_pdr_predictions import (
     predictions_schema,
     get_pdr_predictions_df,
 )
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.util.subgraph_predictions import get_all_contract_ids_by_owner
+from pdr_backend.util.timeutil import pretty_timestr, current_ut
 
 
 @enforce_types

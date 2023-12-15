@@ -13,6 +13,16 @@ def is_sapphire_network(chain_id: int) -> bool:
 
 
 @enforce_types
+def get_sapphire_postfix(network: str) -> str:
+    if network == "sapphire-testnet":
+        return "testnet"
+    if network == "sapphire-mainnet":
+        return "mainnet"
+
+    raise ValueError(f"'{network}' is not valid name")
+
+
+@enforce_types
 def send_encrypted_tx(
     contract_instance,
     function_name,

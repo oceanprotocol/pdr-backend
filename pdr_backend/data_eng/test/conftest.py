@@ -1,14 +1,14 @@
 from typing import List
+
 from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.data_eng.model_factory import ModelFactory
-from pdr_backend.ppss.model_ss import ModelSS
 from pdr_backend.models.prediction import (
     Prediction,
     mock_prediction,
 )
-
+from pdr_backend.ppss.model_ss import ModelSS
 from pdr_backend.util.test_data import (
     sample_first_predictions,
     sample_second_predictions,

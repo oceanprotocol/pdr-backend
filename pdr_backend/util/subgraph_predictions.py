@@ -22,23 +22,6 @@ class FilterMode(Enum):
 
 
 @enforce_types
-def get_sapphire_postfix(network: str) -> str:
-    """
-    Returns the sapphire postfix based on the network name
-
-    Args:
-        network: the network string from ppss or the full network-string
-    """
-
-    if "main" in network:
-        return "mainnet"
-    if "test" in network:
-        return "testnet"
-
-    raise ValueError(network, "is not a valid network")
-
-
-@enforce_types
 def fetch_filtered_predictions(
     start_ts: int,
     end_ts: int,

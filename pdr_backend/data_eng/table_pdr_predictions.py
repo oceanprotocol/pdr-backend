@@ -4,12 +4,11 @@ from enforce_typing import enforce_types
 import polars as pl
 from polars import Utf8, Int64, Float64, Boolean
 
+from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.subgraph_predictions import (
-    get_sapphire_postfix,
     fetch_filtered_predictions,
     FilterMode,
 )
-
 from pdr_backend.util.timeutil import ms_to_seconds
 
 # RAW_PREDICTIONS_SCHEMA
