@@ -7,7 +7,6 @@ from pdr_backend.util.test_data import (
 )
 
 
-@patch("conftest.mock_prediction.Prediction")
 def test_mock_predictions():
     predictions = [
         mock_prediction(prediction_tuple)
@@ -17,5 +16,11 @@ def test_mock_predictions():
     assert len(predictions) == 2
     assert isinstance(predictions[0], Prediction)
     assert isinstance(predictions[1], Prediction)
-    assert predictions[0].id == "1"
-    assert predictions[1].id == "2"
+    assert (
+        predictions[0].id
+        == "ADA/USDT-5m-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    )
+    assert (
+        predictions[1].id
+        == "BTC/USDT-5m-1701589500-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    )
