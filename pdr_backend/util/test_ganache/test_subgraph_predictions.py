@@ -11,7 +11,7 @@ from pdr_backend.util.subgraph_predictions import (
 
 SAMPLE_PREDICTION = Prediction(
     # pylint: disable=line-too-long
-    id="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ID="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     pair="ADA/USDT",
     timeframe="5m",
     prediction=True,

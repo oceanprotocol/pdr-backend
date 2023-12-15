@@ -13,7 +13,7 @@ from pdr_backend.util.timeutil import ms_to_seconds
 
 # RAW_PREDICTIONS_SCHEMA
 predictions_schema = {
-    "id": Utf8,
+    "ID": Utf8,
     "pair": Utf8,
     "timeframe": Utf8,
     "prediction": Boolean,

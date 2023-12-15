@@ -154,7 +154,7 @@ def fetch_filtered_predictions(
                 continue
 
             prediction_obj = Prediction(
-                id=prediction["id"],
+                ID=prediction["id"],
                 pair=pair,
                 timeframe=timeframe,
                 prediction=predicted_value,

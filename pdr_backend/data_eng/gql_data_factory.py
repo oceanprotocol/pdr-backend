@@ -213,7 +213,7 @@ class GQLDataFactory:
             df = pl.concat([cur_df, df])
 
             # check for duplicates and throw error if any found
-            duplicate_rows = df.filter(pl.struct("id").is_duplicated())
+            duplicate_rows = df.filter(pl.struct("ID").is_duplicated())
             if len(duplicate_rows) > 0:
                 raise Exception(
                     f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}"

@@ -6,10 +6,9 @@ from enforce_typing import enforce_types
 @enforce_types
 class Prediction:
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=redefined-builtin
     def __init__(
         self,
-        id: str,
+        ID: str,
         pair: str,
         timeframe: str,
         prediction: Union[bool, None],  # prediction = subgraph.predicted_value
@@ -21,7 +20,7 @@ class Prediction:
         slot: int,  # slot/epoch timestamp
         user: str,
     ) -> None:
-        self.id = id
+        self.ID = ID
         self.pair = pair
         self.timeframe = timeframe
         self.prediction = prediction
@@ -53,9 +52,9 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         user,
     ) = prediction_tuple
 
-    _id = f"{pair_str}-{timeframe_str}-{slot}-{user}"
+    ID = f"{pair_str}-{timeframe_str}-{slot}-{user}"
     return Prediction(
-        id=_id,
+        ID=ID,
         pair=pair_str,
         timeframe=timeframe_str,
         prediction=prediction,
