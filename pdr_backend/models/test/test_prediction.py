@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from pdr_backend.models.prediction import mock_prediction, Prediction
 
 from pdr_backend.util.test_data import (
