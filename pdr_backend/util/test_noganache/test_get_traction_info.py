@@ -27,7 +27,7 @@ def test_get_traction_info_main_mainnet(
 
     PATH = "pdr_backend.util.get_traction_info"
     PATH2 = "pdr_backend.data_eng"
-    with (
+    with (  # pylint: disable=not-context-manager
         patch(f"{PATH}.get_traction_statistics", mock_traction_stat),
         patch(f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum),
         patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily),
