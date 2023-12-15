@@ -1,3 +1,4 @@
+from typing import List
 from enforce_typing import enforce_types
 import pytest
 
@@ -5,7 +6,13 @@ from pdr_backend.ppss.ppss import (
     mock_ppss,
 )
 
-from pdr_backend.util.subgraph_predictions import Prediction
+from pdr_backend.models.prediction import mock_prediction, Prediction
+
+from pdr_backend.util.test_data import (
+    sample_first_predictions,
+    sample_second_predictions,
+    sample_daily_predictions,
+)
 
 
 @enforce_types
@@ -18,202 +25,26 @@ def _mock_ppss(tmpdir_factory):
 
 @enforce_types
 @pytest.fixture(scope="session")
-def sample_first_predictions():
+def _sample_first_predictions() -> List[Prediction]:
     return [
-        Prediction(
-            id="1",
-            pair="ADA/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=False,
-            timestamp=1701503000,
-            source="binance",
-            payout=0.0,
-            slot=1701503100,
-            user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="2",
-            pair="BTC/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1701589400,
-            source="binance",
-            payout=0.0,
-            slot=1701589500,
-            user="0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
+        mock_prediction(prediction_tuple)
+        for prediction_tuple in sample_first_predictions
     ]
 
 
 @enforce_types
 @pytest.fixture(scope="session")
-def sample_second_predictions():
+def _sample_second_predictions() -> List[Prediction]:
     return [
-        Prediction(
-            id="3",
-            pair="ETH/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1701675800,
-            source="binance",
-            payout=0.0500,
-            slot=1701675900,
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="4",
-            pair="BTC/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=0.0500,
-            trueval=False,
-            timestamp=1701503100,
-            source="binance",
-            payout=0.0,
-            slot=1701503000,
-            user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="5",
-            pair="ADA/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1701589400,
-            source="binance",
-            payout=0.0500,
-            slot=1701589500,
-            user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="6",
-            pair="BNB/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1701675800,
-            source="kraken",
-            payout=0.0500,
-            slot=1701675900,
-            user="0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="7",
-            pair="ETH/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=None,
-            trueval=False,
-            timestamp=1701589400,
-            source="binance",
-            payout=0.0,
-            slot=1701589500,
-            user="0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="8",
-            pair="ETH/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1701675800,
-            source="binance",
-            payout=0.0500,
-            slot=1701675900,
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
+        mock_prediction(prediction_tuple)
+        for prediction_tuple in sample_second_predictions
     ]
 
 
 @enforce_types
 @pytest.fixture(scope="session")
-def sample_daily_predictions():
+def _sample_daily_predictions() -> List[Prediction]:
     return [
-        Prediction(
-            id="9",
-            pair="ETH/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1698865200,
-            source="binance",
-            payout=0.0500,
-            slot=1698865200,  # Nov 01
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="10",
-            pair="BTC/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=0.0500,
-            trueval=False,
-            timestamp=1698951600,
-            source="binance",
-            payout=0.0,
-            slot=1698951600,  # Nov 02
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="11",
-            pair="ADA/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1699038000,
-            source="binance",
-            payout=0.0500,
-            slot=1699038000,  # Nov 03
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="12",
-            pair="BNB/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1699124400,
-            source="kraken",
-            payout=0.0500,
-            slot=1699124400,  # Nov 04
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="13",
-            pair="ETH/USDT",
-            timeframe="1h",
-            prediction=True,
-            stake=None,
-            trueval=False,
-            timestamp=1699214400,
-            source="binance",
-            payout=0.0,
-            slot=1701589500,  # Nov 05
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
-        Prediction(
-            id="14",
-            pair="ETH/USDT",
-            timeframe="5m",
-            prediction=True,
-            stake=0.0500,
-            trueval=True,
-            timestamp=1699300800,
-            source="binance",
-            payout=0.0500,
-            slot=1699300800,  # Nov 06
-            user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-        ),
+        mock_prediction(prediction_tuple)
+        for prediction_tuple in sample_daily_predictions
     ]

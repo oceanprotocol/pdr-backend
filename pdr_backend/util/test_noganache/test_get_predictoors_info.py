@@ -1,18 +1,7 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
-
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
-
-
-@pytest.fixture(name="mock_ppss_")
-def mock_ppss(tmpdir):
-    s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
-    ppss.web3_pp = Mock()
-    return ppss
 
 
 @patch("pdr_backend.util.get_predictoors_info.fetch_filtered_predictions")
@@ -22,13 +11,12 @@ def test_get_predictoors_info_main_mainnet(
     mock_get_cli_statistics,
     mock_save_prediction_csv,
     mock_fetch_filtered_predictions,
-    mock_ppss_,
+    _mock_ppss,
 ):
-    mock_ppss_.web3_pp.network = "main"
     mock_fetch_filtered_predictions.return_value = []
 
     get_predictoors_info_main(
-        mock_ppss_,
+        _mock_ppss,
         "0x123",
         "2023-01-01",
         "2023-01-02",

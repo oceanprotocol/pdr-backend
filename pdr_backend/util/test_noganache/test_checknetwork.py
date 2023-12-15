@@ -3,12 +3,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from pdr_backend.ppss.ppss import (
-    mock_ppss,
-)
-
-from pdr_backend.ppss.web3_pp import mock_web3_pp
-
 from pdr_backend.util.check_network import (
     WEEK,
     check_dfbuyer,
@@ -119,6 +113,7 @@ def test_check_network_main(
     mock_token,
     mock_query_subgraph,
     mock_get_opf_addresses,
+    _mock_ppss,
 ):
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
@@ -127,11 +122,6 @@ def test_check_network_main(
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
     mock_token.return_value.balanceOf.return_value = 1000 * 1e18
 
-    feed_str = "binance c ADA/USDT"
-    network = "development"
-    _mock_ppss = mock_ppss("5m", [feed_str], network)
-    _mock_ppss.web3_pp = mock_web3_pp(network)
-
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth.chain_id = 1
     mock_w3.eth.get_balance.return_value = 1000 * 1e18
@@ -139,6 +129,6 @@ def test_check_network_main(
     check_network_main(_mock_ppss, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with(1)
-    assert mock_query_subgraph.call_count == 2
+    assert mock_query_subgraph.call_count == 1
     mock_token.assert_called()
     _mock_ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()

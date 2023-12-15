@@ -18,9 +18,9 @@ from pdr_backend.util.predictoor_stats import (
 
 
 @enforce_types
-def test_aggregate_prediction_statistics(sample_first_predictions):
+def test_aggregate_prediction_statistics(_sample_first_predictions):
     stats, correct_predictions = aggregate_prediction_statistics(
-        sample_first_predictions
+        _sample_first_predictions
     )
     assert isinstance(stats, dict)
     assert "pair_timeframe" in stats
@@ -29,9 +29,9 @@ def test_aggregate_prediction_statistics(sample_first_predictions):
 
 
 @enforce_types
-def test_get_endpoint_statistics(sample_first_predictions):
+def test_get_endpoint_statistics(_sample_first_predictions):
     accuracy, pair_timeframe_stats, predictoor_stats = get_endpoint_statistics(
-        sample_first_predictions
+        _sample_first_predictions
     )
     assert isinstance(accuracy, float)
     assert isinstance(pair_timeframe_stats, List)  # List[PairTimeframeStat]
@@ -61,8 +61,8 @@ def test_get_endpoint_statistics(sample_first_predictions):
 
 
 @enforce_types
-def test_get_cli_statistics(capsys, sample_first_predictions):
-    get_cli_statistics(sample_first_predictions)
+def test_get_cli_statistics(capsys, _sample_first_predictions):
+    get_cli_statistics(_sample_first_predictions)
     captured = capsys.readouterr()
     output = captured.out
     assert "Overall Accuracy" in output
@@ -73,9 +73,9 @@ def test_get_cli_statistics(capsys, sample_first_predictions):
 @enforce_types
 @patch("matplotlib.pyplot.savefig")
 def test_get_traction_statistics(
-    mock_savefig, sample_first_predictions, sample_second_predictions
+    mock_savefig, _sample_first_predictions, _sample_second_predictions
 ):
-    predictions = sample_first_predictions + sample_second_predictions
+    predictions = _sample_first_predictions + _sample_second_predictions
 
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in predictions]
@@ -96,8 +96,8 @@ def test_get_traction_statistics(
 
 
 @enforce_types
-def test_get_slot_statistics(sample_first_predictions, sample_second_predictions):
-    predictions = sample_first_predictions + sample_second_predictions
+def test_get_slot_statistics(_sample_first_predictions, _sample_second_predictions):
+    predictions = _sample_first_predictions + _sample_second_predictions
 
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in predictions]
@@ -127,9 +127,9 @@ def test_get_slot_statistics(sample_first_predictions, sample_second_predictions
 @enforce_types
 @patch("matplotlib.pyplot.savefig")
 def test_plot_slot_statistics(
-    mock_savefig, sample_first_predictions, sample_second_predictions
+    mock_savefig, _sample_first_predictions, _sample_second_predictions
 ):
-    predictions = sample_first_predictions + sample_second_predictions
+    predictions = _sample_first_predictions + _sample_second_predictions
 
     # Get all predictions into a dataframe
     preds_dicts = [pred.__dict__ for pred in predictions]

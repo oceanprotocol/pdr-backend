@@ -21,10 +21,10 @@ def test_get_traction_info_main_mainnet(
     mock_fetch_filtered_predictions,
     mock_get_traction_statistics,
     _mock_ppss,
-    sample_daily_predictions,
+    _sample_daily_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
-    mock_fetch_filtered_predictions.return_value = sample_daily_predictions
+    mock_fetch_filtered_predictions.return_value = _sample_daily_predictions
 
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
@@ -49,7 +49,7 @@ def test_get_traction_info_main_mainnet(
 
     # Get all predictions into a dataframe
     preds = [
-        x for x in sample_daily_predictions if st_ut_sec <= x.timestamp <= fin_ut_sec
+        x for x in _sample_daily_predictions if st_ut_sec <= x.timestamp <= fin_ut_sec
     ]
     preds = [pred.__dict__ for pred in preds]
     preds_df = pl.DataFrame(preds)

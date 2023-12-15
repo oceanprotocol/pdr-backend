@@ -15,10 +15,10 @@ def test_get_predictions_info_main_mainnet(
     mock_get_all_contract_ids_by_owner,
     mock_get_cli_statistics,
     _mock_ppss,
-    sample_first_predictions,
+    _sample_first_predictions,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123", "0x234"]
-    mock_fetch_filtered_predictions.return_value = sample_first_predictions
+    mock_fetch_filtered_predictions.return_value = _sample_first_predictions
 
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
@@ -36,4 +36,4 @@ def test_get_predictions_info_main_mainnet(
         payout_only=True,
         trueval_only=True,
     )
-    mock_get_cli_statistics.assert_called_with(sample_first_predictions)
+    mock_get_cli_statistics.assert_called_with(_sample_first_predictions)
