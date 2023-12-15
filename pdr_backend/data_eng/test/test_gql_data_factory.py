@@ -238,9 +238,9 @@ def test_get_gql_dfs_calls(
     _sample_daily_predictions,
     monkeypatch,
 ):
+    """Test core DataFactory functions are being called"""
     del_network_override(monkeypatch)
 
-    """Test core DataFactory functions are being called"""
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
 

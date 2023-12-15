@@ -273,7 +273,8 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_contract_func = Mock()
     mock_contract_func.return_value = _mock_pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.ppss.web3_pp.PredictoorContract", mock_contract_func
+        "pdr_backend.models.predictoor_contract.PredictoorContract",
+        mock_contract_func,
     )
 
     def advance_func(*args, **kwargs):  # pylint: disable=unused-argument
