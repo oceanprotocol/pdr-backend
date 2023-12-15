@@ -1,6 +1,6 @@
 from os import getenv
 import random
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -8,10 +8,6 @@ from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.models.predictoor_contract import (
-    mock_predictoor_contract,
-    PredictoorContract,
-)
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
@@ -111,7 +107,7 @@ class Web3PP(StrMixin):
         return feeds
 
     @enforce_types
-    def get_contracts(self, feed_addrs: List[str]) -> Dict[str, PredictoorContract]:
+    def get_contracts(self, feed_addrs: List[str]) -> Dict[str, Any]:
         """
         @description
           Get contracts for specified feeds
@@ -122,6 +118,10 @@ class Web3PP(StrMixin):
         @return
           contracts -- dict of [feed_addr] : PredictoorContract
         """
+        from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+            PredictoorContract,
+        )
+
         contracts = {}
         for addr in feed_addrs:
             contracts[addr] = PredictoorContract(self, addr)
@@ -179,6 +179,10 @@ def mock_web3_pp(network: str) -> Web3PP:
 
 @enforce_types
 def inplace_mock_feedgetters(web3_pp, feed: Feed):
+    from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+        mock_predictoor_contract,
+    )
+
     inplace_mock_query_feed_contracts(web3_pp, feed)
 
     c = mock_predictoor_contract(feed.address)
@@ -192,9 +196,14 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: Feed):
 
 
 @enforce_types
-def inplace_mock_get_contracts(web3_pp: Web3PP, feed: Feed, c: PredictoorContract):
+def inplace_mock_get_contracts(web3_pp: Web3PP, feed: Feed, predictoor_contract):
+    from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+        PredictoorContract,
+    )
+
+    assert isinstance(predictoor_contract, PredictoorContract)
     web3_pp.get_contracts = Mock()
-    web3_pp.get_contracts.return_value = {feed.address: c}
+    web3_pp.get_contracts.return_value = {feed.address: predictoor_contract}
 
 
 @enforce_types
