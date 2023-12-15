@@ -1,65 +1,75 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 import polars as pl
 
+from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.get_traction_info import get_traction_info_main
 from pdr_backend.util.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
-@patch("pdr_backend.util.get_traction_info.get_traction_statistics")
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.util.get_traction_info.plot_traction_cum_sum_statistics")
-@patch("pdr_backend.util.get_traction_info.plot_traction_daily_statistics")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
 def test_get_traction_info_main_mainnet(
-    mock_get_all_contract_ids_by_owner,
-    mock_plot_traction_daily_statistics,
-    mock_plot_traction_cum_sum_statistics,
-    mock_fetch_filtered_predictions,
-    mock_get_traction_statistics,
-    _mock_ppss,
     _sample_daily_predictions,
+    tmpdir,
+    monkeypatch,
 ):
-    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
-    mock_fetch_filtered_predictions.return_value = _sample_daily_predictions
+    del_network_override(monkeypatch)
+    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
 
-    st_timestr = "2023-11-02"
-    fin_timestr = "2023-11-05"
+    mock_traction_stat = Mock()
+    mock_plot_cumsum = Mock()
+    mock_plot_daily = Mock()
+    mock_getids = Mock(return_value=["0x123"])
+    mock_fetch = Mock(return_value=_sample_daily_predictions)
 
-    get_traction_info_main(_mock_ppss, st_timestr, fin_timestr, "parquet_data/")
+    PATH = "pdr_backend.util.get_traction_info"
+    PATH2 = "pdr_backend.data_eng"
+    with (
+        patch(f"{PATH}.get_traction_statistics", mock_traction_stat),
+        patch(f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum),
+        patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily),
+        patch(f"{PATH2}.gql_data_factory.get_all_contract_ids_by_owner", mock_getids),
+        patch(f"{PATH2}.table_pdr_predictions.fetch_filtered_predictions", mock_fetch),
+    ):
+        st_timestr = "2023-11-02"
+        fin_timestr = "2023-11-05"
 
-    mock_fetch_filtered_predictions.assert_called_with(
-        1698883200,
-        1699142400,
-        ["0x123"],
-        "mainnet",
-        FilterMode.CONTRACT_TS,
-        payout_only=False,
-        trueval_only=False,
-    )
+        get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
 
-    # calculate ms locally so we can filter raw Predictions
-    st_ut = timestr_to_ut(st_timestr)
-    fin_ut = timestr_to_ut(fin_timestr)
-    st_ut_sec = st_ut // 1000
-    fin_ut_sec = fin_ut // 1000
+        mock_fetch.assert_called_with(
+            1698883200,
+            1699142400,
+            ["0x123"],
+            "mainnet",
+            FilterMode.CONTRACT_TS,
+            payout_only=False,
+            trueval_only=False,
+        )
 
-    # Get all predictions into a dataframe
-    preds = [
-        x for x in _sample_daily_predictions if st_ut_sec <= x.timestamp <= fin_ut_sec
-    ]
-    preds = [pred.__dict__ for pred in preds]
-    preds_df = pl.DataFrame(preds)
-    preds_df = preds_df.with_columns(
-        [
-            pl.col("timestamp").mul(1000).alias("timestamp"),
+        # calculate ms locally so we can filter raw Predictions
+        st_ut = timestr_to_ut(st_timestr)
+        fin_ut = timestr_to_ut(fin_timestr)
+        st_ut_sec = st_ut // 1000
+        fin_ut_sec = fin_ut // 1000
+
+        # Get all predictions into a dataframe
+        preds = [
+            x
+            for x in _sample_daily_predictions
+            if st_ut_sec <= x.timestamp <= fin_ut_sec
         ]
-    )
+        preds = [pred.__dict__ for pred in preds]
+        preds_df = pl.DataFrame(preds)
+        preds_df = preds_df.with_columns(
+            [
+                pl.col("timestamp").mul(1000).alias("timestamp"),
+            ]
+        )
 
-    # Assert calls and values
-    pl.DataFrame.equals(mock_get_traction_statistics.call_args, preds_df)
-    mock_plot_traction_cum_sum_statistics.assert_called()
-    mock_plot_traction_daily_statistics.assert_called()
+        # Assert calls and values
+        pl.DataFrame.equals(mock_traction_stat.call_args, preds_df)
+        mock_plot_cumsum.assert_called()
+        mock_plot_daily.assert_called()

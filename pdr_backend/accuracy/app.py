@@ -77,7 +77,10 @@ def save_statistics_to_file():
         "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
     )
 
-    contract_information = fetch_contract_id_and_spe(contract_addresses, network_param)
+    contracts_list_unfiltered = fetch_contract_id_and_spe(
+        contract_addresses,
+        network_param,
+    )
 
     while True:
         try:
@@ -85,13 +88,13 @@ def save_statistics_to_file():
 
             for statistic_type in statistic_types:
                 seconds_per_epoch = statistic_type["seconds_per_epoch"]
-                contracts = list(
+                contracts_list = list(
                     filter(
                         lambda item, spe=seconds_per_epoch: int(
                             item["seconds_per_epoch"]
                         )
                         == spe,
-                        contract_information,
+                        contracts_list_unfiltered,
                     )
                 )
 
@@ -99,10 +102,14 @@ def save_statistics_to_file():
                     statistic_type["alias"]
                 )
 
-                contract_ids = [contract["id"] for contract in contracts]
-                # Get statistics for all contracts
+                contract_ids = [contract_item["ID"] for contract_item in contracts_list]
+
                 statistics = calculate_statistics_for_all_assets(
-                    contract_ids, contracts, start_ts_param, end_ts_param, network_param
+                    contract_ids,
+                    contracts_list,
+                    start_ts_param,
+                    end_ts_param,
+                    network_param,
                 )
 
                 output.append(

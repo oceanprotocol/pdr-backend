@@ -34,8 +34,10 @@ def print_stats(contract_dict, field_name, threshold=0.9):
 def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
     ts_now = time.time()
     ts_start_time = int((ts_now // WEEK) * WEEK)
+
+    contracts_sg_dict = contract_query_result["data"]["predictContracts"]
     contract_addresses = [
-        i["id"] for i in contract_query_result["data"]["predictContracts"]
+        contract_sg_dict["id"] for contract_sg_dict in contracts_sg_dict
     ]
     sofar = get_consume_so_far_per_contract(
         subgraph_url,

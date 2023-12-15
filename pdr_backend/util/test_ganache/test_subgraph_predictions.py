@@ -144,15 +144,18 @@ def test_get_all_contract_ids_by_owner(
 def test_fetch_contract_id_and_spe(
     mock_query_subgraph,
 ):  # pylint: disable=unused-argument
-    contract_details = fetch_contract_id_and_spe(
+    contracts_list = fetch_contract_id_and_spe(
         contract_addresses=["contract1", "contract2"], network="mainnet"
     )
 
-    assert len(contract_details) == 2
-    assert contract_details[0]["id"] == "contract1"
-    assert contract_details[0]["seconds_per_epoch"] == 300
-    assert contract_details[0]["name"] == "token1"
-    assert contract_details[1]["id"] == "contract2"
-    assert contract_details[1]["seconds_per_epoch"] == 600
-    assert contract_details[1]["name"] == "token2"
+    assert len(contracts_list) == 2
+
+    c0, c1 = contracts_list  # pylint: disable=unbalanced-tuple-unpacking
+    assert c0["ID"] == "contract1"
+    assert c0["seconds_per_epoch"] == 300
+    assert c0["name"] == "token1"
+    assert c1["ID"] == "contract2"
+    assert c1["seconds_per_epoch"] == 600
+    assert c1["name"] == "token2"
+
     mock_query_subgraph.assert_called_once()

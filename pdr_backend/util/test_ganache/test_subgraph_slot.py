@@ -17,9 +17,9 @@ from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
-    id="1-12345",
+    ID="1-12345",
     slot="12345",
-    trueValues=[{"id": "1", "trueValue": True}],
+    trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
 )
@@ -39,9 +39,9 @@ def test_get_predict_slots_query():
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
-    id="0xAsset-12345",
+    ID="0xAsset-12345",
     slot="12345",
-    trueValues=[{"id": "1", "trueValue": True}],
+    trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
 )
@@ -89,7 +89,7 @@ def test_get_slots(mock_query_subgraph):
     # Verify that the slots contain instances of PredictSlot
     assert isinstance(result_slots[0], PredictSlot)
     # Verify the first slot's data matches the sample
-    assert result_slots[0].id == "0xAsset-12345"
+    assert result_slots[0].ID == "0xAsset-12345"
 
 
 @enforce_types
@@ -140,23 +140,23 @@ def test_aggregate_statistics():
 @enforce_types
 @patch("pdr_backend.util.subgraph_slot.fetch_slots_for_all_assets")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
-    # Set up the mock to return a predetermined value
+    # Mocks
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
-    # Contracts List
-    contracts: List[ContractIdAndSPE] = [
-        {"id": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
+    contracts_list: List[ContractIdAndSPE] = [
+        {"ID": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
     ]
-    # Test the calculate_statistics_for_all_assets function
+
+    # Main work
     statistics = calculate_statistics_for_all_assets(
         asset_ids=["0xAsset"],
-        contracts=contracts,
+        contracts_list=contracts_list,
         start_ts_param=1000,
         end_ts_param=2000,
         network="mainnet",
     )
-    # Verify that the statistics are calculated as expected
+
+    # Verify
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
-    # Verify that the mock was called as expected
     mock_fetch_slots.assert_called_once_with(["0xAsset"], 1000, 2000, "mainnet")
 
 
@@ -175,6 +175,6 @@ def test_fetch_slots_for_all_assets(mock_query_subgraph):
     assert "0xAsset" in result
     assert all(isinstance(slot, PredictSlot) for slot in result["0xAsset"])
     assert len(result["0xAsset"]) == 1
-    assert result["0xAsset"][0].id == "0xAsset-12345"
+    assert result["0xAsset"][0].ID == "0xAsset-12345"
     # Verify that the mock was called
     mock_query_subgraph.assert_called()

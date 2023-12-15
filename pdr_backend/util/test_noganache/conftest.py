@@ -2,12 +2,8 @@ from typing import List
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.ppss.ppss import (
-    mock_ppss,
-)
-
 from pdr_backend.models.prediction import mock_prediction, Prediction
-
+from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.test_data import (
     sample_first_predictions,
     sample_second_predictions,
