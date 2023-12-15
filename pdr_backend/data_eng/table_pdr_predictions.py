@@ -81,4 +81,9 @@ def get_pdr_predictions_df(
     predictions_df = _object_list_to_df(predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
+    # cull any records outside of our time range and sort them by timestamp
+    predictions_df = predictions_df.filter(
+        pl.col("timestamp").is_between(st_ut, fin_ut)
+    ).sort("timestamp")
+
     return predictions_df

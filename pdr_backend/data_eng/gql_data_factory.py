@@ -38,19 +38,16 @@ class GQLDataFactory:
 
     def __init__(self, ppss: PPSS):
         self.ppss = ppss
-
-        # Method 1: Cull anything returned outside st_ut, fin_ut
-        self.debug_duplicate = False
-
-        network = get_sapphire_postfix(ppss.web3_pp.network)
-
+        
         # filter by feed contract address
+        network = get_sapphire_postfix(ppss.web3_pp.network)
         contract_list = get_all_contract_ids_by_owner(
             owner_address=self.ppss.web3_pp.owner_addrs,
             network=network,
         )
         contract_list = [f.lower() for f in contract_list]
 
+        # configure all tables that will be recorded onto lake
         self.record_config = {
             "pdr_predictions": {
                 "fetch_fn": get_pdr_predictions_df,
@@ -125,10 +122,11 @@ class GQLDataFactory:
             df = do_fetch(self.ppss.web3_pp.network, st_ut, fin_ut, record["config"])
 
             # postcondition
-            assert df.schema == record["schema"]
+            if len(df) > 0:
+                assert df.schema == record["schema"]
 
-            # save to parquet
-            self._save_parquet(filename, df)
+                # save to parquet
+                self._save_parquet(filename, df)
 
     def _calc_start_ut(self, filename: str) -> int:
         """
@@ -217,33 +215,14 @@ class GQLDataFactory:
 
         if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
-
-            if self.debug_duplicate is True:
-                print(">>> Existing rows")
-                print(f"HEAD: {cur_df.head(2)}")
-                print(f"TAIL: {cur_df.tail(2)}")
-
-                print(">>> Appending rows")
-                print(f"HEAD: {df.head(2)}")
-                print(f"TAIL: {df.tail(2)}")
-
             df = pl.concat([cur_df, df])
-            df.write_parquet(filename)
-
+            
+            # check for duplicates and throw error if any found
             duplicate_rows = df.filter(pl.struct("id").is_duplicated())
-            if len(duplicate_rows) > 0 and self.debug_duplicate is True:
-                print(f">>>> Duplicate rows found. {len(duplicate_rows)} rows:")
-                print(f"HEAD: {duplicate_rows.head(2)}")
-                print(f"TAIL: {duplicate_rows.tail(2)}")
+            if len(duplicate_rows) > 0:
+                raise Exception(f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}")
 
-                # log duplicate rows to log file
-                log_filename = "debug.log"
-                with open(log_filename, "a") as f:
-                    f.write(
-                        f">>>>>>>> Duplicate rows found. {len(duplicate_rows)} rows:"
-                    )
-                    f.write(str(duplicate_rows))
-
+            df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")
         else:  # write new file
