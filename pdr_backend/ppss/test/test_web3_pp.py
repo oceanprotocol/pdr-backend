@@ -147,7 +147,10 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
         m.contract_address = feed.address
         return m
 
-    with patch("pdr_backend.ppss.web3_pp.PredictoorContract", _mock_contract):
+    with patch(
+        "pdr_backend.models.predictoor_contract.PredictoorContract",
+        _mock_contract,
+    ):
         contracts = web3_pp.get_contracts([feed.address])
     assert list(contracts.keys()) == [feed.address]
     assert contracts[feed.address].contract_address == feed.address

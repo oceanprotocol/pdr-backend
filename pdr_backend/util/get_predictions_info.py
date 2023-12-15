@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.csvs import save_analysis_csv
+from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.predictoor_stats import get_cli_statistics
 from pdr_backend.util.subgraph_predictions import (
     get_all_contract_ids_by_owner,
@@ -21,14 +22,7 @@ def get_predictions_info_main(
     end_timestr: str,
     pq_dir: str,
 ):
-    # get network
-    if "main" in ppss.web3_pp.network:
-        network = "mainnet"
-    elif "test" in ppss.web3_pp.network:
-        network = "testnet"
-    else:
-        raise ValueError(ppss.web3_pp.network)
-
+    network = get_sapphire_postfix(ppss.web3_pp.network)
     start_ut: int = ms_to_seconds(timestr_to_ut(start_timestr))
     end_ut: int = ms_to_seconds(timestr_to_ut(end_timestr))
 

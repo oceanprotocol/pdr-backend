@@ -9,7 +9,7 @@ from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
 
 @dataclass
 class PredictSlot:
-    id: str
+    ID: str
     slot: str
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
@@ -165,7 +165,7 @@ def fetch_slots_for_all_assets(
 
     slots_by_asset: Dict[str, List[PredictSlot]] = {}
     for slot in all_slots:
-        slot_id = slot.id
+        slot_id = slot.ID
         # split the id to get the asset id
         asset_id = slot_id.split("-")[0]
         if asset_id not in slots_by_asset:
@@ -228,7 +228,7 @@ def process_single_slot(
         return None
 
     # split the id to get the slot timestamp
-    timestamp = int(slot.id.split("-")[1])  # Using dot notation for attribute access
+    timestamp = int(slot.ID.split("-")[1])  # Using dot notation for attribute access
 
     if (
         end_of_previous_day_timestamp - SECONDS_IN_A_DAY
@@ -244,7 +244,7 @@ def process_single_slot(
     )
 
     if prediction_result is None:
-        print("Prediction result is None for slot: ", slot.id)
+        print("Prediction result is None for slot: ", slot.ID)
         return (
             staked_yesterday,
             staked_today,
@@ -308,7 +308,7 @@ def aggregate_statistics(
 @enforce_types
 def calculate_statistics_for_all_assets(
     asset_ids: List[str],
-    contracts: List[ContractIdAndSPE],
+    contracts_list: List[ContractIdAndSPE],
     start_ts_param: int,
     end_ts_param: int,
     network: str = "mainnet",
@@ -346,15 +346,20 @@ def calculate_statistics_for_all_assets(
         )
 
         # filter contracts to get the contract with the current asset id
-        contract = next(
-            (contract for contract in contracts if contract["id"] == asset_id),
+        contract_item = next(
+            (
+                contract_item
+                for contract_item in contracts_list
+                if contract_item["ID"] == asset_id
+            ),
             None,
         )
 
         overall_stats[asset_id] = {
-            "token_name": contract["name"] if contract else None,
+            "token_name": contract_item["name"] if contract_item else None,
             "average_accuracy": average_accuracy,
             "total_staked_yesterday": staked_yesterday,
             "total_staked_today": staked_today,
         }
+
     return overall_stats

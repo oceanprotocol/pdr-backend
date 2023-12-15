@@ -9,7 +9,7 @@ from pdr_backend.util.networkutil import get_subgraph_url
 
 
 class ContractIdAndSPE(TypedDict):
-    id: str
+    ID: str
     seconds_per_epoch: int
     name: str
 
@@ -18,6 +18,7 @@ class FilterMode(Enum):
     NONE = 0
     CONTRACT = 1
     PREDICTOOR = 2
+    CONTRACT_TS = 3
 
 
 @enforce_types
@@ -67,7 +68,9 @@ def fetch_filtered_predictions(
 
     # pylint: disable=line-too-long
     if filter_mode == FilterMode.NONE:
-        where_clause = f", where: {{slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
+    elif filter_mode == FilterMode.CONTRACT_TS:
+        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
     elif filter_mode == FilterMode.CONTRACT:
         where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
     elif filter_mode == FilterMode.PREDICTOOR:
@@ -123,35 +126,37 @@ def fetch_filtered_predictions(
         if len(data) == 0:
             break
 
-        for prediction in data:
-            info725 = prediction["slot"]["predictContract"]["token"]["nft"]["nftData"]
+        for prediction_sg_dict in data:
+            info725 = prediction_sg_dict["slot"]["predictContract"]["token"]["nft"][
+                "nftData"
+            ]
             info = info725_to_info(info725)
             pair = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
-            timestamp = prediction["timestamp"]
-            slot = prediction["slot"]["slot"]
-            user = prediction["user"]["id"]
+            timestamp = prediction_sg_dict["timestamp"]
+            slot = prediction_sg_dict["slot"]["slot"]
+            user = prediction_sg_dict["user"]["id"]
 
             trueval = None
             payout = None
             predicted_value = None
             stake = None
 
-            if payout_only is True and prediction["payout"] is None:
+            if payout_only is True and prediction_sg_dict["payout"] is None:
                 continue
 
-            if not prediction["payout"] is None:
-                stake = float(prediction["stake"])
-                trueval = prediction["payout"]["trueValue"]
-                predicted_value = prediction["payout"]["predictedValue"]
-                payout = float(prediction["payout"]["payout"])
+            if not prediction_sg_dict["payout"] is None:
+                stake = float(prediction_sg_dict["stake"])
+                trueval = prediction_sg_dict["payout"]["trueValue"]
+                predicted_value = prediction_sg_dict["payout"]["predictedValue"]
+                payout = float(prediction_sg_dict["payout"]["payout"])
 
             if trueval_only is True and trueval is None:
                 continue
 
-            prediction_obj = Prediction(
-                id=prediction["id"],
+            prediction = Prediction(
+                ID=prediction_sg_dict["id"],
                 pair=pair,
                 timeframe=timeframe,
                 prediction=predicted_value,
@@ -163,7 +168,7 @@ def fetch_filtered_predictions(
                 slot=slot,
                 user=user,
             )
-            predictions.append(prediction_obj)
+            predictions.append(prediction)
 
     return predictions
 
@@ -227,21 +232,17 @@ def fetch_contract_id_and_spe(
     contract_addresses: List[str], network: str
 ) -> List[ContractIdAndSPE]:
     """
-    This function queries a GraphQL endpoint to retrieve contract details such as
-    the contract ID and seconds per epoch for each contract address provided.
-    It supports querying both mainnet and testnet networks.
+    @description
+      Query a GraphQL endpoint to retrieve details of contracts, like
+      contract ID and seconds per epoch.
 
-    Args:
-        contract_addresses (List[str]): A list of contract addresses to query.
-        network (str): The blockchain network to query ('mainnet' or 'testnet').
+    @arguments
+        contract_addresses - contract addresses to query
+        network - where to query. Eg 'mainnet' or 'testnet'
 
-    Raises:
-        Exception: If the network is not 'mainnet' or 'testnet', or if no data is returned.
-
-    Returns:
-        List[ContractDetail]: A list of dictionaries containing contract details.
+    @return
+        contracts_list - where each item has contract details
     """
-
     if network not in ("mainnet", "testnet"):
         raise Exception("Invalid network, pick mainnet or testnet")
 
@@ -268,15 +269,15 @@ def fetch_contract_id_and_spe(
     if "data" not in result:
         raise Exception("Error fetching contracts: No data returned")
 
-    # Parse the results and construct ContractDetail objects
-    contract_data = result["data"]["predictContracts"]
-    contracts: List[ContractIdAndSPE] = [
-        {
-            "id": contract["id"],
-            "seconds_per_epoch": contract["secondsPerEpoch"],
-            "name": contract["token"]["name"],
-        }
-        for contract in contract_data
-    ]
+    contracts_sg_dict = result["data"]["predictContracts"]
 
-    return contracts
+    contracts_list: List[ContractIdAndSPE] = []
+    for contract_sg_dict in contracts_sg_dict:
+        contract_item: ContractIdAndSPE = {
+            "ID": contract_sg_dict["id"],
+            "seconds_per_epoch": contract_sg_dict["secondsPerEpoch"],
+            "name": contract_sg_dict["token"]["name"],
+        }
+        contracts_list.append(contract_item)
+
+    return contracts_list

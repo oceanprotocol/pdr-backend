@@ -200,13 +200,7 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
 
 
 @enforce_types
-def get_traction_statistics(
-    all_predictions: List[Prediction],
-) -> pl.DataFrame:
-    # Get all predictions into a dataframe
-    preds_dicts = [pred.__dict__ for pred in all_predictions]
-    preds_df = pl.DataFrame(preds_dicts)
-
+def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
     # Calculate predictoor traction statistics
     # Predictoor addresses are aggregated historically
     stats_df = (
@@ -287,7 +281,7 @@ def plot_traction_cum_sum_statistics(stats_df: pl.DataFrame, pq_dir: str) -> Non
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
     # draw cum_unique_predictoors
-    chart_path = os.path.join(charts_dir, "cum_daily_unique_predictoors.png")
+    chart_path = os.path.join(charts_dir, "daily_cumulative_unique_predictoors.png")
     plt.figure(figsize=(10, 6))
     plt.plot(
         stats_df["datetime"].to_pandas(),
@@ -306,13 +300,7 @@ def plot_traction_cum_sum_statistics(stats_df: pl.DataFrame, pq_dir: str) -> Non
 
 
 @enforce_types
-def get_slot_statistics(
-    all_predictions: List[Prediction],
-) -> pl.DataFrame:
-    # Get all predictions into a dataframe
-    preds_dicts = [pred.__dict__ for pred in all_predictions]
-    preds_df = pl.DataFrame(preds_dicts)
-
+def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
     # Create a <pair-timeframe-slot> key to group predictions
     slots_df = (
         preds_df.with_columns(
@@ -409,7 +397,7 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
     # draw daily predictoor stake in $OCEAN
-    chart_path = os.path.join(charts_dir, "daily_slot_average_stake.png")
+    chart_path = os.path.join(charts_dir, "daily_average_stake.png")
     plt.figure(figsize=(10, 6))
     plt.plot(
         slots_daily_df["datetime"].to_pandas(),
@@ -419,7 +407,7 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     )
     plt.xlabel("Date")
     plt.ylabel("Average $OCEAN Staked")
-    plt.title("Daily Average $OCEAN Staked")
+    plt.title("Daily average $OCEAN staked per slot, across all Feeds")
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)
@@ -437,7 +425,7 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     )
     plt.xlabel("Date")
     plt.ylabel("Average Predictoors")
-    plt.title("Daily Average Predictoors")
+    plt.title("Average # Predictoors competing per slot, per feed")
     plt.xticks(range(0, len(dates), ticks), dates[::ticks], rotation=90)
     plt.tight_layout()
     plt.savefig(chart_path)

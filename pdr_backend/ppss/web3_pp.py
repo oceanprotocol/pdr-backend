@@ -166,8 +166,8 @@ def del_network_override(monkeypatch):
 def mock_web3_pp(network: str) -> Web3PP:
     D1 = {
         "address_file": "address.json 1",
-        "rpc_url": "rpc url 1",
-        "subgraph_url": "subgraph url 1",
+        "rpc_url": "http://example.com/rpc",
+        "subgraph_url": "http://example.com/subgraph",
         "stake_token": "0xStake1",
         "owner_addrs": "0xOwner1",
     }
@@ -273,7 +273,8 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_contract_func = Mock()
     mock_contract_func.return_value = _mock_pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.ppss.web3_pp.PredictoorContract", mock_contract_func
+        "pdr_backend.models.predictoor_contract.PredictoorContract",
+        mock_contract_func,
     )
 
     def advance_func(*args, **kwargs):  # pylint: disable=unused-argument

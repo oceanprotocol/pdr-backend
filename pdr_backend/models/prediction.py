@@ -1,15 +1,17 @@
 from typing import Union
 
+from enforce_typing import enforce_types
 
+
+@enforce_types
 class Prediction:
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=redefined-builtin
     def __init__(
         self,
-        id: str,
+        ID: str,
         pair: str,
         timeframe: str,
-        prediction: Union[bool, None],
+        prediction: Union[bool, None],  # prediction = subgraph.predicted_value
         stake: Union[float, None],
         trueval: Union[bool, None],
         timestamp: int,  # timestamp == prediction submitted timestamp
@@ -18,7 +20,7 @@ class Prediction:
         slot: int,  # slot/epoch timestamp
         user: str,
     ) -> None:
-        self.id = id
+        self.ID = ID
         self.pair = pair
         self.timeframe = timeframe
         self.prediction = prediction
@@ -29,3 +31,38 @@ class Prediction:
         self.payout = payout
         self.slot = slot
         self.user = user
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def mock_prediction(prediction_tuple: tuple) -> Prediction:
+    (
+        pair_str,
+        timeframe_str,
+        prediction,
+        stake,
+        trueval,
+        timestamp,
+        source,
+        payout,
+        slot,
+        user,
+    ) = prediction_tuple
+
+    ID = f"{pair_str}-{timeframe_str}-{slot}-{user}"
+    return Prediction(
+        ID=ID,
+        pair=pair_str,
+        timeframe=timeframe_str,
+        prediction=prediction,
+        stake=stake,
+        trueval=trueval,
+        timestamp=timestamp,
+        source=source,
+        payout=payout,
+        slot=slot,
+        user=user,
+    )

@@ -99,7 +99,7 @@ def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
             for prediction in predictions:
                 writer.writerow(
                     [
-                        prediction.id,
+                        prediction.ID,
                         prediction.timestamp,
                         prediction.slot,
                         prediction.stake,

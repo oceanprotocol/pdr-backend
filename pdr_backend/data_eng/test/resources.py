@@ -5,6 +5,7 @@ import polars as pl
 
 
 from pdr_backend.data_eng.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+from pdr_backend.data_eng.gql_data_factory import GQLDataFactory
 from pdr_backend.data_eng.model_data_factory import ModelDataFactory
 from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.data_eng.plutil import (
@@ -14,6 +15,8 @@ from pdr_backend.data_eng.plutil import (
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
@@ -33,6 +36,15 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     ohlcv_data_factory = OhlcvDataFactory(pp, ss)
     model_data_factory = ModelDataFactory(pp, ss)
     return pp, ss, ohlcv_data_factory, model_data_factory
+
+
+@enforce_types
+def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
+    network = "sapphire-mainnet"
+    ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
+    ppss.web3_pp = mock_web3_pp(network)
+    gql_data_factory = GQLDataFactory(ppss)
+    return ppss, gql_data_factory
 
 
 @enforce_types

@@ -34,8 +34,10 @@ def print_stats(contract_dict, field_name, threshold=0.9):
 def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
     ts_now = time.time()
     ts_start_time = int((ts_now // WEEK) * WEEK)
+
+    contracts_sg_dict = contract_query_result["data"]["predictContracts"]
     contract_addresses = [
-        i["id"] for i in contract_query_result["data"]["predictContracts"]
+        contract_sg_dict["id"] for contract_sg_dict in contracts_sg_dict
     ]
     sofar = get_consume_so_far_per_contract(
         subgraph_url,
@@ -66,6 +68,7 @@ def get_expected_consume(for_ts: int, tokens: int):
     return n_intervals * amount_per_feed_per_interval
 
 
+@enforce_types
 def check_network_main(ppss: PPSS, lookback_hours: int):
     subgraph_url = ppss.web3_pp.subgraph_url
     web3_config = ppss.web3_pp.web3_config

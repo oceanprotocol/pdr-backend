@@ -167,7 +167,7 @@ def do_get_traction_info():
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_traction_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
+    get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types

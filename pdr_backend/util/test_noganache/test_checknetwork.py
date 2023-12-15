@@ -1,9 +1,8 @@
 import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.util.check_network import (
     WEEK,
     check_dfbuyer,
@@ -107,17 +106,6 @@ def test_get_expected_consume():
     assert get_expected_consume(for_ts, tokens) == expected
 
 
-@pytest.fixture(name="mock_ppss_")
-def mock_ppss(tmpdir):
-    s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
-    ppss.web3_pp = Mock()
-    ppss.web3_pp.subgraph_url = "http://example.com/subgraph"
-    ppss.web3_pp.web3_config = MagicMock()
-    ppss.web3_pp.web3_config.w3.eth.chain_id = 1
-    return ppss
-
-
 @patch("pdr_backend.util.check_network.get_opf_addresses")
 @patch("pdr_backend.util.subgraph.query_subgraph")
 @patch("pdr_backend.util.check_network.Token")
@@ -125,7 +113,7 @@ def test_check_network_main(
     mock_token,
     mock_query_subgraph,
     mock_get_opf_addresses,
-    mock_ppss_,
+    _mock_ppss,
 ):
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
@@ -133,10 +121,14 @@ def test_check_network_main(
     }
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
     mock_token.return_value.balanceOf.return_value = 1000 * 1e18
-    mock_ppss_.web3_pp.web3_config.w3.eth.get_balance.return_value = 1000 * 1e18
-    check_network_main(mock_ppss_, lookback_hours=24)
+
+    mock_w3 = Mock()  # pylint: disable=not-callable
+    mock_w3.eth.chain_id = 1
+    mock_w3.eth.get_balance.return_value = 1000 * 1e18
+    _mock_ppss.web3_pp.web3_config.w3 = mock_w3
+    check_network_main(_mock_ppss, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with(1)
-    assert mock_query_subgraph.call_count == 2
+    assert mock_query_subgraph.call_count == 1
     mock_token.assert_called()
-    mock_ppss_.web3_pp.web3_config.w3.eth.get_balance.assert_called()
+    _mock_ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()
