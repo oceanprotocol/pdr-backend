@@ -38,7 +38,7 @@ class GQLDataFactory:
 
     def __init__(self, ppss: PPSS):
         self.ppss = ppss
-        
+
         # filter by feed contract address
         network = get_sapphire_postfix(ppss.web3_pp.network)
         contract_list = get_all_contract_ids_by_owner(
@@ -216,11 +216,13 @@ class GQLDataFactory:
         if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
-            
+
             # check for duplicates and throw error if any found
             duplicate_rows = df.filter(pl.struct("id").is_duplicated())
             if len(duplicate_rows) > 0:
-                raise Exception(f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}")
+                raise Exception(
+                    f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}"
+                )
 
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
