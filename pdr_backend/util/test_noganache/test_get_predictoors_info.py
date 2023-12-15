@@ -18,11 +18,9 @@ def test_get_predictoors_info_main_mainnet(tmpdir, monkeypatch):
     mock_getstats = Mock()
 
     PATH = "pdr_backend.util.get_predictoors_info"
-    with (  # pylint: disable=not-context-manager
-        patch(f"{PATH}.fetch_filtered_predictions", mock_fetch),
-        patch(f"{PATH}.save_prediction_csv", mock_save),
-        patch(f"{PATH}.get_cli_statistics", mock_getstats),
-    ):
+    with patch(f"{PATH}.fetch_filtered_predictions", mock_fetch), patch(
+        f"{PATH}.save_prediction_csv", mock_save
+    ), patch(f"{PATH}.get_cli_statistics", mock_getstats):
         get_predictoors_info_main(
             ppss,
             "0x123",

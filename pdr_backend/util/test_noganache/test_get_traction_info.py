@@ -27,12 +27,12 @@ def test_get_traction_info_main_mainnet(
 
     PATH = "pdr_backend.util.get_traction_info"
     PATH2 = "pdr_backend.data_eng"
-    with (  # pylint: disable=not-context-manager
-        patch(f"{PATH}.get_traction_statistics", mock_traction_stat),
-        patch(f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum),
-        patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily),
-        patch(f"{PATH2}.gql_data_factory.get_all_contract_ids_by_owner", mock_getids),
-        patch(f"{PATH2}.table_pdr_predictions.fetch_filtered_predictions", mock_fetch),
+    with patch(f"{PATH}.get_traction_statistics", mock_traction_stat), patch(
+        f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum
+    ), patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily), patch(
+        f"{PATH2}.gql_data_factory.get_all_contract_ids_by_owner", mock_getids
+    ), patch(
+        f"{PATH2}.table_pdr_predictions.fetch_filtered_predictions", mock_fetch
     ):
         st_timestr = "2023-11-02"
         fin_timestr = "2023-11-05"

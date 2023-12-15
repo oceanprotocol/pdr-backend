@@ -23,11 +23,10 @@ def test_get_predictions_info_main_mainnet(
     mock_getstats = Mock()
 
     PATH = "pdr_backend.util.get_predictions_info"
-    with (  # pylint: disable=not-context-manager
-        patch(f"{PATH}.get_all_contract_ids_by_owner", mock_getids),
-        patch(f"{PATH}.fetch_filtered_predictions", mock_fetch),
-        patch(f"{PATH}.save_analysis_csv", mock_save),
-        patch(f"{PATH}.get_cli_statistics", mock_getstats),
+    with patch(f"{PATH}.get_all_contract_ids_by_owner", mock_getids), patch(
+        f"{PATH}.fetch_filtered_predictions", mock_fetch
+    ), patch(f"{PATH}.save_analysis_csv", mock_save), patch(
+        f"{PATH}.get_cli_statistics", mock_getstats
     ):
         st_timestr = "2023-11-02"
         fin_timestr = "2023-11-05"
