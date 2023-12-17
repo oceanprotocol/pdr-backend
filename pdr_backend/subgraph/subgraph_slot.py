@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Tuple, Optional
 from enforce_typing import enforce_types
 
-from pdr_backend.util.subgraph import query_subgraph
+from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
-from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
+from pdr_backend.subgraph.subgraph_predictions import ContractIdAndSPE
 
 
 @dataclass

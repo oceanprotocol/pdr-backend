@@ -10,7 +10,7 @@ from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import print_feeds
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.subgraph import (
+from pdr_backend.subgraph.core_subgraph import (
     get_consume_so_far_per_contract,
     wait_until_subgraph_syncs,
 )

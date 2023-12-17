@@ -299,6 +299,7 @@ def query_feed_contracts(
     return feeds
 
 
+# don't use @enforce_types here, it causes issues
 def get_pending_slots(
     subgraph_url: str,
     timestamp: int,
@@ -416,6 +417,7 @@ def get_pending_slots(
     return slots
 
 
+@enforce_types
 def get_consume_so_far_per_contract(
     subgraph_url: str,
     user_address: str,

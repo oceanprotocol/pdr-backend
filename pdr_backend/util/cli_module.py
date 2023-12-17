@@ -34,9 +34,9 @@ from pdr_backend.util.cli_arguments import (
 )
 
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.get_predictions_info import get_predictions_info_main
-from pdr_backend.util.get_predictoors_info import get_predictoors_info_main
-from pdr_backend.util.get_traction_info import get_traction_info_main
+from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
+from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.util.topup import topup_main
 
 

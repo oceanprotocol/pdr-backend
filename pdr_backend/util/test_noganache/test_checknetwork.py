@@ -107,7 +107,7 @@ def test_get_expected_consume():
 
 
 @patch("pdr_backend.util.check_network.get_opf_addresses")
-@patch("pdr_backend.util.subgraph.query_subgraph")
+@patch("pdr_backend.subgraph.core_subgraph.query_subgraph")
 @patch("pdr_backend.util.check_network.Token")
 def test_check_network_main(
     mock_token,

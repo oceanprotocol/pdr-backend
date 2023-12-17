@@ -4,8 +4,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.util.get_predictions_info import get_predictions_info_main
-from pdr_backend.util.subgraph_predictions import FilterMode
+from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
+from pdr_backend.subgraph.subgraph_predictions import FilterMode
 
 
 @enforce_types
@@ -22,7 +22,7 @@ def test_get_predictions_info_main_mainnet(
     mock_save = Mock()
     mock_getstats = Mock()
 
-    PATH = "pdr_backend.util.get_predictions_info"
+    PATH = "pdr_backend.analytics.get_predictions_info"
     with patch(f"{PATH}.get_all_contract_ids_by_owner", mock_getids), patch(
         f"{PATH}.fetch_filtered_predictions", mock_fetch
     ), patch(f"{PATH}.save_analysis_csv", mock_save), patch(

@@ -10,7 +10,7 @@ from web3 import Web3
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
 from pdr_backend.util.strutil import StrMixin
-from pdr_backend.util.subgraph import get_pending_slots, query_feed_contracts
+from pdr_backend.subgraph.core_subgraph import get_pending_slots, query_feed_contracts
 from pdr_backend.util.web3_config import Web3Config
 
 

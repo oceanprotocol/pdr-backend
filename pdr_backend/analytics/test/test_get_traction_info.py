@@ -5,8 +5,8 @@ import polars as pl
 
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.util.get_traction_info import get_traction_info_main
-from pdr_backend.util.subgraph_predictions import FilterMode
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
+from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
 
@@ -25,7 +25,7 @@ def test_get_traction_info_main_mainnet(
     mock_getids = Mock(return_value=["0x123"])
     mock_fetch = Mock(return_value=_sample_daily_predictions)
 
-    PATH = "pdr_backend.util.get_traction_info"
+    PATH = "pdr_backend.analytics.get_traction_info"
     PATH2 = "pdr_backend.lake"
     with patch(f"{PATH}.get_traction_statistics", mock_traction_stat), patch(
         f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum

@@ -3,7 +3,7 @@ from dataclasses import asdict
 from typing import Dict, List
 from enforce_typing import enforce_types
 
-from pdr_backend.util.subgraph_slot import (
+from pdr_backend.subgraph.subgraph_slot import (
     get_predict_slots_query,
     get_slots,
     fetch_slots_for_all_assets,
@@ -13,7 +13,7 @@ from pdr_backend.util.subgraph_slot import (
     calculate_statistics_for_all_assets,
     PredictSlot,
 )
-from pdr_backend.util.subgraph_predictions import ContractIdAndSPE
+from pdr_backend.subgraph.subgraph_predictions import ContractIdAndSPE
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
@@ -62,7 +62,7 @@ MOCK_QUERY_RESPONSE_SECOND_CALL: Dict[str, Dict[str, list]] = {
 
 
 @enforce_types
-@patch("pdr_backend.util.subgraph_slot.query_subgraph")
+@patch("pdr_backend.subgraph.subgraph_slot.query_subgraph")
 def test_get_slots(mock_query_subgraph):
     # Configure the mock to return a full page of results on the first call,
     # and no results on the second call
@@ -138,7 +138,7 @@ def test_aggregate_statistics():
 
 
 @enforce_types
-@patch("pdr_backend.util.subgraph_slot.fetch_slots_for_all_assets")
+@patch("pdr_backend.subgraph.subgraph_slot.fetch_slots_for_all_assets")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Mocks
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
@@ -162,7 +162,8 @@ def test_calculate_statistics_for_all_assets(mock_fetch_slots):
 
 @enforce_types
 @patch(
-    "pdr_backend.util.subgraph_slot.query_subgraph", return_value=MOCK_QUERY_RESPONSE
+    "pdr_backend.subgraph.subgraph_slot.query_subgraph",
+    return_value=MOCK_QUERY_RESPONSE,
 )
 def test_fetch_slots_for_all_assets(mock_query_subgraph):
     # Test the fetch_slots_for_all_assets function

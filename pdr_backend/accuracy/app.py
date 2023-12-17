@@ -5,9 +5,9 @@ from typing import Tuple
 from enforce_typing import enforce_types
 from flask import Flask, jsonify
 
-from pdr_backend.util.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.util.subgraph_slot import calculate_statistics_for_all_assets
-from pdr_backend.util.subgraph_predictions import fetch_contract_id_and_spe
+from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
+from pdr_backend.subgraph.subgraph_slot import calculate_statistics_for_all_assets
+from pdr_backend.subgraph.subgraph_predictions import fetch_contract_id_and_spe
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"

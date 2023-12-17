@@ -4,7 +4,7 @@ At some point, we can expand it into traction info wrt traders & txs too.
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.predictoor_stats import (
+from pdr_backend.analytics.predictoor_stats import (
     get_traction_statistics,
     get_slot_statistics,
     plot_traction_cum_sum_statistics,

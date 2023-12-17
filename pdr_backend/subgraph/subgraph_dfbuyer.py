@@ -1,4 +1,4 @@
-from pdr_backend.util.subgraph import query_subgraph
+from pdr_backend.subgraph.core_subgraph import query_subgraph
 
 
 def get_consume_so_far(

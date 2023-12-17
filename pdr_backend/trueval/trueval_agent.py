@@ -10,7 +10,7 @@ from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.trueval.get_trueval import get_trueval
-from pdr_backend.util.subgraph import wait_until_subgraph_syncs
+from pdr_backend.subgraph.core_subgraph import wait_until_subgraph_syncs
 
 
 @enforce_types

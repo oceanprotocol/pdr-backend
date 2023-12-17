@@ -8,7 +8,7 @@ from pytest import approx
 
 from pdr_backend.models.feed import Feed
 from pdr_backend.models.slot import Slot
-from pdr_backend.util.subgraph import (
+from pdr_backend.subgraph.core_subgraph import (
     block_number_is_synced,
     key_to_key725,
     value_to_value725,
@@ -304,7 +304,9 @@ def test_get_pending_slots():
         call_count += 1
         return {"data": {"predictSlots": slot_data}}
 
-    with patch("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph):
+    with patch(
+        "pdr_backend.subgraph.core_subgraph.query_subgraph", mock_query_subgraph
+    ):
         slots = get_pending_slots(
             subgraph_url="foo",
             timestamp=2000,
@@ -388,7 +390,9 @@ def test_get_consume_so_far_per_contract():
         call_count += 1
         return {"data": {"predictContracts": slot_data}}
 
-    with patch("pdr_backend.util.subgraph.query_subgraph", mock_query_subgraph):
+    with patch(
+        "pdr_backend.subgraph.core_subgraph.query_subgraph", mock_query_subgraph
+    ):
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
@@ -418,7 +422,9 @@ def test_block_number_is_synced():
 
         return {"data": {"predictContracts": [{"id": "sample_id"}]}}
 
-    with patch("pdr_backend.util.subgraph.query_subgraph", side_effect=mock_response):
+    with patch(
+        "pdr_backend.subgraph.core_subgraph.query_subgraph", side_effect=mock_response
+    ):
         assert block_number_is_synced("foo", 499) is True
         assert block_number_is_synced("foo", 500) is False
         assert block_number_is_synced("foo", 501) is False

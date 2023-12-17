@@ -3,7 +3,7 @@ import json
 from enum import Enum
 from enforce_typing import enforce_types
 
-from pdr_backend.util.subgraph import query_subgraph, info725_to_info
+from pdr_backend.subgraph.core_subgraph import query_subgraph, info725_to_info
 from pdr_backend.models.prediction import Prediction
 from pdr_backend.util.networkutil import get_subgraph_url
 

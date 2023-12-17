@@ -4,7 +4,7 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.util.predictoor_stats import (
+from pdr_backend.analytics.predictoor_stats import (
     aggregate_prediction_statistics,
     get_endpoint_statistics,
     get_cli_statistics,

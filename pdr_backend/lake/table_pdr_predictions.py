@@ -5,7 +5,7 @@ import polars as pl
 from polars import Utf8, Int64, Float64, Boolean
 
 from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.util.subgraph_predictions import (
+from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
     FilterMode,
 )

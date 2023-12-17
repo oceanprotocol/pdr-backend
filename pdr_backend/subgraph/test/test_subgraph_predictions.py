@@ -1,7 +1,7 @@
 from typing import Dict
 from unittest.mock import patch
 from enforce_typing import enforce_types
-from pdr_backend.util.subgraph_predictions import (
+from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
     get_all_contract_ids_by_owner,
     fetch_contract_id_and_spe,
@@ -95,7 +95,7 @@ MOCK_CONTRACT_DETAILS_RESPONSE = {
 
 
 @enforce_types
-@patch("pdr_backend.util.subgraph_predictions.query_subgraph")
+@patch("pdr_backend.subgraph.subgraph_predictions.query_subgraph")
 def test_fetch_filtered_predictions(mock_query_subgraph):
     mock_query_subgraph.side_effect = [
         MOCK_PREDICTIONS_RESPONSE_FIRST_CALL,
@@ -120,7 +120,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
 
 @enforce_types
 @patch(
-    "pdr_backend.util.subgraph_predictions.query_subgraph",
+    "pdr_backend.subgraph.subgraph_predictions.query_subgraph",
     return_value=MOCK_CONTRACTS_RESPONSE,
 )
 def test_get_all_contract_ids_by_owner(
@@ -138,7 +138,7 @@ def test_get_all_contract_ids_by_owner(
 
 @enforce_types
 @patch(
-    "pdr_backend.util.subgraph_predictions.query_subgraph",
+    "pdr_backend.subgraph.subgraph_predictions.query_subgraph",
     return_value=MOCK_CONTRACT_DETAILS_RESPONSE,
 )
 def test_fetch_contract_id_and_spe(
