@@ -150,7 +150,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
         query = """
         {
                 predictPredictions(
-                    where: {user: "%s", payout: null}, first: %s, skip: %s
+                    where: {user: "%s", payout: null, slot_: {status: "Paying"} }, first: %s, skip: %s
                 ) {
                     id
                     timestamp
