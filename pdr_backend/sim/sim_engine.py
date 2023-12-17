@@ -241,7 +241,10 @@ class SimEngine:
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
-        ax0.set_title("Trading profit vs time", fontsize=FONTSIZE, fontweight="bold")
+        ax0.set_title(
+            f"Trading profit vs time. Current: ${y0[-1]:.2f}",
+            fontsize=FONTSIZE, fontweight="bold",
+        )
         ax0.set_xlabel("time", fontsize=FONTSIZE)
         ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
@@ -259,7 +262,8 @@ class SimEngine:
         ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
         now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
         ax1.set_title(
-            f"% correct vs time. {now_s}", fontsize=FONTSIZE, fontweight="bold"
+            f"% correct vs time. Current: {now_s}",
+            fontsize=FONTSIZE, fontweight="bold",
         )
         ax1.set_xlabel("time", fontsize=FONTSIZE)
         ax1.set_ylabel("% correct", fontsize=FONTSIZE)
