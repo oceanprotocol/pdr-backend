@@ -12,39 +12,31 @@ from pdr_backend.analytics.check_network import (
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.mathutil import to_wei
-from pdr_backend.util.timeutil import current_ut
 
 
 PATH = "pdr_backend.analytics.check_network"
 
-
-# pylint: disable=unused-argument
-@enforce_types
-def mock_get_consume_so_far_per_contract(
-    subgraph_url, dfbuyer_addr, start_ut, contract_addresses
-):
-    return {
-        "0x1": 120,
-    }
-
-
-# pylint: disable=unused-argument
-@enforce_types
-def mock_get_expected_consume(for_ut, token_amt):
-    return 100
+MOCK_CUR_UT = 1702826080982
 
 
 @enforce_types
 @patch(
     f"{PATH}.get_consume_so_far_per_contract",
-    side_effect=mock_get_consume_so_far_per_contract,
+    side_effect=Mock(return_value={"0x1": 120}),
 )
 @patch(
     f"{PATH}.get_expected_consume",
-    side_effect=mock_get_expected_consume,
+    side_effect=Mock(return_value=100),
 )
-def test_check_dfbuyer(
-    mock_get_expected_consume_, mock_get_consume_so_far_per_contract_, capsys
+@patch(
+    f"{PATH}.current_ut",
+    side_effect=Mock(return_value=MOCK_CUR_UT),
+)
+def test_check_dfbuyer(  # pylint: disable=unused-argument
+    mock_current_ut,
+    mock_get_expected_consume_,
+    mock_get_consume_so_far_per_contract_,
+    capsys,
 ):
     dfbuyer_addr = "0x1"
     contract_query_result = {"data": {"predictContracts": [{"id": "0x1"}]}}
@@ -60,7 +52,7 @@ def test_check_dfbuyer(
     )
     assert target_str in captured.out
 
-    cur_ut = current_ut()
+    cur_ut = MOCK_CUR_UT
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
     mock_get_consume_so_far_per_contract_.assert_called_once_with(
         subgraph_url, dfbuyer_addr, start_ut, ["0x1"]
