@@ -169,12 +169,12 @@ def nmse(yhat, y, ymin=None, ymax=None) -> float:
 
 
 @enforce_types
-def from_wei(amt_wei: int):
+def from_wei(amt_wei: int) -> Union[int, float]:
     return float(amt_wei / 1e18)
 
 
 @enforce_types
-def to_wei(amt_eth) -> int:
+def to_wei(amt_eth: Union[int, float]) -> int:
     return int(amt_eth * 1e18)
 
 

@@ -1,15 +1,11 @@
-from pdr_backend.models.prediction import mock_prediction, Prediction
+from enforce_typing import enforce_types
 
-from pdr_backend.util.test_data import (
-    sample_first_predictions,
-)
+from pdr_backend.models.prediction import Prediction, mock_first_predictions
 
 
-def test_mock_predictions():
-    predictions = [
-        mock_prediction(prediction_tuple)
-        for prediction_tuple in sample_first_predictions
-    ]
+@enforce_types
+def test_predictions():
+    predictions = mock_first_predictions()
 
     assert len(predictions) == 2
     assert isinstance(predictions[0], Prediction)

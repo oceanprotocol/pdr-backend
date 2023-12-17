@@ -1,85 +1,99 @@
 import math
-import time
+from typing import Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.models.token import Token
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.subgraph.core_subgraph import (
-    get_consume_so_far_per_contract,
-    query_subgraph,
-)
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import from_wei
+from pdr_backend.util.timeframestr import s_to_timeframe_str
+from pdr_backend.util.timeutil import current_ut
+from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 
-WEEK = 86400 * 7
+_N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 
 
 @enforce_types
-def seconds_to_text(seconds: int) -> str:
-    if seconds == 300:
-        return "5m"
-    if seconds == 3600:
-        return "1h"
-    return ""
+def print_stats(contract_dict: dict, field_name: str, threshold: float = 0.9):
+    n_slots = len(contract_dict["slots"])
+    n_slots_with_field = sum(
+        1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0
+    )
+    if n_slots == 0:
+        n_slots = 1
 
-
-def print_stats(contract_dict, field_name, threshold=0.9):
-    count = sum(1 for _ in contract_dict["slots"])
-    with_field = sum(1 for slot in contract_dict["slots"] if len(slot[field_name]) > 0)
-    if count == 0:
-        count += 1
-    status = "PASS" if with_field / count > threshold else "FAIL"
+    status = "PASS" if n_slots_with_field / n_slots > threshold else "FAIL"
     token_name = contract_dict["token"]["name"]
-    timeframe = seconds_to_text(int(contract_dict["secondsPerEpoch"]))
-    print(f"{token_name} {timeframe}: " f"{with_field}/{count} {field_name} - {status}")
+
+    s_per_epoch = int(contract_dict["secondsPerEpoch"])
+    timeframe_str = s_to_timeframe_str(s_per_epoch)
+    print(
+        f"{token_name} {timeframe_str}: "
+        f"{n_slots_with_field}/{n_slots} {field_name} - {status}"
+    )
 
 
-def check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, tokens):
-    ts_now = time.time()
-    ts_start_time = int((ts_now // WEEK) * WEEK)
+@enforce_types
+def check_dfbuyer(
+    dfbuyer_addr: str,
+    contract_query_result: dict,
+    subgraph_url: str,
+    token_amt: int,
+):
+    cur_ut = current_ut()  # accounts for timezone
+    start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
     contract_addresses = [
         contract_sg_dict["id"] for contract_sg_dict in contracts_sg_dict
     ]
-    sofar = get_consume_so_far_per_contract(
+    amt_consume_so_far = get_consume_so_far_per_contract(
         subgraph_url,
         dfbuyer_addr,
-        ts_start_time,
+        start_ut,
         contract_addresses,
     )
-    expected = get_expected_consume(int(ts_now), tokens)
+    expect_amt_consume = get_expected_consume(cur_ut, token_amt)
     print(
         "Checking consume amounts (dfbuyer)"
-        f", expecting {expected} consume per contract"
+        f", expecting {expect_amt_consume} consume per contract"
     )
     for addr in contract_addresses:
-        x = sofar[addr]
-        log_text = "PASS" if x >= expected else "FAIL"
+        x = amt_consume_so_far[addr]
+        log_text = "PASS" if x >= expect_amt_consume else "FAIL"
         print(
             f"    {log_text}... got {x} consume for contract: {addr}"
-            f", expected {expected}"
+            f", expected {expect_amt_consume}"
         )
 
 
 @enforce_types
-def get_expected_consume(for_ts: int, tokens: int):
-    amount_per_feed_per_interval = tokens / 7 / 20
-    week_start = (math.floor(for_ts / WEEK)) * WEEK
-    time_passed = for_ts - week_start
-    n_intervals = int(time_passed / 86400) + 1
-    return n_intervals * amount_per_feed_per_interval
+def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
+    """
+    @arguments
+      for_ut -- unix time, in ms, in UTC time zone
+      token_amt -- # tokens
+
+    @return
+      exp_consume --
+    """
+    amt_per_feed_per_week = token_amt / 7 / _N_FEEDS
+    week_start_ut = (math.floor(for_ut / S_PER_WEEK)) * S_PER_WEEK
+    time_passed = for_ut - week_start_ut
+    n_weeks = int(time_passed / S_PER_DAY) + 1
+    return n_weeks * amt_per_feed_per_week
 
 
 @enforce_types
 def check_network_main(ppss: PPSS, lookback_hours: int):
-    subgraph_url = ppss.web3_pp.subgraph_url
-    web3_config = ppss.web3_pp.web3_config
-    chain_id = web3_config.w3.eth.chain_id
-    addresses = get_opf_addresses(chain_id)
+    web3_pp = ppss.web3_pp
 
-    ts = int(time.time())
-    ts_start = ts - lookback_hours * 60 * 60
+    cur_ut = current_ut()  # accounts for timezone
+    start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
             {
                 predictContracts{
@@ -117,10 +131,10 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
                 } 
             }
             """ % (
-        ts,
-        ts_start,
+        cur_ut,
+        start_ut,
     )
-    result = query_subgraph(subgraph_url, query, timeout=10.0)
+    result = query_subgraph(web3_pp.subgraph_url, query, timeout=10.0)
 
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
@@ -144,19 +158,13 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         print_stats(contract, "trueValues")
     print("\nChecking account balances")
 
-    if chain_id == 23294:
-        ocean_address = "0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520"
-    else:
-        ocean_address = "0x973e69303259B0c2543a38665122b773D28405fB"
+    OCEAN_address = get_address(web3_pp, "Ocean")
+    OCEAN = Token(web3_pp, OCEAN_address)
 
-    ocean_token = Token(ppss.web3_pp, ocean_address)
-
-    for name, value in addresses.items():
-        ocean_bal_wei = ocean_token.balanceOf(value)
-        native_bal_wei = web3_config.w3.eth.get_balance(value)
-
-        ocean_bal = ocean_bal_wei / 1e18
-        native_bal = native_bal_wei / 1e18
+    addresses = get_opf_addresses(web3_pp.network)
+    for name, address in addresses.items():
+        ocean_bal = from_wei(OCEAN.balanceOf(address))
+        native_bal = from_wei(web3_pp.web3_config.w3.eth.get_balance(address))
 
         ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 10 else " OK "
         native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 10 else " OK "
@@ -171,5 +179,6 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     # ---------------- dfbuyer ----------------
 
+    dfbuyer_addr = addresses["dfbuyer"].lower()
     token_amt = 44460
-    check_dfbuyer(addresses["dfbuyer"].lower(), result, subgraph_url, token_amt)
+    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)

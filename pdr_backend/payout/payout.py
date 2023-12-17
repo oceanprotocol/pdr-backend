@@ -6,11 +6,9 @@ from pdr_backend.models.dfrewards import DFRewards
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.wrapped_token import WrappedToken
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
+from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
-from pdr_backend.subgraph.core_subgraph import (
-    query_pending_payouts,
-    wait_until_subgraph_syncs,
-)
 
 
 @enforce_types

@@ -5,12 +5,9 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.token import Token, NativeToken
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
-    OCEAN_TOKEN_ADDRS,
-)
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import from_wei, to_wei
 
 
 @enforce_types
@@ -18,29 +15,27 @@ def topup_main(ppss: PPSS):
     # if there is not enough balance, exit 1 so we know that script failed
     failed = False
 
-    web3_config = ppss.web3_pp.web3_config
-    chain_id = web3_config.w3.eth.chain_id
-    if chain_id not in [SAPPHIRE_MAINNET_CHAINID, SAPPHIRE_TESTNET_CHAINID]:
+    web3_pp = ppss.web3_pp
+    owner = web3_pp.web3_config.owner
+    if web3_pp.network not in ["sapphire-testnet", "sapphire-mainnet"]:
         print("Unknown network")
         sys.exit(1)
 
-    OCEAN = Token(ppss.web3_pp, OCEAN_TOKEN_ADDRS[chain_id])
+    OCEAN_addr = get_address(ppss.web3_pp, "Ocean")
+    OCEAN = Token(ppss.web3_pp, OCEAN_addr)
     ROSE = NativeToken(ppss.web3_pp)
 
-    owner_OCEAN_bal = int(OCEAN.balanceOf(web3_config.owner)) / 1e18
-    owner_ROSE_bal = int(ROSE.balanceOf(web3_config.owner)) / 1e18
+    owner_OCEAN_bal = from_wei(OCEAN.balanceOf(owner))
+    owner_ROSE_bal = from_wei(ROSE.balanceOf(owner))
     print(
-        f"Topup address ({web3_config.owner}) has "
+        f"Topup address ({owner}) has "
         + f"{owner_OCEAN_bal:.2f} OCEAN and {owner_ROSE_bal:.2f} ROSE\n\n"
     )
 
-    addresses: Dict[str, str] = get_opf_addresses(chain_id)
+    addresses: Dict[str, str] = get_opf_addresses(web3_pp.network)
     for addr_label, address in addresses.items():
-        OCEAN_bal_wei = OCEAN.balanceOf(address)
-        ROSE_bal_wei = ROSE.balanceOf(address)
-
-        OCEAN_bal = OCEAN_bal_wei / 1e18
-        ROSE_bal = ROSE_bal_wei / 1e18
+        OCEAN_bal = from_wei(OCEAN.balanceOf(address))
+        ROSE_bal = from_wei(ROSE.balanceOf(address))
 
         min_OCEAN_bal, topup_OCEAN_bal = 20, 20
         min_ROSE_bal, topup_ROSE_bal = 30, 30
@@ -59,8 +54,8 @@ def topup_main(ppss: PPSS):
             if owner_OCEAN_bal > topup_OCEAN_bal:
                 OCEAN.transfer(
                     address,
-                    web3_config.w3.to_wei(topup_OCEAN_bal, "ether"),
-                    web3_config.owner,
+                    to_wei(topup_OCEAN_bal),
+                    owner,
                     True,
                 )
                 owner_OCEAN_bal = owner_OCEAN_bal - topup_OCEAN_bal
@@ -73,8 +68,8 @@ def topup_main(ppss: PPSS):
             if owner_ROSE_bal > topup_ROSE_bal:
                 ROSE.transfer(
                     address,
-                    web3_config.w3.to_wei(topup_ROSE_bal, "ether"),
-                    web3_config.owner,
+                    to_wei(topup_ROSE_bal),
+                    owner,
                     True,
                 )
                 owner_ROSE_bal = owner_ROSE_bal - topup_ROSE_bal

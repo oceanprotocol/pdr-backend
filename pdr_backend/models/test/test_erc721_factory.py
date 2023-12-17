@@ -2,6 +2,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import to_wei
 
 
 @enforce_types
@@ -40,8 +41,8 @@ def test_Erc721Factory(web3_pp, web3_config):
         [
             18,
             18,
-            web3_config.w3.to_wei(rate, "ether"),
-            web3_config.w3.to_wei(cut, "ether"),
+            to_wei(rate),
+            to_wei(cut),
             1,
         ],
     )
