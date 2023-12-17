@@ -7,7 +7,7 @@ from pdr_backend.ppss.model_ss import ModelSS
 
 
 @enforce_types
-class ModelFactory:
+class AimodelFactory:
     def __init__(self, model_ss: ModelSS):
         self.model_ss = model_ss
 

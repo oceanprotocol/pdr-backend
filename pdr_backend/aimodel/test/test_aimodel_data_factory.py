@@ -4,7 +4,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from pdr_backend.lake.model_data_factory import ModelDataFactory
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.test.resources import (
     _mergedohlcv_df_ETHUSDT,
@@ -36,7 +36,7 @@ def test_create_xy__0(tmpdir):
         {
             "input_feeds": ["binanceus oc ETH/USDT"],
             "parquet_dir": str(tmpdir),
-            "st_timestr": "2023-06-18",  # not used by ModelDataFactory
+            "st_timestr": "2023-06-18",  # not used by AimodelDataFactory
             "fin_timestr": "2023-06-21",  # ""
             "max_n_train": 4,
             "autoregressive_n": 2,
@@ -45,7 +45,7 @@ def test_create_xy__0(tmpdir):
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
-            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by ModelDataFactory
+            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by AimodelDataFactory
             "datetime": [None] * 8,  # ""
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
             "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
@@ -72,7 +72,7 @@ def test_create_xy__0(tmpdir):
         }
     )
 
-    model_data_factory = ModelDataFactory(data_pp, data_ss)
+    model_data_factory = AimodelDataFactory(data_pp, data_ss)
     X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(data_ss, X, y, x_df)
@@ -226,7 +226,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     pq_data_factory = OhlcvDataFactory(pp, ss)
     mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    model_data_factory = ModelDataFactory(pp, ss)
+    model_data_factory = AimodelDataFactory(pp, ss)
     X, y, x_df = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss, X, y, x_df)
@@ -310,7 +310,7 @@ def test_create_xy__input_type(tmpdir):
     mergedohlcv_df, model_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(model_data_factory, ModelDataFactory)
+    assert isinstance(model_data_factory, AimodelDataFactory)
 
     # create_xy() input should be pl
     model_data_factory.create_xy(mergedohlcv_df, testshift=0)

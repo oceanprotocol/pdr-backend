@@ -6,7 +6,7 @@ import polars as pl
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.model_data_factory import ModelDataFactory
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -34,7 +34,7 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    model_data_factory = ModelDataFactory(pp, ss)
+    model_data_factory = AimodelDataFactory(pp, ss)
     return pp, ss, ohlcv_data_factory, model_data_factory
 
 

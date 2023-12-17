@@ -8,8 +8,8 @@ import numpy as np
 import polars as pl
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.lake.model_data_factory import ModelDataFactory
-from pdr_backend.lake.model_factory import ModelFactory
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
@@ -99,15 +99,15 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = ModelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        model_data_factory = AimodelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        model_factory = ModelFactory(self.ppss.model_ss)
-        model = model_factory.build(X_train, y_train)
+        aimodel_factory = AimodelFactory(self.ppss.model_ss)
+        model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
 

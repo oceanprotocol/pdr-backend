@@ -3,10 +3,10 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.model_data_factory import ModelDataFactory
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.lake.model_factory import ModelFactory
+from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 
@@ -37,7 +37,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         pq_data_factory = OhlcvDataFactory(data_pp, data_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
-        model_data_factory = ModelDataFactory(data_pp, data_ss)
+        model_data_factory = AimodelDataFactory(data_pp, data_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data
@@ -46,8 +46,8 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        model_factory = ModelFactory(self.ppss.model_ss)
-        model = model_factory.build(X_train, y_train)
+        aimodel_factory = AimodelFactory(self.ppss.model_ss)
+        model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data
         predprice = model.predict(X_test)[0]

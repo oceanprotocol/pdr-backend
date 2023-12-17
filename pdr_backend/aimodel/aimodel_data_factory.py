@@ -12,7 +12,7 @@ from pdr_backend.util.mathutil import has_nan, fill_nans
 
 
 @enforce_types
-class ModelDataFactory:
+class AimodelDataFactory:
     """
     Roles:
     - From mergedohlcv_df, create (X, y, x_df) for model building
