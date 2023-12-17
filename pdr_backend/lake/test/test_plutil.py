@@ -12,7 +12,7 @@ from pdr_backend.lake.constants import (
     TOHLCV_DTYPES_PL,
 )
 from pdr_backend.lake.plutil import (
-    initialize_df,
+    initialize_rawohlcv_df,
     transform_df,
     concat_next_df,
     save_rawohlcv_file,
@@ -21,6 +21,7 @@ from pdr_backend.lake.plutil import (
     oldest_ut,
     newest_ut,
     _get_tail_df,
+    text_to_df,
 )
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
@@ -35,8 +36,8 @@ ONE_ROW_RAW_TOHLCV_DATA = [[1686807300000, 1646, 1647.2, 1646.23, 1647.05, 8.174
 
 
 @enforce_types
-def test_initialize_df():
-    df = initialize_df()
+def test_initialize_rawohlcv_df():
+    df = initialize_rawohlcv_df()
     assert isinstance(df, pl.DataFrame)
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL
 
@@ -44,12 +45,12 @@ def test_initialize_df():
     _assert_TOHLCVd_cols_and_types(df)
 
     # test that it works with just 2 cols and without datetime
-    df = initialize_df(OHLCV_COLS[:2])
+    df = initialize_rawohlcv_df(OHLCV_COLS[:2])
     assert df.columns == OHLCV_COLS[:2]
     assert list(df.schema.values())[:2] == OHLCV_DTYPES_PL[:2]
 
     # test datetime w/ just ut + 2 cols
-    df = initialize_df(TOHLCV_COLS[:3])
+    df = initialize_rawohlcv_df(TOHLCV_COLS[:3])
     df = transform_df(df)
     assert df.columns == TOHLCV_COLS[:3] + ["datetime"]
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [
@@ -57,7 +58,7 @@ def test_initialize_df():
     ]
 
     # assert error without timestamp
-    df = initialize_df(OHLCV_COLS)
+    df = initialize_rawohlcv_df(OHLCV_COLS)
     with pytest.raises(Exception):
         df = transform_df(df)
 
@@ -65,7 +66,7 @@ def test_initialize_df():
 @enforce_types
 def test_concat_next_df():
     # baseline data
-    df = initialize_df(TOHLCV_COLS)
+    df = initialize_rawohlcv_df(TOHLCV_COLS)
     assert len(df) == 0
 
     cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
@@ -213,7 +214,7 @@ def test_load_filtered(tmpdir):
 
 @enforce_types
 def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
-    df = initialize_df(TOHLCV_COLS)
+    df = initialize_rawohlcv_df(TOHLCV_COLS)
 
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     next_df = pl.DataFrame(raw_data, schema=schema)
@@ -311,3 +312,18 @@ def test_parquet_tail_records(tmpdir):
 
     tail_df = _get_tail_df(filename, n=1)
     assert tail_df.equals(target_tail_df)
+
+
+@enforce_types
+def test_text_to_df():
+    df = text_to_df(
+        """datetime|timestamp|open|close
+d0|0|10.0|11.0
+d1|1|10.1|11.1
+"""
+    )
+    assert df.columns == ["datetime", "timestamp", "open", "close"]
+    assert df.shape == (2, 4)
+    assert df["datetime"][0] == "d0"
+    assert df["open"][1] == 10.1
+    assert isinstance(df["open"][1], float)

@@ -9,13 +9,19 @@ import polars as pl
 import pytest
 
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
-from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.ohlcv_data_factory import (
+    OhlcvDataFactory,
+    _merge_rawohlcv_dfs,
+    _add_df_col,
+    _ordered_cols,
+)
 from pdr_backend.lake.plutil import (
-    initialize_df,
+    initialize_rawohlcv_df,
     transform_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
     concat_next_df,
+    text_to_df,
 )
 from pdr_backend.lake.test.resources import (
     _data_pp_ss_1feed,
@@ -237,7 +243,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         raw_tohlcv_data = [
             [st_ut + s_per_epoch * i] + [ohlcv_val] * 5 for i in range(n_pts)
         ]
-        df = initialize_df()
+        df = initialize_rawohlcv_df()
         next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
         df = concat_next_df(df, next_df)
         df = transform_df(df)  # add "datetime" col, more
@@ -355,3 +361,162 @@ def test_get_mergedohlcv_df_calls(tmpdir):
     factory._update_rawohlcv_files.assert_called()
     factory._load_rawohlcv_files.assert_called()
     factory._merge_rawohlcv_dfs.assert_called()
+
+
+# ==================================================================
+# test lower-level functions: _merge_rawohlcv_dfs(), _add_df_col()
+
+
+@pytest.fixture()
+def raw_df1():  # binance BTC/USDT
+    return text_to_df(
+        """datetime|timestamp|open|close
+d0|0|10.0|11.0
+d1|1|10.1|11.1
+d3|3|10.3|11.3
+d4|4|10.4|11.4
+"""
+    )  # does not have: "d2|2|10.2|11.2" to simulate missing vals from exchanges
+
+
+@pytest.fixture()
+def raw_df2():  # binance ETH/USDT
+    return text_to_df(
+        """datetime|timestamp|open|close
+d0|0|20.0|21.0
+d1|1|20.1|21.1
+d2|2|20.2|21.2
+d3|3|20.3|21.3
+"""
+    )  # does *not* have: "d4|4|20.4|21.4" to simulate missing vals from exchanges
+
+
+@pytest.fixture()
+def raw_df3():  # kraken BTC/USDT
+    return text_to_df(
+        """datetime|timestamp|open|close
+d0|0|30.0|31.0
+d1|1|30.1|31.1
+d2|2|30.2|31.2
+d3|3|30.3|31.3
+d4|4|30.4|31.4
+"""
+    )
+
+
+@pytest.fixture()
+def raw_df4():  # kraken ETH/USDT
+    return text_to_df(
+        """datetime|timestamp|open|close
+d0|0|40.0|41.0
+d1|1|40.1|41.1
+d2|2|40.2|41.2
+d3|3|40.3|41.3
+d4|4|40.4|41.4
+"""
+    )
+
+
+@enforce_types
+def test_merge_rawohlcv_dfs(raw_df1, raw_df2, raw_df3, raw_df4):
+    raw_dfs = {
+        "binance": {"BTC/USDT": raw_df1, "ETH/USDT": raw_df2},
+        "kraken": {"BTC/USDT": raw_df3, "ETH/USDT": raw_df4},
+    }
+
+    merged_df = _merge_rawohlcv_dfs(raw_dfs)
+
+    assert merged_df.columns == [
+        "timestamp",
+        "binance:BTC/USDT:open",
+        "binance:BTC/USDT:close",
+        "binance:ETH/USDT:open",
+        "binance:ETH/USDT:close",
+        "kraken:BTC/USDT:open",
+        "kraken:BTC/USDT:close",
+        "kraken:ETH/USDT:open",
+        "kraken:ETH/USDT:close",
+        "datetime",
+    ]
+    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["binance:BTC/USDT:close"][3] == 11.3
+    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
+    assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
+
+
+@enforce_types
+def test_add_df_col_unequal_dfs(raw_df1, raw_df2):
+    # basic sanity test that floats are floats
+    assert isinstance(raw_df1["close"][1], float)
+
+    # add a first raw_df
+    merged_df = _add_df_col(None, "binance:BTC/USDT:close", raw_df1, "close")
+    assert merged_df.columns == ["timestamp", "binance:BTC/USDT:close", "datetime"]
+    assert merged_df.shape == (4, 3)
+    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["binance:BTC/USDT:close"][3] == 11.4
+
+    # add a second raw_df
+    merged_df = _add_df_col(merged_df, "binance:ETH/USDT:open", raw_df2, "open")
+    assert merged_df.columns == [
+        "timestamp",
+        "binance:BTC/USDT:close",
+        "binance:ETH/USDT:open",
+        "datetime",
+    ]
+    assert merged_df.shape == (5, 4)
+    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["binance:BTC/USDT:close"][3] == 11.3
+    assert merged_df["binance:ETH/USDT:open"][3] == 20.3
+    assert merged_df["binance:ETH/USDT:open"][4] == None
+
+
+@enforce_types
+def test_add_df_col_equal_dfs(raw_df3, raw_df4):
+    # basic sanity test that floats are floats
+    assert isinstance(raw_df3["close"][1], float)
+
+    # add a first raw_df
+    merged_df = _add_df_col(None, "kraken:BTC/USDT:close", raw_df3, "close")
+    assert merged_df.columns == [
+        "timestamp",
+        "kraken:BTC/USDT:close",
+        "datetime",
+    ]
+    assert merged_df.shape == (5, 3)
+    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
+
+    # add a second raw_df
+    merged_df = _add_df_col(merged_df, "kraken:ETH/USDT:open", raw_df4, "open")
+    assert merged_df.columns == [
+        "timestamp",
+        "kraken:BTC/USDT:close",
+        "kraken:ETH/USDT:open",
+        "datetime",
+    ]
+    assert merged_df.shape == (5, 4)
+    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
+    assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
+
+
+@enforce_types
+def test_ordered_cols():
+    assert _ordered_cols(["datetime", "timestamp"]) == ["timestamp", "datetime"]
+    assert _ordered_cols(["a", "c", "b", "datetime", "timestamp"]) == [
+        "timestamp",
+        "a",
+        "c",
+        "b",
+        "datetime",
+    ]
+
+    for bad_cols in [
+        ["a", "c", "b", "datetime"],  # missing timestamp
+        ["a", "c", "b", "timestamp"],  # missing datetime
+        ["a", "c", "b", "b", "datetime", "timestamp"],  # duplicates
+        ["a", "c", "b", "timestamp", "datetime", "timestamp"],  # duplicates
+    ]:
+        with pytest.raises(AssertionError):
+            _ordered_cols(bad_cols)

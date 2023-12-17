@@ -3,15 +3,15 @@ import copy
 from enforce_typing import enforce_types
 import polars as pl
 
-
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
     concat_next_df,
-    initialize_df,
+    initialize_rawohlcv_df,
     transform_df,
+    text_to_df,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -75,7 +75,7 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
 @enforce_types
 def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     """Return a df for use in rawohlcv_dfs"""
-    df = initialize_df(TOHLCV_COLS)
+    df = initialize_rawohlcv_df(TOHLCV_COLS)
 
     next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL)
 

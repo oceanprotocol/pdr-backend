@@ -1,8 +1,11 @@
 """
-plutil: polars dataframe & cvs utilities. 
+plutil: polars dataframe & csv/parquet utilities. 
 These utilities are specific to the time-series dataframe columns we're using.
 """
+from io import StringIO
 import os
+import shutil
+from tempfile import mkdtemp
 from typing import List
 
 from enforce_typing import enforce_types
@@ -17,9 +20,8 @@ from pdr_backend.lake.constants import (
 
 
 @enforce_types
-def initialize_df(cols: List[str] = []) -> pl.DataFrame:
+def initialize_rawohlcv_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
-    Polars has no index, so "timestamp" and "datetime" are regular cols
     Applies transform to get columns (including datetime)
     """
     df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL)
@@ -129,7 +131,7 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
     df = df.filter((pl.col("timestamp") >= st) & (pl.col("timestamp") <= fin))
 
     # initialize df and enforce schema
-    df0 = initialize_df(cols)
+    df0 = initialize_rawohlcv_df(cols)
     df = concat_next_df(df0, df)
 
     # add in datetime column
@@ -190,3 +192,16 @@ def _get_head_df(filename: str, n: int = 5) -> pl.DataFrame:
     if not head_df.is_empty():
         return head_df
     raise ValueError(f"File {filename} has no entries")
+
+
+@enforce_types
+def text_to_df(s: str) -> pl.DataFrame:
+    tmpdir = mkdtemp()
+    filename = os.path.join(tmpdir, f"df.psv")
+    s = StringIO(s)
+    with open(filename, "w") as f:
+        for line in s:
+            f.write(line)
+    df = pl.scan_csv(filename, separator="|").collect()
+    shutil.rmtree(tmpdir)
+    return df
