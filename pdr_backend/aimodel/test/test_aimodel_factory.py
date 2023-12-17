@@ -4,15 +4,15 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.ppss.model_ss import APPROACHES, ModelSS
+from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
 
 @enforce_types
 def test_aimodel_factory_basic():
     for approach in APPROACHES:
-        model_ss = ModelSS({"approach": approach})
-        factory = AimodelFactory(model_ss)
-        assert isinstance(factory.model_ss, ModelSS)
+        aimodel_ss = AimodelSS({"approach": approach})
+        factory = AimodelFactory(aimodel_ss)
+        assert isinstance(factory.aimodel_ss, AimodelSS)
 
         (X_train, y_train, X_test, y_test) = _data()
 
@@ -28,12 +28,12 @@ def test_aimodel_factory_basic():
 def test_aimodel_accuracy_from_xy(aimodel_factory):
     (X_train, y_train, X_test, y_test) = _data()
 
-    model = aimodel_factory.build(X_train, y_train)
+    aimodel = aimodel_factory.build(X_train, y_train)
 
-    y_train_hat = model.predict(X_train)
+    y_train_hat = aimodel.predict(X_train)
     assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
 
-    y_test_hat = model.predict(X_test)
+    y_test_hat = aimodel.predict(X_test)
     assert sum(abs(y_test - y_test_hat)) < 1e-10
 
 
@@ -71,7 +71,7 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
     )  # newest
     y_train = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
 
-    model = aimodel_factory.build(X_train, y_train)
+    aimodel = aimodel_factory.build(X_train, y_train)
 
-    y_train_hat = model.predict(X_train)
+    y_train_hat = aimodel.predict(X_train)
     assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear

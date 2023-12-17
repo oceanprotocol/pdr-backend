@@ -19,7 +19,7 @@ data_ss:
   autoregressive_n : 10 # no. epochs that model looks back, to predict next
   parquet_dir: parquet_data
 
-model_ss:
+aimodel_ss:
   approach: LIN
   
 predictoor_ss:

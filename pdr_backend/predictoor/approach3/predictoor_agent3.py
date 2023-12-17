@@ -46,7 +46,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        aimodel_factory = AimodelFactory(self.ppss.model_ss)
+        aimodel_factory = AimodelFactory(self.ppss.aimodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data
