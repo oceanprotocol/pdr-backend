@@ -3,7 +3,7 @@ import warnings
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.data_eng.model_factory import ModelFactory
+from pdr_backend.lake.model_factory import ModelFactory
 from pdr_backend.ppss.model_ss import APPROACHES, ModelSS
 
 

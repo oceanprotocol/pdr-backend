@@ -3,7 +3,7 @@ import ccxt
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.data_eng.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 
 
 @enforce_types

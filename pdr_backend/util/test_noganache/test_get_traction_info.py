@@ -26,7 +26,7 @@ def test_get_traction_info_main_mainnet(
     mock_fetch = Mock(return_value=_sample_daily_predictions)
 
     PATH = "pdr_backend.util.get_traction_info"
-    PATH2 = "pdr_backend.data_eng"
+    PATH2 = "pdr_backend.lake"
     with patch(f"{PATH}.get_traction_statistics", mock_traction_stat), patch(
         f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum
     ), patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily), patch(

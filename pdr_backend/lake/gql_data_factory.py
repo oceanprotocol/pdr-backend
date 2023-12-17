@@ -4,11 +4,11 @@ from typing import Dict, Callable
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.data_eng.plutil import (
+from pdr_backend.lake.plutil import (
     has_data,
     newest_ut,
 )
-from pdr_backend.data_eng.table_pdr_predictions import (
+from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     get_pdr_predictions_df,
 )

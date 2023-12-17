@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 
 import numpy as np
 
-from pdr_backend.data_eng import timeblock
+from pdr_backend.lake import timeblock
 
 
 @enforce_types

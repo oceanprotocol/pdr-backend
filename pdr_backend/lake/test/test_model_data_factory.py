@@ -4,9 +4,9 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.data_eng.test.resources import (
+from pdr_backend.lake.model_data_factory import ModelDataFactory
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.test.resources import (
     _mergedohlcv_df_ETHUSDT,
     _data_pp_ss_1feed,
     _data_pp,

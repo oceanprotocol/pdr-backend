@@ -3,10 +3,10 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.model_data_factory import ModelDataFactory
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.data_eng.model_factory import ModelFactory
+from pdr_backend.lake.model_factory import ModelFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 

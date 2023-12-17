@@ -5,14 +5,14 @@ from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
 
-from pdr_backend.data_eng.constants import (
+from pdr_backend.lake.constants import (
     OHLCV_COLS,
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
     TOHLCV_SCHEMA_PL,
 )
-from pdr_backend.data_eng.fetch_ohlcv import safe_fetch_ohlcv
-from pdr_backend.data_eng.plutil import (
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.plutil import (
     initialize_df,
     transform_df,
     concat_next_df,

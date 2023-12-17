@@ -4,8 +4,8 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.data_eng.test.resources import _gql_data_factory
-from pdr_backend.data_eng.table_pdr_predictions import predictions_schema
+from pdr_backend.lake.test.resources import _gql_data_factory
+from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
@@ -15,8 +15,8 @@ from pdr_backend.util.timeutil import timestr_to_ut
 pdr_predictions_record = "pdr_predictions"
 
 
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql1(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
@@ -36,8 +36,8 @@ def test_update_gql1(
     )
 
 
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql2(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
@@ -57,8 +57,8 @@ def test_update_gql2(
     )
 
 
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql3(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
@@ -78,8 +78,8 @@ def test_update_gql3(
     )
 
 
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_gql_iteratively(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
@@ -183,8 +183,8 @@ def _test_update_gql(
         assert target_pred * 1000 in preds
 
 
-@patch("pdr_backend.data_eng.table_pdr_predictions.fetch_filtered_predictions")
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_load_and_verify_schema(
     mock_get_all_contract_ids_by_owner,
     mock_fetch_filtered_predictions,
@@ -227,9 +227,9 @@ def test_load_and_verify_schema(
 
 
 @enforce_types
-@patch("pdr_backend.data_eng.gql_data_factory.get_all_contract_ids_by_owner")
-@patch("pdr_backend.data_eng.gql_data_factory.GQLDataFactory._update")
-@patch("pdr_backend.data_eng.gql_data_factory.GQLDataFactory._load_parquet")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
+@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._load_parquet")
 def test_get_gql_dfs_calls(
     mock_load_parquet,
     mock_update,

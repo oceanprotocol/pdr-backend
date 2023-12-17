@@ -8,16 +8,16 @@ import numpy as np
 import polars as pl
 import pytest
 
-from pdr_backend.data_eng.constants import TOHLCV_SCHEMA_PL
-from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.data_eng.plutil import (
+from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.plutil import (
     initialize_df,
     transform_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
     concat_next_df,
 )
-from pdr_backend.data_eng.test.resources import (
+from pdr_backend.lake.test.resources import (
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,

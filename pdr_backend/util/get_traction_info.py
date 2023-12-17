@@ -11,7 +11,7 @@ from pdr_backend.util.predictoor_stats import (
     plot_traction_daily_statistics,
     plot_slot_daily_statistics,
 )
-from pdr_backend.data_eng.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 
 @enforce_types

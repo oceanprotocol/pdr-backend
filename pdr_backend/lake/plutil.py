@@ -9,7 +9,7 @@ from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
 
-from pdr_backend.data_eng.constants import (
+from pdr_backend.lake.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_SCHEMA_PL,

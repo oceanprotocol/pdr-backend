@@ -5,13 +5,13 @@ import numpy as np
 import polars as pl
 import pytest
 
-from pdr_backend.data_eng.constants import (
+from pdr_backend.lake.constants import (
     OHLCV_COLS,
     TOHLCV_COLS,
     OHLCV_DTYPES_PL,
     TOHLCV_DTYPES_PL,
 )
-from pdr_backend.data_eng.plutil import (
+from pdr_backend.lake.plutil import (
     initialize_df,
     transform_df,
     concat_next_df,

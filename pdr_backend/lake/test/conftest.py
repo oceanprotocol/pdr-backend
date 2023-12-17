@@ -3,7 +3,7 @@ from typing import List
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.data_eng.model_factory import ModelFactory
+from pdr_backend.lake.model_factory import ModelFactory
 from pdr_backend.models.prediction import (
     Prediction,
     mock_prediction,
