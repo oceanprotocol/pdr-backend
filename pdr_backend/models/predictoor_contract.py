@@ -8,7 +8,7 @@ from pdr_backend.models.fixed_rate import FixedRate
 from pdr_backend.models.token import Token
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
-from pdr_backend.util.mathutil import string_to_bytes32, from_wei
+from pdr_backend.util.mathutil import string_to_bytes32, from_wei, to_wei
 from pdr_backend.util.networkutil import (
     is_sapphire_network,
     send_encrypted_tx,
@@ -258,7 +258,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
           If False, returns the tx hash immediately after sending.
           If an exception occurs during the  process, returns None.
         """
-        amount_wei = self.config.w3.to_wei(str(stake_amount), "ether")
+        amount_wei = to_wei(stake_amount)
 
         # Check allowance first, only approve if needed
         if self.last_allowance <= 0:

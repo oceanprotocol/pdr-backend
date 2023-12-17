@@ -5,6 +5,7 @@ from pdr_backend.util.timeframestr import (
     Timeframe,
     pack_timeframe_str_list,
     verify_timeframe_str,
+    s_to_timeframe_str,
 )
 
 
@@ -65,3 +66,16 @@ def test_verify_timeframe_str():
 
     with pytest.raises(ValueError):
         verify_timeframe_str("foo")
+
+
+@enforce_types
+def test_s_to_timeframe_str():
+    assert s_to_timeframe_str(300) == "5m"
+    assert s_to_timeframe_str(3600) == "1h"
+
+    assert s_to_timeframe_str(0) == ""
+    assert s_to_timeframe_str(100) == ""
+    assert s_to_timeframe_str(-300) == ""
+
+    with pytest.raises(TypeError):
+        s_to_timeframe_str("300")

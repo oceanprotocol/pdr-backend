@@ -3,7 +3,7 @@ import csv
 from typing import List, Dict
 
 from enforce_typing import enforce_types
-from pdr_backend.util.subgraph_predictions import Prediction
+from pdr_backend.subgraph.subgraph_predictions import Prediction
 
 
 @enforce_types
