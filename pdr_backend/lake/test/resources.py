@@ -5,6 +5,7 @@ import polars as pl
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.plutil import text_to_df
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
@@ -71,6 +72,9 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
     )
 
 
+# ==================================================================
+
+
 @enforce_types
 def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     """Return a df for use in rawohlcv_dfs"""
@@ -121,3 +125,43 @@ ETHUSDT_RAWOHLCV_DFS = {
         "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
     }
 }
+
+# ==================================================================
+
+RAW_DF1 = text_to_df(  # binance BTC/USDT
+    """datetime|timestamp|open|close
+d0|0|10.0|11.0
+d1|1|10.1|11.1
+d3|3|10.3|11.3
+d4|4|10.4|11.4
+"""
+)  # does not have: "d2|2|10.2|11.2" to simulate missing vals from exchanges
+
+RAW_DF2 = text_to_df(  # binance ETH/USDT
+    """datetime|timestamp|open|close
+d0|0|20.0|21.0
+d1|1|20.1|21.1
+d2|2|20.2|21.2
+d3|3|20.3|21.3
+"""
+)  # does *not* have: "d4|4|20.4|21.4" to simulate missing vals from exchanges
+
+RAW_DF3 = text_to_df(  # kraken BTC/USDT
+    """datetime|timestamp|open|close
+d0|0|30.0|31.0
+d1|1|30.1|31.1
+d2|2|30.2|31.2
+d3|3|30.3|31.3
+d4|4|30.4|31.4
+"""
+)
+
+RAW_DF4 = text_to_df(  # kraken ETH/USDT
+    """datetime|timestamp|open|close
+d0|0|40.0|41.0
+d1|1|40.1|41.1
+d2|2|40.2|41.2
+d3|3|40.3|41.3
+d4|4|40.4|41.4
+"""
+)

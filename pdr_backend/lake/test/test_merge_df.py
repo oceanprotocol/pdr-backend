@@ -7,7 +7,13 @@ from pdr_backend.lake.merge_df import (
     _add_df_col,
     _ordered_cols,
 )
-from pdr_backend.lake.test.resources import ETHUSDT_RAWOHLCV_DFS
+from pdr_backend.lake.test.resources import (
+    ETHUSDT_RAWOHLCV_DFS,
+    RAW_DF1,
+    RAW_DF2,
+    RAW_DF3,
+    RAW_DF4,
+)
 
 
 @enforce_types
@@ -31,10 +37,10 @@ def test_mergedohlcv_df_shape():
 
 
 @enforce_types
-def test_merge_rawohlcv_dfs(raw_df1, raw_df2, raw_df3, raw_df4):
+def test_merge_rawohlcv_dfs():
     raw_dfs = {
-        "binance": {"BTC/USDT": raw_df1, "ETH/USDT": raw_df2},
-        "kraken": {"BTC/USDT": raw_df3, "ETH/USDT": raw_df4},
+        "binance": {"BTC/USDT": RAW_DF1, "ETH/USDT": RAW_DF2},
+        "kraken": {"BTC/USDT": RAW_DF3, "ETH/USDT": RAW_DF4},
     }
 
     merged_df = merge_rawohlcv_dfs(raw_dfs)
@@ -58,19 +64,19 @@ def test_merge_rawohlcv_dfs(raw_df1, raw_df2, raw_df3, raw_df4):
 
 
 @enforce_types
-def test_add_df_col_unequal_dfs(raw_df1, raw_df2):
+def test_add_df_col_unequal_dfs():
     # basic sanity test that floats are floats
-    assert isinstance(raw_df1["close"][1], float)
+    assert isinstance(RAW_DF1["close"][1], float)
 
-    # add a first raw_df
-    merged_df = _add_df_col(None, "binance:BTC/USDT:close", raw_df1, "close")
+    # add a first RAW_DF
+    merged_df = _add_df_col(None, "binance:BTC/USDT:close", RAW_DF1, "close")
     assert merged_df.columns == ["timestamp", "binance:BTC/USDT:close", "datetime"]
     assert merged_df.shape == (4, 3)
     assert merged_df["datetime"][1] == "d1"
     assert merged_df["binance:BTC/USDT:close"][3] == 11.4
 
-    # add a second raw_df
-    merged_df = _add_df_col(merged_df, "binance:ETH/USDT:open", raw_df2, "open")
+    # add a second RAW_DF
+    merged_df = _add_df_col(merged_df, "binance:ETH/USDT:open", RAW_DF2, "open")
     assert merged_df.columns == [
         "timestamp",
         "binance:BTC/USDT:close",
@@ -84,12 +90,12 @@ def test_add_df_col_unequal_dfs(raw_df1, raw_df2):
 
 
 @enforce_types
-def test_add_df_col_equal_dfs(raw_df3, raw_df4):
+def test_add_df_col_equal_dfs():
     # basic sanity test that floats are floats
-    assert isinstance(raw_df3["close"][1], float)
+    assert isinstance(RAW_DF3["close"][1], float)
 
-    # add a first raw_df
-    merged_df = _add_df_col(None, "kraken:BTC/USDT:close", raw_df3, "close")
+    # add a first RAW_DF
+    merged_df = _add_df_col(None, "kraken:BTC/USDT:close", RAW_DF3, "close")
     assert merged_df.columns == [
         "timestamp",
         "kraken:BTC/USDT:close",
@@ -99,8 +105,8 @@ def test_add_df_col_equal_dfs(raw_df3, raw_df4):
     assert merged_df["datetime"][1] == "d1"
     assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
 
-    # add a second raw_df
-    merged_df = _add_df_col(merged_df, "kraken:ETH/USDT:open", raw_df4, "open")
+    # add a second RAW_DF
+    merged_df = _add_df_col(merged_df, "kraken:ETH/USDT:open", RAW_DF4, "open")
     assert merged_df.columns == [
         "timestamp",
         "kraken:BTC/USDT:close",
