@@ -36,7 +36,7 @@ d3|3|20.3|21.3
     )  # does *not* have: "d4|4|20.4|21.4" to simulate missing vals from exchanges
 
 
-# ==================================================================@pytest.fixture()
+@pytest.fixture()
 def raw_df3():  # kraken BTC/USDT
     return text_to_df(
         """datetime|timestamp|open|close

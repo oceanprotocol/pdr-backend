@@ -1,7 +1,7 @@
 import os
 import time
 from typing import List
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -9,11 +9,9 @@ import polars as pl
 import pytest
 
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import (
     OhlcvDataFactory,
-    _merge_rawohlcv_dfs,
-    _add_df_col,
-    _ordered_cols,
 )
 from pdr_backend.lake.plutil import (
     initialize_rawohlcv_df,
@@ -26,7 +24,6 @@ from pdr_backend.lake.test.resources import (
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,
-    ETHUSDT_RAWOHLCV_DFS,
 )
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
@@ -259,7 +256,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     rawohlcv_dfs = (  # pylint: disable=assignment-from-no-return
         factory._load_rawohlcv_files(fin_ut)
     )
-    mergedohlcv_df = factory._merge_rawohlcv_dfs(rawohlcv_dfs)
+    mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
     assert len(df0) == len(df1) == len(df1["high"]) == len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
@@ -325,33 +322,16 @@ def test_exchange_hist_overlap(tmpdir):
 
 
 @enforce_types
-def test_mergedohlcv_df_shape(tmpdir):
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-    mergedohlcv_df = factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert mergedohlcv_df.columns == [
-        "timestamp",
-        "binanceus:ETH/USDT:open",
-        "binanceus:ETH/USDT:high",
-        "binanceus:ETH/USDT:low",
-        "binanceus:ETH/USDT:close",
-        "binanceus:ETH/USDT:volume",
-        "datetime",
-    ]
-    assert mergedohlcv_df.shape == (12, 7)
-    assert len(mergedohlcv_df["timestamp"]) == 12
-    assert (  # pylint: disable=unsubscriptable-object
-        mergedohlcv_df["timestamp"][0] == 1686805500000
-    )
-
-
-@enforce_types
-def test_get_mergedohlcv_df_calls(tmpdir):
+@patch("pdr_backend.lake.ohlcv_data_factory.merge_rawohlcv_dfs")
+def test_get_mergedohlcv_df_calls(
+    mock_merge_rawohlcv_dfs,
+    tmpdir,
+):
+    mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
     _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
 
     factory._update_rawohlcv_files = Mock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)
-    factory._merge_rawohlcv_dfs = Mock(return_value=Mock(spec=pl.DataFrame))
 
     mergedohlcv_df = factory.get_mergedohlcv_df()
 
@@ -359,113 +339,4 @@ def test_get_mergedohlcv_df_calls(tmpdir):
 
     factory._update_rawohlcv_files.assert_called()
     factory._load_rawohlcv_files.assert_called()
-    factory._merge_rawohlcv_dfs.assert_called()
-
-
-# ==================================================================
-# test lower-level functions: _merge_rawohlcv_dfs(), _add_df_col()
-
-
-@enforce_types
-def test_merge_rawohlcv_dfs(raw_df1, raw_df2, raw_df3, raw_df4):
-    raw_dfs = {
-        "binance": {"BTC/USDT": raw_df1, "ETH/USDT": raw_df2},
-        "kraken": {"BTC/USDT": raw_df3, "ETH/USDT": raw_df4},
-    }
-
-    merged_df = _merge_rawohlcv_dfs(raw_dfs)
-
-    assert merged_df.columns == [
-        "timestamp",
-        "binance:BTC/USDT:open",
-        "binance:BTC/USDT:close",
-        "binance:ETH/USDT:open",
-        "binance:ETH/USDT:close",
-        "kraken:BTC/USDT:open",
-        "kraken:BTC/USDT:close",
-        "kraken:ETH/USDT:open",
-        "kraken:ETH/USDT:close",
-        "datetime",
-    ]
-    assert merged_df["datetime"][1] == "d1"
-    assert merged_df["binance:BTC/USDT:close"][3] == 11.3
-    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
-    assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
-
-
-@enforce_types
-def test_add_df_col_unequal_dfs(raw_df1, raw_df2):
-    # basic sanity test that floats are floats
-    assert isinstance(raw_df1["close"][1], float)
-
-    # add a first raw_df
-    merged_df = _add_df_col(None, "binance:BTC/USDT:close", raw_df1, "close")
-    assert merged_df.columns == ["timestamp", "binance:BTC/USDT:close", "datetime"]
-    assert merged_df.shape == (4, 3)
-    assert merged_df["datetime"][1] == "d1"
-    assert merged_df["binance:BTC/USDT:close"][3] == 11.4
-
-    # add a second raw_df
-    merged_df = _add_df_col(merged_df, "binance:ETH/USDT:open", raw_df2, "open")
-    assert merged_df.columns == [
-        "timestamp",
-        "binance:BTC/USDT:close",
-        "binance:ETH/USDT:open",
-        "datetime",
-    ]
-    assert merged_df.shape == (5, 4)
-    assert merged_df["datetime"][1] == "d1"
-    assert merged_df["binance:BTC/USDT:close"][3] == 11.3
-    assert merged_df["binance:ETH/USDT:open"][3] == 20.3
-    assert merged_df["binance:ETH/USDT:open"][4].is_null()
-
-
-@enforce_types
-def test_add_df_col_equal_dfs(raw_df3, raw_df4):
-    # basic sanity test that floats are floats
-    assert isinstance(raw_df3["close"][1], float)
-
-    # add a first raw_df
-    merged_df = _add_df_col(None, "kraken:BTC/USDT:close", raw_df3, "close")
-    assert merged_df.columns == [
-        "timestamp",
-        "kraken:BTC/USDT:close",
-        "datetime",
-    ]
-    assert merged_df.shape == (5, 3)
-    assert merged_df["datetime"][1] == "d1"
-    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
-
-    # add a second raw_df
-    merged_df = _add_df_col(merged_df, "kraken:ETH/USDT:open", raw_df4, "open")
-    assert merged_df.columns == [
-        "timestamp",
-        "kraken:BTC/USDT:close",
-        "kraken:ETH/USDT:open",
-        "datetime",
-    ]
-    assert merged_df.shape == (5, 4)
-    assert merged_df["datetime"][1] == "d1"
-    assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
-    assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
-
-
-@enforce_types
-def test_ordered_cols():
-    assert _ordered_cols(["datetime", "timestamp"]) == ["timestamp", "datetime"]
-    assert _ordered_cols(["a", "c", "b", "datetime", "timestamp"]) == [
-        "timestamp",
-        "a",
-        "c",
-        "b",
-        "datetime",
-    ]
-
-    for bad_cols in [
-        ["a", "c", "b", "datetime"],  # missing timestamp
-        ["a", "c", "b", "timestamp"],  # missing datetime
-        ["a", "c", "b", "b", "datetime", "timestamp"],  # duplicates
-        ["a", "c", "b", "timestamp", "datetime", "timestamp"],  # duplicates
-    ]:
-        with pytest.raises(AssertionError):
-            _ordered_cols(bad_cols)
+    mock_merge_rawohlcv_dfs.assert_called()
