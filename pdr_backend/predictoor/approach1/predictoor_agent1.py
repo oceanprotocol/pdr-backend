@@ -4,22 +4,18 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
-from pdr_backend.predictoor.approach1.predictoor_config1 import PredictoorConfig1
 
 
 @enforce_types
 class PredictoorAgent1(BasePredictoorAgent):
-    predictoor_config_class = PredictoorConfig1
-
     def get_prediction(
-        self, addr: str, timestamp: int  # pylint: disable=unused-argument
+        self, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
-          Given a feed, let's predict for a given timestamp.
+          Predict for a given timestamp.
 
         @arguments
-          addr -- str -- address of the trading pair. Info in self.feeds[addr]
           timestamp -- int -- when to make prediction for (unix time)
 
         @return

@@ -3,72 +3,80 @@ import time
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
-from pdr_backend.dfbuyer.dfbuyer_config import DFBuyerConfig
+
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.token import Token
+from pdr_backend.models.feed import print_feeds
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.subgraph import (
-    get_consume_so_far_per_contract,
-    wait_until_subgraph_syncs,
-)
+from pdr_backend.util.mathutil import from_wei
+from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
+from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 
 WEEK = 7 * 86400
 
 
 @enforce_types
 class DFBuyerAgent:
-    def __init__(self, config: DFBuyerConfig):
-        self.config: DFBuyerConfig = config
+    def __init__(self, ppss: PPSS):
+        # ppss
+        self.ppss = ppss
+        print("\n" + "-" * 80)
+        print(self.ppss)
+
+        # set self.feeds
+        self.feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(self.feeds, f"all feeds, owner={ppss.web3_pp.owner_addrs}")
+
+        if not self.feeds:
+            raise ValueError("No feeds found.")
+
+        # addresses
+        batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
+        self.OCEAN_addr = get_address(ppss.web3_pp, "Ocean")
+
+        # set attribs to track progress
         self.last_consume_ts = 0
-        self.feeds = config.get_feeds()
         self.predictoor_batcher: PredictoorBatcher = PredictoorBatcher(
-            self.config.web3_config,
-            get_address(config.web3_config.w3.eth.chain_id, "PredictoorHelper"),
+            ppss.web3_pp,
+            batcher_addr,
         )
-        self.token_addr = get_address(config.web3_config.w3.eth.chain_id, "Ocean")
         self.fail_counter = 0
-
-        print("-" * 80)
-        print("Config:")
-        print(self.config)
-
-        print("\n" + "." * 80)
-        print("Feeds (detailed):")
-        for feed in self.feeds.values():
-            print(f"  {feed.longstr()}")
-
-        print("\n" + "." * 80)
-        print("Feeds (succinct):")
-        for addr, feed in self.feeds.items():
-            print(f"  {feed}, {feed.seconds_per_epoch} s/epoch, addr={addr}")
-
-        token = Token(self.config.web3_config, self.token_addr)
+        self.batch_size = ppss.dfbuyer_ss.batch_size
 
         # Check allowance and approve if necessary
         print("Checking allowance...")
-        allowance = token.allowance(
-            self.config.web3_config.owner, self.predictoor_batcher.contract_address
+        OCEAN = Token(ppss.web3_pp, self.OCEAN_addr)
+        allowance = OCEAN.allowance(
+            ppss.web3_pp.web3_config.owner,
+            self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
             print("Approving tokens for predictoor_batcher")
-            tx = token.approve(
+            tx = OCEAN.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
             print(f"Done: {tx['transactionHash'].hex()}")
 
     def run(self, testing: bool = False):
+        if not self.feeds:
+            return
         while True:
-            ts = self.config.web3_config.get_block("latest")["timestamp"]
+            ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
             self.take_step(ts)
 
             if testing:
                 break
 
     def take_step(self, ts: int):
+        if not self.feeds:
+            return
         print("Taking step for timestamp:", ts)
-        wait_until_subgraph_syncs(self.config.web3_config, self.config.subgraph_url)
+        wait_until_subgraph_syncs(
+            self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
+        )
         missing_consumes_amt = self._get_missing_consumes(ts)
         print("Missing consume amounts:", missing_consumes_amt)
 
@@ -86,10 +94,11 @@ class DFBuyerAgent:
             print("One or more consumes have failed...")
             self.fail_counter += 1
 
-            if self.fail_counter > 3 and self.config.batch_size > 6:
-                self.config.batch_size = self.config.batch_size * 2 // 3
+            batch_size = self.ppss.dfbuyer_ss.batch_size
+            if self.fail_counter > 3 and batch_size > 6:
+                self.batch_size = batch_size * 2 // 3
                 print(
-                    f"Seems like we keep failing, adjusting batch size to: {self.config.batch_size}"
+                    f"Seems like we keep failing, adjusting batch size to: {batch_size}"
                 )
                 self.fail_counter = 0
 
@@ -99,12 +108,14 @@ class DFBuyerAgent:
         self.fail_counter = 0
 
         # sleep until next consume interval
-        ts = self.config.web3_config.get_block("latest")["timestamp"]
+        ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
         interval_start = (
-            int(ts / self.config.consume_interval_seconds)
-            * self.config.consume_interval_seconds
+            int(ts / self.ppss.dfbuyer_ss.consume_interval_seconds)
+            * self.ppss.dfbuyer_ss.consume_interval_seconds
         )
-        seconds_left = (interval_start + self.config.consume_interval_seconds) - ts + 60
+        seconds_left = (
+            (interval_start + self.ppss.dfbuyer_ss.consume_interval_seconds) - ts + 60
+        )
         print(
             f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
         )
@@ -134,6 +145,8 @@ class DFBuyerAgent:
     def _prepare_batches(
         self, consume_times: Dict[str, int]
     ) -> List[Tuple[List[str], List[int]]]:
+        batch_size = self.ppss.dfbuyer_ss.batch_size
+
         max_no_of_addresses_in_batch = 3  # to avoid gas issues
         batches: List[Tuple[List[str], List[int]]] = []
         addresses_to_consume: List[str] = []
@@ -141,16 +154,16 @@ class DFBuyerAgent:
         for address, times in consume_times.items():
             while times > 0:
                 current_times_to_consume = min(
-                    times, self.config.batch_size - sum(times_to_consume)
+                    times, batch_size - sum(times_to_consume)
                 )
                 if current_times_to_consume > 0:
                     addresses_to_consume.append(
-                        self.config.web3_config.w3.to_checksum_address(address)
+                        self.ppss.web3_pp.web3_config.w3.to_checksum_address(address)
                     )
                     times_to_consume.append(current_times_to_consume)
                     times -= current_times_to_consume
                 if (
-                    sum(times_to_consume) == self.config.batch_size
+                    sum(times_to_consume) == batch_size
                     or address == list(consume_times.keys())[-1]
                     or len(addresses_to_consume) == max_no_of_addresses_in_batch
                 ):
@@ -160,12 +173,12 @@ class DFBuyerAgent:
         return batches
 
     def _consume(self, addresses_to_consume, times_to_consume):
-        for i in range(self.config.max_request_tries):
+        for i in range(self.ppss.dfbuyer_ss.max_request_tries):
             try:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.token_addr,
+                    self.OCEAN_addr,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()
@@ -229,27 +242,30 @@ class DFBuyerAgent:
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         prices: Dict[str, float] = {}
         for address in contract_addresses:
-            rate_wei = PredictoorContract(self.config.web3_config, address).get_price()
-            rate_float = float(self.config.web3_config.w3.from_wei(rate_wei, "ether"))
-            prices[address] = rate_float
+            rate_wei = PredictoorContract(self.ppss.web3_pp, address).get_price()
+            prices[address] = from_wei(rate_wei)
         return prices
 
     def _get_consume_so_far(self, ts: int) -> Dict[str, float]:
         week_start = (math.floor(ts / WEEK)) * WEEK
         consume_so_far = get_consume_so_far_per_contract(
-            self.config.subgraph_url,
-            self.config.web3_config.owner,
+            self.ppss.web3_pp.subgraph_url,
+            self.ppss.web3_pp.web3_config.owner,
             week_start,
             list(self.feeds.keys()),
         )
         return consume_so_far
 
     def _get_expected_amount_per_feed(self, ts: int):
-        amount_per_feed_per_interval = self.config.amount_per_interval / len(self.feeds)
+        amount_per_feed_per_interval = self.ppss.dfbuyer_ss.amount_per_interval / len(
+            self.feeds
+        )
         week_start = (math.floor(ts / WEEK)) * WEEK
         time_passed = ts - week_start
 
         # find out how many intervals has passed
-        n_intervals = int(time_passed / self.config.consume_interval_seconds) + 1
+        n_intervals = (
+            int(time_passed / self.ppss.dfbuyer_ss.consume_interval_seconds) + 1
+        )
 
         return n_intervals * amount_per_feed_per_interval

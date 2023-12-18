@@ -2,6 +2,7 @@ import datetime
 from datetime import timezone
 
 from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.util.timeutil import (
     pretty_timestr,
@@ -93,6 +94,9 @@ def test_dt_to_ut_and_back():
 
     dt2 = ut_to_dt(ut)
     assert dt2 == dt
+
+    with pytest.raises(AssertionError):
+        ut_to_dt(-1)
 
 
 @enforce_types

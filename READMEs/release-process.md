@@ -51,7 +51,7 @@ To elaborate: we have an automated docker build for pdr-backend `main` branch an
 
 If you want to add Docker branches, go to https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit
 
-Then: on "Build rules", add your branch. Below is an example, where Alex is buildint "pdr-backend: alex" from branch "feature/alex".
+Then: on "Build rules", add your branch. Below is an example, where Alex is building "pdr-backend: alex" from branch "feature/alex".
 
 ![](./images/dockerbranch.png)
 
@@ -65,7 +65,7 @@ First, build your image locally with a custom label, eg `yaml-cli2`.
 
 ```console
 cd ~/code/pdr-backend
-docker build -t 'oceanprotocol/pdr-backend:yaml-cli2' .
+docker build . -t 'oceanprotocol/pdr-backend:yaml-cli2' .
 ```
 
 Then, start barge, using the custom label:
@@ -83,3 +83,10 @@ Pros of local testing:
 - no need of cleanups. If a PR is merged, we don't need to delete that branch from dockerhub autobuild.
 - no need of access to dockerhub
 - dockerhub should be used for production ready images only
+
+### All Barge READMEs
+
+- [barge.md](barge.md): the main Barge README
+- [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
+- [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.
+

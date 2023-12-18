@@ -29,6 +29,9 @@ source venv/bin/activate
 
 # Install modules in the environment
 pip install -r requirements.txt
+
+#add pwd to bash path
+export PATH=$PATH:.
 ```
 
 If you're running MacOS, then in console:
@@ -38,28 +41,28 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 ## Simulate Modeling and Trading
 
-Simulation allows us to quickly build intuition, and assess the performance of the data / model / trading strategy (backtest).
+Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
+
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
 
 Let's simulate! In console:
 ```console
-python pdr_backend/simulation/runtrade.py
+pdr sim my_ppss.yaml
 ```
 
-What `runtrade.py` does:
+What it does:
 1. Set simulation parameters.
-1. Grab historical price data from exchanges and stores in `csvs/` dir. It re-uses any previously saved data.
+1. Grab historical price data from exchanges and stores in `parquet_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
    - Build a model
    - Predict up/down
    - Trade.
+   - Plot total profit versus time, and more.
    - (It logs this all to screen, and to `out*.txt`.)
-   - Plot total profit versus time.
 
-The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runtrade.py](../pdr_backend/simulation/runtrade.py).
+The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in [runsim.py](../pdr_backend/sim/runsim.py).
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
-
-([This README](dynamic-model-codebase.md) has more info about the simulator's code structure.)
 
 ## Run Trader Bot on Sapphire Testnet
 
@@ -74,31 +77,16 @@ Then, copy & paste your private key as an envvar. In console:
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Now, set other envvars. In console:
-```console
-#other envvars for testnet and mainnet
-export ADDRESS_FILE="${HOME}/.ocean/ocean-contracts/artifacts/address.json"
-export PAIR_FILTER=BTC/USDT
-export TIMEFRAME_FILTER=5m
-export SOURCE_FILTER=binance
-
-#testnet-specific envvars
-export RPC_URL=https://testnet.sapphire.oasis.dev
-export SUBGRAPH_URL=https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-export STAKE_TOKEN=0x973e69303259B0c2543a38665122b773D28405fB # (fake) OCEAN token address
-export OWNER_ADDRS=0xe02a421dfc549336d47efee85699bd0a3da7d6ff # OPF deployer address
-```
-
-([envvars.md](envvars.md) has details.)
+Update `my_ppss.yaml` as desired.
 
 Then, run a simple trading bot. In console:
 ```console
-python pdr_backend/trader/main.py
+pdr trader 2 my_ppss.yaml sapphire-testnet 
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. 
 
-(You can track at finer resolution by writing more logs to the [code](../pdr_backend/trader/trader_agent.py), or [querying Predictoor subgraph](subgraph.md).)
+You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/trader/trader_agent.py), or [querying Predictoor subgraph](subgraph.md).
 
 ## Run Trader Bot on Sapphire Mainnet
 
@@ -111,21 +99,11 @@ Then, copy & paste your private key as an envvar. (You can skip this if it's sam
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Now, set other envvars. In console:
-```console
-#envvars for testnet and mainnet
-#(can skip this, since same as testnet)
-
-#mainnet-specific envvars
-export RPC_URL=https://sapphire.oasis.io
-export SUBGRAPH_URL=https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
-export STAKE_TOKEN=0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520 # OCEAN token address
-export OWNER_ADDRS=0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703 # OPF deployer address
-```
+Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
 ```console
-python pdr_backend/trader/main.py
+pdr trader 2 my_ppss.yaml sapphire-mainnet 
 ```
 
 This is where there's real $ at stake. Good luck!
@@ -144,10 +122,6 @@ Once you're familiar with the above, you can set your own trading strategy and o
 1. Fork `pdr-backend` repo.
 1. Change trader bot code as you wish, while iterating with simulation.
 1. Bring your trader bot to testnet then mainnet.
-
-To help, here's the code structure of the bot:
-- It runs [`trader_agent.py::TraderAgent`](../pdr_backend/trader/trader_agent.py) found in `pdr_backend/trader/`
-- It's configured by envvars and [`trader_config.py::TraderConfig`](../pdr_backend/trader/trader_config.py)
 
 ## Run Bots Remotely
 

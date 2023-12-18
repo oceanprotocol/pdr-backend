@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 
 Barge is a Docker container to run a local Ganache network having Predictoor contracts and (optionally) local bots. This README describes how to install Barge, and provides reference on running it with various agents.
 
+⚠️ If you're on MacOS or Windows, we recommend using a remotely-run Barge. See [vps flow](vps.md).
+
 ## Contents
 
 Main:
@@ -39,11 +41,7 @@ docker system prune -a --volumes
 ```
 
 **Then, get Docker running.** To run barge, you need the Docker engine running. Here's how:
-- If you're on Linux: you're good, there's nothing extra to do.
-- If you're on MacOS: 
-  - via console: `open -a Docker`
-  - or, via app: open Finder app, find Docker, click to open app. (You don't need to press "play" or anything else. The app being open is enough.)
-  - ⚠️ MacOS may give Docker issues. [Here](macos.md) are workarounds.
+- If you're on Linux: you're good, there's nothing extra to do
 
 Congrats! Barge is installed and ready to be run.
 
@@ -95,8 +93,10 @@ For each other subcomponent of Barge, you need to change its respective repo sim
 
 And for Barge core functionality, make changes to the [barge repo](https://github.com/oceanprotocol/barge) itself.
 
-## Other READMEs
+More info: [Barge flow of calls](barge-calls.md)
 
-- [Parent predictoor README: predictoor.md](./predictoor.md)
-- [Parent trader README: trader.md](./trader.md)
-- [Root README](../README.md)
+## All Barge READMEs
+
+- [barge.md](barge.md): the main Barge README
+- [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
+- [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.

@@ -1,0 +1,22 @@
+from enforce_typing import enforce_types
+
+from pdr_backend.ppss.publisher_ss import mock_publisher_ss, PublisherSS
+
+
+@enforce_types
+def test_publisher_ss():
+    d = {
+        "sapphire-mainnet": {"fee_collector_address": "0x1"},
+        "sapphire-testnet": {"fee_collector_address": "0x2"},
+    }
+    ss1 = PublisherSS("sapphire-mainnet", d)
+    assert ss1.fee_collector_address == "0x1"
+
+    ss2 = PublisherSS("sapphire-testnet", d)
+    assert ss2.fee_collector_address == "0x2"
+
+
+@enforce_types
+def test_mock_publisher_ss():
+    publisher_ss = mock_publisher_ss()
+    assert isinstance(publisher_ss, PublisherSS)

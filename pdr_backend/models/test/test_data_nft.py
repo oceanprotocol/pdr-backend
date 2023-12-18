@@ -6,14 +6,16 @@ from eth_account import Account
 from web3.logs import DISCARD
 
 from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.erc721_factory import ERC721Factory
+from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.mathutil import to_wei
 
 
 @enforce_types
-def test_set_ddo():
+def test_set_ddo(web3_pp, web3_config):
+    private_key = os.getenv("PRIVATE_KEY")
+
     path = os.path.join(
         os.path.dirname(__file__), "../../tests/resources/ddo_v4_sample.json"
     )
@@ -22,15 +24,12 @@ def test_set_ddo():
         content = file_handle.read()
         ddo = json.loads(content)
 
-    private_key = os.getenv("PRIVATE_KEY")
     owner = Account.from_key(  # pylint:disable=no-value-for-parameter
         private_key=private_key
     )
-    rpc_url = os.getenv("RPC_URL")
-    web3_config = Web3Config(rpc_url, private_key)
-    factory = ERC721Factory(web3_config)
-    ocean_address = get_address(web3_config.w3.eth.chain_id, "Ocean")
-    fre_address = get_address(web3_config.w3.eth.chain_id, "FixedPrice")
+    factory = Erc721Factory(web3_pp)
+    ocean_address = get_address(web3_pp, "Ocean")
+    fre_address = get_address(web3_pp, "FixedPrice")
 
     feeCollector = owner.address
 
@@ -49,8 +48,8 @@ def test_set_ddo():
         [],
     )
 
-    rate = web3_config.w3.to_wei(3, "ether")
-    cut = web3_config.w3.to_wei(0.2, "ether")
+    rate = to_wei(3)
+    cut = to_wei(0.2)
     fre_data = (
         fre_address,
         [ocean_address, owner.address, feeCollector, owner.address],
@@ -59,7 +58,7 @@ def test_set_ddo():
     logs_nft, _ = factory.createNftWithErc20WithFixedRate(nft_data, erc_data, fre_data)
     data_nft_address = logs_nft["newTokenAddress"]
     print(f"Deployed NFT: {data_nft_address}")
-    data_nft = DataNft(web3_config, data_nft_address)
+    data_nft = DataNft(web3_pp, data_nft_address)
 
     tx = data_nft.set_ddo(ddo, wait_for_receipt=True)
     receipt = web3_config.w3.eth.wait_for_transaction_receipt(tx)

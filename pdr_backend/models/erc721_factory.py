@@ -3,26 +3,19 @@ from web3.logs import DISCARD
 
 from pdr_backend.models.base_contract import BaseContract
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.networkutil import tx_call_params
 
 
 @enforce_types
-class ERC721Factory(BaseContract):
-    def __init__(self, config: Web3Config, chain_id=None):
-        if not chain_id:
-            chain_id = config.w3.eth.chain_id
-        address = get_address(chain_id, "ERC721Factory")
+class Erc721Factory(BaseContract):
+    def __init__(self, web3_pp):
+        address = get_address(web3_pp, "ERC721Factory")
         if not address:
-            raise ValueError("Cannot figure out ERC721Factory address")
-        super().__init__(config, address, "ERC721Factory")
+            raise ValueError("Cannot figure out Erc721Factory address")
+        super().__init__(web3_pp, address, "ERC721Factory")
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
-        #            gasPrice = self.config.w3.eth.gas_price
-        call_params = {
-            "from": self.config.owner,
-            "gasPrice": 100000000000,
-        }
-
+        call_params = tx_call_params(self.web3_pp)
         tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
             NftCreateData, ErcCreateData, FixedData
         ).transact(call_params)
