@@ -23,14 +23,12 @@ _D1 = {
     "address_file": "address.json 1",
     "rpc_url": "rpc url 1",
     "subgraph_url": "subgraph url 1",
-    "stake_token": "0xStake1",
     "owner_addrs": "0xOwner1",
 }
 _D2 = {
     "address_file": "address.json 2",
     "rpc_url": "rpc url 2",
     "subgraph_url": "subgraph url 2",
-    "stake_token": "0xStake2",
     "owner_addrs": "0xOwner2",
 }
 _D = {
@@ -58,7 +56,6 @@ def test_web3_pp__yaml_dict(monkeypatch):
     assert pp.address_file == "address.json 1"
     assert pp.rpc_url == "rpc url 1"
     assert pp.subgraph_url == "subgraph url 1"
-    assert pp.stake_token == "0xStake1"
     assert pp.owner_addrs == "0xOwner1"
 
     # network2

@@ -167,9 +167,8 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def get_current_epoch(self) -> int:
         """
-        curEpoch returns the timestamp of current candle start
-
-        this function returns the 'epoch number' that increases
+        Whereas curEpoch returns the timestamp of current candle start...
+        *This* function returns the 'epoch number' that increases
           by one each secondsPerEpoch seconds
         """
         current_epoch_ts = self.get_current_epoch_ts()
@@ -238,34 +237,36 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def submit_prediction(
         self,
         predicted_value: bool,
-        stake_amount: float,
+        stake_amt: float,
         prediction_ts: int,
         wait_for_receipt=True,
     ):
         """
-        Submits a prediction with the specified stake amount, to the contract.
+        @description
+          Submits a prediction with the specified stake amount, to the contract.
 
-        @param predicted_value: The predicted value (True or False)
-        @param stake_amount: The amount of ETH to be staked on the prediction
-        @param prediction_ts: The prediction timestamp == start a candle.
-        @param wait_for_receipt:
-          If True, waits for tx receipt after submission.
-          If False, immediately after sending the transaction.
-          Default is True.
+        @arguments
+          predicted_value: The predicted value (True or False)
+          stake_amt: The amount of OCEAN to stake in prediction (in ETH, not wei)
+          prediction_ts: The prediction timestamp == start a candle.
+          wait_for_receipt:
+            If True, waits for tx receipt after submission.
+            If False, immediately after sending the transaction.
+            Default is True.
 
         @return:
           If wait_for_receipt is True, returns the tx receipt.
           If False, returns the tx hash immediately after sending.
           If an exception occurs during the  process, returns None.
         """
-        amount_wei = to_wei(stake_amount)
+        stake_amt_wei = to_wei(stake_amt)
 
         # Check allowance first, only approve if needed
         if self.last_allowance <= 0:
             self.last_allowance = self.token.allowance(
                 self.config.owner, self.contract_address
             )
-        if self.last_allowance < amount_wei:
+        if self.last_allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, MAX_UINT)
                 self.last_allowance = MAX_UINT
@@ -279,7 +280,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             if is_sapphire_network(self.config.w3.eth.chain_id):
                 self.contract_instance.encodeABI(
                     fn_name="submitPredval",
-                    args=[predicted_value, amount_wei, prediction_ts],
+                    args=[predicted_value, stake_amt_wei, prediction_ts],
                 )
                 sender = self.config.owner
                 receiver = self.contract_instance.address
@@ -287,7 +288,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 res, txhash = send_encrypted_tx(
                     self.contract_instance,
                     "submitPredval",
-                    [predicted_value, amount_wei, prediction_ts],
+                    [predicted_value, stake_amt_wei, prediction_ts],
                     pk,
                     sender,
                     receiver,
@@ -300,10 +301,10 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 print("Encrypted transaction status code:", res)
             else:
                 tx = self.contract_instance.functions.submitPredval(
-                    predicted_value, amount_wei, prediction_ts
+                    predicted_value, stake_amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance -= amount_wei
+            self.last_allowance -= stake_amt_wei
             print(f"Submitted prediction, txhash: {txhash}")
             if not wait_for_receipt:
                 return txhash
