@@ -3,6 +3,7 @@ from typing import List, Union
 from enforce_typing import enforce_types
 
 import polars as pl
+from pdr_backend.lake.plutil import set_col_values
 
 
 @enforce_types
@@ -55,7 +56,7 @@ def _add_df_col(
         merged_df = newraw_df
     else:
         merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
-        merged_df = _merge_cols(merged_df, "timestamp", "timestamp_right")
+        merged_df = merge_cols(merged_df, "timestamp", "timestamp_right")
 
     merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
     _verify_df_cols(merged_df)
@@ -63,13 +64,14 @@ def _add_df_col(
 
 
 @enforce_types
-def _merge_cols(df: pl.DataFrame, col1: str, col2: str) -> pl.DataFrame:
+def merge_cols(df: pl.DataFrame, col1: str, col2: str) -> pl.DataFrame:
     """Keep the non-null versions of col1 & col2, in col1. Drop col2."""
     assert col1 in df
     if col2 not in df:
         return df
-    for i in range(df.shape[1]):
-        df[col1][i] = df[col1][i] or df[col2][i]
+    n_rows = df.shape[0]
+    new_vals = [df[col1][i] or df[col2][i] for i in range(n_rows)]
+    df = set_col_values(df, col1, new_vals)
     df = df.drop(col2)
     return df
 

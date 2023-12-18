@@ -29,6 +29,12 @@ def initialize_rawohlcv_df(cols: List[str] = []) -> pl.DataFrame:
 
 
 @enforce_types
+def set_col_values(df: pl.DataFrame, col: str, new_vals: list) -> pl.DataFrame:
+    """Equivalent to: df[col] = new_vals"""
+    return df.with_columns(pl.Series(new_vals).alias(col))
+
+
+@enforce_types
 def concat_next_df(df: pl.DataFrame, next_df: pl.DataFrame) -> pl.DataFrame:
     """Add a next_df to existing df, with the expected columns etc.
     Makes sure that both schemas match before concatenating.

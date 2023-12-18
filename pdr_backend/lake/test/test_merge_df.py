@@ -5,6 +5,7 @@ import pytest
 from pdr_backend.lake.merge_df import (
     merge_rawohlcv_dfs,
     _add_df_col,
+    merge_cols,
     _ordered_cols,
 )
 from pdr_backend.lake.test.resources import (
@@ -112,6 +113,30 @@ def test_add_df_col_equal_dfs():
     assert merged_df["timestamp"][1] == 1
     assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
     assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
+
+
+@enforce_types
+def test_merge_cols():
+    df = pl.DataFrame(
+        {
+            "a": [1, 2, 3, 4],
+            "b": [5, 6, 7, None],
+            "c": [9, 9, 9, 9],
+        }
+    )  # None will become pl.Null
+
+    df = df.select(["a", "b", "c"])
+    assert df.columns == ["a", "b", "c"]
+
+    # merge b into a
+    df2 = merge_cols(df, "a", "b")
+    assert df2.columns == ["a", "c"]
+    assert df2["a"].to_list() == [1, 2, 3, 4]
+
+    # merge a into b
+    df3 = merge_cols(df, "b", "a")
+    assert df3.columns == ["b", "c"]
+    assert df3["b"].to_list() == [5, 6, 7, 4]  # the 4 comes from "a"
 
 
 @enforce_types

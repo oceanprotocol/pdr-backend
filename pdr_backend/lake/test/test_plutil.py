@@ -13,6 +13,7 @@ from pdr_backend.lake.constants import (
 )
 from pdr_backend.lake.plutil import (
     initialize_rawohlcv_df,
+    set_col_values,
     concat_next_df,
     save_rawohlcv_file,
     load_rawohlcv_file,
@@ -51,6 +52,25 @@ def test_initialize_rawohlcv_df():
     df = initialize_rawohlcv_df(TOHLCV_COLS[:3])
     assert df.columns == TOHLCV_COLS[:3]
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3]
+
+
+@enforce_types
+def test_set_col_values():
+    df = pl.DataFrame(
+        {
+            "a": [1, 2, 3],
+            "b": [4, 5, 6],
+        }
+    )
+
+    df2 = set_col_values(df, "a", [7, 8, 9])
+    assert df2["a"].to_list() == [7, 8, 9]
+
+    df2 = set_col_values(df, "a", [7.1, 8.1, 9.1])
+    assert df2["a"].to_list() == [7.1, 8.1, 9.1]
+
+    with pytest.raises(pl.exceptions.ShapeError):
+        set_col_values(df, "a", [7, 8])
 
 
 @enforce_types
