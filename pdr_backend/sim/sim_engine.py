@@ -8,9 +8,9 @@ import numpy as np
 import polars as pl
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.data_eng.model_data_factory import ModelDataFactory
-from pdr_backend.data_eng.model_factory import ModelFactory
-from pdr_backend.data_eng.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
@@ -99,15 +99,15 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = ModelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        model_data_factory = AimodelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        model_factory = ModelFactory(self.ppss.model_ss)
-        model = model_factory.build(X_train, y_train)
+        aimodel_factory = AimodelFactory(self.ppss.aimodel_ss)
+        model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
 
@@ -241,7 +241,11 @@ class SimEngine:
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
-        ax0.set_title("Trading profit vs time", fontsize=FONTSIZE, fontweight="bold")
+        ax0.set_title(
+            f"Trading profit vs time. Current: ${y0[-1]:.2f}",
+            fontsize=FONTSIZE,
+            fontweight="bold",
+        )
         ax0.set_xlabel("time", fontsize=FONTSIZE)
         ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
@@ -259,7 +263,9 @@ class SimEngine:
         ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
         now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
         ax1.set_title(
-            f"% correct vs time. {now_s}", fontsize=FONTSIZE, fontweight="bold"
+            f"% correct vs time. Current: {now_s}",
+            fontsize=FONTSIZE,
+            fontweight="bold",
         )
         ax1.set_xlabel("time", fontsize=FONTSIZE)
         ax1.set_ylabel("% correct", fontsize=FONTSIZE)

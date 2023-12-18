@@ -6,6 +6,7 @@ from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import to_wei
 
 MAX_UINT256 = 2**256 - 1
 
@@ -36,8 +37,8 @@ def publish_asset(
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
     trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
 
-    rate_wei: int = web3_config.w3.to_wei(rate, "ether")
-    cut_wei: int = web3_config.w3.to_wei(cut, "ether")
+    rate_wei = to_wei(rate)
+    cut_wei = to_wei(cut)
 
     nft_name: str = base + "-" + quote + "-" + source + "-" + timeframe
     nft_symbol: str = pair

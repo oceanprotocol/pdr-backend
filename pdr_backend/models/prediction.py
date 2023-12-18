@@ -1,15 +1,17 @@
-from typing import Union
+from typing import List, Union
+
+from enforce_typing import enforce_types
 
 
+@enforce_types
 class Prediction:
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=redefined-builtin
     def __init__(
         self,
-        id: str,
+        ID: str,
         pair: str,
         timeframe: str,
-        prediction: Union[bool, None],
+        prediction: Union[bool, None],  # prediction = subgraph.predicted_value
         stake: Union[float, None],
         trueval: Union[bool, None],
         timestamp: int,  # timestamp == prediction submitted timestamp
@@ -18,7 +20,7 @@ class Prediction:
         slot: int,  # slot/epoch timestamp
         user: str,
     ) -> None:
-        self.id = id
+        self.ID = ID
         self.pair = pair
         self.timeframe = timeframe
         self.prediction = prediction
@@ -29,3 +31,238 @@ class Prediction:
         self.payout = payout
         self.slot = slot
         self.user = user
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def mock_prediction(prediction_tuple: tuple) -> Prediction:
+    (
+        pair_str,
+        timeframe_str,
+        prediction,
+        stake,
+        trueval,
+        timestamp,
+        source,
+        payout,
+        slot,
+        user,
+    ) = prediction_tuple
+
+    ID = f"{pair_str}-{timeframe_str}-{slot}-{user}"
+    return Prediction(
+        ID=ID,
+        pair=pair_str,
+        timeframe=timeframe_str,
+        prediction=prediction,
+        stake=stake,
+        trueval=trueval,
+        timestamp=timestamp,
+        source=source,
+        payout=payout,
+        slot=slot,
+        user=user,
+    )
+
+
+@enforce_types
+def mock_first_predictions() -> List[Prediction]:
+    return [
+        mock_prediction(prediction_tuple) for prediction_tuple in _FIRST_PREDICTION_TUPS
+    ]
+
+
+@enforce_types
+def mock_second_predictions() -> List[Prediction]:
+    return [
+        mock_prediction(prediction_tuple)
+        for prediction_tuple in _SECOND_PREDICTION_TUPS
+    ]
+
+
+@enforce_types
+def mock_daily_predictions() -> List[Prediction]:
+    return [
+        mock_prediction(prediction_tuple) for prediction_tuple in _DAILY_PREDICTION_TUPS
+    ]
+
+
+_FIRST_PREDICTION_TUPS = [
+    (
+        "ADA/USDT",
+        "5m",
+        True,
+        0.0500,
+        False,
+        1701503000,
+        "binance",
+        0.0,
+        1701503100,
+        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "BTC/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1701589400,
+        "binance",
+        0.0,
+        1701589500,
+        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+]
+
+_SECOND_PREDICTION_TUPS = [
+    (
+        "ETH/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1701675800,
+        "binance",
+        0.0500,
+        1701675900,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "BTC/USDT",
+        "1h",
+        True,
+        0.0500,
+        False,
+        1701503100,
+        "binance",
+        0.0,
+        1701503000,
+        "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ADA/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1701589400,
+        "binance",
+        0.0500,
+        1701589500,
+        "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "BNB/USDT",
+        "1h",
+        True,
+        0.0500,
+        True,
+        1701675800,
+        "kraken",
+        0.0500,
+        1701675900,
+        "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ETH/USDT",
+        "1h",
+        True,
+        None,
+        False,
+        1701589400,
+        "binance",
+        0.0,
+        1701589500,
+        "0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ETH/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1701675800,
+        "binance",
+        0.0500,
+        1701675900,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+]
+
+_DAILY_PREDICTION_TUPS = [
+    (
+        "ETH/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1698865200,
+        "binance",
+        0.0500,
+        1698865200,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "BTC/USDT",
+        "1h",
+        True,
+        0.0500,
+        False,
+        1698951600,
+        "binance",
+        0.0,
+        1698951600,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ADA/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1699038000,
+        "binance",
+        0.0500,
+        1699038000,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "BNB/USDT",
+        "1h",
+        True,
+        0.0500,
+        True,
+        1699124400,
+        "kraken",
+        0.0500,
+        1699124400,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ETH/USDT",
+        "1h",
+        True,
+        None,
+        False,
+        1699214400,
+        "binance",
+        0.0,
+        1701589500,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "ETH/USDT",
+        "5m",
+        True,
+        0.0500,
+        True,
+        1699300800,
+        "binance",
+        0.0500,
+        1699300800,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+]

@@ -59,3 +59,12 @@ def verify_timeframe_str(timeframe_str: str):
     """Raises an error if timeframe_str is not e.g. '1m', '1h'."""
     if timeframe_str not in CAND_TIMEFRAMES:
         raise ValueError(timeframe_str)
+
+
+@enforce_types
+def s_to_timeframe_str(seconds: int) -> str:
+    if seconds == 300:
+        return "5m"
+    if seconds == 3600:
+        return "1h"
+    return ""

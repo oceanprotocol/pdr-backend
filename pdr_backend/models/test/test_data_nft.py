@@ -9,6 +9,7 @@ from pdr_backend.models.data_nft import DataNft
 from pdr_backend.models.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import to_wei
 
 
 @enforce_types
@@ -47,8 +48,8 @@ def test_set_ddo(web3_pp, web3_config):
         [],
     )
 
-    rate = web3_config.w3.to_wei(3, "ether")
-    cut = web3_config.w3.to_wei(0.2, "ether")
+    rate = to_wei(3)
+    cut = to_wei(0.2)
     fre_data = (
         fre_address,
         [ocean_address, owner.address, feeCollector, owner.address],

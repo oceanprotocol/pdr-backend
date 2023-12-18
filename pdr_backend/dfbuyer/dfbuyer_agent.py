@@ -3,17 +3,17 @@ import time
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
+
 from pdr_backend.models.predictoor_batcher import PredictoorBatcher
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.models.token import Token
-from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.models.feed import print_feeds
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.subgraph import (
-    get_consume_so_far_per_contract,
-    wait_until_subgraph_syncs,
-)
+from pdr_backend.util.mathutil import from_wei
+from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
+from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 
 WEEK = 7 * 86400
 
@@ -243,10 +243,7 @@ class DFBuyerAgent:
         prices: Dict[str, float] = {}
         for address in contract_addresses:
             rate_wei = PredictoorContract(self.ppss.web3_pp, address).get_price()
-            rate_float = float(
-                self.ppss.web3_pp.web3_config.w3.from_wei(rate_wei, "ether")
-            )
-            prices[address] = rate_float
+            prices[address] = from_wei(rate_wei)
         return prices
 
     def _get_consume_so_far(self, ts: int) -> Dict[str, float]:

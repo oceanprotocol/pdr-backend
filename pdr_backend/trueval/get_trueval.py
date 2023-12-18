@@ -4,7 +4,7 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import Feed
-from pdr_backend.data_eng.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 
 
 @enforce_types
