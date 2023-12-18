@@ -86,7 +86,12 @@ class BasePredictoorAgent(ABC):
 
         # submit prediction to chain
         print("Submit predict tx to chain...")
-        self.feed_contract.submit_prediction(predval, stake, target_slot, True)
+        self.feed_contract.submit_prediction(
+            predval,
+            stake,
+            target_slot,
+            wait_for_receipt=True,
+        )
         self.prev_submit_epochs.append(submit_epoch)
         print("-> Submit predict tx result: success.")
         print("" + "=" * 180)

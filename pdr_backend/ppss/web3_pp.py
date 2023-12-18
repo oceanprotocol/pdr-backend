@@ -60,10 +60,6 @@ class Web3PP(StrMixin):
         return self.dn["subgraph_url"]  # type: ignore[index]
 
     @property
-    def stake_token(self) -> str:
-        return self.dn["stake_token"]  # type: ignore[index]
-
-    @property
     def owner_addrs(self) -> str:
         return self.dn["owner_addrs"]  # type: ignore[index]
 
@@ -169,7 +165,6 @@ def mock_web3_pp(network: str) -> Web3PP:
         "address_file": "address.json 1",
         "rpc_url": "http://example.com/rpc",
         "subgraph_url": "http://example.com/subgraph",
-        "stake_token": "0xStake1",
         "owner_addrs": "0xOwner1",
     }
     D = {
@@ -241,12 +236,16 @@ class _MockPredictoorContractWithTracking:
         return self.s_per_epoch
 
     def submit_prediction(
-        self, predval: bool, stake: float, timestamp: int, wait: bool = True
+        self,
+        predicted_value: bool,
+        stake_amt: float,
+        prediction_ts: int,
+        wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument
-        assert stake <= 3
-        if timestamp in self._prediction_slots:
-            print(f"      (Replace prev pred at time slot {timestamp})")
-        self._prediction_slots.append(timestamp)
+        assert stake_amt <= 3
+        if prediction_ts in self._prediction_slots:
+            print(f"      (Replace prev pred at time slot {prediction_ts})")
+        self._prediction_slots.append(prediction_ts)
 
 
 @enforce_types

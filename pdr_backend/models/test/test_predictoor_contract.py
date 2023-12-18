@@ -5,6 +5,7 @@ from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.models.token import Token
 from pdr_backend.models.predictoor_contract import mock_predictoor_contract
 from pdr_backend.util.contract import get_address
+from pdr_backend.util.mathutil import from_wei, to_wei
 
 
 @enforce_types
@@ -93,40 +94,57 @@ def test_get_trueValSubmitTimeout(predictoor_contract):
 
 
 @enforce_types
-def test_submit_prediction_aggpredval_payout(predictoor_contract, ocean_token: Token):
+def test_submit_prediction_trueval_payout(
+    predictoor_contract,
+    ocean_token: Token,
+):
+    OCEAN = ocean_token
+    w3 = predictoor_contract.config.w3
     owner_addr = predictoor_contract.config.owner
-    balance_before = ocean_token.balanceOf(owner_addr)
-    current_epoch = predictoor_contract.get_current_epoch_ts()
-    soonest_timestamp = predictoor_contract.soonest_timestamp_to_predict(current_epoch)
-    receipt = predictoor_contract.submit_prediction(True, 1, soonest_timestamp, True)
-    assert receipt["status"] == 1
-
-    balance_after = ocean_token.balanceOf(owner_addr)
-    assert balance_before - balance_after == 1e18
-
-    prediction = predictoor_contract.get_prediction(
-        soonest_timestamp, predictoor_contract.config.owner
+    OCEAN_before = from_wei(OCEAN.balanceOf(owner_addr))
+    cur_epoch = predictoor_contract.get_current_epoch_ts()
+    soonest_ts = predictoor_contract.soonest_timestamp_to_predict(cur_epoch)
+    predval = True
+    stake_amt = 1.0
+    receipt = predictoor_contract.submit_prediction(
+        predval,
+        stake_amt,
+        soonest_ts,
+        wait_for_receipt=True,
     )
-    assert prediction[0]
-    assert prediction[1] == 1e18
+    assert receipt["status"] == 1
 
-    predictoor_contract.config.w3.provider.make_request(
-        "evm_increaseTime", [S_PER_EPOCH * 2]
+    OCEAN_after = from_wei(OCEAN.balanceOf(owner_addr))
+    assert (OCEAN_before - OCEAN_after) == approx(stake_amt, 1e-8)
+
+    pred_tup = predictoor_contract.get_prediction(
+        soonest_ts,
+        predictoor_contract.config.owner,
     )
-    predictoor_contract.config.w3.provider.make_request("evm_mine", [])
-    receipt = predictoor_contract.submit_trueval(True, soonest_timestamp, False, True)
+    assert pred_tup[0] == predval
+    assert pred_tup[1] == to_wei(stake_amt)
+
+    w3.provider.make_request("evm_increaseTime", [S_PER_EPOCH * 2])
+    w3.provider.make_request("evm_mine", [])
+    trueval = True
+    receipt = predictoor_contract.submit_trueval(
+        trueval,
+        soonest_ts,
+        cancel_round=False,
+        wait_for_receipt=True,
+    )
     assert receipt["status"] == 1
 
-    receipt = predictoor_contract.payout(soonest_timestamp, True)
+    receipt = predictoor_contract.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
-    balance_final = ocean_token.balanceOf(owner_addr)
-    assert balance_before / 1e18 == approx(balance_final / 1e18, 2.0)  # + sub revenue
+    OCEAN_final = from_wei(OCEAN.balanceOf(owner_addr))
+    assert OCEAN_before == approx(OCEAN_final, 2.0)  # + sub revenue
 
 
 @enforce_types
 def test_redeem_unused_slot_revenue(predictoor_contract):
-    current_epoch = predictoor_contract.get_current_epoch_ts() - S_PER_EPOCH * 123
-    receipt = predictoor_contract.redeem_unused_slot_revenue(current_epoch, True)
+    cur_epoch = predictoor_contract.get_current_epoch_ts() - S_PER_EPOCH * 123
+    receipt = predictoor_contract.redeem_unused_slot_revenue(cur_epoch, True)
     assert receipt["status"] == 1
 
 
