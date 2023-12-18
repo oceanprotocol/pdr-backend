@@ -85,18 +85,21 @@ def test_get_expected_consume():
 
 
 @enforce_types
+@patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
 @patch(f"{PATH}.query_subgraph")
 @patch(f"{PATH}.Token")
-def test_check_network_main(
+def test_check_network_main(  # pylint: disable=unused-argument
     mock_token,
     mock_query_subgraph,
     mock_get_opf_addresses,
+    mock_check_dfbuyer,
     tmpdir,
     monkeypatch,
 ):
     del_network_override(monkeypatch)
     ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
         "some_other_address": "0xSomeOtherAddress",
@@ -105,7 +108,6 @@ def test_check_network_main(
     mock_token.return_value.balanceOf.return_value = to_wei(1000)
 
     mock_w3 = Mock()  # pylint: disable=not-callable
-    mock_w3.eth.chain_id = 1
     mock_w3.eth.get_balance.return_value = to_wei(1000)
     ppss.web3_pp.web3_config.w3 = mock_w3
     check_network_main(ppss, lookback_hours=24)

@@ -18,7 +18,7 @@ class AimodelDataFactory:
     - From mergedohlcv_df, create (X, y, x_df) for model building
 
     Where
-      parquet files -> parquet_dfs -> mergedohlcv_df, via ohlcv_data_factory
+      rawohlcv files -> rawohlcv_dfs -> mergedohlcv_df, via ohlcv_data_factory
 
       X -- 2d array of [sample_i, var_i] : value -- inputs for model
       y -- 1d array of [sample_i] -- target outputs for model
@@ -31,12 +31,11 @@ class AimodelDataFactory:
         "binanceus:ETH-USDT:high:t-2",
         "binanceus:ETH-USDT:high:t-1",
         ...
-        "datetime",
+        (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
 
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
-       - "datetime" values ares python datetime.datetime, UTC
     """
 
     def __init__(self, pp: DataPP, ss: DataSS):
@@ -64,7 +63,7 @@ class AimodelDataFactory:
         # preconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
         assert "timestamp" in mergedohlcv_df.columns
-        assert "datetime" in mergedohlcv_df.columns
+        assert "datetime" not in mergedohlcv_df.columns
 
         # every column should be ordered with oldest first, youngest last.
         # let's verify! The timestamps should be in ascending order
@@ -119,6 +118,9 @@ class AimodelDataFactory:
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == ss.n
         assert isinstance(x_df, pd.DataFrame)
+
+        assert "timestamp" not in x_df.columns
+        assert "datetime" not in x_df.columns
 
         # return
         return X, y, x_df

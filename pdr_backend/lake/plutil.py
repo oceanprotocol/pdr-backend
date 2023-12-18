@@ -1,8 +1,11 @@
 """
-plutil: polars dataframe & cvs utilities. 
+plutil: polars dataframe & csv/parquet utilities. 
 These utilities are specific to the time-series dataframe columns we're using.
 """
+from io import StringIO
 import os
+import shutil
+from tempfile import mkdtemp
 from typing import List
 
 from enforce_typing import enforce_types
@@ -10,17 +13,15 @@ import numpy as np
 import polars as pl
 
 from pdr_backend.lake.constants import (
-    OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_SCHEMA_PL,
 )
 
 
 @enforce_types
-def initialize_df(cols: List[str] = []) -> pl.DataFrame:
+def initialize_rawohlcv_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
-    Polars has no index, so "timestamp" and "datetime" are regular cols
-    Applies transform to get columns (including datetime)
+    Applies transform to get columns
     """
     df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL)
     df = df.select(cols if cols else "*")
@@ -28,27 +29,9 @@ def initialize_df(cols: List[str] = []) -> pl.DataFrame:
 
 
 @enforce_types
-def transform_df(
-    df: pl.DataFrame,
-) -> pl.DataFrame:
-    """Apply the transform on TOHLCV struct:
-    - Ensure UTC timezone
-    - Adds datetime
-    """
-
-    # preconditions
-    assert "timestamp" in df.columns
-    assert "datetime" not in df.columns
-
-    # add datetime
-    df = df.with_columns(
-        [
-            pl.from_epoch("timestamp", time_unit="ms")
-            .dt.replace_time_zone("UTC")
-            .alias("datetime")
-        ]
-    )
-    return df
+def set_col_values(df: pl.DataFrame, col: str, new_vals: list) -> pl.DataFrame:
+    """Equivalent to: df[col] = new_vals"""
+    return df.with_columns(pl.Series(new_vals).alias(col))
 
 
 @enforce_types
@@ -68,10 +51,10 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
     """
     # preconditions
     assert df.columns[:6] == TOHLCV_COLS
-    assert "datetime" in df.columns
+    assert "datetime" not in df.columns
 
-    # parquet column order: timestamp, datetime, O, H, L, C, V
-    columns = ["timestamp", "datetime"] + OHLCV_COLS
+    # parquet column order: timestamp, O, H, L, C, V
+    columns = TOHLCV_COLS
 
     df = df.select(columns)
 
@@ -105,10 +88,7 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
       df -- dataframe
 
     @notes
-      Polars does not have an index. "timestamp" is a regular col and required for "datetime"
-      (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
-
-      Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
+      Polars does not have an index. "timestamp" is a regular col
     """
     # handle cols
     if cols is None:
@@ -129,15 +109,12 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
     df = df.filter((pl.col("timestamp") >= st) & (pl.col("timestamp") <= fin))
 
     # initialize df and enforce schema
-    df0 = initialize_df(cols)
+    df0 = initialize_rawohlcv_df(cols)
     df = concat_next_df(df0, df)
-
-    # add in datetime column
-    df = transform_df(df)
 
     # postconditions, return
     assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
-    assert "datetime" in df.columns and df["datetime"].dtype == pl.Datetime
+    assert "datetime" not in df.columns
 
     return df
 
@@ -190,3 +167,16 @@ def _get_head_df(filename: str, n: int = 5) -> pl.DataFrame:
     if not head_df.is_empty():
         return head_df
     raise ValueError(f"File {filename} has no entries")
+
+
+@enforce_types
+def text_to_df(s: str) -> pl.DataFrame:
+    tmpdir = mkdtemp()
+    filename = os.path.join(tmpdir, "df.psv")
+    s = StringIO(s)  # type: ignore
+    with open(filename, "w") as f:
+        for line in s:
+            f.write(line)
+    df = pl.scan_csv(filename, separator="|").collect()
+    shutil.rmtree(tmpdir)
+    return df
