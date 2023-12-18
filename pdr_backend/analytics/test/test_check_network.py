@@ -89,7 +89,7 @@ def test_get_expected_consume():
 @patch(f"{PATH}.get_opf_addresses")
 @patch(f"{PATH}.query_subgraph")
 @patch(f"{PATH}.Token")
-def test_check_network_main(
+def test_check_network_main(  # pylint: disable=unused-argument
     mock_token,
     mock_query_subgraph,
     mock_get_opf_addresses,
