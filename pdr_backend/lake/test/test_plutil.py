@@ -13,7 +13,6 @@ from pdr_backend.lake.constants import (
 )
 from pdr_backend.lake.plutil import (
     initialize_rawohlcv_df,
-    transform_df,
     concat_next_df,
     save_rawohlcv_file,
     load_rawohlcv_file,
@@ -41,26 +40,17 @@ def test_initialize_rawohlcv_df():
     assert isinstance(df, pl.DataFrame)
     assert list(df.schema.values()) == TOHLCV_DTYPES_PL
 
-    df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
-    # test that it works with just 2 cols and without datetime
+    # test with just 2 cols
     df = initialize_rawohlcv_df(OHLCV_COLS[:2])
     assert df.columns == OHLCV_COLS[:2]
     assert list(df.schema.values())[:2] == OHLCV_DTYPES_PL[:2]
 
-    # test datetime w/ just ut + 2 cols
+    # test with just ut + 2 cols
     df = initialize_rawohlcv_df(TOHLCV_COLS[:3])
-    df = transform_df(df)
-    assert df.columns == TOHLCV_COLS[:3] + ["datetime"]
-    assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3] + [
-        pl.Datetime(time_unit="ms", time_zone="UTC")
-    ]
-
-    # assert error without timestamp
-    df = initialize_rawohlcv_df(OHLCV_COLS)
-    with pytest.raises(Exception):
-        df = transform_df(df)
+    assert df.columns == TOHLCV_COLS[:3]
+    assert list(df.schema.values()) == TOHLCV_DTYPES_PL[:3]
 
 
 @enforce_types
@@ -79,23 +69,16 @@ def test_concat_next_df():
     df = concat_next_df(df, next_df)
     assert len(df) == 4
 
-    # add datetime
-    df = transform_df(df)
     _assert_TOHLCVd_cols_and_types(df)
 
     # assert 1 more row
     next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
 
-    # assert that concat verifies schemas match and require datetime
+    # assert that concat verifies schemas match
     next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     assert len(next_df) == 1
     assert "datetime" not in next_df.columns
-    with pytest.raises(Exception):
-        df = concat_next_df(df, next_df)
-
-    # add datetime to next_df
-    next_df = transform_df(next_df)
 
     # add 1 row to existing 4 rows
     df = concat_next_df(df, next_df)
@@ -109,11 +92,8 @@ def test_concat_next_df():
 
 @enforce_types
 def _assert_TOHLCVd_cols_and_types(df: pl.DataFrame):
-    assert df.columns == TOHLCV_COLS + ["datetime"]
-    assert list(df.schema.values())[:-1] == TOHLCV_DTYPES_PL
-    assert (
-        str(list(df.schema.values())[-1]) == "Datetime(time_unit='ms', time_zone='UTC')"
-    )
+    assert df.columns == TOHLCV_COLS
+    assert list(df.schema.values()) == TOHLCV_DTYPES_PL
     assert "timestamp" in df.columns and df.schema["timestamp"] == pl.Int64
 
 
@@ -125,7 +105,6 @@ def _filename(tmpdir) -> str:
 def test_load_basic(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    df = transform_df(df)
     save_rawohlcv_file(filename, df)
 
     # simplest specification. Don't specify cols, st or fin
@@ -150,31 +129,21 @@ def test_load_basic(tmpdir):
 
 @enforce_types
 def test_load_append(tmpdir):
-    # save 4-row parquet
+    # save 4-row parquet to new file
     filename = _filename(tmpdir)
     df_4_rows = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
+    save_rawohlcv_file(filename, df_4_rows)
 
-    # saving tohlcv w/o datetime throws an error
-    with pytest.raises(Exception):
-        save_rawohlcv_file(filename, df_4_rows)  # write new file
-
-    # transform then save
-    df_4_rows = transform_df(df_4_rows)
-    save_rawohlcv_file(filename, df_4_rows)  # write new file
-
-    # append 1 row to parquet
+    # append 1 row to existing file
     df_1_row = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
-    df_1_row = transform_df(df_1_row)
-    save_rawohlcv_file(filename, df_1_row)  # will append existing file
+    save_rawohlcv_file(filename, df_1_row)
 
-    # test that us doing a manual concat is the same as the load
+    # verify: doing a manual concat is the same as the load
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-    df_5_rows = concat_next_df(
-        df_4_rows, transform_df(pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema))
-    )
+    df_1_row = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
+    df_5_rows = concat_next_df(df_4_rows, df_1_row)
     df_5_rows_loaded = load_rawohlcv_file(filename)
 
-    # we don't need to transform
     _assert_TOHLCVd_cols_and_types(df_5_rows_loaded)
 
     assert len(df_5_rows_loaded) == 5
@@ -186,7 +155,6 @@ def test_load_filtered(tmpdir):
     # save
     filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    df = transform_df(df)
     save_rawohlcv_file(filename, df)
 
     # load with filters on rows & columns
@@ -204,12 +172,8 @@ def test_load_filtered(tmpdir):
 
     # test cols and types
     assert df2["timestamp"].dtype == pl.Int64
-    assert list(df2.columns) == TOHLCV_COLS[:3] + ["datetime"]
-    assert list(df2.schema.values())[:-1] == TOHLCV_DTYPES_PL[:3]
-    assert (
-        str(list(df2.schema.values())[-1])
-        == "Datetime(time_unit='ms', time_zone='UTC')"
-    )
+    assert list(df2.columns) == TOHLCV_COLS[:3]
+    assert list(df2.schema.values()) == TOHLCV_DTYPES_PL[:3]
 
 
 @enforce_types
@@ -226,19 +190,15 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
 @enforce_types
 def test_has_data(tmpdir):
     filename0 = os.path.join(tmpdir, "f0.parquet")
-    save_rawohlcv_file(filename0, transform_df(_df_from_raw_data([])))
+    save_rawohlcv_file(filename0, _df_from_raw_data([]))
     assert not has_data(filename0)
 
     filename1 = os.path.join(tmpdir, "f1.parquet")
-    save_rawohlcv_file(
-        filename1, transform_df(_df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
-    )
+    save_rawohlcv_file(filename1, _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
     assert has_data(filename1)
 
     filename4 = os.path.join(tmpdir, "f4.parquet")
-    save_rawohlcv_file(
-        filename4, transform_df(_df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
-    )
+    save_rawohlcv_file(filename4, _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
     assert has_data(filename4)
 
 
@@ -248,7 +208,6 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
 
     # write out four rows
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    df = transform_df(df)
     save_rawohlcv_file(filename, df)
 
     # assert head == oldest and tail == latest
@@ -260,7 +219,6 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
 
     # append and check newest/oldest
     df = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
-    df = transform_df(df)
     save_rawohlcv_file(filename, df)
 
     ut0 = oldest_ut(filename)
@@ -274,7 +232,6 @@ def test_oldest_ut_and_newest_ut__with_data(tmpdir):
 def test_oldest_ut_and_newest_ut__no_data(tmpdir):
     filename = _filename(tmpdir)
     df = _df_from_raw_data([])
-    df = transform_df(df)
     save_rawohlcv_file(filename, df)
 
     with pytest.raises(ValueError):
@@ -317,13 +274,13 @@ def test_parquet_tail_records(tmpdir):
 @enforce_types
 def test_text_to_df():
     df = text_to_df(
-        """datetime|timestamp|open|close
-d0|0|10.0|11.0
-d1|1|10.1|11.1
+        """timestamp|open|close
+0|10.0|11.0
+1|10.1|11.1
 """
     )
-    assert df.columns == ["datetime", "timestamp", "open", "close"]
-    assert df.shape == (2, 4)
-    assert df["datetime"][0] == "d0"
+    assert df.columns == ["timestamp", "open", "close"]
+    assert df.shape == (2, 3)
+    assert df["timestamp"][0] == 0
     assert df["open"][1] == 10.1
     assert isinstance(df["open"][1], float)

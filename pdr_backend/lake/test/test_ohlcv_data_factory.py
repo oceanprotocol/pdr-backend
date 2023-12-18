@@ -15,7 +15,6 @@ from pdr_backend.lake.ohlcv_data_factory import (
 )
 from pdr_backend.lake.plutil import (
     initialize_rawohlcv_df,
-    transform_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
     concat_next_df,
@@ -242,7 +241,6 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         df = initialize_rawohlcv_df()
         next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
         df = concat_next_df(df, next_df)
-        df = transform_df(df)  # add "datetime" col, more
         save_rawohlcv_file(filename, df)
 
     factory._update_rawohlcv_files_at_exch_and_pair = mock_update

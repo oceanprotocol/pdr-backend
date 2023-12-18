@@ -46,7 +46,6 @@ def test_create_xy__0(tmpdir):
         {
             # every column is ordered from youngest to oldest
             "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by AimodelDataFactory
-            "datetime": [None] * 8,  # ""
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
             "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
             "binanceus:ETH/USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],

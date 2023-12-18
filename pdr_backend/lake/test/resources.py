@@ -3,16 +3,15 @@ import copy
 from enforce_typing import enforce_types
 import polars as pl
 
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
-from pdr_backend.lake.plutil import text_to_df
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
+    text_to_df,
     concat_next_df,
     initialize_rawohlcv_df,
-    transform_df,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -82,7 +81,6 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL)
 
     df = concat_next_df(df, next_df)
-    df = transform_df(df)
 
     return df
 
@@ -128,39 +126,39 @@ ETHUSDT_RAWOHLCV_DFS = {
 # ==================================================================
 
 RAW_DF1 = text_to_df(  # binance BTC/USDT
-    """datetime|timestamp|open|close
-d0|0|10.0|11.0
-d1|1|10.1|11.1
-d3|3|10.3|11.3
-d4|4|10.4|11.4
+    """timestamp|open|close
+0|10.0|11.0
+1|10.1|11.1
+3|10.3|11.3
+4|10.4|11.4
 """
-)  # does not have: "d2|2|10.2|11.2" to simulate missing vals from exchanges
+)  # does not have: "2|10.2|11.2" to simulate missing vals from exchanges
 
 RAW_DF2 = text_to_df(  # binance ETH/USDT
-    """datetime|timestamp|open|close
-d0|0|20.0|21.0
-d1|1|20.1|21.1
-d2|2|20.2|21.2
-d3|3|20.3|21.3
+    """timestamp|open|close
+0|20.0|21.0
+1|20.1|21.1
+2|20.2|21.2
+3|20.3|21.3
 """
-)  # does *not* have: "d4|4|20.4|21.4" to simulate missing vals from exchanges
+)  # does *not* have: "4|20.4|21.4" to simulate missing vals from exchanges
 
 RAW_DF3 = text_to_df(  # kraken BTC/USDT
-    """datetime|timestamp|open|close
-d0|0|30.0|31.0
-d1|1|30.1|31.1
-d2|2|30.2|31.2
-d3|3|30.3|31.3
-d4|4|30.4|31.4
+    """timestamp|open|close
+0|30.0|31.0
+1|30.1|31.1
+2|30.2|31.2
+3|30.3|31.3
+4|30.4|31.4
 """
 )
 
 RAW_DF4 = text_to_df(  # kraken ETH/USDT
-    """datetime|timestamp|open|close
-d0|0|40.0|41.0
-d1|1|40.1|41.1
-d2|2|40.2|41.2
-d3|3|40.3|41.3
-d4|4|40.4|41.4
+    """timestamp|open|close
+0|40.0|41.0
+1|40.1|41.1
+2|40.2|41.2
+3|40.3|41.3
+4|40.4|41.4
 """
 )

@@ -27,9 +27,8 @@ def test_mergedohlcv_df_shape():
         "binanceus:ETH/USDT:low",
         "binanceus:ETH/USDT:close",
         "binanceus:ETH/USDT:volume",
-        "datetime",
     ]
-    assert mergedohlcv_df.shape == (12, 7)
+    assert mergedohlcv_df.shape == (12, 6)
     assert len(mergedohlcv_df["timestamp"]) == 12
     assert (  # pylint: disable=unsubscriptable-object
         mergedohlcv_df["timestamp"][0] == 1686805500000
@@ -55,9 +54,8 @@ def test_merge_rawohlcv_dfs():
         "kraken:BTC/USDT:close",
         "kraken:ETH/USDT:open",
         "kraken:ETH/USDT:close",
-        "datetime",
     ]
-    assert merged_df["datetime"][1] == "d1"
+    assert merged_df["timestamp"][1] == 1
     assert merged_df["binance:BTC/USDT:close"][3] == 11.3
     assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
     assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
@@ -70,9 +68,9 @@ def test_add_df_col_unequal_dfs():
 
     # add a first RAW_DF
     merged_df = _add_df_col(None, "binance:BTC/USDT:close", RAW_DF1, "close")
-    assert merged_df.columns == ["timestamp", "binance:BTC/USDT:close", "datetime"]
-    assert merged_df.shape == (4, 3)
-    assert merged_df["datetime"][1] == "d1"
+    assert merged_df.columns == ["timestamp", "binance:BTC/USDT:close"]
+    assert merged_df.shape == (4, 2)
+    assert merged_df["timestamp"][1] == 1
     assert merged_df["binance:BTC/USDT:close"][3] == 11.4
 
     # add a second RAW_DF
@@ -81,10 +79,9 @@ def test_add_df_col_unequal_dfs():
         "timestamp",
         "binance:BTC/USDT:close",
         "binance:ETH/USDT:open",
-        "datetime",
     ]
-    assert merged_df.shape == (5, 4)
-    assert merged_df["datetime"][1] == "d1"
+    assert merged_df.shape == (5, 3)
+    assert merged_df["timestamp"][1] == 1
     assert merged_df["binance:BTC/USDT:close"][3] == 11.3
     assert merged_df["binance:ETH/USDT:open"][3] == 20.3
 
@@ -99,10 +96,9 @@ def test_add_df_col_equal_dfs():
     assert merged_df.columns == [
         "timestamp",
         "kraken:BTC/USDT:close",
-        "datetime",
     ]
-    assert merged_df.shape == (5, 3)
-    assert merged_df["datetime"][1] == "d1"
+    assert merged_df.shape == (5, 2)
+    assert merged_df["timestamp"][1] == 1
     assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
 
     # add a second RAW_DF
@@ -111,30 +107,27 @@ def test_add_df_col_equal_dfs():
         "timestamp",
         "kraken:BTC/USDT:close",
         "kraken:ETH/USDT:open",
-        "datetime",
     ]
-    assert merged_df.shape == (5, 4)
-    assert merged_df["datetime"][1] == "d1"
+    assert merged_df.shape == (5, 3)
+    assert merged_df["timestamp"][1] == 1
     assert merged_df["kraken:BTC/USDT:close"][3] == 31.3
     assert merged_df["kraken:ETH/USDT:open"][4] == 40.4
 
 
 @enforce_types
 def test_ordered_cols():
-    assert _ordered_cols(["datetime", "timestamp"]) == ["timestamp", "datetime"]
-    assert _ordered_cols(["a", "c", "b", "datetime", "timestamp"]) == [
+    assert _ordered_cols(["timestamp"]) == ["timestamp"]
+    assert _ordered_cols(["a", "c", "b", "timestamp"]) == [
         "timestamp",
         "a",
         "c",
         "b",
-        "datetime",
     ]
 
     for bad_cols in [
-        ["a", "c", "b", "datetime"],  # missing timestamp
-        ["a", "c", "b", "timestamp"],  # missing datetime
-        ["a", "c", "b", "b", "datetime", "timestamp"],  # duplicates
-        ["a", "c", "b", "timestamp", "datetime", "timestamp"],  # duplicates
+        ["a", "c", "b"],  # missing timestamp
+        ["a", "c", "b", "b", "timestamp"],  # duplicates
+        ["a", "c", "b", "timestamp", "timestamp"],  # duplicates
     ]:
         with pytest.raises(AssertionError):
             _ordered_cols(bad_cols)

@@ -21,11 +21,10 @@ def merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
     for exch_str in raw_dfs.keys():
         for pair_str, raw_df in raw_dfs[exch_str].items():
             assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
-            assert "datetime" in raw_df.columns
             assert "timestamp" in raw_df.columns
 
             for raw_col in raw_df.columns:
-                if raw_col in ["timestamp", "datetime"]:
+                if raw_col == "timestamp":
                     continue
                 signal_str = raw_col  # eg "close"
                 merged_col = f"{exch_str}:{pair_str}:{signal_str}"
@@ -45,19 +44,18 @@ def _add_df_col(
 ) -> pl.DataFrame:
     """
     Does polars equivalent of: merged_df[merged_col] = raw_df[raw_col].
-    Tuned for this factory, by keeping "timestamp" & "datetime"
+    Tuned for this factory, by keeping "timestamp"
     """
     newraw_df = raw_df.with_columns(
         pl.col(raw_col).alias(merged_col),
     )
-    newraw_df = newraw_df.select(["timestamp", merged_col, "datetime"])
+    newraw_df = newraw_df.select(["timestamp", merged_col])
 
     if merged_df is None:
         merged_df = newraw_df
     else:
-        merged_df = merged_df.join(newraw_df, on=["timestamp", "datetime"], how="outer")
+        merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
         merged_df = _merge_cols(merged_df, "timestamp", "timestamp_right")
-        merged_df = _merge_cols(merged_df, "datetime", "datetime_right")
 
     merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
     _verify_df_cols(merged_df)
@@ -78,22 +76,20 @@ def _merge_cols(df: pl.DataFrame, col1: str, col2: str) -> pl.DataFrame:
 
 @enforce_types
 def _ordered_cols(merged_cols: List[str]) -> List[str]:
-    """Returns in order ["timestamp", item1, item2, item3, ..., "datetime"]"""
+    """Returns in order ["timestamp", item1, item2, item3, ...]"""
     assert "timestamp" in merged_cols
-    assert "datetime" in merged_cols
     assert len(set(merged_cols)) == len(merged_cols)
 
     ordered_cols = []
     ordered_cols += ["timestamp"]
-    ordered_cols += [col for col in merged_cols if col not in ["timestamp", "datetime"]]
-    ordered_cols += ["datetime"]
+    ordered_cols += [col for col in merged_cols if col != "timestamp"]
     return ordered_cols
 
 
 @enforce_types
 def _verify_df_cols(df: pl.DataFrame):
-    assert "datetime" in df.columns
     assert "timestamp" in df.columns
+    assert "datetime" not in df.columns
     for col in df.columns:
         assert "_right" not in col
         assert "_left" not in col

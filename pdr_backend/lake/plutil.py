@@ -13,7 +13,6 @@ import numpy as np
 import polars as pl
 
 from pdr_backend.lake.constants import (
-    OHLCV_COLS,
     TOHLCV_COLS,
     TOHLCV_SCHEMA_PL,
 )
@@ -22,34 +21,10 @@ from pdr_backend.lake.constants import (
 @enforce_types
 def initialize_rawohlcv_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
-    Applies transform to get columns (including datetime)
+    Applies transform to get columns
     """
     df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL)
     df = df.select(cols if cols else "*")
-    return df
-
-
-@enforce_types
-def transform_df(
-    df: pl.DataFrame,
-) -> pl.DataFrame:
-    """Apply the transform on TOHLCV struct:
-    - Ensure UTC timezone
-    - Adds datetime
-    """
-
-    # preconditions
-    assert "timestamp" in df.columns
-    assert "datetime" not in df.columns
-
-    # add datetime
-    df = df.with_columns(
-        [
-            pl.from_epoch("timestamp", time_unit="ms")
-            .dt.replace_time_zone("UTC")
-            .alias("datetime")
-        ]
-    )
     return df
 
 
@@ -70,10 +45,10 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
     """
     # preconditions
     assert df.columns[:6] == TOHLCV_COLS
-    assert "datetime" in df.columns
+    assert "datetime" not in df.columns
 
-    # parquet column order: timestamp, datetime, O, H, L, C, V
-    columns = ["timestamp", "datetime"] + OHLCV_COLS
+    # parquet column order: timestamp, O, H, L, C, V
+    columns = TOHLCV_COLS
 
     df = df.select(columns)
 
@@ -107,10 +82,7 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
       df -- dataframe
 
     @notes
-      Polars does not have an index. "timestamp" is a regular col and required for "datetime"
-      (1) Don't specify "datetime" as a column, as that'll get calc'd from timestamp
-
-      Either don't save datetime, or save it and load it so it doesn't have to be re-computed.
+      Polars does not have an index. "timestamp" is a regular col
     """
     # handle cols
     if cols is None:
@@ -134,12 +106,9 @@ def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFr
     df0 = initialize_rawohlcv_df(cols)
     df = concat_next_df(df0, df)
 
-    # add in datetime column
-    df = transform_df(df)
-
     # postconditions, return
     assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
-    assert "datetime" in df.columns and df["datetime"].dtype == pl.Datetime
+    assert "datetime" not in df.columns
 
     return df
 
