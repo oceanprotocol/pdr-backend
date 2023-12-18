@@ -21,6 +21,7 @@ install_requirements = [
     "pandas",
     "pathlib",
     "polars",
+    "polars[timezone]",
     "pyarrow",
     "pylint",
     "pytest",

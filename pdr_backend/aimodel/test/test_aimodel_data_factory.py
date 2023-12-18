@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     _mergedohlcv_df_ETHUSDT,
     _data_pp_ss_1feed,
@@ -83,10 +83,8 @@ def test_create_xy__0(tmpdir):
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    _, ss, pq_data_factory, aimodel_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH/USDT"
-    )
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    _, ss, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
     target_X = np.array(
@@ -223,8 +221,7 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
     assert ss.autoregressive_n == 3
     assert ss.n == (4 + 4) * 3
 
-    pq_data_factory = OhlcvDataFactory(pp, ss)
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(rawohlcv_dfs)
+    mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
     aimodel_data_factory = AimodelDataFactory(pp, ss)
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
@@ -307,24 +304,24 @@ def test_create_xy__check_timestamp_order(tmpdir):
 
 @enforce_types
 def test_create_xy__input_type(tmpdir):
-    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(factory, AimodelDataFactory)
+    assert isinstance(aimodel_data_factory, AimodelDataFactory)
 
     # create_xy() input should be pl
-    factory.create_xy(mergedohlcv_df, testshift=0)
+    aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     # create_xy() inputs shouldn't be pd
     with pytest.raises(AssertionError):
-        factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
+        aimodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
 
 
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    __, __, pq_data_factory, factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-    mergedohlcv_df = pq_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
     assert not has_nan(mergedohlcv_df)
@@ -344,7 +341,9 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=False)
+    X, y, x_df = aimodel_data_factory.create_xy(
+        mergedohlcv_df, testshift=0, do_fill_nans=False
+    )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
     # nan approach 1: fix externally
@@ -352,11 +351,13 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0, do_fill_nans=True)
+    X, y, x_df = aimodel_data_factory.create_xy(
+        mergedohlcv_df, testshift=0, do_fill_nans=True
+    )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 

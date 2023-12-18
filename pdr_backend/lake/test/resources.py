@@ -5,6 +5,7 @@ import polars as pl
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import text_to_df
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -21,11 +22,9 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, ohlcv_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH/USDT"
-    )
-    mergedohlcv_df = ohlcv_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    return mergedohlcv_df, model_data_factory
+    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    return mergedohlcv_df, aimodel_data_factory
 
 
 @enforce_types
@@ -34,8 +33,8 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    model_data_factory = AimodelDataFactory(pp, ss)
-    return pp, ss, ohlcv_data_factory, model_data_factory
+    aimodel_data_factory = AimodelDataFactory(pp, ss)
+    return pp, ss, ohlcv_data_factory, aimodel_data_factory
 
 
 @enforce_types
