@@ -197,8 +197,8 @@ def _get_head_df(filename: str, n: int = 5) -> pl.DataFrame:
 @enforce_types
 def text_to_df(s: str) -> pl.DataFrame:
     tmpdir = mkdtemp()
-    filename = os.path.join(tmpdir, f"df.psv")
-    s = StringIO(s)
+    filename = os.path.join(tmpdir, "df.psv")
+    s = StringIO(s)  # type: ignore
     with open(filename, "w") as f:
         for line in s:
             f.write(line)

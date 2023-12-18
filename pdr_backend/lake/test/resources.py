@@ -11,7 +11,6 @@ from pdr_backend.lake.plutil import (
     concat_next_df,
     initialize_rawohlcv_df,
     transform_df,
-    text_to_df,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS

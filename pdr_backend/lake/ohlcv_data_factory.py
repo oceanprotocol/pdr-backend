@@ -6,7 +6,6 @@ import numpy as np
 import polars as pl
 
 from pdr_backend.lake.constants import (
-    OHLCV_COLS,
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
     TOHLCV_SCHEMA_PL,
@@ -298,7 +297,7 @@ def _merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
                 merged_col = f"{exch_str}:{pair_str}:{signal_str}"
                 merged_df = _add_df_col(merged_df, merged_col, raw_df, raw_col)
 
-    merged_df = merged_df.select(_ordered_cols(merged_df.columns))
+    merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
     _verify_df_cols(merged_df)
     return merged_df
 
@@ -326,7 +325,7 @@ def _add_df_col(
         merged_df = _merge_cols(merged_df, "timestamp", "timestamp_right")
         merged_df = _merge_cols(merged_df, "datetime", "datetime_right")
 
-    merged_df = merged_df.select(_ordered_cols(merged_df.columns))
+    merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
     _verify_df_cols(merged_df)
     return merged_df
 

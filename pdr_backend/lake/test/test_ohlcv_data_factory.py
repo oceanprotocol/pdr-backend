@@ -21,7 +21,6 @@ from pdr_backend.lake.plutil import (
     load_rawohlcv_file,
     save_rawohlcv_file,
     concat_next_df,
-    text_to_df,
 )
 from pdr_backend.lake.test.resources import (
     _data_pp_ss_1feed,
@@ -367,56 +366,6 @@ def test_get_mergedohlcv_df_calls(tmpdir):
 # test lower-level functions: _merge_rawohlcv_dfs(), _add_df_col()
 
 
-@pytest.fixture()
-def raw_df1():  # binance BTC/USDT
-    return text_to_df(
-        """datetime|timestamp|open|close
-d0|0|10.0|11.0
-d1|1|10.1|11.1
-d3|3|10.3|11.3
-d4|4|10.4|11.4
-"""
-    )  # does not have: "d2|2|10.2|11.2" to simulate missing vals from exchanges
-
-
-@pytest.fixture()
-def raw_df2():  # binance ETH/USDT
-    return text_to_df(
-        """datetime|timestamp|open|close
-d0|0|20.0|21.0
-d1|1|20.1|21.1
-d2|2|20.2|21.2
-d3|3|20.3|21.3
-"""
-    )  # does *not* have: "d4|4|20.4|21.4" to simulate missing vals from exchanges
-
-
-@pytest.fixture()
-def raw_df3():  # kraken BTC/USDT
-    return text_to_df(
-        """datetime|timestamp|open|close
-d0|0|30.0|31.0
-d1|1|30.1|31.1
-d2|2|30.2|31.2
-d3|3|30.3|31.3
-d4|4|30.4|31.4
-"""
-    )
-
-
-@pytest.fixture()
-def raw_df4():  # kraken ETH/USDT
-    return text_to_df(
-        """datetime|timestamp|open|close
-d0|0|40.0|41.0
-d1|1|40.1|41.1
-d2|2|40.2|41.2
-d3|3|40.3|41.3
-d4|4|40.4|41.4
-"""
-    )
-
-
 @enforce_types
 def test_merge_rawohlcv_dfs(raw_df1, raw_df2, raw_df3, raw_df4):
     raw_dfs = {
@@ -468,7 +417,7 @@ def test_add_df_col_unequal_dfs(raw_df1, raw_df2):
     assert merged_df["datetime"][1] == "d1"
     assert merged_df["binance:BTC/USDT:close"][3] == 11.3
     assert merged_df["binance:ETH/USDT:open"][3] == 20.3
-    assert merged_df["binance:ETH/USDT:open"][4] == None
+    assert merged_df["binance:ETH/USDT:open"][4].is_null()
 
 
 @enforce_types
