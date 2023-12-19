@@ -1,7 +1,7 @@
 import os
 import time
 from typing import List
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -9,10 +9,12 @@ import polars as pl
 import pytest
 
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
-from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
+from pdr_backend.lake.ohlcv_data_factory import (
+    OhlcvDataFactory,
+)
 from pdr_backend.lake.plutil import (
-    initialize_df,
-    transform_df,
+    initialize_rawohlcv_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
     concat_next_df,
@@ -21,7 +23,6 @@ from pdr_backend.lake.test.resources import (
     _data_pp_ss_1feed,
     _data_pp,
     _data_ss,
-    ETHUSDT_RAWOHLCV_DFS,
 )
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
@@ -237,10 +238,9 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         raw_tohlcv_data = [
             [st_ut + s_per_epoch * i] + [ohlcv_val] * 5 for i in range(n_pts)
         ]
-        df = initialize_df()
+        df = initialize_rawohlcv_df()
         next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
         df = concat_next_df(df, next_df)
-        df = transform_df(df)  # add "datetime" col, more
         save_rawohlcv_file(filename, df)
 
     factory._update_rawohlcv_files_at_exch_and_pair = mock_update
@@ -254,7 +254,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     rawohlcv_dfs = (  # pylint: disable=assignment-from-no-return
         factory._load_rawohlcv_files(fin_ut)
     )
-    mergedohlcv_df = factory._merge_rawohlcv_dfs(rawohlcv_dfs)
+    mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
     assert len(df0) == len(df1) == len(df1["high"]) == len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
@@ -320,33 +320,16 @@ def test_exchange_hist_overlap(tmpdir):
 
 
 @enforce_types
-def test_mergedohlcv_df_shape(tmpdir):
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
-    mergedohlcv_df = factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert mergedohlcv_df.columns == [
-        "timestamp",
-        "binanceus:ETH/USDT:open",
-        "binanceus:ETH/USDT:high",
-        "binanceus:ETH/USDT:low",
-        "binanceus:ETH/USDT:close",
-        "binanceus:ETH/USDT:volume",
-        "datetime",
-    ]
-    assert mergedohlcv_df.shape == (12, 7)
-    assert len(mergedohlcv_df["timestamp"]) == 12
-    assert (  # pylint: disable=unsubscriptable-object
-        mergedohlcv_df["timestamp"][0] == 1686805500000
-    )
-
-
-@enforce_types
-def test_get_mergedohlcv_df_calls(tmpdir):
+@patch("pdr_backend.lake.ohlcv_data_factory.merge_rawohlcv_dfs")
+def test_get_mergedohlcv_df_calls(
+    mock_merge_rawohlcv_dfs,
+    tmpdir,
+):
+    mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
     _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
 
     factory._update_rawohlcv_files = Mock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)
-    factory._merge_rawohlcv_dfs = Mock(return_value=Mock(spec=pl.DataFrame))
 
     mergedohlcv_df = factory.get_mergedohlcv_df()
 
@@ -354,4 +337,4 @@ def test_get_mergedohlcv_df_calls(tmpdir):
 
     factory._update_rawohlcv_files.assert_called()
     factory._load_rawohlcv_files.assert_called()
-    factory._merge_rawohlcv_dfs.assert_called()
+    mock_merge_rawohlcv_dfs.assert_called()

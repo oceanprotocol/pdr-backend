@@ -3,15 +3,15 @@ import copy
 from enforce_typing import enforce_types
 import polars as pl
 
-
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
+    text_to_df,
     concat_next_df,
-    initialize_df,
-    transform_df,
+    initialize_rawohlcv_df,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
@@ -21,11 +21,9 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, ohlcv_data_factory, model_data_factory = _data_pp_ss_1feed(
-        tmpdir, "binanceus h ETH/USDT"
-    )
-    mergedohlcv_df = ohlcv_data_factory._merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    return mergedohlcv_df, model_data_factory
+    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
+    return mergedohlcv_df, aimodel_data_factory
 
 
 @enforce_types
@@ -34,8 +32,8 @@ def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     pp = _data_pp([feed])
     ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    model_data_factory = AimodelDataFactory(pp, ss)
-    return pp, ss, ohlcv_data_factory, model_data_factory
+    aimodel_data_factory = AimodelDataFactory(pp, ss)
+    return pp, ss, ohlcv_data_factory, aimodel_data_factory
 
 
 @enforce_types
@@ -72,15 +70,17 @@ def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
     )
 
 
+# ==================================================================
+
+
 @enforce_types
 def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     """Return a df for use in rawohlcv_dfs"""
-    df = initialize_df(TOHLCV_COLS)
+    df = initialize_rawohlcv_df(TOHLCV_COLS)
 
     next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL)
 
     df = concat_next_df(df, next_df)
-    df = transform_df(df)
 
     return df
 
@@ -122,3 +122,43 @@ ETHUSDT_RAWOHLCV_DFS = {
         "ETH/USDT": _df_from_raw_data(BINANCE_ETH_DATA),
     }
 }
+
+# ==================================================================
+
+RAW_DF1 = text_to_df(  # binance BTC/USDT
+    """timestamp|open|close
+0|10.0|11.0
+1|10.1|11.1
+3|10.3|11.3
+4|10.4|11.4
+"""
+)  # does not have: "2|10.2|11.2" to simulate missing vals from exchanges
+
+RAW_DF2 = text_to_df(  # binance ETH/USDT
+    """timestamp|open|close
+0|20.0|21.0
+1|20.1|21.1
+2|20.2|21.2
+3|20.3|21.3
+"""
+)  # does *not* have: "4|20.4|21.4" to simulate missing vals from exchanges
+
+RAW_DF3 = text_to_df(  # kraken BTC/USDT
+    """timestamp|open|close
+0|30.0|31.0
+1|30.1|31.1
+2|30.2|31.2
+3|30.3|31.3
+4|30.4|31.4
+"""
+)
+
+RAW_DF4 = text_to_df(  # kraken ETH/USDT
+    """timestamp|open|close
+0|40.0|41.0
+1|40.1|41.1
+2|40.2|41.2
+3|40.3|41.3
+4|40.4|41.4
+"""
+)

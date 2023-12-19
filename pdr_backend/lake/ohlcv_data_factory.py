@@ -6,15 +6,14 @@ import numpy as np
 import polars as pl
 
 from pdr_backend.lake.constants import (
-    OHLCV_COLS,
     OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
     TOHLCV_SCHEMA_PL,
 )
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
-    initialize_df,
-    transform_df,
+    initialize_rawohlcv_df,
     concat_next_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
@@ -36,9 +35,10 @@ class OhlcvDataFactory:
 
     Where:
       rawohlcv_dfs -- dict of [exch_str][pair_str] : df
-        And df has columns of: "open", "high", .., "volume", "datetime"
+        And df has columns of: "timestamp", "open", "high", .., "volume"
+        And NOT "datetime" column
         Where pair_str must have '/' not '-', to avoid key issues
-        (and index = timestamp)
+
 
       mergedohlcv_df -- polars DataFrame with cols like:
         "timestamp",
@@ -48,29 +48,12 @@ class OhlcvDataFactory:
         "binanceus:ETH-USDT:close",
         "binanceus:ETH-USDT:volume",
         ...
-        "datetime",
-        (and no index)
+       (NOT "datetime")
 
       #For each column: oldest first, newest at the end
 
-    And:
-      X -- 2d array of [sample_i, var_i] : value -- inputs for model
-      y -- 1d array of [sample_i] -- target outputs for model
-
-      x_df -- *pandas* DataFrame with cols like:
-        "binanceus:ETH-USDT:open:t-3",
-        "binanceus:ETH-USDT:open:t-2",
-        "binanceus:ETH-USDT:open:t-1",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-        "binanceus:ETH-USDT:high:t-1",
-        ...
-        "datetime",
-        (and index = 0, 1, .. -- nothing special)
-
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
-       - "datetime" values ares python datetime.datetime, UTC
     """
 
     def __init__(self, pp: DataPP, ss: DataSS):
@@ -97,7 +80,7 @@ class OhlcvDataFactory:
 
         self._update_rawohlcv_files(fin_ut)
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
-        mergedohlcv_df = self._merge_rawohlcv_dfs(rawohlcv_dfs)
+        mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
         print("Get historical data, across many exchanges & pairs: done.")
 
@@ -133,7 +116,7 @@ class OhlcvDataFactory:
             return
 
         # empty ohlcv df
-        df = initialize_df()
+        df = initialize_rawohlcv_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
             exch = self.ss.exchs_dict[exch_str]
@@ -175,9 +158,6 @@ class OhlcvDataFactory:
 
             print(f"      newest_ut_value: {newest_ut_value}")
             st_ut = newest_ut_value + self.pp.timeframe_ms
-
-        # add "datetime" col, more
-        df = transform_df(df)
 
         # output to file
         save_rawohlcv_file(filename, df)
@@ -222,9 +202,9 @@ class OhlcvDataFactory:
           fin_ut -- finish timestamp
 
         @return
-          rawohlcv_dfs -- dict of [exch_str][pair_str] : df
-            Where df has columns=OHLCV_COLS+"datetime", and index=timestamp
-            And pair_str is eg "BTC/USDT". Not "BTC-USDT", to avoid key issues
+          rawohlcv_dfs -- dict of [exch_str][pair_str] : ohlcv_df
+            Where df has columns: TOHLCV_COLS
+            And pair_str is eg "BTC/USDT", *not* "BTC-USDT"
         """
         print("  Load rawohlcv file.")
         st_ut = self.ss.st_timestamp
@@ -243,69 +223,12 @@ class OhlcvDataFactory:
             ]
             rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
 
-            assert "datetime" in rawohlcv_df.columns
             assert "timestamp" in rawohlcv_df.columns
+            assert "datetime" not in rawohlcv_df.columns
 
             rawohlcv_dfs[exch_str][pair_str] = rawohlcv_df
 
         return rawohlcv_dfs
-
-    def _merge_rawohlcv_dfs(self, rawohlcv_dfs: dict) -> pl.DataFrame:
-        """
-        @arguments
-          rawohlcv_dfs -- see class docstring
-
-        @return
-          mergedohlcv_df -- see class docstring
-        """
-        # init mergedohlcv_df such that it can do basic operations
-        print("  Merge rawohlcv dataframes.")
-        mergedohlcv_df = initialize_df()  # grow this
-        mergedohlcv_cols = ["timestamp"]  # grow this
-        for exch_str in rawohlcv_dfs.keys():
-            for pair_str, rawohlcv_df in rawohlcv_dfs[exch_str].items():
-                assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
-                assert "datetime" in rawohlcv_df.columns
-                assert "timestamp" in rawohlcv_df.columns
-
-                for rawohlcv_col in rawohlcv_df.columns:
-                    if rawohlcv_col in ["timestamp", "datetime"]:
-                        continue
-
-                    signal_str = rawohlcv_col  # eg "close"
-                    mergedohlcv_col = f"{exch_str}:{pair_str}:{signal_str}"
-
-                    rawohlcv_df = rawohlcv_df.with_columns(
-                        [pl.col(rawohlcv_col).alias(mergedohlcv_col)]
-                    )
-                    mergedohlcv_cols.append(mergedohlcv_col)
-
-                # drop columns we won't merge
-                # drop original OHLCV cols and datetime
-                rawohlcv_df = rawohlcv_df.drop(OHLCV_COLS)
-                if "datetime" in mergedohlcv_df.columns:
-                    rawohlcv_df = rawohlcv_df.drop("datetime")
-
-                # only keep OHCLV cols
-                mergedohlcv_cols = [
-                    col for col in mergedohlcv_cols if col not in OHLCV_COLS
-                ]
-
-                # join rawohclv_df into mergedohlcv_df
-                if mergedohlcv_df.shape[0] == 0:
-                    mergedohlcv_df = rawohlcv_df
-                else:
-                    mergedohlcv_df = mergedohlcv_df.join(
-                        rawohlcv_df, on="timestamp", how="outer"
-                    )
-
-        # select columns in-order [timestamp, ..., datetime]
-        mergedohlcv_df = mergedohlcv_df.select(mergedohlcv_cols + ["datetime"])
-
-        assert "datetime" in mergedohlcv_df.columns
-        assert "timestamp" in mergedohlcv_df.columns
-
-        return mergedohlcv_df
 
     def _rawohlcv_filename(self, exch_str, pair_str) -> str:
         """
