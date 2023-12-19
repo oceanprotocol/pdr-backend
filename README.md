@@ -17,7 +17,7 @@ SPDX-License-Identifier: Apache-2.0
 
 - [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [OCEAN](READMEs/get-ocean-on-sapphire.md)
 - [Envvars](READMEs/envvars.md)
-- [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
+- [Predictoor subgraph](READMEs/subgraph.md)
 - [Dynamic model codebase](READMEs/dynamic-model-codebase.md)
 - [Static models in predictoors](READMEs/static-model.md)
 
