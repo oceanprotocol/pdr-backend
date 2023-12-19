@@ -2,7 +2,7 @@ from typing import List, Dict
 from enforce_typing import enforce_types
 
 import polars as pl
-from polars import Utf8, Int64, Float64, Boolean
+from polars import Utf8, Int64, Float64, Boolean, Object
 
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.subgraph.subgraph_predictions import (
@@ -24,6 +24,30 @@ predictions_schema = {
     "payout": Float64,
     "slot": Int64,
     "user": Utf8,
+}
+
+# PREDICTOOR_SUMMARY_SCHEMA
+predictoor_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
+    "predictions": Object,
+    "user": Utf8
+}
+
+# PREDICTOOR_SUMMARY_SCHEMA
+feed_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
 }
 
 

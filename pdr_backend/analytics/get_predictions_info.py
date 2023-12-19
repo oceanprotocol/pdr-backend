@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.csvs import save_analysis_csv
 from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.analytics.predictoor_stats import get_cli_statistics
+from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats, get_feed_summary_stats
 from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     fetch_filtered_predictions,
@@ -54,4 +54,7 @@ def get_predictions_info_main(
 
     save_analysis_csv(predictions, pq_dir)
 
-    get_cli_statistics(predictions)
+    predictoor_summary_df = get_predictoor_summary_stats(predictions)
+    print(predictoor_summary_df)
+    feed_summary_df = get_feed_summary_stats(predictions)
+    print(feed_summary_df)

@@ -7,6 +7,7 @@ import polars as pl
 
 from pdr_backend.models.prediction import Prediction
 from pdr_backend.util.csvs import get_plots_dir
+from pdr_backend.lake.table_pdr_predictions import feed_summary_df_schema, predictoor_summary_df_schema
 
 
 class PairTimeframeStat(TypedDict):
@@ -49,9 +50,8 @@ def aggregate_prediction_statistics(
     correct_predictions = 0
 
     for prediction in all_predictions:
-        pair_timeframe_key = (prediction.pair, prediction.timeframe)
+        pair_timeframe_key = (prediction.pair, prediction.timeframe, prediction.source)
         predictor_key = prediction.user
-        source = prediction.source
 
         is_correct = prediction.prediction == prediction.trueval
 
@@ -85,7 +85,7 @@ def aggregate_prediction_statistics(
         stats["predictor"][predictor_key]["stake"] += prediction.stake
         stats["predictor"][predictor_key]["payout"] += prediction.payout
         stats["predictor"][predictor_key]["details"].add(
-            (prediction.pair, prediction.timeframe, source)
+            (prediction.pair, prediction.timeframe, prediction.source)
         )
 
     return stats, correct_predictions
@@ -158,9 +158,8 @@ def get_endpoint_statistics(
 
     return overall_accuracy, pair_timeframe_stats, predictoor_stats
 
-
 @enforce_types
-def get_cli_statistics(all_predictions: List[Prediction]) -> None:
+def get_feed_summary_stats(all_predictions: List[Prediction]) -> pl.DataFrame:
     total_predictions = len(all_predictions)
 
     stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
@@ -173,31 +172,68 @@ def get_cli_statistics(all_predictions: List[Prediction]) -> None:
         print("No correct predictions found.")
         return
 
-    print(f"Overall Accuracy: {correct_predictions/total_predictions*100:.2f}%")
-
+    data = []
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe = key
+        pair, timeframe, source = key
         accuracy = (
             stat_pair_timeframe_item["correct"]
             / stat_pair_timeframe_item["total"]
             * 100
         )
-        print(f"Accuracy for Pair: {pair}, Timeframe: {timeframe}: {accuracy:.2f}%")
-        print(f"Total stake: {stat_pair_timeframe_item['stake']}")
-        print(f"Total payout: {stat_pair_timeframe_item['payout']}")
-        print(f"Number of predictions: {stat_pair_timeframe_item['total']}\n")
+        new_data = {
+            "timeframe": timeframe,
+            "pair": pair,
+            "source": source,
+            "accuracy": accuracy,
+            "sum_stake": stat_pair_timeframe_item['stake'],
+            "sum_payout": stat_pair_timeframe_item['payout'],
+            "n_predictions": stat_pair_timeframe_item["total"]
+        }
+        data.append(new_data)
 
-    for predictoor_addr, stat_predictoor_item in stats["predictor"].items():
-        accuracy = stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100
-        print(f"Accuracy for Predictoor Address: {predictoor_addr}: {accuracy:.2f}%")
-        print(f"Stake: {stat_predictoor_item['stake']}")
-        print(f"Payout: {stat_predictoor_item['payout']}")
-        print(f"Number of predictions: {stat_predictoor_item['total']}")
-        print("Details of Predictions:")
-        for detail in stat_predictoor_item["details"]:
-            print(f"Pair: {detail[0]}, Timeframe: {detail[1]}, Source: {detail[2]}")
-        print("\n")
+    df = pl.DataFrame(data, schema=feed_summary_df_schema)
+    return df
 
+
+
+@enforce_types
+def get_predictoor_summary_stats(all_predictions: List[Prediction]) -> pl.DataFrame:
+    total_predictions = len(all_predictions)
+    stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
+
+    if total_predictions == 0:
+        print("No predictions found.")
+        return
+
+    if correct_predictions == 0:
+        print("No correct predictions found.")
+        return
+
+    data = []
+    predictor_addr = next(iter(stats["predictor"]))
+
+    for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
+        pair, timeframe, source = key
+        accuracy = (
+            stat_pair_timeframe_item["correct"]
+            / stat_pair_timeframe_item["total"]
+            * 100
+        )
+        new_data = {
+            "timeframe": timeframe,
+            "pair": pair,
+            "source": source,
+            "accuracy": accuracy,
+            "sum_stake": stat_pair_timeframe_item['stake'],
+            "sum_payout": stat_pair_timeframe_item['payout'],
+            "n_predictions": stat_pair_timeframe_item["total"],
+            "predictions": all_predictions,
+            "user": predictor_addr
+        }
+        data.append(new_data)
+
+    df = pl.DataFrame(data, schema=predictoor_summary_df_schema)
+    return df
 
 @enforce_types
 def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
