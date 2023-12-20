@@ -2,15 +2,15 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
+from pdr_backend.analytics.predictoor_stats import get_cli_statistics
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_predictions import (
+    FilterMode,
+    fetch_filtered_predictions,
+    get_all_contract_ids_by_owner,
+)
 from pdr_backend.util.csvs import save_analysis_csv
 from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.analytics.predictoor_stats import get_cli_statistics
-from pdr_backend.subgraph.subgraph_predictions import (
-    get_all_contract_ids_by_owner,
-    fetch_filtered_predictions,
-    FilterMode,
-)
 from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 
 

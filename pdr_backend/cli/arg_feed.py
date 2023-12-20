@@ -1,6 +1,6 @@
 """Utilities for all feeds from binance etc.
 Used as inputs for models, and for predicing.
-Complementary to models/feed.py which models a prediction feed contract.
+Complementary to subgraph/subgraph_feed.py which models a prediction feed contract.
 """
 
 from typing import List, Set

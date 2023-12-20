@@ -1,7 +1,7 @@
 from typing import Dict
 
-from enforce_typing import enforce_types
 import requests
+from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import SUBGRAPH_MAX_TRIES
 

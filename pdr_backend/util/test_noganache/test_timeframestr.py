@@ -1,11 +1,11 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.timeframestr import (
     Timeframe,
     pack_timeframe_str_list,
-    verify_timeframe_str,
     s_to_timeframe_str,
+    verify_timeframe_str,
 )
 
 

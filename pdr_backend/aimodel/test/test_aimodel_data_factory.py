@@ -1,26 +1,26 @@
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
-    _mergedohlcv_df_ETHUSDT,
-    _data_pp_ss_1feed,
+    BINANCE_BTC_DATA,
+    BINANCE_ETH_DATA,
+    ETHUSDT_RAWOHLCV_DFS,
+    KRAKEN_BTC_DATA,
+    KRAKEN_ETH_DATA,
     _data_pp,
+    _data_pp_ss_1feed,
     _data_ss,
     _df_from_raw_data,
-    BINANCE_ETH_DATA,
-    BINANCE_BTC_DATA,
-    KRAKEN_ETH_DATA,
-    KRAKEN_BTC_DATA,
-    ETHUSDT_RAWOHLCV_DFS,
+    _mergedohlcv_df_ETHUSDT,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.mathutil import has_nan, fill_nans
+from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types

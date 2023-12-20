@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.models.erc721_factory import Erc721Factory
+from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import to_wei
 

@@ -1,8 +1,8 @@
 import pytest
 
-from pdr_backend.models.token import Token
-from pdr_backend.models.predictoor_batcher import PredictoorBatcher
-from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
+from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.contract import get_address

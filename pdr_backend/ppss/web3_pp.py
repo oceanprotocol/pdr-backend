@@ -1,5 +1,5 @@
-from os import getenv
 import random
+from os import getenv
 from typing import Any, Dict, List, Optional
 from unittest.mock import Mock
 
@@ -7,10 +7,10 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.models.feed import SubgraphFeed
-from pdr_backend.models.slot import Slot
-from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
+from pdr_backend.contract.slot import Slot
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
+from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
 
@@ -115,7 +115,8 @@ class Web3PP(StrMixin):
         @return
           contracts -- dict of [feed_addr] : PredictoorContract
         """
-        from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.contract.predictoor_contract import (
             PredictoorContract,
         )
 
@@ -175,7 +176,8 @@ def mock_web3_pp(network: str) -> Web3PP:
 
 @enforce_types
 def inplace_mock_feedgetters(web3_pp, feed: SubgraphFeed):
-    from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
+    from pdr_backend.contract.predictoor_contract import (
         mock_predictoor_contract,
     )
 
@@ -195,7 +197,8 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
 def inplace_mock_get_contracts(
     web3_pp: Web3PP, feed: SubgraphFeed, predictoor_contract
 ):
-    from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
+    from pdr_backend.contract.predictoor_contract import (
         PredictoorContract,
     )
 
@@ -275,7 +278,7 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_contract_func = Mock()
     mock_contract_func.return_value = _mock_pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.models.predictoor_contract.PredictoorContract",
+        "pdr_backend.contract.predictoor_contract.PredictoorContract",
         mock_contract_func,
     )
 

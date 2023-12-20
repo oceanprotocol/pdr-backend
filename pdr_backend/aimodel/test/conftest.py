@@ -1,5 +1,5 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import AimodelSS

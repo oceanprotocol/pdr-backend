@@ -1,13 +1,13 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.pairstr import (
-    unpack_pairs_str,
-    unpack_pair_str,
     pack_pair_str_list,
-    verify_pairs_str,
-    verify_pair_str,
+    unpack_pair_str,
+    unpack_pairs_str,
     verify_base_str,
+    verify_pair_str,
+    verify_pairs_str,
     verify_quote_str,
 )
 

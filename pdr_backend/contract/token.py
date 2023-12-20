@@ -1,8 +1,8 @@
 from enforce_typing import enforce_types
 from web3.types import TxParams, Wei
 
-from pdr_backend.models.base_contract import BaseContract
-from pdr_backend.util.networkutil import tx_gas_price, tx_call_params
+from pdr_backend.contract.base_contract import BaseContract
+from pdr_backend.util.networkutil import tx_call_params, tx_gas_price
 
 
 @enforce_types

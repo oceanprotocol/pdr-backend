@@ -10,14 +10,14 @@ from pdr_backend.ppss.web3_pp import (
     inplace_mock_feedgetters,
     inplace_mock_w3_and_contract_with_tracking,
 )
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 from pdr_backend.trader.test.trader_agent_runner import (
+    INIT_BLOCK_NUMBER,
+    INIT_TIMESTAMP,
     do_constructor,
     do_run,
-    INIT_TIMESTAMP,
-    INIT_BLOCK_NUMBER,
     setup_take_step,
 )
-from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types

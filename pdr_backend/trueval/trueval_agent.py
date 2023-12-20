@@ -1,16 +1,16 @@
-from collections import defaultdict
 import time
+from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import SubgraphFeed
-from pdr_backend.models.slot import Slot
-from pdr_backend.models.predictoor_batcher import PredictoorBatcher
-from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
+from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.trueval.get_trueval import get_trueval
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
+from pdr_backend.trueval.get_trueval import get_trueval
 
 
 @enforce_types

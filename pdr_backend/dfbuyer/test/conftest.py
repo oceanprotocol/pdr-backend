@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock, patch
+
 import pytest
 
+from pdr_backend.contract.predictoor_batcher import mock_predictoor_batcher
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.models.predictoor_batcher import mock_predictoor_batcher
 from pdr_backend.ppss.ppss import mock_feed_ppss
 from pdr_backend.ppss.web3_pp import inplace_mock_feedgetters
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS

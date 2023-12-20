@@ -1,14 +1,13 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.signalstr import (
     char_to_signal,
     signal_to_char,
     unpack_signalchar_str,
-    verify_signalchar_str,
     verify_signal_str,
+    verify_signalchar_str,
 )
-
 
 # ==========================================================================
 # conversions

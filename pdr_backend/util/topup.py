@@ -3,7 +3,7 @@ from typing import Dict
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.token import Token, NativeToken
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.contract import get_address

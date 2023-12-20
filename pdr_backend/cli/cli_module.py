@@ -1,42 +1,40 @@
 import sys
 
 from enforce_typing import enforce_types
-from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.publisher.publish_assets import publish_assets
-from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
-from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
-from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
-from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
-from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
-from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.analytics.check_network import check_network_main
-from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
-
-from pdr_backend.util.cli_arguments import (
+from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
+from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
+from pdr_backend.cli.cli_arguments import (
+    CheckNetworkArgParser,
     ClaimOceanArgParser,
     ClaimRoseArgParser,
-    CheckNetworkArgParser,
     DfbuyerArgParser,
-    do_help_long,
-    GetPredictoorsInfoArgParser,
     GetPredictionsInfoArgParser,
+    GetPredictoorsInfoArgParser,
     GetTractionInfoArgParser,
     PredictoorArgParser,
-    print_args,
     PublisherArgParser,
     SimArgParser,
     TopupArgParser,
     TraderArgParser,
     TruevalArgParser,
+    do_help_long,
+    print_args,
 )
-
+from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
+from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
+from pdr_backend.publisher.publish_assets import publish_assets
+from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
+from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
+from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
-from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
-from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
-from pdr_backend.analytics.get_traction_info import get_traction_info_main
+from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.topup import topup_main
 
 

@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.networkutil import tx_call_params
 

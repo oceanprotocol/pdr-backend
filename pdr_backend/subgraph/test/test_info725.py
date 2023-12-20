@@ -2,11 +2,11 @@ from enforce_typing import enforce_types
 from web3 import Web3
 
 from pdr_backend.subgraph.info725 import (
-    key_to_key725,
-    value_to_value725,
-    value725_to_value,
-    info_to_info725,
     info725_to_info,
+    info_to_info725,
+    key_to_key725,
+    value725_to_value,
+    value_to_value725,
 )
 
 

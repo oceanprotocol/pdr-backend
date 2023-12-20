@@ -1,11 +1,11 @@
-from abc import ABC, abstractmethod
 import time
+from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import print_feeds
+from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.mathutil import sole_value
 
 

@@ -1,14 +1,14 @@
-from typing import List, Dict
-from enforce_typing import enforce_types
+from typing import Dict, List
 
 import polars as pl
-from polars import Utf8, Int64, Float64, Boolean
+from enforce_typing import enforce_types
+from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.subgraph.subgraph_predictions import (
-    fetch_filtered_predictions,
     FilterMode,
+    fetch_filtered_predictions,
 )
+from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
 # RAW_PREDICTIONS_SCHEMA

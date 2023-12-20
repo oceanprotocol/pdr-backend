@@ -4,7 +4,7 @@ from typing import List
 from enforce_typing import enforce_types
 from eth_account import Account
 
-from pdr_backend.models.token import Token
+from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
 

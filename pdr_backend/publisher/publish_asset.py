@@ -2,8 +2,8 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.erc721_factory import Erc721Factory
+from pdr_backend.contract.data_nft import DataNft
+from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import to_wei

@@ -1,9 +1,8 @@
+import pytest
 from enforce_typing import enforce_types
 
-import pytest
-
+from pdr_backend.subgraph.subgraph_feed import mock_feed
 from pdr_backend.trueval.get_trueval import get_trueval
-from pdr_backend.models.feed import mock_feed
 
 _PATH = "pdr_backend.trueval.get_trueval"
 

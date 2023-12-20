@@ -1,6 +1,6 @@
+import sys
 from argparse import ArgumentParser as ArgParser
 from argparse import Namespace
-import sys
 
 from enforce_typing import enforce_types
 

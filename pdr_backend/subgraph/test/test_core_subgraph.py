@@ -1,6 +1,6 @@
-from enforce_typing import enforce_types
 import pytest
 import requests
+from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.test.resources import MockPost
