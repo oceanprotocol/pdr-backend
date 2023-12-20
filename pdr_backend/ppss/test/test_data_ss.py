@@ -1,11 +1,12 @@
 import copy
 import os
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.util.feedstr import Feed, Feeds
 from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
@@ -36,12 +37,14 @@ def test_data_ss_basic():
     # derivative properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
-    assert ss.input_feed_tups == [
-        ("kraken", "high", "ETH/USDT"),
-        ("kraken", "close", "ETH/USDT"),
-        ("binanceus", "high", "ETH/USDT"),
-        ("binanceus", "high", "TRX/DAI"),
-    ]
+    assert ss.input_feeds == Feeds(
+        [
+            Feed("kraken", "high", "ETH/USDT"),
+            Feed("kraken", "close", "ETH/USDT"),
+            Feed("binanceus", "high", "ETH/USDT"),
+            Feed("binanceus", "high", "TRX/DAI"),
+        ]
+    )
     assert ss.exchange_pair_tups == set(
         [
             ("kraken", "ETH/USDT"),
@@ -49,7 +52,7 @@ def test_data_ss_basic():
             ("binanceus", "TRX/DAI"),
         ]
     )
-    assert len(ss.input_feed_tups) == ss.n_input_feeds == 4
+    assert len(ss.input_feeds) == ss.n_input_feeds == 4
     assert ss.n == 4 * 3 == 12
     assert ss.n_exchs == 2
     assert len(ss.exchange_strs) == 2

@@ -1,8 +1,9 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import mock_feed
 from pdr_backend.ppss.data_pp import DataPP, mock_data_pp
+from pdr_backend.util.feedstr import Feed
 from pdr_backend.util.mathutil import sole_value
 
 
@@ -24,10 +25,10 @@ def test_data_pp_1feed():
     # derivative properties
     assert isinstance(pp.timeframe_ms, int)  # test more below
     assert isinstance(pp.timeframe_m, int)  # ""
-    assert pp.predict_feed_tups == [("kraken", "high", "ETH/USDT")]
+    assert pp.predict_feeds == [Feed("kraken", "high", "ETH/USDT")]
     assert pp.pair_strs == ["ETH/USDT"]
     assert pp.exchange_strs == ["kraken"]
-    assert pp.predict_feed_tup == ("kraken", "high", "ETH/USDT")
+    assert pp.predict_feed == Feed("kraken", "high", "ETH/USDT")
     assert pp.exchange_str == "kraken"
     assert pp.signal_str == "high"
     assert pp.pair_str == "ETH/USDT"
@@ -53,15 +54,15 @@ def test_data_pp_3feeds():
     assert pp.predict_feeds_strs == ["kraken h ETH/USDT", "binance oh BTC/USDT"]
 
     # derivative properties
-    assert pp.predict_feed_tups == [
-        ("kraken", "high", "ETH/USDT"),
-        ("binance", "open", "BTC/USDT"),
-        ("binance", "high", "BTC/USDT"),
+    assert pp.predict_feeds == [
+        Feed("kraken", "high", "ETH/USDT"),
+        Feed("binance", "open", "BTC/USDT"),
+        Feed("binance", "high", "BTC/USDT"),
     ]
     assert pp.pair_strs == ["ETH/USDT", "BTC/USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]
     with pytest.raises(ValueError):
-        pp.predict_feed_tup  # pylint: disable=pointless-statement
+        pp.predict_feed  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
         pp.exchange_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):

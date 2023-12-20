@@ -1,14 +1,14 @@
 import sys
 from typing import Tuple
 
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.mathutil import has_nan, fill_nans
+from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types
@@ -79,8 +79,7 @@ class AimodelDataFactory:
         x_df = pd.DataFrame()  # build this up
 
         target_hist_cols = [
-            f"{exch_str}:{pair_str}:{signal_str}"
-            for exch_str, signal_str, pair_str in ss.input_feed_tups
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.input_feeds
         ]
 
         for hist_col in target_hist_cols:

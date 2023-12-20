@@ -1,29 +1,25 @@
 import os
 from typing import Dict
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.constants import (
-    OHLCV_MULT_MIN,
-    OHLCV_MULT_MAX,
-    TOHLCV_SCHEMA_PL,
-)
+from pdr_backend.lake.constants import OHLCV_MULT_MAX, OHLCV_MULT_MIN, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
-    initialize_rawohlcv_df,
     concat_next_df,
-    load_rawohlcv_file,
-    save_rawohlcv_file,
     has_data,
-    oldest_ut,
+    initialize_rawohlcv_df,
+    load_rawohlcv_file,
     newest_ut,
+    oldest_ut,
+    save_rawohlcv_file,
 )
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.timeutil import pretty_timestr, current_ut
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 
 @enforce_types
@@ -217,9 +213,9 @@ class OhlcvDataFactory:
             assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
             filename = self._rawohlcv_filename(exch_str, pair_str)
             cols = [
-                signal_str  # cols is a subset of TOHLCV_COLS
-                for e, signal_str, p in self.ss.input_feed_tups
-                if e == exch_str and p == pair_str
+                feed.signal  # cols is a subset of TOHLCV_COLS
+                for feed in self.ss.input_feeds
+                if feed.exchange == exch_str and feed.pair == pair_str
             ]
             rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
 

@@ -2,10 +2,10 @@ import copy
 import os
 from typing import List
 
-from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -32,9 +32,9 @@ class SimEngine:
     def __init__(self, ppss: PPSS):
         # preconditions
         assert (
-            len(ppss.data_pp.predict_feed_tups) == 1
+            len(ppss.data_pp.predict_feeds) == 1
         ), "sim engine can only handle 1 prediction feed"
-        assert ppss.data_pp.predict_feed_tups[0] in ppss.data_ss.input_feed_tups
+        assert ppss.data_pp.predict_feeds[0] in ppss.data_ss.input_feeds
 
         # pp & ss values
         self.ppss = ppss

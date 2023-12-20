@@ -1,67 +1,62 @@
 from typing import Set
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.feedstr import (
-    unpack_feeds_strs,
-    unpack_feeds_str,
-    unpack_feed_str,
-    pack_feed_str,
-    verify_feeds_strs,
-    verify_feeds_str,
+    Feed,
+    Feeds,
     verify_feed_str,
-    verify_feed_tup,
+    verify_feeds_str,
+    verify_feeds_strs,
 )
-
-
-# ==========================================================================
-# unpack..() functions
 
 
 @enforce_types
 def test_unpack_feeds_strs():
     # 1 str w 1 feed, 1 feed total
-    target_feed_tups = [("binance", "open", "ADA/USDT")]
-    assert unpack_feeds_strs(["binance o ADA/USDT"]) == target_feed_tups
-    assert unpack_feeds_strs(["binance o ADA-USDT"]) == target_feed_tups
+    target_feeds = [Feed("binance", "open", "ADA/USDT")]
+    assert Feeds.from_strs(["binance o ADA/USDT"]) == target_feeds
+    assert Feeds.from_strs(["binance o ADA-USDT"]) == target_feeds
 
     # 1 str w 2 feeds, 2 feeds total
-    target_feed_tups = [
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "high", "ADA/USDT"),
+    target_feeds = [
+        Feed("binance", "open", "ADA/USDT"),
+        Feed("binance", "high", "ADA/USDT"),
     ]
-    assert unpack_feeds_strs(["binance oh ADA/USDT"]) == target_feed_tups
-    assert unpack_feeds_strs(["binance oh ADA-USDT"]) == target_feed_tups
+    assert Feeds.from_strs(["binance oh ADA/USDT"]) == target_feeds
+    assert Feeds.from_strs(["binance oh ADA-USDT"]) == target_feeds
 
     # 2 strs each w 1 feed, 2 feeds total
-    target_feed_tups = [
-        ("binance", "open", "ADA/USDT"),
-        ("kraken", "high", "ADA/RAI"),
+    target_feeds = [
+        Feed("binance", "open", "ADA/USDT"),
+        Feed("kraken", "high", "ADA/RAI"),
     ]
-    feed_tups = unpack_feeds_strs(
+    feeds = Feeds.from_strs(
         [
             "binance o ADA-USDT",
             "kraken h ADA/RAI",
         ]
     )
-    assert feed_tups == target_feed_tups
+    assert feeds == target_feeds
 
     # first str has 4 feeds and second has 1 feed; 5 feeds total
-    target_feed_tups = [
-        ("binance", "close", "ADA/USDT"),
-        ("binance", "close", "BTC/USDT"),
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "BTC/USDT"),
-        ("kraken", "high", "ADA/RAI"),
-    ]
-    feed_tups = unpack_feeds_strs(
+    target_feeds = Feeds(
+        [
+            Feed("binance", "close", "ADA/USDT"),
+            Feed("binance", "close", "BTC/USDT"),
+            Feed("binance", "open", "ADA/USDT"),
+            Feed("binance", "open", "BTC/USDT"),
+            Feed("kraken", "high", "ADA/RAI"),
+        ]
+    )
+    feeds = Feeds.from_strs(
         [
             "binance oc ADA-USDT BTC/USDT",
             "kraken h ADA-RAI",
         ]
     )
-    assert sorted(feed_tups) == target_feed_tups
+    assert feeds == target_feeds
 
     # unhappy paths. Note: verify section has way more
     lists = [
@@ -72,43 +67,45 @@ def test_unpack_feeds_strs():
     ]
     for feeds_strs in lists:
         with pytest.raises(ValueError):
-            unpack_feeds_strs(feeds_strs)
+            Feeds.from_strs(feeds_strs)
 
 
 @enforce_types
 def test_unpack_feeds_str():
     # 1 feed
-    target_feed_tups = [("binance", "open", "ADA/USDT")]
-    assert unpack_feeds_str("binance o ADA/USDT") == target_feed_tups
-    assert unpack_feeds_str("binance o ADA-USDT") == target_feed_tups
+    target_feeds = [Feed("binance", "open", "ADA/USDT")]
+    assert Feeds.from_str("binance o ADA/USDT") == target_feeds
+    assert Feeds.from_str("binance o ADA-USDT") == target_feeds
 
     # >1 signal, so >1 feed
-    target_feed_tups = [
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "close", "ADA/USDT"),
+    target_feeds = [
+        Feed("binance", "open", "ADA/USDT"),
+        Feed("binance", "close", "ADA/USDT"),
     ]
-    assert unpack_feeds_str("binance oc ADA/USDT") == target_feed_tups
-    assert unpack_feeds_str("binance oc ADA-USDT") == target_feed_tups
+    assert Feeds.from_str("binance oc ADA/USDT") == target_feeds
+    assert Feeds.from_str("binance oc ADA-USDT") == target_feeds
 
     # >1 pair, so >1 feed
-    target_feed_tups = [
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "ETH/RAI"),
+    target_feeds = [
+        Feed("binance", "open", "ADA/USDT"),
+        Feed("binance", "open", "ETH/RAI"),
     ]
-    assert unpack_feeds_str("binance o ADA/USDT ETH/RAI") == target_feed_tups
-    assert unpack_feeds_str("binance o ADA-USDT ETH/RAI") == target_feed_tups
-    assert unpack_feeds_str("binance o ADA-USDT ETH-RAI") == target_feed_tups
+    assert Feeds.from_str("binance o ADA/USDT ETH/RAI") == target_feeds
+    assert Feeds.from_str("binance o ADA-USDT ETH/RAI") == target_feeds
+    assert Feeds.from_str("binance o ADA-USDT ETH-RAI") == target_feeds
 
     # >1 signal and >1 pair, so >1 feed
-    target = [
-        ("binance", "close", "ADA/USDT"),
-        ("binance", "close", "BTC/USDT"),
-        ("binance", "open", "ADA/USDT"),
-        ("binance", "open", "BTC/USDT"),
-    ]
-    assert sorted(unpack_feeds_str("binance oc ADA/USDT,BTC/USDT")) == target
-    assert sorted(unpack_feeds_str("binance oc ADA-USDT,BTC/USDT")) == target
-    assert sorted(unpack_feeds_str("binance oc ADA-USDT,BTC-USDT")) == target
+    target = Feeds(
+        [
+            Feed("binance", "close", "ADA/USDT"),
+            Feed("binance", "close", "BTC/USDT"),
+            Feed("binance", "open", "ADA/USDT"),
+            Feed("binance", "open", "BTC/USDT"),
+        ]
+    )
+    assert Feeds.from_str("binance oc ADA/USDT,BTC/USDT") == target
+    assert Feeds.from_str("binance oc ADA-USDT,BTC/USDT") == target
+    assert Feeds.from_str("binance oc ADA-USDT,BTC-USDT") == target
 
     # unhappy paths. Verify section has way more, this is just for baseline
     strs = [
@@ -118,35 +115,30 @@ def test_unpack_feeds_str():
     ]
     for feeds_str in strs:
         with pytest.raises(ValueError):
-            unpack_feeds_str(feeds_str)
-
-    # test separators between pairs: space, comma, both or a mix
-    # Note: verify section has way more
-    def _pairs(feed_tups) -> Set[str]:
-        return set(pair for (_, _, pair) in feed_tups)
+            Feeds.from_str(feeds_str)
 
     targ_prs = set(["ADA/USDT", "BTC/USDT"])
-    assert _pairs(unpack_feeds_str("binance o ADA/USDT BTC/USDT")) == targ_prs
-    assert _pairs(unpack_feeds_str("binance o ADA-USDT BTC/USDT")) == targ_prs
-    assert _pairs(unpack_feeds_str("binance o ADA-USDT BTC-USDT")) == targ_prs
+    assert Feeds.from_str("binance o ADA/USDT BTC/USDT").pairs == targ_prs
+    assert Feeds.from_str("binance o ADA-USDT BTC/USDT").pairs == targ_prs
+    assert Feeds.from_str("binance o ADA-USDT BTC-USDT").pairs == targ_prs
 
     targ_prs = set(["ADA/USDT", "BTC/USDT"])
-    assert _pairs(unpack_feeds_str("binance oc ADA/USDT,BTC/USDT")) == targ_prs
-    assert _pairs(unpack_feeds_str("binance oc ADA-USDT,BTC/USDT")) == targ_prs
-    assert _pairs(unpack_feeds_str("binance oc ADA-USDT,BTC-USDT")) == targ_prs
+    assert Feeds.from_str("binance oc ADA/USDT,BTC/USDT").pairs == targ_prs
+    assert Feeds.from_str("binance oc ADA-USDT,BTC/USDT").pairs == targ_prs
+    assert Feeds.from_str("binance oc ADA-USDT,BTC-USDT").pairs == targ_prs
 
     targ_prs = set(["ADA/USDT", "BTC/USDT", "ETH/USDC", "DOT/DAI"])
     assert (
-        _pairs(unpack_feeds_str("binance oc ADA/USDT  BTC/USDT  ,ETH/USDC,    DOT/DAI"))
+        Feeds.from_str("binance oc ADA/USDT  BTC/USDT  ,ETH/USDC,    DOT/DAI").pairs
         == targ_prs
     )
 
 
 @enforce_types
 def test_unpack_feed_str():
-    target_feed_tup = ("binance", "close", "BTC/USDT")
-    assert unpack_feed_str("binance c BTC/USDT") == target_feed_tup
-    assert unpack_feed_str("binance c BTC-USDT") == target_feed_tup
+    target_feed = Feed("binance", "close", "BTC/USDT")
+    assert Feed.from_str("binance c BTC/USDT") == target_feed
+    assert Feed.from_str("binance c BTC-USDT") == target_feed
 
 
 # ==========================================================================
@@ -155,9 +147,9 @@ def test_unpack_feed_str():
 
 @enforce_types
 def test_pack_feed_str():
-    target_feed_str = "binance o BTC/USDT"
-    assert pack_feed_str(("binance", "open", "BTC/USDT")) == target_feed_str
-    assert pack_feed_str(("binance", "open", "BTC-USDT")) == target_feed_str
+    target_feed_str = "binance BTC/USDT o"
+    assert str(Feed("binance", "open", "BTC/USDT")) == target_feed_str
+    assert str(Feed("binance", "open", "BTC-USDT")) == target_feed_str
 
 
 # ==========================================================================
@@ -271,7 +263,7 @@ def test_verify_feeds_str__and__verify_feed_str():
 
 
 @enforce_types
-def test_verify_feed_tup():
+def test_verify_feed():
     # ok
     tups = [
         ("binance", "open", "BTC/USDT"),
@@ -279,19 +271,26 @@ def test_verify_feed_tup():
         ("kraken", "close", "BTC-DAI"),
     ]
     for feed_tup in tups:
-        verify_feed_tup(feed_tup)
+        Feed(*feed_tup)
 
-    # not ok
+    # not ok - Value Error
     tups = [
-        (),
-        ("binance", "open"),
         ("binance", "open", ""),
         ("xyz", "open", "BTC/USDT"),
         ("xyz", "open", "BTC-USDT"),
         ("binance", "xyz", "BTC/USDT"),
         ("binance", "open", "BTC/XYZ"),
-        ("binance", "open", "BTC/USDT", ""),
     ]
     for feed_tup in tups:
         with pytest.raises(ValueError):
-            verify_feed_tup(feed_tup)
+            Feed(*feed_tup)
+
+    # not ok - Type Error
+    tups = [
+        (),
+        ("binance", "open"),
+        ("binance", "open", "BTC/USDT", ""),
+    ]
+    for feed_tup in tups:
+        with pytest.raises(TypeError):
+            Feed(*feed_tup)
