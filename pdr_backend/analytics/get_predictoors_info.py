@@ -11,6 +11,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
 )
 from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 
 @enforce_types
@@ -21,25 +22,18 @@ def get_predictoors_info_main(
     end_timestr: str,
     csv_output_dir: str,
 ):
-    network = get_sapphire_postfix(ppss.web3_pp.network)
-    start_ut: int = ms_to_seconds(timestr_to_ut(start_timestr))
-    end_ut: int = ms_to_seconds(timestr_to_ut(end_timestr))
+    data_ss = ppss.data_ss
+    data_ss.d["st_timestr"] = start_timestr
+    data_ss.d["fin_timestr"] = end_timestr
 
-    pdr_addrs_filter = []
-    if pdr_addrs_str:
-        pdr_addrs_filter = pdr_addrs_str.lower().split(",")
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_dfs = gql_data_factory.get_gql_dfs()
 
-    predictions = fetch_filtered_predictions(
-        start_ut,
-        end_ut,
-        pdr_addrs_filter,
-        network,
-        FilterMode.PREDICTOOR,
-    )
+    if len(gql_dfs) == 0:
+        print("No records found. Please adjust start and end times.")
+        return
 
-    save_prediction_csv(predictions, csv_output_dir)
-
-    predictoor_summary_df = get_predictoor_summary_stats(predictions)
-    print(predictoor_summary_df)
-    feed_summary_df = get_feed_summary_stats(predictions)
-    print(feed_summary_df)
+    predictions_df = gql_dfs["pdr_predictions"]
+    user_predictions_df = predictions_df.filter(predictions_df['user'] == pdr_addrs_str.lower())
+    predictoor_summary_df = get_predictoor_summary_stats(user_predictions_df)
+    #feed_summary_df = get_feed_summary_stats(predictions)

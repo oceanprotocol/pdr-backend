@@ -159,81 +159,48 @@ def get_endpoint_statistics(
     return overall_accuracy, pair_timeframe_stats, predictoor_stats
 
 @enforce_types
-def get_feed_summary_stats(all_predictions: List[Prediction]) -> pl.DataFrame:
-    total_predictions = len(all_predictions)
+def get_feed_summary_stats(preds_df: pl.DataFrame) -> pl.DataFrame:
+    # 1 - filter from lake only the rows that you're looking for
+  df = predictions_df.filter(~((pl.col("trueval").is_null()) | (pl.col("payout").is_null())))
 
-    stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
+  print(df)
 
-    if total_predictions == 0:
-        print("No predictions found.")
-        return
+  # Group by pair
+  df = df.groupby("pair").agg(
+    pl.col("timeframe").first().alias("timeframe"),
+    pl.col("source").first().alias("source"),
+    pl.col("user").first().alias("user"),
+    pl.col("payout").sum().alias("sum_payout"),
+    pl.col("stake").sum().alias("sum_stake"),
+    pl.col("prediction").count().alias("num_predictions"),
+    (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy")
+  )
 
-    if correct_predictions == 0:
-        print("No correct predictions found.")
-        return
-
-    data = []
-    for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe, source = key
-        accuracy = (
-            stat_pair_timeframe_item["correct"]
-            / stat_pair_timeframe_item["total"]
-            * 100
-        )
-        new_data = {
-            "timeframe": timeframe,
-            "pair": pair,
-            "source": source,
-            "accuracy": accuracy,
-            "sum_stake": stat_pair_timeframe_item['stake'],
-            "sum_payout": stat_pair_timeframe_item['payout'],
-            "n_predictions": stat_pair_timeframe_item["total"]
-        }
-        data.append(new_data)
-
-    df = pl.DataFrame(data, schema=feed_summary_df_schema)
-    return df
+  print(df)
+  return df
 
 
 
 @enforce_types
-def get_predictoor_summary_stats(all_predictions: List[Prediction]) -> pl.DataFrame:
-    total_predictions = len(all_predictions)
-    stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
+def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
+  # 1 - filter from lake only the rows that you're looking for
+  df = predictions_df.filter(~((pl.col("trueval").is_null()) | (pl.col("payout").is_null())))
 
-    if total_predictions == 0:
-        print("No predictions found.")
-        return
+  print(df)
 
-    if correct_predictions == 0:
-        print("No correct predictions found.")
-        return
+  # Group by pair
+  df = df.groupby("pair").agg(
+    pl.col("timeframe").first().alias("timeframe"),
+    pl.col("source").first().alias("source"),
+    pl.col("user").first().alias("user"),
+    pl.col("payout").sum().alias("sum_payout"),
+    pl.col("stake").sum().alias("sum_stake"),
+    pl.col("prediction").count().alias("num_predictions"),
+    (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy")
+  )
 
-    data = []
-    predictor_addr = next(iter(stats["predictor"]))
-
-    for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe, source = key
-        accuracy = (
-            stat_pair_timeframe_item["correct"]
-            / stat_pair_timeframe_item["total"]
-            * 100
-        )
-        new_data = {
-            "timeframe": timeframe,
-            "pair": pair,
-            "source": source,
-            "accuracy": accuracy,
-            "sum_stake": stat_pair_timeframe_item['stake'],
-            "sum_payout": stat_pair_timeframe_item['payout'],
-            "n_predictions": stat_pair_timeframe_item["total"],
-            "predictions": all_predictions,
-            "user": predictor_addr
-        }
-        data.append(new_data)
-
-    df = pl.DataFrame(data, schema=predictoor_summary_df_schema)
-    return df
+  print(df)
+  return df
 
 @enforce_types
 def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
