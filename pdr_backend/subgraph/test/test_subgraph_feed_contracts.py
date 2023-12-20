@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 import requests
 import pytest
 
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.subgraph.info725 import info_to_info725
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.test.resources import MockPost
@@ -58,7 +58,7 @@ def test_query_feed_contracts__fullchain(monkeypatch):
     assert len(feeds) == 1
     assert contract_addr in feeds
     feed = feeds[contract_addr]
-    assert isinstance(feed, Feed)
+    assert isinstance(feed, SubgraphFeed)
 
     assert feed.name == "Name:contract1"
     assert feed.address == "0xNFT1"

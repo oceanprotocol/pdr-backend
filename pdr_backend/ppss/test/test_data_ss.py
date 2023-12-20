@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.feedstr import Feed, Feeds
+from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
 from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
@@ -37,12 +37,12 @@ def test_data_ss_basic():
     # derivative properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
-    assert ss.input_feeds == Feeds(
+    assert ss.input_feeds == ArgFeeds(
         [
-            Feed("kraken", "high", "ETH/USDT"),
-            Feed("kraken", "close", "ETH/USDT"),
-            Feed("binanceus", "high", "ETH/USDT"),
-            Feed("binanceus", "high", "TRX/DAI"),
+            ArgFeed("kraken", "high", "ETH/USDT"),
+            ArgFeed("kraken", "close", "ETH/USDT"),
+            ArgFeed("binanceus", "high", "ETH/USDT"),
+            ArgFeed("binanceus", "high", "TRX/DAI"),
         ]
     )
     assert ss.exchange_pair_tups == set(

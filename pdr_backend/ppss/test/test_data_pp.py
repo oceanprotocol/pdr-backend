@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import mock_feed
 from pdr_backend.ppss.data_pp import DataPP, mock_data_pp
-from pdr_backend.util.feedstr import Feed
+from pdr_backend.util.feedstr import ArgFeed
 from pdr_backend.util.mathutil import sole_value
 
 
@@ -25,10 +25,10 @@ def test_data_pp_1feed():
     # derivative properties
     assert isinstance(pp.timeframe_ms, int)  # test more below
     assert isinstance(pp.timeframe_m, int)  # ""
-    assert pp.predict_feeds == [Feed("kraken", "high", "ETH/USDT")]
+    assert pp.predict_feeds == [ArgFeed("kraken", "high", "ETH/USDT")]
     assert pp.pair_strs == ["ETH/USDT"]
     assert pp.exchange_strs == ["kraken"]
-    assert pp.predict_feed == Feed("kraken", "high", "ETH/USDT")
+    assert pp.predict_feed == ArgFeed("kraken", "high", "ETH/USDT")
     assert pp.exchange_str == "kraken"
     assert pp.signal_str == "high"
     assert pp.pair_str == "ETH/USDT"
@@ -55,9 +55,9 @@ def test_data_pp_3feeds():
 
     # derivative properties
     assert pp.predict_feeds == [
-        Feed("kraken", "high", "ETH/USDT"),
-        Feed("binance", "open", "BTC/USDT"),
-        Feed("binance", "high", "BTC/USDT"),
+        ArgFeed("kraken", "high", "ETH/USDT"),
+        ArgFeed("binance", "open", "BTC/USDT"),
+        ArgFeed("binance", "high", "BTC/USDT"),
     ]
     assert pp.pair_strs == ["ETH/USDT", "BTC/USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]

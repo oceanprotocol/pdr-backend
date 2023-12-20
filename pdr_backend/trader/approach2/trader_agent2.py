@@ -6,7 +6,7 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import (
     Portfolio,
     Order,
@@ -108,7 +108,7 @@ class TraderAgent2(BaseTraderAgent):
                 self.portfolio.close_position(addr, order)
                 self.update_cache()
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             Logic:

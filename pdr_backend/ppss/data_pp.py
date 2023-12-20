@@ -3,8 +3,8 @@ from typing import Dict, List
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed as FeedMixin
-from pdr_backend.util.feedstr import Feed, Feeds, verify_feeds_strs
+from pdr_backend.models.feed import SubgraphFeed
+from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
@@ -17,7 +17,8 @@ class DataPP:
 
         # test inputs
         verify_timeframe_str(self.timeframe)
-        verify_feeds_strs(self.predict_feeds_strs)
+        ArgFeeds.from_strs(self.predict_feeds_strs)  # test that it's valid
+
         if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
             raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
 
@@ -63,12 +64,12 @@ class DataPP:
         return Timeframe(self.timeframe).m
 
     @property
-    def predict_feeds(self) -> Feeds:
+    def predict_feeds(self) -> ArgFeeds:
         """
         Return list of Feed(exchange_str, signal_str, pair_str)
         E.g. [Feed("binance", "open",  "ADA/USDT"), ...]
         """
-        return Feeds.from_strs(self.predict_feeds_strs)
+        return ArgFeeds.from_strs(self.predict_feeds_strs)
 
     @property
     def pair_strs(self) -> set:
@@ -81,7 +82,7 @@ class DataPP:
         return remove_dups([feed.exchange for feed in self.predict_feeds])
 
     @property
-    def predict_feed(self) -> Feed:
+    def predict_feed(self) -> ArgFeed:
         """
         Return Feed(exchange_str, signal_str, pair_str)
         E.g. Feed("binance", "open",  "ADA/USDT")
@@ -123,7 +124,9 @@ class DataPP:
         return f"{self.timeframe} {self.predict_feeds_strs}"
 
     @enforce_types
-    def filter_feeds(self, cand_feeds: Dict[str, FeedMixin]) -> Dict[str, FeedMixin]:
+    def filter_feeds(
+        self, cand_feeds: Dict[str, SubgraphFeed]
+    ) -> Dict[str, SubgraphFeed]:
         """
         @description
           Filter to feeds that fit self.predict_feeds'
@@ -139,10 +142,10 @@ class DataPP:
             (self.timeframe, feed.exchange, feed.pair) for feed in self.predict_feeds
         ]
 
-        final_feeds: Dict[str, FeedMixin] = {}
+        final_feeds: Dict[str, SubgraphFeed] = {}
         found_tups = set()  # to avoid duplicates
         for feed in cand_feeds.values():
-            assert isinstance(feed, FeedMixin)
+            assert isinstance(feed, SubgraphFeed)
             feed_tup = (feed.timeframe, feed.source, feed.pair)
             if feed_tup in allowed_tups and feed_tup not in found_tups:
                 final_feeds[feed.address] = feed

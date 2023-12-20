@@ -1,9 +1,9 @@
 from pdr_backend.models.slot import Slot
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 
 
 def test_slot_initialization():
-    feed = Feed(
+    feed = SubgraphFeed(
         "Contract Name",
         "0x12345",
         "test",
@@ -20,4 +20,4 @@ def test_slot_initialization():
 
     assert slot.slot_number == slot_number
     assert slot.feed == feed
-    assert isinstance(slot.feed, Feed)
+    assert isinstance(slot.feed, SubgraphFeed)

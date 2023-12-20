@@ -16,7 +16,7 @@ from pdr_backend.util.signalstr import (
 )
 
 
-class Feed:
+class ArgFeed:
     def __init__(self, exchange, signal, pair):
         verify_exchange_str(exchange)
         verify_signal_str(signal)
@@ -47,7 +47,7 @@ class Feed:
         return hash((self.exchange, self.signal, self.pair))
 
     @staticmethod
-    def from_str(feed_str: str, do_verify: bool = True) -> "Feed":
+    def from_str(feed_str: str, do_verify: bool = True) -> "ArgFeed":
         """
         @description
           Unpack the string for a *single* feed: 1 exchange, 1 signal, 1 pair
@@ -72,9 +72,9 @@ class Feed:
         return feed
 
 
-class Feeds(List[Feed]):
+class ArgFeeds(List[ArgFeed]):
     @staticmethod
-    def from_strs(feeds_strs: List[str], do_verify: bool = True) -> "Feeds":
+    def from_strs(feeds_strs: List[str], do_verify: bool = True) -> "ArgFeeds":
         if do_verify:
             if not feeds_strs:
                 raise ValueError(feeds_strs)
@@ -83,17 +83,16 @@ class Feeds(List[Feed]):
         for feeds_str in feeds_strs:
             feeds += _unpack_feeds_str(feeds_str)
 
-        return Feeds(feeds)
+        return ArgFeeds(feeds)
 
-    def __init__(self, feeds: List[Feed]):
+    def __init__(self, feeds: List[ArgFeed]):
         super().__init__(feeds)
 
     @staticmethod
-    def from_str(feeds_str: str) -> "Feeds":
-        return Feeds(_unpack_feeds_str(feeds_str))
+    def from_str(feeds_str: str) -> "ArgFeeds":
+        return ArgFeeds(_unpack_feeds_str(feeds_str))
 
     def __eq__(self, other):
-        # TODO: ask: does order matter?
         intersection = set(self).intersection(set(other))
         return len(intersection) == len(self) and len(intersection) == len(other)
 
@@ -111,7 +110,7 @@ class Feeds(List[Feed]):
 
 
 @enforce_types
-def _unpack_feeds_str(feeds_str: str) -> List[Feed]:
+def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     """
     @description
       Unpack a *single* feeds str. It can have >1 feeds of course.
@@ -138,49 +137,9 @@ def _unpack_feeds_str(feeds_str: str) -> List[Feed]:
     signal_str_list = unpack_signalchar_str(signal_char_str)
     pair_str_list = unpack_pairs_str(pairs_str)
     feeds = [
-        Feed(exchange_str, signal_str, pair_str)
+        ArgFeed(exchange_str, signal_str, pair_str)
         for signal_str in signal_str_list
         for pair_str in pair_str_list
     ]
 
     return feeds
-
-
-# ==========================================================================
-# verify..() functions
-
-
-@enforce_types
-def verify_feeds_strs(feeds_strs: List[str]):
-    """
-    @description
-      Raise an error if feeds_strs is invalid
-
-    @argument
-      feeds_strs -- eg ["binance oh ADA/USDT BTC-USDT", "kraken o ADA/DAI"]
-    """
-    Feeds.from_strs(feeds_strs, do_verify=True)
-
-
-@enforce_types
-def verify_feeds_str(feeds_str: str):
-    """
-    @description
-      Raise an error if feeds_str is invalid
-
-    @argument
-      feeds_str -- e.g. "binance oh ADA/USDT BTC-USDT"
-    """
-    Feeds.from_str(feeds_str)
-
-
-@enforce_types
-def verify_feed_str(feed_str: str):
-    """
-    @description
-      Raise an error if feed_str is invalid
-
-    @argument
-      feed_str -- e.g. "binance o ADA/USDT"
-    """
-    Feed.from_str(feed_str, do_verify=True)

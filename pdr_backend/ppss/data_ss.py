@@ -7,7 +7,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.util.feedstr import Feeds, verify_feeds_strs
+from pdr_backend.util.feedstr import ArgFeeds
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
@@ -31,11 +31,10 @@ class DataSS:
         )
         assert 0 < self.max_n_train
         assert 0 < self.autoregressive_n < np.inf
-        verify_feeds_strs(self.input_feeds_strs)
 
         # save self.exchs_dict
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
-        feeds = Feeds.from_strs(self.input_feeds_strs)
+        feeds = ArgFeeds.from_strs(self.input_feeds_strs)
         for feed in feeds:
             exchange_class = getattr(ccxt, feed.exchange)
             self.exchs_dict[feed.exchange] = exchange_class()
@@ -110,9 +109,9 @@ class DataSS:
         return len(self.input_feeds)
 
     @property
-    def input_feeds(self) -> Feeds:
-        """Return list of Feed(exchange_str, signal_str, pair_str)"""
-        return Feeds.from_strs(self.input_feeds_strs)
+    def input_feeds(self) -> ArgFeeds:
+        """Return list of ArgFeed(exchange_str, signal_str, pair_str)"""
+        return ArgFeeds.from_strs(self.input_feeds_strs)
 
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
