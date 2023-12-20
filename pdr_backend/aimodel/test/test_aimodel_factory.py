@@ -1,7 +1,7 @@
 import warnings
 
-from enforce_typing import enforce_types
 import numpy as np
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS

@@ -6,8 +6,8 @@ import ccxt
 import numpy as np
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeeds
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.util.feedstr import ArgFeeds
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 

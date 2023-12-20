@@ -1,4 +1,4 @@
-from pdr_backend.models.feed import SubgraphFeed
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 class Slot:

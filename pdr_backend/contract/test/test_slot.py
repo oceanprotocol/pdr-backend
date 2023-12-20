@@ -1,5 +1,5 @@
-from pdr_backend.models.slot import Slot
-from pdr_backend.models.feed import SubgraphFeed
+from pdr_backend.contract.slot import Slot
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 def test_slot_initialization():

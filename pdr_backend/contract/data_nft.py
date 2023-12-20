@@ -4,9 +4,9 @@ from typing import Union
 
 from enforce_typing import enforce_types
 from web3 import Web3
-from web3.types import TxReceipt, HexBytes
+from web3.types import HexBytes, TxReceipt
 
-from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.networkutil import tx_call_params
 
 

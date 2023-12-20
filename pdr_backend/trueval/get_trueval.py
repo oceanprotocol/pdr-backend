@@ -3,8 +3,8 @@ from typing import Tuple
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 @enforce_types

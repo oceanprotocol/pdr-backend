@@ -1,24 +1,24 @@
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.mathutil import (
-    isNumber,
-    intInStr,
     Range,
+    all_nan,
+    fill_nans,
+    from_wei,
+    has_nan,
+    intInStr,
+    isNumber,
+    nmse,
     randunif,
     round_sig,
-    all_nan,
-    has_nan,
-    fill_nans,
-    nmse,
-    from_wei,
-    to_wei,
+    sole_value,
     str_with_wei,
     string_to_bytes32,
-    sole_value,
+    to_wei,
 )
 
 

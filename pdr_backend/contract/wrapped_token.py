@@ -1,4 +1,4 @@
-from pdr_backend.models.token import Token
+from pdr_backend.contract.token import Token
 from pdr_backend.util.networkutil import tx_call_params
 
 

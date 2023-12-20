@@ -4,12 +4,9 @@ from unittest.mock import Mock, call
 from enforce_typing import enforce_types
 from eth_account import Account
 
-from pdr_backend.models.token import Token
+from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.fund_accounts import (
-    fund_accounts_with_OCEAN,
-    fund_accounts,
-)
+from pdr_backend.util.fund_accounts import fund_accounts, fund_accounts_with_OCEAN
 
 
 @enforce_types

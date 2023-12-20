@@ -1,4 +1,5 @@
 from abc import ABC
+
 from enforce_typing import enforce_types
 
 
@@ -6,13 +7,12 @@ from enforce_typing import enforce_types
 class BaseContract(ABC):
     def __init__(self, web3_pp, address: str, contract_name: str):
         super().__init__()
-        from pdr_backend.ppss.web3_pp import (  # pylint: disable=import-outside-toplevel
+        from pdr_backend.ppss.web3_pp import (
             Web3PP,
-        )
-
-        from pdr_backend.util.contract import (  # pylint: disable=import-outside-toplevel
+        )  # pylint: disable=import-outside-toplevel
+        from pdr_backend.util.contract import (
             get_contract_abi,
-        )
+        )  # pylint: disable=import-outside-toplevel
 
         if not isinstance(web3_pp, Web3PP):
             raise ValueError(f"web3_pp is {web3_pp.__class__}, not Web3PP")

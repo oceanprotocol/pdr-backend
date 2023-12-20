@@ -1,14 +1,14 @@
-from enforce_typing import enforce_types
 import numpy as np
+from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES,
+    OHLCV_MULT_MAX,
+    OHLCV_MULT_MIN,
     TOHLCV_COLS,
     TOHLCV_DTYPES,
     TOHLCV_SCHEMA_PL,
-    OHLCV_MULT_MIN,
-    OHLCV_MULT_MAX,
 )
 
 

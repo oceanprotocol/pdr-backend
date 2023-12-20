@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.models.prediction import Prediction, mock_first_predictions
+from pdr_backend.contract.prediction import Prediction, mock_first_predictions
 
 
 @enforce_types

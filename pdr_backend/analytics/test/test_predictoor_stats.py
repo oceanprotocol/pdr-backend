@@ -1,19 +1,19 @@
 from typing import List
 from unittest.mock import patch
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.analytics.predictoor_stats import (
     aggregate_prediction_statistics,
-    get_endpoint_statistics,
-    get_cli_statistics,
-    get_traction_statistics,
-    get_slot_statistics,
     calculate_slot_daily_statistics,
-    plot_traction_daily_statistics,
-    plot_traction_cum_sum_statistics,
+    get_cli_statistics,
+    get_endpoint_statistics,
+    get_slot_statistics,
+    get_traction_statistics,
     plot_slot_daily_statistics,
+    plot_traction_cum_sum_statistics,
+    plot_traction_daily_statistics,
 )
 
 

@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.models.token import NativeToken, Token
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.mathutil import to_wei
 from pdr_backend.util.topup import topup_main

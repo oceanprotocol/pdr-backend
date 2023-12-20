@@ -1,6 +1,7 @@
 import os
-from enforce_typing import enforce_types
+
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.web3_config import Web3Config
 

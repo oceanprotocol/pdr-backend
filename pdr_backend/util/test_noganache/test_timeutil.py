@@ -1,17 +1,17 @@
 import datetime
 from datetime import timezone
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.timeutil import (
-    pretty_timestr,
     current_ut,
     dt_to_ut,
-    ut_to_dt,
-    timestr_to_ut,
-    ut_to_timestr,
     ms_to_seconds,
+    pretty_timestr,
+    timestr_to_ut,
+    ut_to_dt,
+    ut_to_timestr,
 )
 
 

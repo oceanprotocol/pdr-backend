@@ -1,12 +1,12 @@
-from math import log10, floor
 import random
 import re
+from math import floor, log10
 from typing import Union
 
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 

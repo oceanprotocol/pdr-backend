@@ -1,18 +1,14 @@
 import copy
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.lake.plutil import (
-    text_to_df,
-    concat_next_df,
-    initialize_rawohlcv_df,
-)
+from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.ppss import mock_ppss

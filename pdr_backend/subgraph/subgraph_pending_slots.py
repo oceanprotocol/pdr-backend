@@ -1,10 +1,10 @@
 import time
 from typing import List, Optional
 
-from pdr_backend.models.feed import SubgraphFeed
-from pdr_backend.models.slot import Slot
-from pdr_backend.subgraph.info725 import info725_to_info
+from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.subgraph.info725 import info725_to_info
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 # don't use @enforce_types here, it causes issues

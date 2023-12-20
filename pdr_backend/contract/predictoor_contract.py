@@ -3,17 +3,16 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.fixed_rate import FixedRate
-
-from pdr_backend.models.token import Token
-from pdr_backend.models.base_contract import BaseContract
-from pdr_backend.util.constants import ZERO_ADDRESS, MAX_UINT
-from pdr_backend.util.mathutil import string_to_bytes32, from_wei, to_wei
+from pdr_backend.contract.base_contract import BaseContract
+from pdr_backend.contract.fixed_rate import FixedRate
+from pdr_backend.contract.token import Token
+from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
+from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
 from pdr_backend.util.networkutil import (
+    get_max_gas,
     is_sapphire_network,
     send_encrypted_tx,
     tx_call_params,
-    get_max_gas,
 )
 
 

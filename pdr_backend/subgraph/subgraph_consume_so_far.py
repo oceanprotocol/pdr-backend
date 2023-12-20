@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Dict, List
 
 from enforce_typing import enforce_types
+
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 
 

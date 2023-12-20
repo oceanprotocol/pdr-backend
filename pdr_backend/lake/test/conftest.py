@@ -1,6 +1,6 @@
 import pytest
 
-from pdr_backend.models.prediction import mock_daily_predictions
+from pdr_backend.contract.prediction import mock_daily_predictions
 
 
 @pytest.fixture()

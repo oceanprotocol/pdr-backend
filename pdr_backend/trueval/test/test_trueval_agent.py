@@ -1,13 +1,10 @@
 from copy import deepcopy
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.trueval.trueval_agent import (
-    TruevalSlot,
-    TruevalAgent,
-)
+from pdr_backend.trueval.trueval_agent import TruevalAgent, TruevalSlot
 from pdr_backend.util.constants import ZERO_ADDRESS
 
 PATH = "pdr_backend.trueval.trueval_agent"

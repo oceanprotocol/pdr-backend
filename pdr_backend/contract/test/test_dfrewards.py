@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
-from pdr_backend.models.dfrewards import DFRewards
 
+from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.util.contract import get_address
 
 

@@ -1,10 +1,7 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.util.exchangestr import (
-    pack_exchange_str_list,
-    verify_exchange_str,
-)
+from pdr_backend.util.exchangestr import pack_exchange_str_list, verify_exchange_str
 
 
 @enforce_types

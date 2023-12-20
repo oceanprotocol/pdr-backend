@@ -4,8 +4,8 @@ from enforce_typing import enforce_types
 from web3.types import RPCEndpoint
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
-from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.predictoor_batcher import mock_predictoor_batcher
+from pdr_backend.contract.data_nft import DataNft
+from pdr_backend.contract.predictoor_batcher import mock_predictoor_batcher
 from pdr_backend.ppss.web3_pp import Web3PP
 
 

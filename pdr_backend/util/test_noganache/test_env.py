@@ -1,5 +1,5 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.env import getenv_or_exit
 

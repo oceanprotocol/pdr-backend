@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.contract import (
+    _condition_sapphire_keys,
     get_address,
     get_addresses,
     get_contract_abi,
     get_contract_filename,
-    _condition_sapphire_keys,
 )
 
 _NETWORKS = [

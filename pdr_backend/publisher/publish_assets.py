@@ -1,10 +1,10 @@
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeeds
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.feedstr import ArgFeeds
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe
 
