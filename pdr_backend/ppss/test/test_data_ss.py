@@ -10,7 +10,7 @@ from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
 from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
-    "input_feeds": ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"],
+    "input_feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
     "parquet_dir": "parquet_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
@@ -24,7 +24,7 @@ def test_data_ss_basic():
     ss = DataSS(_D)
 
     # yaml properties
-    assert ss.input_feeds_strs == ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"]
+    assert ss.input_feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]
     assert "parquet_data" in ss.parquet_dir
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
@@ -100,7 +100,7 @@ def test_data_ss_copy():
     pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["kraken h ETH/USDT"],
+            "predict_feeds": ["kraken ETH/USDT h"],
             "sim_only": {"test_n": 2},
         }
     )
@@ -111,7 +111,7 @@ def test_data_ss_copy():
     pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["binanceus c TRX/USDC"],
+            "predict_feeds": ["binanceus TRX/USDC c"],
             "sim_only": {"test_n": 2},
         }
     )

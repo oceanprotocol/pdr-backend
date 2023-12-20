@@ -28,12 +28,12 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
         trueval_submitter_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
         fee_collector_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
         timeframe_strs = ["5m"]
-        feeds_strs = [f"binance c {_SOME}"]
+        feeds_strs = [f"binance {_SOME} c"]
     elif "sapphire" in web3_pp.network:
         trueval_submitter_addr = get_address(web3_pp, "PredictoorHelper")
         fee_collector_addr = publisher_ss.fee_collector_address
         timeframe_strs = ["5m", "1h"]
-        feeds_strs = [f"binance c {_ALL}"]
+        feeds_strs = [f"binance {_ALL} c"]
     else:
         raise ValueError(web3_pp.network)
 

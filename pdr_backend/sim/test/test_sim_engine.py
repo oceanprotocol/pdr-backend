@@ -18,14 +18,14 @@ def test_sim_engine(tmpdir):
     ppss.data_pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["binanceus c BTC/USDT"],
+            "predict_feeds": ["binanceus BTC/USDT c"],
             "sim_only": {"test_n": 10},
         }
     )
     assert hasattr(ppss, "data_ss")
     ppss.data_ss = DataSS(
         {
-            "input_feeds": ["binanceus oc BTC/USDT ETH/USDT"],
+            "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-06-30",

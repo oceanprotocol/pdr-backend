@@ -84,7 +84,7 @@ def mock_feed_ppss(
     tmpdir=None,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(timeframe, [f"{exchange} c {pair}"], network, tmpdir)
+    ppss = mock_ppss(timeframe, [f"{exchange} {pair} c"], network, tmpdir)
     return (feed, ppss)
 
 

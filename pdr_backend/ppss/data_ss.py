@@ -43,7 +43,7 @@ class DataSS:
     # yaml properties
     @property
     def input_feeds_strs(self) -> List[str]:
-        return self.d["input_feeds"]  # eg ["binance ohlcv BTC/USDT",..]
+        return self.d["input_feeds"]  # eg ["binance BTC/USDT ohlcv",..]
 
     @property
     def parquet_dir(self) -> str:

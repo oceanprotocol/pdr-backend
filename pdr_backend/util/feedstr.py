@@ -29,7 +29,7 @@ class ArgFeed:
     def __str__(self):
         pair_str = self.pair.replace("-", "/")
         char = signal_to_char(self.signal)
-        feed_str = f"{self.exchange} {char} {pair_str}"
+        feed_str = f"{self.exchange} {pair_str} {char}"
 
         return feed_str
 
@@ -132,8 +132,12 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     """
     feeds_str = feeds_str.strip()
     feeds_str = " ".join(feeds_str.split())  # replace multiple whitespace w/ 1
-    # TODO: move signal at end
-    exchange_str, signal_char_str, pairs_str = feeds_str.split(" ", maxsplit=2)
+    feeds_str_split = feeds_str.split(" ")
+
+    exchange_str = feeds_str_split[0]
+    pairs_str = " ".join(feeds_str_split[1:-1])
+    signal_char_str = feeds_str_split[-1]
+
     signal_str_list = unpack_signalchar_str(signal_char_str)
     pair_str_list = unpack_pairs_str(pairs_str)
     feeds = [

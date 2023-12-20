@@ -30,7 +30,7 @@ class DataPP:
 
     @property
     def predict_feeds_strs(self) -> List[str]:
-        return self.d["predict_feeds"]  # eg ["binance oh BTC/USDT",..]
+        return self.d["predict_feeds"]  # eg ["binance BTC/USDT oh",..]
 
     @property
     def test_n(self) -> int:
