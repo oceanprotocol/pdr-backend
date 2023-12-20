@@ -29,7 +29,7 @@ class Feed:
     def __str__(self):
         pair_str = self.pair.replace("-", "/")
         char = signal_to_char(self.signal)
-        feed_str = f"{self.exchange} {pair_str} {char}"
+        feed_str = f"{self.exchange} {char} {pair_str}"
 
         return feed_str
 

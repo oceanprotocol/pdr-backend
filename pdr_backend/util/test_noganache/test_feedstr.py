@@ -147,7 +147,7 @@ def test_unpack_feed_str():
 
 @enforce_types
 def test_pack_feed_str():
-    target_feed_str = "binance BTC/USDT o"
+    target_feed_str = "binance o BTC/USDT"
     assert str(Feed("binance", "open", "BTC/USDT")) == target_feed_str
     assert str(Feed("binance", "open", "BTC-USDT")) == target_feed_str
 
