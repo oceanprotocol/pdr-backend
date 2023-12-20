@@ -115,9 +115,10 @@ class Web3PP(StrMixin):
         @return
           contracts -- dict of [feed_addr] : PredictoorContract
         """
+        # pylint: disable=import-outside-toplevel
         from pdr_backend.contract.predictoor_contract import (
             PredictoorContract,
-        )  # pylint: disable=import-outside-toplevel
+        )
 
         contracts = {}
         for addr in feed_addrs:
@@ -175,9 +176,10 @@ def mock_web3_pp(network: str) -> Web3PP:
 
 @enforce_types
 def inplace_mock_feedgetters(web3_pp, feed: SubgraphFeed):
+    # pylint: disable=import-outside-toplevel
     from pdr_backend.contract.predictoor_contract import (
         mock_predictoor_contract,
-    )  # pylint: disable=import-outside-toplevel
+    )
 
     inplace_mock_query_feed_contracts(web3_pp, feed)
 
@@ -195,9 +197,10 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
 def inplace_mock_get_contracts(
     web3_pp: Web3PP, feed: SubgraphFeed, predictoor_contract
 ):
+    # pylint: disable=import-outside-toplevel
     from pdr_backend.contract.predictoor_contract import (
         PredictoorContract,
-    )  # pylint: disable=import-outside-toplevel
+    )
 
     assert isinstance(predictoor_contract, PredictoorContract)
     web3_pp.get_contracts = Mock()
