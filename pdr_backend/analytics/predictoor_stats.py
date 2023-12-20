@@ -159,7 +159,7 @@ def get_endpoint_statistics(
     return overall_accuracy, pair_timeframe_stats, predictoor_stats
 
 @enforce_types
-def get_feed_summary_stats(preds_df: pl.DataFrame) -> pl.DataFrame:
+def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
   df = predictions_df.filter(~((pl.col("trueval").is_null()) | (pl.col("payout").is_null())))
 
@@ -169,7 +169,6 @@ def get_feed_summary_stats(preds_df: pl.DataFrame) -> pl.DataFrame:
   df = df.groupby("pair").agg(
     pl.col("timeframe").first().alias("timeframe"),
     pl.col("source").first().alias("source"),
-    pl.col("user").first().alias("user"),
     pl.col("payout").sum().alias("sum_payout"),
     pl.col("stake").sum().alias("sum_stake"),
     pl.col("prediction").count().alias("num_predictions"),

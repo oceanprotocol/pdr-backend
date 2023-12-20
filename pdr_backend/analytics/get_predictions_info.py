@@ -35,6 +35,4 @@ def get_predictions_info_main(
         return
 
     predictions_df = gql_dfs["pdr_predictions"]
-
-    predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
-    #feed_summary_df = get_feed_summary_stats(predictions_df)
+    feed_summary_df = get_feed_summary_stats(predictions_df)

@@ -36,4 +36,3 @@ def get_predictoors_info_main(
     predictions_df = gql_dfs["pdr_predictions"]
     user_predictions_df = predictions_df.filter(predictions_df['user'] == pdr_addrs_str.lower())
     predictoor_summary_df = get_predictoor_summary_stats(user_predictions_df)
-    #feed_summary_df = get_feed_summary_stats(predictions)
