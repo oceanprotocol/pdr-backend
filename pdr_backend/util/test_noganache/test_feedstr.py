@@ -1,5 +1,3 @@
-from typing import Set
-
 import pytest
 from enforce_typing import enforce_types
 

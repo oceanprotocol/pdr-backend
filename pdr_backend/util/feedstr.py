@@ -63,7 +63,8 @@ class Feed:
           Feed
         """
         feeds_str = feed_str
-        feeds = _unpack_feeds_str(feeds_str, do_verify=False)
+        feeds = _unpack_feeds_str(feeds_str)
+
         if do_verify:
             if len(feeds) != 1:
                 raise ValueError(feed_str)
@@ -80,15 +81,16 @@ class Feeds(List[Feed]):
 
         feeds = []
         for feeds_str in feeds_strs:
-            feeds += _unpack_feeds_str(feeds_str, do_verify=False)
+            feeds += _unpack_feeds_str(feeds_str)
 
         return Feeds(feeds)
 
     def __init__(self, feeds: List[Feed]):
         super().__init__(feeds)
 
-    def from_str(feeds_str: str, do_verify: bool = True) -> "Feeds":
-        return Feeds(_unpack_feeds_str(feeds_str, do_verify=do_verify))
+    @staticmethod
+    def from_str(feeds_str: str) -> "Feeds":
+        return Feeds(_unpack_feeds_str(feeds_str))
 
     def __eq__(self, other):
         # TODO: ask: does order matter?
@@ -97,21 +99,19 @@ class Feeds(List[Feed]):
 
     @property
     def pairs(self) -> List[str]:
-        return set([feed.pair for feed in self])
+        return set(feed.pair for feed in self)
 
     @property
     def exchanges(self) -> List[str]:
-        return set([feed.exchange for feed in self])
+        return set(feed.exchange for feed in self)
 
     @property
     def signals(self) -> List[str]:
-        return set([feed.signal for feed in self])
+        return set(feed.signal for feed in self)
 
 
 @enforce_types
-def _unpack_feeds_str(
-    feeds_str: str, do_verify: bool = True
-) -> List[Tuple[str, str, str]]:
+def _unpack_feeds_str(feeds_str: str) -> List[Tuple[str, str, str]]:
     """
     @description
       Unpack a *single* feeds str. It can have >1 feeds of course.
