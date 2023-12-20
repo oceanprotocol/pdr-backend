@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.trader_ss import inplace_make_trader_fast, TraderSS
+from pdr_backend.ppss.trader_ss import TraderSS, inplace_make_trader_fast
 
 _D = {
     "sim_only": {

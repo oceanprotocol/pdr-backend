@@ -1,9 +1,9 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import mock_feed
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.ppss.data_pp import DataPP, mock_data_pp
-from pdr_backend.util.feedstr import ArgFeed
+from pdr_backend.subgraph.subgraph_feed import mock_feed
 from pdr_backend.util.mathutil import sole_value
 
 

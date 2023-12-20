@@ -2,10 +2,9 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.slot import Slot
+from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.info725 import key_to_key725, value_to_value725
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
-
 
 SAMPLE_SLOT_DATA = [
     {

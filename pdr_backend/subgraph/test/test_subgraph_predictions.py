@@ -1,12 +1,14 @@
 from typing import Dict
 from unittest.mock import patch
+
 from enforce_typing import enforce_types
+
 from pdr_backend.subgraph.subgraph_predictions import (
-    fetch_filtered_predictions,
-    get_all_contract_ids_by_owner,
-    fetch_contract_id_and_spe,
     FilterMode,
     Prediction,
+    fetch_contract_id_and_spe,
+    fetch_filtered_predictions,
+    get_all_contract_ids_by_owner,
 )
 
 SAMPLE_PREDICTION = Prediction(

@@ -3,8 +3,8 @@ from typing import Dict, List
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import SubgraphFeed
-from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str

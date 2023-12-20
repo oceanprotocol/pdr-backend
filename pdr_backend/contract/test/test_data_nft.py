@@ -5,8 +5,8 @@ from enforce_typing import enforce_types
 from eth_account import Account
 from web3.logs import DISCARD
 
-from pdr_backend.models.data_nft import DataNft
-from pdr_backend.models.erc721_factory import Erc721Factory
+from pdr_backend.contract.data_nft import DataNft
+from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import to_wei

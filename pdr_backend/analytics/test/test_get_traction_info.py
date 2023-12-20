@@ -1,11 +1,11 @@
 from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 

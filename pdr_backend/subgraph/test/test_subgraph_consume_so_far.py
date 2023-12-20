@@ -6,7 +6,6 @@ from pytest import approx
 from pdr_backend.subgraph.info725 import key_to_key725, value_to_value725
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 
-
 SAMPLE_CONTRACT_DATA = [
     {
         "id": "contract1",

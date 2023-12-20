@@ -1,10 +1,11 @@
 import time
 from typing import Any, List
+
 from enforce_typing import enforce_types
 
-from pdr_backend.models.dfrewards import DFRewards
-from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.models.wrapped_token import WrappedToken
+from pdr_backend.contract.dfrewards import DFRewards
+from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs

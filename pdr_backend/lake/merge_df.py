@@ -1,8 +1,8 @@
 from typing import List, Union
 
+import polars as pl
 from enforce_typing import enforce_types
 
-import polars as pl
 from pdr_backend.lake.plutil import set_col_values
 
 

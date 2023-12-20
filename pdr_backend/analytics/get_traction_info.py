@@ -3,15 +3,16 @@ At some point, we can expand it into traction info wrt traders & txs too.
 """
 
 from enforce_typing import enforce_types
-from pdr_backend.ppss.ppss import PPSS
+
 from pdr_backend.analytics.predictoor_stats import (
-    get_traction_statistics,
     get_slot_statistics,
+    get_traction_statistics,
+    plot_slot_daily_statistics,
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
-    plot_slot_daily_statistics,
 )
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.ppss.ppss import PPSS
 
 
 @enforce_types

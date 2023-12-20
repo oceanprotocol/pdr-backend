@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 from web3.logs import DISCARD
 
-from pdr_backend.models.base_contract import BaseContract
+from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.networkutil import tx_call_params
 

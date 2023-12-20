@@ -1,8 +1,9 @@
-import os
 import csv
-from typing import List, Dict
+import os
+from typing import Dict, List
 
 from enforce_typing import enforce_types
+
 from pdr_backend.subgraph.subgraph_predictions import Prediction
 
 

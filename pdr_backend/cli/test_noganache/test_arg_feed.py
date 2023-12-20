@@ -1,7 +1,7 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
 
 
 @enforce_types

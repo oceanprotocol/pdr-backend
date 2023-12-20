@@ -1,11 +1,10 @@
-from unittest.mock import Mock
 import os
-
 from argparse import Namespace
+from unittest.mock import Mock
+
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.cli_module import (
+from pdr_backend.cli.cli_module import (
     do_check_network,
     do_claim_OCEAN,
     do_claim_ROSE,
@@ -19,6 +18,7 @@ from pdr_backend.util.cli_module import (
     do_trader,
     do_trueval,
 )
+from pdr_backend.ppss.ppss import PPSS
 
 
 class _APPROACH:
@@ -125,7 +125,7 @@ class MockAgent:
         self.__class__.was_run = True
 
 
-_CLI_PATH = "pdr_backend.util.cli_module"
+_CLI_PATH = "pdr_backend.cli.cli_module"
 
 
 @enforce_types

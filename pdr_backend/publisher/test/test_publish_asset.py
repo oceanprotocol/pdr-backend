@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 from pytest import approx
 
-from pdr_backend.models.predictoor_contract import PredictoorContract
+from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.contract import get_address
 

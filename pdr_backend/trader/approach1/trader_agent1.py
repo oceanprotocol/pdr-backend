@@ -1,11 +1,11 @@
 from os import getenv
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import SubgraphFeed
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 

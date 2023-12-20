@@ -4,8 +4,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.sim.sim_engine import SimEngine
 
 

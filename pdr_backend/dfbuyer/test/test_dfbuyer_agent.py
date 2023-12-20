@@ -1,14 +1,14 @@
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 from ccxt.base.exchange import math
 from enforce_typing import enforce_types
-import pytest
 
+from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.dfbuyer.dfbuyer_agent import WEEK, DFBuyerAgent
-from pdr_backend.models.predictoor_batcher import PredictoorBatcher
+from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
 

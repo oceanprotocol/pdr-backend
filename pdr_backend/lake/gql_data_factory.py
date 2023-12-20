@@ -1,21 +1,18 @@
 import os
-from typing import Dict, Callable
+from typing import Callable, Dict
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.plutil import (
-    has_data,
-    newest_ut,
-)
+from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
     get_pdr_predictions_df,
+    predictions_schema,
 )
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.util.timeutil import pretty_timestr, current_ut
+from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 
 @enforce_types

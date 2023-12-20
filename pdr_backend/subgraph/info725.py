@@ -1,4 +1,5 @@
 from typing import Dict, Optional, Union
+
 from enforce_typing import enforce_types
 from web3 import Web3
 

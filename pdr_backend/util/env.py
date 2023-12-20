@@ -1,5 +1,5 @@
-from os import getenv
 import sys
+from os import getenv
 from typing import Union
 
 from enforce_typing import enforce_types

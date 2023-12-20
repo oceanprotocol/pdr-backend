@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import SubgraphFeed, mock_feed, print_feeds
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed, print_feeds
 
 
 @enforce_types

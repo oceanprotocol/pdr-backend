@@ -1,21 +1,21 @@
-from unittest.mock import Mock
 import os
+from unittest.mock import Mock
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import (
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_CHAINID,
     MAX_UINT,
+    SAPPHIRE_MAINNET_CHAINID,
+    SAPPHIRE_TESTNET_CHAINID,
 )
 from pdr_backend.util.networkutil import (
-    is_sapphire_network,
+    get_max_gas,
     get_sapphire_postfix,
+    is_sapphire_network,
     send_encrypted_tx,
     tx_call_params,
     tx_gas_price,
-    get_max_gas,
 )
 from pdr_backend.util.web3_config import Web3Config
 

@@ -3,8 +3,8 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.ppss.publisher_ss import mock_publisher_ss
+from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.publisher.publish_assets import publish_assets
 
 _PATH = "pdr_backend.publisher.publish_assets"

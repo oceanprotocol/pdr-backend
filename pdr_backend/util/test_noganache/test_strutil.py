@@ -1,7 +1,7 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum, asCurrency
+from pdr_backend.util.strutil import StrMixin, asCurrency, dictStr, prettyBigNum
 
 
 def testStrMixin1():

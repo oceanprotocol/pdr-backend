@@ -2,12 +2,7 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import (
-    fast_test_yaml_str,
-    mock_ppss,
-    mock_feed_ppss,
-    PPSS,
-)
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_feed_ppss, mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
 
 

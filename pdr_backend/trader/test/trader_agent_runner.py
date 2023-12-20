@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_feed_ppss
 from pdr_backend.ppss.web3_pp import (
