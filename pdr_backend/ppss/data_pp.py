@@ -3,8 +3,8 @@ from typing import Dict, List
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.util.feedstr import Feeds, verify_feeds_strs
+from pdr_backend.models.feed import Feed as FeedMixin
+from pdr_backend.util.feedstr import Feed, Feeds, verify_feeds_strs
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
@@ -123,7 +123,7 @@ class DataPP:
         return f"{self.timeframe} {self.predict_feeds_strs}"
 
     @enforce_types
-    def filter_feeds(self, cand_feeds: Dict[str, Feed]) -> Dict[str, Feed]:
+    def filter_feeds(self, cand_feeds: Dict[str, FeedMixin]) -> Dict[str, FeedMixin]:
         """
         @description
           Filter to feeds that fit self.predict_feeds'
@@ -139,10 +139,10 @@ class DataPP:
             (self.timeframe, feed.exchange, feed.pair) for feed in self.predict_feeds
         ]
 
-        final_feeds: Dict[str, Feed] = {}
+        final_feeds: Dict[str, FeedMixin] = {}
         found_tups = set()  # to avoid duplicates
         for feed in cand_feeds.values():
-            assert isinstance(feed, Feed)
+            assert isinstance(feed, FeedMixin)
             feed_tup = (feed.timeframe, feed.source, feed.pair)
             if feed_tup in allowed_tups and feed_tup not in found_tups:
                 final_feeds[feed.address] = feed

@@ -3,7 +3,7 @@ Used as inputs for models, and for predicing.
 Complementary to models/feed.py which models a prediction feed contract.
 """
 
-from typing import List, Tuple
+from typing import List, Set
 
 from enforce_typing import enforce_types
 
@@ -74,7 +74,7 @@ class Feed:
 
 class Feeds(List[Feed]):
     @staticmethod
-    def from_strs(feeds_strs: str, do_verify: bool = True) -> "Feeds":
+    def from_strs(feeds_strs: List[str], do_verify: bool = True) -> "Feeds":
         if do_verify:
             if not feeds_strs:
                 raise ValueError(feeds_strs)
@@ -98,20 +98,20 @@ class Feeds(List[Feed]):
         return len(intersection) == len(self) and len(intersection) == len(other)
 
     @property
-    def pairs(self) -> List[str]:
+    def pairs(self) -> Set[str]:
         return set(feed.pair for feed in self)
 
     @property
-    def exchanges(self) -> List[str]:
+    def exchanges(self) -> Set[str]:
         return set(feed.exchange for feed in self)
 
     @property
-    def signals(self) -> List[str]:
+    def signals(self) -> Set[str]:
         return set(feed.signal for feed in self)
 
 
 @enforce_types
-def _unpack_feeds_str(feeds_str: str) -> List[Tuple[str, str, str]]:
+def _unpack_feeds_str(feeds_str: str) -> List[Feed]:
     """
     @description
       Unpack a *single* feeds str. It can have >1 feeds of course.
@@ -171,7 +171,7 @@ def verify_feeds_str(feeds_str: str):
     @argument
       feeds_str -- e.g. "binance oh ADA/USDT BTC-USDT"
     """
-    Feeds.from_str(feeds_str, do_verify=True)
+    Feeds.from_str(feeds_str)
 
 
 @enforce_types
