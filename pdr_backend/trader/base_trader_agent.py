@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import Feed, print_feeds
+from pdr_backend.models.feed import SubgraphFeed, print_feeds
 from pdr_backend.models.predictoor_contract import PredictoorContract
 from pdr_backend.util.cache import Cache
 
@@ -13,7 +13,7 @@ class BaseTraderAgent:
     def __init__(
         self,
         ppss: PPSS,
-        _do_trade: Optional[Callable[[Feed, Tuple], Any]] = None,
+        _do_trade: Optional[Callable[[SubgraphFeed, Tuple], Any]] = None,
         cache_dir=".cache",
     ):
         # ppss
@@ -213,7 +213,7 @@ class BaseTraderAgent:
             "stake": pred_denom,
         }
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             This function is called each time there's a new prediction available.

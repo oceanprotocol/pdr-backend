@@ -1,15 +1,16 @@
 import copy
 import os
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
 from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
-    "input_feeds": ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"],
+    "input_feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
     "parquet_dir": "parquet_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
@@ -23,7 +24,7 @@ def test_data_ss_basic():
     ss = DataSS(_D)
 
     # yaml properties
-    assert ss.input_feeds_strs == ["kraken hc ETH/USDT", "binanceus h ETH/USDT,TRX/DAI"]
+    assert ss.input_feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]
     assert "parquet_data" in ss.parquet_dir
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
@@ -36,12 +37,14 @@ def test_data_ss_basic():
     # derivative properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
-    assert ss.input_feed_tups == [
-        ("kraken", "high", "ETH/USDT"),
-        ("kraken", "close", "ETH/USDT"),
-        ("binanceus", "high", "ETH/USDT"),
-        ("binanceus", "high", "TRX/DAI"),
-    ]
+    assert ss.input_feeds == ArgFeeds(
+        [
+            ArgFeed("kraken", "high", "ETH/USDT"),
+            ArgFeed("kraken", "close", "ETH/USDT"),
+            ArgFeed("binanceus", "high", "ETH/USDT"),
+            ArgFeed("binanceus", "high", "TRX/DAI"),
+        ]
+    )
     assert ss.exchange_pair_tups == set(
         [
             ("kraken", "ETH/USDT"),
@@ -49,7 +52,7 @@ def test_data_ss_basic():
             ("binanceus", "TRX/DAI"),
         ]
     )
-    assert len(ss.input_feed_tups) == ss.n_input_feeds == 4
+    assert len(ss.input_feeds) == ss.n_input_feeds == 4
     assert ss.n == 4 * 3 == 12
     assert ss.n_exchs == 2
     assert len(ss.exchange_strs) == 2
@@ -97,7 +100,7 @@ def test_data_ss_copy():
     pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["kraken h ETH/USDT"],
+            "predict_feeds": ["kraken ETH/USDT h"],
             "sim_only": {"test_n": 2},
         }
     )
@@ -108,7 +111,7 @@ def test_data_ss_copy():
     pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["binanceus c TRX/USDC"],
+            "predict_feeds": ["binanceus TRX/USDC c"],
             "sim_only": {"test_n": 2},
         }
     )

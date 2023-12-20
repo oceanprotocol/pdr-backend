@@ -1,10 +1,10 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
-from enforce_typing import enforce_types
 import numpy as np
+from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.util.feedstr import unpack_feeds_strs, verify_feeds_strs
+from pdr_backend.models.feed import SubgraphFeed
+from pdr_backend.util.feedstr import ArgFeed, ArgFeeds
 from pdr_backend.util.listutil import remove_dups
 from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
@@ -17,7 +17,8 @@ class DataPP:
 
         # test inputs
         verify_timeframe_str(self.timeframe)
-        verify_feeds_strs(self.predict_feeds_strs)
+        ArgFeeds.from_strs(self.predict_feeds_strs)  # test that it's valid
+
         if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
             raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
 
@@ -29,7 +30,7 @@ class DataPP:
 
     @property
     def predict_feeds_strs(self) -> List[str]:
-        return self.d["predict_feeds"]  # eg ["binance oh BTC/USDT",..]
+        return self.d["predict_feeds"]  # eg ["binance BTC/USDT oh",..]
 
     @property
     def test_n(self) -> int:
@@ -63,48 +64,48 @@ class DataPP:
         return Timeframe(self.timeframe).m
 
     @property
-    def predict_feed_tups(self) -> List[Tuple[str, str, str]]:
+    def predict_feeds(self) -> ArgFeeds:
         """
-        Return list of (exchange_str, signal_str, pair_str)
-        E.g. [("binance", "open",  "ADA/USDT"), ...]
+        Return list of Feed(exchange_str, signal_str, pair_str)
+        E.g. [Feed("binance", "open",  "ADA/USDT"), ...]
         """
-        return unpack_feeds_strs(self.predict_feeds_strs)
+        return ArgFeeds.from_strs(self.predict_feeds_strs)
 
     @property
     def pair_strs(self) -> set:
         """Return e.g. ['ETH/USDT','BTC/USDT']."""
-        return remove_dups([tup[2] for tup in self.predict_feed_tups])
+        return remove_dups([feed.pair for feed in self.predict_feeds])
 
     @property
     def exchange_strs(self) -> str:
         """Return e.g. ['binance','kraken']."""
-        return remove_dups([tup[0] for tup in self.predict_feed_tups])
+        return remove_dups([feed.exchange for feed in self.predict_feeds])
 
     @property
-    def predict_feed_tup(self) -> Tuple[str, str, str]:
+    def predict_feed(self) -> ArgFeed:
         """
-        Return (exchange_str, signal_str, pair_str)
-        E.g. ("binance", "open",  "ADA/USDT")
+        Return Feed(exchange_str, signal_str, pair_str)
+        E.g. Feed("binance", "open",  "ADA/USDT")
         Only applicable when 1 feed.
         """
-        if len(self.predict_feed_tups) != 1:
+        if len(self.predict_feeds) != 1:
             raise ValueError("This method only works with 1 predict_feed")
-        return self.predict_feed_tups[0]
+        return self.predict_feeds[0]
 
     @property
     def exchange_str(self) -> str:
         """Return e.g. 'binance'. Only applicable when 1 feed."""
-        return self.predict_feed_tup[0]
+        return self.predict_feed.exchange
 
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
-        return self.predict_feed_tup[1]
+        return self.predict_feed.signal
 
     @property
     def pair_str(self) -> str:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
-        return self.predict_feed_tup[2]
+        return self.predict_feed.pair
 
     @property
     def base_str(self) -> str:
@@ -123,10 +124,12 @@ class DataPP:
         return f"{self.timeframe} {self.predict_feeds_strs}"
 
     @enforce_types
-    def filter_feeds(self, cand_feeds: Dict[str, Feed]) -> Dict[str, Feed]:
+    def filter_feeds(
+        self, cand_feeds: Dict[str, SubgraphFeed]
+    ) -> Dict[str, SubgraphFeed]:
         """
         @description
-          Filter to feeds that fit self.predict_feed_tups'
+          Filter to feeds that fit self.predict_feeds'
             (exchange_str, pair) combos
 
         @arguments
@@ -136,14 +139,13 @@ class DataPP:
           final_feeds -- dict of [feed_addr] : Feed
         """
         allowed_tups = [
-            (self.timeframe, exchange, pair)
-            for exchange, _, pair in self.predict_feed_tups
+            (self.timeframe, feed.exchange, feed.pair) for feed in self.predict_feeds
         ]
 
-        final_feeds: Dict[str, Feed] = {}
+        final_feeds: Dict[str, SubgraphFeed] = {}
         found_tups = set()  # to avoid duplicates
         for feed in cand_feeds.values():
-            assert isinstance(feed, Feed)
+            assert isinstance(feed, SubgraphFeed)
             feed_tup = (feed.timeframe, feed.source, feed.pair)
             if feed_tup in allowed_tups and feed_tup not in found_tups:
                 final_feeds[feed.address] = feed

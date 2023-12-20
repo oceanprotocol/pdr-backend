@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 
@@ -14,7 +14,7 @@ _N_THR = 3
 def query_feed_contracts(
     subgraph_url: str,
     owners_string: Optional[str] = None,
-) -> Dict[str, Feed]:
+) -> Dict[str, SubgraphFeed]:
     """
     @description
       Query the chain for prediction feed contracts.
@@ -24,7 +24,7 @@ def query_feed_contracts(
       owners -- E.g. filter to "0x123,0x124". If None or "", allow all
 
     @return
-      feeds -- dict of [feed_addr] : Feed
+      feeds -- dict of [feed_addr] : SubgraphFeed
     """
     owners = None
     if owners_string:
@@ -32,7 +32,7 @@ def query_feed_contracts(
 
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    feeds: Dict[str, Feed] = {}
+    feeds: Dict[str, SubgraphFeed] = {}
 
     while True:
         query = """
@@ -84,7 +84,7 @@ def query_feed_contracts(
                     continue
 
                 # ok, add this one
-                feed = Feed(
+                feed = SubgraphFeed(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],
@@ -116,5 +116,6 @@ def query_feed_contracts(
 
     # postconditions
     for feed in feeds.values():
-        assert isinstance(feed, Feed)
+        assert isinstance(feed, SubgraphFeed)
+
     return feeds

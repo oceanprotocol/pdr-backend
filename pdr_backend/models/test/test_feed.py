@@ -1,11 +1,11 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed, mock_feed, print_feeds
+from pdr_backend.models.feed import SubgraphFeed, mock_feed, print_feeds
 
 
 @enforce_types
 def test_feed():
-    feed = Feed(
+    feed = SubgraphFeed(
         "Contract Name",
         "0x12345",
         "SYM:TEST",

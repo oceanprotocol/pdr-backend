@@ -15,7 +15,7 @@ def test_get_predictions_info_main_mainnet(
     monkeypatch,
 ):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet", str(tmpdir))
 
     mock_getids = Mock(return_value=["0x123", "0x234"])
     mock_fetch = Mock(return_value=_sample_first_predictions)

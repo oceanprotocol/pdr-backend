@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.models.slot import Slot
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
@@ -86,13 +86,13 @@ class Web3PP(StrMixin):
     # --------------------------------
     # onchain feed data
     @enforce_types
-    def query_feed_contracts(self) -> Dict[str, Feed]:
+    def query_feed_contracts(self) -> Dict[str, SubgraphFeed]:
         """
         @description
           Gets all feeds, only filtered by self.owner_addrs
 
         @return
-          feeds -- dict of [feed_addr] : Feed
+          feeds -- dict of [feed_addr] : SubgraphFeed
         """
         feeds = query_feed_contracts(
             subgraph_url=self.subgraph_url,
@@ -100,7 +100,7 @@ class Web3PP(StrMixin):
         )
         # postconditions
         for feed in feeds.values():
-            assert isinstance(feed, Feed)
+            assert isinstance(feed, SubgraphFeed)
         return feeds
 
     @enforce_types
@@ -174,7 +174,7 @@ def mock_web3_pp(network: str) -> Web3PP:
 
 
 @enforce_types
-def inplace_mock_feedgetters(web3_pp, feed: Feed):
+def inplace_mock_feedgetters(web3_pp, feed: SubgraphFeed):
     from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
         mock_predictoor_contract,
     )
@@ -186,13 +186,15 @@ def inplace_mock_feedgetters(web3_pp, feed: Feed):
 
 
 @enforce_types
-def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: Feed):
+def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
     web3_pp.query_feed_contracts = Mock()
     web3_pp.query_feed_contracts.return_value = {feed.address: feed}
 
 
 @enforce_types
-def inplace_mock_get_contracts(web3_pp: Web3PP, feed: Feed, predictoor_contract):
+def inplace_mock_get_contracts(
+    web3_pp: Web3PP, feed: SubgraphFeed, predictoor_contract
+):
     from pdr_backend.models.predictoor_contract import (  # pylint: disable=import-outside-toplevel
         PredictoorContract,
     )

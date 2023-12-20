@@ -8,7 +8,7 @@ from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.timeframestr import Timeframe
 
 
-class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
+class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(
         self,
@@ -54,7 +54,7 @@ class Feed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
 
 @enforce_types
-def print_feeds(feeds: Dict[str, Feed], label: Optional[str] = None):
+def print_feeds(feeds: Dict[str, SubgraphFeed], label: Optional[str] = None):
     label = label or "feeds"
     print(f"{len(feeds)} {label}:")
     if not feeds:
@@ -76,10 +76,10 @@ def _rnd_eth_addr() -> str:
 
 
 @enforce_types
-def mock_feed(timeframe_str: str, exchange_str: str, pair_str: str) -> Feed:
+def mock_feed(timeframe_str: str, exchange_str: str, pair_str: str) -> SubgraphFeed:
     addr = _rnd_eth_addr()
     name = f"Feed {addr} {pair_str}|{exchange_str}|{timeframe_str}"
-    feed = Feed(
+    feed = SubgraphFeed(
         name=name,
         address=addr,
         symbol=f"SYM: {addr}",

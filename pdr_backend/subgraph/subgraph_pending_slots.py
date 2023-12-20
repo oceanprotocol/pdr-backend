@@ -1,7 +1,7 @@
 import time
 from typing import List, Optional
 
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.models.slot import Slot
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.subgraph.core_subgraph import query_subgraph
@@ -102,7 +102,7 @@ def get_pending_slots(
                 if source_filter and (source not in source_filter):
                     continue
 
-                feed = Feed(
+                feed = SubgraphFeed(
                     name=contract["token"]["name"],
                     address=contract["id"],
                     symbol=contract["token"]["symbol"],

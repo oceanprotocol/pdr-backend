@@ -28,13 +28,13 @@ def test_create_xy__0(tmpdir):
     data_pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["binanceus c ETH/USDT"],
+            "predict_feeds": ["binanceus ETH/USDT c"],
             "sim_only": {"test_n": 2},
         }
     )
     data_ss = DataSS(
         {
-            "input_feeds": ["binanceus oc ETH/USDT"],
+            "input_feeds": ["binanceus ETH/USDT oc"],
             "parquet_dir": str(tmpdir),
             "st_timestr": "2023-06-18",  # not used by AimodelDataFactory
             "fin_timestr": "2023-06-21",  # ""
@@ -82,7 +82,7 @@ def test_create_xy__0(tmpdir):
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    _, ss, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, ss, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus ETH/USDT h")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
@@ -212,10 +212,10 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         },
     }
 
-    pp = _data_pp(["binanceus h ETH/USDT"])
+    pp = _data_pp(["binanceus ETH/USDT h"])
     ss = _data_ss(
         parquet_dir,
-        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
+        ["binanceus BTC/USDT,ETH/USDT hl", "kraken BTC/USDT,ETH/USDT hl"],
     )
     assert ss.autoregressive_n == 3
     assert ss.n == (4 + 4) * 3
@@ -319,7 +319,7 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus ETH/USDT h")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok

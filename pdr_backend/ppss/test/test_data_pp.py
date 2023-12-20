@@ -1,8 +1,9 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.models.feed import mock_feed
 from pdr_backend.ppss.data_pp import DataPP, mock_data_pp
+from pdr_backend.util.feedstr import ArgFeed
 from pdr_backend.util.mathutil import sole_value
 
 
@@ -11,23 +12,23 @@ def test_data_pp_1feed():
     pp = DataPP(
         {
             "timeframe": "5m",
-            "predict_feeds": ["kraken h ETH/USDT"],
+            "predict_feeds": ["kraken ETH/USDT h"],
             "sim_only": {"test_n": 2},
         }
     )
 
     # yaml properties
     assert isinstance(pp.timeframe, str)
-    assert pp.predict_feeds_strs == ["kraken h ETH/USDT"]
+    assert pp.predict_feeds_strs == ["kraken ETH/USDT h"]
     assert pp.test_n == 2
 
     # derivative properties
     assert isinstance(pp.timeframe_ms, int)  # test more below
     assert isinstance(pp.timeframe_m, int)  # ""
-    assert pp.predict_feed_tups == [("kraken", "high", "ETH/USDT")]
+    assert pp.predict_feeds == [ArgFeed("kraken", "high", "ETH/USDT")]
     assert pp.pair_strs == ["ETH/USDT"]
     assert pp.exchange_strs == ["kraken"]
-    assert pp.predict_feed_tup == ("kraken", "high", "ETH/USDT")
+    assert pp.predict_feed == ArgFeed("kraken", "high", "ETH/USDT")
     assert pp.exchange_str == "kraken"
     assert pp.signal_str == "high"
     assert pp.pair_str == "ETH/USDT"
@@ -40,28 +41,28 @@ def test_data_pp_1feed():
     # setters
     pp.set_timeframe("1h")
     assert pp.timeframe == "1h"
-    pp.set_predict_feeds(["binance oh BTC/DAI"])
-    assert pp.predict_feeds_strs == ["binance oh BTC/DAI"]
+    pp.set_predict_feeds(["binance BTC/DAI oh"])
+    assert pp.predict_feeds_strs == ["binance BTC/DAI oh"]
 
 
 @enforce_types
 def test_data_pp_3feeds():
-    pp = mock_data_pp("5m", ["kraken h ETH/USDT", "binance oh BTC/USDT"])
+    pp = mock_data_pp("5m", ["kraken ETH/USDT h", "binance BTC/USDT oh"])
 
     # yaml properties
     assert pp.timeframe == "5m"
-    assert pp.predict_feeds_strs == ["kraken h ETH/USDT", "binance oh BTC/USDT"]
+    assert pp.predict_feeds_strs == ["kraken ETH/USDT h", "binance BTC/USDT oh"]
 
     # derivative properties
-    assert pp.predict_feed_tups == [
-        ("kraken", "high", "ETH/USDT"),
-        ("binance", "open", "BTC/USDT"),
-        ("binance", "high", "BTC/USDT"),
+    assert pp.predict_feeds == [
+        ArgFeed("kraken", "high", "ETH/USDT"),
+        ArgFeed("binance", "open", "BTC/USDT"),
+        ArgFeed("binance", "high", "BTC/USDT"),
     ]
     assert pp.pair_strs == ["ETH/USDT", "BTC/USDT"]
     assert pp.exchange_strs == ["kraken", "binance"]
     with pytest.raises(ValueError):
-        pp.predict_feed_tup  # pylint: disable=pointless-statement
+        pp.predict_feed  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
         pp.exchange_str  # pylint: disable=pointless-statement
     with pytest.raises(ValueError):
@@ -76,14 +77,14 @@ def test_data_pp_3feeds():
 
 @enforce_types
 def test_pp_5m_vs_1h():
-    pp = mock_data_pp("5m", ["binance c ETH/USDT"])
+    pp = mock_data_pp("5m", ["binance ETH/USDT c"])
     assert pp.timeframe == "5m"
     assert pp.timeframe_ms == 5 * 60 * 1000
     assert pp.timeframe_s == 5 * 60
     assert pp.timeframe_m == 5
 
     # 1h
-    pp = mock_data_pp("1h", ["binance c ETH/USDT"])
+    pp = mock_data_pp("1h", ["binance ETH/USDT c"])
     assert pp.timeframe == "1h"
     assert pp.timeframe_ms == 60 * 60 * 1000
     assert pp.timeframe_s == 60 * 60
@@ -97,7 +98,7 @@ def _triplet(feed) -> tuple:
 @enforce_types
 def test_filter_feeds_1allowed():
     # setup
-    pp = mock_data_pp("5m", ["binance c BTC/USDT"])
+    pp = mock_data_pp("5m", ["binance BTC/USDT c"])
     ok = [
         mock_feed("5m", "binance", "BTC/USDT"),
     ]
@@ -125,7 +126,7 @@ def test_filter_feeds_3allowed():
     # setup
     pp = mock_data_pp(
         "5m",
-        ["binance c BTC/USDT,ETH/USDT", "kraken c BTC/USDT"],
+        ["binance BTC/USDT,ETH/USDT c", "kraken BTC/USDT c"],
     )
     ok = [
         mock_feed("5m", "binance", "BTC/USDT"),
@@ -158,7 +159,7 @@ def test_filter_feeds_joiner():
 
 @enforce_types
 def _test_filter_feeds_joiner(join_str):
-    pp = mock_data_pp("5m", ["binance c ETH/USDT"])
+    pp = mock_data_pp("5m", ["binance ETH/USDT c"])
 
     f1 = mock_feed("5m", "binance", f"BTC{join_str}USDT")
     f2 = mock_feed("5m", "binance", f"ETH{join_str}USDT")

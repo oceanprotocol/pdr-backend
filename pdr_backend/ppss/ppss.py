@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from enforce_typing import enforce_types
 import yaml
 
-from pdr_backend.models.feed import Feed, mock_feed
+from pdr_backend.models.feed import SubgraphFeed, mock_feed
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
@@ -82,9 +82,9 @@ def mock_feed_ppss(
     pair,
     network: Optional[str] = None,
     tmpdir=None,
-) -> Tuple[Feed, PPSS]:
+) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(timeframe, [f"{exchange} c {pair}"], network, tmpdir)
+    ppss = mock_ppss(timeframe, [f"{exchange} {pair} c"], network, tmpdir)
     return (feed, ppss)
 
 

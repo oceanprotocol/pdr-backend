@@ -3,16 +3,16 @@
 data_pp:
   timeframe: 1h
   predict_feeds:
-    - binance c BTC/USDT
+    - binance BTC/USDT c
   sim_only:
     test_n : 200 # number of epochs to simulate
 
 data_ss:
   input_feeds :
-    - binance ohlcv BTC/USDT
-#    - binance c ETH/USDT,TRX/USDT,ADA/USDT
-#    - binance c DOT/USDT
-#    - kraken ohlcv BTC/USDT
+    - binance BTC/USDT ohlcv
+#    - binance ETH/USDT,TRX/USDT,ADA/USDT c
+#    - binance DOT/USDT c
+#    - kraken BTC/USDT ohlcv
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
   max_n_train: 5000 # no. epochs to train model on
@@ -21,7 +21,7 @@ data_ss:
 
 aimodel_ss:
   approach: LIN
-  
+
 predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
@@ -77,19 +77,19 @@ payout_ss:
 
 
 web3_pp:
-  
+
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev
     subgraph_url: https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     owner_addrs: "0xe02a421dfc549336d47efee85699bd0a3da7d6ff" # OPF deployer address
-  
+
   sapphire-mainnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://sapphire.oasis.io
     subgraph_url: https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
     owner_addrs: "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703" # OPF deployer address
-    
+
   development:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: http://localhost:8545
@@ -99,7 +99,7 @@ web3_pp:
   barge-predictoor-bot:
     address_file: "~/barge-predictoor-bot.address.json"
     private_key: "0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # address is 0xe2DD...
-    rpc_url: http://4.245.224.119:8545 # from VPS 
+    rpc_url: http://4.245.224.119:8545 # from VPS
     subgraph_url: http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph # from VPS
     owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 

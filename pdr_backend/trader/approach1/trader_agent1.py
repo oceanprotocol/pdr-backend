@@ -5,7 +5,7 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import Feed
+from pdr_backend.models.feed import SubgraphFeed
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
@@ -55,7 +55,7 @@ class TraderAgent1(BaseTraderAgent):
         self.order: Optional[Dict[str, Any]] = None
         assert self.exchange is not None, "Exchange cannot be None"
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             Logic:

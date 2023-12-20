@@ -29,7 +29,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Compute data_ss
         feed = self.feed
         d = copy.deepcopy(self.ppss.data_pp.d)
-        d["predict_feeds"] = [f"{feed.source} c {feed.pair}"]
+        d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
         data_pp = DataPP(d)
         data_ss = self.ppss.data_ss.copy_with_yval(data_pp)
 

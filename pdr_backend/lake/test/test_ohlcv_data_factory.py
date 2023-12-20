@@ -93,7 +93,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
     _, ss, factory, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h",
         st_timestr,
         fin_timestr,
     )
@@ -180,10 +180,10 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
 def _test_get_mergedohlcv_df_happypath(tmpdir):
     parquet_dir = str(tmpdir)
 
-    pp = _data_pp(["binanceus h BTC/USDT"])
+    pp = _data_pp(["binanceus BTC/USDT h"])
     ss = _data_ss(
         parquet_dir,
-        ["binanceus h BTC-USDT,ETH/USDT", "kraken h BTC/USDT"],
+        ["binanceus BTC-USDT,ETH/USDT h", "kraken BTC/USDT h"],
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
@@ -225,7 +225,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     """
 
     # setup
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h BTC/USDT")
+    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus BTC/USDT h")
     filename = factory._rawohlcv_filename("binanceus", "BTC/USDT")
     st_ut = factory.ss.st_timestamp
     fin_ut = factory.ss.fin_timestamp
@@ -284,7 +284,7 @@ def test_exchange_hist_overlap(tmpdir):
     """DataFactory get_mergedohlcv_df() and concat is executing e2e correctly"""
     _, _, factory, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h",
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
@@ -303,7 +303,7 @@ def test_exchange_hist_overlap(tmpdir):
     # let's get more data from exchange with overlap
     _, _, factory2, _ = _data_pp_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h",
         st_timestr="2023-06-18",  # same
         fin_timestr="2023-06-20",  # different
     )
@@ -326,7 +326,7 @@ def test_get_mergedohlcv_df_calls(
     tmpdir,
 ):
     mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus ETH/USDT h")
 
     factory._update_rawohlcv_files = Mock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)
