@@ -19,7 +19,9 @@ from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 class ArgFeed:
     def __init__(self, exchange, signal, pair: Union[ArgPair, str]):
         verify_exchange_str(exchange)
-        verify_signal_str(signal)
+
+        if signal is not None:
+            verify_signal_str(signal)
 
         self.exchange = exchange
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
@@ -132,15 +134,16 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     feeds_str = " ".join(feeds_str.split())  # replace multiple whitespace w/ 1
     feeds_str_split = feeds_str.split(" ")
 
-    if len(feeds_str_split) < 3:
-        # TODO: this will be adapted to support missing signal
-        raise ValueError(feeds_str)
-
     exchange_str = feeds_str_split[0]
-    pairs_list_str = " ".join(feeds_str_split[1:-1])
-    signal_char_str = feeds_str_split[-1]
 
-    signal_str_list = unpack_signalchar_str(signal_char_str)
+    if len(feeds_str_split) < 3:
+        pairs_list_str = " ".join(feeds_str_split[1:])
+        signal_str_list = [None]
+    else:
+        pairs_list_str = " ".join(feeds_str_split[1:-1])
+        signal_char_str = feeds_str_split[-1]
+        signal_str_list = unpack_signalchar_str(signal_char_str)
+
     pairs = ArgPairs.from_str(pairs_list_str)
 
     feeds = [
