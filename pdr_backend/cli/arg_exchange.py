@@ -24,12 +24,14 @@ class ArgExchange:
         return hash(self.exchange)
 
 
-class ArgExchanges(List[str]):
+class ArgExchanges(List[ArgExchange]):
     def __init__(self, exchanges: Union[List[str], List[ArgExchange]]):
         if not isinstance(exchanges, list):
             raise TypeError("exchanges must be a list")
 
-        super().__init__([ArgExchange(exchange) for exchange in exchanges])
+        super().__init__(
+            [ArgExchange(str(exchange)) for exchange in exchanges if exchange]
+        )
 
     def __str__(self):
         if not self:
