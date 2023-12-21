@@ -103,19 +103,19 @@ class DataPP:
         return self.predict_feed.signal
 
     @property
-    def pair_str(self) -> str:
+    def pair_str(self) -> ArgPair:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
         return self.predict_feed.pair
 
     @property
     def base_str(self) -> str:
         """Return e.g. 'ETH'. Only applicable when 1 feed."""
-        return ArgPair(self.pair_str).base_str
+        return ArgPair(self.pair_str).base_str or ""
 
     @property
     def quote_str(self) -> str:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
-        return ArgPair(self.pair_str).quote_str
+        return ArgPair(self.pair_str).quote_str or ""
 
     @property
     def filter_feeds_s(self) -> str:

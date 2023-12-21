@@ -116,7 +116,7 @@ class DataSS:
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, feed.pair) for feed in self.input_feeds)
+        return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
 
     @enforce_types
     def __str__(self) -> str:

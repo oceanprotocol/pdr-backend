@@ -96,7 +96,7 @@ class ArgFeeds(List[ArgFeed]):
 
     @property
     def pairs(self) -> Set[str]:
-        return set(feed.pair for feed in self)
+        return set(str(feed.pair) for feed in self)
 
     @property
     def exchanges(self) -> Set[str]:

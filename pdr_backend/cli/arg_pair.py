@@ -12,9 +12,16 @@ from pdr_backend.util.constants import CAND_USDCOINS
 
 
 class ArgPair:
-    def __init__(self, pair_str: Optional[str] = None, base_str: Optional[str] = None, quote_str: Optional[str] = None):
+    def __init__(
+        self,
+        pair_str: Optional[Union[str, "ArgPair"]] = None,
+        base_str: Optional[str] = None,
+        quote_str: Optional[str] = None,
+    ):
         if not pair_str and [None in [base_str, quote_str]]:
-            raise ValueError("Must provide either pair_str, or both base_str and quote_str")
+            raise ValueError(
+                "Must provide either pair_str, or both base_str and quote_str"
+            )
 
         if isinstance(pair_str, ArgPair):
             pair_str = str(pair_str)
@@ -47,8 +54,8 @@ class ArgPair:
 
 class ArgPairs(List[ArgPair]):
     @staticmethod
-    def from_str(pairs_str: str) -> 'ArgPairs':
-        pairs = ArgPairs([pair for pair in _unpack_pairs_str(pairs_str)])
+    def from_str(pairs_str: str) -> "ArgPairs":
+        pairs = ArgPairs(_unpack_pairs_str(pairs_str))
 
         if not pairs:
             raise ValueError(pairs_str)
@@ -69,7 +76,7 @@ class ArgPairs(List[ArgPair]):
         super().__init__(pairs)
 
     @enforce_types
-    def __str__(self) -> Union[ArgPair, None]:
+    def __str__(self) -> str:
         """
         Example: Given ArgPairs ["BTC/USDT","ETH-DAI"]
         Return "BTC/USDT,ETH/DAI"
