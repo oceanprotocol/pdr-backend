@@ -215,7 +215,7 @@ class OhlcvDataFactory:
             cols = [
                 feed.signal  # cols is a subset of TOHLCV_COLS
                 for feed in self.ss.input_feeds
-                if feed.exchange == exch_str and feed.pair == pair_str
+                if str(feed.exchange) == exch_str and feed.pair == pair_str
             ]
             rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
 

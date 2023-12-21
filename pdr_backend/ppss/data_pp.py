@@ -95,7 +95,11 @@ class DataPP:
     @property
     def exchange_str(self) -> str:
         """Return e.g. 'binance'. Only applicable when 1 feed."""
-        return self.predict_feed.exchange
+        return str(self.predict_feed.exchange)
+
+    @property
+    def exchange_class(self) -> str:
+        return self.predict_feed.exchange.exchange_class
 
     @property
     def signal_str(self) -> str:

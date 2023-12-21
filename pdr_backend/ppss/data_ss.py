@@ -2,7 +2,6 @@ import copy
 import os
 from typing import List, Set, Tuple
 
-import ccxt
 import numpy as np
 from enforce_typing import enforce_types
 
@@ -36,8 +35,8 @@ class DataSS:
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
         feeds = ArgFeeds.from_strs(self.input_feeds_strs)
         for feed in feeds:
-            exchange_class = getattr(ccxt, feed.exchange)
-            self.exchs_dict[feed.exchange] = exchange_class()
+            exchange_class = feed.exchange.exchange_class
+            self.exchs_dict[str(feed.exchange)] = exchange_class()
 
     # --------------------------------
     # yaml properties

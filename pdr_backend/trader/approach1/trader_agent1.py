@@ -36,7 +36,7 @@ class TraderAgent1(BaseTraderAgent):
         super().__init__(ppss)
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.ppss.data_pp.exchange_str)
+        exchange_class = self.ppss.data_pp.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),

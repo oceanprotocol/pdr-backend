@@ -7,23 +7,21 @@ from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.exchangestr import verify_exchange_str
+from pdr_backend.cli.arg_exchange import ArgExchange
+from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 from pdr_backend.util.signalstr import (
     signal_to_char,
     unpack_signalchar_str,
     verify_signal_str,
 )
-from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 
 
 class ArgFeed:
     def __init__(self, exchange, signal, pair: Union[ArgPair, str]):
-        verify_exchange_str(exchange)
-
         if signal is not None:
             verify_signal_str(signal)
 
-        self.exchange = exchange
+        self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = signal
 
