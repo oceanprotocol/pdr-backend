@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from enforce_typing import enforce_types
 
@@ -36,29 +36,40 @@ class Timeframe:
             return 60
         raise ValueError(f"need to support timeframe={self.timeframe_str}")
 
-
-@enforce_types
-def pack_timeframe_str_list(timeframe_str_list) -> Union[str, None]:
-    """
-    Example: Given ["1m","1h"]
-    Return "1m,1h"
-    """
-    if timeframe_str_list in [None, []]:
-        return None
-    if not isinstance(timeframe_str_list, list):
-        raise TypeError(timeframe_str_list)
-    for timeframe_str in timeframe_str_list:
-        verify_timeframe_str(timeframe_str)
-
-    timeframes_str = ",".join(timeframe_str_list)
-    return timeframes_str
+    def __str__(self):
+        return self.timeframe_str
 
 
-@enforce_types
-def verify_timeframe_str(timeframe_str: str):
-    """Raises an error if timeframe_str is not e.g. '1m', '1h'."""
-    if timeframe_str not in CAND_TIMEFRAMES:
-        raise ValueError(timeframe_str)
+class Timeframes(List[Timeframe]):
+    def __init__(self, timeframes: Union[List[str], List[Timeframe]]):
+        if not isinstance(timeframes, list):
+            raise TypeError("timeframes must be a list")
+
+        frames = []
+        for timeframe in timeframes:
+            if isinstance(timeframe, str):
+                frame = Timeframe(timeframe)
+
+            frames.append(frame)
+
+        super().__init__(frames)
+
+    @staticmethod
+    def from_str(timeframes_str: str):
+        """
+        @description
+          Parses a comma-separated string of timeframes, e.g. "1h,5m"
+        """
+        if not isinstance(timeframes_str, str):
+            raise TypeError("timeframes_strs must be a string")
+
+        return Timeframes(timeframes_str.split(","))
+
+    def __str__(self):
+        if not self:
+            return ""
+
+        return ",".join([str(frame) for frame in self])
 
 
 @enforce_types

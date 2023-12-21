@@ -5,9 +5,9 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.listutil import remove_dups
-from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
 
 
 class DataPP:
@@ -16,7 +16,7 @@ class DataPP:
         self.d = d  # yaml_dict["data_pp"]
 
         # test inputs
-        verify_timeframe_str(self.timeframe)
+        Timeframe(self.timeframe)
         ArgFeeds.from_strs(self.predict_feeds_strs)  # test that it's valid
 
         if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens

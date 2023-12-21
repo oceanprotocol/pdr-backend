@@ -6,7 +6,7 @@ from pdr_backend.subgraph.info725 import info_to_info725
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.test.resources import MockPost
-from pdr_backend.util.timeframestr import Timeframe
+from pdr_backend.cli.timeframe import Timeframe
 
 
 @enforce_types
