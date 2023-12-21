@@ -3,12 +3,12 @@ Used as inputs for models, and for predicing.
 Complementary to subgraph/subgraph_feed.py which models a prediction feed contract.
 """
 
-from typing import List, Set
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.exchangestr import verify_exchange_str
-from pdr_backend.util.pairstr import unpack_pairs_str, verify_pair_str
+from pdr_backend.cli.arg_exchange import ArgExchange
+from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 from pdr_backend.util.signalstr import (
     signal_to_char,
     unpack_signalchar_str,
@@ -17,19 +17,17 @@ from pdr_backend.util.signalstr import (
 
 
 class ArgFeed:
-    def __init__(self, exchange, signal, pair):
-        verify_exchange_str(exchange)
-        verify_signal_str(signal)
-        verify_pair_str(pair)
+    def __init__(self, exchange, signal, pair: Union[ArgPair, str]):
+        if signal is not None:
+            verify_signal_str(signal)
 
-        self.exchange = exchange
-        self.pair = pair
+        self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
+        self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = signal
 
     def __str__(self):
-        pair_str = self.pair.replace("-", "/")
         char = signal_to_char(self.signal)
-        feed_str = f"{self.exchange} {pair_str} {char}"
+        feed_str = f"{self.exchange} {self.pair} {char}"
 
         return feed_str
 
@@ -40,11 +38,11 @@ class ArgFeed:
         return (
             self.exchange == other.exchange
             and self.signal == other.signal
-            and self.pair == other.pair
+            and str(self.pair) == str(other.pair)
         )
 
     def __hash__(self):
-        return hash((self.exchange, self.signal, self.pair))
+        return hash((self.exchange, self.signal, str(self.pair)))
 
     @staticmethod
     def from_str(feed_str: str, do_verify: bool = True) -> "ArgFeed":
@@ -98,7 +96,7 @@ class ArgFeeds(List[ArgFeed]):
 
     @property
     def pairs(self) -> Set[str]:
-        return set(feed.pair for feed in self)
+        return set(str(feed.pair) for feed in self)
 
     @property
     def exchanges(self) -> Set[str]:
@@ -135,15 +133,21 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     feeds_str_split = feeds_str.split(" ")
 
     exchange_str = feeds_str_split[0]
-    pairs_str = " ".join(feeds_str_split[1:-1])
-    signal_char_str = feeds_str_split[-1]
 
-    signal_str_list = unpack_signalchar_str(signal_char_str)
-    pair_str_list = unpack_pairs_str(pairs_str)
+    if len(feeds_str_split) < 3:
+        pairs_list_str = " ".join(feeds_str_split[1:])
+        signal_str_list = [None]
+    else:
+        pairs_list_str = " ".join(feeds_str_split[1:-1])
+        signal_char_str = feeds_str_split[-1]
+        signal_str_list = unpack_signalchar_str(signal_char_str)
+
+    pairs = ArgPairs.from_str(pairs_list_str)
+
     feeds = [
         ArgFeed(exchange_str, signal_str, pair_str)
         for signal_str in signal_str_list
-        for pair_str in pair_str_list
+        for pair_str in pairs
     ]
 
     return feeds

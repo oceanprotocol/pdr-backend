@@ -2,7 +2,6 @@ import copy
 import os
 from typing import List, Set, Tuple
 
-import ccxt
 import numpy as np
 from enforce_typing import enforce_types
 
@@ -36,8 +35,8 @@ class DataSS:
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
         feeds = ArgFeeds.from_strs(self.input_feeds_strs)
         for feed in feeds:
-            exchange_class = getattr(ccxt, feed.exchange)
-            self.exchs_dict[feed.exchange] = exchange_class()
+            exchange_class = feed.exchange.exchange_class
+            self.exchs_dict[str(feed.exchange)] = exchange_class()
 
     # --------------------------------
     # yaml properties
@@ -116,7 +115,7 @@ class DataSS:
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, feed.pair) for feed in self.input_feeds)
+        return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
 
     @enforce_types
     def __str__(self) -> str:
