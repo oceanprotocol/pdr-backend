@@ -6,7 +6,6 @@ from pdr_backend.cli.arg_exchange import ArgExchanges
 
 @enforce_types
 def test_pack_exchange_str_list():
-    assert str(ArgExchanges([])) == ""
     assert str(ArgExchanges(["binance"])) == "binance"
     assert str(ArgExchanges(["binance", "kraken"])) == "binance,kraken"
 
@@ -18,6 +17,9 @@ def test_pack_exchange_str_list():
 
     with pytest.raises(TypeError):
         ArgExchanges("")
+
+    with pytest.raises(ValueError):
+        ArgExchanges([])
 
     with pytest.raises(ValueError):
         ArgExchanges(["adfs"])

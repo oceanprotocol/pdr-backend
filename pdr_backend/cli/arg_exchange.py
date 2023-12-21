@@ -5,6 +5,9 @@ import ccxt
 
 class ArgExchange:
     def __init__(self, exchange: str):
+        if not exchange:
+            raise ValueError(exchange)
+
         if not hasattr(ccxt, exchange):
             raise ValueError(exchange)
 
@@ -29,9 +32,12 @@ class ArgExchanges(List[ArgExchange]):
         if not isinstance(exchanges, list):
             raise TypeError("exchanges must be a list")
 
-        super().__init__(
-            [ArgExchange(str(exchange)) for exchange in exchanges if exchange]
-        )
+        converted = [ArgExchange(str(exchange)) for exchange in exchanges if exchange]
+
+        if not converted:
+            raise ValueError(exchanges)
+
+        super().__init__(converted)
 
     def __str__(self):
         if not self:
