@@ -99,7 +99,7 @@ class OhlcvDataFactory:
           pair_str -- eg "BTC/USDT". Not "BTC-USDT", to avoid key issues
           fin_ut -- a timestamp, in ms, in UTC
         """
-        assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
+        assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
         print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}.")
 
         filename = self._rawohlcv_filename(exch_str, pair_str)
@@ -118,7 +118,7 @@ class OhlcvDataFactory:
             exch = self.ss.exchs_dict[exch_str]
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
-                symbol=pair_str.replace("-", "/"),
+                symbol=str(pair_str).replace("-", "/"),
                 timeframe=self.pp.timeframe,
                 since=st_ut,
                 limit=1000,
@@ -210,7 +210,7 @@ class OhlcvDataFactory:
             rawohlcv_dfs[exch_str] = {}
 
         for exch_str, pair_str in self.ss.exchange_pair_tups:
-            assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
+            assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
             filename = self._rawohlcv_filename(exch_str, pair_str)
             cols = [
                 feed.signal  # cols is a subset of TOHLCV_COLS
@@ -241,8 +241,8 @@ class OhlcvDataFactory:
         @notes
           If pair_str has '/', it will become '-' in the filename.
         """
-        assert "/" in pair_str or "-" in pair_str, pair_str
-        pair_str = pair_str.replace("/", "-")  # filesystem needs "-"
+        assert "/" in str(pair_str) or "-" in pair_str, pair_str
+        pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
         basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
         filename = os.path.join(self.ss.parquet_dir, basename)
         return filename

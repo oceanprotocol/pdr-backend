@@ -3,33 +3,31 @@ Used as inputs for models, and for predicing.
 Complementary to subgraph/subgraph_feed.py which models a prediction feed contract.
 """
 
-from typing import List, Set
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.util.exchangestr import verify_exchange_str
-from pdr_backend.util.pairstr import unpack_pairs_str, verify_pair_str
 from pdr_backend.util.signalstr import (
     signal_to_char,
     unpack_signalchar_str,
     verify_signal_str,
 )
+from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 
 
 class ArgFeed:
-    def __init__(self, exchange, signal, pair):
+    def __init__(self, exchange, signal, pair: Union[ArgPair, str]):
         verify_exchange_str(exchange)
         verify_signal_str(signal)
-        verify_pair_str(pair)
 
         self.exchange = exchange
-        self.pair = pair
+        self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = signal
 
     def __str__(self):
-        pair_str = self.pair.replace("-", "/")
         char = signal_to_char(self.signal)
-        feed_str = f"{self.exchange} {pair_str} {char}"
+        feed_str = f"{self.exchange} {self.pair} {char}"
 
         return feed_str
 
@@ -40,11 +38,11 @@ class ArgFeed:
         return (
             self.exchange == other.exchange
             and self.signal == other.signal
-            and self.pair == other.pair
+            and str(self.pair) == str(other.pair)
         )
 
     def __hash__(self):
-        return hash((self.exchange, self.signal, self.pair))
+        return hash((self.exchange, self.signal, str(self.pair)))
 
     @staticmethod
     def from_str(feed_str: str, do_verify: bool = True) -> "ArgFeed":
@@ -134,16 +132,21 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     feeds_str = " ".join(feeds_str.split())  # replace multiple whitespace w/ 1
     feeds_str_split = feeds_str.split(" ")
 
+    if len(feeds_str_split) < 3:
+        # TODO: this will be adapted to support missing signal
+        raise ValueError(feeds_str)
+
     exchange_str = feeds_str_split[0]
-    pairs_str = " ".join(feeds_str_split[1:-1])
+    pairs_list_str = " ".join(feeds_str_split[1:-1])
     signal_char_str = feeds_str_split[-1]
 
     signal_str_list = unpack_signalchar_str(signal_char_str)
-    pair_str_list = unpack_pairs_str(pairs_str)
+    pairs = ArgPairs.from_str(pairs_list_str)
+
     feeds = [
         ArgFeed(exchange_str, signal_str, pair_str)
         for signal_str in signal_str_list
-        for pair_str in pair_str_list
+        for pair_str in pairs
     ]
 
     return feeds

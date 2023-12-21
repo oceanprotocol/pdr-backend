@@ -225,8 +225,6 @@ def test_verify_feeds_str__and__verify_feed_str():
         "binancexyz ADA/USDT o",
         "binance ADA/USDT ohx",
         "binance ADA/USDT z",
-        "binance , ADA/USDT o",
-        "binance , ADA/USDT, o",
         "binance , ADA/USDT, o,",
         "binance , ADA-USDT, o, ",
         "binance,ADA/USDT,o",
@@ -241,6 +239,7 @@ def test_verify_feeds_str__and__verify_feed_str():
         "binance ADA&USDT o",
         "binance ADA/USDT XYZ o",
     ]
+
     for feed_str in strs:
         with pytest.raises(ValueError):
             ArgFeed.from_str(feed_str)

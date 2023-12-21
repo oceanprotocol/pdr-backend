@@ -4,9 +4,9 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.listutil import remove_dups
-from pdr_backend.util.pairstr import unpack_pair_str
 from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
 
 
@@ -110,12 +110,12 @@ class DataPP:
     @property
     def base_str(self) -> str:
         """Return e.g. 'ETH'. Only applicable when 1 feed."""
-        return unpack_pair_str(self.pair_str)[0]
+        return ArgPair(self.pair_str).base_str
 
     @property
     def quote_str(self) -> str:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
-        return unpack_pair_str(self.pair_str)[1]
+        return ArgPair(self.pair_str).quote_str
 
     @property
     def filter_feeds_s(self) -> str:
