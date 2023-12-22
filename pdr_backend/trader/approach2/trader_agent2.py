@@ -31,7 +31,7 @@ class TraderAgent2(BaseTraderAgent):
             self.portfolio = Portfolio(list(self.feeds.keys()))
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.ppss.data_pp.exchange_str)
+        exchange_class = self.ppss.data_pp.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),

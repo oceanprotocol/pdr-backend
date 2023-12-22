@@ -21,7 +21,7 @@ def merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
     merged_df = None
     for exch_str in raw_dfs.keys():
         for pair_str, raw_df in raw_dfs[exch_str].items():
-            assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
+            assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
             assert "timestamp" in raw_df.columns
 
             for raw_col in raw_df.columns:

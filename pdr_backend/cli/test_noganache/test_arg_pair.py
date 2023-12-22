@@ -1,32 +1,28 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.util.pairstr import (
-    pack_pair_str_list,
-    unpack_pair_str,
-    unpack_pairs_str,
-    verify_base_str,
-    verify_pair_str,
-    verify_pairs_str,
-    verify_quote_str,
+from pdr_backend.cli.arg_pair import (
+    ArgPair,
+    ArgPairs,
+    _verify_base_str,
+    _verify_quote_str,
 )
-
-# ==========================================================================
-# unpack..() functions
 
 
 @enforce_types
 def test_unpack_pair_str():
-    assert unpack_pair_str("BTC/USDT") == ("BTC", "USDT")
-    assert unpack_pair_str("BTC-USDT") == ("BTC", "USDT")
+    assert ArgPair("BTC/USDT").base_str == "BTC"
+    assert ArgPair("BTC/USDT").quote_str == "USDT"
+    assert ArgPair("BTC-USDT").base_str == "BTC"
+    assert ArgPair("BTC-USDT").quote_str == "USDT"
 
 
 @enforce_types
 def test_unpack_pairs_str():
-    assert unpack_pairs_str("ADA-USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
-    assert unpack_pairs_str("ADA/USDT BTC/USDT,ETH-USDC, DOT/DAI") == [
+    assert ArgPairs.from_str("ADA-USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
+    assert ArgPairs.from_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
+    assert ArgPairs.from_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
+    assert ArgPairs.from_str("ADA/USDT BTC/USDT,ETH-USDC, DOT/DAI") == [
         "ADA/USDT",
         "BTC/USDT",
         "ETH/USDC",
@@ -34,32 +30,28 @@ def test_unpack_pairs_str():
     ]
 
 
-# ==========================================================================
-# pack..() functions
-
-
 @enforce_types
 def test_pack_pair_str_list():
-    assert pack_pair_str_list(None) is None
-    assert pack_pair_str_list([]) is None
-    assert pack_pair_str_list(["ADA/USDT"]) == "ADA/USDT"
-    assert pack_pair_str_list(["ADA-USDT"]) == "ADA/USDT"
-    assert pack_pair_str_list(["ADA/USDT", "BTC/USDT"]) == "ADA/USDT,BTC/USDT"
-    assert pack_pair_str_list(["ADA/USDT", "BTC-USDT"]) == "ADA/USDT,BTC/USDT"
-    assert pack_pair_str_list(["ADA-USDT", "BTC-USDT"]) == "ADA/USDT,BTC/USDT"
+    assert str(ArgPairs(["ADA/USDT"])) == "ADA/USDT"
+    assert str(ArgPairs(["ADA-USDT"])) == "ADA/USDT"
+    assert str(ArgPairs(["ADA/USDT", "BTC/USDT"])) == "ADA/USDT,BTC/USDT"
+    assert str(ArgPairs(["ADA/USDT", "BTC-USDT"])) == "ADA/USDT,BTC/USDT"
+    assert str(ArgPairs(["ADA-USDT", "BTC-USDT"])) == "ADA/USDT,BTC/USDT"
 
     with pytest.raises(TypeError):
-        pack_pair_str_list("")
+        ArgPairs("")
 
     with pytest.raises(ValueError):
-        pack_pair_str_list(["adfs"])
+        ArgPairs([])
+
+    with pytest.raises(TypeError):
+        ArgPairs(None)
 
     with pytest.raises(ValueError):
-        pack_pair_str_list(["ADA-USDT fgds"])
+        ArgPairs(["adfs"])
 
-
-# ==========================================================================
-# verify..() functions
+    with pytest.raises(ValueError):
+        ArgPairs(["ADA-USDT fgds"])
 
 
 @enforce_types
@@ -76,10 +68,12 @@ def test_verify_pairs_str__and__verify_pair_str():
         "BTC/USDT ",
         "  BTC/USDT   ",
     ]
-    for pairs_str in strs:
-        verify_pairs_str(pairs_str)
+
     for pair_str in strs:
-        verify_pair_str(pair_str)
+        ArgPair(pair_str)
+
+    for pair_str in strs:
+        ArgPairs([pair_str])
 
     # not ok for verify_pair_str, ok for verify_pairs_str
     # (well-formed >1 signal or >1 pair)
@@ -94,10 +88,10 @@ def test_verify_pairs_str__and__verify_pair_str():
         "ADA/USDT, BTC/USDT ETH-USDC , DOT/DAI",
     ]
     for pairs_str in strs:
-        verify_pairs_str(pairs_str)
+        ArgPairs.from_str(pairs_str)
     for pair_str in strs:
         with pytest.raises(ValueError):
-            verify_pair_str(pair_str)
+            ArgPair(pair_str)
 
     # not ok for verify_pair_str, not ok for verify_pairs_str
     # (poorly formed)
@@ -139,13 +133,12 @@ def test_verify_pairs_str__and__verify_pair_str():
         "ADA/USDT - BTC/USDT",
         "ADA/USDT / BTC/USDT",
     ]
+
     for pairs_str in strs:
         with pytest.raises(ValueError):
-            verify_pairs_str(pairs_str)
-
-    for pair_str in strs:
+            ArgPairs.from_str(pairs_str)
         with pytest.raises(ValueError):
-            verify_pair_str(pair_str)
+            ArgPair(pairs_str)
 
 
 @enforce_types
@@ -161,7 +154,7 @@ def test_base_str():
         "OCEAN",
     ]
     for base_str in strs:
-        verify_base_str(base_str)
+        _verify_base_str(base_str)
 
     # not ok
     strs = [
@@ -178,7 +171,7 @@ def test_base_str():
     ]
     for base_str in strs:
         with pytest.raises(ValueError):
-            verify_base_str(base_str)
+            _verify_base_str(base_str)
 
 
 @enforce_types
@@ -194,7 +187,7 @@ def test_quote_str():
         "DAI",
     ]
     for quote_str in strs:
-        verify_quote_str(quote_str)
+        _verify_quote_str(quote_str)
 
     # not ok
     strs = [
@@ -211,4 +204,4 @@ def test_quote_str():
     ]
     for quote_str in strs:
         with pytest.raises(ValueError):
-            verify_quote_str(quote_str)
+            _verify_quote_str(quote_str)

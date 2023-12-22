@@ -4,10 +4,10 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.listutil import remove_dups
-from pdr_backend.util.pairstr import unpack_pair_str
-from pdr_backend.util.timeframestr import Timeframe, verify_timeframe_str
 
 
 class DataPP:
@@ -16,7 +16,7 @@ class DataPP:
         self.d = d  # yaml_dict["data_pp"]
 
         # test inputs
-        verify_timeframe_str(self.timeframe)
+        Timeframe(self.timeframe)
         ArgFeeds.from_strs(self.predict_feeds_strs)  # test that it's valid
 
         if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
@@ -95,7 +95,11 @@ class DataPP:
     @property
     def exchange_str(self) -> str:
         """Return e.g. 'binance'. Only applicable when 1 feed."""
-        return self.predict_feed.exchange
+        return str(self.predict_feed.exchange)
+
+    @property
+    def exchange_class(self) -> str:
+        return self.predict_feed.exchange.exchange_class
 
     @property
     def signal_str(self) -> str:
@@ -103,19 +107,19 @@ class DataPP:
         return self.predict_feed.signal
 
     @property
-    def pair_str(self) -> str:
+    def pair_str(self) -> ArgPair:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
         return self.predict_feed.pair
 
     @property
     def base_str(self) -> str:
         """Return e.g. 'ETH'. Only applicable when 1 feed."""
-        return unpack_pair_str(self.pair_str)[0]
+        return ArgPair(self.pair_str).base_str or ""
 
     @property
     def quote_str(self) -> str:
         """Return e.g. 'USDT'. Only applicable when 1 feed."""
-        return unpack_pair_str(self.pair_str)[1]
+        return ArgPair(self.pair_str).quote_str or ""
 
     @property
     def filter_feeds_s(self) -> str:

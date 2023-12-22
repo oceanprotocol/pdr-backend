@@ -3,9 +3,9 @@ from typing import Dict, Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.pairstr import unpack_pair_str
+from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.strutil import StrMixin
-from pdr_backend.util.timeframestr import Timeframe
 
 
 class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
@@ -38,11 +38,11 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @property
     def base(self):
-        return unpack_pair_str(self.pair)[0]
+        return ArgPair(self.pair).base_str
 
     @property
     def quote(self):
-        return unpack_pair_str(self.pair)[1]
+        return ArgPair(self.pair).quote_str
 
     @enforce_types
     def shortstr(self) -> str:
