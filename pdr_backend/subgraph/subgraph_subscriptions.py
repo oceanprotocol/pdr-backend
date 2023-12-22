@@ -48,6 +48,7 @@ def fetch_filtered_subscriptions(
     # Convert contracts to lowercase
     contracts = [f.lower() for f in contracts]
 
+    # pylint: disable=line-too-long
     if len(contracts) > 0:
         where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}}}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
     else:
