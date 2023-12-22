@@ -2,7 +2,7 @@ from typing import Dict
 
 import polars as pl
 from enforce_typing import enforce_types
-from polars import Int64, Utf8
+from polars import Int64, Utf8, Float32
 
 from pdr_backend.subgraph.subgraph_subscriptions import (
     fetch_filtered_subscriptions,
@@ -20,7 +20,7 @@ subscriptions_schema = {
     "timeframe": Utf8,
     "source": Utf8,
     "tx_id": Utf8,
-    "event_index": Int64,
+    "last_price_value": Float32,
     "timestamp": Int64,
     "user": Utf8,
 }

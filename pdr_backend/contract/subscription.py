@@ -14,6 +14,7 @@ class Subscription:
         source: str,
         timestamp: int,  # timestamp == subscription purchased timestamp
         tx_id: str,
+        last_price_value: float,
         user: str,
     ) -> None:
         self.ID = ID
@@ -22,6 +23,7 @@ class Subscription:
         self.source = source
         self.timestamp = timestamp
         self.tx_id = tx_id
+        self.last_price_value = last_price_value
         self.user = user
 
 
@@ -37,6 +39,7 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
         source,
         timestamp,
         tx_id,
+        last_price_value,
         event_index,
         user,
     ) = subscription_tuple
@@ -49,6 +52,7 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
         source=source,
         timestamp=timestamp,
         tx_id=tx_id,
+        last_price_value=float(last_price_value)*1.201,
         user=user,
     )
 
@@ -68,6 +72,7 @@ _SUBSCRIPTION_TUPS = [
         "binance",
         1698850800,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809592",
+        "2.4979184013322233",
         98,
         "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
     ),
@@ -77,6 +82,7 @@ _SUBSCRIPTION_TUPS = [
         "kraken",
         1698937200,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809593",
+        "2.4979184013322233",
         99,
         "0xabcdef0123456789abcdef0123456789abcdef01",
     ),
@@ -86,6 +92,7 @@ _SUBSCRIPTION_TUPS = [
         "kraken",
         1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809594",
+        "2.4979184013322233",
         100,
         "0x123456789abcdef0123456789abcdef01234567",
     ),
@@ -95,6 +102,7 @@ _SUBSCRIPTION_TUPS = [
         "binance",
         1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809595",
+        "2.4979184013322233",
         101,
         "0xabcdef0123456789abcdef0123456789abcdef02",
     ),
@@ -104,6 +112,7 @@ _SUBSCRIPTION_TUPS = [
         "kraken",
         1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809596",
+        "2.4979184013322233",
         102,
         "0xabcdef0123456789abcdef0123456789abcdef03",
     ),
@@ -113,6 +122,7 @@ _SUBSCRIPTION_TUPS = [
         "kraken",
         1699200000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809597",
+        "2.4979184013322233",
         103,
         "0xabcdef0123456789abcdef0123456789abcdef04",
     ),
@@ -122,6 +132,7 @@ _SUBSCRIPTION_TUPS = [
         "binance",
         1699200000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809598",
+        "2.4979184013322233",
         104,
         "0xabcdef0123456789abcdef0123456789abcdef05",
     ),
@@ -131,6 +142,7 @@ _SUBSCRIPTION_TUPS = [
         "kraken",
         1699286400,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809599",
+        "2.4979184013322233",
         105,
         "0xabcdef0123456789abcdef0123456789abcdef06",
     ),

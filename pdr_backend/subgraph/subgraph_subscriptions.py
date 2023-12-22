@@ -48,12 +48,12 @@ def fetch_filtered_subscriptions(
     # Convert contracts to lowercase
     contracts = [f.lower() for f in contracts]
 
-    # pylint: disable=line-too-long
     if len(contracts) > 0:
-        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}}}"
+        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}}}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
     else:
         where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
 
+    # pylint: disable=line-too-long
     while True:
         query = f"""
             {{
@@ -61,7 +61,6 @@ def fetch_filtered_subscriptions(
                     id
                     txId
                     timestamp
-                    expireTime
                     user {{
                         id
                     }}
@@ -70,6 +69,7 @@ def fetch_filtered_subscriptions(
                         token {{
                             id
                             name
+                            lastPriceValue
                             nft{{
                                 nftData {{
                                 key
@@ -77,10 +77,6 @@ def fetch_filtered_subscriptions(
                                 }}
                             }}
                         }}
-                        token {{
-                            lastPriceValue
-                        }}
-                        secondsPerSubscription
                     }}
                 }}
             }}"""
@@ -102,13 +98,16 @@ def fetch_filtered_subscriptions(
             break
 
         for subscription_sg_dict in data:
-            info725 = subscription_sg_dict["predictContract"]["token"]["nft"]["nftData"]
+            info725 = subscription_sg_dict["predictContract"]["token"]["nft"][
+                "nftData"
+            ]
             info = info725_to_info(info725)
             pair = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
             timestamp = subscription_sg_dict["timestamp"]
             tx_id = subscription_sg_dict["txId"]
+            last_price_value = float(subscription_sg_dict["predictContract"]["token"]["lastPriceValue"]) * 1.201
             user = subscription_sg_dict["user"]["id"]
 
             subscription = Subscription(
@@ -118,8 +117,13 @@ def fetch_filtered_subscriptions(
                 source=source,
                 timestamp=timestamp,
                 tx_id=tx_id,
+                last_price_value=last_price_value,
                 user=user,
             )
             subscriptions.append(subscription)
+
+        # avoids doing next fetch if we've reached the end
+        if len(data) < chunk_size :
+            break
 
     return subscriptions

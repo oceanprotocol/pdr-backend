@@ -127,7 +127,7 @@ def fetch_filtered_predictions(
         data = result["data"]["predictPredictions"]
         if len(data) == 0:
             break
-
+        
         for prediction_sg_dict in data:
             info725 = prediction_sg_dict["slot"]["predictContract"]["token"]["nft"][
                 "nftData"
@@ -171,6 +171,10 @@ def fetch_filtered_predictions(
                 user=user,
             )
             predictions.append(prediction)
+        
+        # avoids doing next fetch if we've reached the end
+        if len(data) < chunk_size :
+            break
 
     return predictions
 

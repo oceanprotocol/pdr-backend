@@ -17,6 +17,7 @@ SAMPLE_PREDICTION = Subscription(
     source="binance",
     timestamp=1701129777,
     tx_id="0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677",
+    last_price_value=float("2.4979184013322233") * 1.201,
     user="0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
 )
 
@@ -92,4 +93,4 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     assert isinstance(subscriptions[0], Subscription)
     assert subscriptions[0].user == "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
     assert subscriptions[0].pair == "ADA/USDT"
-    assert mock_query_subgraph.call_count == 2
+    assert mock_query_subgraph.call_count == 1

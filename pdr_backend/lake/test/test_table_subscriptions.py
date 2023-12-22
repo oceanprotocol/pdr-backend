@@ -184,4 +184,5 @@ def test_load_and_verify_schema(
 
     assert len(gql_dfs) == 1
     assert len(gql_dfs[pdr_subscriptions_record]) == 7
+    assert round(gql_dfs[pdr_subscriptions_record]["last_price_value"].sum(), 2) == 21.0
     assert gql_dfs[pdr_subscriptions_record].schema == subscriptions_schema
