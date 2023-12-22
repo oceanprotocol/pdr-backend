@@ -1,7 +1,7 @@
 import pytest
 
-from pdr_backend.contract.prediction import mock_daily_predictions
-from pdr_backend.contract.subscription import mock_subscriptions
+from pdr_backend.subgraph.prediction import mock_daily_predictions
+from pdr_backend.subgraph.subscription import mock_subscriptions
 
 
 @pytest.fixture()

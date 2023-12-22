@@ -52,7 +52,7 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
         source=source,
         timestamp=timestamp,
         tx_id=tx_id,
-        last_price_value=float(last_price_value)*1.201,
+        last_price_value=float(last_price_value) * 1.201,
         user=user,
     )
 

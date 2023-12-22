@@ -3,7 +3,7 @@ from typing import List
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.subscription import Subscription
+from pdr_backend.subgraph.subscription import Subscription
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
@@ -98,16 +98,19 @@ def fetch_filtered_subscriptions(
             break
 
         for subscription_sg_dict in data:
-            info725 = subscription_sg_dict["predictContract"]["token"]["nft"][
-                "nftData"
-            ]
+            info725 = subscription_sg_dict["predictContract"]["token"]["nft"]["nftData"]
             info = info725_to_info(info725)
             pair = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
             timestamp = subscription_sg_dict["timestamp"]
             tx_id = subscription_sg_dict["txId"]
-            last_price_value = float(subscription_sg_dict["predictContract"]["token"]["lastPriceValue"]) * 1.201
+            last_price_value = (
+                float(
+                    subscription_sg_dict["predictContract"]["token"]["lastPriceValue"]
+                )
+                * 1.201
+            )
             user = subscription_sg_dict["user"]["id"]
 
             subscription = Subscription(
@@ -123,7 +126,7 @@ def fetch_filtered_subscriptions(
             subscriptions.append(subscription)
 
         # avoids doing next fetch if we've reached the end
-        if len(data) < chunk_size :
+        if len(data) < chunk_size:
             break
 
     return subscriptions
