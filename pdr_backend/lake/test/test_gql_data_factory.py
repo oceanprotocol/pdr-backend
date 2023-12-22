@@ -127,9 +127,11 @@ def _test_update_gql(
         st_timestr,
         fin_timestr,
     )
-    
+
     # Update predictions record only
-    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
+    gql_data_factory.record_config = _filter_gql_config(
+        gql_data_factory.record_config, pdr_predictions_record
+    )
 
     # setup: filename
     # everything will be inside the gql folder
@@ -216,7 +218,9 @@ def test_load_and_verify_schema(
         st_timestr,
         fin_timestr,
     )
-    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
+    gql_data_factory.record_config = _filter_gql_config(
+        gql_data_factory.record_config, pdr_predictions_record
+    )
 
     fin_ut = timestr_to_ut(fin_timestr)
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
@@ -256,9 +260,12 @@ def test_get_gql_dfs_calls(
         st_timestr,
         fin_timestr,
     )
-    
+
     # Update predictions record only
-    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
+    default_config = gql_data_factory.record_config
+    gql_data_factory.record_config = _filter_gql_config(
+        gql_data_factory.record_config, pdr_predictions_record
+    )
 
     # calculate ms locally so we can filter raw Predictions
     st_ut = timestr_to_ut(st_timestr)
@@ -286,6 +293,77 @@ def test_get_gql_dfs_calls(
     mock_update.assert_called_once()
     mock_load_parquet.assert_called_once()
 
+    # reset record config
+    gql_data_factory.record_config = default_config
+
 
 # ====================================================================
-# test loading flow when there are predictions saved but no subscriptions saved
+# test loading flow when there are pdr files missing
+
+
+@enforce_types
+@patch("pdr_backend.lake.table_pdr_predictions.fetch_filtered_predictions")
+@patch("pdr_backend.lake.table_pdr_subscriptions.fetch_filtered_subscriptions")
+@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
+def test_load_missing_parquet(
+    mock_get_all_contract_ids_by_owner,
+    mock_fetch_filtered_subscriptions,
+    mock_fetch_filtered_predictions,
+    tmpdir,
+    sample_daily_predictions,
+    monkeypatch,
+):
+    """Test core DataFactory functions are being called"""
+    del_network_override(monkeypatch)
+
+    mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
+    mock_fetch_filtered_subscriptions.return_value = []
+    mock_fetch_filtered_predictions.return_value = []
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-04_0:00"
+
+    _, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h",
+        st_timestr,
+        fin_timestr,
+    )
+
+    # Work 1: Fetch empty dataset
+    # (1) perform empty fetch
+    # (2) do not save to parquet
+    # (3) handle missing parquet file
+    # (4) assert we get empty dataframes with the expected schema
+    dfs = gql_data_factory.get_gql_dfs()
+
+    predictions_table = "pdr_predictions"
+    subscriptions_table = "pdr_subscriptions"
+
+    assert len(dfs[predictions_table]) == 0
+    assert len(dfs[subscriptions_table]) == 0
+
+    assert (
+        dfs[predictions_table].schema
+        == gql_data_factory.record_config[predictions_table]["schema"]
+    )
+    assert (
+        dfs[subscriptions_table].schema
+        == gql_data_factory.record_config[subscriptions_table]["schema"]
+    )
+
+    # Work 2: Fetch 1 dataset
+    # (1) perform 1 successful datafactory loops (predictions)
+    # (2) assert subscriptions parquet doesn't exist / has 0 records
+    _test_update_gql(
+        mock_fetch_filtered_predictions,
+        tmpdir,
+        sample_daily_predictions,
+        st_timestr,
+        fin_timestr,
+        n_preds=2,
+    )
+
+    dfs = gql_data_factory.get_gql_dfs()
+    assert len(dfs[predictions_table]) == 2
+    assert len(dfs[subscriptions_table]) == 0

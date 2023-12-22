@@ -39,18 +39,14 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
     gql_data_factory = GQLDataFactory(ppss)
-    
+
     return ppss, gql_data_factory
 
 
 @enforce_types
 def _filter_gql_config(record_config: Dict, record_filter: str) -> Dict:
     # Return a filtered version of record_config for testing
-    return {
-        k: v
-        for k, v in record_config.items()
-        if k == record_filter
-    }
+    return {k: v for k, v in record_config.items() if k == record_filter}
 
 
 @enforce_types

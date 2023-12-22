@@ -8,6 +8,7 @@ from pdr_backend.contract.subscription import mock_subscriptions
 def sample_daily_predictions():
     return mock_daily_predictions()
 
+
 @pytest.fixture()
 def sample_subscriptions():
     return mock_subscriptions()

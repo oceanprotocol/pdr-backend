@@ -58,7 +58,7 @@ class GQLDataFactory:
                 "config": {
                     "contract_list": contract_list,
                 },
-            },  
+            },
         }
 
     def get_gql_dfs(self) -> Dict[str, pl.DataFrame]:
@@ -175,7 +175,13 @@ class GQLDataFactory:
             print(f"      filename={filename}")
 
             # load all data from file
-            df = pl.read_parquet(filename)
+            # check if file exists
+            # if file doesn't exist, return an empty dataframe with the expected schema
+            if os.path.exists(filename):
+                df = pl.read_parquet(filename)
+            else:
+                df = pl.DataFrame(schema=record["schema"])
+
             df = df.filter(
                 (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
             )

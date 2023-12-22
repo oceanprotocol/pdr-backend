@@ -19,7 +19,6 @@ subscriptions_schema = {
     "pair": Utf8,
     "timeframe": Utf8,
     "source": Utf8,
-    "timeframe": Utf8,
     "tx_id": Utf8,
     "event_index": Int64,
     "timestamp": Int64,
@@ -41,10 +40,7 @@ def get_pdr_subscriptions_df(
 
     # fetch subscriptions
     subscriptions = fetch_filtered_subscriptions(
-        ms_to_seconds(st_ut),
-        ms_to_seconds(fin_ut),
-        config["contract_list"],
-        network
+        ms_to_seconds(st_ut), ms_to_seconds(fin_ut), config["contract_list"], network
     )
 
     if len(subscriptions) == 0:

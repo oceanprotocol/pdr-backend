@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 
 from enforce_typing import enforce_types
 
@@ -56,8 +56,10 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
 @enforce_types
 def mock_subscriptions() -> List[Subscription]:
     return [
-        mock_subscription(subscription_tuple) for subscription_tuple in _SUBSCRIPTION_TUPS
+        mock_subscription(subscription_tuple)
+        for subscription_tuple in _SUBSCRIPTION_TUPS
     ]
+
 
 _SUBSCRIPTION_TUPS = [
     (

@@ -1,6 +1,5 @@
 import json
-from enum import Enum
-from typing import List, TypedDict
+from typing import List
 
 from enforce_typing import enforce_types
 
@@ -33,7 +32,7 @@ def fetch_filtered_subscriptions(
         network: A string indicating the blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A dataframe of predictSubscriptions objects that match the filter criteria within the given time range.
+        A dataframe of predictSubscriptions objects that match the filter criteria
 
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
@@ -103,9 +102,7 @@ def fetch_filtered_subscriptions(
             break
 
         for subscription_sg_dict in data:
-            info725 = subscription_sg_dict["predictContract"]["token"]["nft"][
-                "nftData"
-            ]
+            info725 = subscription_sg_dict["predictContract"]["token"]["nft"]["nftData"]
             info = info725_to_info(info725)
             pair = info["pair"]
             timeframe = info["timeframe"]

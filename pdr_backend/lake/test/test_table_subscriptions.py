@@ -82,9 +82,12 @@ def _test_update_gql(
         st_timestr,
         fin_timestr,
     )
-    
+
     # Update subscriptions record only
-    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_subscriptions_record)
+    default_config = gql_data_factory.record_config
+    gql_data_factory.record_config = _filter_gql_config(
+        gql_data_factory.record_config, pdr_subscriptions_record
+    )
 
     # setup: filename
     # everything will be inside the gql folder
@@ -137,6 +140,9 @@ def _test_update_gql(
     for target_sub in target_subs_ts:
         assert target_sub * 1000 in subs
 
+    # reset record config
+    gql_data_factory.record_config = default_config
+
 
 @patch("pdr_backend.lake.table_pdr_subscriptions.fetch_filtered_subscriptions")
 @patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
@@ -167,9 +173,11 @@ def test_load_and_verify_schema(
         st_timestr,
         fin_timestr,
     )
-    
+
     # Update subscriptions record only
-    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_subscriptions_record)
+    gql_data_factory.record_config = _filter_gql_config(
+        gql_data_factory.record_config, pdr_subscriptions_record
+    )
 
     fin_ut = timestr_to_ut(fin_timestr)
     gql_dfs = gql_data_factory._load_parquet(fin_ut)

@@ -17,7 +17,6 @@ SAMPLE_PREDICTION = Subscription(
     source="binance",
     timestamp=1701129777,
     tx_id="0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677",
-    event_index=14,
     user="0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
 )
 
@@ -33,48 +32,47 @@ MOCK_SUBSCRIPTIONS_RESPONSE_FIRST_CALL = {
                         "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
                         "name": "ADA/USDT",
                         "nft": {
-                        "nftData": [
-                            {
-                            "key": "0x238ad53218834f943da60c8bafd36c36692dcb35e6d76bdd93202f5c04c0baff",
-                            "value": "0x55534454"
-                            },
-                            {
-                            "key": "0x2cef5778d97683b4f64607f72e862fc0c92376e44cc61195ef72a634c0b1793e",
-                            "value": "0x4144412f55534454"
-                            },
-                            {
-                            "key": "0x49435d2ff85f9f3594e40e887943d562765d026d50b7383e76891f8190bff4c9",
-                            "value": "0x356d"
-                            },
-                            {
-                            "key": "0xf1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f",
-                            "value": "0x414441"
-                            },
-                            {
-                            "key": "0xf7e3126f87228afb82c9b18537eed25aaeb8171a78814781c26ed2cfeff27e69",
-                            "value": "0x62696e616e6365"
-                            }
-                        ]
+                            "nftData": [
+                                {
+                                    "key": "0x238ad53218834f943da60c8bafd36c36692dcb35e6d76bdd93202f5c04c0baff",
+                                    "value": "0x55534454",
+                                },
+                                {
+                                    "key": "0x2cef5778d97683b4f64607f72e862fc0c92376e44cc61195ef72a634c0b1793e",
+                                    "value": "0x4144412f55534454",
+                                },
+                                {
+                                    "key": "0x49435d2ff85f9f3594e40e887943d562765d026d50b7383e76891f8190bff4c9",
+                                    "value": "0x356d",
+                                },
+                                {
+                                    "key": "0xf1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f",
+                                    "value": "0x414441",
+                                },
+                                {
+                                    "key": "0xf7e3126f87228afb82c9b18537eed25aaeb8171a78814781c26ed2cfeff27e69",
+                                    "value": "0x62696e616e6365",
+                                },
+                            ]
                         },
-                        "lastPriceValue": "2.4979184013322233"
+                        "lastPriceValue": "2.4979184013322233",
                     },
                     "secondsPerSubscription": "86400",
-                    "secondsPerEpoch": "300"
+                    "secondsPerEpoch": "300",
                 },
-                "user": {
-                    "id": "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
-                },
+                "user": {"id": "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"},
                 "expireTime": "1701216000",
                 "eventIndex": 14,
                 "block": 1342747,
                 "timestamp": 1701129777,
-                "txId": "0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677"
+                "txId": "0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677",
             }
         ]
     }
 }
 
 MOCK_SUBSCRIPTIONS_RESPONSE_SECOND_CALL: Dict[str, dict] = {}
+
 
 @enforce_types
 @patch("pdr_backend.subgraph.subgraph_subscriptions.query_subgraph")
@@ -86,7 +84,7 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     subscriptions = fetch_filtered_subscriptions(
         start_ts=1701129700,
         end_ts=1701129800,
-        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
 
@@ -95,4 +93,3 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     assert subscriptions[0].user == "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
     assert subscriptions[0].pair == "ADA/USDT"
     assert mock_query_subgraph.call_count == 2
-
