@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -39,7 +39,7 @@ def get_pdr_subscriptions_df(
     """
     network = get_sapphire_postfix(network)
 
-    # fetch predictions
+    # fetch subscriptions
     subscriptions = fetch_filtered_subscriptions(
         ms_to_seconds(st_ut),
         ms_to_seconds(fin_ut),
@@ -48,7 +48,7 @@ def get_pdr_subscriptions_df(
     )
 
     if len(subscriptions) == 0:
-        print("      No predictions to fetch. Exit.")
+        print("      No subscriptions fetched. Exit.")
         return pl.DataFrame()
 
     # convert subscriptions to df and transform timestamp into ms

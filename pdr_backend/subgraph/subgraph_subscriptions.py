@@ -14,12 +14,12 @@ from pdr_backend.util.networkutil import get_subgraph_url
 def fetch_filtered_subscriptions(
     start_ts: int,
     end_ts: int,
-    filters: List[str],
+    contracts: List[str],
     network: str,
 ) -> List[Subscription]:
     """
     Fetches subscriptions from predictoor subgraph within a specified time range
-    and according to given filters.
+    and according to given contracts.
 
     This function supports querying subscriptions based on contract
     addresses. It iteratively queries the subgraph in chunks to retrieve all relevant
@@ -28,7 +28,7 @@ def fetch_filtered_subscriptions(
     Args:
         start_ts: The starting Unix timestamp for the query range.
         end_ts: The ending Unix timestamp for the query range.
-        filters: A list of strings representing the filter
+        contracts: A list of strings representing the filter
             values (contract addresses).
         network: A string indicating the blockchain network to query ('mainnet' or 'testnet').
 
@@ -46,12 +46,12 @@ def fetch_filtered_subscriptions(
     offset = 0
     subscriptions: List[Subscription] = []
 
-    # Convert filters to lowercase
-    filters = [f.lower() for f in filters]
+    # Convert contracts to lowercase
+    contracts = [f.lower() for f in contracts]
 
     # pylint: disable=line-too-long
-    if len(filters) > 0:
-        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(filters)}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}}}"
+    if len(contracts) > 0:
+        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}}}"
     else:
         where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
 
@@ -62,7 +62,7 @@ def fetch_filtered_subscriptions(
                     id
                     txId
                     timestamp
-                    eventIndex
+                    expireTime
                     user {{
                         id
                     }}
@@ -78,6 +78,10 @@ def fetch_filtered_subscriptions(
                                 }}
                             }}
                         }}
+                        token {{
+                            lastPriceValue
+                        }}
+                        secondsPerSubscription
                     }}
                 }}
             }}"""
@@ -108,7 +112,6 @@ def fetch_filtered_subscriptions(
             source = info["source"]
             timestamp = subscription_sg_dict["timestamp"]
             tx_id = subscription_sg_dict["txId"]
-            event_index = subscription_sg_dict["eventIndex"]
             user = subscription_sg_dict["user"]["id"]
 
             subscription = Subscription(
@@ -118,7 +121,6 @@ def fetch_filtered_subscriptions(
                 source=source,
                 timestamp=timestamp,
                 tx_id=tx_id,
-                event_index=event_index,
                 user=user,
             )
             subscriptions.append(subscription)

@@ -213,7 +213,7 @@ class GQLDataFactory:
         if len(df) > 1:
             assert (
                 df.head(1)["timestamp"].to_list()[0]
-                < df.tail(1)["timestamp"].to_list()[0]
+                <= df.tail(1)["timestamp"].to_list()[0]
             )
 
         if os.path.exists(filename):  # "append" existing file

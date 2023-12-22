@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
-from pdr_backend.lake.test.resources import _gql_data_factory
+from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
@@ -127,6 +127,9 @@ def _test_update_gql(
         st_timestr,
         fin_timestr,
     )
+    
+    # Update predictions record only
+    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
 
     # setup: filename
     # everything will be inside the gql folder
@@ -213,6 +216,7 @@ def test_load_and_verify_schema(
         st_timestr,
         fin_timestr,
     )
+    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
 
     fin_ut = timestr_to_ut(fin_timestr)
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
@@ -252,6 +256,9 @@ def test_get_gql_dfs_calls(
         st_timestr,
         fin_timestr,
     )
+    
+    # Update predictions record only
+    gql_data_factory.record_config = _filter_gql_config(gql_data_factory.record_config, pdr_predictions_record)
 
     # calculate ms locally so we can filter raw Predictions
     st_ut = timestr_to_ut(st_timestr)
@@ -278,3 +285,7 @@ def test_get_gql_dfs_calls(
 
     mock_update.assert_called_once()
     mock_load_parquet.assert_called_once()
+
+
+# ====================================================================
+# test loading flow when there are predictions saved but no subscriptions saved

@@ -14,7 +14,6 @@ class Subscription:
         source: str,
         timestamp: int,  # timestamp == subscription purchased timestamp
         tx_id: str,
-        event_index: int,
         user: str,
     ) -> None:
         self.ID = ID
@@ -23,7 +22,6 @@ class Subscription:
         self.source = source
         self.timestamp = timestamp
         self.tx_id = tx_id
-        self.event_index = event_index
         self.user = user
 
 
@@ -51,105 +49,85 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
         source=source,
         timestamp=timestamp,
         tx_id=tx_id,
-        event_index=event_index,
         user=user,
     )
 
 
 @enforce_types
-def mock_first_subscriptions() -> List[Subscription]:
+def mock_subscriptions() -> List[Subscription]:
     return [
-        mock_subscription(subscription_tuple) for subscription_tuple in _FIRST_SUBSCRIPTION_TUPS
+        mock_subscription(subscription_tuple) for subscription_tuple in _SUBSCRIPTION_TUPS
     ]
 
-
-@enforce_types
-def mock_second_subscriptions() -> List[Subscription]:
-    return [
-        mock_subscription(subscription_tuple)
-        for subscription_tuple in _SECOND_SUBSCRIPTION_TUPS
-    ]
-
-_FIRST_SUBSCRIPTION_TUPS = [
+_SUBSCRIPTION_TUPS = [
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809592-98",
         "ETH/USDT",
         "5m",
         "binance",
-        1703030563,
+        1698850800,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809592",
         98,
         "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
     ),
-        (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3152-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809593-99",
+    (
         "BTC/USDT",
         "5m",
         "kraken",
-        1703030564,
+        1698937200,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809593",
         99,
         "0xabcdef0123456789abcdef0123456789abcdef01",
     ),
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3153-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809594-100",
         "LTC/USDT",
         "1h",
         "kraken",
-        1703030565,
+        1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809594",
         100,
         "0x123456789abcdef0123456789abcdef01234567",
     ),
-]
-
-_SECOND_SUBSCRIPTION_TUPS = [
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3154-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809595-101",
         "XRP/USDT",
         "5m",
         "binance",
-        1703030566,
+        1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809595",
         101,
         "0xabcdef0123456789abcdef0123456789abcdef02",
     ),
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3155-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809596-102",
         "DOGE/USDT",
         "5m",
         "kraken",
-        1703030567,
+        1699110000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809596",
         102,
         "0xabcdef0123456789abcdef0123456789abcdef03",
     ),
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3156-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809597-103",
         "ADA/USDT",
         "1h",
         "kraken",
-        1703030568,
+        1699200000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809597",
         103,
         "0xabcdef0123456789abcdef0123456789abcdef04",
     ),
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3157-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809598-104",
         "DOT/USDT",
         "5m",
         "binance",
-        1703030569,
+        1699200000,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809598",
         104,
         "0xabcdef0123456789abcdef0123456789abcdef05",
     ),
     (
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3158-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809599-105",
         "LINK/USDT",
         "1h",
         "kraken",
-        1703030570,
+        1699286400,
         "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809599",
         105,
         "0xabcdef0123456789abcdef0123456789abcdef06",
