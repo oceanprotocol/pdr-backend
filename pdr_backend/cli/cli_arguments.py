@@ -259,3 +259,5 @@ DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
+
+CreateWalletArgParser = _ArgParser_PPSS_NETWORK

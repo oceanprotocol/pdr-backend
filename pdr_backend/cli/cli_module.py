@@ -20,6 +20,7 @@ from pdr_backend.cli.cli_arguments import (
     TopupArgParser,
     TraderArgParser,
     TruevalArgParser,
+    CreateWalletArgParser,
     do_help_long,
     print_args,
 )
@@ -36,6 +37,7 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.topup import topup_main
+from pdr_backend.util.web3_util import create_wallet
 
 
 @enforce_types
@@ -222,3 +224,13 @@ def do_topup():
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     topup_main(ppss)
+
+
+@enforce_types
+def do_create_wallet():
+    parser = CreateWalletArgParser("Create new web3 wallet", "create_wallet")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    create_wallet(ppss.web3_pp.rpc_url)
