@@ -49,6 +49,8 @@ def fund_wallets_with_amount(amount: float, to_addressess: List[str], web3_pp: W
         token_name = "OCEAN"
 
     private_key = getenv("PRIVATE_KEY")
+    assert private_key is not None, "Need PRIVATE_KEY env var"
+    
     account = Account.from_key(  # pylint: disable=no-value-for-parameter
         private_key
     )

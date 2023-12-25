@@ -128,7 +128,7 @@ class LOOKBACK_Mixin:
 @enforce_types
 class NUM_WALLETS_Mixin:
     def add_argument_NUM_WALLETS(self):
-        self.add_argument("--NUM_WALLETS", type=int, help="1|2|..")
+        self.add_argument("NUM_WALLETS", type=int, help="1|2|..")
 
 
 @enforce_types
@@ -271,9 +271,9 @@ class _ArgParser_NUM_WALLETS_NETWORK_PPSS(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
+        self.add_argument_NUM_WALLETS()
         self.add_argument_PPSS()
         self.add_argument_NETWORK()
-        self.add_argument_NUM_WALLETS()
 
 @enforce_types
 class _ArgParser_FUND_WALLETS_NETWORK_PPSS(
