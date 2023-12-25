@@ -125,6 +125,43 @@ class LOOKBACK_Mixin:
         )
 
 
+@enforce_types
+class NUM_WALLETS_Mixin:
+    def add_argument_NUM_WALLETS(self):
+        self.add_argument("--NUM_WALLETS", type=int, help="1|2|..")
+
+
+@enforce_types
+class TO_ADDRESSES_Mixin:
+    def add_argument_TO_ADDRESSES(self):
+        self.add_argument(
+            "TO_ADDRESSES",
+            type=str,
+            help="Comma-separated list of addresses to send to",
+        )
+
+
+@enforce_types
+class TOKEN_AMOUNT_Mixin:
+    def add_argument_TOKEN_AMOUNT(self):
+        self.add_argument(
+            "TOKEN_AMOUNT",
+            type=float,
+            help="Amount of token to send to each address",
+        )
+
+
+@enforce_types
+class NATIVE_TOKEN_Mixin:
+    def add_argument_NATIVE_TOKEN(self):
+        self.add_argument(
+            "--NATIVE_TOKEN",
+            action="store_true",
+            default=False,
+            help="Is native token or OCEAN?"
+        )
+
+
 # ========================================================================
 # argparser base classes
 
@@ -223,6 +260,41 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
         self.add_argument_FEEDS()
 
 
+@enforce_types
+class _ArgParser_NUM_WALLETS_NETWORK_PPSS(
+    ArgParser,
+    NUM_WALLETS_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+        self.add_argument_NUM_WALLETS()
+
+@enforce_types
+class _ArgParser_FUND_WALLETS_NETWORK_PPSS(
+    ArgParser,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    NATIVE_TOKEN_Mixin,
+    TOKEN_AMOUNT_Mixin,
+    TO_ADDRESSES_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_TOKEN_AMOUNT()
+        self.add_argument_TO_ADDRESSES()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+        self.add_argument_NATIVE_TOKEN()
+
+
 # ========================================================================
 # actual arg-parser implementations are just aliases to argparser base classes
 # In order of help text.
@@ -260,4 +332,6 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
-CreateWalletArgParser = _ArgParser_PPSS_NETWORK
+CreateWalletArgParser = _ArgParser_NUM_WALLETS_NETWORK_PPSS
+
+FundWalletsArgParser = _ArgParser_FUND_WALLETS_NETWORK_PPSS

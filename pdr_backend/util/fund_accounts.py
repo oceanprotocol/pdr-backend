@@ -10,9 +10,9 @@ from pdr_backend.util.contract import get_address
 
 
 @enforce_types
-def fund_accounts_with_OCEAN(web3_pp: Web3PP):
+def fund_sys_accounts_with_OCEAN(web3_pp: Web3PP):
     """
-    Fund accounts, with opinions: use OCEAN, and choices of amounts.
+    Fund predictoor system accounts, with opinions: use OCEAN, and choices of amounts.
     Meant to be used from CLI.
     """
     print(f"Fund accounts with OCEAN, network = {web3_pp.network}")
@@ -29,12 +29,12 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
 
     OCEAN_addr = get_address(web3_pp, "Ocean")
     OCEAN = Token(web3_pp, OCEAN_addr)
-    fund_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
+    fund_sys_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
     print("Done funding.")
 
 
 @enforce_types
-def fund_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
+def fund_sys_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
     """Worker function to actually fund accounts"""
     for private_key_name, amount in accounts_to_fund:
         if private_key_name in os.environ:
