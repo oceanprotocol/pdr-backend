@@ -71,6 +71,15 @@ dfbuyer_ss:
 payout_ss:
   batch_size: 250
 
+lake_ss:
+  parquet_dir: parquet_data
+  feeds:
+    - binance BTC/USDT
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT
+#    - kraken BTC/USDT
+  st_timestr: 2023-06-01_00:00 # starting date for data
+  fin_timestr: now # ending date for data
+
 
 # ------------------------------------------------------------------
 # Network settings

@@ -14,6 +14,7 @@ from pdr_backend.cli.cli_arguments import (
     GetPredictionsInfoArgParser,
     GetPredictoorsInfoArgParser,
     GetTractionInfoArgParser,
+    LakeArgParser,
     PredictoorArgParser,
     PublisherArgParser,
     SimArgParser,
@@ -104,6 +105,17 @@ def do_trader():
         raise ValueError(f"Unknown trader approach {approach}")
 
     agent.run()
+
+
+@enforce_types
+def do_lake():
+    parser = LakeArgParser("Run the lake tool", "lake")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+
+    print("Hello")
 
 
 # do_help() is implemented in cli_arguments and imported, so nothing needed here

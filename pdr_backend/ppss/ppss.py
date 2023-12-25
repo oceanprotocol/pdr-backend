@@ -9,6 +9,7 @@ from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.publisher_ss import PublisherSS
@@ -43,6 +44,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         # fill attributes from d
         self.data_pp = DataPP(d["data_pp"])
         self.data_ss = DataSS(d["data_ss"])
+        self.lake_ss = LakeSS(d["lake_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
@@ -58,6 +60,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s = ""
         s += f"data_pp={self.data_pp}\n"
         s += f"data_ss={self.data_ss}\n"
+        s += f"lake_ss={self.lake_ss}\n"
         s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
         s += f"payout_ss={self.payout_ss}\n"
         s += f"aimodel_ss={self.aimodel_ss}\n"
