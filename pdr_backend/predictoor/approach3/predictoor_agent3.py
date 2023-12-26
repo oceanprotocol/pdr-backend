@@ -32,7 +32,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
         data_pp = DataPP(d)
         lake_ss = self.ppss.lake_ss.copy_with_yval(data_pp)
-        aimodel_ss = self.ppss.aimodel_ss.copy_with_yval(data_pp)
+        aimodel_ss = self.ppss.predictoor_ss.aimodel_ss.copy_with_yval(data_pp)
 
         # From lake_ss, build X/y
         pq_data_factory = OhlcvDataFactory(data_pp, lake_ss)
@@ -47,7 +47,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        aimodel_factory = AimodelFactory(self.ppss.aimodel_ss)
+        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data

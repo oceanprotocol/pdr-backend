@@ -32,7 +32,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert ppss.data_pp.timeframe in ["5m", "1h"]
     assert isinstance(ppss.lake_ss.st_timestr, str)
     assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
-    assert ppss.aimodel_ss.approach == "LIN"
+    assert ppss.predictoor_ss.aimodel_ss.approach == "LIN"
     assert ppss.payout_ss.batch_size >= 0
     assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
     assert isinstance(ppss.sim_ss.do_plot, bool)
@@ -46,7 +46,6 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert "data_pp" in s
     assert "lake_ss" in s
     assert "dfbuyer_ss" in s
-    assert "aimodel_ss" in s
     assert "payout_ss" in s
     assert "predictoor_ss" in s
     assert "sim_ss" in s

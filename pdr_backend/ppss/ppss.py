@@ -44,7 +44,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.data_pp = DataPP(d["data_pp"])
         self.lake_ss = LakeSS(d["lake_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
-        self.aimodel_ss = AimodelSS(d["aimodel_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.payout_ss = PayoutSS(d["payout_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
@@ -57,7 +56,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
     def __str__(self):
         s = ""
         s += f"data_pp={self.data_pp}\n"
-        s += f"aimodel_ss={self.aimodel_ss}\n"
         s += f"lake_ss={self.lake_ss}\n"
         s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
         s += f"payout_ss={self.payout_ss}\n"
@@ -111,7 +109,7 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "lake_ss")
-    assert hasattr(ppss, "aimodel_ss")
+    assert hasattr(ppss, "predictoor_ss")
 
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
@@ -124,7 +122,7 @@ def mock_ppss(
             "fin_timestr": fin_timestr,
         }
     )
-    ppss.aimodel_ss = AimodelSS(
+    ppss.predictoor_ss.aimodel_ss = AimodelSS(
         {
             "input_feeds": predict_feeds,
             "approach": "LIN",

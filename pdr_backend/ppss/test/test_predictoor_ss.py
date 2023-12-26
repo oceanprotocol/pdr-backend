@@ -9,7 +9,13 @@ def test_predictoor_ss():
         "bot_only": {
             "s_until_epoch_end": 60,
             "stake_amount": 1,
-        }
+        },
+        "aimodel_ss": {
+            "input_feeds": ["binance BTC/USDT c"],
+            "approach": "LIN",
+            "max_n_train": 7,
+            "autoregressive_n": 3,
+        },
     }
     ss = PredictoorSS(d)
 

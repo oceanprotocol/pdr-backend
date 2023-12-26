@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 
 
 class PredictoorSS(StrMixin):
@@ -9,6 +10,7 @@ class PredictoorSS(StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["predictor_ss"]
+        self.aimodel_ss = AimodelSS(d["aimodel_ss"])
 
     # --------------------------------
     # yaml properties

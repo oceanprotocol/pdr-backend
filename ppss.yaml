@@ -10,20 +10,20 @@ data_pp:
 data_ss:
   parquet_dir: parquet_data
 
-aimodel_ss:
-  approach: LIN
-  input_feeds:
-    - binance BTC/USDT
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT
-#    - kraken BTC/USDT
-  max_n_train: 5000 # no. epochs to train model on
-  autoregressive_n : 10 # no. epochs that model looks back, to predict next
-
 predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN
   approach3:
+  aimodel_ss:
+    input_feeds:
+      - binance BTC/USDT
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT
+#    - kraken BTC/USDT
+    max_n_train: 5000 # no. epochs to train model on
+    autoregressive_n : 10 # no. epochs that model looks back, to predict next
+    approach: LIN
+
 
 trader_pp:
   sim_only:
