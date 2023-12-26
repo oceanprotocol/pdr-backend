@@ -34,7 +34,7 @@ class SimEngine:
         assert (
             len(ppss.data_pp.predict_feeds) == 1
         ), "sim engine can only handle 1 prediction feed"
-        assert ppss.data_pp.predict_feeds[0] in ppss.data_ss.input_feeds
+        assert ppss.data_pp.predict_feeds[0] in ppss.aimodel_ss.input_feeds
 
         # pp & ss values
         self.ppss = ppss
@@ -83,7 +83,7 @@ class SimEngine:
         log("Start run")
 
         # main loop!
-        pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
         for test_i in range(self.ppss.data_pp.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
@@ -99,7 +99,7 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = AimodelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        model_data_factory = AimodelDataFactory(self.ppss.data_pp, self.ppss.lake_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1

@@ -10,25 +10,35 @@ from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
-def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+def _mergedohlcv_df_ETHUSDT():
+    _, _, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed("binanceus ETH/USDT h")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, aimodel_data_factory
 
 
 @enforce_types
-def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
-    parquet_dir = str(tmpdir)
+def _data_pp_aimodel_ss_1feed(feed):
     pp = _data_pp([feed])
-    ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    ss = _aimodel_ss([feed])
     ohlcv_data_factory = OhlcvDataFactory(pp, ss)
     aimodel_data_factory = AimodelDataFactory(pp, ss)
+    return pp, ss, ohlcv_data_factory, aimodel_data_factory
+
+
+@enforce_types
+def _data_pp_lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
+    parquet_dir = str(tmpdir)
+    pp = _data_pp([feed])
+    ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
+    aimodel_data_factory = AimodelDataFactory(pp, _aimodel_ss([feed]))
     return pp, ss, ohlcv_data_factory, aimodel_data_factory
 
 
@@ -53,15 +63,25 @@ def _data_pp(predict_feeds) -> DataPP:
 
 
 @enforce_types
-def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
-    return DataSS(
+def _aimodel_ss(input_feeds):
+    return AimodelSS(
         {
             "input_feeds": input_feeds,
+            "approach": "LIN",
+            "max_n_train": 7,
+            "autoregressive_n": 3,
+        }
+    )
+
+
+@enforce_types
+def _lake_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
+    return LakeSS(
+        {
+            "feeds": input_feeds,
             "parquet_dir": parquet_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",
-            "max_n_train": 7,
-            "autoregressive_n": 3,
         }
     )
 

@@ -7,7 +7,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
@@ -38,7 +38,7 @@ class AimodelDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, pp: DataPP, ss: DataSS):
+    def __init__(self, pp: DataPP, ss: AimodelSS):
         self.pp = pp
         self.ss = ss
 

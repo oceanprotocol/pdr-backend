@@ -18,7 +18,7 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
 )
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 
@@ -52,7 +52,7 @@ class OhlcvDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, pp: DataPP, ss: DataSS):
+    def __init__(self, pp: DataPP, ss: LakeSS):
         self.pp = pp
         self.ss = ss
 

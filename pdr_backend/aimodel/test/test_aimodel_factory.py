@@ -10,7 +10,14 @@ from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 @enforce_types
 def test_aimodel_factory_basic():
     for approach in APPROACHES:
-        aimodel_ss = AimodelSS({"approach": approach})
+        aimodel_ss = AimodelSS(
+            {
+                "approach": approach,
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+                "input_feeds": ["binance BTC/USDT c"],
+            }
+        )
         factory = AimodelFactory(aimodel_ss)
         assert isinstance(factory.aimodel_ss, AimodelSS)
 

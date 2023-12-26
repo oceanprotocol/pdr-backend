@@ -1,3 +1,4 @@
+# TODO: split for Aimodel and Lake
 import copy
 import os
 

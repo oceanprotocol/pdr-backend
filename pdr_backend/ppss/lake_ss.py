@@ -6,6 +6,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
@@ -101,7 +102,7 @@ class LakeSS:
 
     @enforce_types
     def __str__(self) -> str:
-        s = "DataSS:\n"
+        s = "LakeSS:\n"
         s += f"input_feeds_strs={self.input_feeds_strs}"
         s += f" -> n_inputfeeds={self.n_input_feeds}\n"
         s += f"st_timestr={self.st_timestr}"
@@ -115,6 +116,13 @@ class LakeSS:
         return s
 
     @enforce_types
-    def copy_with_yval(self):
-        """Copy self"""
-        return copy.deepcopy(self.d)
+    def copy_with_yval(self, data_pp: DataPP):
+        """Copy self, add data_pp's feeds to new data_ss' inputs as needed"""
+        d2 = copy.deepcopy(self.d)
+
+        for predict_feed in data_pp.predict_feeds:
+            if predict_feed in self.input_feeds:
+                continue
+            d2["input_feeds"].append(str(predict_feed))
+
+        return LakeSS(d2)

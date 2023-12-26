@@ -3,9 +3,10 @@ import os
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.sim.sim_engine import SimEngine
 
 
@@ -22,15 +23,22 @@ def test_sim_engine(tmpdir):
             "sim_only": {"test_n": 10},
         }
     )
-    assert hasattr(ppss, "data_ss")
-    ppss.data_ss = DataSS(
+    assert hasattr(ppss, "aimodel_ss")
+    ppss.aimodel_ss = AimodelSS(
         {
             "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
+            "max_n_train": 100,
+            "autoregressive_n": 2,
+            "approach": "LIN",
+        }
+    )
+
+    ppss.lake_ss = LakeSS(
+        {
+            "feeds": ["binanceus BTC/USDT ETH/USDT oc"],
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-06-30",
-            "max_n_train": 100,
-            "autoregressive_n": 2,
         }
     )
 

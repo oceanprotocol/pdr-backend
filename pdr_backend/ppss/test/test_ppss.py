@@ -30,7 +30,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     #  - so just do one test for each of this class's pp/ss attribute
     assert ppss.data_pp.timeframe in ["5m", "1h"]
-    assert isinstance(ppss.data_ss.st_timestr, str)
+    assert isinstance(ppss.lake_ss.st_timestr, str)
     assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
     assert ppss.aimodel_ss.approach == "LIN"
     assert ppss.payout_ss.batch_size >= 0
@@ -44,7 +44,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     # str
     s = str(ppss)
     assert "data_pp" in s
-    assert "data_ss" in s
+    assert "lake_ss" in s
     assert "dfbuyer_ss" in s
     assert "aimodel_ss" in s
     assert "payout_ss" in s
@@ -68,7 +68,7 @@ def test_mock_feed_ppss(monkeypatch):
 
     assert ppss.data_pp.timeframe == "5m"
     assert ppss.data_pp.predict_feeds_strs == ["binance BTC/USDT c"]
-    assert ppss.data_ss.input_feeds_strs == ["binance BTC/USDT c"]
+    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
@@ -78,7 +78,7 @@ def test_mock_ppss(monkeypatch):
     ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet")
     assert ppss.data_pp.timeframe == "5m"
     assert ppss.data_pp.predict_feeds_strs == ["binance BTC/USDT c"]
-    assert ppss.data_ss.input_feeds_strs == ["binance BTC/USDT c"]
+    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 

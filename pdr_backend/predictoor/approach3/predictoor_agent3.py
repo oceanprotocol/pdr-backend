@@ -26,18 +26,18 @@ class PredictoorAgent3(BasePredictoorAgent):
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
           stake -- int -- amount to stake, in units of Eth
         """
-        # Compute data_ss
+        # Compute aimodel_ss
         feed = self.feed
         d = copy.deepcopy(self.ppss.data_pp.d)
         d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
         data_pp = DataPP(d)
-        data_ss = self.ppss.data_ss.copy_with_yval(data_pp)
+        aimodel_ss = self.ppss.aimodel_ss.copy_with_yval(data_pp)
 
-        # From data_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(data_pp, data_ss)
+        # From aimodel_ss, build X/y
+        pq_data_factory = OhlcvDataFactory(data_pp, aimodel_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
-        model_data_factory = AimodelDataFactory(data_pp, data_ss)
+        model_data_factory = AimodelDataFactory(data_pp, aimodel_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data
