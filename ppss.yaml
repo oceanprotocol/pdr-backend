@@ -7,9 +7,6 @@ data_pp:
   sim_only:
     test_n : 200 # number of epochs to simulate
 
-data_ss:
-  parquet_dir: parquet_data
-
 predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
