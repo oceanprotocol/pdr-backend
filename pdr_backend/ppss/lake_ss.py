@@ -123,6 +123,6 @@ class LakeSS:
         for predict_feed in data_pp.predict_feeds:
             if predict_feed in self.input_feeds:
                 continue
-            d2["input_feeds"].append(str(predict_feed))
+            d2["feeds"].append(str(predict_feed))
 
         return LakeSS(d2)
