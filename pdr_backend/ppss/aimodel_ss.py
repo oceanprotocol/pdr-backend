@@ -1,10 +1,11 @@
-from enforce_typing import enforce_types
-from typing import List, Set, Tuple
-import numpy as np
-from pdr_backend.ppss.data_pp import DataPP
 import copy
+from typing import List, Set, Tuple
+
+import numpy as np
+from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.util.strutil import StrMixin
 
 APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]

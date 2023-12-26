@@ -1,13 +1,12 @@
 import pytest
 from enforce_typing import enforce_types
-from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
 
+from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
 
 @enforce_types
 def test_aimodel_ss1():
-    # TODO: more after splitting the data ss tests
     d = {
         "approach": "LIN",
         "max_n_train": 7,

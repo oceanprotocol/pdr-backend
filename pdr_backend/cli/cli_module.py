@@ -113,9 +113,11 @@ def do_lake():
     args = parser.parse_args()
     print_args(args)
 
+    # pylint: disable=unused-variable
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
-    print("Hello")
+    # TODO: implement lake tool
+    print("Building...")
 
 
 # do_help() is implemented in cli_arguments and imported, so nothing needed here
