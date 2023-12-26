@@ -31,10 +31,11 @@ class PredictoorAgent3(BasePredictoorAgent):
         d = copy.deepcopy(self.ppss.data_pp.d)
         d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
         data_pp = DataPP(d)
+        lake_ss = self.ppss.lake_ss.copy_with_yval(data_pp)
         aimodel_ss = self.ppss.aimodel_ss.copy_with_yval(data_pp)
 
-        # From aimodel_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(data_pp, aimodel_ss)
+        # From lake_ss, build X/y
+        pq_data_factory = OhlcvDataFactory(data_pp, lake_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
         model_data_factory = AimodelDataFactory(data_pp, aimodel_ss)

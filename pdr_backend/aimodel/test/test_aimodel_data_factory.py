@@ -79,8 +79,10 @@ def test_create_xy__0():
 
 
 @enforce_types
-def test_create_xy__1exchange_1coin_1signal():
-    _, ss, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed("binanceus ETH/USDT h")
+def test_create_xy__1exchange_1coin_1signal(tmpdir):
+    _, ss, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
@@ -279,8 +281,8 @@ def test_create_xy__2exchanges_2coins_2signals():
 
 
 @enforce_types
-def test_create_xy__check_timestamp_order():
-    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT()
+def test_create_xy__check_timestamp_order(tmpdir):
+    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     # timestamps should be descending order
     uts = mergedohlcv_df["timestamp"].to_list()
@@ -297,8 +299,8 @@ def test_create_xy__check_timestamp_order():
 
 
 @enforce_types
-def test_create_xy__input_type():
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT()
+def test_create_xy__input_type(tmpdir):
+    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(aimodel_data_factory, AimodelDataFactory)
@@ -312,9 +314,11 @@ def test_create_xy__input_type():
 
 
 @enforce_types
-def test_create_xy__handle_nan():
+def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed("binanceus ETH/USDT h")
+    _, _, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok

@@ -17,19 +17,22 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
-def _mergedohlcv_df_ETHUSDT():
-    _, _, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed("binanceus ETH/USDT h")
+def _mergedohlcv_df_ETHUSDT(tmpdir):
+    _, _, _, aimodel_data_factory = _data_pp_aimodel_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, aimodel_data_factory
 
 
 @enforce_types
-def _data_pp_aimodel_ss_1feed(feed):
+def _data_pp_aimodel_ss_1feed(tmpdir, feed):
     pp = _data_pp([feed])
-    ss = _aimodel_ss([feed])
-    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    aimodel_data_factory = AimodelDataFactory(pp, ss)
-    return pp, ss, ohlcv_data_factory, aimodel_data_factory
+    aimodel_ss = _aimodel_ss([feed])
+    lake_ss = _lake_ss(tmpdir, [feed])
+    ohlcv_data_factory = OhlcvDataFactory(pp, lake_ss)
+    aimodel_data_factory = AimodelDataFactory(pp, aimodel_ss)
+    return pp, aimodel_ss, ohlcv_data_factory, aimodel_data_factory
 
 
 @enforce_types
