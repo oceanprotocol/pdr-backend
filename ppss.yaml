@@ -6,6 +6,8 @@ data_pp:
     - binance BTC/USDT c
 
 predictoor_ss:
+  predict_feed: binance BTC/USDT c
+  timeframe: 1h
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN

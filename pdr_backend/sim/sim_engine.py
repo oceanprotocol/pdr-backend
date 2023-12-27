@@ -32,10 +32,7 @@ class SimEngine:
     def __init__(self, ppss: PPSS):
         # preconditions
         assert (
-            len(ppss.data_pp.predict_feeds) == 1
-        ), "sim engine can only handle 1 prediction feed"
-        assert (
-            ppss.data_pp.predict_feeds[0] in ppss.predictoor_ss.aimodel_ss.input_feeds
+            ppss.predictoor_ss.predict_feed in ppss.predictoor_ss.aimodel_ss.input_feeds
         )
 
         # pp & ss values
@@ -60,12 +57,12 @@ class SimEngine:
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.ppss.data_pp.base_str
+        return self.ppss.predictoor_ss.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.ppss.data_pp.quote_str
+        return self.ppss.predictoor_ss.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -85,7 +82,7 @@ class SimEngine:
         log("Start run")
 
         # main loop!
-        pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.lake_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.predictoor_ss, self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
@@ -101,9 +98,7 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
         testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = AimodelDataFactory(
-            self.ppss.data_pp, self.ppss.predictoor_ss.aimodel_ss
-        )
+        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
@@ -120,7 +115,7 @@ class SimEngine:
 
         # current time
         recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
-        ut = recent_ut - testshift * self.ppss.data_pp.timeframe_ms
+        ut = recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms
 
         # current price
         curprice = y_train[-1]

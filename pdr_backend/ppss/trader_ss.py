@@ -114,6 +114,7 @@ class TraderSS(StrMixin):
         """Returns timeframe, in minutes"""
         return Timeframe(self.timeframe).m
 
+
 # =========================================================================
 # utilities for testing
 

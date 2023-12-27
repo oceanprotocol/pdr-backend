@@ -28,7 +28,7 @@ def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
-        ppss.data_pp.timeframe_s,
+        ppss.predictoor_ss.timeframe_s,
         feed.address,
         monkeypatch,
     )

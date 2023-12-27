@@ -121,12 +121,18 @@ def mock_ppss(
             "fin_timestr": fin_timestr,
         }
     )
-    ppss.predictoor_ss.aimodel_ss = AimodelSS(
+
+    ppss.predictoor_ss = PredictoorSS(
         {
-            "input_feeds": predict_feeds,
-            "approach": "LIN",
-            "max_n_train": 7,
-            "autoregressive_n": 3,
+            "predict_feed": predict_feeds[0],
+            "timeframe": "5m",
+            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "aimodel_ss": {
+                "input_feeds": predict_feeds,
+                "approach": "LIN",
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+            },
         }
     )
     return ppss

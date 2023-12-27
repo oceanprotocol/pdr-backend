@@ -1,4 +1,3 @@
-import copy
 from typing import Tuple
 
 from enforce_typing import enforce_types
@@ -27,18 +26,13 @@ class PredictoorAgent3(BasePredictoorAgent):
           stake -- int -- amount to stake, in units of Eth
         """
         # Compute aimodel_ss
-        feed = self.feed
-        d = copy.deepcopy(self.ppss.data_pp.d)
-        d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
-        data_pp = DataPP(d)
-        lake_ss = self.ppss.lake_ss.copy_with_yval(data_pp)
-        aimodel_ss = self.ppss.predictoor_ss.aimodel_ss.copy_with_yval(data_pp)
+        lake_ss = self.ppss.lake_ss
 
         # From lake_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(data_pp, lake_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.predictoor_ss, lake_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
-        model_data_factory = AimodelDataFactory(data_pp, aimodel_ss)
+        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data

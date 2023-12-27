@@ -7,7 +7,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
@@ -38,8 +38,7 @@ class AimodelDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, pp: DataPP, ss: AimodelSS):
-        self.pp = pp
+    def __init__(self, ss: PredictoorSS):
         self.ss = ss
 
     def create_xy(
@@ -73,7 +72,7 @@ class AimodelDataFactory:
         # condition inputs
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
-        ss = self.ss
+        ss = self.ss.aimodel_ss
 
         # main work
         x_df = pd.DataFrame()  # build this up
@@ -107,8 +106,8 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        pp = self.pp
-        hist_col = f"{pp.exchange_str}:{pp.pair_str}:{pp.signal_str}"
+        ref_ss = self.ss
+        hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 

@@ -17,7 +17,7 @@ from pdr_backend.lake.plutil import (
     oldest_ut,
     save_rawohlcv_file,
 )
-from pdr_backend.ppss.data_pp import DataPP
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
@@ -52,8 +52,8 @@ class OhlcvDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, pp: DataPP, ss: LakeSS):
-        self.pp = pp
+    def __init__(self, predictoor_ss: PredictoorSS, ss: LakeSS):
+        self.predictoor_ss = predictoor_ss
         self.ss = ss
 
     def get_mergedohlcv_df(self) -> pl.DataFrame:
@@ -119,7 +119,7 @@ class OhlcvDataFactory:
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
-                timeframe=self.pp.timeframe,
+                timeframe=self.predictoor_ss.timeframe,
                 since=st_ut,
                 limit=1000,
             )
@@ -131,8 +131,8 @@ class OhlcvDataFactory:
                 # But exchange data often has gaps. Warn about worst violations
                 diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
                 diffs_m = diffs_ms / 1000 / 60  # in minutes
-                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
-                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
+                mn_thr = self.predictoor_ss.timeframe_m * OHLCV_MULT_MIN
+                mx_thr = self.predictoor_ss.timeframe_m * OHLCV_MULT_MAX
 
                 if min(diffs_m) < mn_thr:
                     print(f"      **WARNING: short candle time: {min(diffs_m)} min")
@@ -153,7 +153,7 @@ class OhlcvDataFactory:
             newest_ut_value = df.tail(1)["timestamp"][0]
 
             print(f"      newest_ut_value: {newest_ut_value}")
-            st_ut = newest_ut_value + self.pp.timeframe_ms
+            st_ut = newest_ut_value + self.predictoor_ss.timeframe_ms
 
         # output to file
         save_rawohlcv_file(filename, df)
@@ -186,7 +186,7 @@ class OhlcvDataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("      User-specified start >= file start, so append file")
-            return file_utN + self.pp.timeframe_ms
+            return file_utN + self.predictoor_ss.timeframe_ms
 
         print("      User-specified start < file start, so delete file")
         os.remove(filename)
@@ -243,6 +243,6 @@ class OhlcvDataFactory:
         """
         assert "/" in str(pair_str) or "-" in pair_str, pair_str
         pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
-        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
+        basename = f"{exch_str}_{pair_str}_{self.predictoor_ss.timeframe}.parquet"
         filename = os.path.join(self.ss.parquet_dir, basename)
         return filename

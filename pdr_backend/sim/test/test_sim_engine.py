@@ -15,15 +15,10 @@ def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
-    assert hasattr(ppss, "data_pp")
-    ppss.data_pp = DataPP(
-        {
-            "timeframe": "5m",
-            "predict_feeds": ["binanceus BTC/USDT c"],
-        }
-    )
     ppss.predictoor_ss = PredictoorSS(
         {
+            "predict_feed": "binanceus BTC/USDT c",
+            "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
                 "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
