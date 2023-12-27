@@ -6,7 +6,6 @@ import pandas as pd
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 

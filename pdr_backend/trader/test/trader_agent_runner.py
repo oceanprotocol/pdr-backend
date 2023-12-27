@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_feed_ppss
@@ -19,16 +18,11 @@ def do_constructor(agent_class, check_subscriptions_and_subscribe_mock):
     inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
     # 1 predict feed
-    assert ppss.data_pp.predict_feeds_strs
+    assert ppss.trader_ss.predict_feed
     agent = agent_class(ppss)
     assert agent.ppss == ppss
     assert agent.feeds
     check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    # 0 predict feeds
-    ppss.data_pp.set_predict_feeds([])
-    with pytest.raises(ValueError):
-        agent_class(ppss)
 
 
 @enforce_types
@@ -58,7 +52,7 @@ def setup_take_step(  # pylint: disable=unused-argument
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
-        ppss.data_pp.timeframe_s,
+        ppss.trader_ss.timeframe_s,
         feed.address,
         monkeypatch,
     )

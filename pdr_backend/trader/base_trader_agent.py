@@ -28,16 +28,14 @@ class BaseTraderAgent:
         cand_feeds = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        print(f"Filter by predict_feeds: {ppss.data_pp.filter_feeds_s}")
-        self.feeds = ppss.data_pp.filter_feeds(cand_feeds)
-        print_feeds(self.feeds, "filtered feeds")
-
-        if not self.feeds:
+        feed = ppss.trader_ss.get_predict_feed_from_candidates(cand_feeds)
+        print_feeds({feed.address: feed}, "filtered feeds")
+        if not feed:
             raise ValueError("No feeds found.")
 
-        # set self.contracts
-        feed_addrs = list(self.feeds.keys())
-        self.contracts = ppss.web3_pp.get_contracts(feed_addrs)
+        # TODO: make it one single feed
+        self.feeds = {feed.address: feed}
+        self.contracts = ppss.web3_pp.get_contracts([feed.address])
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0

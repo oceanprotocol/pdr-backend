@@ -68,7 +68,7 @@ async def test_process_block_at_feed(  # pylint: disable=unused-argument
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
-        ppss.data_pp.timeframe_s,
+        ppss.trader_ss.timeframe_s,
         feed.address,
         monkeypatch,
     )

@@ -6,7 +6,6 @@ import yaml
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.aimodel_ss import AimodelSS
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
@@ -41,7 +40,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             d = yaml.safe_load(str(yaml_str))
 
         # fill attributes from d
-        self.data_pp = DataPP(d["data_pp"])
         self.lake_ss = LakeSS(d["lake_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
@@ -55,7 +53,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
     def __str__(self):
         s = ""
-        s += f"data_pp={self.data_pp}\n"
         s += f"lake_ss={self.lake_ss}\n"
         s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
         s += f"payout_ss={self.payout_ss}\n"
@@ -99,14 +96,6 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=yaml_str, network=network)
 
-    assert hasattr(ppss, "data_pp")
-    ppss.data_pp = DataPP(
-        {
-            "timeframe": timeframe,
-            "predict_feeds": predict_feeds,
-        }
-    )
-
     assert hasattr(ppss, "lake_ss")
     assert hasattr(ppss, "predictoor_ss")
 
@@ -125,7 +114,7 @@ def mock_ppss(
     ppss.predictoor_ss = PredictoorSS(
         {
             "predict_feed": predict_feeds[0],
-            "timeframe": "5m",
+            "timeframe": timeframe,
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
                 "input_feeds": predict_feeds,
@@ -133,6 +122,17 @@ def mock_ppss(
                 "max_n_train": 7,
                 "autoregressive_n": 3,
             },
+        }
+    )
+
+    ppss.trader_ss = TraderSS(
+        {
+            "timeframe": timeframe,
+            "predict_feed": predict_feeds[0],
+            "sim_only": {
+                "buy_amt": "10 USD",
+            },
+            "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
         }
     )
     return ppss

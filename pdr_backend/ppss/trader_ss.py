@@ -1,10 +1,11 @@
-from typing import Union
+from typing import Dict, Union
 
 from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 class TraderSS(StrMixin):
@@ -113,6 +114,19 @@ class TraderSS(StrMixin):
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
         return Timeframe(self.timeframe).m
+
+    @enforce_types
+    def get_predict_feed_from_candidates(
+        self, cand_feeds: Dict[str, SubgraphFeed]
+    ) -> Union[None, SubgraphFeed]:
+        feed = self.predict_feed
+        allowed_tup = (self.timeframe, feed.exchange, feed.pair)
+
+        for feed in cand_feeds.values():
+            assert isinstance(feed, SubgraphFeed)
+            feed_tup = (feed.timeframe, feed.source, feed.pair)
+            if feed_tup == allowed_tup:
+                return feed
 
 
 # =========================================================================
