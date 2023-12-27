@@ -4,8 +4,6 @@ data_pp:
   timeframe: 1h
   predict_feeds:
     - binance BTC/USDT c
-  sim_only:
-    test_n : 200 # number of epochs to simulate
 
 predictoor_ss:
   bot_only:
@@ -41,6 +39,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
+  test_n : 200 # number of epochs to simulate
 
 # ------------------------------------------------------------------
 # Bots run by OPF

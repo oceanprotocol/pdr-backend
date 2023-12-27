@@ -94,7 +94,6 @@ def test_lake_ss_copy():
         {
             "timeframe": "5m",
             "predict_feeds": ["kraken ETH/USDT h"],
-            "sim_only": {"test_n": 2},
         }
     )
     ss2 = ss.copy_with_yval(pp)
@@ -105,7 +104,6 @@ def test_lake_ss_copy():
         {
             "timeframe": "5m",
             "predict_feeds": ["binanceus TRX/USDC c"],
-            "sim_only": {"test_n": 2},
         }
     )
     ss3 = ss.copy_with_yval(pp)

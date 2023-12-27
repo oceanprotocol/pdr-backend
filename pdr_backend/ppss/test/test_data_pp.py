@@ -13,14 +13,12 @@ def test_data_pp_1feed():
         {
             "timeframe": "5m",
             "predict_feeds": ["kraken ETH/USDT h"],
-            "sim_only": {"test_n": 2},
         }
     )
 
     # yaml properties
     assert isinstance(pp.timeframe, str)
     assert pp.predict_feeds_strs == ["kraken ETH/USDT h"]
-    assert pp.test_n == 2
 
     # derivative properties
     assert isinstance(pp.timeframe_ms, int)  # test more below

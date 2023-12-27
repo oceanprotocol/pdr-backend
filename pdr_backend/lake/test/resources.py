@@ -9,8 +9,8 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
@@ -60,7 +60,6 @@ def _data_pp(predict_feeds) -> DataPP:
         {
             "timeframe": "5m",
             "predict_feeds": predict_feeds,
-            "sim_only": {"test_n": 2},
         }
     )
 

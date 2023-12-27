@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
@@ -19,9 +18,6 @@ class DataPP:
         Timeframe(self.timeframe)
         ArgFeeds.from_strs(self.predict_feeds_strs)  # test that it's valid
 
-        if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
-            raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
-
     # --------------------------------
     # yaml properties
     @property
@@ -31,10 +27,6 @@ class DataPP:
     @property
     def predict_feeds_strs(self) -> List[str]:
         return self.d["predict_feeds"]  # eg ["binance BTC/USDT oh",..]
-
-    @property
-    def test_n(self) -> int:
-        return self.d["sim_only"]["test_n"]  # eg 200
 
     # --------------------------------
     # setters
@@ -161,7 +153,6 @@ class DataPP:
         s = "DataPP:\n"
         s += f"  timeframe={self.timeframe}\n"
         s += f"  predict_feeds_strs={self.predict_feeds_strs}\n"
-        s += f"  test_n={self.test_n}\n"
         s += "-" * 10 + "\n"
         return s
 
@@ -172,7 +163,6 @@ def mock_data_pp(timeframe_str: str, predict_feeds: List[str]) -> DataPP:
         {
             "timeframe": timeframe_str,
             "predict_feeds": predict_feeds,
-            "sim_only": {"test_n": 2},
         }
     )
     return data_pp

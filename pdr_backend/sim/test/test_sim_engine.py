@@ -3,10 +3,10 @@ import os
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.ppss.sim_ss import SimSS
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.sim.sim_engine import SimEngine
 
 
@@ -20,7 +20,6 @@ def test_sim_engine(tmpdir):
         {
             "timeframe": "5m",
             "predict_feeds": ["binanceus BTC/USDT c"],
-            "sim_only": {"test_n": 10},
         }
     )
     ppss.predictoor_ss = PredictoorSS(
@@ -49,6 +48,7 @@ def test_sim_engine(tmpdir):
         {
             "do_plot": False,
             "log_dir": os.path.join(tmpdir, "logs"),
+            "test_n": 10,
         }
     )
 

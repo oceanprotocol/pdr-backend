@@ -104,7 +104,6 @@ def mock_ppss(
         {
             "timeframe": timeframe,
             "predict_feeds": predict_feeds,
-            "sim_only": {"test_n": 10},
         }
     )
 

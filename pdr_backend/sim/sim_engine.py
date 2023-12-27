@@ -87,9 +87,9 @@ class SimEngine:
         # main loop!
         pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
-        for test_i in range(self.ppss.data_pp.test_n):
+        for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
-            self._plot(test_i, self.ppss.data_pp.test_n)
+            self._plot(test_i, self.ppss.sim_ss.test_n)
 
         log("Done all iters.")
 
@@ -100,7 +100,7 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
-        testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(
             self.ppss.data_pp, self.ppss.predictoor_ss.aimodel_ss
         )
@@ -158,7 +158,7 @@ class SimEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.ppss.data_pp.test_n}: "
+            f"Iter #{test_i+1:3}/{self.ppss.sim_ss.test_n}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"

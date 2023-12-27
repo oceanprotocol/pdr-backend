@@ -29,7 +29,6 @@ def test_create_xy__0():
         {
             "timeframe": "5m",
             "predict_feeds": ["binanceus ETH/USDT c"],
-            "sim_only": {"test_n": 2},
         }
     )
     aimodel_ss = AimodelSS(
