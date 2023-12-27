@@ -9,23 +9,54 @@ from eth_account import Account
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.mathutil import to_wei, from_wei
 
 
 @enforce_types
-def create_wallets(n_wallets: int, rpc_url: str):
+def create_accounts(n_accounts: int, web3_pp: Web3PP):
     """
     @description
-        Create a new wallet with a private key using the Web3.HTTPProvider(rpc_url)
-        and print the private_key and the public_key
+        Create new accounts using the web3 provider and print the private_key and the public_key
     """
     # loop through n_wallets
-    for i in range(n_wallets):
-        w3 = Web3(Web3.HTTPProvider(rpc_url))
-        new_account = w3.eth.account.create()
+    for i in range(n_accounts):
+        new_account = web3_pp.w3.eth.account.create()
         print(f"\nWallet #{i}")
         print(f"Private Key: {new_account._private_key.hex()}")
         print(f"Public Key: {new_account.address}")
+
+
+@enforce_types
+def get_account_balances(checksum_address: str, web3_pp: Web3PP):
+    """
+    @description
+        Get account balances from an address
+    """
+    # loop through n_wallets
+    native_token = NativeToken(web3_pp)
+    OCEAN_addr = get_address(web3_pp, "Ocean")
+    OCEAN_token = Token(web3_pp, OCEAN_addr)
+
+    native_token_balance = native_token.balanceOf(checksum_address)
+    OCEAN_balance = OCEAN_token.balanceOf(checksum_address)
+
+    return native_token_balance, OCEAN_balance
+
+
+@enforce_types
+def print_account_balances(addresses: List[str], web3_pp: Web3PP):
+    """
+    @description
+        Get account balances from an address
+    """
+    # loop through n_wallets
+    for address in addresses:
+        checksum_address = web3_pp.w3.to_checksum_address(address.lower())
+        native_token_balance, OCEAN_balance = get_account_balances(checksum_address, web3_pp)
+
+        print(f"\Account {checksum_address}")
+        print(f"Native token balance: {from_wei(native_token_balance)}")
+        print(f"OCEAN balance: {from_wei(OCEAN_balance)}")
 
 
 @enforce_types
@@ -63,3 +94,4 @@ def fund_wallets_with_amount(amount: float, to_addressess: List[str], web3_pp: W
             account.address,
             True,
         )
+

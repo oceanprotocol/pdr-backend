@@ -21,6 +21,7 @@ from pdr_backend.cli.cli_arguments import (
     TraderArgParser,
     TruevalArgParser,
     CreateWalletArgParser,
+    AddressArgParser,
     FundWalletsArgParser,
     do_help_long,
     print_args,
@@ -38,7 +39,7 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.fund_accounts import fund_sys_accounts_with_OCEAN
-from pdr_backend.util.web3_util import create_wallets, fund_wallets_with_amount
+from pdr_backend.util.web3_util import create_accounts, print_account_balances, fund_wallets_with_amount
 
 
 @enforce_types
@@ -228,13 +229,25 @@ def do_topup():
 
 
 @enforce_types
-def do_create_wallets():
-    parser = CreateWalletArgParser("Create new web3 wallet", "create_wallets")
+def do_create_accounts():
+    parser = CreateWalletArgParser("Create new web3 wallet", "create_accounts")
     args = parser.parse_args()
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    create_wallets(args.NUM_WALLETS, ppss.web3_pp.rpc_url)
+    create_accounts(args.NUM_WALLETS, ppss.web3_pp)
+
+
+@enforce_types
+def do_view_account_balances():
+    parser = AddressArgParser("Get balances from 1 or more accounts", "get_account_balances")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    
+    accounts = args.ADDRESSES.split(",")
+    print_account_balances(accounts, ppss.web3_pp)
 
 
 @enforce_types

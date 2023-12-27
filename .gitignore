@@ -166,9 +166,9 @@ cython_debug/
 
 # predictoor-specific
 out*.txt
-my_ppss.yaml
+my_ppss*.yaml
 csvs/
-parquet_data/
+parquet_data*/
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json

@@ -142,6 +142,16 @@ class TO_ADDRESSES_Mixin:
 
 
 @enforce_types
+class ADDRESSES_Mixin:
+    def add_argument_ADDRESSES(self):
+        self.add_argument(
+            "ADDRESSES",
+            type=str,
+            help="Comma-separated list of addresses to send to",
+        )
+
+
+@enforce_types
 class TOKEN_AMOUNT_Mixin:
     def add_argument_TOKEN_AMOUNT(self):
         self.add_argument(
@@ -275,6 +285,23 @@ class _ArgParser_NUM_WALLETS_NETWORK_PPSS(
         self.add_argument_PPSS()
         self.add_argument_NETWORK()
 
+
+@enforce_types
+class _ArgParser_ADDRESSES_NETWORK_PPSS(
+    ArgParser,
+    ADDRESSES_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_ADDRESSES()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+
+
 @enforce_types
 class _ArgParser_FUND_WALLETS_NETWORK_PPSS(
     ArgParser,
@@ -333,5 +360,7 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
 CreateWalletArgParser = _ArgParser_NUM_WALLETS_NETWORK_PPSS
+
+AddressArgParser = _ArgParser_ADDRESSES_NETWORK_PPSS
 
 FundWalletsArgParser = _ArgParser_FUND_WALLETS_NETWORK_PPSS
