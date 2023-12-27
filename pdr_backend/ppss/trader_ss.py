@@ -25,7 +25,7 @@ class TraderSS(StrMixin):
         return self.d["sim_only"]["buy_amt"]
 
     @property
-    def predict_feed(self) -> str:
+    def predict_feed(self) -> ArgFeed:
         """Which feed to use for predictions. Eg "feed1"."""
         return ArgFeed.from_str(self.d["predict_feed"])
 
@@ -119,14 +119,19 @@ class TraderSS(StrMixin):
     def get_predict_feed_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
     ) -> Union[None, SubgraphFeed]:
-        feed = self.predict_feed
-        allowed_tup = (self.timeframe, feed.exchange, feed.pair)
+        allowed_tup = (
+            self.timeframe,
+            self.predict_feed.exchange,
+            self.predict_feed.pair,
+        )
 
         for feed in cand_feeds.values():
             assert isinstance(feed, SubgraphFeed)
             feed_tup = (feed.timeframe, feed.source, feed.pair)
             if feed_tup == allowed_tup:
                 return feed
+
+        return None
 
 
 # =========================================================================

@@ -31,7 +31,7 @@ class PredictoorSS(StrMixin):
         return self.d["bot_only"]["stake_amount"]
 
     @property
-    def predict_feed(self) -> str:
+    def predict_feed(self) -> ArgFeed:
         """Which feed to use for predictions. Eg "feed1"."""
         return ArgFeed.from_str(self.d["predict_feed"])
 
@@ -89,8 +89,11 @@ class PredictoorSS(StrMixin):
     def get_predict_feed_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
     ) -> Union[None, SubgraphFeed]:
-        feed = self.predict_feed
-        allowed_tup = (self.timeframe, feed.exchange, feed.pair)
+        allowed_tup = (
+            self.timeframe,
+            self.predict_feed.exchange,
+            self.predict_feed.pair,
+        )
 
         for feed in cand_feeds.values():
             assert isinstance(feed, SubgraphFeed)
