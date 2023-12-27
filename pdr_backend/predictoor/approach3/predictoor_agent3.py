@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 

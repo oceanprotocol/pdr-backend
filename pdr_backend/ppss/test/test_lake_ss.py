@@ -5,7 +5,6 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -82,29 +81,3 @@ def test_parquet_dir(tmpdir):
     ss = LakeSS(d)
     target_parquet_dir = os.path.join(tmpdir, "parquet_data")
     assert ss.parquet_dir == target_parquet_dir
-
-
-@enforce_types
-def test_lake_ss_copy():
-    ss = LakeSS(_D)
-    assert ss.n_input_feeds == 4
-
-    # copy 1: don't need to append the new feed
-    pp = DataPP(
-        {
-            "timeframe": "5m",
-            "predict_feeds": ["kraken ETH/USDT h"],
-        }
-    )
-    ss2 = ss.copy_with_yval(pp)
-    assert ss2.n_input_feeds == 4 + 0
-
-    # copy 2: do need to append the new feed
-    pp = DataPP(
-        {
-            "timeframe": "5m",
-            "predict_feeds": ["binanceus TRX/USDC c"],
-        }
-    )
-    ss3 = ss.copy_with_yval(pp)
-    assert ss3.n_input_feeds == 4 + 1

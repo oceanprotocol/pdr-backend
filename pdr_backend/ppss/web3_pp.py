@@ -25,7 +25,7 @@ class Web3PP(StrMixin):
             raise ValueError(f"network '{network}' not found in dict")
 
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
-        self.d = d  # yaml_dict["data_pp"]
+        self.d = d  # yaml_dict["web3_pp"]
 
         self._web3_config: Optional[Web3Config] = None
 

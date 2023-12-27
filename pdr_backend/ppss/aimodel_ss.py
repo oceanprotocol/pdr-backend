@@ -5,7 +5,6 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeeds
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.util.strutil import StrMixin
 
 APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
@@ -80,13 +79,7 @@ class AimodelSS(StrMixin):
         return self.n_input_feeds * self.autoregressive_n
 
     @enforce_types
-    def copy_with_yval(self, data_pp: DataPP):
-        """Copy self, add data_pp's feeds to new data_ss' inputs as needed"""
+    def copy_with_yval(self):
         d2 = copy.deepcopy(self.d)
-
-        for predict_feed in data_pp.predict_feeds:
-            if predict_feed in self.input_feeds:
-                continue
-            d2["input_feeds"].append(str(predict_feed))
 
         return AimodelSS(d2)

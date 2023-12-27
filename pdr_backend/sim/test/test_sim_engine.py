@@ -2,7 +2,6 @@ import os
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS

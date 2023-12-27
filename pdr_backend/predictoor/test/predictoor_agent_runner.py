@@ -62,6 +62,6 @@ def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
 
     # relatively basic sanity tests
     assert _mock_pdr_contract._prediction_slots
-    assert (mock_w3.eth.timestamp + 2 * ppss.data_pp.timeframe_s) >= max(
+    assert (mock_w3.eth.timestamp + 2 * ppss.predictoor_ss.timeframe_s) >= max(
         _mock_pdr_contract._prediction_slots
     )

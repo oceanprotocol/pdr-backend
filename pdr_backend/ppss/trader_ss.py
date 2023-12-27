@@ -12,7 +12,7 @@ class TraderSS(StrMixin):
 
     @enforce_types
     def __init__(self, d: dict):
-        self.d = d  # yaml_dict["data_pp"]
+        self.d = d  # yaml_dict["trader_ss"]
         ArgFeed.from_str(d["predict_feed"])  # validate
         Timeframe(d["timeframe"])  # validate
 
