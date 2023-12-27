@@ -34,6 +34,7 @@ def test_sim_engine(tmpdir):
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-06-30",
+            "timeframe": "5m",
         }
     )
 

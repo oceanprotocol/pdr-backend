@@ -26,7 +26,7 @@ def _mergedohlcv_df_ETHUSDT(tmpdir):
 def _predictoor_ss_1feed(tmpdir, feed):
     predictoor_ss = _predictoor_ss(feed, [feed])
     lake_ss = _lake_ss(tmpdir, [feed])
-    ohlcv_data_factory = OhlcvDataFactory(predictoor_ss, lake_ss)
+    ohlcv_data_factory = OhlcvDataFactory(lake_ss)
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     return predictoor_ss, ohlcv_data_factory, aimodel_data_factory
 
@@ -35,8 +35,7 @@ def _predictoor_ss_1feed(tmpdir, feed):
 def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    predictoor_ss = _predictoor_ss(feed, [feed])
-    ohlcv_data_factory = OhlcvDataFactory(predictoor_ss, ss)
+    ohlcv_data_factory = OhlcvDataFactory(ss)
     aimodel_data_factory = AimodelDataFactory(_predictoor_ss(feed, [feed]))
     return ss, ohlcv_data_factory, aimodel_data_factory
 
@@ -75,6 +74,7 @@ def _lake_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
             "parquet_dir": parquet_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",
+            "timeframe": "5m",
         }
     )
 

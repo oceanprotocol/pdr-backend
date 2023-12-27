@@ -28,7 +28,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         lake_ss = self.ppss.lake_ss
 
         # From lake_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(self.ppss.predictoor_ss, lake_ss)
+        pq_data_factory = OhlcvDataFactory(lake_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)

@@ -76,6 +76,7 @@ lake_ss:
 #    - kraken BTC/USDT
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
+  timeframe: 1h
 
 
 # ------------------------------------------------------------------

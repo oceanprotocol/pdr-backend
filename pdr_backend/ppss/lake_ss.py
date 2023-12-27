@@ -6,6 +6,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
@@ -35,6 +36,8 @@ class LakeSS:
             exchange_class = feed.exchange.exchange_class
             self.exchs_dict[str(feed.exchange)] = exchange_class()
 
+        Timeframe(d["timeframe"])  # validate
+
     # --------------------------------
     # yaml properties
     @property
@@ -56,6 +59,10 @@ class LakeSS:
     @property
     def fin_timestr(self) -> str:
         return self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
+
+    @property
+    def timeframe(self) -> str:
+        return self.d["timeframe"]  # eg "1m"
 
     # --------------------------------
     # derivative properties
@@ -98,6 +105,21 @@ class LakeSS:
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
         return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
+
+    @property
+    def timeframe_ms(self) -> int:
+        """Returns timeframe, in ms"""
+        return Timeframe(self.timeframe).ms
+
+    @property
+    def timeframe_s(self) -> int:
+        """Returns timeframe, in s"""
+        return Timeframe(self.timeframe).s
+
+    @property
+    def timeframe_m(self) -> int:
+        """Returns timeframe, in minutes"""
+        return Timeframe(self.timeframe).m
 
     @enforce_types
     def __str__(self) -> str:

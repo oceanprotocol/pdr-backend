@@ -174,17 +174,13 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
 def _test_get_mergedohlcv_df_happypath(tmpdir):
     parquet_dir = str(tmpdir)
 
-    predictoor_ss = _predictoor_ss(
-        "binanceus BTC/USDT h",
-        ["binanceus BTC-USDT,ETH/USDT h", "kraken BTC/USDT h"],
-    )
     ss = _lake_ss(
         parquet_dir,
         ["binanceus BTC-USDT,ETH/USDT h", "kraken BTC/USDT h"],
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
-    factory = OhlcvDataFactory(predictoor_ss, ss)
+    factory = OhlcvDataFactory(ss)
 
     # call and assert
     mergedohlcv_df = factory.get_mergedohlcv_df()

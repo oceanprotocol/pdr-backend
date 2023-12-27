@@ -82,7 +82,7 @@ class SimEngine:
         log("Start run")
 
         # main loop!
-        pq_data_factory = OhlcvDataFactory(self.ppss.predictoor_ss, self.ppss.lake_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)

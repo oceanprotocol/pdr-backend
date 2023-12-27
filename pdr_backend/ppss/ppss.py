@@ -108,6 +108,7 @@ def mock_ppss(
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
+            "timeframe": timeframe,
         }
     )
 

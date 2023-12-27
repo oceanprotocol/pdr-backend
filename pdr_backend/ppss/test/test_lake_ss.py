@@ -13,6 +13,7 @@ _D = {
     "parquet_dir": "parquet_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
+    "timeframe": "5m",
 }
 
 
