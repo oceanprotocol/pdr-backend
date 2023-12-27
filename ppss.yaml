@@ -29,6 +29,8 @@ trader_pp:
   bot_only:
 
 trader_ss:
+  predict_feed: binance BTC/USDT c
+  timeframe: 1h
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
   bot_only:
