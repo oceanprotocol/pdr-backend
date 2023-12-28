@@ -83,7 +83,7 @@ class TraderSS(StrMixin):
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
-        return self.predict_feed.signal
+        return str(self.predict_feed.signal)
 
     @property
     def base_str(self) -> str:
@@ -102,17 +102,17 @@ class TraderSS(StrMixin):
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return self.predict_feed.timeframe.ms
+        return self.predict_feed.timeframe.ms if self.predict_feed.timeframe else 0
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return self.predict_feed.timeframe.s
+        return self.predict_feed.timeframe.s if self.predict_feed.timeframe else 0
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        return self.predict_feed.timeframe.m
+        return self.predict_feed.timeframe.m if self.predict_feed.timeframe else 0
 
     @enforce_types
     def get_predict_feed_from_candidates(

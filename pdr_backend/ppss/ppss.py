@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple
 import yaml
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS

@@ -1,12 +1,12 @@
-from enforce_typing import enforce_types
 from typing import Dict, Union
 
-from pdr_backend.util.strutil import StrMixin
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from enforce_typing import enforce_types
+
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.util.strutil import StrMixin
 
 
 class PredictoorSS(StrMixin):
@@ -54,7 +54,7 @@ class PredictoorSS(StrMixin):
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
-        return self.predict_feed.signal
+        return str(self.predict_feed.signal)
 
     @property
     def base_str(self) -> str:
@@ -73,17 +73,17 @@ class PredictoorSS(StrMixin):
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return self.predict_feed.timeframe.ms
+        return self.predict_feed.timeframe.ms if self.predict_feed.timeframe else 0
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return self.predict_feed.timeframe.s
+        return self.predict_feed.timeframe.s if self.predict_feed.timeframe else 0
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        return self.predict_feed.timeframe.m
+        return self.predict_feed.timeframe.m if self.predict_feed.timeframe else 0
 
     @enforce_types
     def get_predict_feed_from_candidates(

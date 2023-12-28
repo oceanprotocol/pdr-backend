@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 import polars as pl
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -18,7 +17,7 @@ from pdr_backend.lake.plutil import (
     load_rawohlcv_file,
     save_rawohlcv_file,
 )
-from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss, _predictoor_ss
+from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr

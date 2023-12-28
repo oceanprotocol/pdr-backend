@@ -25,6 +25,7 @@ from pdr_backend.cli.cli_arguments import (
     print_args,
 )
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1

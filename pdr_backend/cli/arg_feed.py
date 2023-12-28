@@ -23,7 +23,7 @@ class ArgFeed:
         self,
         exchange,
         signal: Union[str, None] = None,
-        pair: Union[ArgPair, str] = None,
+        pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[Timeframe, str]] = None,
     ):
         if signal is not None:
@@ -125,11 +125,11 @@ class ArgFeeds(List[ArgFeed]):
 
     @property
     def exchanges(self) -> Set[str]:
-        return set(feed.exchange for feed in self)
+        return set(str(feed.exchange) for feed in self)
 
     @property
     def signals(self) -> Set[str]:
-        return set(feed.signal for feed in self)
+        return set(str(feed.signal) for feed in self)
 
 
 @enforce_types

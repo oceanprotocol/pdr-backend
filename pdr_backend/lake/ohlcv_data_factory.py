@@ -104,6 +104,7 @@ class OhlcvDataFactory:
         filename = self._rawohlcv_filename(feed)
         print(f"      filename={filename}")
 
+        assert feed.timeframe
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
         print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
         if st_ut > min(current_ut(), fin_ut):
