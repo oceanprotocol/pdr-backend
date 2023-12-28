@@ -28,7 +28,7 @@ class TraderAgent2(BaseTraderAgent):
 
         # If cache params are empty, instantiate
         if self.portfolio is None:
-            self.portfolio = Portfolio(list(self.feeds.keys()))
+            self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
         exchange_class = self.ppss.trader_ss.exchange_class
@@ -46,7 +46,7 @@ class TraderAgent2(BaseTraderAgent):
             }
         )
 
-        self.update_positions(list(self.feeds.keys()))
+        self.update_positions([self.feed.address])
 
     def update_cache(self):
         super().update_cache()
@@ -76,7 +76,7 @@ class TraderAgent2(BaseTraderAgent):
         @description
             Cycle through open positions and asses them
         """
-        feeds = list(self.feeds.keys()) if feeds is None or feeds == [] else feeds
+        feeds = [self.feed.address] if feeds is None or feeds == [] else feeds
         if not feeds:
             return
         if not self.portfolio:

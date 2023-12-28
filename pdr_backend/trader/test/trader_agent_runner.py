@@ -21,7 +21,7 @@ def do_constructor(agent_class, check_subscriptions_and_subscribe_mock):
     assert ppss.trader_ss.predict_feed
     agent = agent_class(ppss)
     assert agent.ppss == ppss
-    assert agent.feeds
+    assert agent.feed
     check_subscriptions_and_subscribe_mock.assert_called_once()
 
 
@@ -60,12 +60,10 @@ def setup_take_step(  # pylint: disable=unused-argument
     agent = agent_class(ppss)
 
     # Create async mock fn so we can await asyncio.gather(*tasks)
-    async def _process_block_at_feed(
-        addr, timestamp
-    ):  # pylint: disable=unused-argument
+    async def _process_block(timestamp):  # pylint: disable=unused-argument
         return (-1, [])
 
-    agent._process_block_at_feed = Mock(side_effect=_process_block_at_feed)
+    agent._process_block = Mock(side_effect=_process_block)
 
     return agent
 
