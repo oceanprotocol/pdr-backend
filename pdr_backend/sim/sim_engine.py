@@ -31,9 +31,13 @@ class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
+        predict_feed = ppss.predictoor_ss.predict_feed
+
+        # timeframe doesn't need to match
         assert (
-            ppss.predictoor_ss.predict_feed in ppss.predictoor_ss.aimodel_ss.input_feeds
-        )
+            str(predict_feed.exchange),
+            str(predict_feed.pair),
+        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
 
         # pp & ss values
         self.ppss = ppss

@@ -29,7 +29,7 @@ def test_sim_engine(tmpdir):
 
     ppss.lake_ss = LakeSS(
         {
-            "feeds": ["binanceus BTC/USDT ETH/USDT oc"],
+            "feeds": ["binanceus BTC/USDT ETH/USDT oc 5m"],
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": "2023-06-18",
             "fin_timestr": "2023-06-30",

@@ -35,6 +35,8 @@ class LakeSS:
             exchange_class = feed.exchange.exchange_class
             self.exchs_dict[str(feed.exchange)] = exchange_class()
 
+            assert feed.timeframe
+
     # --------------------------------
     # yaml properties
     @property
