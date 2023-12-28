@@ -22,12 +22,15 @@ class ArgFeed:
     def __init__(
         self,
         exchange,
-        signal,
-        pair: Union[ArgPair, str],
+        signal: Union[str, None] = None,
+        pair: Union[ArgPair, str] = None,
         timeframe: Optional[Union[Timeframe, str]] = None,
     ):
         if signal is not None:
             verify_signal_str(signal)
+
+        if pair is None:
+            raise ValueError("pair cannot be None")
 
         self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
@@ -41,10 +44,10 @@ class ArgFeed:
             )
 
     def __str__(self):
-        char = signal_to_char(self.signal)
         feed_str = f"{self.exchange} {self.pair}"
 
         if self.signal is not None:
+            char = signal_to_char(self.signal)
             feed_str += f" {char}"
 
         if self.timeframe is not None:
@@ -60,6 +63,7 @@ class ArgFeed:
             self.exchange == other.exchange
             and self.signal == other.signal
             and str(self.pair) == str(other.pair)
+            and str(self.timeframe) == str(other.timeframe)
         )
 
     def __hash__(self):
