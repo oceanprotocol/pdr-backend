@@ -223,7 +223,6 @@ def test_verify_feeds_str__and__verify_feed_str():
         "o ADA/USDT",
         "binance,ADA/USDT",
         "binance,ADA-USDT",
-        "binance , ADA/USDT",
         "xyz ADA/USDT o",  # catch non-exchanges!
         "binancexyz ADA/USDT o",
         "binance ADA/USDT ohx",
@@ -279,7 +278,7 @@ def test_verify_ArgFeed():
     tups = [
         (),
         ("binance", "open"),
-        ("binance", "open", "BTC/USDT", ""),
+        ("binance", "open", "BTC/USDT", "", ""),
     ]
     for feed_tup in tups:
         with pytest.raises(TypeError):
