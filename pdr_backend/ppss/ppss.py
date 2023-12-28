@@ -79,13 +79,12 @@ def mock_feed_ppss(
     tmpdir=None,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(timeframe, [f"{exchange} {pair} c"], network, tmpdir)
+    ppss = mock_ppss([f"{exchange} {pair} c {timeframe}"], network, tmpdir)
     return (feed, ppss)
 
 
 @enforce_types
 def mock_ppss(
-    timeframe: str,
     predict_feeds: List[str],
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
@@ -108,34 +107,36 @@ def mock_ppss(
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
-            "timeframe": timeframe,
         }
     )
 
-    ppss.predictoor_ss = PredictoorSS(
-        {
-            "predict_feed": predict_feeds[0],
-            "timeframe": timeframe,
-            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
-                "input_feeds": predict_feeds,
-                "approach": "LIN",
-                "max_n_train": 7,
-                "autoregressive_n": 3,
-            },
-        }
-    )
+    try:
+        ppss.predictoor_ss = PredictoorSS(
+            {
+                "predict_feed": predict_feeds[0],
+                "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+                "aimodel_ss": {
+                    "input_feeds": predict_feeds,
+                    "approach": "LIN",
+                    "max_n_train": 7,
+                    "autoregressive_n": 3,
+                },
+            }
+        )
 
-    ppss.trader_ss = TraderSS(
-        {
-            "timeframe": timeframe,
-            "predict_feed": predict_feeds[0],
-            "sim_only": {
-                "buy_amt": "10 USD",
-            },
-            "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
-        }
-    )
+        ppss.trader_ss = TraderSS(
+            {
+                "predict_feed": predict_feeds[0],
+                "sim_only": {
+                    "buy_amt": "10 USD",
+                },
+                "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
+            }
+        )
+    except AssertionError:
+        # allow feed without timeframe
+        pass
+
     return ppss
 
 

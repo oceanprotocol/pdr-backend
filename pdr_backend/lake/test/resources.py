@@ -17,7 +17,7 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, aimodel_data_factory
 
@@ -36,14 +36,13 @@ def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
     ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(ss)
-    aimodel_data_factory = AimodelDataFactory(_predictoor_ss(feed, [feed]))
-    return ss, ohlcv_data_factory, aimodel_data_factory
+    return ss, ohlcv_data_factory
 
 
 @enforce_types
 def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
-    ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
+    ppss = mock_ppss([feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
     gql_data_factory = GQLDataFactory(ppss)
     return ppss, gql_data_factory

@@ -17,8 +17,8 @@ class PredictoorSS(StrMixin):
         self.d = d  # yaml_dict["predictor_ss"]
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
 
-        ArgFeed.from_str(d["predict_feed"])  # validate
-        Timeframe(d["timeframe"])  # validate
+        feed = ArgFeed.from_str(d["predict_feed"])  # validate
+        assert feed.timeframe
 
     # --------------------------------
     # yaml properties
@@ -34,10 +34,6 @@ class PredictoorSS(StrMixin):
     def predict_feed(self) -> ArgFeed:
         """Which feed to use for predictions. Eg "feed1"."""
         return ArgFeed.from_str(self.d["predict_feed"])
-
-    @property
-    def timeframe(self) -> str:
-        return self.d["timeframe"]  # eg "1m"
 
     # --------------------------------
     # derivative properties
@@ -71,19 +67,23 @@ class PredictoorSS(StrMixin):
         return ArgPair(self.pair_str).quote_str or ""
 
     @property
+    def timeframe(self) -> str:
+        return str(self.predict_feed.timeframe)
+
+    @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return Timeframe(self.timeframe).ms
+        return self.predict_feed.timeframe.ms
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return Timeframe(self.timeframe).s
+        return self.predict_feed.timeframe.s
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        return Timeframe(self.timeframe).m
+        return self.predict_feed.timeframe.m
 
     @enforce_types
     def get_predict_feed_from_candidates(

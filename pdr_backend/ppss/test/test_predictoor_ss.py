@@ -6,8 +6,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS
 @enforce_types
 def test_predictoor_ss():
     d = {
-        "predict_feed": "binance BTC/USDT c",
-        "timeframe": "5m",
+        "predict_feed": "binance BTC/USDT c 5m",
         "bot_only": {
             "s_until_epoch_end": 60,
             "stake_amount": 1,

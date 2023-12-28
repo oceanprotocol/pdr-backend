@@ -85,7 +85,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
             uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
-    ss, factory, _ = _lake_ss_1feed(
+    ss, factory = _lake_ss_1feed(
         tmpdir,
         "binanceus ETH/USDT h",
         st_timestr,
@@ -218,7 +218,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     """
 
     # setup
-    _, factory, _ = _lake_ss_1feed(tmpdir, "binanceus BTC/USDT h")
+    _, factory = _lake_ss_1feed(tmpdir, "binanceus BTC/USDT h")
     filename = factory._rawohlcv_filename("binanceus", "BTC/USDT")
     st_ut = factory.ss.st_timestamp
     fin_ut = factory.ss.fin_timestamp
@@ -275,7 +275,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
 @enforce_types
 def test_exchange_hist_overlap(tmpdir):
     """DataFactory get_mergedohlcv_df() and concat is executing e2e correctly"""
-    _, factory, _ = _lake_ss_1feed(
+    _, factory = _lake_ss_1feed(
         tmpdir,
         "binanceus ETH/USDT h",
         st_timestr="2023-06-18",
@@ -294,7 +294,7 @@ def test_exchange_hist_overlap(tmpdir):
     assert head_timestamp < tail_timestamp
 
     # let's get more data from exchange with overlap
-    _, factory2, _ = _lake_ss_1feed(
+    _, factory2 = _lake_ss_1feed(
         tmpdir,
         "binanceus ETH/USDT h",
         st_timestr="2023-06-18",  # same
@@ -319,7 +319,7 @@ def test_get_mergedohlcv_df_calls(
     tmpdir,
 ):
     mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
-    _, factory, _ = _lake_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+    _, factory = _lake_ss_1feed(tmpdir, "binanceus ETH/USDT h")
 
     factory._update_rawohlcv_files = Mock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)

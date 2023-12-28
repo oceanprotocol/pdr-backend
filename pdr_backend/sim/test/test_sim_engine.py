@@ -16,8 +16,7 @@ def test_sim_engine(tmpdir):
 
     ppss.predictoor_ss = PredictoorSS(
         {
-            "predict_feed": "binanceus BTC/USDT c",
-            "timeframe": "5m",
+            "predict_feed": "binanceus BTC/USDT c 5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
                 "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],

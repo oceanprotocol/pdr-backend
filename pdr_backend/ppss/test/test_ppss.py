@@ -65,23 +65,23 @@ def test_mock_feed_ppss(monkeypatch):
     assert feed.pair == "BTC/USDT"
 
     assert ppss.predictoor_ss.timeframe == "5m"
-    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c"
-    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c"]
+    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c 5m"
+    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss(monkeypatch):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet")
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet")
     assert ppss.predictoor_ss.timeframe == "5m"
-    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c"
-    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c"]
+    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c 5m"
+    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_default_network_development(monkeypatch):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"])
+    ppss = mock_ppss(["binance BTC/USDT c 5m"])
     assert ppss.web3_pp.network == "development"

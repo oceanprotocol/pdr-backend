@@ -3,7 +3,6 @@ from typing import Dict, Union
 from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
@@ -14,8 +13,8 @@ class TraderSS(StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["trader_ss"]
-        ArgFeed.from_str(d["predict_feed"])  # validate
-        Timeframe(d["timeframe"])  # validate
+        feed = ArgFeed.from_str(d["predict_feed"])  # validate
+        assert feed.timeframe
 
     # --------------------------------
     # yaml properties: sim only
@@ -45,10 +44,6 @@ class TraderSS(StrMixin):
     def position_size(self) -> Union[int, float]:
         """Trading size. Eg 10"""
         return self.d["bot_only"]["position_size"]
-
-    @property
-    def timeframe(self) -> str:
-        return self.d["timeframe"]  # eg "1m"
 
     # --------------------------------
     # setters (add as needed)
@@ -101,19 +96,23 @@ class TraderSS(StrMixin):
         return ArgPair(self.pair_str).quote_str or ""
 
     @property
+    def timeframe(self) -> str:
+        return str(self.predict_feed.timeframe)  # eg "1m"
+
+    @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return Timeframe(self.timeframe).ms
+        return self.predict_feed.timeframe.ms
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return Timeframe(self.timeframe).s
+        return self.predict_feed.timeframe.s
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        return Timeframe(self.timeframe).m
+        return self.predict_feed.timeframe.m
 
     @enforce_types
     def get_predict_feed_from_candidates(

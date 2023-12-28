@@ -25,8 +25,7 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 def test_create_xy__0():
     predictoor_ss = PredictoorSS(
         {
-            "predict_feed": "binanceus ETH/USDT c",
-            "timeframe": "5m",
+            "predict_feed": "binanceus ETH/USDT c 5m",
             "bot_only": {
                 "s_until_epoch_end": 60,
                 "stake_amount": 1,
@@ -79,7 +78,9 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+    ss, _, aimodel_data_factory = _predictoor_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h 5m"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
@@ -208,7 +209,7 @@ def test_create_xy__2exchanges_2coins_2signals():
     }
 
     ss = _predictoor_ss(
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         ["binanceus BTC/USDT,ETH/USDT hl", "kraken BTC/USDT,ETH/USDT hl"],
     )
     assert ss.aimodel_ss.autoregressive_n == 3
@@ -313,7 +314,7 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok

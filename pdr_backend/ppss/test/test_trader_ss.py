@@ -7,8 +7,7 @@ _D = {
         "buy_amt": "10 USD",
     },
     "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
-    "predict_feed": "kraken ETH/USDT h",
-    "timeframe": "5m",
+    "predict_feed": "kraken ETH/USDT h 5m",
 }
 
 
@@ -21,7 +20,7 @@ def test_trader_ss():
     assert ss.min_buffer == 60
     assert ss.max_tries == 10
     assert ss.position_size == 3
-    assert str(ss.predict_feed) == "kraken ETH/USDT h"
+    assert str(ss.predict_feed) == "kraken ETH/USDT h 5m"
 
     assert ss.signal_str == "high"
     assert ss.pair_str == "ETH/USDT"
