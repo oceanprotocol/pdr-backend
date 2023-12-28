@@ -44,7 +44,7 @@ def get_account_balances(checksum_address: str, web3_pp: Web3PP):
 
 
 @enforce_types
-def print_account_balances(addresses: List[str], web3_pp: Web3PP):
+def view_account_balances(addresses: List[str], web3_pp: Web3PP):
     """
     @description
         Get account balances from an address

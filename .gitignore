@@ -166,7 +166,7 @@ cython_debug/
 
 # predictoor-specific
 out*.txt
-my_ppss*.yaml
+my_ppss*.*
 csvs/
 parquet_data*/
 
