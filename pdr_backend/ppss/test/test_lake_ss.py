@@ -9,11 +9,10 @@ from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
 _D = {
-    "feeds": ["kraken ETH/USDT hc 5m", "binanceus ETH/USDT,TRX/DAI h 1h"],
+    "feeds": ["kraken ETH/USDT 5m", "binanceus ETH/USDT,TRX/DAI 1h"],
     "parquet_dir": "parquet_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
-    "timeframe": "5m",
 }
 
 
@@ -33,10 +32,9 @@ def test_lake_ss_basic():
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
     assert ss.input_feeds == ArgFeeds(
         [
-            ArgFeed("kraken", "high", "ETH/USDT", "5m"),
-            ArgFeed("kraken", "close", "ETH/USDT", "5m"),
-            ArgFeed("binanceus", "high", "ETH/USDT", "1h"),
-            ArgFeed("binanceus", "high", "TRX/DAI", "1h"),
+            ArgFeed("kraken", None, "ETH/USDT", "5m"),
+            ArgFeed("binanceus", None, "ETH/USDT", "1h"),
+            ArgFeed("binanceus", None, "TRX/DAI", "1h"),
         ]
     )
     assert ss.exchange_pair_tups == set(
@@ -46,7 +44,7 @@ def test_lake_ss_basic():
             ("binanceus", "TRX/DAI"),
         ]
     )
-    assert len(ss.input_feeds) == ss.n_input_feeds == 4
+    assert len(ss.input_feeds) == ss.n_input_feeds == 3
     assert ss.n_exchs == 2
     assert len(ss.exchange_strs) == 2
     assert "binanceus" in ss.exchange_strs
