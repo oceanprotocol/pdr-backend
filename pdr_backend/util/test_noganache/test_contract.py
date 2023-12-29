@@ -25,7 +25,7 @@ _NETWORKS = [
 def test_contract_main(network, monkeypatch):
     # setup
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"], network)
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], network)
     web3_pp = ppss.web3_pp
     assert web3_pp.network == network
 

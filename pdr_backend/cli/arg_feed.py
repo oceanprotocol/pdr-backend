@@ -3,31 +3,55 @@ Used as inputs for models, and for predicing.
 Complementary to subgraph/subgraph_feed.py which models a prediction feed contract.
 """
 
-from typing import List, Set, Union
+from typing import List, Optional, Set, Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
+from pdr_backend.cli.timeframe import Timeframe, Timeframes, verify_timeframes_str
 from pdr_backend.util.signalstr import (
     signal_to_char,
     unpack_signalchar_str,
+    verify_signalchar_str,
     verify_signal_str,
 )
 
 
 class ArgFeed:
-    def __init__(self, exchange, signal, pair: Union[ArgPair, str]):
+    def __init__(
+        self,
+        exchange,
+        signal: Union[str, None] = None,
+        pair: Union[ArgPair, str, None] = None,
+        timeframe: Optional[Union[Timeframe, str]] = None,
+    ):
         if signal is not None:
             verify_signal_str(signal)
+
+        if pair is None:
+            raise ValueError("pair cannot be None")
 
         self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = signal
 
+        if timeframe is None:
+            self.timeframe = None
+        else:
+            self.timeframe = (
+                Timeframe(timeframe) if isinstance(timeframe, str) else timeframe
+            )
+
     def __str__(self):
-        char = signal_to_char(self.signal)
-        feed_str = f"{self.exchange} {self.pair} {char}"
+        feed_str = f"{self.exchange} {self.pair}"
+
+        if self.signal is not None:
+            char = signal_to_char(self.signal)
+            feed_str += f" {char}"
+
+        if self.timeframe is not None:
+            feed_str += f" {self.timeframe}"
 
         return feed_str
 
@@ -39,6 +63,7 @@ class ArgFeed:
             self.exchange == other.exchange
             and self.signal == other.signal
             and str(self.pair) == str(other.pair)
+            and str(self.timeframe) == str(other.timeframe)
         )
 
     def __hash__(self):
@@ -100,11 +125,11 @@ class ArgFeeds(List[ArgFeed]):
 
     @property
     def exchanges(self) -> Set[str]:
-        return set(feed.exchange for feed in self)
+        return set(str(feed.exchange) for feed in self)
 
     @property
     def signals(self) -> Set[str]:
-        return set(feed.signal for feed in self)
+        return set(str(feed.signal) for feed in self)
 
 
 @enforce_types
@@ -122,7 +147,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
       ]
 
     @arguments
-      feeds_str - "<exchange_str> <chars subset of "ohclv"> <pairs_str>"
+      feeds_str - "<exchange_str> <pairs_str> <chars subset of "ohclv"> <timeframe> "
       do_verify - typically T. Only F to avoid recursion from verify functions
 
     @return
@@ -134,20 +159,46 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     exchange_str = feeds_str_split[0]
 
-    if len(feeds_str_split) < 3:
-        pairs_list_str = " ".join(feeds_str_split[1:])
-        signal_str_list = [None]
+    timeframe_str = feeds_str_split[-1]
+    offset_end = None
+
+    if verify_timeframes_str(timeframe_str):
+        timeframe_str_list = Timeframes.from_str(timeframe_str)
+
+        # last part is a valid timeframe, and we might have a signal before it
+        signal_char_str = feeds_str_split[-2]
+
+        if verify_signalchar_str(signal_char_str, True):
+            # last part is a valid timeframe and we have a valid signal before it
+            signal_str_list = unpack_signalchar_str(signal_char_str)
+            offset_end = -2
+        else:
+            # last part is a valid timeframe, but there is no signal before it
+            signal_str_list = [None]
+            offset_end = -1
     else:
-        pairs_list_str = " ".join(feeds_str_split[1:-1])
+        # last part is not a valid timeframe, but it might be a signal
+        timeframe_str_list = [None]
         signal_char_str = feeds_str_split[-1]
-        signal_str_list = unpack_signalchar_str(signal_char_str)
+
+        if verify_signalchar_str(signal_char_str, True):
+            # last part is a valid signal
+            signal_str_list = unpack_signalchar_str(signal_char_str)
+            offset_end = -1
+        else:
+            # last part is not a valid timeframe, nor a signal
+            signal_str_list = [None]
+            offset_end = None
+
+    pairs_list_str = " ".join(feeds_str_split[1:offset_end])
 
     pairs = ArgPairs.from_str(pairs_list_str)
 
     feeds = [
-        ArgFeed(exchange_str, signal_str, pair_str)
+        ArgFeed(exchange_str, signal_str, pair_str, timeframe_str)
         for signal_str in signal_str_list
         for pair_str in pairs
+        for timeframe_str in timeframe_str_list
     ]
 
     return feeds

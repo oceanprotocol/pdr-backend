@@ -1,4 +1,3 @@
-import copy
 from typing import Tuple
 
 from enforce_typing import enforce_types
@@ -6,7 +5,6 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.ppss.data_pp import DataPP
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 
@@ -26,18 +24,14 @@ class PredictoorAgent3(BasePredictoorAgent):
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
           stake -- int -- amount to stake, in units of Eth
         """
-        # Compute data_ss
-        feed = self.feed
-        d = copy.deepcopy(self.ppss.data_pp.d)
-        d["predict_feeds"] = [f"{feed.source} {feed.pair} c"]
-        data_pp = DataPP(d)
-        data_ss = self.ppss.data_ss.copy_with_yval(data_pp)
+        # Compute aimodel_ss
+        lake_ss = self.ppss.lake_ss
 
-        # From data_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(data_pp, data_ss)
+        # From lake_ss, build X/y
+        pq_data_factory = OhlcvDataFactory(lake_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
 
-        model_data_factory = AimodelDataFactory(data_pp, data_ss)
+        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data
@@ -46,7 +40,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        aimodel_factory = AimodelFactory(self.ppss.aimodel_ss)
+        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data

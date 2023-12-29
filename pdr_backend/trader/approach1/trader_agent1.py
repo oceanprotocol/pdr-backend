@@ -35,8 +35,8 @@ class TraderAgent1(BaseTraderAgent):
     def __init__(self, ppss: PPSS):
         super().__init__(ppss)
 
-        # Generic exchange clss
-        exchange_class = self.ppss.data_pp.exchange_class
+        # Generic exchange class
+        exchange_class = self.ppss.trader_ss.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -72,12 +72,12 @@ class TraderAgent1(BaseTraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.ppss.data_pp.exchange_str == "mexc":
+            if self.ppss.trader_ss.exchange_str == "mexc":
                 amount = float(self.order["info"]["origQty"])
 
             # close it
             order = self.exchange.create_market_sell_order(
-                self.ppss.data_pp.pair_str, amount
+                self.ppss.trader_ss.pair_str, amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")
@@ -99,7 +99,7 @@ class TraderAgent1(BaseTraderAgent):
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.ppss.data_pp.pair_str, self.ppss.trader_ss.position_size
+                self.ppss.trader_ss.pair_str, self.ppss.trader_ss.position_size
             )
 
             # If order is successful, we log the order so we can close it

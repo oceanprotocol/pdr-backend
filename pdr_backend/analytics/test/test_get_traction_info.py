@@ -17,7 +17,7 @@ def test_get_traction_info_main_mainnet(
     monkeypatch,
 ):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_traction_stat = Mock()
     mock_plot_cumsum = Mock()

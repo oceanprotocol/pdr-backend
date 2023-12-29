@@ -14,6 +14,7 @@ from pdr_backend.cli.cli_arguments import (
     GetPredictionsInfoArgParser,
     GetPredictoorsInfoArgParser,
     GetTractionInfoArgParser,
+    LakeArgParser,
     PredictoorArgParser,
     PublisherArgParser,
     SimArgParser,
@@ -24,6 +25,7 @@ from pdr_backend.cli.cli_arguments import (
     print_args,
 )
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
@@ -104,6 +106,18 @@ def do_trader():
         raise ValueError(f"Unknown trader approach {approach}")
 
     agent.run()
+
+
+@enforce_types
+def do_lake():
+    parser = LakeArgParser("Run the lake tool", "lake")
+    args = parser.parse_args()
+    print_args(args)
+
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
+    df = ohlcv_data_factory.get_mergedohlcv_df()
+    print(df)
 
 
 # do_help() is implemented in cli_arguments and imported, so nothing needed here

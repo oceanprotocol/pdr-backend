@@ -123,7 +123,7 @@ def _test_update_gql(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -209,7 +209,7 @@ def test_load_and_verify_schema(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -248,7 +248,7 @@ def test_get_gql_dfs_calls(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )

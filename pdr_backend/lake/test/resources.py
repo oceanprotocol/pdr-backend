@@ -9,59 +9,71 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus ETH/USDT h")
+    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, aimodel_data_factory
 
 
 @enforce_types
-def _data_pp_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
+def _predictoor_ss_1feed(tmpdir, feed):
+    predictoor_ss = _predictoor_ss(feed, [feed])
+    lake_ss = _lake_ss(tmpdir, [feed])
+    ohlcv_data_factory = OhlcvDataFactory(lake_ss)
+    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
+    return predictoor_ss, ohlcv_data_factory, aimodel_data_factory
+
+
+@enforce_types
+def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     parquet_dir = str(tmpdir)
-    pp = _data_pp([feed])
-    ss = _data_ss(parquet_dir, [feed], st_timestr, fin_timestr)
-    ohlcv_data_factory = OhlcvDataFactory(pp, ss)
-    aimodel_data_factory = AimodelDataFactory(pp, ss)
-    return pp, ss, ohlcv_data_factory, aimodel_data_factory
+    ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    ohlcv_data_factory = OhlcvDataFactory(ss)
+    return ss, ohlcv_data_factory
 
 
 @enforce_types
 def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
-    ppss = mock_ppss("5m", [feed], network, str(tmpdir), st_timestr, fin_timestr)
+    ppss = mock_ppss([feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
     gql_data_factory = GQLDataFactory(ppss)
     return ppss, gql_data_factory
 
 
 @enforce_types
-def _data_pp(predict_feeds) -> DataPP:
-    return DataPP(
+def _predictoor_ss(predict_feed, input_feeds):
+    return PredictoorSS(
         {
+            "predict_feed": predict_feed,
             "timeframe": "5m",
-            "predict_feeds": predict_feeds,
-            "sim_only": {"test_n": 2},
+            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "aimodel_ss": {
+                "input_feeds": input_feeds,
+                "approach": "LIN",
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+            },
         }
     )
 
 
 @enforce_types
-def _data_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
-    return DataSS(
+def _lake_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
+    return LakeSS(
         {
-            "input_feeds": input_feeds,
+            "feeds": input_feeds,
             "parquet_dir": parquet_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",
-            "max_n_train": 7,
-            "autoregressive_n": 3,
+            "timeframe": "5m",
         }
     )
 
