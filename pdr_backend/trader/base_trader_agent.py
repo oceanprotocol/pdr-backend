@@ -2,7 +2,6 @@ import asyncio
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache

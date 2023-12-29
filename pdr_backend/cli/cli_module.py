@@ -114,12 +114,10 @@ def do_lake():
     args = parser.parse_args()
     print_args(args)
 
-    # pylint: disable=unused-variable
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
-
-    # TODO: implement lake tool
-    print("Building...")
+    df = ohlcv_data_factory.get_mergedohlcv_df()
+    print(df)
 
 
 # do_help() is implemented in cli_arguments and imported, so nothing needed here
