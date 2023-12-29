@@ -2,9 +2,9 @@
 lake_ss:
   parquet_dir: parquet_data
   feeds:
-    - binance BTC/USDT h 1h
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT h 5m
-#    - kraken BTC/USDT c 1h
+    - binance BTC/USDT 1h
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 1h
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
 

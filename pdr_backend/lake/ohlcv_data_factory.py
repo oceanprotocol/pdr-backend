@@ -7,7 +7,12 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
-from pdr_backend.lake.constants import OHLCV_MULT_MAX, OHLCV_MULT_MIN, TOHLCV_SCHEMA_PL
+from pdr_backend.lake.constants import (
+    OHLCV_MULT_MAX,
+    OHLCV_MULT_MIN,
+    TOHLCV_SCHEMA_PL,
+    TOHLCV_COLS,
+)
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
@@ -215,11 +220,7 @@ class OhlcvDataFactory:
             exch_str = str(feed.exchange)
             assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
             filename = self._rawohlcv_filename(feed)
-            cols = [
-                feed.signal  # cols is a subset of TOHLCV_COLS
-                for feed in self.ss.input_feeds
-                if str(feed.exchange) == exch_str and feed.pair == pair_str
-            ]
+            cols = TOHLCV_COLS
             rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
 
             assert "timestamp" in rawohlcv_df.columns
