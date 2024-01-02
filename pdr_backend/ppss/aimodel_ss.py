@@ -1,28 +1,21 @@
 import copy
-from typing import List, Set, Tuple
 
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.ppss.abstract.base_ss import MultiFeedSS
 from pdr_backend.util.strutil import StrMixin
 
 APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
 
 
 @enforce_types
-class AimodelSS(StrMixin):
+class AimodelSS(MultiFeedSS, StrMixin):
     __STR_OBJDIR__ = ["d"]
+    FEEDS_KEY = "input_feeds"
 
     def __init__(self, d: dict):
-        self.d = d  # yaml_dict["aimodel_ss"]
-
-        # save self.exchs_dict
-        self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
-        feeds = ArgFeeds.from_strs(self.input_feeds_strs)
-        for feed in feeds:
-            exchange_class = feed.exchange.exchange_class
-            self.exchs_dict[str(feed.exchange)] = exchange_class()
+        super().__init__(d)  # yaml_dict["aimodel_ss"]
 
         # test inputs
         if self.approach not in APPROACHES:
@@ -33,30 +26,10 @@ class AimodelSS(StrMixin):
 
     # --------------------------------
     # yaml properties
+
     @property
     def approach(self) -> str:
         return self.d["approach"]  # eg "LIN"
-
-    @property
-    def input_feeds_strs(self) -> List[str]:
-        return self.d["input_feeds"]  # eg ["binance BTC/USDT ohlcv",..]
-
-    @property
-    def n_exchs(self) -> int:
-        return len(self.exchs_dict)
-
-    @property
-    def exchange_strs(self) -> List[str]:
-        return sorted(self.exchs_dict.keys())
-
-    @property
-    def n_input_feeds(self) -> int:
-        return len(self.input_feeds)
-
-    @property
-    def input_feeds(self) -> ArgFeeds:
-        """Return list of ArgFeed(exchange_str, signal_str, pair_str)"""
-        return ArgFeeds.from_strs(self.input_feeds_strs)
 
     @property
     def max_n_train(self) -> int:
@@ -68,18 +41,17 @@ class AimodelSS(StrMixin):
             "autoregressive_n"
         ]  # eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]
 
-    @property
-    def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
-        """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
+    # input feeds defined in base
 
+    # --------------------------------
+    # derivative properties
     @property
     def n(self) -> int:
         """Number of input dimensions == # columns in X"""
         return self.n_input_feeds * self.autoregressive_n
 
     @enforce_types
-    def copy_with_yval(self):
+    def copy(self):
         d2 = copy.deepcopy(self.d)
 
         return AimodelSS(d2)
