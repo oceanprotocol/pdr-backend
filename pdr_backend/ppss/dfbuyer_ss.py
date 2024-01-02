@@ -1,14 +1,17 @@
 from enforce_typing import enforce_types
 
+from pdr_backend.ppss.abstract.base_ss import MultiFeedSS
 from pdr_backend.util.strutil import StrMixin
 
 
-class DFBuyerSS(StrMixin):
+class DFBuyerSS(MultiFeedSS, StrMixin):
     __STR_OBJDIR__ = ["d"]
+    FEEDS_KEY = "feeds"
 
     @enforce_types
     def __init__(self, d: dict):
-        self.d = d  # yaml_dict["dfbuyer_ss"]
+        # yaml_dict["dfbuyer_ss"]
+        super().__init__(d, assert_feed_attributes=["timeframe"])
 
     # --------------------------------
     # yaml properties
@@ -39,6 +42,8 @@ class DFBuyerSS(StrMixin):
         Number of times to retry the request, hardcoded to 5
         """
         return 5
+
+    # feeds defined in base
 
     # --------------------------------
     # derived values

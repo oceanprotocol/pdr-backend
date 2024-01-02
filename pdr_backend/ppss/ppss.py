@@ -129,6 +129,15 @@ def mock_ppss(
         }
     )
 
+    ppss.dfbuyer_ss = DFBuyerSS(
+        {
+            "feeds": predict_feeds,
+            "batch_size": 20,
+            "consume_interval_seconds": 86400,
+            "weekly_spending_limit": 37000,
+        }
+    )
+
     return ppss
 
 

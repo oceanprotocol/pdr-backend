@@ -57,6 +57,10 @@ trueval_ss:
   sleep_time: 30
 
 dfbuyer_ss:
+  feeds:
+    - binance BTC/USDT 5m
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 5m
   batch_size: 20
   consume_interval_seconds: 86400
   weekly_spending_limit: 37000

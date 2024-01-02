@@ -55,6 +55,25 @@ class MultiFeedSS(ABC):
         """Return set of unique (exchange_str, pair_str) tuples"""
         return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
 
+    @enforce_types
+    def filter_feeds_from_candidates(
+        self, cand_feeds: Dict[str, SubgraphFeed]
+    ) -> Dict[str, SubgraphFeed]:
+        result: Dict[str, SubgraphFeed] = {}
+
+        allowed_tups = [
+            (str(feed.exchange), str(feed.pair), str(feed.timeframe))
+            for feed in self.input_feeds
+        ]
+
+        for sg_key, sg_feed in cand_feeds.items():
+            assert isinstance(sg_feed, SubgraphFeed)
+
+            if (sg_feed.source, sg_feed.pair, sg_feed.timeframe) in allowed_tups:
+                result[sg_key] = sg_feed
+
+        return result
+
 
 class SingleFeedSS(ABC):
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
