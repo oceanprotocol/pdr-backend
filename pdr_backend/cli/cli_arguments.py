@@ -251,40 +251,35 @@ TopupArgParser = _ArgParser_PPSS_NETWORK
 
 
 def get_arg_parser(func_name):
-    if func_name == "do_sim":
-        return SimArgParser("Run simulation", "sim")
-    if func_name == "do_predictoor":
-        return PredictoorArgParser("Run a predictoor bot", "predictoor")
-    if func_name == "do_trader":
-        return TraderArgParser("Run a trader bot", "trader")
-    if func_name == "do_lake":
-        return LakeArgParser("Run the lake tool", "lake")
-    if func_name == "do_claim_OCEAN":
-        return ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN")
-    if func_name == "do_claim_ROSE":
-        return ClaimRoseArgParser("Claim ROSE", "claim_ROSE")
-    if func_name == "do_get_predictoors_info":
-        return GetPredictoorsInfoArgParser(
+    parsers = {
+        "do_sim": SimArgParser("Run simulation", "sim"),
+        "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
+        "do_trader": TraderArgParser("Run a trader bot", "trader"),
+        "do_lake": LakeArgParser("Run the lake tool", "lake"),
+        "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
+        "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
+        "do_get_predictoors_info": GetPredictoorsInfoArgParser(
             "For specified predictoors, report {accuracy, ..} of each predictoor",
             "get_predictoors_info",
-        )
-    if func_name == "do_get_predictions_info":
-        return GetPredictionsInfoArgParser(
+        ),
+        "do_get_predictions_info": GetPredictionsInfoArgParser(
             "For specified feeds, report {accuracy, ..} of each predictoor",
             "get_predictions_info",
-        )
-    if func_name == "do_get_traction_info":
-        return GetTractionInfoArgParser(
+        ),
+        "do_get_traction_info": GetTractionInfoArgParser(
             "Get traction info: # predictoors vs time, etc",
             "get_traction_info",
-        )
-    if func_name == "do_check_network":
-        return CheckNetworkArgParser("Check network", "check_network")
-    if func_name == "do_trueval":
-        return TruevalArgParser("Run trueval bot", "trueval")
-    if func_name == "do_dfbuyer":
-        return DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
-    if func_name == "do_publisher":
-        return PublisherArgParser("Publish feeds", "publisher")
-    if func_name == "do_topup":
-        return TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup")
+        ),
+        "do_check_network": CheckNetworkArgParser("Check network", "check_network"),
+        "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
+        "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
+        "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
+        "do_topup": TopupArgParser(
+            "Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"
+        ),
+    }
+
+    if func_name not in parsers:
+        raise ValueError(f"Unknown function name: {func_name}")
+
+    return parsers[func_name]

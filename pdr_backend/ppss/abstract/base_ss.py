@@ -9,8 +9,11 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 class MultiFeedSS(ABC):
+    FEEDS_KEY = ""
+
     @enforce_types
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
+        assert self.__class__.FEEDS_KEY
         self.d = d
         # save self.exchs_dict
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
