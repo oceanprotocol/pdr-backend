@@ -35,22 +35,8 @@ Tools for core team:
 """
 
 
-@enforce_types
-def print_args(arguments: Namespace):
-    arguments_dict = arguments.__dict__
-    command = arguments_dict.pop("command", None)
-
-    print(f"dftool {command}: Begin")
-    print("Arguments:")
-
-    for arg_k, arg_v in arguments_dict.items():
-        print(f"{arg_k}={arg_v}")
-
-
 # ========================================================================
 # mixins
-
-
 @enforce_types
 class APPROACH_Mixin:
     def add_argument_APPROACH(self):
@@ -128,45 +114,46 @@ class LOOKBACK_Mixin:
 
 # ========================================================================
 # argparser base classes
+class CustomArgParser(ArgParser):
+    def add_arguments_bulk(self, command_name, arguments):
+        self.add_argument("command", choices=[command_name])
+
+        for arg in arguments:
+            func = getattr(self, f"add_argument_{arg}")
+            func()
 
 
 @enforce_types
-class _ArgParser_PPSS(ArgParser, PPSS_Mixin):
+class _ArgParser_PPSS(CustomArgParser, PPSS_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_PPSS()
+        self.add_arguments_bulk(command_name, ["PPSS"])
 
 
 @enforce_types
-class _ArgParser_PPSS_NETWORK(ArgParser, PPSS_Mixin, NETWORK_Mixin):
+class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
+        self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
 
 
 @enforce_types
 class _ArgParser_APPROACH_PPSS_NETWORK(
-    ArgParser,
+    CustomArgParser,
     APPROACH_Mixin,
     PPSS_Mixin,
     NETWORK_Mixin,
 ):
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_APPROACH()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
+        self.add_arguments_bulk(command_name, ["APPROACH", "PPSS", "NETWORK"])
 
 
 @enforce_types
 class _ArgParser_PPSS_NETWORK_LOOKBACK(
-    ArgParser,
+    CustomArgParser,
     PPSS_Mixin,
     NETWORK_Mixin,
     LOOKBACK_Mixin,
@@ -174,15 +161,12 @@ class _ArgParser_PPSS_NETWORK_LOOKBACK(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
-        self.add_argument_LOOKBACK()
+        self.add_arguments_bulk(command_name, ["PPSS", "NETWORK", "LOOKBACK"])
 
 
 @enforce_types
 class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
-    ArgParser,
+    CustomArgParser,
     ST_Mixin,
     END_Mixin,
     PQDIR_Mixin,
@@ -193,18 +177,12 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_ST()
-        self.add_argument_END()
-        self.add_argument_PQDIR()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
-        self.add_argument_PDRS()
+        self.add_arguments_bulk(command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK"])
 
 
 @enforce_types
 class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
-    ArgParser,
+    CustomArgParser,
     ST_Mixin,
     END_Mixin,
     PQDIR_Mixin,
@@ -215,18 +193,33 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_ST()
-        self.add_argument_END()
-        self.add_argument_PQDIR()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
-        self.add_argument_FEEDS()
+        self.add_arguments_bulk(
+            command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK", "FEEDS"]
+        )
 
 
 # ========================================================================
 # actual arg-parser implementations are just aliases to argparser base classes
 # In order of help text.
+
+
+@enforce_types
+def do_help_long(status_code=0):
+    print(HELP_LONG)
+    sys.exit(status_code)
+
+
+@enforce_types
+def print_args(arguments: Namespace):
+    arguments_dict = arguments.__dict__
+    command = arguments_dict.pop("command", None)
+
+    print(f"dftool {command}: Begin")
+    print("Arguments:")
+
+    for arg_k, arg_v in arguments_dict.items():
+        print(f"{arg_k}={arg_v}")
+
 
 SimArgParser = _ArgParser_PPSS
 
@@ -239,13 +232,6 @@ LakeArgParser = _ArgParser_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
 
 ClaimRoseArgParser = _ArgParser_PPSS
-
-
-@enforce_types
-def do_help_long(status_code=0):
-    print(HELP_LONG)
-    sys.exit(status_code)
-
 
 GetPredictoorsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS
 
@@ -262,3 +248,43 @@ DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
+
+
+def get_arg_parser(func_name):
+    if func_name == "do_sim":
+        return SimArgParser("Run simulation", "sim")
+    if func_name == "do_predictoor":
+        return PredictoorArgParser("Run a predictoor bot", "predictoor")
+    if func_name == "do_trader":
+        return TraderArgParser("Run a trader bot", "trader")
+    if func_name == "do_lake":
+        return LakeArgParser("Run the lake tool", "lake")
+    if func_name == "do_claim_OCEAN":
+        return ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN")
+    if func_name == "do_claim_ROSE":
+        return ClaimRoseArgParser("Claim ROSE", "claim_ROSE")
+    if func_name == "do_get_predictoors_info":
+        return GetPredictoorsInfoArgParser(
+            "For specified predictoors, report {accuracy, ..} of each predictoor",
+            "get_predictoors_info",
+        )
+    if func_name == "do_get_predictions_info":
+        return GetPredictionsInfoArgParser(
+            "For specified feeds, report {accuracy, ..} of each predictoor",
+            "get_predictions_info",
+        )
+    if func_name == "do_get_traction_info":
+        return GetTractionInfoArgParser(
+            "Get traction info: # predictoors vs time, etc",
+            "get_traction_info",
+        )
+    if func_name == "do_check_network":
+        return CheckNetworkArgParser("Check network", "check_network")
+    if func_name == "do_trueval":
+        return TruevalArgParser("Run trueval bot", "trueval")
+    if func_name == "do_dfbuyer":
+        return DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
+    if func_name == "do_publisher":
+        return PublisherArgParser("Publish feeds", "publisher")
+    if func_name == "do_topup":
+        return TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup")
