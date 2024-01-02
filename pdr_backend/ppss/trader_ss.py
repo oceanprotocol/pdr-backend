@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
 
@@ -21,6 +21,14 @@ class TraderSS(SingleFeedSS, StrMixin):
     def buy_amt_str(self) -> Union[int, float]:
         """How much to buy. Eg 10."""
         return self.d["sim_only"]["buy_amt"]
+
+    @property
+    def fee_percent(self) -> str:
+        return self.d["sim_only"]["fee_percent"]  # Eg 0.001 is 0.1%.Trading fee
+
+    @property
+    def init_holdings_strs(self) -> List[str]:
+        return self.d["sim_only"]["init_holdings"]  # eg ["1000 USDT", ..]
 
     # predict_feed defined in base
 
@@ -61,6 +69,15 @@ class TraderSS(SingleFeedSS, StrMixin):
     def buy_amt_usd(self):
         amt_s, _ = self.buy_amt_str.split()
         return float(amt_s)
+
+    @property
+    def init_holdings(self) -> Dict[str, float]:
+        d = {}
+        for s in self.init_holdings_strs:
+            amt_s, coin = s.split()
+            amt = float(amt_s)
+            d[coin] = amt
+        return d
 
 
 # =========================================================================

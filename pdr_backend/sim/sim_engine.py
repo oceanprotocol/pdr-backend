@@ -43,7 +43,7 @@ class SimEngine:
         self.ppss = ppss
 
         # state
-        self.holdings = copy.copy(self.ppss.trader_pp.init_holdings)
+        self.holdings = copy.copy(self.ppss.trader_ss.init_holdings)
         self.tot_profit_usd = 0.0
         self.nmses_train: List[float] = []
         self.ys_test: List[float] = []
@@ -192,7 +192,7 @@ class SimEngine:
         usdcoin_amt_sent = min(usdcoin_amt_spend, self.holdings[self.usdcoin])
         self.holdings[self.usdcoin] -= usdcoin_amt_sent
 
-        p = self.ppss.trader_pp.fee_percent
+        p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = p * usdcoin_amt_sent
         tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
         self.holdings[self.tokcoin] += tokcoin_amt_recd
@@ -215,7 +215,7 @@ class SimEngine:
         tokcoin_amt_sent = tokcoin_amt_sell
         self.holdings[self.tokcoin] -= tokcoin_amt_sent
 
-        p = self.ppss.trader_pp.fee_percent
+        p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = p * tokcoin_amt_sent * price
         usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
         self.holdings[self.usdcoin] += usdcoin_amt_recd

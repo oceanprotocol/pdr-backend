@@ -23,18 +23,14 @@ predictoor_ss:
     autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
 
-trader_pp:
-  sim_only:
-    fee_percent: 0.0 # simulated % fee
-    init_holdings:
-      - 100000 USDT
-      - 0 BTC
-  bot_only:
-
 trader_ss:
   predict_feed: binance BTC/USDT c 1h
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
+    fee_percent: 0.0 # simulated % fee
+    init_holdings:
+      - 100000 USDT
+      - 0 BTC
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
