@@ -77,7 +77,7 @@ class AimodelDataFactory:
         x_df = pd.DataFrame()  # build this up
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.input_feeds
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
         ]
 
         for hist_col in target_hist_cols:

@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from enforce_typing import enforce_types
@@ -8,7 +7,7 @@ from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
-class MultiFeedSS(ABC):
+class MultiFeedMixin:
     FEEDS_KEY = ""
 
     @enforce_types
@@ -17,7 +16,7 @@ class MultiFeedSS(ABC):
         self.d = d
         # save self.exchs_dict
         self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
-        feeds = ArgFeeds.from_strs(self.input_feeds_strs)
+        feeds = ArgFeeds.from_strs(self.feeds_strs)
         for feed in feeds:
             exchange_class = feed.exchange.exchange_class
             self.exchs_dict[str(feed.exchange)] = exchange_class()
@@ -28,7 +27,7 @@ class MultiFeedSS(ABC):
     # --------------------------------
     # yaml properties
     @property
-    def input_feeds_strs(self) -> List[str]:
+    def feeds_strs(self) -> List[str]:
         return self.d[self.__class__.FEEDS_KEY]  # eg ["binance BTC/USDT ohlcv",..]
 
     # --------------------------------
@@ -42,18 +41,18 @@ class MultiFeedSS(ABC):
         return sorted(self.exchs_dict.keys())
 
     @property
-    def n_input_feeds(self) -> int:
-        return len(self.input_feeds)
+    def n_feeds(self) -> int:
+        return len(self.feeds)
 
     @property
-    def input_feeds(self) -> ArgFeeds:
+    def feeds(self) -> ArgFeeds:
         """Return list of ArgFeed(exchange_str, signal_str, pair_str)"""
-        return ArgFeeds.from_strs(self.input_feeds_strs)
+        return ArgFeeds.from_strs(self.feeds_strs)
 
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
+        return set((feed.exchange, str(feed.pair)) for feed in self.feeds)
 
     @enforce_types
     def filter_feeds_from_candidates(
@@ -63,7 +62,7 @@ class MultiFeedSS(ABC):
 
         allowed_tups = [
             (str(feed.exchange), str(feed.pair), str(feed.timeframe))
-            for feed in self.input_feeds
+            for feed in self.feeds
         ]
 
         for sg_key, sg_feed in cand_feeds.items():
@@ -75,7 +74,7 @@ class MultiFeedSS(ABC):
         return result
 
 
-class SingleFeedSS(ABC):
+class SingleFeedMixin:
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
         self.d = d  # yaml_dict["predictor_ss"]
         if assert_feed_attributes:

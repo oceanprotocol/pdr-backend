@@ -1,10 +1,10 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.abstract.base_ss import MultiFeedSS
+from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.strutil import StrMixin
 
 
-class DFBuyerSS(MultiFeedSS, StrMixin):
+class DFBuyerSS(MultiFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEEDS_KEY = "feeds"
 

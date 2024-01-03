@@ -3,14 +3,14 @@ import copy
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.abstract.base_ss import MultiFeedSS
+from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.strutil import StrMixin
 
 APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
 
 
 @enforce_types
-class AimodelSS(MultiFeedSS, StrMixin):
+class AimodelSS(MultiFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEEDS_KEY = "input_feeds"
 
@@ -48,7 +48,7 @@ class AimodelSS(MultiFeedSS, StrMixin):
     @property
     def n(self) -> int:
         """Number of input dimensions == # columns in X"""
-        return self.n_input_feeds * self.autoregressive_n
+        return self.n_feeds * self.autoregressive_n
 
     @enforce_types
     def copy(self):

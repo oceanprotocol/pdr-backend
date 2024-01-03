@@ -1,11 +1,11 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.abstract.base_ss import SingleFeedSS
+from pdr_backend.ppss.base_ss import SingleFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.util.strutil import StrMixin
 
 
-class PredictoorSS(SingleFeedSS, StrMixin):
+class PredictoorSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
 
     @enforce_types

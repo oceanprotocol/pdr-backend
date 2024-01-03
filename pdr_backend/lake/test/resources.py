@@ -49,14 +49,14 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
 
 
 @enforce_types
-def _predictoor_ss(predict_feed, input_feeds):
+def _predictoor_ss(predict_feed, feeds):
     return PredictoorSS(
         {
             "predict_feed": predict_feed,
             "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
-                "input_feeds": input_feeds,
+                "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,
                 "autoregressive_n": 3,
@@ -66,10 +66,10 @@ def _predictoor_ss(predict_feed, input_feeds):
 
 
 @enforce_types
-def _lake_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
+def _lake_ss(parquet_dir, feeds, st_timestr=None, fin_timestr=None):
     return LakeSS(
         {
-            "feeds": input_feeds,
+            "feeds": feeds,
             "parquet_dir": parquet_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",

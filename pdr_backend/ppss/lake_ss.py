@@ -4,11 +4,11 @@ import os
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.abstract.base_ss import MultiFeedSS
+from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
-class LakeSS(MultiFeedSS):
+class LakeSS(MultiFeedMixin):
     FEEDS_KEY = "feeds"
 
     @enforce_types
@@ -73,8 +73,8 @@ class LakeSS(MultiFeedSS):
     @enforce_types
     def __str__(self) -> str:
         s = "LakeSS:\n"
-        s += f"input_feeds_strs={self.input_feeds_strs}"
-        s += f" -> n_inputfeeds={self.n_input_feeds}\n"
+        s += f"feeds_strs={self.feeds_strs}"
+        s += f" -> n_inputfeeds={self.n_feeds}\n"
         s += f"st_timestr={self.st_timestr}"
         s += f" -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
         s += f"fin_timestr={self.fin_timestr}"

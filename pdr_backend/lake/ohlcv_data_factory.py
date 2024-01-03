@@ -91,7 +91,7 @@ class OhlcvDataFactory:
 
     def _update_rawohlcv_files(self, fin_ut: int):
         print("  Update all rawohlcv files: begin")
-        for feed in self.ss.input_feeds:
+        for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
         print("  Update all rawohlcv files: done")
 
@@ -215,7 +215,7 @@ class OhlcvDataFactory:
         for exch_str in self.ss.exchange_strs:
             rawohlcv_dfs[exch_str] = {}
 
-        for feed in self.ss.input_feeds:
+        for feed in self.ss.feeds:
             pair_str = str(feed.pair)
             exch_str = str(feed.exchange)
             assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
