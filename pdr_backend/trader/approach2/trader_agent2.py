@@ -6,12 +6,8 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.models.feed import Feed
-from pdr_backend.trader.approach2.portfolio import (
-    Portfolio,
-    Order,
-    create_order,
-)
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
@@ -32,10 +28,10 @@ class TraderAgent2(BaseTraderAgent):
 
         # If cache params are empty, instantiate
         if self.portfolio is None:
-            self.portfolio = Portfolio(list(self.feeds.keys()))
+            self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.ppss.data_pp.exchange_str)
+        exchange_class = self.ppss.trader_ss.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -50,7 +46,7 @@ class TraderAgent2(BaseTraderAgent):
             }
         )
 
-        self.update_positions(list(self.feeds.keys()))
+        self.update_positions([self.feed.address])
 
     def update_cache(self):
         super().update_cache()
@@ -68,11 +64,11 @@ class TraderAgent2(BaseTraderAgent):
     def should_close(self, order: Order):
         """
         @description
-            Check if order has lapsed in time relative to data_pp.timeframe
+            Check if order has lapsed in time relative to trader_ss.timeframe
         """
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
-        order_lapsed = now_ts - tx_ts > self.ppss.data_pp.timeframe_ms
+        order_lapsed = now_ts - tx_ts > self.ppss.trader_ss.timeframe_ms
         return order_lapsed
 
     def update_positions(self, feeds: Optional[List[str]] = None):
@@ -80,7 +76,7 @@ class TraderAgent2(BaseTraderAgent):
         @description
             Cycle through open positions and asses them
         """
-        feeds = list(self.feeds.keys()) if feeds is None or feeds == [] else feeds
+        feeds = [self.feed.address] if feeds is None or feeds == [] else feeds
         if not feeds:
             return
         if not self.portfolio:
@@ -102,13 +98,13 @@ class TraderAgent2(BaseTraderAgent):
 
                 print("     [Close Position] Requirements met")
                 order = self.exchange.create_market_sell_order(
-                    self.ppss.data_pp.exchange_str,
+                    self.ppss.trader_ss.exchange_str,
                     position.open_order.amount,
                 )
                 self.portfolio.close_position(addr, order)
                 self.update_cache()
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             Logic:
@@ -138,11 +134,11 @@ class TraderAgent2(BaseTraderAgent):
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             print("     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
-                symbol=self.ppss.data_pp.exchange_str,
+                symbol=self.ppss.trader_ss.exchange_str,
                 amount=self.ppss.trader_ss.position_size,
             )
             if order and self.portfolio:
-                order = create_order(order, self.ppss.data_pp.exchange_str)
+                order = create_order(order, self.ppss.trader_ss.exchange_str)
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()
         else:

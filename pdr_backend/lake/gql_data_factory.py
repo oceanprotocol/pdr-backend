@@ -1,21 +1,18 @@
 import os
-from typing import Dict, Callable
+from typing import Callable, Dict
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.plutil import (
-    has_data,
-    newest_ut,
-)
+from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
     get_pdr_predictions_df,
+    predictions_schema,
 )
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.util.timeutil import pretty_timestr, current_ut
+from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 
 @enforce_types
@@ -66,9 +63,9 @@ class GQLDataFactory:
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
-        fin_ut = self.ppss.data_ss.fin_timestamp
+        fin_ut = self.ppss.lake_ss.fin_timestamp
 
-        print(f"  Data start: {pretty_timestr(self.ppss.data_ss.st_timestamp)}")
+        print(f"  Data start: {pretty_timestr(self.ppss.lake_ss.st_timestamp)}")
         print(f"  Data fin: {pretty_timestr(fin_ut)}")
 
         self._update(fin_ut)
@@ -137,13 +134,13 @@ class GQLDataFactory:
         """
         if not os.path.exists(filename):
             print("      No file exists yet, so will fetch all data")
-            return self.ppss.data_ss.st_timestamp
+            return self.ppss.lake_ss.st_timestamp
 
         print("      File already exists")
         if not has_data(filename):
             print("      File has no data, so delete it")
             os.remove(filename)
-            return self.ppss.data_ss.st_timestamp
+            return self.ppss.lake_ss.st_timestamp
 
         file_utN = newest_ut(filename)
         return file_utN + 1000
@@ -158,7 +155,7 @@ class GQLDataFactory:
             Where df has columns=GQL_COLS+"datetime", and index=timestamp
         """
         print("  Load parquet.")
-        st_ut = self.ppss.data_ss.st_timestamp
+        st_ut = self.ppss.lake_ss.st_timestamp
 
         dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
 
@@ -190,7 +187,7 @@ class GQLDataFactory:
           parquet_filename -- name for parquet file.
         """
         basename = f"{filename_str}.parquet"
-        filename = os.path.join(self.ppss.data_ss.parquet_dir, basename)
+        filename = os.path.join(self.ppss.lake_ss.parquet_dir, basename)
         return filename
 
     @enforce_types

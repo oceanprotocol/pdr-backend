@@ -1,11 +1,11 @@
 import os
-from typing import List, Dict, Tuple, TypedDict, Set
-from enforce_typing import enforce_types
+from typing import Dict, List, Set, Tuple, TypedDict
 
 import matplotlib.pyplot as plt
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.models.prediction import Prediction
+from pdr_backend.contract.prediction import Prediction
 from pdr_backend.util.csvs import get_plots_dir
 from pdr_backend.lake.table_pdr_predictions import feed_summary_df_schema, predictoor_summary_df_schema
 

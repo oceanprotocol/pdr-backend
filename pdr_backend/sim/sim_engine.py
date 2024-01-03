@@ -2,10 +2,10 @@ import copy
 import os
 from typing import List
 
-from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -31,10 +31,13 @@ class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
+        predict_feed = ppss.predictoor_ss.predict_feed
+
+        # timeframe doesn't need to match
         assert (
-            len(ppss.data_pp.predict_feed_tups) == 1
-        ), "sim engine can only handle 1 prediction feed"
-        assert ppss.data_pp.predict_feed_tups[0] in ppss.data_ss.input_feed_tups
+            str(predict_feed.exchange),
+            str(predict_feed.pair),
+        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
 
         # pp & ss values
         self.ppss = ppss
@@ -58,12 +61,12 @@ class SimEngine:
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.ppss.data_pp.base_str
+        return self.ppss.predictoor_ss.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.ppss.data_pp.quote_str
+        return self.ppss.predictoor_ss.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -83,11 +86,11 @@ class SimEngine:
         log("Start run")
 
         # main loop!
-        pq_data_factory = OhlcvDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
-        for test_i in range(self.ppss.data_pp.test_n):
+        for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
-            self._plot(test_i, self.ppss.data_pp.test_n)
+            self._plot(test_i, self.ppss.sim_ss.test_n)
 
         log("Done all iters.")
 
@@ -98,15 +101,15 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
-        testshift = self.ppss.data_pp.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = AimodelDataFactory(self.ppss.data_pp, self.ppss.data_ss)
+        testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        aimodel_factory = AimodelFactory(self.ppss.aimodel_ss)
+        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
@@ -116,7 +119,7 @@ class SimEngine:
 
         # current time
         recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
-        ut = recent_ut - testshift * self.ppss.data_pp.timeframe_ms
+        ut = recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms
 
         # current price
         curprice = y_train[-1]
@@ -154,7 +157,7 @@ class SimEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.ppss.data_pp.test_n}: "
+            f"Iter #{test_i+1:3}/{self.ppss.sim_ss.test_n}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"

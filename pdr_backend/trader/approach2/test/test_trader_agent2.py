@@ -1,17 +1,17 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_feed_ppss
 from pdr_backend.ppss.web3_pp import inplace_mock_feedgetters
+from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trader.test.trader_agent_runner import (
     do_constructor,
     do_run,
     setup_trade,
 )
-from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 
 
 @enforce_types

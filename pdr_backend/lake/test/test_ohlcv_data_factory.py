@@ -3,27 +3,21 @@ import time
 from typing import List
 from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
-import pytest
+from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
-from pdr_backend.lake.ohlcv_data_factory import (
-    OhlcvDataFactory,
-)
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
+    concat_next_df,
     initialize_rawohlcv_df,
     load_rawohlcv_file,
     save_rawohlcv_file,
-    concat_next_df,
 )
-from pdr_backend.lake.test.resources import (
-    _data_pp_ss_1feed,
-    _data_pp,
-    _data_ss,
-)
+from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
 from pdr_backend.util.timeutil import current_ut, ut_to_timestr
@@ -91,9 +85,9 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
             uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
-    _, ss, factory, _ = _data_pp_ss_1feed(
+    ss, factory = _lake_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -102,21 +96,16 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
     # setup: filename
     #   it's ok for input pair_str to have '/' or '-', it handles it
     #   but the output filename should not have '/' its pairstr part
-    filename = factory._rawohlcv_filename("binanceus", "ETH/USDT")
-    filename2 = factory._rawohlcv_filename("binanceus", "ETH-USDT")
+    feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
+    filename = factory._rawohlcv_filename(feed)
+    feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
+    filename2 = factory._rawohlcv_filename(feed)
     assert filename == filename2
     assert "ETH-USDT" in filename and "ETH/USDT" not in filename
 
-    # ensure we check for unwanted "-". (Everywhere but filename, it's '/')
-    with pytest.raises(AssertionError):
-        factory._update_rawohlcv_files_at_exch_and_pair(
-            "binanceus", "ETH-USDT", ss.fin_timestamp
-        )
-
     # work 1: new rawohlcv file
-    factory._update_rawohlcv_files_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
-    )
+    feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
+    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
 
     def _uts_in_rawohlcv_file(filename: str) -> List[int]:
         df = load_rawohlcv_file(filename)
@@ -134,18 +123,14 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
     # work 2: two more epochs at end --> it'll append existing file
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
-    factory._update_rawohlcv_files_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
-    )
+    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts2 = _uts_in_rawohlcv_file(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new file
     ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
-    factory._update_rawohlcv_files_at_exch_and_pair(
-        "binanceus", "ETH/USDT", ss.fin_timestamp
-    )
+    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts3 = _uts_in_rawohlcv_file(filename)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
@@ -180,14 +165,13 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
 def _test_get_mergedohlcv_df_happypath(tmpdir):
     parquet_dir = str(tmpdir)
 
-    pp = _data_pp(["binanceus h BTC/USDT"])
-    ss = _data_ss(
+    ss = _lake_ss(
         parquet_dir,
-        ["binanceus h BTC-USDT,ETH/USDT", "kraken h BTC/USDT"],
+        ["binanceus BTC-USDT,ETH/USDT h 5m", "kraken BTC/USDT h 5m"],
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
-    factory = OhlcvDataFactory(pp, ss)
+    factory = OhlcvDataFactory(ss)
 
     # call and assert
     mergedohlcv_df = factory.get_mergedohlcv_df()
@@ -225,8 +209,10 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     """
 
     # setup
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h BTC/USDT")
-    filename = factory._rawohlcv_filename("binanceus", "BTC/USDT")
+    _, factory = _lake_ss_1feed(tmpdir, "binanceus BTC/USDT h 5m")
+    filename = factory._rawohlcv_filename(
+        ArgFeed("binanceus", "high", "BTC/USDT", "5m")
+    )
     st_ut = factory.ss.st_timestamp
     fin_ut = factory.ss.fin_timestamp
 
@@ -243,7 +229,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         df = concat_next_df(df, next_df)
         save_rawohlcv_file(filename, df)
 
-    factory._update_rawohlcv_files_at_exch_and_pair = mock_update
+    factory._update_rawohlcv_files_at_feed = mock_update
 
     # test 1: get mergedohlcv_df via several low-level instrs, as get_mergedohlcv_df() does
     factory._update_rawohlcv_files(fin_ut)
@@ -282,9 +268,9 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
 @enforce_types
 def test_exchange_hist_overlap(tmpdir):
     """DataFactory get_mergedohlcv_df() and concat is executing e2e correctly"""
-    _, _, factory, _ = _data_pp_ss_1feed(
+    _, factory = _lake_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",
     )
@@ -301,9 +287,9 @@ def test_exchange_hist_overlap(tmpdir):
     assert head_timestamp < tail_timestamp
 
     # let's get more data from exchange with overlap
-    _, _, factory2, _ = _data_pp_ss_1feed(
+    _, factory2 = _lake_ss_1feed(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr="2023-06-18",  # same
         fin_timestr="2023-06-20",  # different
     )
@@ -326,7 +312,7 @@ def test_get_mergedohlcv_df_calls(
     tmpdir,
 ):
     mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
-    _, _, factory, _ = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, factory = _lake_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
 
     factory._update_rawohlcv_files = Mock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)

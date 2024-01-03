@@ -1,0 +1,31 @@
+import time
+
+from enforce_typing import enforce_types
+
+from pdr_backend.contract.token import Token
+from pdr_backend.util.contract import get_address
+from pdr_backend.util.networkutil import tx_call_params
+
+
+@enforce_types
+def test_token(web3_pp, web3_config):
+    token_address = get_address(web3_pp, "Ocean")
+    token = Token(web3_pp, token_address)
+
+    accounts = web3_config.w3.eth.accounts
+    owner_addr = web3_config.owner
+    alice = accounts[1]
+
+    call_params = tx_call_params(web3_pp)
+    token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
+
+    allowance_start = token.allowance(owner_addr, alice)
+    token.approve(alice, allowance_start + 100, True)
+    time.sleep(1)
+    allowance_end = token.allowance(owner_addr, alice)
+    assert allowance_end - allowance_start == 100
+
+    balance_start = token.balanceOf(alice)
+    token.transfer(alice, 100, owner_addr)
+    balance_end = token.balanceOf(alice)
+    assert balance_end - balance_start == 100

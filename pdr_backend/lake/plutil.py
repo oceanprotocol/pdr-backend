@@ -2,20 +2,17 @@
 plutil: polars dataframe & csv/parquet utilities. 
 These utilities are specific to the time-series dataframe columns we're using.
 """
-from io import StringIO
 import os
 import shutil
+from io import StringIO
 from tempfile import mkdtemp
 from typing import List
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.constants import (
-    TOHLCV_COLS,
-    TOHLCV_SCHEMA_PL,
-)
+from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 
 
 @enforce_types

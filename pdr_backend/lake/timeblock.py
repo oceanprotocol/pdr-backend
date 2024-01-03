@@ -1,6 +1,6 @@
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
+from enforce_typing import enforce_types
 
 
 @enforce_types

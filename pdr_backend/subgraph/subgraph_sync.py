@@ -1,4 +1,5 @@
 import time
+
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph

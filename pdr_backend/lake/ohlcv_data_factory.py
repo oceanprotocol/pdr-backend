@@ -1,29 +1,31 @@
 import os
 from typing import Dict
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.lake.constants import (
-    OHLCV_MULT_MIN,
     OHLCV_MULT_MAX,
+    OHLCV_MULT_MIN,
     TOHLCV_SCHEMA_PL,
+    TOHLCV_COLS,
 )
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
-    initialize_rawohlcv_df,
     concat_next_df,
-    load_rawohlcv_file,
-    save_rawohlcv_file,
     has_data,
-    oldest_ut,
+    initialize_rawohlcv_df,
+    load_rawohlcv_file,
     newest_ut,
+    oldest_ut,
+    save_rawohlcv_file,
 )
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.timeutil import pretty_timestr, current_ut
+from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.util.timeutil import current_ut, pretty_timestr
 
 
 @enforce_types
@@ -56,8 +58,7 @@ class OhlcvDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, pp: DataPP, ss: DataSS):
-        self.pp = pp
+    def __init__(self, ss: LakeSS):
         self.ss = ss
 
     def get_mergedohlcv_df(self) -> pl.DataFrame:
@@ -90,26 +91,26 @@ class OhlcvDataFactory:
 
     def _update_rawohlcv_files(self, fin_ut: int):
         print("  Update all rawohlcv files: begin")
-        for exch_str, pair_str in self.ss.exchange_pair_tups:
-            self._update_rawohlcv_files_at_exch_and_pair(exch_str, pair_str, fin_ut)
+        for feed in self.ss.input_feeds:
+            self._update_rawohlcv_files_at_feed(feed, fin_ut)
         print("  Update all rawohlcv files: done")
 
-    def _update_rawohlcv_files_at_exch_and_pair(
-        self, exch_str: str, pair_str: str, fin_ut: int
-    ):
+    def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: int):
         """
         @arguments
-          exch_str -- eg "binanceus"
-          pair_str -- eg "BTC/USDT". Not "BTC-USDT", to avoid key issues
+          feed -- ArgFeed
           fin_ut -- a timestamp, in ms, in UTC
         """
-        assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
+        pair_str = str(feed.pair)
+        exch_str = str(feed.exchange)
+        assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
         print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}.")
 
-        filename = self._rawohlcv_filename(exch_str, pair_str)
+        filename = self._rawohlcv_filename(feed)
         print(f"      filename={filename}")
 
-        st_ut = self._calc_start_ut_maybe_delete(filename)
+        assert feed.timeframe
+        st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
         print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
         if st_ut > min(current_ut(), fin_ut):
             print("      Given start time, no data to gather. Exit.")
@@ -122,8 +123,8 @@ class OhlcvDataFactory:
             exch = self.ss.exchs_dict[exch_str]
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
-                symbol=pair_str.replace("-", "/"),
-                timeframe=self.pp.timeframe,
+                symbol=str(pair_str).replace("-", "/"),
+                timeframe=str(feed.timeframe),
                 since=st_ut,
                 limit=1000,
             )
@@ -135,8 +136,8 @@ class OhlcvDataFactory:
                 # But exchange data often has gaps. Warn about worst violations
                 diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
                 diffs_m = diffs_ms / 1000 / 60  # in minutes
-                mn_thr = self.pp.timeframe_m * OHLCV_MULT_MIN
-                mx_thr = self.pp.timeframe_m * OHLCV_MULT_MAX
+                mn_thr = feed.timeframe.m * OHLCV_MULT_MIN
+                mx_thr = feed.timeframe.m * OHLCV_MULT_MAX
 
                 if min(diffs_m) < mn_thr:
                     print(f"      **WARNING: short candle time: {min(diffs_m)} min")
@@ -157,18 +158,19 @@ class OhlcvDataFactory:
             newest_ut_value = df.tail(1)["timestamp"][0]
 
             print(f"      newest_ut_value: {newest_ut_value}")
-            st_ut = newest_ut_value + self.pp.timeframe_ms
+            st_ut = newest_ut_value + feed.timeframe.ms
 
         # output to file
         save_rawohlcv_file(filename, df)
 
-    def _calc_start_ut_maybe_delete(self, filename: str) -> int:
+    def _calc_start_ut_maybe_delete(self, timeframe: Timeframe, filename: str) -> int:
         """
         @description
         Calculate start timestamp, reconciling whether file exists and where
         its data starts. Will delete file if it's inconvenient to re-use
 
         @arguments
+          timeframe - Timeframe
           filename - csv file with data. May or may not exist.
 
         @return
@@ -190,7 +192,7 @@ class OhlcvDataFactory:
 
         if self.ss.st_timestamp >= file_ut0:
             print("      User-specified start >= file start, so append file")
-            return file_utN + self.pp.timeframe_ms
+            return file_utN + timeframe.ms
 
         print("      User-specified start < file start, so delete file")
         os.remove(filename)
@@ -213,14 +215,12 @@ class OhlcvDataFactory:
         for exch_str in self.ss.exchange_strs:
             rawohlcv_dfs[exch_str] = {}
 
-        for exch_str, pair_str in self.ss.exchange_pair_tups:
-            assert "/" in pair_str, f"pair_str={pair_str} needs '/'"
-            filename = self._rawohlcv_filename(exch_str, pair_str)
-            cols = [
-                signal_str  # cols is a subset of TOHLCV_COLS
-                for e, signal_str, p in self.ss.input_feed_tups
-                if e == exch_str and p == pair_str
-            ]
+        for feed in self.ss.input_feeds:
+            pair_str = str(feed.pair)
+            exch_str = str(feed.exchange)
+            assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
+            filename = self._rawohlcv_filename(feed)
+            cols = TOHLCV_COLS
             rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
 
             assert "timestamp" in rawohlcv_df.columns
@@ -230,14 +230,13 @@ class OhlcvDataFactory:
 
         return rawohlcv_dfs
 
-    def _rawohlcv_filename(self, exch_str, pair_str) -> str:
+    def _rawohlcv_filename(self, feed: ArgFeed) -> str:
         """
         @description
           Computes a filename for the rawohlcv data.
 
         @arguments
-          exch_str -- eg "binanceus"
-          pair_str -- eg "BTC/USDT" or "BTC-USDT"
+          feed -- ArgFeed
 
         @return
           rawohlcv_filename --
@@ -245,8 +244,9 @@ class OhlcvDataFactory:
         @notes
           If pair_str has '/', it will become '-' in the filename.
         """
-        assert "/" in pair_str or "-" in pair_str, pair_str
-        pair_str = pair_str.replace("/", "-")  # filesystem needs "-"
-        basename = f"{exch_str}_{pair_str}_{self.pp.timeframe}.parquet"
+        pair_str = str(feed.pair)
+        assert "/" in str(pair_str) or "-" in pair_str, pair_str
+        pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
+        basename = f"{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
         filename = os.path.join(self.ss.parquet_dir, basename)
         return filename

@@ -1,11 +1,11 @@
 from typing import List
 from unittest.mock import patch
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
+from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
@@ -123,7 +123,7 @@ def _test_update_gql(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -209,7 +209,7 @@ def test_load_and_verify_schema(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -248,7 +248,7 @@ def test_get_gql_dfs_calls(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus h ETH/USDT",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )

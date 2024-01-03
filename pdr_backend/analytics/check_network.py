@@ -3,16 +3,16 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.models.token import Token
+from pdr_backend.cli.timeframe import s_to_timeframe_str
+from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
-from pdr_backend.util.timeframestr import s_to_timeframe_str
 from pdr_backend.util.timeutil import current_ut
-from pdr_backend.subgraph.core_subgraph import query_subgraph
-from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 
@@ -128,7 +128,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
                         }
                     }
                     secondsPerEpoch
-                } 
+                }
             }
             """ % (
         cur_ut,

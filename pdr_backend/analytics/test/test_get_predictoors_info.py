@@ -2,16 +2,16 @@ from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 
+from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 
 
 @enforce_types
 def test_get_predictoors_info_main_mainnet(tmpdir, monkeypatch):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_fetch = Mock(return_value=[])
     mock_save = Mock()

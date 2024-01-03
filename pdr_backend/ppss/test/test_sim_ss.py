@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.sim_ss import SimSS
 
-_D = {"do_plot": False, "log_dir": "logs"}
+_D = {"do_plot": False, "log_dir": "logs", "test_n": 2}
 
 
 @enforce_types
@@ -15,6 +15,7 @@ def test_sim_ss():
     # yaml properties
     assert not ss.do_plot
     assert "logs" in ss.log_dir
+    assert ss.test_n == 2
 
     # str
     assert "SimSS" in str(ss)

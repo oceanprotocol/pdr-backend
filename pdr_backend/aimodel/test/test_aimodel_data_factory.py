@@ -1,45 +1,41 @@
-from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
-    _mergedohlcv_df_ETHUSDT,
-    _data_pp_ss_1feed,
-    _data_pp,
-    _data_ss,
-    _df_from_raw_data,
-    BINANCE_ETH_DATA,
     BINANCE_BTC_DATA,
-    KRAKEN_ETH_DATA,
-    KRAKEN_BTC_DATA,
+    BINANCE_ETH_DATA,
     ETHUSDT_RAWOHLCV_DFS,
+    KRAKEN_BTC_DATA,
+    KRAKEN_ETH_DATA,
+    _predictoor_ss,
+    _predictoor_ss_1feed,
+    _df_from_raw_data,
+    _mergedohlcv_df_ETHUSDT,
 )
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
-from pdr_backend.util.mathutil import has_nan, fill_nans
+from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
-@enforce_types
-def test_create_xy__0(tmpdir):
-    data_pp = DataPP(
+def test_create_xy__0():
+    predictoor_ss = PredictoorSS(
         {
-            "timeframe": "5m",
-            "predict_feeds": ["binanceus c ETH/USDT"],
-            "sim_only": {"test_n": 2},
-        }
-    )
-    data_ss = DataSS(
-        {
-            "input_feeds": ["binanceus oc ETH/USDT"],
-            "parquet_dir": str(tmpdir),
-            "st_timestr": "2023-06-18",  # not used by AimodelDataFactory
-            "fin_timestr": "2023-06-21",  # ""
-            "max_n_train": 4,
-            "autoregressive_n": 2,
+            "predict_feed": "binanceus ETH/USDT c 5m",
+            "bot_only": {
+                "s_until_epoch_end": 60,
+                "stake_amount": 1,
+            },
+            "aimodel_ss": {
+                "input_feeds": ["binanceus ETH/USDT oc"],
+                "approach": "LIN",
+                "max_n_train": 4,
+                "autoregressive_n": 2,
+            },
         }
     )
     mergedohlcv_df = pl.DataFrame(
@@ -71,10 +67,10 @@ def test_create_xy__0(tmpdir):
         }
     )
 
-    factory = AimodelDataFactory(data_pp, data_ss)
+    factory = AimodelDataFactory(predictoor_ss)
     X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(data_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
     assert np.array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -82,7 +78,9 @@ def test_create_xy__0(tmpdir):
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    _, ss, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    ss, _, aimodel_data_factory = _predictoor_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h 5m"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
@@ -121,7 +119,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(ss, X, y, x_df)
+    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
     assert np.array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -161,7 +159,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
-    _assert_pd_df_shape(ss, X, y, x_df)
+    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
     assert np.array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -186,21 +184,19 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    assert "max_n_train" in ss.d
-    ss.d["max_n_train"] = 5
+    assert "max_n_train" in ss.aimodel_ss.d
+    ss.aimodel_ss.d["max_n_train"] = 5
 
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(ss, X, y, x_df)
+    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
     assert np.array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
 
 @enforce_types
-def test_create_xy__2exchanges_2coins_2signals(tmpdir):
-    parquet_dir = str(tmpdir)
-
+def test_create_xy__2exchanges_2coins_2signals():
     rawohlcv_dfs = {
         "binanceus": {
             "BTC/USDT": _df_from_raw_data(BINANCE_BTC_DATA),
@@ -212,20 +208,19 @@ def test_create_xy__2exchanges_2coins_2signals(tmpdir):
         },
     }
 
-    pp = _data_pp(["binanceus h ETH/USDT"])
-    ss = _data_ss(
-        parquet_dir,
-        ["binanceus hl BTC/USDT,ETH/USDT", "kraken hl BTC/USDT,ETH/USDT"],
+    ss = _predictoor_ss(
+        "binanceus ETH/USDT h 5m",
+        ["binanceus BTC/USDT,ETH/USDT hl", "kraken BTC/USDT,ETH/USDT hl"],
     )
-    assert ss.autoregressive_n == 3
-    assert ss.n == (4 + 4) * 3
+    assert ss.aimodel_ss.autoregressive_n == 3
+    assert ss.aimodel_ss.n == (4 + 4) * 3
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    aimodel_data_factory = AimodelDataFactory(pp, ss)
+    aimodel_data_factory = AimodelDataFactory(ss)
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(ss, X, y, x_df)
+    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
     target_cols = [
         "binanceus:BTC/USDT:high:t-4",
@@ -319,7 +314,7 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, _, aimodel_data_factory = _data_pp_ss_1feed(tmpdir, "binanceus h ETH/USDT")
+    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
@@ -365,7 +360,9 @@ def test_create_xy__handle_nan(tmpdir):
 
 
 @enforce_types
-def _assert_pd_df_shape(ss: DataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame):
+def _assert_pd_df_shape(
+    ss: AimodelSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
+):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
     assert X.shape[1] == ss.n

@@ -1,19 +1,20 @@
-from unittest.mock import patch
 from dataclasses import asdict
 from typing import Dict, List
+from unittest.mock import patch
+
 from enforce_typing import enforce_types
 
+from pdr_backend.subgraph.subgraph_predictions import ContractIdAndSPE
 from pdr_backend.subgraph.subgraph_slot import (
+    PredictSlot,
+    aggregate_statistics,
+    calculate_prediction_result,
+    calculate_statistics_for_all_assets,
+    fetch_slots_for_all_assets,
     get_predict_slots_query,
     get_slots,
-    fetch_slots_for_all_assets,
-    calculate_prediction_result,
     process_single_slot,
-    aggregate_statistics,
-    calculate_statistics_for_all_assets,
-    PredictSlot,
 )
-from pdr_backend.subgraph.subgraph_predictions import ContractIdAndSPE
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(

@@ -1,21 +1,21 @@
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 from web3 import Web3
 
-from pdr_backend.models.feed import mock_feed
-from pdr_backend.models.predictoor_contract import mock_predictoor_contract
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.ppss.web3_pp import (
+    Web3PP,
     del_network_override,
     inplace_mock_feedgetters,
     inplace_mock_get_contracts,
     inplace_mock_query_feed_contracts,
     mock_web3_pp,
-    Web3PP,
 )
+from pdr_backend.subgraph.subgraph_feed import mock_feed
+from pdr_backend.util.web3_config import Web3Config
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 
@@ -145,7 +145,7 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
         return m
 
     with patch(
-        "pdr_backend.models.predictoor_contract.PredictoorContract",
+        "pdr_backend.contract.predictoor_contract.PredictoorContract",
         _mock_contract,
     ):
         contracts = web3_pp.get_contracts([feed.address])

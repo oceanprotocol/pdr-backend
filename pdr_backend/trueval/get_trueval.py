@@ -3,13 +3,13 @@ from typing import Tuple
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 @enforce_types
 def get_trueval(
-    feed: Feed, init_timestamp: int, end_timestamp: int
+    feed: SubgraphFeed, init_timestamp: int, end_timestamp: int
 ) -> Tuple[bool, bool]:
     """
     @description
@@ -17,7 +17,7 @@ def get_trueval(
         If the round should be canceled, the second value in the returned tuple is set to True.
 
     @arguments
-        feed -- Feed -- The feed object containing pair details
+        feed -- SubgraphFeed -- The feed object containing pair details
         init_timestamp -- int -- The starting timestamp.
         end_timestamp -- int -- The ending timestamp.
 

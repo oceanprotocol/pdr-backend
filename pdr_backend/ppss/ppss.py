@@ -2,22 +2,20 @@ import os
 import tempfile
 from typing import List, Optional, Tuple
 
-from enforce_typing import enforce_types
 import yaml
+from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed, mock_feed
-from pdr_backend.ppss.data_pp import DataPP
-from pdr_backend.ppss.data_ss import DataSS
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_pp import TraderPP
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.ppss.publisher_ss import PublisherSS
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 
 
 @enforce_types
@@ -41,10 +39,8 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             d = yaml.safe_load(str(yaml_str))
 
         # fill attributes from d
-        self.data_pp = DataPP(d["data_pp"])
-        self.data_ss = DataSS(d["data_ss"])
+        self.lake_ss = LakeSS(d["lake_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
-        self.aimodel_ss = AimodelSS(d["aimodel_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.payout_ss = PayoutSS(d["payout_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
@@ -56,11 +52,9 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
     def __str__(self):
         s = ""
-        s += f"data_pp={self.data_pp}\n"
-        s += f"data_ss={self.data_ss}\n"
+        s += f"lake_ss={self.lake_ss}\n"
         s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
         s += f"payout_ss={self.payout_ss}\n"
-        s += f"aimodel_ss={self.aimodel_ss}\n"
         s += f"predictoor_ss={self.predictoor_ss}\n"
         s += f"trader_pp={self.trader_pp}\n"
         s += f"trader_ss={self.trader_ss}\n"
@@ -82,15 +76,14 @@ def mock_feed_ppss(
     pair,
     network: Optional[str] = None,
     tmpdir=None,
-) -> Tuple[Feed, PPSS]:
+) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(timeframe, [f"{exchange} c {pair}"], network, tmpdir)
+    ppss = mock_ppss([f"{exchange} {pair} c {timeframe}"], network, tmpdir)
     return (feed, ppss)
 
 
 @enforce_types
 def mock_ppss(
-    timeframe: str,
     predict_feeds: List[str],
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
@@ -101,28 +94,44 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=yaml_str, network=network)
 
-    assert hasattr(ppss, "data_pp")
-    ppss.data_pp = DataPP(
-        {
-            "timeframe": timeframe,
-            "predict_feeds": predict_feeds,
-            "sim_only": {"test_n": 10},
-        }
-    )
+    assert hasattr(ppss, "lake_ss")
+    assert hasattr(ppss, "predictoor_ss")
 
-    assert hasattr(ppss, "data_ss")
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
-    ppss.data_ss = DataSS(
+
+    ppss.lake_ss = LakeSS(
         {
-            "input_feeds": predict_feeds,
+            "feeds": predict_feeds,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
-            "max_n_train": 100,
-            "autoregressive_n": 2,
         }
     )
+
+    ppss.predictoor_ss = PredictoorSS(
+        {
+            "predict_feed": predict_feeds[0],
+            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "aimodel_ss": {
+                "input_feeds": predict_feeds,
+                "approach": "LIN",
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+            },
+        }
+    )
+
+    ppss.trader_ss = TraderSS(
+        {
+            "predict_feed": predict_feeds[0],
+            "sim_only": {
+                "buy_amt": "10 USD",
+            },
+            "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
+        }
+    )
+
     return ppss
 
 

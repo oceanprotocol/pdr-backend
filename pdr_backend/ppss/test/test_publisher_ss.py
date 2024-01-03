@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.publisher_ss import mock_publisher_ss, PublisherSS
+from pdr_backend.ppss.publisher_ss import PublisherSS, mock_publisher_ss
 
 
 @enforce_types

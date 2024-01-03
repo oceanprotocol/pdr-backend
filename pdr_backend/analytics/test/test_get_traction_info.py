@@ -1,11 +1,11 @@
 from unittest.mock import Mock, patch
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -17,7 +17,7 @@ def test_get_traction_info_main_mainnet(
     monkeypatch,
 ):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_traction_stat = Mock()
     mock_plot_cumsum = Mock()

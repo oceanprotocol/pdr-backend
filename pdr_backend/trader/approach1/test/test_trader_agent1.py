@@ -1,14 +1,14 @@
 from unittest.mock import patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
+from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.test.trader_agent_runner import (
     do_constructor,
     do_run,
     setup_trade,
 )
-from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 
 
 @enforce_types

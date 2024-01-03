@@ -1,11 +1,11 @@
 from unittest.mock import Mock, call, patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.models.dfrewards import DFRewards
-from pdr_backend.models.predictoor_contract import PredictoorContract
-from pdr_backend.models.wrapped_token import WrappedToken
+from pdr_backend.contract.dfrewards import DFRewards
+from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.payout.payout import (
     batchify,
     do_ocean_payout,

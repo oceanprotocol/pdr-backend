@@ -2,17 +2,16 @@ from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.analytics.check_network import (
+    _N_FEEDS,
     check_dfbuyer,
     check_network_main,
     get_expected_consume,
-    _N_FEEDS,
 )
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import del_network_override
+from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.mathutil import to_wei
-
 
 PATH = "pdr_backend.analytics.check_network"
 
@@ -98,7 +97,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     monkeypatch,
 ):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance c BTC/USDT"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",

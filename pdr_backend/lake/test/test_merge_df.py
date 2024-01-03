@@ -1,12 +1,12 @@
-from enforce_typing import enforce_types
 import polars as pl
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.lake.merge_df import (
-    merge_rawohlcv_dfs,
     _add_df_col,
-    merge_cols,
     _ordered_cols,
+    merge_cols,
+    merge_rawohlcv_dfs,
 )
 from pdr_backend.lake.test.resources import (
     ETHUSDT_RAWOHLCV_DFS,
