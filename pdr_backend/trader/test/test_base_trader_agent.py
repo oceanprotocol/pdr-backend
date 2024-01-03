@@ -48,7 +48,7 @@ async def test_trader_agent_take_step(
     await agent.take_step()
 
     assert check_subscriptions_and_subscribe_mock.call_count == 2
-    assert agent._process_block_at_feed.call_count == 1
+    assert agent._process_block.call_count == 1
 
 
 @enforce_types
@@ -58,7 +58,7 @@ def custom_do_trade(feed, prediction):
 
 @pytest.mark.asyncio
 @patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
-async def test_process_block_at_feed(  # pylint: disable=unused-argument
+async def test_process_block(  # pylint: disable=unused-argument
     check_subscriptions_and_subscribe_mock,
     monkeypatch,
 ):
@@ -68,16 +68,14 @@ async def test_process_block_at_feed(  # pylint: disable=unused-argument
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
-        ppss.data_pp.timeframe_s,
+        ppss.trader_ss.timeframe_s,
         feed.address,
         monkeypatch,
     )
 
     agent = BaseTraderAgent(ppss, custom_do_trade)
 
-    feed_addr = feed.address
-    agent.prev_traded_epochs_per_feed.clear()
-    agent.prev_traded_epochs_per_feed[feed_addr] = []
+    agent.prev_traded_epochs = []
 
     async def _do_trade(feed, prediction):  # pylint: disable=unused-argument
         pass
@@ -90,25 +88,25 @@ async def test_process_block_at_feed(  # pylint: disable=unused-argument
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 55)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 0
+    s_till_epoch_end, _ = await agent._process_block(55)
+    assert len(agent.prev_traded_epochs) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should trade
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 80)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 1
+    s_till_epoch_end, _ = await agent._process_block(80)
+    assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 80)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 1
+    s_till_epoch_end, _ = await agent._process_block(80)
+    assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     _mock_pdr_contract.get_current_epoch = Mock()
     _mock_pdr_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end, _ = await agent._process_block_at_feed(feed_addr, 140)
-    assert len(agent.prev_traded_epochs_per_feed[feed_addr]) == 2
+    s_till_epoch_end, _ = await agent._process_block(140)
+    assert len(agent.prev_traded_epochs) == 2
     assert s_till_epoch_end == 40
 
 
@@ -122,14 +120,12 @@ def test_save_and_load_cache(
 
     agent = BaseTraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
 
-    agent.prev_traded_epochs_per_feed = {
-        feed.address: [1, 2, 3],
-    }
+    agent.prev_traded_epochs = [1, 2, 3]
 
     agent.update_cache()
 
     agent_new = BaseTraderAgent(ppss, custom_do_trade, cache_dir=".test_cache")
-    assert agent_new.prev_traded_epochs_per_feed[feed.address] == [3]
+    assert agent_new.prev_traded_epochs == [3]
     cache_dir_path = (
         Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
         / "util/.test_cache"

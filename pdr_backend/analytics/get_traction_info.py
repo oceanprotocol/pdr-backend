@@ -19,9 +19,9 @@ from pdr_backend.ppss.ppss import PPSS
 def get_traction_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, pq_dir: str
 ):
-    data_ss = ppss.data_ss
-    data_ss.d["st_timestr"] = start_timestr
-    data_ss.d["fin_timestr"] = end_timestr
+    lake_ss = ppss.lake_ss
+    lake_ss.d["st_timestr"] = start_timestr
+    lake_ss.d["fin_timestr"] = end_timestr
 
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()

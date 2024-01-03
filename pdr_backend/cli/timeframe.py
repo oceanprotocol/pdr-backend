@@ -79,3 +79,19 @@ def s_to_timeframe_str(seconds: int) -> str:
     if seconds == 3600:
         return "1h"
     return ""
+
+
+@enforce_types
+def verify_timeframes_str(signal_str: str):
+    """
+    @description
+      Raise an error if signal is invalid.
+
+    @argument
+      signal_str -- e.g. "close"
+    """
+    try:
+        Timeframes.from_str(signal_str)
+        return True
+    except ValueError:
+        return False

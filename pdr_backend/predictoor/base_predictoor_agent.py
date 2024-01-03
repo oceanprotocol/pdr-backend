@@ -29,15 +29,14 @@ class BasePredictoorAgent(ABC):
         cand_feeds = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        print(f"Filter by predict_feeds: {ppss.data_pp.filter_feeds_s}")
-        feeds = ppss.data_pp.filter_feeds(cand_feeds)
-        print_feeds(feeds, "filtered feeds")
-        if not feeds:
+        feed = ppss.predictoor_ss.get_predict_feed_from_candidates(cand_feeds)
+        print_feeds({feed.address: feed}, "filtered feeds")
+        if not feed:
             raise ValueError("No feeds found.")
-        contracts = ppss.web3_pp.get_contracts(list(feeds.keys()))
 
-        # set feed, contract
-        self.feed = sole_value(feeds)
+        self.feed = feed
+
+        contracts = ppss.web3_pp.get_contracts([feed.address])
         self.feed_contract = sole_value(contracts)
 
         # set attribs to track block

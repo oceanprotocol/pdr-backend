@@ -1,32 +1,27 @@
 # (web3_pp / network settings is at bottom, because it's long)
-
-data_pp:
-  timeframe: 1h
-  predict_feeds:
-    - binance BTC/USDT c
-  sim_only:
-    test_n : 200 # number of epochs to simulate
-
-data_ss:
-  input_feeds :
-    - binance BTC/USDT ohlcv
-#    - binance ETH/USDT,TRX/USDT,ADA/USDT c
-#    - binance DOT/USDT c
-#    - kraken BTC/USDT ohlcv
+lake_ss:
+  parquet_dir: parquet_data
+  feeds:
+    - binance BTC/USDT 1h
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 1h
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
-  max_n_train: 5000 # no. epochs to train model on
-  autoregressive_n : 10 # no. epochs that model looks back, to predict next
-  parquet_dir: parquet_data
-
-aimodel_ss:
-  approach: LIN
 
 predictoor_ss:
+  predict_feed: binance BTC/USDT c 1h
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN
   approach3:
+  aimodel_ss:
+    input_feeds:
+      - binance BTC/USDT
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT
+#    - kraken BTC/USDT
+    max_n_train: 5000 # no. epochs to train model on
+    autoregressive_n : 10 # no. epochs that model looks back, to predict next
+    approach: LIN
 
 trader_pp:
   sim_only:
@@ -37,6 +32,7 @@ trader_pp:
   bot_only:
 
 trader_ss:
+  predict_feed: binance BTC/USDT c 1h
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
   bot_only:
@@ -47,6 +43,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
+  test_n : 200 # number of epochs to simulate
 
 # ------------------------------------------------------------------
 # Bots run by OPF
@@ -70,7 +67,6 @@ dfbuyer_ss:
 
 payout_ss:
   batch_size: 250
-
 
 # ------------------------------------------------------------------
 # Network settings

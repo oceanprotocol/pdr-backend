@@ -97,7 +97,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     monkeypatch,
 ):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",

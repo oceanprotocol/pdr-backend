@@ -12,8 +12,9 @@ Main tools:
   pdr sim PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
+  pdr lake PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
-  prd claim_ROSE PPSS_FILE
+  pdr claim_ROSE PPSS_FILE
 
 Utilities:
   pdr help
@@ -232,6 +233,8 @@ SimArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+
+LakeArgParser = _ArgParser_PPSS_NETWORK
 
 ClaimOceanArgParser = _ArgParser_PPSS
 

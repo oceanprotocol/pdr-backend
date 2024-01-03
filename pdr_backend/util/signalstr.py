@@ -56,7 +56,7 @@ def unpack_signalchar_str(signalchar_str: str) -> List[str]:
 
 
 @enforce_types
-def verify_signalchar_str(signalchar_str: str):
+def verify_signalchar_str(signalchar_str: str, graceful: bool = False):
     """
     @description
       Raise an error if signalchar_str is invalid
@@ -70,8 +70,13 @@ def verify_signalchar_str(signalchar_str: str):
     c_seen = set()
     for c in signalchar_str:
         if c not in "ohlcv" or c in c_seen:
+            if graceful:
+                return False
+
             raise ValueError(signalchar_str)
         c_seen.add(c)
+
+    return True
 
 
 @enforce_types

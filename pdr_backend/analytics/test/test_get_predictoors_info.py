@@ -11,7 +11,7 @@ from pdr_backend.subgraph.subgraph_predictions import FilterMode
 @enforce_types
 def test_get_predictoors_info_main_mainnet(tmpdir, monkeypatch):
     del_network_override(monkeypatch)
-    ppss = mock_ppss("5m", ["binance BTC/USDT c"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_fetch = Mock(return_value=[])
     mock_save = Mock()
