@@ -166,8 +166,7 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
   print(df)
 
   # Group by pair
-  df = df.groupby("pair").agg(
-    pl.col("timeframe").first().alias("timeframe"),
+  df = df.groupby(["pair", "timeframe"]).agg(
     pl.col("source").first().alias("source"),
     pl.col("payout").sum().alias("sum_payout"),
     pl.col("stake").sum().alias("sum_stake"),
@@ -188,8 +187,7 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
   print(df)
 
   # Group by pair
-  df = df.groupby("pair").agg(
-    pl.col("timeframe").first().alias("timeframe"),
+  df = df.groupby(["pair", "timeframe"]).agg(
     pl.col("source").first().alias("source"),
     pl.col("user").first().alias("user"),
     pl.col("payout").sum().alias("sum_payout"),
