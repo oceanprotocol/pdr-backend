@@ -107,7 +107,7 @@ class SingleFeedMixin:
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
-        return str(self.feed.signal)
+        return str(self.feed.signal) if self.feed.signal else ""
 
     @property
     def base_str(self) -> str:
