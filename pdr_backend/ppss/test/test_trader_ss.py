@@ -9,7 +9,7 @@ _D = {
         "init_holdings": ["10000.0 USDT", "0 BTC"],
     },
     "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
-    "predict_feed": "kraken ETH/USDT h 5m",
+    "feed": "kraken ETH/USDT h 5m",
 }
 
 
@@ -22,7 +22,7 @@ def test_trader_ss():
     assert ss.min_buffer == 60
     assert ss.max_tries == 10
     assert ss.position_size == 3
-    assert str(ss.predict_feed) == "kraken ETH/USDT h 5m"
+    assert str(ss.feed) == "kraken ETH/USDT h 5m"
     assert ss.fee_percent == 0.01
     assert ss.init_holdings_strs == ["10000.0 USDT", "0 BTC"]
 

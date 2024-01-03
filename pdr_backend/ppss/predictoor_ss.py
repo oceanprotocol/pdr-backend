@@ -7,6 +7,7 @@ from pdr_backend.util.strutil import StrMixin
 
 class PredictoorSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
+    FEED_KEY = "predict_feed"
 
     @enforce_types
     def __init__(self, d: dict):
@@ -23,7 +24,7 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     def stake_amount(self) -> int:
         return self.d["bot_only"]["stake_amount"]
 
-    # predict_feed defined in base
+    # feed defined in base
 
     # --------------------------------
     # derivative properties

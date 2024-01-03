@@ -24,7 +24,7 @@ predictoor_ss:
     approach: LIN
 
 trader_ss:
-  predict_feed: binance BTC/USDT c 1h
+  feed: binance BTC/USDT c 1h
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee

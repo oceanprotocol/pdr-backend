@@ -49,10 +49,10 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
 
 
 @enforce_types
-def _predictoor_ss(predict_feed, feeds):
+def _predictoor_ss(feed, feeds):
     return PredictoorSS(
         {
-            "predict_feed": predict_feed,
+            "predict_feed": feed,
             "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {

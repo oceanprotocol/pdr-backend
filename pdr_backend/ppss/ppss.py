@@ -81,7 +81,7 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    predict_feeds: List[str],
+    feeds: List[str],
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -99,7 +99,7 @@ def mock_ppss(
 
     ppss.lake_ss = LakeSS(
         {
-            "feeds": predict_feeds,
+            "feeds": feeds,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
@@ -108,10 +108,10 @@ def mock_ppss(
 
     ppss.predictoor_ss = PredictoorSS(
         {
-            "predict_feed": predict_feeds[0],
+            "predict_feed": feeds[0],
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
-                "input_feeds": predict_feeds,
+                "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,
                 "autoregressive_n": 3,
@@ -121,7 +121,7 @@ def mock_ppss(
 
     ppss.trader_ss = TraderSS(
         {
-            "predict_feed": predict_feeds[0],
+            "feed": feeds[0],
             "sim_only": {
                 "buy_amt": "10 USD",
             },
@@ -131,7 +131,7 @@ def mock_ppss(
 
     ppss.dfbuyer_ss = DFBuyerSS(
         {
-            "feeds": predict_feeds,
+            "feeds": feeds,
             "batch_size": 20,
             "consume_interval_seconds": 86400,
             "weekly_spending_limit": 37000,

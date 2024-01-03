@@ -72,39 +72,42 @@ class MultiFeedMixin:
 
 
 class SingleFeedMixin:
+    FEED_KEY = ""
+
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
+        assert self.__class__.FEED_KEY
         self.d = d  # yaml_dict["predictor_ss"]
         if assert_feed_attributes:
             for attr in assert_feed_attributes:
-                assert getattr(self.predict_feed, attr)
+                assert getattr(self.feed, attr)
 
     # --------------------------------
     # yaml properties
     @property
-    def predict_feed(self) -> ArgFeed:
+    def feed(self) -> ArgFeed:
         """Which feed to use for predictions. Eg "feed1"."""
-        return ArgFeed.from_str(self.d["predict_feed"])
+        return ArgFeed.from_str(self.d[self.__class__.FEED_KEY])
 
     # --------------------------------
 
     @property
     def pair_str(self) -> ArgPair:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
-        return self.predict_feed.pair
+        return self.feed.pair
 
     @property
     def exchange_str(self) -> str:
         """Return e.g. 'binance'. Only applicable when 1 feed."""
-        return str(self.predict_feed.exchange)
+        return str(self.feed.exchange)
 
     @property
     def exchange_class(self) -> str:
-        return self.predict_feed.exchange.exchange_class
+        return self.feed.exchange.exchange_class
 
     @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
-        return str(self.predict_feed.signal)
+        return str(self.feed.signal)
 
     @property
     def base_str(self) -> str:
@@ -118,31 +121,31 @@ class SingleFeedMixin:
 
     @property
     def timeframe(self) -> str:
-        return str(self.predict_feed.timeframe)
+        return str(self.feed.timeframe)
 
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
-        return self.predict_feed.timeframe.ms if self.predict_feed.timeframe else 0
+        return self.feed.timeframe.ms if self.feed.timeframe else 0
 
     @property
     def timeframe_s(self) -> int:
         """Returns timeframe, in s"""
-        return self.predict_feed.timeframe.s if self.predict_feed.timeframe else 0
+        return self.feed.timeframe.s if self.feed.timeframe else 0
 
     @property
     def timeframe_m(self) -> int:
         """Returns timeframe, in minutes"""
-        return self.predict_feed.timeframe.m if self.predict_feed.timeframe else 0
+        return self.feed.timeframe.m if self.feed.timeframe else 0
 
     @enforce_types
-    def get_predict_feed_from_candidates(
+    def get_feed_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
     ) -> Union[None, SubgraphFeed]:
         allowed_tup = (
             self.timeframe,
-            self.predict_feed.exchange,
-            self.predict_feed.pair,
+            self.feed.exchange,
+            self.feed.pair,
         )
 
         for feed in cand_feeds.values():

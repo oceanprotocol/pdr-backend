@@ -18,7 +18,7 @@ def do_constructor(agent_class, check_subscriptions_and_subscribe_mock):
     inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
 
     # 1 predict feed
-    assert ppss.trader_ss.predict_feed
+    assert ppss.trader_ss.feed
     agent = agent_class(ppss)
     assert agent.ppss == ppss
     assert agent.feed

@@ -8,6 +8,7 @@ from pdr_backend.util.strutil import StrMixin
 
 class TraderSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
+    FEED_KEY = "feed"
 
     @enforce_types
     def __init__(self, d: dict):
@@ -30,7 +31,7 @@ class TraderSS(SingleFeedMixin, StrMixin):
     def init_holdings_strs(self) -> List[str]:
         return self.d["sim_only"]["init_holdings"]  # eg ["1000 USDT", ..]
 
-    # predict_feed defined in base
+    # feed defined in base
 
     # --------------------------------
     # yaml properties: bot only
