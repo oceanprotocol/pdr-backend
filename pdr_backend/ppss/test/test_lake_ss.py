@@ -25,7 +25,7 @@ def test_lake_ss_basic():
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
 
-    assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
+    assert ss.exchange_strs == set(["binanceus", "kraken"])
 
     # derivative properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")

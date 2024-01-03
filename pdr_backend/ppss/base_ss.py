@@ -14,14 +14,11 @@ class MultiFeedMixin:
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
         assert self.__class__.FEEDS_KEY
         self.d = d
-        # save self.exchs_dict
-        self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
         feeds = ArgFeeds.from_strs(self.feeds_strs)
-        for feed in feeds:
-            exchange_class = feed.exchange.exchange_class
-            self.exchs_dict[str(feed.exchange)] = exchange_class()
-            if assert_feed_attributes:
-                for attr in assert_feed_attributes:
+
+        if assert_feed_attributes:
+            for attr in assert_feed_attributes:
+                for feed in feeds:
                     assert getattr(feed, attr)
 
     # --------------------------------
@@ -34,11 +31,11 @@ class MultiFeedMixin:
 
     @property
     def n_exchs(self) -> int:
-        return len(self.exchs_dict)
+        return len(self.exchange_strs)
 
     @property
-    def exchange_strs(self) -> List[str]:
-        return sorted(self.exchs_dict.keys())
+    def exchange_strs(self) -> Set[str]:
+        return set(str(feed.exchange) for feed in self.feeds)
 
     @property
     def n_feeds(self) -> int:

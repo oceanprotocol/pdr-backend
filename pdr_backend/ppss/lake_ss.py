@@ -79,7 +79,6 @@ class LakeSS(MultiFeedMixin):
         s += f" -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
         s += f"fin_timestr={self.fin_timestr}"
         s += f" -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
-        s += f"exchs_dict={self.exchs_dict}"
         s += f" -> n_exchs={self.n_exchs}\n"
         s += f"parquet_dir={self.parquet_dir}\n"
         s += "-" * 10 + "\n"

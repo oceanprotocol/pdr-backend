@@ -120,7 +120,7 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
-            exch = self.ss.exchs_dict[exch_str]
+            exch = feed.exchange.exchange_class()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),

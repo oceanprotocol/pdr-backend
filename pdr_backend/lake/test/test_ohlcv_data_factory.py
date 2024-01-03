@@ -91,7 +91,6 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
         st_timestr,
         fin_timestr,
     )
-    ss.exchs_dict["binanceus"] = FakeExchange()
 
     # setup: filename
     #   it's ok for input pair_str to have '/' or '-', it handles it
@@ -105,7 +104,9 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
     # work 1: new rawohlcv file
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
-    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+        mock.return_value = FakeExchange()
+        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
 
     def _uts_in_rawohlcv_file(filename: str) -> List[int]:
         df = load_rawohlcv_file(filename)
@@ -123,14 +124,18 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
     # work 2: two more epochs at end --> it'll append existing file
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
-    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+        mock.return_value = FakeExchange()
+        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts2 = _uts_in_rawohlcv_file(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new file
     ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
     ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
-    factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+        mock.return_value = FakeExchange()
+        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts3 = _uts_in_rawohlcv_file(filename)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
