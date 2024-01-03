@@ -333,8 +333,14 @@ def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
                 .unique()
                 .count()
                 .alias("n_predictoors"),  # n unique predictoors
-                pl.col("payout").sum().alias("slot_payout"),  # Sum of slot payout
-                pl.col("stake").sum().alias("slot_stake"),  # Sum of slot stake
+                pl.col("stake").min().alias("min_stake"),  # min stake
+                pl.col("stake").max().alias("max_stake"),  # max stake
+                pl.col("stake").mean().alias("mean_stake"),  # mean stake
+                pl.col("stake").sum().alias("sum_stake"),  # Sum of slot stake
+                pl.col("payout").min().alias("min_payout"),  # min payout
+                pl.col("payout").max().alias("max_payout"),  # max payout
+                pl.col("payout").mean().alias("mean_payout"),  # mean payout
+                pl.col("payout").sum().alias("sum_payout"),  # Sum of slot payout
             ]
         )
         .sort(["pair", "timeframe", "slot"])
@@ -343,29 +349,32 @@ def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
     return slots_df
 
 
+@enforce_types
+def get_mean_slots_df(slots_df: pl.DataFrame) -> pl.DataFrame:
+    return slots_df.select(
+        [
+            pl.col("pair_timeframe").first(),
+            pl.col("datetime").first(),
+            pl.col("sum_stake").mean().alias("mean_stake"),
+            pl.col("sum_payout").mean().alias("mean_payout"),
+            pl.col("n_predictoors").mean().alias("mean_n_predictoors"),
+        ]
+    )
+
+
+@enforce_types
 def calculate_slot_daily_statistics(
     slots_df: pl.DataFrame,
 ) -> pl.DataFrame:
-    def get_mean_slots_slots_df(slots_df: pl.DataFrame) -> pl.DataFrame:
-        return slots_df.select(
-            [
-                pl.col("pair_timeframe").first(),
-                pl.col("datetime").first(),
-                pl.col("slot_stake").mean().alias("mean_stake"),
-                pl.col("slot_payout").mean().alias("mean_payout"),
-                pl.col("n_predictoors").mean().alias("mean_n_predictoors"),
-            ]
-        )
-
     # for each <pair_timeframe,datetime> take a sample of up-to 5
     # then for each <pair_timeframe,datetime> calc daily mean_stake, mean_payout, ...
     # then for each <datetime> sum those numbers across all feeds
     slots_daily_df = (
         slots_df.group_by(["pair_timeframe", "datetime"])
         .map_groups(
-            lambda df: get_mean_slots_slots_df(df.sample(5))
+            lambda df: get_mean_slots_df(df.sample(5))
             if len(df) > 5
-            else get_mean_slots_slots_df(df)
+            else get_mean_slots_df(df)
         )
         .group_by("datetime")
         .agg(
@@ -383,6 +392,7 @@ def calculate_slot_daily_statistics(
     return slots_daily_df
 
 
+@enforce_types
 def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     assert "pair_timeframe" in slots_df.columns
     assert "slot" in slots_df.columns
