@@ -60,6 +60,7 @@ def test_get_endpoint_statistics(_sample_first_predictions):
             assert key in predictoor_stat
         assert len(predictoor_stat["details"]) == 2
 
+
 @enforce_types
 def test_get_feed_statistics(capsys, _sample_first_predictions):
     get_feed_summary_stats(_sample_first_predictions)
@@ -68,6 +69,7 @@ def test_get_feed_statistics(capsys, _sample_first_predictions):
     assert "Overall Accuracy" in output
     assert "Accuracy for Pair" in output
     assert "Accuracy for Predictoor Address" in output
+
 
 @enforce_types
 def test_get_predictoor_statistics(capsys, _sample_first_predictions):

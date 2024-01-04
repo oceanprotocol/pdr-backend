@@ -36,7 +36,7 @@ predictoor_summary_df_schema = {
     "sum_stake": Float64,
     "sum_payout": Float64,
     "n_predictions": Int64,
-    "user": Utf8
+    "user": Utf8,
 }
 
 # PREDICTOOR_SUMMARY_SCHEMA

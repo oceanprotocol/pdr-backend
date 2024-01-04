@@ -157,10 +157,13 @@ def get_endpoint_statistics(
 
     return overall_accuracy, pair_timeframe_stats, predictoor_stats
 
+
 @enforce_types
 def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
-    df = predictions_df.filter(~((pl.col("trueval").is_null()) | (pl.col("payout").is_null())))
+    df = predictions_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
 
     # Group by pair
     df = df.groupby(["pair", "timeframe"]).agg(
@@ -168,18 +171,19 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy")
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     print(df)
     return df
 
 
-
 @enforce_types
 def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
-    df = predictions_df.filter(~((pl.col("trueval").is_null()) | (pl.col("payout").is_null())))
+    df = predictions_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
 
     # Group by pair
     df = df.groupby(["user", "pair", "timeframe"]).agg(
@@ -187,11 +191,12 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy")
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     print(df)
     return df
+
 
 @enforce_types
 def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:

@@ -28,6 +28,8 @@ def get_predictoors_info_main(
 
     if pdr_addrs_str:
         pdr_addrs_list = pdr_addrs_str.lower().split(",")
-        predictions_df = predictions_df.filter(predictions_df["user"].is_in(pdr_addrs_list))
+        predictions_df = predictions_df.filter(
+            predictions_df["user"].is_in(pdr_addrs_list)
+        )
 
     get_predictoor_summary_stats(predictions_df)

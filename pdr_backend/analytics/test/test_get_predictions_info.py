@@ -31,9 +31,7 @@ def test_get_predictions_info_main_mainnet(
         st_timestr = "2023-11-02"
         fin_timestr = "2023-11-05"
 
-        get_predictions_info_main(
-            ppss, "0x123", st_timestr, fin_timestr
-        )
+        get_predictions_info_main(ppss, "0x123", st_timestr, fin_timestr)
 
         mock_fetch.assert_called_with(
             1698883200,
