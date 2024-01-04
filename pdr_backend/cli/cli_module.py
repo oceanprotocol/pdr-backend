@@ -153,7 +153,7 @@ def do_get_predictoors_info():
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END, args.PQDIR)
+    get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END)
 
 
 @enforce_types
@@ -166,7 +166,7 @@ def do_get_predictions_info():
     print_args(args)
 
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
+    get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END)
 
 
 @enforce_types

@@ -26,13 +26,13 @@ def test_get_predictions_info_main_mainnet(
     with patch(f"{PATH}.get_all_contract_ids_by_owner", mock_getids), patch(
         f"{PATH}.fetch_filtered_predictions", mock_fetch
     ), patch(f"{PATH}.save_analysis_csv", mock_save), patch(
-        f"{PATH}.get_cli_statistics", mock_getstats
+        f"{PATH}.get_feed_summary_stats", mock_getstats
     ):
         st_timestr = "2023-11-02"
         fin_timestr = "2023-11-05"
 
         get_predictions_info_main(
-            ppss, "0x123", st_timestr, fin_timestr, "parquet_data/"
+            ppss, "0x123", st_timestr, fin_timestr
         )
 
         mock_fetch.assert_called_with(

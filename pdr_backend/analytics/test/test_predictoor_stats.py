@@ -7,7 +7,8 @@ from enforce_typing import enforce_types
 from pdr_backend.analytics.predictoor_stats import (
     aggregate_prediction_statistics,
     calculate_slot_daily_statistics,
-    get_cli_statistics,
+    get_feed_summary_stats,
+    get_predictoor_summary_stats,
     get_endpoint_statistics,
     get_slot_statistics,
     get_traction_statistics,
@@ -59,10 +60,18 @@ def test_get_endpoint_statistics(_sample_first_predictions):
             assert key in predictoor_stat
         assert len(predictoor_stat["details"]) == 2
 
+@enforce_types
+def test_get_feed_statistics(capsys, _sample_first_predictions):
+    get_feed_summary_stats(_sample_first_predictions)
+    captured = capsys.readouterr()
+    output = captured.out
+    assert "Overall Accuracy" in output
+    assert "Accuracy for Pair" in output
+    assert "Accuracy for Predictoor Address" in output
 
 @enforce_types
-def test_get_cli_statistics(capsys, _sample_first_predictions):
-    get_cli_statistics(_sample_first_predictions)
+def test_get_predictoor_statistics(capsys, _sample_first_predictions):
+    get_predictoor_summary_stats(_sample_first_predictions)
     captured = capsys.readouterr()
     output = captured.out
     assert "Overall Accuracy" in output
