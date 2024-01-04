@@ -179,6 +179,7 @@ def text_to_df(s: str) -> pl.DataFrame:
     return df
 
 
+@enforce_types
 def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     """
     @description
