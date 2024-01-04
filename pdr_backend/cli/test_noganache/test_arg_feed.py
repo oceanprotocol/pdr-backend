@@ -351,3 +351,28 @@ def test_verify_ArgFeed():
     for feed_tup in tups:
         with pytest.raises(TypeError):
             ArgFeed(*feed_tup)
+
+
+@enforce_types
+def test_contains_combination():
+    # feeds have no timeframe so contains all timeframes
+    feeds = ArgFeeds(
+        [ArgFeed("binance", "close", "BTC/USDT"), ArgFeed("kraken", "close", "BTC/DAI")]
+    )
+
+    assert feeds.contains_combination("binance", "BTC/USDT", "1h")
+    assert feeds.contains_combination("kraken", "BTC/DAI", "5m")
+    assert not feeds.contains_combination("kraken", "BTC/USDT", "1h")
+
+    # binance feed has a timeframe so contains just those timeframes
+    feeds = ArgFeeds(
+        [
+            ArgFeed("binance", "close", "BTC/USDT", "5m"),
+            ArgFeed("kraken", "close", "BTC/DAI"),
+        ]
+    )
+
+    assert not feeds.contains_combination("binance", "BTC/USDT", "1h")
+    assert feeds.contains_combination("binance", "BTC/USDT", "5m")
+    assert feeds.contains_combination("kraken", "BTC/DAI", "5m")
+    assert feeds.contains_combination("kraken", "BTC/DAI", "1h")

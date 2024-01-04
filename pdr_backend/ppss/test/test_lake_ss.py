@@ -25,12 +25,12 @@ def test_lake_ss_basic():
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
 
-    assert sorted(ss.exchs_dict.keys()) == ["binanceus", "kraken"]
+    assert ss.exchange_strs == set(["binanceus", "kraken"])
 
     # derivative properties
     assert ss.st_timestamp == timestr_to_ut("2023-06-18")
     assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
-    assert ss.input_feeds == ArgFeeds(
+    assert ss.feeds == ArgFeeds(
         [
             ArgFeed("kraken", None, "ETH/USDT", "5m"),
             ArgFeed("binanceus", None, "ETH/USDT", "1h"),
@@ -44,7 +44,7 @@ def test_lake_ss_basic():
             ("binanceus", "TRX/DAI"),
         ]
     )
-    assert len(ss.input_feeds) == ss.n_input_feeds == 3
+    assert len(ss.feeds) == ss.n_feeds == 3
     assert ss.n_exchs == 2
     assert len(ss.exchange_strs) == 2
     assert "binanceus" in ss.exchange_strs

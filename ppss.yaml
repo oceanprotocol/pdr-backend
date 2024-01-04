@@ -23,18 +23,14 @@ predictoor_ss:
     autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
 
-trader_pp:
+trader_ss:
+  feed: binance BTC/USDT c 1h
   sim_only:
+    buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     init_holdings:
       - 100000 USDT
       - 0 BTC
-  bot_only:
-
-trader_ss:
-  predict_feed: binance BTC/USDT c 1h
-  sim_only:
-    buy_amt: 10 USD # buy this amount in each epoch
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
@@ -57,10 +53,18 @@ publisher_ss:
     fee_collector_address: 0x0000000000000000000000000000000000000000
 
 trueval_ss:
+  feeds:
+    - binance BTC/USDT 5m
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 5m
   batch_size: 30
   sleep_time: 30
 
 dfbuyer_ss:
+  feeds:
+    - binance BTC/USDT 5m
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 5m
   batch_size: 20
   consume_interval_seconds: 86400
   weekly_spending_limit: 37000

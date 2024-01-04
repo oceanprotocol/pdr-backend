@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
+from pdr_backend.cli.arg_feed import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
@@ -127,9 +128,7 @@ class Web3PP(StrMixin):
     def get_pending_slots(
         self,
         timestamp: int,
-        pair_filters: Optional[List[str]] = None,
-        timeframe_filter: Optional[List[str]] = None,
-        source_filter: Optional[List[str]] = None,
+        allowed_feeds: Optional[ArgFeeds] = None,
     ) -> List[Slot]:
         """
         @description
@@ -142,9 +141,7 @@ class Web3PP(StrMixin):
             subgraph_url=self.subgraph_url,
             timestamp=timestamp,
             owner_addresses=[self.owner_addrs] if self.owner_addrs else None,
-            pair_filter=pair_filters,
-            timeframe_filter=timeframe_filter,
-            source_filter=source_filter,
+            allowed_feeds=allowed_feeds,
         )
 
 

@@ -91,7 +91,7 @@ class OhlcvDataFactory:
 
     def _update_rawohlcv_files(self, fin_ut: int):
         print("  Update all rawohlcv files: begin")
-        for feed in self.ss.input_feeds:
+        for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
         print("  Update all rawohlcv files: done")
 
@@ -120,7 +120,7 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
-            exch = self.ss.exchs_dict[exch_str]
+            exch = feed.exchange.exchange_class()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
@@ -215,7 +215,7 @@ class OhlcvDataFactory:
         for exch_str in self.ss.exchange_strs:
             rawohlcv_dfs[exch_str] = {}
 
-        for feed in self.ss.input_feeds:
+        for feed in self.ss.feeds:
             pair_str = str(feed.pair)
             exch_str = str(feed.exchange)
             assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"

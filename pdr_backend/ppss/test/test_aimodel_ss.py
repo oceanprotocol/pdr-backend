@@ -16,13 +16,13 @@ def test_aimodel_ss1():
     ss = AimodelSS(d)
 
     # yaml properties
-    assert ss.input_feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]
+    assert ss.feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]
     assert ss.approach == "LIN"
     assert ss.max_n_train == 7
     assert ss.autoregressive_n == 3
 
     # derivative properties
-    assert ss.input_feeds == ArgFeeds(
+    assert ss.feeds == ArgFeeds(
         [
             ArgFeed("kraken", "high", "ETH/USDT"),
             ArgFeed("kraken", "close", "ETH/USDT"),
