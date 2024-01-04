@@ -31,8 +31,8 @@ def test_update_gql1(
         tmpdir,
         sample_daily_predictions,
         "2023-11-02_0:00",
-        "2023-11-04_0:00",
-        n_preds=2,
+        "2023-11-04_21:00",
+        n_preds=3,
     )
 
 
@@ -52,8 +52,8 @@ def test_update_gql2(
         tmpdir,
         sample_daily_predictions,
         "2023-11-02_0:00",
-        "2023-11-06_0:00",
-        n_preds=4,
+        "2023-11-06_21:00",
+        n_preds=5,
     )
 
 
@@ -92,7 +92,7 @@ def test_update_gql_iteratively(
 
     iterations = [
         ("2023-11-02_0:00", "2023-11-04_0:00", 2),
-        ("2023-11-01_0:00", "2023-11-05_0:00", 3),
+        ("2023-11-01_0:00", "2023-11-05_0:00", 3),  # do not append to start
         ("2023-11-02_0:00", "2023-11-07_0:00", 5),
     ]
 
@@ -325,7 +325,7 @@ def test_load_missing_parquet(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )

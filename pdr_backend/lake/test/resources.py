@@ -45,8 +45,13 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
     ppss = mock_ppss([feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
-    gql_data_factory = GQLDataFactory(ppss)
 
+    # setup lake
+    parquet_dir = str(tmpdir)
+    lake_ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    ppss.lake_ss = lake_ss
+
+    gql_data_factory = GQLDataFactory(ppss)
     return ppss, gql_data_factory
 
 

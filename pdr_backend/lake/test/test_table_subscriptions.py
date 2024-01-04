@@ -29,8 +29,8 @@ def test_update_gql1(
         tmpdir,
         sample_subscriptions,
         "2023-11-02_0:00",
-        "2023-11-04_0:00",
-        n_subs=1,
+        "2023-11-04_17:00",
+        n_subs=4,
     )
 
 
@@ -46,9 +46,10 @@ def test_update_gql_iteratively(
     del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     iterations = [
-        ("2023-11-02_0:00", "2023-11-04_0:00", 1),
-        ("2023-11-01_0:00", "2023-11-05_0:00", 4),
-        ("2023-11-02_0:00", "2023-11-07_0:00", 7),
+        ("2023-11-02_0:00", "2023-11-04_17:00", 4),
+        ("2023-11-01_0:00", "2023-11-04_17:00", 4),  # does not append to beginning
+        ("2023-11-01_0:00", "2023-11-05_17:00", 6),
+        ("2023-11-01_0:00", "2023-11-06_17:00", 7),
     ]
 
     for st_timestr, fin_timestr, n_subs in iterations:
@@ -78,7 +79,7 @@ def _test_update_gql(
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -155,7 +156,7 @@ def test_load_and_verify_schema(
 ):
     del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
-    st_timestr = "2023-11-02_0:00"
+    st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
 
     _test_update_gql(
@@ -164,12 +165,12 @@ def test_load_and_verify_schema(
         sample_subscriptions,
         st_timestr,
         fin_timestr,
-        n_subs=7,
+        n_subs=8,
     )
 
     _, gql_data_factory = _gql_data_factory(
         tmpdir,
-        "binanceus ETH/USDT h",
+        "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
     )
@@ -183,6 +184,6 @@ def test_load_and_verify_schema(
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
 
     assert len(gql_dfs) == 1
-    assert len(gql_dfs[pdr_subscriptions_record]) == 7
-    assert round(gql_dfs[pdr_subscriptions_record]["last_price_value"].sum(), 2) == 21.0
+    assert len(gql_dfs[pdr_subscriptions_record]) == 8
+    assert round(gql_dfs[pdr_subscriptions_record]["last_price_value"].sum(), 2) == 24.0
     assert gql_dfs[pdr_subscriptions_record].schema == subscriptions_schema
