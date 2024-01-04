@@ -1,9 +1,8 @@
 from typing import Dict, List
 
 import polars as pl
-from polars import Utf8, Int64, Float64, Boolean, Object
+from polars import Utf8, Int64, Float64, Boolean
 from enforce_typing import enforce_types
-from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
