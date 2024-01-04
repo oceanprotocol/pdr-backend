@@ -9,6 +9,10 @@ from pdr_backend.lake.table_pdr_predictions import (
     get_pdr_predictions_df,
     predictions_schema,
 )
+from pdr_backend.lake.table_pdr_subscriptions import (
+    get_pdr_subscriptions_df,
+    subscriptions_schema,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -44,6 +48,13 @@ class GQLDataFactory:
             "pdr_predictions": {
                 "fetch_fn": get_pdr_predictions_df,
                 "schema": predictions_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
+            "pdr_subscriptions": {
+                "fetch_fn": get_pdr_subscriptions_df,
+                "schema": subscriptions_schema,
                 "config": {
                     "contract_list": contract_list,
                 },
@@ -164,7 +175,13 @@ class GQLDataFactory:
             print(f"      filename={filename}")
 
             # load all data from file
-            df = pl.read_parquet(filename)
+            # check if file exists
+            # if file doesn't exist, return an empty dataframe with the expected schema
+            if os.path.exists(filename):
+                df = pl.read_parquet(filename)
+            else:
+                df = pl.DataFrame(schema=record["schema"])
+
             df = df.filter(
                 (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
             )
@@ -202,7 +219,7 @@ class GQLDataFactory:
         if len(df) > 1:
             assert (
                 df.head(1)["timestamp"].to_list()[0]
-                < df.tail(1)["timestamp"].to_list()[0]
+                <= df.tail(1)["timestamp"].to_list()[0]
             )
 
         if os.path.exists(filename):  # "append" existing file

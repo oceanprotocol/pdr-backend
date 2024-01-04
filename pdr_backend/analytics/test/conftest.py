@@ -1,6 +1,6 @@
 import pytest
 
-from pdr_backend.contract.prediction import (
+from pdr_backend.subgraph.prediction import (
     mock_daily_predictions,
     mock_first_predictions,
     mock_second_predictions,

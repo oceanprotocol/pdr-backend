@@ -4,7 +4,7 @@ from typing import List, TypedDict
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.prediction import Prediction
+from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
@@ -171,6 +171,10 @@ def fetch_filtered_predictions(
                 user=user,
             )
             predictions.append(prediction)
+
+        # avoids doing next fetch if we've reached the end
+        if len(data) < chunk_size:
+            break
 
     return predictions
 
