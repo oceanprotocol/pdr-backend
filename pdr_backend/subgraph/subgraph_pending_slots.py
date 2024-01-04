@@ -1,6 +1,7 @@
 import time
 from typing import List, Optional
 
+from pdr_backend.cli.arg_feed import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
@@ -12,9 +13,7 @@ def get_pending_slots(
     subgraph_url: str,
     timestamp: int,
     owner_addresses: Optional[List[str]],
-    pair_filter: Optional[List[str]] = None,
-    timeframe_filter: Optional[List[str]] = None,
-    source_filter: Optional[List[str]] = None,
+    allowed_feeds: Optional[ArgFeeds] = None,
 ):
     chunk_size = 1000
     offset = 0
@@ -93,13 +92,9 @@ def get_pending_slots(
                 if owners and (owner_id not in owners):
                     continue
 
-                if pair_filter and (pair not in pair_filter):
-                    continue
-
-                if timeframe_filter and (timeframe not in timeframe_filter):
-                    continue
-
-                if source_filter and (source not in source_filter):
+                if allowed_feeds and not allowed_feeds.contains_combination(
+                    source, pair, timeframe
+                ):
                     continue
 
                 feed = SubgraphFeed(
