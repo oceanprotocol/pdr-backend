@@ -6,7 +6,7 @@ import os
 import shutil
 from io import StringIO
 from tempfile import mkdtemp
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 import polars as pl
@@ -177,3 +177,17 @@ def text_to_df(s: str) -> pl.DataFrame:
     df = pl.scan_csv(filename, separator="|").collect()
     shutil.rmtree(tmpdir)
     return df
+
+
+@enforce_types
+def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
+    """
+    @description
+        Convert list objects to a dataframe using their __dict__ structure.
+    """
+    # Get all predictions into a dataframe
+    obj_dicts = [object.__dict__ for object in objects]
+    obj_df = pl.DataFrame(obj_dicts, schema=schema)
+    assert obj_df.schema == schema
+
+    return obj_df

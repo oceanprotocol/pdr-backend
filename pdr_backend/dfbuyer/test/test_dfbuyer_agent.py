@@ -136,6 +136,7 @@ def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
 
     ppss.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
     ppss.dfbuyer_ss.batch_size = 3
+    ppss.dfbuyer_ss.filter_feeds_from_candidates.return_value = feeds
 
     batcher_class = MagicMock(spec=PredictoorBatcher)
     monkeypatch.setattr(f"{PATH}.PredictoorBatcher", batcher_class)

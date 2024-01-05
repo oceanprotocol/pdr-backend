@@ -27,8 +27,10 @@ class DFBuyerAgent:
         print(self.ppss)
 
         # set self.feeds
-        self.feeds = ppss.web3_pp.query_feed_contracts()
-        print_feeds(self.feeds, f"all feeds, owner={ppss.web3_pp.owner_addrs}")
+        cand_feeds = ppss.web3_pp.query_feed_contracts()
+        print_feeds(cand_feeds, f"all feeds, owner={ppss.web3_pp.owner_addrs}")
+
+        self.feeds = ppss.dfbuyer_ss.filter_feeds_from_candidates(cand_feeds)
 
         if not self.feeds:
             raise ValueError("No feeds found.")

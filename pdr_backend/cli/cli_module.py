@@ -7,21 +7,8 @@ from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.cli.cli_arguments import (
-    CheckNetworkArgParser,
-    ClaimOceanArgParser,
-    ClaimRoseArgParser,
-    DfbuyerArgParser,
-    GetPredictionsInfoArgParser,
-    GetPredictoorsInfoArgParser,
-    GetTractionInfoArgParser,
-    LakeArgParser,
-    PredictoorArgParser,
-    PublisherArgParser,
-    SimArgParser,
-    TopupArgParser,
-    TraderArgParser,
-    TruevalArgParser,
     do_help_long,
+    get_arg_parser,
     print_args,
 )
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
@@ -50,7 +37,11 @@ def _do_main():
     if func is None:
         do_help_long(1)
 
-    func()
+    parser = get_arg_parser(func_name)
+    args = parser.parse_args()
+    print_args(args)
+
+    func(args)
 
 
 # ========================================================================
@@ -58,22 +49,14 @@ def _do_main():
 
 
 @enforce_types
-def do_sim():
-    parser = SimArgParser("Run simulation", "sim")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_sim(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="development")
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
 
 @enforce_types
-def do_predictoor():
-    parser = PredictoorArgParser("Run a predictoor bot", "predictoor")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_predictoor(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     approach = args.APPROACH
@@ -90,11 +73,7 @@ def do_predictoor():
 
 
 @enforce_types
-def do_trader():
-    parser = TraderArgParser("Run a trader bot", "trader")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_trader(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     approach = args.APPROACH
 
@@ -109,11 +88,7 @@ def do_trader():
 
 
 @enforce_types
-def do_lake():
-    parser = LakeArgParser("Run the lake tool", "lake")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_lake(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
@@ -124,80 +99,43 @@ def do_lake():
 
 
 @enforce_types
-def do_claim_OCEAN():
-    parser = ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_claim_OCEAN(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_ocean_payout(ppss)
 
 
 @enforce_types
-def do_claim_ROSE():
-    parser = ClaimRoseArgParser("Claim ROSE", "claim_ROSE")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_claim_ROSE(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_rose_payout(ppss)
 
 
 @enforce_types
-def do_get_predictoors_info():
-    parser = GetPredictoorsInfoArgParser(
-        "For specified predictoors, report {accuracy, ..} of each predictoor",
-        "get_predictoors_info",
-    )
-    args = parser.parse_args()
-    print_args(args)
-
+def do_get_predictoors_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types
-def do_get_predictions_info():
-    parser = GetPredictionsInfoArgParser(
-        "For specified feeds, report {accuracy, ..} of each predictoor",
-        "get_predictions_info",
-    )
-    args = parser.parse_args()
-    print_args(args)
-
+def do_get_predictions_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types
-def do_get_traction_info():
-    parser = GetTractionInfoArgParser(
-        "Get traction info: # predictoors vs time, etc",
-        "get_traction_info",
-    )
-    args = parser.parse_args()
-    print_args(args)
-
+def do_get_traction_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types
-def do_check_network():
-    parser = CheckNetworkArgParser("Check network", "check_network")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_check_network(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
 @enforce_types
-def do_trueval(testing=False):
-    parser = TruevalArgParser("Run trueval bot", "trueval")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_trueval(args, testing=False):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
     agent = TruevalAgent(ppss, predictoor_batcher_addr)
@@ -206,33 +144,22 @@ def do_trueval(testing=False):
 
 
 # @enforce_types
-def do_dfbuyer():
-    parser = DfbuyerArgParser("Run dfbuyer bot", "dfbuyer")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_dfbuyer(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
     agent.run()
 
 
 @enforce_types
-def do_publisher():
-    parser = PublisherArgParser("Publish feeds", "publisher")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_publisher(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+
     if ppss.web3_pp.network == "development":
         fund_accounts_with_OCEAN(ppss.web3_pp)
     publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 
 @enforce_types
-def do_topup():
-    parser = TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_topup(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     topup_main(ppss)

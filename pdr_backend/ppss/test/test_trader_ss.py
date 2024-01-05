@@ -5,9 +5,11 @@ from pdr_backend.ppss.trader_ss import TraderSS, inplace_make_trader_fast
 _D = {
     "sim_only": {
         "buy_amt": "10 USD",
+        "fee_percent": 0.01,
+        "init_holdings": ["10000.0 USDT", "0 BTC"],
     },
     "bot_only": {"min_buffer": 60, "max_tries": 10, "position_size": 3},
-    "predict_feed": "kraken ETH/USDT h 5m",
+    "feed": "kraken ETH/USDT h 5m",
 }
 
 
@@ -20,7 +22,9 @@ def test_trader_ss():
     assert ss.min_buffer == 60
     assert ss.max_tries == 10
     assert ss.position_size == 3
-    assert str(ss.predict_feed) == "kraken ETH/USDT h 5m"
+    assert str(ss.feed) == "kraken ETH/USDT h 5m"
+    assert ss.fee_percent == 0.01
+    assert ss.init_holdings_strs == ["10000.0 USDT", "0 BTC"]
 
     assert ss.signal_str == "high"
     assert ss.pair_str == "ETH/USDT"
@@ -29,6 +33,7 @@ def test_trader_ss():
 
     # derivative properties
     assert ss.buy_amt_usd == 10.0
+    assert ss.init_holdings["USDT"] == 10000.0
 
     # setters
     ss.set_max_tries(12)

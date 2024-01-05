@@ -59,9 +59,7 @@ def test_get_pending_slots():
             subgraph_url="foo",
             timestamp=2000,
             owner_addresses=None,
-            pair_filter=None,
-            timeframe_filter=None,
-            source_filter=None,
+            allowed_feeds=None,
         )
 
     assert len(slots) == 2

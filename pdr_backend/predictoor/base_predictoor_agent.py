@@ -29,7 +29,7 @@ class BasePredictoorAgent(ABC):
         cand_feeds = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed = ppss.predictoor_ss.get_predict_feed_from_candidates(cand_feeds)
+        feed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
         print_feeds({feed.address: feed}, "filtered feeds")
         if not feed:
             raise ValueError("No feeds found.")
