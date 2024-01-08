@@ -115,3 +115,25 @@ def test_check_network_main(  # pylint: disable=unused-argument
     assert mock_query_subgraph.call_count == 1
     mock_token.assert_called()
     ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()
+
+    # test if predictoor contracts are found, iterates through them
+    with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
+        mock_query_subgraph.return_value = {
+            "data": {
+                "predictContracts": [
+                    {
+                        "slots": {},
+                        "token": {"name": "aa"},
+                        "secondsPerEpoch": 86400,
+                    },
+                    {
+                        "slots": {},
+                        "token": {"name": "bb"},
+                        "secondsPerEpoch": 86400,
+                    },
+                ]
+            }
+        }
+        check_network_main(ppss, lookback_hours=24)
+        assert mock_query_subgraph.call_count == 1
+        assert mock_check_dfbuyer.call_count == 2
