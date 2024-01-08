@@ -1,8 +1,9 @@
 import time
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.token import Token
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.util.contract import get_address
 
 
@@ -28,3 +29,16 @@ def test_token(web3_pp, web3_config):
     token.transfer(alice, 100, owner_addr)
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
+
+
+@enforce_types
+def test_native_token(web3_pp):
+    token = NativeToken(web3_pp)
+    assert token.w3
+
+    owner = web3_pp.web3_config.owner
+    assert token.balanceOf(owner)
+
+    with patch("web3.eth.Eth.send_transaction") as mock:
+        token.transfer(owner, 100, "0x123", False)
+        assert mock.called

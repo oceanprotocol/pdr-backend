@@ -24,6 +24,7 @@ class Token(BaseContract):
 
         if not wait_for_receipt:
             return tx
+
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def approve(self, spender, amount, wait_for_receipt=True):
@@ -32,8 +33,10 @@ class Token(BaseContract):
         tx = self.contract_instance.functions.approve(spender, amount).transact(
             call_params
         )
+
         if not wait_for_receipt:
             return tx
+
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
 
