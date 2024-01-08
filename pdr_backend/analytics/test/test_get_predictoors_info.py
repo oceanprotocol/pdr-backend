@@ -30,7 +30,7 @@ def test_get_predictoors_info_main_mainnet(
     ):
         get_predictoors_info_main(
             ppss,
-            "0x123",
+            "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
             "2023-01-01",
             "2023-01-02",
         )

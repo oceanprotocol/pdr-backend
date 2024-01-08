@@ -33,5 +33,4 @@ def get_predictions_info_main(
             .map_elements(lambda x: x.split("-")[0])
             .is_in(feed_addrs_list)
         )
-    print(predictions_df)
     get_feed_summary_stats(predictions_df)
