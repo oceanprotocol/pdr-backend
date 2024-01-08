@@ -1,7 +1,7 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_exchange import ArgExchanges
+from pdr_backend.cli.arg_exchange import ArgExchange, ArgExchanges
 
 
 @enforce_types
@@ -14,6 +14,9 @@ def test_pack_exchange_str_list():
 
     with pytest.raises(TypeError):
         ArgExchanges(None)
+
+    with pytest.raises(ValueError):
+        ArgExchange(None)
 
     with pytest.raises(TypeError):
         ArgExchanges("")

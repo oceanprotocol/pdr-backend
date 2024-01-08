@@ -1,6 +1,8 @@
 import warnings
+from unittest.mock import Mock
 
 import numpy as np
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
@@ -82,3 +84,16 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
 
     y_train_hat = aimodel.predict(X_train)
     assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
+
+
+@enforce_types
+def test_aimodel_factory_bad_approach():
+    aimodel_ss = Mock(spec=AimodelSS)
+    aimodel_ss.approach = "BAD"
+    factory = AimodelFactory(aimodel_ss)
+
+    X_train, y_train, _, _ = _data()
+
+    # forcefully change the model
+    with pytest.raises(ValueError):
+        factory.build(X_train, y_train)

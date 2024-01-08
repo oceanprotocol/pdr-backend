@@ -15,12 +15,16 @@ def test_unpack_feeds_strs():
     assert ArgFeeds.from_strs(["binance ADA-USDT o 1h"]) == target_feeds
 
     # 1 str w 2 feeds, 2 feeds total
-    target_feeds = [
-        ArgFeed("binance", "open", "ADA/USDT"),
-        ArgFeed("binance", "high", "ADA/USDT"),
-    ]
+    target_feeds = ArgFeeds(
+        [
+            ArgFeed("binance", "open", "ADA/USDT"),
+            ArgFeed("binance", "high", "ADA/USDT"),
+        ]
+    )
     assert ArgFeeds.from_strs(["binance ADA/USDT oh"]) == target_feeds
     assert ArgFeeds.from_strs(["binance ADA-USDT oh"]) == target_feeds
+    assert target_feeds.signals == set(["open", "high"])
+    assert target_feeds.exchanges == set(["binance"])
 
     # 2 strs each w 1 feed, 2 feeds total
     target_feeds = [

@@ -144,6 +144,27 @@ class Web3PP(StrMixin):
             allowed_feeds=allowed_feeds,
         )
 
+    @enforce_types
+    def tx_call_params(self, gas=None) -> dict:
+        call_params = {
+            "from": self.web3_config.owner,
+            "gasPrice": self.tx_gas_price(),
+        }
+        if gas is not None:
+            call_params["gas"] = gas
+        return call_params
+
+    @enforce_types
+    def tx_gas_price(self) -> int:
+        """Return gas price for use in call_params of transaction calls."""
+        network = self.network
+        if network in ["sapphire-testnet", "sapphire-mainnet"]:
+            return self.web3_config.w3.eth.gas_price
+            # return 100000000000
+        if network in ["development", "barge-predictoor-bot", "barge-pytest"]:
+            return 0
+        raise ValueError(f"Unknown network {network}")
+
 
 # =========================================================================
 # utilities for testing

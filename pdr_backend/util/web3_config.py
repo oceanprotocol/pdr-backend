@@ -13,6 +13,10 @@ from web3.middleware import (
 from web3.types import BlockData
 
 from pdr_backend.util.constants import WEB3_MAX_TRIES
+from pdr_backend.util.constants import (
+    SAPPHIRE_MAINNET_CHAINID,
+    SAPPHIRE_TESTNET_CHAINID,
+)
 
 _KEYS = KeyAPI(NativeECCBackend)
 
@@ -76,3 +80,16 @@ class Web3Config:
             "validUntil": valid_until,
         }
         return auth
+
+    @property
+    def is_sapphire(self):
+        return self.w3.eth.chain_id in [
+            SAPPHIRE_TESTNET_CHAINID,
+            SAPPHIRE_MAINNET_CHAINID,
+        ]
+
+    @enforce_types
+    def get_max_gas(self) -> int:
+        """Returns max block gas"""
+        block = self.get_block(self.w3.eth.block_number, full_transactions=False)
+        return int(block["gasLimit"] * 0.99)

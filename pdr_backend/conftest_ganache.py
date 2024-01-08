@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
@@ -95,6 +97,30 @@ def predictoor_contract2():
     )
     dt_addr = logs["newTokenAddress"]
     return PredictoorContract(w3p, dt_addr)
+
+
+@pytest.fixture(scope="module")  # "module" = invoke once per test module
+def predictoor_contract_empty():
+    w3p = _web3_pp()
+    w3c = w3p.web3_config
+    _, _, _, _, logs = publish_asset(
+        s_per_epoch=S_PER_EPOCH,
+        s_per_subscription=S_PER_EPOCH * 24,
+        base="ETH",
+        quote="USDT",
+        source="kraken",
+        timeframe="5m",
+        trueval_submitter_addr=w3c.owner,
+        feeCollector_addr=w3c.owner,
+        rate=3,
+        cut=0.2,
+        web3_pp=w3p,
+    )
+    dt_addr = logs["newTokenAddress"]
+    predictoor_c = PredictoorContract(w3p, dt_addr)
+    predictoor_c.get_exchanges = Mock(return_value=[])
+
+    return predictoor_c
 
 
 # pylint: disable=redefined-outer-name

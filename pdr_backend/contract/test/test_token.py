@@ -1,10 +1,10 @@
 import time
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.token import Token
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.networkutil import tx_call_params
 
 
 @enforce_types
@@ -16,7 +16,7 @@ def test_token(web3_pp, web3_config):
     owner_addr = web3_config.owner
     alice = accounts[1]
 
-    call_params = tx_call_params(web3_pp)
+    call_params = web3_pp.tx_call_params()
     token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
 
     allowance_start = token.allowance(owner_addr, alice)
@@ -29,3 +29,16 @@ def test_token(web3_pp, web3_config):
     token.transfer(alice, 100, owner_addr)
     balance_end = token.balanceOf(alice)
     assert balance_end - balance_start == 100
+
+
+@enforce_types
+def test_native_token(web3_pp):
+    token = NativeToken(web3_pp)
+    assert token.w3
+
+    owner = web3_pp.web3_config.owner
+    assert token.balanceOf(owner)
+
+    with patch("web3.eth.Eth.send_transaction") as mock:
+        token.transfer(owner, 100, "0x123", False)
+        assert mock.called

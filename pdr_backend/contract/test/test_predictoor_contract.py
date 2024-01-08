@@ -1,3 +1,6 @@
+from unittest.mock import Mock
+
+import pytest
 from enforce_typing import enforce_types
 from pytest import approx
 
@@ -29,9 +32,17 @@ def test_buy_and_start_subscription(predictoor_contract):
 
 
 @enforce_types
+def test_buy_and_start_subscription_empty(predictoor_contract_empty):
+    with pytest.raises(ValueError):
+        assert predictoor_contract_empty.buy_and_start_subscription()
+
+
+@enforce_types
 def test_buy_many(predictoor_contract):
     receipts = predictoor_contract.buy_many(2, None, True)
     assert len(receipts) == 2
+
+    assert predictoor_contract.buy_many(0, None, True) is None
 
 
 @enforce_types
@@ -51,6 +62,13 @@ def test_get_stake_token(predictoor_contract, web3_pp):
 def test_get_price(predictoor_contract):
     price = predictoor_contract.get_price()
     assert price / 1e18 == approx(3.603)
+
+
+@enforce_types
+def test_get_price_no_exchanges(predictoor_contract_empty):
+    predictoor_contract_empty.get_exchanges = Mock(return_value=[])
+    with pytest.raises(ValueError):
+        predictoor_contract_empty.get_price()
 
 
 @enforce_types

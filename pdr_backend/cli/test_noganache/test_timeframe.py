@@ -36,6 +36,13 @@ def test_timeframe_class_bad():
     with pytest.raises(ValueError):
         Timeframe("foo")
 
+    t = Timeframe("1h")
+    # forcefully change the model
+    t.timeframe_str = "BAD"
+
+    with pytest.raises(ValueError):
+        _ = t.m
+
 
 @enforce_types
 def test_pack_timeframe_str_list():
@@ -44,6 +51,9 @@ def test_pack_timeframe_str_list():
     assert str(Timeframes(["1h", "5m"])) == "1h,5m"
 
     assert str(Timeframes.from_str("1h,5m")) == "1h,5m"
+
+    with pytest.raises(TypeError):
+        Timeframes.from_str(None)
 
     with pytest.raises(TypeError):
         Timeframes("")

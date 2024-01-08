@@ -45,7 +45,12 @@ def check_and_create_dir(dir_path: str):
 
 
 @enforce_types
-def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
+def _save_prediction_csv(
+    all_predictions: List[Prediction],
+    csv_output_dir: str,
+    headers: List,
+    attribute_names: List,
+):
     check_and_create_dir(csv_output_dir)
 
     data = generate_prediction_data_structure(all_predictions)
@@ -56,58 +61,43 @@ def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
 
-            writer.writerow(
-                ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"]
-            )
+            writer.writerow(headers)
 
             for prediction in predictions:
                 writer.writerow(
                     [
-                        prediction.prediction,
-                        prediction.trueval,
-                        prediction.timestamp,
-                        prediction.stake,
-                        prediction.payout,
+                        getattr(prediction, attribute_name)
+                        for attribute_name in attribute_names
                     ]
                 )
+
         print(f"CSV file '{filename}' created successfully.")
 
 
 @enforce_types
+def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
+    _save_prediction_csv(
+        all_predictions,
+        csv_output_dir,
+        ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"],
+        ["prediction", "trueval", "timestamp", "stake", "payout"],
+    )
+
+
+@enforce_types
 def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
-    check_and_create_dir(csv_output_dir)
-
-    data = generate_prediction_data_structure(all_predictions)
-
-    for key, predictions in data.items():
-        predictions.sort(key=lambda x: x.timestamp)
-        filename = key_csv_filename_with_dir(csv_output_dir, key)
-        with open(filename, "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                [
-                    "PredictionID",
-                    "Timestamp",
-                    "Slot",
-                    "Stake",
-                    "Wallet",
-                    "Payout",
-                    "True Value",
-                    "Predicted Value",
-                ]
-            )
-
-            for prediction in predictions:
-                writer.writerow(
-                    [
-                        prediction.ID,
-                        prediction.timestamp,
-                        prediction.slot,
-                        prediction.stake,
-                        prediction.user,
-                        prediction.payout,
-                        prediction.trueval,
-                        prediction.prediction,
-                    ]
-                )
-        print(f"CSV file '{filename}' created successfully.")
+    _save_prediction_csv(
+        all_predictions,
+        csv_output_dir,
+        [
+            "PredictionID",
+            "Timestamp",
+            "Slot",
+            "Stake",
+            "Wallet",
+            "Payout",
+            "True Value",
+            "Predicted Value",
+        ],
+        ["ID", "timestamp", "slot", "stake", "user", "payout", "trueval", "prediction"],
+    )
