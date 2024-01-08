@@ -1,4 +1,5 @@
 import copy
+from typing import Dict
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -44,19 +45,30 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
     ppss = mock_ppss([feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
+
+    # setup lake
+    parquet_dir = str(tmpdir)
+    lake_ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    ppss.lake_ss = lake_ss
+
     gql_data_factory = GQLDataFactory(ppss)
     return ppss, gql_data_factory
 
 
+def _filter_gql_config(record_config: Dict, record_filter: str) -> Dict:
+    # Return a filtered version of record_config for testing
+    return {k: v for k, v in record_config.items() if k == record_filter}
+
+
 @enforce_types
-def _predictoor_ss(predict_feed, input_feeds):
+def _predictoor_ss(feed, feeds):
     return PredictoorSS(
         {
-            "predict_feed": predict_feed,
+            "predict_feed": feed,
             "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
-                "input_feeds": input_feeds,
+                "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,
                 "autoregressive_n": 3,
@@ -66,10 +78,10 @@ def _predictoor_ss(predict_feed, input_feeds):
 
 
 @enforce_types
-def _lake_ss(parquet_dir, input_feeds, st_timestr=None, fin_timestr=None):
+def _lake_ss(parquet_dir, feeds, st_timestr=None, fin_timestr=None):
     return LakeSS(
         {
-            "feeds": input_feeds,
+            "feeds": feeds,
             "parquet_dir": parquet_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",

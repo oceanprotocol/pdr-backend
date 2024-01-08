@@ -1,18 +1,20 @@
 import copy
 import os
-from typing import List, Set, Tuple
 
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
 
-class LakeSS:
+class LakeSS(MultiFeedMixin):
+    FEEDS_KEY = "feeds"
+
     @enforce_types
     def __init__(self, d: dict):
-        self.d = d  # yaml_dict["lake_ss"]
+        # yaml_dict["lake_ss"]
+        super().__init__(d, assert_feed_attributes=["timeframe"])
 
         # handle parquet_dir
         assert self.parquet_dir == os.path.abspath(self.parquet_dir)
@@ -28,21 +30,8 @@ class LakeSS:
             <= np.inf
         )
 
-        # save self.exchs_dict
-        self.exchs_dict: dict = {}  # e.g. {"binance" : ccxt.binance()}
-        feeds = ArgFeeds.from_strs(self.input_feeds_strs)
-        for feed in feeds:
-            exchange_class = feed.exchange.exchange_class
-            self.exchs_dict[str(feed.exchange)] = exchange_class()
-
-            assert feed.timeframe
-
     # --------------------------------
     # yaml properties
-    @property
-    def input_feeds_strs(self) -> List[str]:
-        return self.d["feeds"]  # eg ["binance BTC/USDT ohlcv",..]
-
     @property
     def parquet_dir(self) -> str:
         s = self.d["parquet_dir"]
@@ -58,6 +47,8 @@ class LakeSS:
     @property
     def fin_timestr(self) -> str:
         return self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
+
+    # feeds defined in base
 
     # --------------------------------
     # derivative properties
@@ -79,45 +70,22 @@ class LakeSS:
         """
         return timestr_to_ut(self.fin_timestr)
 
-    @property
-    def n_exchs(self) -> int:
-        return len(self.exchs_dict)
-
-    @property
-    def exchange_strs(self) -> List[str]:
-        return sorted(self.exchs_dict.keys())
-
-    @property
-    def n_input_feeds(self) -> int:
-        return len(self.input_feeds)
-
-    @property
-    def input_feeds(self) -> ArgFeeds:
-        """Return list of ArgFeed(exchange_str, signal_str, pair_str)"""
-        return ArgFeeds.from_strs(self.input_feeds_strs)
-
-    @property
-    def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
-        """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, str(feed.pair)) for feed in self.input_feeds)
-
     @enforce_types
     def __str__(self) -> str:
         s = "LakeSS:\n"
-        s += f"input_feeds_strs={self.input_feeds_strs}"
-        s += f" -> n_inputfeeds={self.n_input_feeds}\n"
+        s += f"feeds_strs={self.feeds_strs}"
+        s += f" -> n_inputfeeds={self.n_feeds}\n"
         s += f"st_timestr={self.st_timestr}"
         s += f" -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
         s += f"fin_timestr={self.fin_timestr}"
         s += f" -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
-        s += f"exchs_dict={self.exchs_dict}"
         s += f" -> n_exchs={self.n_exchs}\n"
         s += f"parquet_dir={self.parquet_dir}\n"
         s += "-" * 10 + "\n"
         return s
 
     @enforce_types
-    def copy_with_yval(self):
+    def copy(self):
         d2 = copy.deepcopy(self.d)
 
         return LakeSS(d2)

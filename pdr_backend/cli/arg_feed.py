@@ -131,6 +131,17 @@ class ArgFeeds(List[ArgFeed]):
     def signals(self) -> Set[str]:
         return set(str(feed.signal) for feed in self)
 
+    def contains_combination(self, source: str, pair: str, timeframe: str) -> bool:
+        for feed in self:
+            if (
+                feed.exchange == source
+                and str(feed.pair) == pair
+                and (not feed.timeframe or str(feed.timeframe) == timeframe)
+            ):
+                return True
+
+        return False
+
 
 @enforce_types
 def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:

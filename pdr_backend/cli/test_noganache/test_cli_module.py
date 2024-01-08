@@ -130,157 +130,105 @@ _CLI_PATH = "pdr_backend.cli.cli_module"
 
 @enforce_types
 def test_do_check_network(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.CheckNetworkArgParser",
-        MockArgParser_PPSS_NETWORK_LOOKBACK,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.check_network_main", mock_f)
 
-    do_check_network()
+    do_check_network(MockArgParser_PPSS_NETWORK_LOOKBACK().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_claim_OCEAN(monkeypatch):
-    monkeypatch.setattr(f"{_CLI_PATH}.ClaimOceanArgParser", MockArgParser_PPSS)
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.do_ocean_payout", mock_f)
 
-    do_claim_OCEAN()
+    do_claim_OCEAN(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_claim_ROSE(monkeypatch):
-    monkeypatch.setattr(f"{_CLI_PATH}.ClaimRoseArgParser", MockArgParser_PPSS)
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.do_rose_payout", mock_f)
 
-    do_claim_ROSE()
+    do_claim_ROSE(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_dfbuyer(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.DfbuyerArgParser",
-        MockArgParser_PPSS_NETWORK,
-    )
-
     monkeypatch.setattr(f"{_CLI_PATH}.DFBuyerAgent", MockAgent)
 
-    do_dfbuyer()
+    do_dfbuyer(MockArgParser_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
 
 
 @enforce_types
 def test_do_get_predictions_info(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.GetPredictionsInfoArgParser",
-        MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.get_predictions_info_main", mock_f)
 
-    do_get_predictions_info()
+    do_get_predictions_info(
+        MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS().parse_args()
+    )
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_get_predictoors_info(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.GetPredictoorsInfoArgParser",
-        MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.get_predictoors_info_main", mock_f)
 
-    do_get_predictoors_info()
+    do_get_predictoors_info(MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_get_traction_info(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.GetTractionInfoArgParser",
-        MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.get_traction_info_main", mock_f)
 
-    do_get_traction_info()
+    do_get_traction_info(MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_predictoor(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.PredictoorArgParser",
-        MockArgParser_APPROACH_PPSS_NETWORK,
-    )
-
     monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent1", MockAgent)
 
-    do_predictoor()
+    do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
 
 
 @enforce_types
 def test_do_publisher(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.PublisherArgParser",
-        MockArgParser_PPSS_NETWORK,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.publish_assets", mock_f)
 
-    do_publisher()
+    do_publisher(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_topup(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.TopupArgParser",
-        MockArgParser_PPSS_NETWORK,
-    )
-
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.topup_main", mock_f)
 
-    do_topup()
+    do_topup(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_trader(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.TraderArgParser",
-        MockArgParser_APPROACH_PPSS_NETWORK,
-    )
-
     monkeypatch.setattr(f"{_CLI_PATH}.TraderAgent1", MockAgent)
 
-    do_trader()
+    do_trader(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
 
 
 @enforce_types
 def test_do_trueval(monkeypatch):
-    monkeypatch.setattr(
-        f"{_CLI_PATH}.TruevalArgParser",
-        MockArgParser_PPSS_NETWORK,
-    )
-
     monkeypatch.setattr(f"{_CLI_PATH}.TruevalAgent", MockAgent)
 
-    do_trueval()
+    do_trueval(MockArgParser_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run

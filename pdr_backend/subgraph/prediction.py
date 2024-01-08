@@ -211,7 +211,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         0.0500,
         True,
-        1698865200,
+        1698865200,  # Nov 01 2023 19:00:00 GMT
         "binance",
         0.0500,
         1698865200,
@@ -224,7 +224,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         0.0500,
         False,
-        1698951600,
+        1698951600,  # Nov 02 2023 19:00:00 GMT
         "binance",
         0.0,
         1698951600,
@@ -237,7 +237,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         0.0500,
         True,
-        1699038000,
+        1699038000,  # Nov 03 2023 19:00:00 GMT
         "binance",
         0.0500,
         1699038000,
@@ -250,7 +250,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         0.0500,
         True,
-        1699124400,
+        1699124400,  # Nov 04 2023 19:00:00 GMT
         "kraken",
         0.0500,
         1699124400,
@@ -263,7 +263,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         None,
         False,
-        1699214400,
+        1699214400,  # Nov 05 2023 19:00:00 GMT
         "binance",
         0.0,
         1701589500,
@@ -276,7 +276,7 @@ _DAILY_PREDICTION_TUPS = [
         True,
         0.0500,
         True,
-        1699300800,
+        1699300800,  # Nov 06 2023 19:00:00 GMT
         "binance",
         0.0500,
         1699300800,

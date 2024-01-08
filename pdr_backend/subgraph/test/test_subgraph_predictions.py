@@ -119,7 +119,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     assert predictions[0].address[0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     assert predictions[0].trueval is False
     assert predictions[0].prediction is True
-    assert mock_query_subgraph.call_count == 2
+    assert mock_query_subgraph.call_count == 1
 
 
 @enforce_types

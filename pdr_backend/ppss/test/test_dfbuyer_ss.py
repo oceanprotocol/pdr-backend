@@ -7,6 +7,7 @@ def test_trueval_config():
             "batch_size": 42,
             "consume_interval_seconds": 42,
             "weekly_spending_limit": 42 * 7 * 24 * 3600,
+            "feeds": ["binance BTC/USDT c 5m"],
         }
     )
     assert ss.batch_size == 42

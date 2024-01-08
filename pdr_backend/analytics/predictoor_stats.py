@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.prediction import Prediction
+from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.util.csvs import get_plots_dir
 
 

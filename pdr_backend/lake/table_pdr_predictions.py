@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import polars as pl
 from polars import Utf8, Int64, Float64, Boolean
@@ -8,10 +8,11 @@ from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
     fetch_filtered_predictions,
 )
+from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
-# RAW_PREDICTIONS_SCHEMA
+# RAW PREDICTOOR PREDICTIONS SCHEMA
 predictions_schema = {
     "ID": Utf8,
     "pair": Utf8,
@@ -48,19 +49,6 @@ feed_summary_df_schema = {
     "sum_payout": Float64,
     "n_predictions": Int64,
 }
-
-
-def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
-    """
-    @description
-        Convert list objects to a dataframe using their __dict__ structure.
-    """
-    # Get all predictions into a dataframe
-    obj_dicts = [object.__dict__ for object in objects]
-    obj_df = pl.DataFrame(obj_dicts, schema=schema)
-    assert obj_df.schema == schema
-
-    return obj_df
 
 
 def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:

@@ -36,7 +36,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert ppss.payout_ss.batch_size >= 0
     assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
     assert isinstance(ppss.sim_ss.do_plot, bool)
-    assert 0.0 <= ppss.trader_pp.fee_percent <= 0.99
+    assert 0.0 <= ppss.trader_ss.fee_percent <= 0.99
     assert "USD" in ppss.trader_ss.buy_amt_str
     assert ppss.trueval_ss.batch_size >= 0
     assert isinstance(ppss.web3_pp.address_file, str)
@@ -48,7 +48,6 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert "payout_ss" in s
     assert "predictoor_ss" in s
     assert "sim_ss" in s
-    assert "trader_pp" in s
     assert "trader_ss" in s
     assert "trueval_ss" in s
     assert "web3_pp" in s
@@ -65,8 +64,8 @@ def test_mock_feed_ppss(monkeypatch):
     assert feed.pair == "BTC/USDT"
 
     assert ppss.predictoor_ss.timeframe == "5m"
-    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c 5m"
-    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c 5m"]
+    assert str(ppss.predictoor_ss.feed) == "binance BTC/USDT c 5m"
+    assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
@@ -75,8 +74,8 @@ def test_mock_ppss(monkeypatch):
     del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet")
     assert ppss.predictoor_ss.timeframe == "5m"
-    assert str(ppss.predictoor_ss.predict_feed) == "binance BTC/USDT c 5m"
-    assert ppss.lake_ss.input_feeds_strs == ["binance BTC/USDT c 5m"]
+    assert str(ppss.predictoor_ss.feed) == "binance BTC/USDT c 5m"
+    assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
