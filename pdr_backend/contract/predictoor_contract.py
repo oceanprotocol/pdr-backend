@@ -8,12 +8,6 @@ from pdr_backend.contract.fixed_rate import FixedRate
 from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
-from pdr_backend.util.networkutil import (
-    get_max_gas,
-    is_sapphire_network,
-    send_encrypted_tx,
-    tx_call_params,
-)
 
 
 @enforce_types
@@ -59,7 +53,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         print("  Approve spend OCEAN: done")
 
         # buy 1 DT
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         orderParams = (  # OrderParams
             self.config.owner,  # consumer
             0,  # serviceIndex
@@ -94,9 +88,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     orderParams, freParams
                 ).estimate_gas(call_params)
             except Exception as e:
-                print(f"  Estimate gasLimit had error in estimate_gas(): {e}")
-                print("  Because of error, use get_max_gas() as workaround")
-                gasLimit = get_max_gas(self.config)
+                print(
+                    f"  Estimate gasLimit had error in estimate_gas(): {e}"
+                    "  Because of error, use get_max_gas() as workaround"
+                )
+                gasLimit = self.config.get_max_gas()
         assert gasLimit is not None, "should have non-None gasLimit by now"
         print(f"  Estimate gasLimit: done. gasLimit={gasLimit}")
         call_params["gas"] = gasLimit + 1
@@ -113,8 +109,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             print("  buyFromFreAndOrder: waited around, it's done")
             return tx
         except Exception as e:
-            print("  buyFromFreAndOrder hit an error:")
-            print(e)
+            print(f"  buyFromFreAndOrder hit an error: {e}")
             return None
 
     def buy_many(self, n_to_buy: int, gasLimit=None, wait_for_receipt=False):
@@ -195,7 +190,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
           denom - denominator = total # OCEAN staked ("")
         """
         auth = self.config.get_auth_signature()
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         (nom_wei, denom_wei) = self.contract_instance.functions.getAggPredval(
             timestamp, auth
         ).call(call_params)
@@ -203,13 +198,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def payout_multiple(self, slots: List[int], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         try:
             tx = self.contract_instance.functions.payoutMultiple(
                 slots, self.config.owner
             ).transact(call_params)
+
             if not wait_for_receipt:
                 return tx
+
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
             print(e)
@@ -217,13 +214,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
     def payout(self, slot, wait_for_receipt=False):
         """Claims the payout for one slot"""
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         try:
             tx = self.contract_instance.functions.payout(
                 slot, self.config.owner
             ).transact(call_params)
+
             if not wait_for_receipt:
                 return tx
+
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
             print(e)
@@ -273,29 +272,12 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 print("Error while approving the contract to spend tokens:", e)
                 return None
 
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         try:
             txhash = None
-            if is_sapphire_network(self.config.w3.eth.chain_id):
-                self.contract_instance.encodeABI(
-                    fn_name="submitPredval",
-                    args=[predicted_value, stake_amt_wei, prediction_ts],
-                )
-                sender = self.config.owner
-                receiver = self.contract_instance.address
-                pk = self.config.account.key.hex()[2:]
-                res, txhash = send_encrypted_tx(
-                    self.contract_instance,
-                    "submitPredval",
-                    [predicted_value, stake_amt_wei, prediction_ts],
-                    pk,
-                    sender,
-                    receiver,
-                    self.config.rpc_url,
-                    0,
-                    1000000,
-                    0,
-                    0,
+            if self.config.is_sapphire:
+                res, txhash = self.send_encrypted_tx(
+                    "submitPredval", [predicted_value, stake_amt_wei, prediction_ts]
                 )
                 print("Encrypted transaction status code:", res)
             else:
@@ -305,8 +287,10 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 txhash = tx.hex()
             self.last_allowance -= stake_amt_wei
             print(f"Submitted prediction, txhash: {txhash}")
+
             if not wait_for_receipt:
                 return txhash
+
             return self.config.w3.eth.wait_for_transaction_receipt(txhash)
         except Exception as e:
             print(e)
@@ -331,25 +315,28 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         Can only be called by the owner.
         Returns the hash of the transaction.
         """
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         tx = self.contract_instance.functions.submitTrueVal(
             timestamp, trueval, cancel_round
         ).transact(call_params)
         print(f"Submit trueval: txhash={tx.hex()}")
-        if not wait_for_receipt:
-            return tx
-        tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
+
+        if wait_for_receipt:
+            tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
+
         return tx
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
         """Redeem unused slot revenue."""
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         try:
             tx = self.contract_instance.functions.redeemUnusedSlotRevenue(
                 timestamp
             ).transact(call_params)
+
             if not wait_for_receipt:
                 return tx
+
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
             print(e)

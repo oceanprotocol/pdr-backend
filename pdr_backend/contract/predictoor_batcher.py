@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.networkutil import tx_call_params
 
 
 class PredictoorBatcher(BaseContract):
@@ -29,7 +28,7 @@ class PredictoorBatcher(BaseContract):
         token_addr: str,
         wait_for_receipt=True,
     ):
-        call_params = tx_call_params(self.web3_pp, gas=14_000_000)
+        call_params = self.web3_pp.tx_call_params(gas=14_000_000)
         tx = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
         ).transact(call_params)
@@ -48,7 +47,7 @@ class PredictoorBatcher(BaseContract):
         cancelRounds: List[List[bool]],
         wait_for_receipt=True,
     ):
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         tx = self.contract_instance.functions.submitTruevalContracts(
             contract_addrs, epoch_starts, trueVals, cancelRounds
         ).transact(call_params)
@@ -67,7 +66,7 @@ class PredictoorBatcher(BaseContract):
         cancelRounds: List[bool],
         wait_for_receipt=True,
     ):
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         tx = self.contract_instance.functions.submitTruevals(
             contract_addr, epoch_starts, trueVals, cancelRounds
         ).transact(call_params)

@@ -3,7 +3,6 @@ from web3.logs import DISCARD
 
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.networkutil import tx_call_params
 
 
 @enforce_types
@@ -17,7 +16,7 @@ class Erc721Factory(BaseContract):
         super().__init__(web3_pp, address, "ERC721Factory")
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
-        call_params = tx_call_params(self.web3_pp)
+        call_params = self.web3_pp.tx_call_params()
         tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
             NftCreateData, ErcCreateData, FixedData
         ).transact(call_params)
