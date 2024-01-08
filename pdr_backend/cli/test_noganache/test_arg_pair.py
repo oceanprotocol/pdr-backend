@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_pair import (
     ArgPair,
     ArgPairs,
+    _unpack_pairs_str,
     _verify_base_str,
     _verify_quote_str,
 )
@@ -19,6 +20,9 @@ def test_unpack_pair_str():
 
 @enforce_types
 def test_unpack_pairs_str():
+    with pytest.raises(ValueError):
+        _unpack_pairs_str("")
+
     assert ArgPairs.from_str("ADA-USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
     assert ArgPairs.from_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
     assert ArgPairs.from_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
@@ -52,6 +56,9 @@ def test_pack_pair_str_list():
 
     with pytest.raises(ValueError):
         ArgPairs(["ADA-USDT fgds"])
+
+    pair_from_base_and_quote = ArgPair(base_str="BTC", quote_str="USDT")
+    assert str(ArgPair(pair_from_base_and_quote)) == "BTC/USDT"
 
 
 @enforce_types
