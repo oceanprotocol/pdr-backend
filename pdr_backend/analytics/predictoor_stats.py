@@ -13,6 +13,7 @@ class PairTimeframeStat(TypedDict):
     pair: str
     timeframe: str
     accuracy: float
+    exchange: str
     stake: float
     payout: float
     number_of_predictions: int
