@@ -22,7 +22,7 @@ def test_do_help_long(capfd):
     with pytest.raises(SystemExit):
         do_help_long()
 
-    out, err = capfd.readouterr()
+    out, _ = capfd.readouterr()
     assert "Predictoor tool" in out
     assert "Main tools:" in out
 
@@ -35,7 +35,7 @@ def test_print_args(capfd):
 
     print_args(parsed_args)
 
-    out, err = capfd.readouterr()
+    out, _ = capfd.readouterr()
     assert "dftool sim: Begin" in out
     assert "Arguments:" in out
     assert "PPSS_FILE=ppss.yaml" in out

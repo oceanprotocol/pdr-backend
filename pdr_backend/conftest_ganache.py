@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.contract.predictoor_contract import PredictoorContract

@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 import pytest
 from enforce_typing import enforce_types
 
@@ -43,7 +41,7 @@ def test_timeframe_class_bad():
     t.timeframe_str = "BAD"
 
     with pytest.raises(ValueError):
-        t.m
+        _ = t.m
 
 
 @enforce_types

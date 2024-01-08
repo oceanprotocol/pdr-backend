@@ -1,7 +1,7 @@
-from enforce_typing import enforce_types
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import patch, Mock
+from enforce_typing import enforce_types
 
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.util.contract import get_address

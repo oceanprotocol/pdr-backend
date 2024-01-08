@@ -116,6 +116,21 @@ def test_check_network_main(  # pylint: disable=unused-argument
     mock_token.assert_called()
     ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()
 
+
+@enforce_types
+@patch(f"{PATH}.check_dfbuyer")
+@patch(f"{PATH}.get_opf_addresses")
+@patch(f"{PATH}.Token")
+def test_check_network_others(  # pylint: disable=unused-argument
+    mock_token,
+    mock_get_opf_addresses,
+    mock_check_dfbuyer,
+    tmpdir,
+    monkeypatch,
+):
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+    mock_query_subgraph = Mock()
+
     # test if predictoor contracts are found, iterates through them
     with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
         mock_query_subgraph.return_value = {
@@ -136,4 +151,4 @@ def test_check_network_main(  # pylint: disable=unused-argument
         }
         check_network_main(ppss, lookback_hours=24)
         assert mock_query_subgraph.call_count == 1
-        assert mock_check_dfbuyer.call_count == 2
+        assert mock_check_dfbuyer.call_count == 1

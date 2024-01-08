@@ -1,7 +1,8 @@
+from unittest.mock import Mock
+
+import pytest
 from enforce_typing import enforce_types
 from pytest import approx
-import pytest
-from unittest.mock import Mock
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
