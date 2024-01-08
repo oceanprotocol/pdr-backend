@@ -1,8 +1,8 @@
 from typing import Dict
 
 import polars as pl
+from polars import Utf8, Int64, Float64, Boolean
 from enforce_typing import enforce_types
-from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
@@ -25,6 +25,29 @@ predictions_schema = {
     "payout": Float64,
     "slot": Int64,
     "user": Utf8,
+}
+
+# PREDICTOOR_SUMMARY_SCHEMA
+predictoor_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
+    "user": Utf8,
+}
+
+# PREDICTOOR_SUMMARY_SCHEMA
+feed_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
 }
 
 

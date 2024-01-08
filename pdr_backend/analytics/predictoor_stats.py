@@ -13,6 +13,7 @@ class PairTimeframeStat(TypedDict):
     pair: str
     timeframe: str
     accuracy: float
+    exchange: str
     stake: float
     payout: float
     number_of_predictions: int
@@ -49,9 +50,8 @@ def aggregate_prediction_statistics(
     correct_predictions = 0
 
     for prediction in all_predictions:
-        pair_timeframe_key = (prediction.pair, prediction.timeframe)
+        pair_timeframe_key = (prediction.pair, prediction.timeframe, prediction.source)
         predictor_key = prediction.user
-        source = prediction.source
 
         is_correct = prediction.prediction == prediction.trueval
 
@@ -85,7 +85,7 @@ def aggregate_prediction_statistics(
         stats["predictor"][predictor_key]["stake"] += prediction.stake
         stats["predictor"][predictor_key]["payout"] += prediction.payout
         stats["predictor"][predictor_key]["details"].add(
-            (prediction.pair, prediction.timeframe, source)
+            (prediction.pair, prediction.timeframe, prediction.source)
         )
 
     return stats, correct_predictions
@@ -121,7 +121,8 @@ def get_endpoint_statistics(
 
     pair_timeframe_stats: List[PairTimeframeStat] = []
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe = key
+        print(key)
+        pair, timeframe, exchange = key
         accuracy = (
             stat_pair_timeframe_item["correct"]
             / stat_pair_timeframe_item["total"]
@@ -133,6 +134,7 @@ def get_endpoint_statistics(
             "pair": pair,
             "timeframe": timeframe,
             "accuracy": accuracy,
+            "exchange": exchange,
             "stake": stat_pair_timeframe_item["stake"],
             "payout": stat_pair_timeframe_item["payout"],
             "number_of_predictions": stat_pair_timeframe_item["total"],
@@ -160,43 +162,43 @@ def get_endpoint_statistics(
 
 
 @enforce_types
-def get_cli_statistics(all_predictions: List[Prediction]) -> None:
-    total_predictions = len(all_predictions)
+def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
+    # 1 - filter from lake only the rows that you're looking for
+    df = predictions_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
 
-    stats, correct_predictions = aggregate_prediction_statistics(all_predictions)
+    # Group by pair
+    df = df.group_by(["pair", "timeframe"]).agg(
+        pl.col("source").first().alias("source"),
+        pl.col("payout").sum().alias("sum_payout"),
+        pl.col("stake").sum().alias("sum_stake"),
+        pl.col("prediction").count().alias("num_predictions"),
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+    )
 
-    if total_predictions == 0:
-        print("No predictions found.")
-        return
+    print(df)
+    return df
 
-    if correct_predictions == 0:
-        print("No correct predictions found.")
-        return
 
-    print(f"Overall Accuracy: {correct_predictions/total_predictions*100:.2f}%")
+@enforce_types
+def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
+    # 1 - filter from lake only the rows that you're looking for
+    df = predictions_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
 
-    for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe = key
-        accuracy = (
-            stat_pair_timeframe_item["correct"]
-            / stat_pair_timeframe_item["total"]
-            * 100
-        )
-        print(f"Accuracy for Pair: {pair}, Timeframe: {timeframe}: {accuracy:.2f}%")
-        print(f"Total stake: {stat_pair_timeframe_item['stake']}")
-        print(f"Total payout: {stat_pair_timeframe_item['payout']}")
-        print(f"Number of predictions: {stat_pair_timeframe_item['total']}\n")
+    # Group by pair
+    df = df.group_by(["user", "pair", "timeframe"]).agg(
+        pl.col("source").first().alias("source"),
+        pl.col("payout").sum().alias("sum_payout"),
+        pl.col("stake").sum().alias("sum_stake"),
+        pl.col("prediction").count().alias("num_predictions"),
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+    )
 
-    for predictoor_addr, stat_predictoor_item in stats["predictor"].items():
-        accuracy = stat_predictoor_item["correct"] / stat_predictoor_item["total"] * 100
-        print(f"Accuracy for Predictoor Address: {predictoor_addr}: {accuracy:.2f}%")
-        print(f"Stake: {stat_predictoor_item['stake']}")
-        print(f"Payout: {stat_predictoor_item['payout']}")
-        print(f"Number of predictions: {stat_predictoor_item['total']}")
-        print("Details of Predictions:")
-        for detail in stat_predictoor_item["details"]:
-            print(f"Pair: {detail[0]}, Timeframe: {detail[1]}, Source: {detail[2]}")
-        print("\n")
+    print(df)
+    return df
 
 
 @enforce_types
