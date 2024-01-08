@@ -120,7 +120,8 @@ def get_endpoint_statistics(
 
     pair_timeframe_stats: List[PairTimeframeStat] = []
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        pair, timeframe = key
+        print(key)
+        pair, timeframe, exchange = key
         accuracy = (
             stat_pair_timeframe_item["correct"]
             / stat_pair_timeframe_item["total"]
@@ -132,6 +133,7 @@ def get_endpoint_statistics(
             "pair": pair,
             "timeframe": timeframe,
             "accuracy": accuracy,
+            "exchange": exchange,
             "stake": stat_pair_timeframe_item["stake"],
             "payout": stat_pair_timeframe_item["payout"],
             "number_of_predictions": stat_pair_timeframe_item["total"],
@@ -166,7 +168,7 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     )
 
     # Group by pair
-    df = df.groupby(["pair", "timeframe"]).agg(
+    df = df.group_by(["pair", "timeframe"]).agg(
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
@@ -186,7 +188,7 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     )
 
     # Group by pair
-    df = df.groupby(["user", "pair", "timeframe"]).agg(
+    df = df.group_by(["user", "pair", "timeframe"]).agg(
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),

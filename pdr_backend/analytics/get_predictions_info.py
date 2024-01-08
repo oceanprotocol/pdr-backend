@@ -29,7 +29,9 @@ def get_predictions_info_main(
     if feed_addrs_str:
         feed_addrs_list = feed_addrs_str.lower().split(",")
         predictions_df = predictions_df.filter(
-            predictions_df["ID"].apply(lambda x: x.split("-")[0]).is_in(feed_addrs_list)
+            predictions_df["ID"]
+            .map_elements(lambda x: x.split("-")[0])
+            .is_in(feed_addrs_list)
         )
-
+    print(predictions_df)
     get_feed_summary_stats(predictions_df)
