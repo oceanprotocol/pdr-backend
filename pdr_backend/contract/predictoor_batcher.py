@@ -33,8 +33,10 @@ class PredictoorBatcher(BaseContract):
         tx = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
         ).transact(call_params)
+
         if not wait_for_receipt:
             return tx
+
         return self.w3.eth.wait_for_transaction_receipt(tx)
 
     @enforce_types
@@ -50,8 +52,10 @@ class PredictoorBatcher(BaseContract):
         tx = self.contract_instance.functions.submitTruevalContracts(
             contract_addrs, epoch_starts, trueVals, cancelRounds
         ).transact(call_params)
+
         if not wait_for_receipt:
             return tx
+
         return self.w3.eth.wait_for_transaction_receipt(tx)
 
     @enforce_types
@@ -67,8 +71,10 @@ class PredictoorBatcher(BaseContract):
         tx = self.contract_instance.functions.submitTruevals(
             contract_addr, epoch_starts, trueVals, cancelRounds
         ).transact(call_params)
+
         if not wait_for_receipt:
             return tx
+
         return self.w3.eth.wait_for_transaction_receipt(tx)
 
 

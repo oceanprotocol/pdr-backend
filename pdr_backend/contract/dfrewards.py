@@ -15,8 +15,10 @@ class DFRewards(BaseContract):
         tx = self.contract_instance.functions.claimFor(user_addr, token_addr).transact(
             call_params
         )
+
         if not wait_for_receipt:
             return tx
+
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def get_claimable_rewards(self, user_addr: str, token_addr: str) -> float:
