@@ -14,6 +14,7 @@ def test_aimodel_ss1():
         "input_feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
     }
     ss = AimodelSS(d)
+    assert isinstance(ss.copy(), AimodelSS)
 
     # yaml properties
     assert ss.feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]

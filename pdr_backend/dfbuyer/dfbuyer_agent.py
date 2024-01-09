@@ -67,7 +67,7 @@ class DFBuyerAgent:
             return
 
         while True:
-            ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+            ts = self.ppss.web3_pp.web3_config.get_current_timestamp()
             self.take_step(ts)
 
             if testing:
