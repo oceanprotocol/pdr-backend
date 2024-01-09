@@ -93,3 +93,8 @@ class Web3Config:
         """Returns max block gas"""
         block = self.get_block(self.w3.eth.block_number, full_transactions=False)
         return int(block["gasLimit"] * 0.99)
+
+    @enforce_types
+    def get_current_timestamp(self):
+        """Returns latest block"""
+        return self.get_block("latest")["timestamp"]
