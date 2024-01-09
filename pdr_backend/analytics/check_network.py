@@ -166,11 +166,12 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         ocean_bal = from_wei(OCEAN.balanceOf(address))
         native_bal = from_wei(web3_pp.web3_config.w3.eth.get_balance(address))
 
-        ocean_warning = " WARNING LOW OCEAN BALANCE!" if ocean_bal < 10 else " OK "
+        ocean_warning = (
+            " WARNING LOW OCEAN BALANCE!"
+            if ocean_bal < 10 and name != "trueval"
+            else " OK "
+        )
         native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 10 else " OK "
-
-        if name == "trueval":
-            ocean_warning = " OK "
 
         print(
             f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}"

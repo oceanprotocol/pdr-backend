@@ -55,9 +55,6 @@ class ArgFeed:
 
         return feed_str
 
-    def __repr__(self):
-        return self.__str__()
-
     def __eq__(self, other):
         return (
             self.exchange == other.exchange
