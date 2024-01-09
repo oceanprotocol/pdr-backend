@@ -10,8 +10,10 @@ from pdr_backend.subgraph.subgraph_predictions import Prediction
 @enforce_types
 def get_plots_dir(pq_dir: str):
     plots_dir = os.path.join(pq_dir, "plots")
+
     if not os.path.exists(plots_dir):
         os.makedirs(plots_dir)
+
     return plots_dir
 
 
@@ -39,19 +41,14 @@ def generate_prediction_data_structure(
 
 
 @enforce_types
-def check_and_create_dir(dir_path: str):
-    if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
-
-
-@enforce_types
 def _save_prediction_csv(
     all_predictions: List[Prediction],
     csv_output_dir: str,
     headers: List,
     attribute_names: List,
 ):
-    check_and_create_dir(csv_output_dir)
+    if not os.path.isdir(csv_output_dir):
+        os.makedirs(csv_output_dir)
 
     data = generate_prediction_data_structure(all_predictions)
 
