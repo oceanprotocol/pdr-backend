@@ -19,6 +19,7 @@ from pdr_backend.lake.table_pdr_subscriptions import (
     get_pdr_subscriptions_df,
     subscriptions_schema,
 )
+from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df, truevals_schema
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -60,6 +61,13 @@ class GQLDataFactory:
             "pdr_subscriptions": {
                 "fetch_fn": get_pdr_subscriptions_df,
                 "schema": subscriptions_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
+            "pdr_truevals": {
+                "fetch_fn": get_pdr_truevals_df,
+                "schema": truevals_schema,
                 "config": {
                     "contract_list": contract_list,
                 },
