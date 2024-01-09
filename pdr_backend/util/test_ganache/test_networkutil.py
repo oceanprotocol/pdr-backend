@@ -50,7 +50,7 @@ def test_get_sapphire_postfix():
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
     ocean_token,
-    web3_config,
+    web3_config
 ):
     # Set up dummy return value for the mocked function
     mock_send_encrypted_sapphire_tx.return_value = (
@@ -63,7 +63,7 @@ def test_send_encrypted_tx(
     pk = os.getenv("PRIVATE_KEY")
     sender = web3_config.owner
     receiver = web3_config.w3.eth.accounts[1]
-    rpc_url = "http://localhost:8545"
+    rpc_url = web3_config.rpc_url
     value = 0
     gasLimit = 10000000
     gasCost = 0
