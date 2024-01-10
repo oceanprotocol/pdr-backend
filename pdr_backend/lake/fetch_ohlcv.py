@@ -1,6 +1,54 @@
 from typing import List, Union
 
 from enforce_typing import enforce_types
+import numpy as np
+
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.lake.constants import (
+    OHLCV_MULT_MAX,
+    OHLCV_MULT_MIN,
+)
+
+
+@enforce_types
+def clean_raw_ohlcv(
+    raw_tohlcv_data: list, feed: ArgFeed, st_ut: int, fin_ut: int, limit: int
+) -> list:
+    """
+    @description
+      From the raw data coming directly from exchange,
+      condition it and account for corner cases.
+
+    @arguments
+      raw_tohlcv_data -- output of safe_fetch_ohlcv(), see below
+      feed - ArgFeed. eg Binance ETH/USDT
+      st_ut -- a timestamp, in ms, in UTC
+      fin_ut -- ""
+      limit - eg 1000
+
+    @return
+      (cleaned) raw_tohlcv_data
+    """
+    raw_tohlcv_data = raw_tohlcv_data or []  # convert None, etc to []
+
+    uts = [vec[0] for vec in raw_tohlcv_data]
+    if len(uts) > 1:
+        # Ideally, time between ohclv candles is always 5m or 1h
+        # But exchange data often has gaps. Warn about worst violations
+        diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
+        diffs_m = diffs_ms / 1000 / 60  # in minutes
+        mn_thr = feed.timeframe.m * OHLCV_MULT_MIN
+        mx_thr = feed.timeframe.m * OHLCV_MULT_MAX
+
+        if min(diffs_m) < mn_thr:
+            print(f"      **WARNING: short candle time: {min(diffs_m)} min")
+        if max(diffs_m) > mx_thr:
+            print(f"      **WARNING: long candle time: {max(diffs_m)} min")
+
+    # filter out data that's too new
+    raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
+
+    return raw_tohlcv_data
 
 
 @enforce_types

@@ -128,7 +128,8 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
 @enforce_types
 def test_get_mergedohlcv_df_happypath(tmpdir):
-    """Is get_mergedohlcv_df() executing e2e correctly? Incl. call to exchange.
+    """Is get_mergedohlcv_df() executing e2e correctly?
+    Includes actual calls to the exchange API, eg binance or kraken, via ccxt.
 
     It may fail if the exchange is temporarily misbehaving, which
       shows up as a FileNotFoundError.

@@ -3,21 +3,18 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
-def test_safe_fetch_ohlcv():
-    exch = ccxt.binanceus()
-    symbol, timeframe, since, limit = "ETH/USDT", "5m", 1701072780919, 10
+@pytest.mark.parametrize("exch", [ccxt.binanceus(), ccxt.kraken()])
+def test_safe_fetch_ohlcv(exch):
+    since = timestr_to_ut("2023-06-18")
+    symbol, timeframe, limit = "ETH/USDT", "5m", 1000
 
     # happy path
     raw_tohlc_data = safe_fetch_ohlcv(exch, symbol, timeframe, since, limit)
-    assert isinstance(raw_tohlc_data, list)
-    for item in raw_tohlc_data:
-        assert len(item) == (6)
-        assert isinstance(item[0], int)
-        for val in item[1:]:
-            assert isinstance(val, float)
+    assert_raw_tohlc_data_ok(raw_tohlc_data)
 
     # catch bad (but almost good) symbol
     with pytest.raises(ValueError):
@@ -43,3 +40,14 @@ def test_safe_fetch_ohlcv():
     # ensure a None is returned when warning
     v = safe_fetch_ohlcv("bad exch", symbol, timeframe, since, limit)
     assert v is None
+
+
+@enforce_types
+def assert_raw_tohlc_data_ok(raw_tohlc_data):
+    assert raw_tohlc_data, raw_tohlc_data
+    assert isinstance(raw_tohlc_data, list)
+    for item in raw_tohlc_data:
+        assert len(item) == (6)
+        assert isinstance(item[0], int)
+        for val in item[1:]:
+            assert isinstance(val, float)
