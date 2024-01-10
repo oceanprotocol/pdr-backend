@@ -9,6 +9,7 @@ class Prediction:
     def __init__(
         self,
         ID: str,
+        contract: str,
         pair: str,
         timeframe: str,
         prediction: Union[bool, None],  # prediction = subgraph.predicted_value
@@ -21,6 +22,11 @@ class Prediction:
         user: str,
     ) -> None:
         self.ID = ID
+        # self.prediction_id = f"{contract}-{slot}-{user}"
+        # self.payout_id = f"{contract}-{slot}-{user}"
+        # self.slot_id = f"{contract}-{slot}"
+        # self.trueval_id = f"{contract}-{slot}"
+        self.contract = contract
         self.pair = pair
         self.timeframe = timeframe
         self.prediction = prediction
@@ -40,6 +46,7 @@ class Prediction:
 @enforce_types
 def mock_prediction(prediction_tuple: tuple) -> Prediction:
     (
+        contract,
         pair_str,
         timeframe_str,
         prediction,
@@ -52,9 +59,10 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         user,
     ) = prediction_tuple
 
-    ID = f"{pair_str}-{timeframe_str}-{slot}-{user}"
+    ID = f"{contract}-{slot}-{user}"
     return Prediction(
         ID=ID,
+        contract=contract,
         pair=pair_str,
         timeframe=timeframe_str,
         prediction=prediction,
@@ -92,6 +100,7 @@ def mock_daily_predictions() -> List[Prediction]:
 
 _FIRST_PREDICTION_TUPS = [
     (
+        "0xaaaa",
         "ADA/USDT",
         "5m",
         True,
@@ -104,6 +113,7 @@ _FIRST_PREDICTION_TUPS = [
         "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xbbbb",
         "BTC/USDT",
         "5m",
         True,
@@ -119,6 +129,7 @@ _FIRST_PREDICTION_TUPS = [
 
 _SECOND_PREDICTION_TUPS = [
     (
+        "0xeeee",
         "ETH/USDT",
         "5m",
         True,
@@ -131,6 +142,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xbbbb",
         "BTC/USDT",
         "1h",
         True,
@@ -143,6 +155,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xaaaa",
         "ADA/USDT",
         "5m",
         True,
@@ -155,6 +168,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xbnnn",
         "BNB/USDT",
         "1h",
         True,
@@ -167,6 +181,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xeeee",
         "ETH/USDT",
         "1h",
         True,
@@ -179,6 +194,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xeeee",
         "ETH/USDT",
         "5m",
         True,
@@ -194,6 +210,7 @@ _SECOND_PREDICTION_TUPS = [
 
 _DAILY_PREDICTION_TUPS = [
     (
+        "0xeeee",
         "ETH/USDT",
         "5m",
         True,
@@ -206,6 +223,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xbbbb",
         "BTC/USDT",
         "1h",
         True,
@@ -218,6 +236,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xaaaa",
         "ADA/USDT",
         "5m",
         True,
@@ -230,6 +249,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xbnnn",
         "BNB/USDT",
         "1h",
         True,
@@ -242,6 +262,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xeeee",
         "ETH/USDT",
         "1h",
         True,
@@ -254,6 +275,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
+        "0xeeee",
         "ETH/USDT",
         "5m",
         True,

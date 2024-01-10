@@ -226,12 +226,11 @@ class GQLDataFactory:
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
 
-            # check for duplicates and throw error if any found
+            # drop duplicates
             duplicate_rows = df.filter(pl.struct("ID").is_duplicated())
             if len(duplicate_rows) > 0:
-                raise Exception(
-                    f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}"
-                )
+                print(f"Duplicate rows found. Dropping {len(duplicate_rows)} rows: {duplicate_rows}")
+            df = df.drop(duplicate_rows)
 
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
@@ -239,3 +238,111 @@ class GQLDataFactory:
         else:  # write new file
             df.write_parquet(filename)
             print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+
+
+    @enforce_types
+    def _post_fetch_process_truevals(self, dfs: Dict[str, pl.DataFrame]) -> pl.DataFrame:
+        """
+        @description
+          Merge the fetched data with the existing data in the parquet file.
+          This is where we do any post-fetch transformations.
+        """
+        st_ut = self.ppss.lake_ss.st_timestamp / 1000
+        fin_ut = self.ppss.lake_ss.fin_timestamp / 1000
+
+        # Work 1: update prediction based on truevals
+        # process recent truevals => update predictions
+        # fetch recent truevals added
+        truevals_df = dfs["pdr_truevals"].filter(
+            (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
+        )
+        truevals_ids = truevals_df["ID"].to_list()
+
+        # find the predictions we'll be updating
+        print(f"post_truevals pdr_truevals: {truevals_ids}")
+        predictions_df = dfs["pdr_predictions"].filter(
+            (pl.col("truevalue_id").is_in(truevals_ids))
+        ).drop(
+            ["truevalue"]
+        )
+
+        # update specific predictions
+        predictions_df = predictions_df.join(
+            truevals_df,
+            left_on=["truevalue_id"],
+            right_on=["ID"],
+            how="left"
+        ).with_columns([
+            pl.col("truevalue").alias("truevalue"),
+        ]).select([
+            "ID",
+            "truevalue_id",
+            "contract",
+            "pair",
+            "timeframe",
+            "prediction",
+            "stake",
+            "truevalue",
+            "timestamp",
+            "source",
+            "payout",
+            "slot",
+            "user",
+        ])
+
+        # save out updated predictions
+        # filename = self._parquet_filename("pdr_predictions")
+        # self._save_parquet(filename, predictions_df)
+        predictions_df.write_parquet("pdr_predictions.parquet")
+
+
+    @enforce_types
+    def _post_fetch_process_payouts(self, dfs: Dict[str, pl.DataFrame]) -> pl.DataFrame:
+        """
+        @description
+          Merge the fetched data with the existing data in the parquet file.
+          This is where we do any post-fetch transformations.
+        """
+        st_ut = self.ppss.lake_ss.st_timestamp / 1000
+        fin_ut = self.ppss.lake_ss.fin_timestamp / 1000
+
+        # Work 2: update prediction based on payouts
+        # process recent payouts => update predictions
+        # fetch recent payouts added
+        payouts_df = dfs["pdr_payouts"].filter(
+            (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
+        )
+        payouts_ids = payouts_df["ID"].to_list()
+
+        # find all predictions that we'll be updating
+        predictions_df = dfs["pdr_predictions"].filter(
+            (pl.col("ID").is_in(payouts_ids))
+        ).drop(
+            ["payout", "predvalue"]
+        )
+
+        # update specific predictions
+        predictions_df = predictions_df.join(
+            payouts_df,
+            on="ID",
+            how="left"
+        ).select([
+            "ID",
+            "truevalue_id",
+            "contract",
+            "pair",
+            "timeframe",
+            "prediction",
+            "stake",
+            "truevalue",
+            "timestamp",
+            "source",
+            "payout",
+            "slot",
+            "user",
+        ])
+
+        # save out updated predictions
+        # filename = self._parquet_filename("pdr_predictions")
+        # self._save_parquet(filename, predictions_df)
+        predictions_df.write_parquet("pdr_predictions.parquet")
