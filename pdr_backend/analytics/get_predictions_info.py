@@ -21,7 +21,7 @@ def get_predictions_info_main(
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
-    if len(gql_dfs) == 0:
+    if len(gql_dfs["pdr_predictions"]) == 0:
         print("No records found. Please adjust start and end times.")
         return
     predictions_df = gql_dfs["pdr_predictions"]

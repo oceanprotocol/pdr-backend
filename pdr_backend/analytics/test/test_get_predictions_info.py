@@ -42,13 +42,11 @@ def test_get_predictions_info_main_mainnet(
 
 
 @enforce_types
-def test_get_predictions_info_empty(_sample_first_predictions, tmpdir, capfd):
+def test_get_predictions_info_empty(tmpdir, capfd):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
-
     mock_getstats = Mock(spec=pl.DataFrame)
-    mock_getPolars = Mock(return_value={"pdr_predictions": predictions_df})
+    mock_getPolars = Mock(return_value={"pdr_predictions": []})
 
     PATH = "pdr_backend.analytics.get_predictions_info"
     with patch(f"{PATH}.get_feed_summary_stats", mock_getstats), patch(
