@@ -27,10 +27,11 @@ def test_get_sapphire_postfix():
 
 
 def test_get_subgraph():
-    assert (
-        get_subgraph_url("testnet")
-        == "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph"
+    expected = (
+        "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/"
+        "subgraphs/name/oceanprotocol/ocean-subgraph"
     )
+    assert get_subgraph_url("testnet") == expected
 
     with pytest.raises(ValueError):
         get_subgraph_url("sapphire-testnet")
