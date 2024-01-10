@@ -318,7 +318,7 @@ class GQLDataFactory:
         predictions_df = dfs["pdr_predictions"].filter(
             (pl.col("ID").is_in(payouts_ids))
         ).drop(
-            ["payout", "predvalue"]
+            ["payout", "prediction"]
         )
 
         # update specific predictions
@@ -326,7 +326,9 @@ class GQLDataFactory:
             payouts_df,
             on="ID",
             how="left"
-        ).select([
+        ).with_columns([
+            pl.col("predvalue").alias("prediction"),
+        ]).select([
             "ID",
             "truevalue_id",
             "contract",
