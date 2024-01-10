@@ -70,21 +70,20 @@ def clean_raw_ohlcv(
       fin_ut -- max allowed time. ""
 
     @return
-      (cleaned) raw_tohlcv_data
+      tohlcv_data -- cleaned data
     """
-    raw_tohlcv_data = raw_tohlcv_data or []  # convert None, etc to []
-
-    uts = _raw_ohlcv_to_uts(raw_tohlcv_data)
+    tohlcv_data = raw_tohlcv_data
+    uts = _ohlcv_to_uts(tohlcv_data)
     _warn_if_uts_have_gaps(uts, feed.timeframe)
 
-    raw_tohlcv_data = _filter_within_timerange(raw_tohlcv_data, st_ut, fin_ut)
+    tohlcv_data = _filter_within_timerange(tohlcv_data, st_ut, fin_ut)
 
-    return raw_tohlcv_data
+    return tohlcv_data
 
 
 @enforce_types
-def _raw_ohlcv_to_uts(raw_tohlcv_data: list) -> list:
-    return [vec[0] for vec in raw_tohlcv_data]
+def _ohlcv_to_uts(tohlcv_data: list) -> list:
+    return [vec[0] for vec in tohlcv_data]
 
 
 @enforce_types
@@ -106,6 +105,6 @@ def _warn_if_uts_have_gaps(uts: List[int], timeframe: Timeframe):
 
 
 @enforce_types
-def _filter_within_timerange(raw_tohlcv_data: list, st_ut: int, fin_ut: int) -> list:
-    uts = _raw_ohlcv_to_uts(raw_tohlcv_data)
-    return [vec for ut, vec in zip(uts, raw_tohlcv_data) if st_ut <= ut <= fin_ut]
+def _filter_within_timerange(tohlcv_data: list, st_ut: int, fin_ut: int) -> list:
+    uts = _ohlcv_to_uts(tohlcv_data)
+    return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]

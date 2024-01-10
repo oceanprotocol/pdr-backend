@@ -2,14 +2,51 @@ import ccxt
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv, clean_raw_ohlcv
 from pdr_backend.util.timeutil import timestr_to_ut
 
-EXCHS = [ccxt.binanceus(), ccxt.kraken()]
+
+MPE = 300000  # ms per 5min epoch
+T4, T5, T6, T7, T8, T10 = 4 * MPE, 5 * MPE, 6 * MPE, 7 * MPE, 8 * MPE, 10 * MPE
+
+#       ut  #o   #h  #l    #c   #v
+RAW5 = [T5, 0.5, 12, 0.12, 1.1, 7.0]
+RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
+RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
+RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 
 
 @enforce_types
-@pytest.mark.parametrize("exch", EXCHS)
+def test_clean_raw_ohlcv():
+    feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
+
+    assert clean_raw_ohlcv([], feed, 0, 0) == []
+
+    # RAW5v is the shape of "raw_tohlcv_data" with just one candle
+    RAW5v = [RAW5]
+    assert clean_raw_ohlcv(RAW5v, feed, 0, 0) == []
+    assert clean_raw_ohlcv(RAW5v, feed, 0, T4) == []
+    assert clean_raw_ohlcv(RAW5v, feed, T6, T10) == []
+    assert clean_raw_ohlcv(RAW5v, feed, T5, T5) == RAW5v
+    assert clean_raw_ohlcv(RAW5v, feed, 0, T10) == RAW5v
+    assert clean_raw_ohlcv(RAW5v, feed, 0, T5) == RAW5v
+    assert clean_raw_ohlcv(RAW5v, feed, T5, T10) == RAW5v
+
+    # RAW5v is the shape of "raw_tohlcv_data" with four candles
+    RAW5678v = [RAW5, RAW6, RAW7, RAW8]
+    assert clean_raw_ohlcv(RAW5678v, feed, 0, 0) == []
+    assert clean_raw_ohlcv(RAW5678v, feed, 0, T10) == RAW5678v
+    assert clean_raw_ohlcv(RAW5678v, feed, T5, T5) == [RAW5]
+    assert clean_raw_ohlcv(RAW5678v, feed, T6, T6) == [RAW6]
+    assert clean_raw_ohlcv(RAW5678v, feed, T5, T6) == [RAW5, RAW6]
+    assert clean_raw_ohlcv(RAW5678v, feed, T5, T8) == RAW5678v
+    assert clean_raw_ohlcv(RAW5678v, feed, T7, T8) == [RAW7, RAW8]
+    assert clean_raw_ohlcv(RAW5678v, feed, T8, T8) == [RAW8]
+
+
+@enforce_types
+@pytest.mark.parametrize("exch", [ccxt.binanceus(), ccxt.kraken()])
 def test_safe_fetch_ohlcv(exch):
     since = timestr_to_ut("2023-06-18")
     symbol, timeframe, limit = "ETH/USDT", "5m", 1000
