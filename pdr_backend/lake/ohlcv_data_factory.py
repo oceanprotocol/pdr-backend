@@ -132,18 +132,13 @@ class OhlcvDataFactory:
                 since=st_ut,
                 limit=limit,
             )
-            raw_tohlcv_data = clean_raw_ohlcv(
-                raw_tohlcv_data,
-                feed,
-                st_ut,
-                fin_ut,
-            )
+            tohlcv_data = clean_raw_ohlcv(raw_tohlcv_data, feed, st_ut, fin_ut)
 
             # concat both TOHLCV data
-            next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+            next_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
             df = concat_next_df(df, next_df)
 
-            if len(raw_tohlcv_data) < limit:  # no more data, we're at newest time
+            if len(tohlcv_data) < limit:  # no more data, we're at newest time
                 break
 
             # prep next iteration
