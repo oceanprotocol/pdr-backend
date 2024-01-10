@@ -8,6 +8,7 @@ from pdr_backend.util.cache import Cache
 from pdr_backend.util.mathutil import sole_value
 
 
+
 # pylint: disable=too-many-instance-attributes
 class BaseTraderAgent:
     def __init__(
