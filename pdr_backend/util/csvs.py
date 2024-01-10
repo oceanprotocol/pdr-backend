@@ -73,6 +73,15 @@ def _save_prediction_csv(
         print(f"CSV file '{filename}' created successfully.")
 
 
+def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
+    _save_prediction_csv(
+        all_predictions,
+        csv_output_dir,
+        ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"],
+        ["prediction", "trueval", "timestamp", "stake", "payout"],
+    )
+
+
 @enforce_types
 def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
     _save_prediction_csv(
