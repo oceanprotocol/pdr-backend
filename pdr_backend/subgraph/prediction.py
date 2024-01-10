@@ -18,7 +18,7 @@ class Prediction:
         source: str,
         payout: Union[float, None],
         slot: int,  # slot/epoch timestamp
-        address: str,
+        contract_addrs: str,
         user: str,
     ) -> None:
         self.ID = ID
@@ -31,7 +31,7 @@ class Prediction:
         self.source = source
         self.payout = payout
         self.slot = slot
-        self.address = (address,)
+        self.contract_addrs = (contract_addrs,)
         self.user = user
 
 
@@ -51,11 +51,11 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         source,
         payout,
         slot,
-        address,
+        contract_addrs,
         user,
     ) = prediction_tuple
 
-    ID = f"{address}-{timeframe_str}-{slot}-{user}"
+    ID = f"{contract_addrs}-{slot}-{user}"
     return Prediction(
         ID=ID,
         pair=pair_str,
@@ -66,7 +66,7 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         timestamp=timestamp,
         source=source,
         payout=payout,
-        address=address,
+        contract_addrs=contract_addrs,
         slot=slot,
         user=user,
     )
@@ -134,7 +134,7 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1701675900,
-        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -160,7 +160,7 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1701589500,
-        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -173,7 +173,7 @@ _SECOND_PREDICTION_TUPS = [
         "kraken",
         0.0500,
         1701675900,
-        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -228,7 +228,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0,
         1698951600,
-        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+        "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -241,7 +241,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1699038000,
-        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -254,7 +254,7 @@ _DAILY_PREDICTION_TUPS = [
         "kraken",
         0.0500,
         1699124400,
-        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -267,7 +267,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701589500,
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+        "0xaa6515c138183303b89b98aea756b54f711710c5",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
@@ -280,7 +280,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1699300800,
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
 ]

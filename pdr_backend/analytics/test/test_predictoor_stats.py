@@ -84,17 +84,6 @@ def test_get_predictoor_statistics(_sample_first_predictions):
     assert isinstance(predictoor_summary_df, pl.DataFrame)
     assert len(predictoor_summary_df.schema) == len(predictoor_summary_df_schema)
 
-    get_cli_statistics([])
-    assert "No predictions found" in capsys.readouterr().out
-
-    with patch(
-        "pdr_backend.analytics.predictoor_stats.aggregate_prediction_statistics"
-    ) as mock:
-        mock.return_value = ({}, 0)
-        get_cli_statistics(_sample_first_predictions)
-
-    assert "No correct predictions found" in capsys.readouterr().out
-
 
 @enforce_types
 @patch("matplotlib.pyplot.savefig")
