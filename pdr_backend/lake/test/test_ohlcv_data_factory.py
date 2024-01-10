@@ -3,9 +3,10 @@ import time
 from typing import List
 from unittest.mock import Mock, patch
 
+from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
-from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
@@ -29,28 +30,18 @@ MS_PER_5M_EPOCH = 300000
 # test update of rawohlcv files
 
 
-def test_update_rawohlcv_files1(tmpdir):
-    _test_update_rawohlcv_files("2023-01-01_0:00", "2023-01-01_0:00", tmpdir, n_uts=1)
-
-
-def test_update_rawohlcv_files2(tmpdir):
-    _test_update_rawohlcv_files("2023-01-01_0:00", "2023-01-01_0:05", tmpdir, n_uts=2)
-
-
-def test_update_rawohlcv_files3(tmpdir):
-    _test_update_rawohlcv_files("2023-01-01_0:00", "2023-01-01_0:10", tmpdir, n_uts=3)
-
-
-def test_update_rawohlcv_files4(tmpdir):
-    _test_update_rawohlcv_files("2023-01-01_0:00", "2023-01-01_0:45", tmpdir, n_uts=10)
-
-
-def test_update_rawohlcv_files5(tmpdir):
-    _test_update_rawohlcv_files("2023-01-01", "2023-06-21", tmpdir, n_uts=">1K")
-
-
 @enforce_types
-def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts):
+@pytest.mark.parametrize(
+    "st_timestr, fin_timestr, n_uts",
+    [
+        ("2023-01-01_0:00", "2023-01-01_0:00", 1),
+        ("2023-01-01_0:00", "2023-01-01_0:05", 2),
+        ("2023-01-01_0:00", "2023-01-01_0:10", 3),
+        ("2023-01-01_0:00", "2023-01-01_0:45", 10),
+        ("2023-01-01", "2023-06-21", ">1K"),
+    ],
+)
+def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir):
     """
     @arguments
       n_uts -- expected # timestamps. Typically int. If '>1K', expect >1000
@@ -61,18 +52,9 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
         """Return a ut : unix time, in ms, in UTC time zone"""
         return since + i * MS_PER_5M_EPOCH
 
-    def _uts_in_range(st_ut: int, fin_ut: int) -> List[int]:
+    def _uts_in_range(st_ut: int, fin_ut: int, limit_N=100000) -> List[int]:
         return [
-            _calc_ut(st_ut, i)
-            for i in range(100000)  # assume <=100K epochs
-            if _calc_ut(st_ut, i) <= fin_ut
-        ]
-
-    def _uts_from_since(cur_ut: int, since_ut: int, limit_N: int) -> List[int]:
-        return [
-            _calc_ut(since_ut, i)
-            for i in range(limit_N)
-            if _calc_ut(since_ut, i) <= cur_ut
+            _calc_ut(st_ut, i) for i in range(limit_N) if _calc_ut(st_ut, i) <= fin_ut
         ]
 
     # setup: exchange
@@ -82,7 +64,7 @@ def _test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, tmpdir, n_uts
 
         # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:
-            uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
+            uts: List[int] = _uts_in_range(since, self.cur_ut, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
     ss, factory = _lake_ss_1feed(
