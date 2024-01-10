@@ -11,11 +11,11 @@ class Trueval:
         ID: str,
         timestamp: int,
         token: str,
-        trueValue: Union[bool, None],
-        slot: float,  # slot/epoch timestamp
+        trueval: Union[bool, None],
+        slot: int,  # slot/epoch timestamp
     ) -> None:
         self.ID = ID
-        self.trueValue = trueValue
+        self.trueval = trueval
         self.timestamp = timestamp
         self.token = token
         self.slot = slot
