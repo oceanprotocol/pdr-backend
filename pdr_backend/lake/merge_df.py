@@ -20,11 +20,11 @@ def merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
     _verify_pair_strs(raw_dfs)
 
     # initialize merged_df with all timestamps seen
-    all_uts = set()
+    all_uts_set: set = set()
     for exch_str in raw_dfs.keys():
         for raw_df in raw_dfs[exch_str].values():
-            all_uts = all_uts.union(raw_df["timestamp"].to_list())
-    all_uts = sorted(all_uts)
+            all_uts_set = all_uts_set.union(raw_df["timestamp"].to_list())
+    all_uts: list = sorted(all_uts_set)
     merged_df = pl.DataFrame({"timestamp": all_uts})
 
     # merge in data from each raw_df. It can handle inconsistent # rows.
