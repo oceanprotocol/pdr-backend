@@ -1,3 +1,5 @@
+import time
+
 from typing import Optional
 
 from enforce_typing import enforce_types
@@ -46,6 +48,9 @@ class Web3Config:
             print(f"An error occured while getting block, error: {e}")
             if tries < WEB3_MAX_TRIES:
                 print("Trying again...")
+                # sleep times for the first 5 tries:
+                # 2.5, 10.0, 22.5, 40.0, 62.5
+                time.sleep(((tries + 1) / 2) ** (2) * 10)
                 return self.get_block(block, full_transactions, tries + 1)
             raise Exception("Couldn't get block") from e
 
