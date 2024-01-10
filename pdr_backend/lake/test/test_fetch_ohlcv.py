@@ -21,6 +21,7 @@ RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 def test_clean_raw_ohlcv():
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
 
+    assert clean_raw_ohlcv(None, feed, 0, 0) == []
     assert clean_raw_ohlcv([], feed, 0, 0) == []
 
     # RAW5v is the shape of "raw_tohlcv_data" with just one candle

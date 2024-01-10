@@ -53,7 +53,7 @@ def safe_fetch_ohlcv(
 
 @enforce_types
 def clean_raw_ohlcv(
-    raw_tohlcv_data: list,
+    raw_tohlcv_data: Union[list, None],
     feed: ArgFeed,
     st_ut: int,
     fin_ut: int,
@@ -72,7 +72,7 @@ def clean_raw_ohlcv(
     @return
       tohlcv_data -- cleaned data
     """
-    tohlcv_data = raw_tohlcv_data
+    tohlcv_data = raw_tohlcv_data or []
     uts = _ohlcv_to_uts(tohlcv_data)
     _warn_if_uts_have_gaps(uts, feed.timeframe)
 
