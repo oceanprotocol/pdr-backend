@@ -72,6 +72,20 @@ def test_trader_agent2_update_positions(  # pylint: disable=unused-argument
     )
     assert agent.update_cache.call_count == 2
 
+    original_call_count = agent.update_cache.call_count
+
+    # does nothing without sheet
+    agent.portfolio = Mock()
+    mock_sheet = None
+    agent.portfolio.get_sheet.return_value = mock_sheet
+    agent.update_positions()
+    assert agent.update_cache.call_count == original_call_count
+
+    # does nothing without a portfolio
+    agent.portfolio = None
+    agent.update_positions()
+    assert agent.update_cache.call_count == original_call_count
+
 
 @enforce_types
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
@@ -95,3 +109,19 @@ def test_trader_agent2_should_close(  # pylint: disable=unused-argument
 
     result = agent.should_close(mock_order)
     assert not result
+
+
+@enforce_types
+@pytest.mark.asyncio
+@patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
+async def test_trader_agent2_do_trade_edges(
+    check_subscriptions_and_subscribe_mock, capfd
+):
+    agent, feed = setup_trade(
+        TraderAgent2,
+        check_subscriptions_and_subscribe_mock,
+    )
+
+    await agent._do_trade(feed, (1.0, 0))
+    out, _ = capfd.readouterr()
+    assert "There's no stake on this" in out
