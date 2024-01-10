@@ -49,7 +49,8 @@ def test_get_predictions_info_main_mainnet(
 
 
 @enforce_types
-def test_get_predictions_info_empty(tmpdir, capfd):
+def test_get_predictions_info_empty(tmpdir, capfd, monkeypatch):
+    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_getids = Mock(return_value=[])
