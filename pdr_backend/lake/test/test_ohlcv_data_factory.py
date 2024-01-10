@@ -137,7 +137,7 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
     n_tries = 5
     for try_i in range(n_tries - 1):
         try:
-            _test_get_mergedohlcv_df_happypath(tmpdir)
+            _test_get_mergedohlcv_df_happypath_onetry(tmpdir)
             return  # success
 
         except FileNotFoundError:
@@ -149,7 +149,7 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
 
 
 @enforce_types
-def _test_get_mergedohlcv_df_happypath(tmpdir):
+def _test_get_mergedohlcv_df_happypath_onetry(tmpdir):
     parquet_dir = str(tmpdir)
 
     ss = _lake_ss(

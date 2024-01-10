@@ -93,6 +93,8 @@ class OhlcvDataFactory:
         print("  Update all rawohlcv files: begin")
         for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
+
+        print()
         print("  Update all rawohlcv files: done")
 
     def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: int):
@@ -104,7 +106,10 @@ class OhlcvDataFactory:
         pair_str = str(feed.pair)
         exch_str = str(feed.exchange)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-        print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}.")
+        print()
+        print(
+            f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: begin"
+        )
 
         filename = self._rawohlcv_filename(feed)
         print(f"      filename={filename}")
@@ -162,6 +167,9 @@ class OhlcvDataFactory:
 
         # output to file
         save_rawohlcv_file(filename, df)
+
+        # done
+        print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: done")
 
     def _calc_start_ut_maybe_delete(self, timeframe: Timeframe, filename: str) -> int:
         """
