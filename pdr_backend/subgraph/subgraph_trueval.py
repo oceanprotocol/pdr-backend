@@ -77,6 +77,8 @@ def fetch_truevals(
         query,
         timeout=20.0,
     )
+
+    print(result)
     new_truevals = result["data"]["predictTrueVals"] or []
 
     new_truevals = [
@@ -86,7 +88,7 @@ def fetch_truevals(
                 "timestamp": trueval["timestamp"],
                 "ID": trueval["id"],
                 "token": trueval["slot"]["predictContract"]["token"]["name"],
-                "slot": float(trueval["id"].split("-")[1]),
+                "slot": int(trueval["id"].split("-")[1]),
             }
         )
         for trueval in new_truevals
