@@ -29,6 +29,7 @@ MS_PER_5M_EPOCH = 300000
 # ====================================================================
 # test update of rawohlcv files
 
+
 @enforce_types
 @pytest.mark.parametrize(
     "st_timestr, fin_timestr, n_uts",
@@ -38,7 +39,7 @@ MS_PER_5M_EPOCH = 300000
         ("2023-01-01_0:00", "2023-01-01_0:10", 3),
         ("2023-01-01_0:00", "2023-01-01_0:45", 10),
         ("2023-01-01", "2023-06-21", ">1K"),
-    ]
+    ],
 )
 def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir):
     """
@@ -53,12 +54,10 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
     def _uts_in_range(st_ut: int, fin_ut: int) -> List[int]:
         return _uts_from_since(fin_ut=fin_ut, st_ut=st_ut, limit_N=100000)
-    
+
     def _uts_from_since(fin_ut: int, st_ut: int, limit_N: int) -> List[int]:
         return [
-            _calc_ut(st_ut, i)
-            for i in range(limit_N)
-            if _calc_ut(st_ut, i) <= fin_ut
+            _calc_ut(st_ut, i) for i in range(limit_N) if _calc_ut(st_ut, i) <= fin_ut
         ]
 
     # setup: exchange
