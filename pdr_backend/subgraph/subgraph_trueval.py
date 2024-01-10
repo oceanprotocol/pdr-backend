@@ -82,7 +82,7 @@ def fetch_truevals(
     new_truevals = [
         Trueval(
             **{
-                "trueValue": trueval["trueValue"],
+                "trueval": trueval["trueValue"],
                 "timestamp": trueval["timestamp"],
                 "ID": trueval["id"],
                 "token": trueval["slot"]["predictContract"]["token"]["name"],
