@@ -124,7 +124,7 @@ class OhlcvDataFactory:
         # empty ohlcv df
         df = initialize_rawohlcv_df()
         while True:
-            print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
+            print(f"      Fetch up to 1000 pts from {pretty_timestr(st_ut)}")
             exch = feed.exchange.exchange_class()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
@@ -133,8 +133,10 @@ class OhlcvDataFactory:
                 since=st_ut,
                 limit=1000,
             )
-            if raw_tohlcv_data is None:  # exchange had error
+            if not raw_tohlcv_data:
+                print("      Got 0 pts")
                 return
+
             uts = [vec[0] for vec in raw_tohlcv_data]
             if len(uts) > 1:
                 # Ideally, time between ohclv candles is always 5m or 1h
@@ -151,6 +153,9 @@ class OhlcvDataFactory:
 
             # filter out data that's too new
             raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
+            if not raw_tohlcv_data:
+                print("      Got 0 pts")
+                return
 
             # concat both TOHLCV data
             next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)

@@ -145,7 +145,7 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
             time.sleep(2)
 
     # last chance
-    _test_get_mergedohlcv_df_happypath(tmpdir)
+    _test_get_mergedohlcv_df_happypath_onetry(tmpdir)
 
 
 @enforce_types
