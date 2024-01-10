@@ -52,10 +52,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
         """Return a ut : unix time, in ms, in UTC time zone"""
         return since + i * MS_PER_5M_EPOCH
 
-    def _uts_in_range(st_ut: int, fin_ut: int) -> List[int]:
-        return _uts_from_since(fin_ut=fin_ut, st_ut=st_ut, limit_N=100000)
-
-    def _uts_from_since(fin_ut: int, st_ut: int, limit_N: int) -> List[int]:
+    def _uts_in_range(st_ut: int, fin_ut: int, limit_N=100000) -> List[int]:
         return [
             _calc_ut(st_ut, i) for i in range(limit_N) if _calc_ut(st_ut, i) <= fin_ut
         ]
@@ -67,7 +64,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
         # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:
-            uts: List[int] = _uts_from_since(self.cur_ut, since, limit)
+            uts: List[int] = _uts_in_range(since, self.cur_ut, limit)
             return [[ut] + [1.0] * 5 for ut in uts]  # 1.0 for open, high, ..
 
     ss, factory = _lake_ss_1feed(
