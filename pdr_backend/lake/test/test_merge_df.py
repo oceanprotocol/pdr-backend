@@ -64,41 +64,53 @@ def test_merge_rawohlcv_dfs_equal_dfs():
 
 @enforce_types
 def test_merge_rawohlcv__empty_and_nonempty_df():
-    raw_df0 = pl.DataFrame(
+    df_btc = pl.DataFrame(
         {
             "timestamp": [],
             "close": [],
         }
     )
-    raw_df1 = pl.DataFrame(
+    df_eth = pl.DataFrame(
         {
             "timestamp": [1, 2, 3],
             "close": [5, 6, 7],
         }
     )
 
-    merged_df = merge_rawohlcv_dfs(
-        {"kraken": {"BTC/USDT": raw_df0, "ETH/USDT": raw_df1}}
+    merged_df = merge_rawohlcv_dfs({"kraken": {"BTC/USDT": df_btc, "ETH/USDT": df_eth}})
+    target_df = pl.DataFrame(
+        {
+            "timestamp": [1, 2, 3],
+            "kraken:BTC/USDT:close": [None, None, None],
+            "kraken:ETH/USDT:close": [5, 6, 7],
+        }
     )
+    assert merged_df.equals(target_df)
 
 
 @enforce_types
 def test_merge_rawohlcv__dfs_with_different_timestamps():
-    raw_df1 = pl.DataFrame(
+    df_eth = pl.DataFrame(
         {
             "timestamp": [1, 2, 3],
             "close": [5, 6, 7],
         }
     )
-    raw_df2 = pl.DataFrame(
+    df_dot = pl.DataFrame(
         {
             "timestamp": [1, 5],
             "close": [8, 9],
         }
     )
-    merged_df = merge_rawohlcv_dfs(
-        {"kraken": {"ETH/USDT": raw_df1, "DOT/USDT": raw_df2}}
+    merged_df = merge_rawohlcv_dfs({"kraken": {"ETH/USDT": df_eth, "DOT/USDT": df_dot}})
+    target_df = pl.DataFrame(
+        {
+            "timestamp": [1, 2, 3, 5],
+            "kraken:ETH/USDT:close": [5, 6, 7, None],
+            "kraken:DOT/USDT:close": [8, None, None, 9],
+        }
     )
+    assert merged_df.equals(target_df)
 
 
 @enforce_types

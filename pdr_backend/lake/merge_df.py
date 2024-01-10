@@ -55,18 +55,31 @@ def _add_df_col(
     Does polars equivalent of: merged_df[merged_col] = raw_df[raw_col].
     Tuned for this factory, by keeping "timestamp"
     """
+    # if raw_df has no rows, then give it many rows with null value
+    # (this is needed to avoid issues in df.join() below)
+    if raw_df.shape[0] == 0:  # empty
+        assert merged_df is not None
+        timestamps = merged_df["timestamp"].to_list()
+        d = {"timestamp": timestamps, raw_col: [None] * len(timestamps)}
+        raw_df = pl.DataFrame(d)
+
+    # newraw_df = copy of raw_df, with raw_col renamed -> merged_col, +timestamp
     newraw_df = raw_df.with_columns(
         pl.col(raw_col).alias(merged_col),
     )
     newraw_df = newraw_df.select(["timestamp", merged_col])
 
+    # now join the cols of newraw_df into merged_df
     if merged_df is None:
         merged_df = newraw_df
     else:
         merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
         merged_df = merge_cols(merged_df, "timestamp", "timestamp_right")
 
+    # re-order merged_df's columns
     merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
+
+    # postconditions, return
     _verify_df_cols(merged_df)
     return merged_df
 
