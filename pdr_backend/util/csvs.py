@@ -34,9 +34,11 @@ def generate_prediction_data_structure(
         key = (
             prediction.pair.replace("/", "-") + prediction.timeframe + prediction.source
         )
+
         if key not in data:
             data[key] = []
         data[key].append(prediction)
+
     return data
 
 
@@ -69,16 +71,6 @@ def _save_prediction_csv(
                 )
 
         print(f"CSV file '{filename}' created successfully.")
-
-
-@enforce_types
-def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
-    _save_prediction_csv(
-        all_predictions,
-        csv_output_dir,
-        ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"],
-        ["prediction", "trueval", "timestamp", "stake", "payout"],
-    )
 
 
 @enforce_types
