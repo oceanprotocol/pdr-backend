@@ -21,7 +21,7 @@ def get_consume_so_far_per_contract(
         query = """
         {
             predictContracts(first:1000, where: {id_in: %s}){
-                id	
+                id
                 token{
                     id
                     name
@@ -66,6 +66,7 @@ def get_consume_so_far_per_contract(
         for contract in contracts:
             contract_address = contract["id"]
             if contract_address not in contract_addresses:
+                no_of_zeroes += 1
                 continue
             order_count = len(contract["token"]["orders"])
             if order_count == 0:
