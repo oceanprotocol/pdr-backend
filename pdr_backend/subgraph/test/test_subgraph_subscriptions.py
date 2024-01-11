@@ -1,3 +1,4 @@
+import pytest
 from typing import Dict
 from unittest.mock import patch
 
@@ -94,3 +95,40 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     assert subscriptions[0].user == "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
     assert subscriptions[0].pair == "ADA/USDT"
     assert mock_query_subgraph.call_count == 1
+
+
+@enforce_types
+def test_fetch_filtered_subscriptions_no_data():
+    # network not supported
+    with pytest.raises(Exception):
+        fetch_filtered_subscriptions(
+            start_ts=1701129700,
+            end_ts=1701129800,
+            contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="xyz",
+        )
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_subscriptions.query_subgraph"
+    ) as mock_query_subgraph:
+        mock_query_subgraph.return_value = {"data": {}}
+        subscriptions = fetch_filtered_subscriptions(
+            start_ts=1701129700,
+            end_ts=1701129800,
+            contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="mainnet",
+        )
+    assert len(subscriptions) == 0
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_subscriptions.query_subgraph"
+    ) as mock_query_subgraph:
+        mock_query_subgraph.return_value = {"data": {"predictPredictions": []}}
+        subscriptions = fetch_filtered_subscriptions(
+            start_ts=1701129700,
+            end_ts=1701129800,
+            contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="mainnet",
+        )
+
+    assert len(subscriptions) == 0

@@ -97,7 +97,6 @@ def test_get_consume_so_far_per_contract_empty_data():
     def mock_query_subgraph_2(subgraph_url, query, tries, timeout):
         return {"data": {"predictContracts": []}}
 
-    PATH = "pdr_backend.subgraph.subgraph_consume_so_far"
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph_2):
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",

@@ -38,11 +38,11 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
         print(".", end="", flush=True)
         try:
             result = query_subgraph(subgraph_url, query)
-            if not "data" in result or len(result["data"]) == 0:
+            if "data" not in result or not result["data"]:
                 print("No data in result")
                 break
-            predict_predictions = result["data"]["predictPredictions"]
-            if len(predict_predictions) == 0:
+            predict_predictions = result["data"].get("predictPredictions", [])
+            if not predict_predictions:
                 break
             for prediction in predict_predictions:
                 contract_address = prediction["slot"]["predictContract"]["id"]
@@ -50,6 +50,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
                 pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             print("An error occured", e)
+            break
 
     print()  # print new line
     return pending_slots
