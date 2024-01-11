@@ -24,6 +24,7 @@ def signal_to_char(signal_str: str) -> str:
     for c, s in CHAR_TO_SIGNAL.items():
         if s == signal_str:
             return c
+
     raise ValueError(signal_str)
 
 

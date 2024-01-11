@@ -37,14 +37,12 @@ def topup_main(ppss: PPSS):
         OCEAN_bal = from_wei(OCEAN.balanceOf(address))
         ROSE_bal = from_wei(ROSE.balanceOf(address))
 
-        min_OCEAN_bal, topup_OCEAN_bal = 20, 20
-        min_ROSE_bal, topup_ROSE_bal = 30, 30
-
-        if addr_label == "trueval":
-            min_OCEAN_bal, topup_OCEAN_bal = 0, 0
-        elif addr_label == "dfbuyer":
-            min_OCEAN_bal, topup_OCEAN_bal = 0, 0
-            min_ROSE_bal, topup_ROSE_bal = 250, 250
+        min_OCEAN_bal, topup_OCEAN_bal = (
+            (0, 0) if addr_label in ["trueval", "dfbuyer"] else (20, 20)
+        )
+        min_ROSE_bal, topup_ROSE_bal = (
+            (250, 250) if addr_label == "dfbuyer" else (30, 30)
+        )
 
         print(f"{addr_label}: {OCEAN_bal:.2f} OCEAN, {ROSE_bal:.2f} ROSE")
 
@@ -79,4 +77,5 @@ def topup_main(ppss: PPSS):
 
     if failed:
         sys.exit(1)
+
     sys.exit(0)

@@ -59,9 +59,7 @@ def get_trueval(
 
     init_c, end_c = init_tohlcv[4], end_tohlcv[4]  # c = closing price
     if end_c == init_c:
-        trueval = False
-        cancel_round = True
-        return trueval, cancel_round
+        return False, True
 
     trueval = end_c > init_c
     cancel_round = False

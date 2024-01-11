@@ -78,12 +78,10 @@ def asCurrency(amount, decimals: bool = True) -> str:
     if decimals:
         if amount >= 0:
             return f"${amount:,.2f}"
+
         return f"-${-amount:,.2f}".format(-amount)
 
-    if amount >= 0:
-        return f"${amount:,.0f}"
-
-    return f"-${-amount:,.0f}"
+    return f"${amount:,.0f}" if amount >= 0 else f"-${-amount:,.0f}"
 
 
 def prettyBigNum(amount, remove_zeroes: bool = True) -> str:
