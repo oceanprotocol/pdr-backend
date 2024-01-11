@@ -69,18 +69,12 @@ _PREDICTION = {
     },
 }
 
-MOCK_PREDICTIONS_RESPONSE_FIRST_CALL = {
-    "data": {
-        "predictPredictions": [_PREDICTION]
-    }
-}
+MOCK_PREDICTIONS_RESPONSE_FIRST_CALL = {"data": {"predictPredictions": [_PREDICTION]}}
 
 MOCK_PREDICTIONS_RESPONSE_SECOND_CALL: Dict[str, dict] = {}
 
 MOCK_PREDICTIONS_RESPONSE_1000 = {
-    "data": {
-        "predictPredictions": [_PREDICTION for i in range(0, 1000)]
-    }
+    "data": {"predictPredictions": [_PREDICTION for i in range(0, 1000)]}
 }
 
 MOCK_CONTRACTS_RESPONSE = {
@@ -142,14 +136,14 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
         and return the predictions that were fetched before the exception.
     """
     num_successful_fetches = 3
+
     # we're going to simulate an exception from subgraph on the second call
-    def simulate_exception(*args, **kwargs):
+    def simulate_exception():
         if simulate_exception.call_count < num_successful_fetches:
             simulate_exception.call_count += 1
             return MOCK_PREDICTIONS_RESPONSE_1000
-        else:
-            raise Exception(f"Simulated exception on call #{num_successful_fetches+1}")
-        
+        raise Exception(f"Simulated exception on call #{num_successful_fetches+1}")
+
     simulate_exception.call_count = 0
 
     # Patch query_subgraph to use our simulate_exception function
@@ -164,7 +158,7 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     )
 
     assert len(predictions) == num_successful_fetches * 1000
-    assert mock_query_subgraph.call_count == num_successful_fetches+1
+    assert mock_query_subgraph.call_count == num_successful_fetches + 1
 
 
 @enforce_types

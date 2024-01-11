@@ -120,7 +120,10 @@ def fetch_filtered_predictions(
                 timeout=20.0,
             )
         except Exception as e:
-            print(f"Error querying subgraph, return #{len(predictions)} records... exception: ", e)
+            print(
+                f"Error querying subgraph, return #{len(predictions)} records... exception: ",
+                e,
+            )
             break
 
         offset += chunk_size
