@@ -59,14 +59,14 @@ def test_aimodel_ss_happy2():
             }
         )
 
+
 @enforce_types
 def test_aimodel_ss_unhappy1():
-
     d = {
         "approach": "LIN",
         "max_n_train": 7,
         "autoregressive_n": 3,
-        "input_feeds": ["kraken ETH/USDT"], # missing a signal like "c"
+        "input_feeds": ["kraken ETH/USDT"],  # missing a signal like "c"
     }
 
     # it should complain that it's missing a signal in input feeds
