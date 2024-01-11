@@ -18,7 +18,7 @@ class Prediction:
         source: str,
         payout: Union[float, None],
         slot: int,  # slot/epoch timestamp
-        contract_addrs: str,
+        address: str,
         user: str,
     ) -> None:
         self.ID = ID
@@ -31,7 +31,7 @@ class Prediction:
         self.source = source
         self.payout = payout
         self.slot = slot
-        self.contract_addrs = (contract_addrs,)
+        self.address = (address,)
         self.user = user
 
 
@@ -51,11 +51,11 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         source,
         payout,
         slot,
-        contract_addrs,
+        address,
         user,
     ) = prediction_tuple
 
-    ID = f"{contract_addrs}-{slot}-{user}"
+    ID = f"{address}-{slot}-{user}"
     return Prediction(
         ID=ID,
         pair=pair_str,
@@ -66,7 +66,7 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         timestamp=timestamp,
         source=source,
         payout=payout,
-        contract_addrs=contract_addrs,
+        address=address,
         slot=slot,
         user=user,
     )

@@ -160,13 +160,13 @@ class TruevalAgent:
             data["trueVals"].append(slot.trueval)
             data["cancelRounds"].append(slot.cancel)
 
-        contract_addrs = list(contracts.keys())
+        address = list(contracts.keys())
         epoch_starts = [data["epoch_starts"] for data in contracts.values()]
         trueVals = [data["trueVals"] for data in contracts.values()]
         cancelRounds = [data["cancelRounds"] for data in contracts.values()]
 
         tx = self.predictoor_batcher.submit_truevals_contracts(
-            contract_addrs, epoch_starts, trueVals, cancelRounds, True
+            address, epoch_starts, trueVals, cancelRounds, True
         )
         return tx["transactionHash"].hex()
 

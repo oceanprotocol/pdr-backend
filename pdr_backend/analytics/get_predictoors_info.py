@@ -8,16 +8,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 
 @enforce_types
-def get_predictoors_info_main(
-    ppss: PPSS,
-    pdr_addrs_str: Union[str, None],
-    start_timestr: str,
-    end_timestr: str,
-):
-    lake_ss = ppss.lake_ss
-    lake_ss.d["st_timestr"] = start_timestr
-    lake_ss.d["fin_timestr"] = end_timestr
-
+def get_predictoors_info_main(ppss: PPSS, pdr_addrs_str: Union[str, None]):
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 

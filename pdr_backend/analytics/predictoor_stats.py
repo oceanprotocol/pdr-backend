@@ -121,7 +121,6 @@ def get_endpoint_statistics(
 
     pair_timeframe_stats: List[PairTimeframeStat] = []
     for key, stat_pair_timeframe_item in stats["pair_timeframe"].items():
-        print(key)
         pair, timeframe, exchange = key
         accuracy = (
             stat_pair_timeframe_item["correct"]
@@ -177,7 +176,6 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
-    print(df)
     return df
 
 
@@ -197,7 +195,6 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
-    print(df)
     return df
 
 

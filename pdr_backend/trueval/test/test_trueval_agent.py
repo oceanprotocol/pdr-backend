@@ -113,7 +113,7 @@ def test_batch_submit_truevals(agent, slot):
 
     trueval_slots.extend(trueval_slots_2)
 
-    contract_addrs = [
+    address = [
         "0x0000000000000000000000000000000000C0FFEE",
         "0x0000000000000000000000000000000000baDbad",
     ]  # checksum
@@ -128,7 +128,7 @@ def test_batch_submit_truevals(agent, slot):
     ) as mock:
         tx = agent.batch_submit_truevals(trueval_slots)
         assert tx == "badc0ffeee"
-        mock.assert_called_with(contract_addrs, epoch_starts, truevals, cancels, True)
+        mock.assert_called_with(address, epoch_starts, truevals, cancels, True)
 
 
 @enforce_types

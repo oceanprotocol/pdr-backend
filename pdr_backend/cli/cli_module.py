@@ -113,13 +113,13 @@ def do_claim_ROSE(args):
 @enforce_types
 def do_get_predictoors_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END)
+    get_predictoors_info_main(ppss, args.PDRS)
 
 
 @enforce_types
 def do_get_predictions_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END)
+    get_predictions_info_main(ppss, args.FEEDS)
 
 
 @enforce_types
