@@ -19,9 +19,16 @@ INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
-def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
+def get_agent(tmpdir: str, monkeypatch, predictoor_agent_class):
+    """
+    @description
+        Initialize the agent, and return it along with the feed and ppss
+        that it uses.
+    """
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
-    feed, ppss = mock_feed_ppss("5m", "binanceus", "BTC/USDT", tmpdir=tmpdir)
+    feed, ppss = mock_feed_ppss(
+        "5m", "binanceus", "BTC/USDT", network="development", tmpdir=tmpdir
+    )
     inplace_mock_query_feed_contracts(ppss.web3_pp, feed)
 
     _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
@@ -37,6 +44,20 @@ def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
 
     # real work: initialize
     agent = predictoor_agent_class(ppss)
+
+    return (feed, ppss, agent, _mock_pdr_contract)
+
+
+@enforce_types
+def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
+    """
+    @description
+        Run the agent for a while, and then do some basic sanity checks.
+    """
+    _, ppss, agent, _mock_pdr_contract = get_agent(
+        tmpdir, monkeypatch, predictoor_agent_class
+    )
+    # now we're done the mocking, time for the real work!!
 
     # real work: main iterations
     for _ in range(500):

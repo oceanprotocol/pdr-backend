@@ -10,6 +10,22 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 @enforce_types
 class PredictoorAgent3(BasePredictoorAgent):
+    def __init__(self, ppss):
+        super().__init__(ppss)
+        self.get_data_components()
+
+    @enforce_types
+    def get_data_components(self):
+        # Compute aimodel_ss
+        lake_ss = self.ppss.lake_ss
+
+        # From lake_ss, build X/y
+        pq_data_factory = OhlcvDataFactory(lake_ss)
+        mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+
+        return mergedohlcv_df
+
+    @enforce_types
     def get_prediction(
         self, timestamp: int  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
@@ -24,12 +40,7 @@ class PredictoorAgent3(BasePredictoorAgent):
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'
           stake -- int -- amount to stake, in units of Eth
         """
-        # Compute aimodel_ss
-        lake_ss = self.ppss.lake_ss
-
-        # From lake_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(lake_ss)
-        mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+        mergedohlcv_df = self.get_data_components()
 
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
