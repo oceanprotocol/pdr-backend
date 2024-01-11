@@ -100,7 +100,14 @@ MOCK_CONTRACT_DETAILS_RESPONSE = {
 @enforce_types
 @patch("pdr_backend.subgraph.subgraph_predictions.query_subgraph")
 def test_fetch_filtered_predictions(mock_query_subgraph):
+    """
+    @description
+      Test that fetch_filtered_predictions() can fetch predictions from subgraph
+      and return them as a list of Prediction objects.
+    """
+    # show the system can fetch multiple times, and handle empty responses
     mock_query_subgraph.side_effect = [
+        MOCK_PREDICTIONS_RESPONSE_FIRST_CALL,
         MOCK_PREDICTIONS_RESPONSE_FIRST_CALL,
         MOCK_PREDICTIONS_RESPONSE_SECOND_CALL,
     ]
@@ -112,13 +119,47 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
         filter_mode=FilterMode.PREDICTOOR,
     )
 
-    assert len(predictions) == 1
+    assert len(predictions) == 2
     assert isinstance(predictions[0], Prediction)
     assert predictions[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert predictions[0].pair == "ADA/USDT"
     assert predictions[0].trueval is False
     assert predictions[0].prediction is True
-    assert mock_query_subgraph.call_count == 1
+    assert mock_query_subgraph.call_count == 3
+
+
+@enforce_types
+@patch("pdr_backend.subgraph.subgraph_predictions.query_subgraph")
+def test_fetch_filtered_predictions_exception(mock_query_subgraph):
+    """
+    @description
+        Verifies that fetch_filtered_predictions() can handle exceptions from subgraph
+        and return the predictions that were fetched before the exception.
+    """
+    num_successful_fetches = 3
+    # we're going to simulate an exception from subgraph on the second call
+    def simulate_exception(*args, **kwargs):
+        if simulate_exception.call_count < num_successful_fetches:
+            simulate_exception.call_count += 1
+            return MOCK_PREDICTIONS_RESPONSE_FIRST_CALL
+        else:
+            raise Exception(f"Simulated exception on call #{num_successful_fetches+1}")
+        
+    simulate_exception.call_count = 0
+
+    # Patch query_subgraph to use our simulate_exception function
+    mock_query_subgraph.side_effect = simulate_exception
+
+    predictions = fetch_filtered_predictions(
+        start_ts=1622547000,
+        end_ts=1622548800,
+        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        network="mainnet",
+        filter_mode=FilterMode.PREDICTOOR,
+    )
+
+    assert len(predictions) == num_successful_fetches
+    assert mock_query_subgraph.call_count == num_successful_fetches+1
 
 
 @enforce_types
