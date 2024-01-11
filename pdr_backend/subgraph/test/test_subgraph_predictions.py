@@ -31,55 +31,61 @@ SAMPLE_PREDICTION = Prediction(
 )
 
 # pylint: disable=line-too-long
+_PREDICTION = {
+    "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
+    "stake": "0.050051425480971974",
+    "timestamp": 1698527000,
+    "payout": {"payout": "0", "trueValue": False, "predictedValue": True},
+    "slot": {
+        "slot": 1698527100,
+        "predictContract": {
+            "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            "token": {
+                "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+                "name": "ADA/USDT",
+                "nft": {
+                    "nftData": [
+                        {
+                            "key": "0x238ad53218834f943da60c8bafd36c36692dcb35e6d76bdd93202f5c04c0baff",
+                            "value": "0x55534454",
+                        },
+                        {
+                            "key": "0x2cef5778d97683b4f64607f72e862fc0c92376e44cc61195ef72a634c0b1793e",
+                            "value": "0x4144412f55534454",
+                        },
+                        {
+                            "key": "0x49435d2ff85f9f3594e40e887943d562765d026d50b7383e76891f8190bff4c9",
+                            "value": "0x356d",
+                        },
+                        {
+                            "key": "0xf1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f",
+                            "value": "0x414441",
+                        },
+                        {
+                            "key": "0xf7e3126f87228afb82c9b18537eed25aaeb8171a78814781c26ed2cfeff27e69",
+                            "value": "0x62696e616e6365",
+                        },
+                    ]
+                },
+            },
+        },
+    },
+}
+
 MOCK_PREDICTIONS_RESPONSE_FIRST_CALL = {
     "data": {
-        "predictPredictions": [
-            {
-                "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
-                "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
-                "stake": "0.050051425480971974",
-                "timestamp": 1698527000,
-                "payout": {"payout": "0", "trueValue": False, "predictedValue": True},
-                "slot": {
-                    "slot": 1698527100,
-                    "predictContract": {
-                        "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-                        "token": {
-                            "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-                            "name": "ADA/USDT",
-                            "nft": {
-                                "nftData": [
-                                    {
-                                        "key": "0x238ad53218834f943da60c8bafd36c36692dcb35e6d76bdd93202f5c04c0baff",
-                                        "value": "0x55534454",
-                                    },
-                                    {
-                                        "key": "0x2cef5778d97683b4f64607f72e862fc0c92376e44cc61195ef72a634c0b1793e",
-                                        "value": "0x4144412f55534454",
-                                    },
-                                    {
-                                        "key": "0x49435d2ff85f9f3594e40e887943d562765d026d50b7383e76891f8190bff4c9",
-                                        "value": "0x356d",
-                                    },
-                                    {
-                                        "key": "0xf1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f",
-                                        "value": "0x414441",
-                                    },
-                                    {
-                                        "key": "0xf7e3126f87228afb82c9b18537eed25aaeb8171a78814781c26ed2cfeff27e69",
-                                        "value": "0x62696e616e6365",
-                                    },
-                                ]
-                            },
-                        },
-                    },
-                },
-            }
-        ]
+        "predictPredictions": [_PREDICTION]
     }
 }
 
 MOCK_PREDICTIONS_RESPONSE_SECOND_CALL: Dict[str, dict] = {}
+
+MOCK_PREDICTIONS_RESPONSE_1000 = {
+    "data": {
+        "predictPredictions": [_PREDICTION for i in range(0, 1000)]
+    }
+}
 
 MOCK_CONTRACTS_RESPONSE = {
     "data": {
@@ -110,8 +116,8 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     """
     # show the system can fetch multiple times, and handle empty responses
     mock_query_subgraph.side_effect = [
-        MOCK_PREDICTIONS_RESPONSE_FIRST_CALL,
-        MOCK_PREDICTIONS_RESPONSE_FIRST_CALL,
+        MOCK_PREDICTIONS_RESPONSE_1000,
+        MOCK_PREDICTIONS_RESPONSE_1000,
         MOCK_PREDICTIONS_RESPONSE_SECOND_CALL,
     ]
     predictions = fetch_filtered_predictions(
@@ -122,7 +128,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
         filter_mode=FilterMode.PREDICTOOR,
     )
 
-    assert len(predictions) == 2
+    assert len(predictions) == 2000
     assert isinstance(predictions[0], Prediction)
     assert predictions[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert predictions[0].pair == "ADA/USDT"
@@ -145,7 +151,7 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     def simulate_exception(*args, **kwargs):
         if simulate_exception.call_count < num_successful_fetches:
             simulate_exception.call_count += 1
-            return MOCK_PREDICTIONS_RESPONSE_FIRST_CALL
+            return MOCK_PREDICTIONS_RESPONSE_1000
         else:
             raise Exception(f"Simulated exception on call #{num_successful_fetches+1}")
         
@@ -162,7 +168,7 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
         filter_mode=FilterMode.PREDICTOOR,
     )
 
-    assert len(predictions) == num_successful_fetches
+    assert len(predictions) == num_successful_fetches * 1000
     assert mock_query_subgraph.call_count == num_successful_fetches+1
 
 
