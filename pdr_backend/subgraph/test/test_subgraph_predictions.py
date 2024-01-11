@@ -143,7 +143,8 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     num_successful_fetches = 3
 
     # we're going to simulate an exception from subgraph on the second call
-    def simulate_exception():
+    # pylint: disable=unused-argument
+    def simulate_exception(*args, **kwargs):
         if simulate_exception.call_count < num_successful_fetches:
             simulate_exception.call_count += 1
             return MOCK_PREDICTIONS_RESPONSE_1000

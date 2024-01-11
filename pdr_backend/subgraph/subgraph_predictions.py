@@ -23,6 +23,7 @@ class FilterMode(Enum):
     CONTRACT_TS = 3
 
 
+# pylint: disable=too-many-statements
 @enforce_types
 def fetch_filtered_predictions(
     start_ts: int,
