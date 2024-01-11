@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# pdr-backend
+# pdr-backend: tlmbots
 
 ⚠️ As of v0.2, the CLI replaces previous `main.py` calls. Update your flows accordingly.
 
