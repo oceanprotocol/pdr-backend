@@ -40,8 +40,8 @@ def test_query_pending_payouts():
 
 
 @enforce_types
-def test_query_pending_payouts_edge_cases(capfd):
-    def mock_query_subgraph(subgraph_url, query):
+def test_query_pending_payouts_edge_cases():
+    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
         return {"data": {}}
 
     PATH = "pdr_backend.subgraph.subgraph_pending_payouts"
@@ -51,7 +51,7 @@ def test_query_pending_payouts_edge_cases(capfd):
             addr="0x123",
         )
 
-    def mock_query_subgraph_2(subgraph_url, query):
+    def mock_query_subgraph_2(subgraph_url, query):  # pylint:disable=unused-argument
         return {"data": {"predictPredictions": []}}
 
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph_2):

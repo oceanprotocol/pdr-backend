@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
 
@@ -34,7 +34,7 @@ def test_block_number_is_synced():
 
 
 @enforce_types
-def test_wait_until_subgraph_syncs(capfd):
+def test_wait_until_subgraph_syncs():
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
     mock_web3_config.w3.eth = Mock()
