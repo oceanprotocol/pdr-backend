@@ -5,8 +5,10 @@ from argparse import Namespace
 from enforce_typing import enforce_types
 
 HELP_LONG = """Predictoor tool
+  Transactions are signed with envvar 'PRIVATE_KEY`.
 
-Usage: pdr sim|predictoor|trader|..
+Usage:
+  pdr sim|predictoor|trader|..
 
 Main tools:
   pdr sim PPSS_FILE
@@ -23,8 +25,9 @@ Utilities:
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
-
-Transactions are signed with envvar 'PRIVATE_KEY`.
+  pdr create_accounts NUM_ACCOUNTS PPSS_FILE NETWORK
+  pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
+  pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -109,6 +112,43 @@ class LOOKBACK_Mixin:
             type=int,
             help="# hours to check back on",
             required=False,
+        )
+
+
+@enforce_types
+class NUM_Mixin:
+    def add_argument_NUM(self):
+        self.add_argument("NUM", type=int, help="1|2|..")
+
+
+@enforce_types
+class ACCOUNTS_Mixin:
+    def add_argument_ACCOUNTS(self):
+        self.add_argument(
+            "ACCOUNTS",
+            type=str,
+            help="Comma-separated list of accounts",
+        )
+
+
+@enforce_types
+class TOKEN_AMOUNT_Mixin:
+    def add_argument_TOKEN_AMOUNT(self):
+        self.add_argument(
+            "TOKEN_AMOUNT",
+            type=float,
+            help="Amount of token to send to each address",
+        )
+
+
+@enforce_types
+class NATIVE_TOKEN_Mixin:
+    def add_argument_NATIVE_TOKEN(self):
+        self.add_argument(
+            "--NATIVE_TOKEN",
+            action="store_true",
+            default=False,
+            help="Is native token or OCEAN?",
         )
 
 
@@ -200,6 +240,58 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
         )
 
 
+@enforce_types
+class _ArgParser_NUM_PPSS_NETWORK(
+    CustomArgParser,
+    NUM_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_NUM()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+
+
+@enforce_types
+class _ArgParser_ACCOUNTS_PPSS_NETWORK(
+    CustomArgParser,
+    ACCOUNTS_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_ACCOUNTS()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+
+
+@enforce_types
+class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
+    CustomArgParser,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    NATIVE_TOKEN_Mixin,
+    TOKEN_AMOUNT_Mixin,
+    ACCOUNTS_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_argument_TOKEN_AMOUNT()
+        self.add_argument_ACCOUNTS()
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+        self.add_argument_NATIVE_TOKEN()
+
+
 # ========================================================================
 # actual arg-parser implementations are just aliases to argparser base classes
 # In order of help text.
@@ -251,6 +343,12 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
+CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
+
+AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
+
+FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
+
 defined_parsers = {
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
@@ -275,6 +373,15 @@ defined_parsers = {
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+    "do_create_accounts": CreateAccountsArgParser(
+        "Create multiple accounts..", "create_accounts"
+    ),
+    "do_view_accounts": AccountsArgParser(
+        "View balances from 1 or more accounts", "view_accounts"
+    ),
+    "do_fund_accounts": FundAccountsArgParser(
+        "Fund multiple wallets from a single address", "fund_accounts"
+    ),
 }
 
 

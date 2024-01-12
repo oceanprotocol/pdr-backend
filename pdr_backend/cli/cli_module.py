@@ -24,8 +24,8 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
-from pdr_backend.util.web3_util import create_accounts, view_account_balances, fund_wallets_with_amount
+from pdr_backend.util.fund_accounts import fund_core_accounts_with_OCEAN
+from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 
 
 @enforce_types
@@ -156,7 +156,7 @@ def do_publisher(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     if ppss.web3_pp.network == "development":
-        fund_accounts_with_OCEAN(ppss.web3_pp)
+        fund_core_accounts_with_OCEAN(ppss.web3_pp)
     publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 
@@ -167,34 +167,20 @@ def do_topup(args):
 
 
 @enforce_types
-def do_create_accounts():
-    parser = CreateWalletArgParser("Create new web3 wallet", "create_accounts")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_create_accounts(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    create_accounts(args.NUM_WALLETS, ppss.web3_pp)
+    create_accounts(args.NUM_ACCOUNTS, ppss.web3_pp)
 
 
 @enforce_types
-def do_view_account_balances():
-    parser = AddressArgParser("View balances from 1 or more accounts", "view_account_balances")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_view_accounts(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    
-    accounts = args.ADDRESSES.split(",")
-    view_account_balances(accounts, ppss.web3_pp)
+    accounts = args.ACCOUNTS.split(",")
+    view_accounts(accounts, ppss.web3_pp)
 
 
 @enforce_types
-def do_fund_wallets():
-    parser = FundWalletsArgParser("Fund multiple wallets from a single address", "fund_wallets")
-    args = parser.parse_args()
-    print_args(args)
-
+def do_fund_accounts(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-
-    to_addresses = args.TO_ADDRESSES.split(",")
-    fund_wallets_with_amount(args.TOKEN_AMOUNT, to_addresses, ppss.web3_pp, args.NATIVE_TOKEN)
+    to_accounts = args.ACCOUNTS.split(",")
+    fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
