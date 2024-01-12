@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts

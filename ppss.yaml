@@ -3,6 +3,7 @@ lake_ss:
   parquet_dir: parquet_data
   feeds:
     - binance BTC/USDT 1h
+#    - binance BTC/USDT ETH/USDT 1h
 #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
 #    - kraken BTC/USDT 1h
   st_timestr: 2023-06-01_00:00 # starting date for data
@@ -16,10 +17,10 @@ predictoor_ss:
   approach3:
   aimodel_ss:
     input_feeds:
-      - binance BTC/USDT c
-#      - binance BTC/USDT ohlcv
-#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT c
-#    - kraken BTC/USDT
+      - binance BTC/USDT c 1h
+#      - binance BTC/USDT ETH/USDT ohlcv 1h
+#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 1h
+#    - kraken BTC/USDT 1h
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
