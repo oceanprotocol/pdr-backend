@@ -10,7 +10,7 @@ from pdr_backend.util.contract import get_address
 
 
 @enforce_types
-def core_fund_accounts_with_OCEAN(web3_pp: Web3PP):
+def fund_accounts_with_OCEAN(web3_pp: Web3PP):
     """
     Fund accounts, with opinions: use OCEAN, and choices of amounts.
     Meant to be used from CLI.
