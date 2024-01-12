@@ -1,12 +1,15 @@
-from typing import List, Set
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_feed import (
     ArgFeed,
     _unpack_feeds_str,
     _pack_feeds_str,
 )
+from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.timeframe import Timeframe
 
 
 class ArgFeeds(List[ArgFeed]):
@@ -43,7 +46,12 @@ class ArgFeeds(List[ArgFeed]):
         return set(str(feed.signal) for feed in self)
 
     @enforce_types
-    def contains_combination(self, source: str, pair: str, timeframe: str) -> bool:
+    def contains_combination(
+        self,
+        source: Union[str, ArgExchange],
+        pair: Union[str, ArgPair],
+        timeframe: Union[str, Timeframe],
+    ) -> bool:
         for feed in self:
             if (
                 feed.exchange == source

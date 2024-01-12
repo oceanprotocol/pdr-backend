@@ -25,6 +25,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
         network: Optional[str] = None,  # eg "development", "sapphire-testnet"
+        do_verify: Optional[bool] = False,
     ):
         # preconditions
         assert (
@@ -50,7 +51,8 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.web3_pp = Web3PP(d["web3_pp"], network)
 
         # postconditions
-        self.verify_feed_dependencies()
+        if do_verify:
+            self.verify_feed_dependencies()
 
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
@@ -114,7 +116,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
 # =========================================================================
 # utilities for testing
-_CACHED_YAML_FILE_S = None
 
 
 @enforce_types
@@ -124,9 +125,15 @@ def mock_feed_ppss(
     pair,
     network: Optional[str] = None,
     tmpdir=None,
+    do_verify: Optional[bool] = False,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss([f"{exchange} {pair} c {timeframe}"], network, tmpdir)
+    ppss = mock_ppss(
+        [f"{exchange} {pair} c {timeframe}"],
+        network,
+        tmpdir,
+        do_verify=do_verify,
+    )
     return (feed, ppss)
 
 
@@ -137,10 +144,13 @@ def mock_ppss(
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
     fin_timestr: Optional[str] = "2023-06-21",
+    do_verify: Optional[bool] = False,
 ) -> PPSS:
     network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str, network=network)
+
+    # do_verify=False here because if we verify, we verify at the end of func
+    ppss = PPSS(yaml_str=yaml_str, network=network, do_verify=False)
 
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
@@ -197,7 +207,13 @@ def mock_ppss(
         }
     )
 
+    # postconditions
+    if do_verify:
+        ppss.verify_feed_dependencies()
     return ppss
+
+
+_CACHED_YAML_FILE_S = None
 
 
 @enforce_types
