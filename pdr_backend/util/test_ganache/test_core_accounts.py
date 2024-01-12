@@ -6,11 +6,11 @@ from eth_account import Account
 
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.core_accounts import _fund_accounts, core_fund_accounts_with_OCEAN
+from pdr_backend.util.core_accounts import _fund_accounts, fund_accounts_with_OCEAN
 
 
 @enforce_types
-def test_core_fund_accounts_with_OCEAN(monkeypatch):
+def test_fund_accounts_with_OCEAN(monkeypatch):
     if os.getenv("NETWORK_OVERRIDE"):
         monkeypatch.delenv("NETWORK_OVERRIDE")
 
@@ -24,7 +24,7 @@ def test_core_fund_accounts_with_OCEAN(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{path}._fund_accounts", mock_f)
 
-    core_fund_accounts_with_OCEAN(web3_pp)
+    fund_accounts_with_OCEAN(web3_pp)
     mock_f.assert_called()
 
 

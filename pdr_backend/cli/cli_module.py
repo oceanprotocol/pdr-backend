@@ -24,7 +24,7 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.fund_accounts import fund_core_accounts_with_OCEAN
+from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 
 
@@ -156,7 +156,7 @@ def do_publisher(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     if ppss.web3_pp.network == "development":
-        fund_core_accounts_with_OCEAN(ppss.web3_pp)
+        fund_accounts_with_OCEAN(ppss.web3_pp)
     publish_assets(ppss.web3_pp, ppss.publisher_ss)
 
 

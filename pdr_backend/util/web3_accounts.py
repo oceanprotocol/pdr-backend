@@ -1,8 +1,7 @@
 import sys
+from os import getenv
 from typing import List
 from enforce_typing import enforce_types
-
-from os import getenv
 
 from eth_account import Account
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -12,13 +11,14 @@ from pdr_backend.util.mathutil import to_wei, from_wei
 
 
 @enforce_types
-def create_accounts(n_accounts: int, web3_pp: Web3PP):
+def create_accounts(n_accounts: int):
     """
     @description
         Create new accounts using the web3 provider and print the private_key and the public_key
     """
     # loop through n_wallets
     for i in range(n_accounts):
+        # pylint: disable=no-value-for-parameter
         new_account = Account.create()
         print(f"\nWallet #{i}")
         print(f"Private Key: {new_account._private_key.hex()}")
@@ -46,16 +46,16 @@ def _get_account_balances(checksum_address: str, web3_pp: Web3PP):
 def view_accounts(addresses: List[str], web3_pp: Web3PP):
     """
     @description
-        view account balances from multiple addresses
+        View account balances for multiple addresses
     """
     # loop through n_wallets
     for address in addresses:
-        checksum_address = web3_pp.w3.to_checksum_address(address.lower())
+        checksum_address = web3_pp.web3_config.w3.to_checksum_address(address.lower())
         native_token_balance, OCEAN_balance = _get_account_balances(
             checksum_address, web3_pp
         )
 
-        print(f"\Account {checksum_address}")
+        print(f"Account {checksum_address}")
         print(f"Native token balance: {from_wei(native_token_balance)}")
         print(f"OCEAN balance: {from_wei(OCEAN_balance)}")
 
@@ -66,7 +66,8 @@ def fund_accounts(
 ):
     """
     @description
-        Fund multiple accounts using native or OCEAN tokens
+        Fund multiple accounts using native or OCEAN tokens.
+        Sends a total of (Amount * n_accounts).
     """
     if web3_pp.network not in ["sapphire-testnet", "sapphire-mainnet"]:
         print("Unknown network")
