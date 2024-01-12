@@ -177,7 +177,9 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK"])
+        self.add_arguments_bulk(
+            command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK", "PDRS"]
+        )
 
 
 @enforce_types
