@@ -178,42 +178,42 @@ def _pack_feeds_str(feeds: List[ArgFeed]) -> List[str]:
     # merge signals via dict
     grouped_signals = defaultdict(set)  # [(exch,pair,timeframe)] : signals
     for feed in feeds:
-        tup3 = (str(feed.exchange), str(feed.pair), str(feed.timeframe))
-        if tup3 not in grouped_signals:
-            grouped_signals[tup3] = {str(feed.signal)}
+        ept_tup = (str(feed.exchange), str(feed.pair), str(feed.timeframe))
+        if ept_tup not in grouped_signals:
+            grouped_signals[ept_tup] = {str(feed.signal)}
         else:
-            grouped_signals[tup3].add(str(feed.signal))
+            grouped_signals[ept_tup].add(str(feed.signal))
 
     # convert new dict to list of 4-tups. Sort for consistency
-    tup4s = []
-    for (exch, pair, timeframe), signals in grouped_signals.items():
-        signals = frozenset(sorted(signals))
-        tup4s.append((exch, pair, timeframe, signals))
-    tup4s = sorted(tup4s)
+    epts_tups = []
+    for (exch, pair, timeframe), signalset in grouped_signals.items():
+        fr_signalset = frozenset(sorted(signalset))
+        epts_tups.append((exch, pair, timeframe, fr_signalset))
+    epts_tups = sorted(epts_tups)
 
     # then, merge pairs via dic
     grouped_pairs = defaultdict(set)  # [(exch,timeframe,signals)] : pairs
-    for exch, pair, timeframe, signals in tup4s:
-        tup3 = (exch, timeframe, signals)
-        if tup3 not in grouped_pairs:
-            grouped_pairs[tup3] = {pair}
+    for exch, pair, timeframe, fr_signalset in epts_tups:
+        ets_tup = (exch, timeframe, fr_signalset)
+        if ets_tup not in grouped_pairs:
+            grouped_pairs[ets_tup] = {pair}
         else:
-            grouped_pairs[tup3].add(pair)
+            grouped_pairs[ets_tup].add(pair)
 
     # convert new dict to list of 4-tups. Sort for consistency
-    tup4s = []
-    for (exch, timeframe, signals), pairs in grouped_pairs.items():
-        pairs = frozenset(sorted(pairs))
-        tup4s.append((exch, timeframe, signals, pairs))
-    tup4s = sorted(tup4s)
+    etsp_tups = []
+    for (exch, timeframe, fr_signalset), pairs in grouped_pairs.items():
+        fr_pairs = frozenset(sorted(pairs))
+        etsp_tups.append((exch, timeframe, fr_signalset, fr_pairs))
+    etsp_tups = sorted(etsp_tups)
 
     # convert to list of str
     strs = []
-    for exch, timeframe, signals, pairs in tup4s:
+    for exch, timeframe, fr_signalset, fr_pairs in etsp_tups:
         s = exch
-        s += " " + " ".join(sorted(pairs))
-        if signals != frozenset({"None"}):
-            s += " " + signals_to_chars(signals)
+        s += " " + " ".join(sorted(fr_pairs))
+        if fr_signalset != frozenset({"None"}):
+            s += " " + signals_to_chars(list(fr_signalset))
         if timeframe != "None":
             s += " " + timeframe
         strs.append(s)

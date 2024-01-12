@@ -55,7 +55,11 @@ class ArgFeeds(List[ArgFeed]):
         return False
 
     @enforce_types
-    def __str__(self):
+    def __eq__(self, other) -> bool:
+        return sorted([str(f) for f in self]) == sorted([str(f) for f in other])
+
+    @enforce_types
+    def __str__(self) -> str:
         return ", ".join(self.to_strs())
 
     @enforce_types

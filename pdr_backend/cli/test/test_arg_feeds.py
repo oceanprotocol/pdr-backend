@@ -327,7 +327,7 @@ def test_ArgFeeds_str():
 
 
 @enforce_types
-def test_ArgFeeds_to_strs1():
+def test_ArgFeeds_to_strs():
     for feeds_strs in [
         ["binance BTC/USDT o"],
         ["binance BTC/USDT oh"],
