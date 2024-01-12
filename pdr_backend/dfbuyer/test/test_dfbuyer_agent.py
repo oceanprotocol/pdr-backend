@@ -40,6 +40,19 @@ def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
 
 
 @enforce_types
+def test_dfbuyer_agent_constructor_empty():
+    # test with no feeds
+    mock_ppss_empty = MagicMock(spec=PPSS)
+    mock_ppss_empty.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
+    mock_ppss_empty.dfbuyer_ss.filter_feeds_from_candidates.return_value = {}
+    mock_ppss_empty.web3_pp = MagicMock(spec=Web3PP)
+    mock_ppss_empty.web3_pp.query_feed_contracts.return_value = {}
+
+    with pytest.raises(ValueError, match="No feeds found"):
+        DFBuyerAgent(mock_ppss_empty)
+
+
+@enforce_types
 def test_dfbuyer_agent_get_expected_amount_per_feed(mock_dfbuyer_agent):
     ts = 1695211135
     amount_per_feed_per_interval = (
@@ -207,6 +220,10 @@ def test_dfbuyer_agent_take_step(
     mock_get_block.assert_called_once_with("latest")
     mock_sleep.assert_called_once_with(86400 - 60)
 
+    # empty feeds
+    mock_dfbuyer_agent.feeds = []
+    assert mock_dfbuyer_agent.take_step(ts) is None
+
 
 @enforce_types
 @patch.object(DFBuyerAgent, "take_step")
@@ -216,6 +233,10 @@ def test_dfbuyer_agent_run(mock_get_block, mock_take_step, mock_dfbuyer_agent):
     mock_dfbuyer_agent.run(testing=True)
     mock_get_block.assert_called_once_with("latest")
     mock_take_step.assert_called_once_with(mock_get_block.return_value["timestamp"])
+
+    # empty feeds
+    mock_dfbuyer_agent.feeds = []
+    assert mock_dfbuyer_agent.run(testing=True) is None
 
 
 @enforce_types
@@ -263,3 +284,25 @@ def test_dfbuyer_agent_consume_batch_method(mock_dfbuyer_agent):
             ),
         ]
         mock_consume.assert_has_calls(calls)
+
+
+@enforce_types
+def test_dfbuyer_agent_batch_txs(mock_dfbuyer_agent):
+    addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
+    consume_times = dict(zip(addresses, [10, 30, 14, 6, 24, 16]))
+
+    with patch.object(
+        mock_dfbuyer_agent,
+        "_consume_batch",
+        side_effect=[False, True, False, True, True],
+    ):
+        failures = mock_dfbuyer_agent._batch_txs(consume_times)
+
+    assert failures
+
+    with patch.object(
+        mock_dfbuyer_agent, "_consume_batch", side_effect=[True, True, True, True, True]
+    ):
+        failures = mock_dfbuyer_agent._batch_txs(consume_times)
+
+    assert failures

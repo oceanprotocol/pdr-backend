@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
+from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
@@ -57,6 +58,7 @@ def test_web3_pp__yaml_dict(monkeypatch):
     assert pp.rpc_url == "rpc url 1"
     assert pp.subgraph_url == "subgraph url 1"
     assert pp.owner_addrs == "0xOwner1"
+    assert isinstance(pp.account, LocalAccount)
 
     # network2
     pp2 = Web3PP(_D, "network2")
@@ -205,3 +207,34 @@ def test_inplace_mocks(monkeypatch):
 
     c = mock_predictoor_contract(feed.address)
     inplace_mock_get_contracts(web3_pp, feed, c)
+
+
+@enforce_types
+def test_tx_gas_price__and__tx_call_params(monkeypatch):
+    del_network_override(monkeypatch)
+
+    web3_pp = mock_web3_pp("sapphire-testnet")
+    eth_mock = Mock()
+    eth_mock.gas_price = 12
+    web3_pp.web3_config.w3.eth = eth_mock
+    web3_pp.web3_config.owner = "0xowner"
+
+    web3_pp.network = "sapphire-testnet"
+    assert web3_pp.tx_gas_price() == 12
+    assert web3_pp.tx_call_params() == {"from": "0xowner", "gasPrice": 12}
+
+    web3_pp.network = "sapphire-mainnet"
+    assert web3_pp.tx_gas_price() == 12
+
+    web3_pp.network = "development"
+    assert web3_pp.tx_gas_price() == 0
+    assert web3_pp.tx_call_params() == {"from": "0xowner", "gasPrice": 0}
+
+    web3_pp.network = "barge-pytest"
+    assert web3_pp.tx_gas_price() == 0
+
+    web3_pp.network = "foo"
+    with pytest.raises(ValueError):
+        web3_pp.tx_gas_price()
+    with pytest.raises(ValueError):
+        web3_pp.tx_call_params()

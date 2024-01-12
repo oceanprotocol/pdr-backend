@@ -40,6 +40,9 @@ def test_contract_main(network, monkeypatch):
     result = get_contract_filename("ERC20Template3", web3_pp.address_file)
     assert result is not None and isinstance(result, Path)
 
+    with pytest.raises(TypeError):
+        get_contract_abi("xyz", web3_pp.address_file)
+
 
 @enforce_types
 def test_condition_sapphire_keys():

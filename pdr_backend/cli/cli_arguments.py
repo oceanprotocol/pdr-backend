@@ -216,7 +216,7 @@ def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
-    print(f"dftool {command}: Begin")
+    print(f"pdr {command}: Begin")
     print("Arguments:")
 
     for arg_k, arg_v in arguments_dict.items():
@@ -251,37 +251,35 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
+defined_parsers = {
+    "do_sim": SimArgParser("Run simulation", "sim"),
+    "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
+    "do_trader": TraderArgParser("Run a trader bot", "trader"),
+    "do_lake": LakeArgParser("Run the lake tool", "lake"),
+    "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
+    "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
+    "do_get_predictoors_info": GetPredictoorsInfoArgParser(
+        "For specified predictoors, report {accuracy, ..} of each predictoor",
+        "get_predictoors_info",
+    ),
+    "do_get_predictions_info": GetPredictionsInfoArgParser(
+        "For specified feeds, report {accuracy, ..} of each predictoor",
+        "get_predictions_info",
+    ),
+    "do_get_traction_info": GetTractionInfoArgParser(
+        "Get traction info: # predictoors vs time, etc",
+        "get_traction_info",
+    ),
+    "do_check_network": CheckNetworkArgParser("Check network", "check_network"),
+    "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
+    "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
+    "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
+    "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+}
+
 
 def get_arg_parser(func_name):
-    parsers = {
-        "do_sim": SimArgParser("Run simulation", "sim"),
-        "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
-        "do_trader": TraderArgParser("Run a trader bot", "trader"),
-        "do_lake": LakeArgParser("Run the lake tool", "lake"),
-        "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
-        "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
-        "do_get_predictoors_info": GetPredictoorsInfoArgParser(
-            "For specified predictoors, report {accuracy, ..} of each predictoor",
-            "get_predictoors_info",
-        ),
-        "do_get_predictions_info": GetPredictionsInfoArgParser(
-            "For specified feeds, report {accuracy, ..} of each predictoor",
-            "get_predictions_info",
-        ),
-        "do_get_traction_info": GetTractionInfoArgParser(
-            "Get traction info: # predictoors vs time, etc",
-            "get_traction_info",
-        ),
-        "do_check_network": CheckNetworkArgParser("Check network", "check_network"),
-        "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
-        "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
-        "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
-        "do_topup": TopupArgParser(
-            "Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"
-        ),
-    }
-
-    if func_name not in parsers:
+    if func_name not in defined_parsers:
         raise ValueError(f"Unknown function name: {func_name}")
 
-    return parsers[func_name]
+    return defined_parsers[func_name]

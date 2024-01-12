@@ -73,3 +73,22 @@ def test_get_traction_info_main_mainnet(
         pl.DataFrame.equals(mock_traction_stat.call_args, preds_df)
         mock_plot_cumsum.assert_called()
         mock_plot_daily.assert_called()
+
+
+@enforce_types
+def test_get_traction_info_empty(tmpdir, capfd, monkeypatch):
+    del_network_override(monkeypatch)
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+
+    mock_empty = Mock(return_value=[])
+
+    PATH = "pdr_backend.analytics.get_traction_info"
+    with patch(f"{PATH}.GQLDataFactory.get_gql_dfs", mock_empty):
+        st_timestr = "2023-11-02"
+        fin_timestr = "2023-11-05"
+
+        get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+
+    assert (
+        "No records found. Please adjust start and end times." in capfd.readouterr().out
+    )

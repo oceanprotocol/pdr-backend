@@ -4,9 +4,32 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_pair import (
     ArgPair,
     ArgPairs,
+    _unpack_pairs_str,
     _verify_base_str,
     _verify_quote_str,
 )
+
+
+@enforce_types
+def test_arg_pair_main():
+    # basic tests
+    p1 = ArgPair("BTC/USDT")
+    p2 = ArgPair(base_str="BTC", quote_str="USDT")
+    assert p1.pair_str == p2.pair_str == "BTC/USDT"
+    assert p1.base_str == p2.base_str == "BTC"
+    assert p1.quote_str == p2.quote_str == "USDT"
+
+    # test __eq__
+    assert p1 == p2
+    assert p1 == "BTC/USDT"
+
+    assert p1 != ArgPair("ETH/USDT")
+    assert p1 != "ETH/USDT"
+    assert p1 != 3
+
+    # test __str__
+    assert str(p1) == "BTC/USDT"
+    assert str(p2) == "BTC/USDT"
 
 
 @enforce_types
@@ -19,6 +42,9 @@ def test_unpack_pair_str():
 
 @enforce_types
 def test_unpack_pairs_str():
+    with pytest.raises(ValueError):
+        _unpack_pairs_str("")
+
     assert ArgPairs.from_str("ADA-USDT BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
     assert ArgPairs.from_str("ADA/USDT,BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
     assert ArgPairs.from_str("ADA/USDT, BTC/USDT") == ["ADA/USDT", "BTC/USDT"]
@@ -52,6 +78,9 @@ def test_pack_pair_str_list():
 
     with pytest.raises(ValueError):
         ArgPairs(["ADA-USDT fgds"])
+
+    pair_from_base_and_quote = ArgPair(base_str="BTC", quote_str="USDT")
+    assert str(ArgPair(pair_from_base_and_quote)) == "BTC/USDT"
 
 
 @enforce_types

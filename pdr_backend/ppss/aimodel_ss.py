@@ -20,6 +20,9 @@ class AimodelSS(MultiFeedMixin, StrMixin):
         # test inputs
         if self.approach not in APPROACHES:
             raise ValueError(self.approach)
+        for feed in self.feeds:
+            if feed.signal is None:
+                raise ValueError(f"Got signal=None for feed: {feed}")
 
         assert 0 < self.max_n_train
         assert 0 < self.autoregressive_n < np.inf

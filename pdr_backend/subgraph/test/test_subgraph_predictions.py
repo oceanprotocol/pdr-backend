@@ -1,6 +1,7 @@
 from typing import Dict
 from unittest.mock import patch
 
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import (
@@ -121,6 +122,45 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
 
 
 @enforce_types
+def test_fetch_filtered_predictions_no_data():
+    # network not supported
+    with pytest.raises(Exception):
+        fetch_filtered_predictions(
+            start_ts=1622547000,
+            end_ts=1622548800,
+            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="xyz",
+            filter_mode=FilterMode.PREDICTOOR,
+        )
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_predictions.query_subgraph"
+    ) as mock_query_subgraph:
+        mock_query_subgraph.return_value = {"data": {}}
+        predictions = fetch_filtered_predictions(
+            start_ts=1622547000,
+            end_ts=1622548800,
+            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="mainnet",
+            filter_mode=FilterMode.PREDICTOOR,
+        )
+    assert len(predictions) == 0
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_predictions.query_subgraph"
+    ) as mock_query_subgraph:
+        mock_query_subgraph.return_value = {"data": {"predictPredictions": []}}
+        predictions = fetch_filtered_predictions(
+            start_ts=1622547000,
+            end_ts=1622548800,
+            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            network="mainnet",
+            filter_mode=FilterMode.PREDICTOOR,
+        )
+    assert len(predictions) == 0
+
+
+@enforce_types
 @patch(
     "pdr_backend.subgraph.subgraph_predictions.query_subgraph",
     return_value=MOCK_CONTRACTS_RESPONSE,
@@ -136,6 +176,17 @@ def test_get_all_contract_ids_by_owner(
     assert "token1" in contract_ids
     assert "token2" in contract_ids
     mock_query_subgraph.assert_called_once()
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_predictions.query_subgraph",
+        return_value={"data": {}},
+    ):
+        with pytest.raises(Exception):
+            get_all_contract_ids_by_owner(owner_address="0xOwner", network="mainnet")
+
+    # network not supported
+    with pytest.raises(Exception):
+        get_all_contract_ids_by_owner(owner_address="0xOwner", network="xyz")
 
 
 @enforce_types
@@ -161,3 +212,18 @@ def test_fetch_contract_id_and_spe(
     assert c1["name"] == "token2"
 
     mock_query_subgraph.assert_called_once()
+
+    with patch(
+        "pdr_backend.subgraph.subgraph_predictions.query_subgraph",
+        return_value={"data": {}},
+    ):
+        with pytest.raises(Exception):
+            fetch_contract_id_and_spe(
+                contract_addresses=["contract1", "contract2"], network="mainnet"
+            )
+
+    # network not supported
+    with pytest.raises(Exception):
+        fetch_contract_id_and_spe(
+            contract_addresses=["contract1", "contract2"], network="xyz"
+        )

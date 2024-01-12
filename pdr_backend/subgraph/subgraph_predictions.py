@@ -121,10 +121,10 @@ def fetch_filtered_predictions(
 
         offset += chunk_size
 
-        if not "data" in result:
+        if "data" not in result or not result["data"]:
             break
 
-        data = result["data"]["predictPredictions"]
+        data = result["data"].get("predictPredictions", [])
         if len(data) == 0:
             break
 
