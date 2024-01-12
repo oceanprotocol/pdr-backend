@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.web3_pp import Web3PP

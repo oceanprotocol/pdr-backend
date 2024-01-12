@@ -210,7 +210,9 @@ def test_inplace_mocks(monkeypatch):
 
 
 @enforce_types
-def test_tx_gas_price__and__tx_call_params():
+def test_tx_gas_price__and__tx_call_params(monkeypatch):
+    del_network_override(monkeypatch)
+
     web3_pp = mock_web3_pp("sapphire-testnet")
     eth_mock = Mock()
     eth_mock.gas_price = 12

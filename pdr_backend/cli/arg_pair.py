@@ -11,6 +11,7 @@ from pdr_backend.util.constants import CAND_USDCOINS
 #   So it converts to "-" just-in-time. That's outside this module.
 
 
+# don't use @enforce_types, causes problems
 class ArgPair:
     def __init__(
         self,
@@ -53,13 +54,6 @@ class ArgPair:
 
 
 class ArgPairs(List[ArgPair]):
-    @staticmethod
-    def from_str(pairs_str: str) -> "ArgPairs":
-        return ArgPairs(_unpack_pairs_str(pairs_str))
-
-    def __eq__(self, other):
-        return set(self) == set(other)
-
     def __init__(self, pairs: Union[List[str], List[ArgPair]]):
         if not isinstance(pairs, list):
             raise TypeError(pairs)
@@ -69,6 +63,13 @@ class ArgPairs(List[ArgPair]):
 
         pairs = [ArgPair(pair) for pair in pairs if pair]
         super().__init__(pairs)
+
+    @staticmethod
+    def from_str(pairs_str: str) -> "ArgPairs":
+        return ArgPairs(_unpack_pairs_str(pairs_str))
+
+    def __eq__(self, other):
+        return set(self) == set(other)
 
     @enforce_types
     def __str__(self) -> str:

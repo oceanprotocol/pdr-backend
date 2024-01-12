@@ -1,20 +1,21 @@
-"""Utilities for all feeds from binance etc.
-Used as inputs for models, and for predicing.
-Complementary to subgraph/subgraph_feed.py which models a prediction feed contract.
-"""
-
-from typing import List, Optional, Set, Union
+from collections import defaultdict
+from typing import List, Optional, Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
-from pdr_backend.cli.timeframe import Timeframe, Timeframes, verify_timeframes_str
+from pdr_backend.cli.timeframe import (
+    Timeframe,
+    Timeframes,
+    verify_timeframes_str,
+)
 from pdr_backend.util.signalstr import (
     signal_to_char,
+    signals_to_chars,
+    verify_signal_str,
     unpack_signalchar_str,
     verify_signalchar_str,
-    verify_signal_str,
 )
 
 
@@ -92,54 +93,6 @@ class ArgFeed:
         return feed
 
 
-class ArgFeeds(List[ArgFeed]):
-    @staticmethod
-    def from_strs(feeds_strs: List[str], do_verify: bool = True) -> "ArgFeeds":
-        if do_verify:
-            if not feeds_strs:
-                raise ValueError(feeds_strs)
-
-        feeds = []
-        for feeds_str in feeds_strs:
-            feeds += _unpack_feeds_str(feeds_str)
-
-        return ArgFeeds(feeds)
-
-    def __init__(self, feeds: List[ArgFeed]):
-        super().__init__(feeds)
-
-    @staticmethod
-    def from_str(feeds_str: str) -> "ArgFeeds":
-        return ArgFeeds(_unpack_feeds_str(feeds_str))
-
-    def __eq__(self, other):
-        intersection = set(self).intersection(set(other))
-        return len(intersection) == len(self) and len(intersection) == len(other)
-
-    @property
-    def pairs(self) -> Set[str]:
-        return set(str(feed.pair) for feed in self)
-
-    @property
-    def exchanges(self) -> Set[str]:
-        return set(str(feed.exchange) for feed in self)
-
-    @property
-    def signals(self) -> Set[str]:
-        return set(str(feed.signal) for feed in self)
-
-    def contains_combination(self, source: str, pair: str, timeframe: str) -> bool:
-        for feed in self:
-            if (
-                feed.exchange == source
-                and str(feed.pair) == pair
-                and (not feed.timeframe or str(feed.timeframe) == timeframe)
-            ):
-                return True
-
-        return False
-
-
 @enforce_types
 def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     """
@@ -210,3 +163,59 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     ]
 
     return feeds
+
+
+@enforce_types
+def _pack_feeds_str(feeds: List[ArgFeed]) -> List[str]:
+    """
+    Returns eg set([
+      "binance BTC/USDT ohl 5m",
+      "binance ETH/USDT ohlv 5m",
+      "binance DOT/USDT c 5m",
+      "kraken BTC/USDT c",
+    ])
+    """
+    # merge signals via dict
+    grouped_signals = defaultdict(set)  # [(exch,pair,timeframe)] : signals
+    for feed in feeds:
+        ept_tup = (str(feed.exchange), str(feed.pair), str(feed.timeframe))
+        if ept_tup not in grouped_signals:
+            grouped_signals[ept_tup] = {str(feed.signal)}
+        else:
+            grouped_signals[ept_tup].add(str(feed.signal))
+
+    # convert new dict to list of 4-tups. Sort for consistency
+    epts_tups = []
+    for (exch, pair, timeframe), signalset in grouped_signals.items():
+        fr_signalset = frozenset(sorted(signalset))
+        epts_tups.append((exch, pair, timeframe, fr_signalset))
+    epts_tups = sorted(epts_tups)
+
+    # then, merge pairs via dic
+    grouped_pairs = defaultdict(set)  # [(exch,timeframe,signals)] : pairs
+    for exch, pair, timeframe, fr_signalset in epts_tups:
+        ets_tup = (exch, timeframe, fr_signalset)
+        if ets_tup not in grouped_pairs:
+            grouped_pairs[ets_tup] = {pair}
+        else:
+            grouped_pairs[ets_tup].add(pair)
+
+    # convert new dict to list of 4-tups. Sort for consistency
+    etsp_tups = []
+    for (exch, timeframe, fr_signalset), pairs in grouped_pairs.items():
+        fr_pairs = frozenset(sorted(pairs))
+        etsp_tups.append((exch, timeframe, fr_signalset, fr_pairs))
+    etsp_tups = sorted(etsp_tups)
+
+    # convert to list of str
+    strs = []
+    for exch, timeframe, fr_signalset, fr_pairs in etsp_tups:
+        s = exch
+        s += " " + " ".join(sorted(fr_pairs))
+        if fr_signalset != frozenset({"None"}):
+            s += " " + signals_to_chars(list(fr_signalset))
+        if timeframe != "None":
+            s += " " + timeframe
+        strs.append(s)
+
+    return strs

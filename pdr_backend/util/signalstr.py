@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
@@ -26,6 +26,31 @@ def signal_to_char(signal_str: str) -> str:
             return c
 
     raise ValueError(signal_str)
+
+
+# don't use @enforce_types, it causes problems
+def signals_to_chars(signal_strs: Union[List[str], Set[str]]) -> str:
+    """
+    Example: Given {"high", "close", "open"}
+    Return "ohc"
+    """
+    # preconditions
+    if not signal_strs:
+        raise ValueError()
+    for signal_str in signal_strs:
+        verify_signal_str(signal_str)
+
+    # main work
+    chars = ""
+    for cand_signal in CAND_SIGNALS:
+        if cand_signal in signal_strs:
+            c = signal_to_char(cand_signal)
+            chars += c
+
+    # postconditions
+    if chars == "":
+        raise ValueError(signal_strs)
+    return chars
 
 
 # ==========================================================================
