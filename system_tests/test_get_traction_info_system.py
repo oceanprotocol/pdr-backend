@@ -4,8 +4,6 @@ from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.subgraph.prediction import Prediction
-from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.web3_config import Web3Config
 
 
