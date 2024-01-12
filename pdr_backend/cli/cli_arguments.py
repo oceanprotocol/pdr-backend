@@ -216,7 +216,7 @@ def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
-    print(f"dftool {command}: Begin")
+    print(f"pdrcli {command}: Begin")
     print("Arguments:")
 
     for arg_k, arg_v in arguments_dict.items():
