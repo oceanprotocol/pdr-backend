@@ -6,7 +6,7 @@ from eth_account import Account
 
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.fund_accounts import fund_accounts, fund_accounts_with_OCEAN
+from pdr_backend.util.fund_accounts import fund_accounts, fund_core_accounts_with_OCEAN
 
 
 @enforce_types
@@ -21,7 +21,7 @@ def test_fund_accounts_with_OCEAN(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{path}.fund_accounts", mock_f)
 
-    fund_accounts_with_OCEAN(web3_pp)
+    fund_core_accounts_with_OCEAN(web3_pp)
     mock_f.assert_called()
 
 
