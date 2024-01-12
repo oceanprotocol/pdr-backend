@@ -13,16 +13,13 @@ from pdr_backend.analytics.predictoor_stats import (
 )
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
 def get_traction_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, pq_dir: str
 ):
-    lake_ss = ppss.lake_ss
-    lake_ss.d["st_timestr"] = start_timestr
-    lake_ss.d["fin_timestr"] = end_timestr
-
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
@@ -31,6 +28,12 @@ def get_traction_info_main(
         return
 
     predictions_df = gql_dfs["pdr_predictions"]
+
+    # filter by start and end dates
+    predictions_df = predictions_df.filter(
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr))
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr))
+    )
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions_df)

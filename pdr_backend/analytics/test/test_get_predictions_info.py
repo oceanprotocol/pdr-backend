@@ -30,7 +30,12 @@ def test_get_predictions_info_main_mainnet(
     with patch(f"{PATH}.get_feed_summary_stats", mock_getstats), patch(
         f"{PATH}.GQLDataFactory.get_gql_dfs", mock_getPolars
     ):
-        get_predictions_info_main(ppss, "0x18f54cc21b7a2fdd011bea06bba7801b280e3151")
+        get_predictions_info_main(
+            ppss,
+            "2023-11-02",
+            "2023-11-05",
+            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+        )
 
         assert mock_getPolars.call_count == 1
         assert mock_getstats.call_count == 1
@@ -47,7 +52,12 @@ def test_get_predictions_info_empty(tmpdir, capfd):
     with patch(f"{PATH}.get_feed_summary_stats", mock_getstats), patch(
         f"{PATH}.GQLDataFactory.get_gql_dfs", mock_getPolars
     ):
-        get_predictions_info_main(ppss, "0x18f54cc21b7a2fdd011bea06bba7801b280e3151")
+        get_predictions_info_main(
+            ppss,
+            "2023-11-02",
+            "2023-11-05",
+            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+        )
 
     assert (
         "No records found. Please adjust start and end times" in capfd.readouterr().out

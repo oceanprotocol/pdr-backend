@@ -19,8 +19,8 @@ Main tools:
 Utilities:
   pdr help
   pdr <cmd> -h
-  pdr get_predictoors_info PQDIR PPSS_FILE NETWORK --PDRS
-  pdr get_predictions_info PQDIR PPSS_FILE NETWORK --FEEDS
+  pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
+  pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
 
@@ -167,6 +167,8 @@ class _ArgParser_PPSS_NETWORK_LOOKBACK(
 @enforce_types
 class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
     CustomArgParser,
+    ST_Mixin,
+    END_Mixin,
     PQDIR_Mixin,
     PPSS_Mixin,
     NETWORK_Mixin,
@@ -175,12 +177,16 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["PQDIR", "PPSS", "NETWORK", "PDRS"])
+        self.add_arguments_bulk(
+            command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK", "PDRS"]
+        )
 
 
 @enforce_types
 class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
     CustomArgParser,
+    ST_Mixin,
+    END_Mixin,
     PQDIR_Mixin,
     PPSS_Mixin,
     NETWORK_Mixin,
@@ -189,7 +195,9 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["PQDIR", "PPSS", "NETWORK", "FEEDS"])
+        self.add_arguments_bulk(
+            command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK", "FEEDS"]
+        )
 
 
 # ========================================================================

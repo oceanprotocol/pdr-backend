@@ -28,7 +28,12 @@ def test_get_predictoors_info_main_mainnet(
     with patch(f"{PATH}.get_predictoor_summary_stats", mock_getstats), patch(
         f"{PATH}.GQLDataFactory.get_gql_dfs", mock_getPolars
     ):
-        get_predictoors_info_main(ppss, "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd")
+        get_predictoors_info_main(
+            ppss,
+            "2023-11-02",
+            "2023-11-05",
+            "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
+        )
 
         assert mock_getPolars.call_count == 1
         assert mock_getstats.call_count == 1
