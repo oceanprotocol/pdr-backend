@@ -1,4 +1,5 @@
 import pytest
+import re
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -72,5 +73,7 @@ def test_aimodel_ss_unhappy1():
     }
 
     # it should complain that it's missing a signal in input feeds
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        AssertionError, match=re.escape("Missing attributes ['signal'] for some feeds")
+    ):
         AimodelSS(d)
