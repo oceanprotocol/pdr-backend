@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
+from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
@@ -57,6 +58,7 @@ def test_web3_pp__yaml_dict(monkeypatch):
     assert pp.rpc_url == "rpc url 1"
     assert pp.subgraph_url == "subgraph url 1"
     assert pp.owner_addrs == "0xOwner1"
+    assert isinstance(pp.account, LocalAccount)
 
     # network2
     pp2 = Web3PP(_D, "network2")

@@ -53,6 +53,8 @@ def test_lake_ss_basic():
     # test str
     assert "LakeSS" in str(ss)
 
+    assert isinstance(ss.copy(), LakeSS)
+
 
 @enforce_types
 def test_lake_ss_now():

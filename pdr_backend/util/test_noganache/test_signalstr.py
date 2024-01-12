@@ -27,6 +27,12 @@ def test_single_conversions():
         assert char_to_signal(char) == signal
         assert signal_to_char(signal) == char
 
+    with pytest.raises(ValueError):
+        signal_to_char("xyz")
+
+    with pytest.raises(ValueError):
+        char_to_signal("x")
+
 
 @enforce_types
 def test_multi_conversions():

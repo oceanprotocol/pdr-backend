@@ -1,5 +1,6 @@
 import copy
 import os
+import pytest
 
 from enforce_typing import enforce_types
 
@@ -19,6 +20,21 @@ def test_sim_ss():
 
     # str
     assert "SimSS" in str(ss)
+
+
+@enforce_types
+def test_sim_ss_bad():
+    bad = copy.deepcopy(_D)
+    bad["test_n"] = -3
+
+    with pytest.raises(ValueError):
+        SimSS(bad)
+
+    bad = copy.deepcopy(_D)
+    bad["test_n"] = "lit"
+
+    with pytest.raises(ValueError):
+        SimSS(bad)
 
 
 @enforce_types

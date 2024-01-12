@@ -55,18 +55,20 @@ def all_nan(
     x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
 ) -> bool:
     """Returns True if all entries in x have a nan _or_ a None"""
-    if type(x) == np.ndarray:
+    if isinstance(x, np.ndarray):
         x = np.array(x, dtype=float)
         return np.isnan(x).all()
-    if type(x) == pd.Series:
+
+    if isinstance(x, pd.Series):
         x = x.fillna(value=np.nan, inplace=False)
         return x.isnull().all()
-    if type(x) == pd.DataFrame:
+
+    if isinstance(x, pd.DataFrame):
         x = x.fillna(value=np.nan)
         return x.isnull().all().all()
-    if type(x) in [pl.Series, pl.DataFrame]:
-        return all_nan(x.to_numpy())  # type: ignore[union-attr]
-    raise ValueError(f"Can't handle type {type(x)}")
+
+    # pl.Series or pl.DataFrame
+    return all_nan(x.to_numpy())  # type: ignore[union-attr]
 
 
 @enforce_types
@@ -74,18 +76,20 @@ def has_nan(
     x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
 ) -> bool:
     """Returns True if any entry in x has a nan _or_ a None"""
-    if type(x) == np.ndarray:
+    if isinstance(x, np.ndarray):
         has_None = (x == None).any()  # pylint: disable=singleton-comparison
         return has_None or np.isnan(np.min(x))
-    if type(x) in [pd.DataFrame, pd.Series]:
-        return x.isnull().values.any()  # type: ignore[union-attr]
-    if type(x) == pl.Series:
+
+    if isinstance(x, pl.Series):
         has_None = x.has_validity()
         return has_None or sum(x.is_nan()) > 0  # type: ignore[union-attr]
-    if type(x) == pl.DataFrame:
+
+    if isinstance(x, pl.DataFrame):
         has_None = any(col.has_validity() for col in x)
         return has_None or sum(sum(x).is_nan()) > 0  # type: ignore[union-attr]
-    raise ValueError(f"Can't handle type {type(x)}")
+
+    # pd.Series or pd.DataFrame
+    return x.isnull().values.any()  # type: ignore[union-attr]
 
 
 @enforce_types

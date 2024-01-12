@@ -46,8 +46,10 @@ def get_addresses(web3_pp) -> Union[dict, None]:
 
     if "barge" in web3_pp.network:  # eg "barge-pytest"
         return d["development"]
+
     if web3_pp.network in d:  # eg "development", "oasis_sapphire"
         return d[web3_pp.network]
+
     return None
 
 
@@ -88,8 +90,10 @@ def get_contract_filename(contract_name: str, address_file: Union[str, None]):
     # didn't find locally, so use use artifacts lib
     path = os.path.join(os.path.dirname(artifacts.__file__), "", contract_basename)
     path = Path(path).expanduser().resolve()
+
     if not path.exists():
         raise TypeError(f"Contract '{contract_name}' not found in artifacts.")
+
     return path
 
 

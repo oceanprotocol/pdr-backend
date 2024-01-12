@@ -154,6 +154,19 @@ def test_trueval_agent_take_step(agent, slot):
         assert call_args[0].feed == slot.feed
 
 
+@enforce_types
+def test_trueval_agent_get_batch(agent, slot):
+    with patch.object(agent.ppss.web3_pp, "get_pending_slots", return_value=[slot]):
+        batch = agent.get_batch()
+
+    assert batch == [slot]
+
+    with patch.object(agent.ppss.web3_pp, "get_pending_slots", return_value=[]):
+        batch = agent.get_batch()
+
+    assert batch == []
+
+
 # ----------------------------------------------
 # Fixtures
 

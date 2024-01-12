@@ -65,8 +65,9 @@ class DFBuyerAgent:
     def run(self, testing: bool = False):
         if not self.feeds:
             return
+
         while True:
-            ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+            ts = self.ppss.web3_pp.web3_config.get_current_timestamp()
             self.take_step(ts)
 
             if testing:
@@ -75,6 +76,7 @@ class DFBuyerAgent:
     def take_step(self, ts: int):
         if not self.feeds:
             return
+
         print("Taking step for timestamp:", ts)
         wait_until_subgraph_syncs(
             self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
@@ -107,17 +109,18 @@ class DFBuyerAgent:
             print("Sleeping for a minute and trying again")
             time.sleep(60)
             return
-        self.fail_counter = 0
 
+        self.fail_counter = 0
+        self._sleep_until_next_consume_interval()
+
+    def _sleep_until_next_consume_interval(self):
         # sleep until next consume interval
-        ts = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
-        interval_start = (
-            int(ts / self.ppss.dfbuyer_ss.consume_interval_seconds)
-            * self.ppss.dfbuyer_ss.consume_interval_seconds
-        )
-        seconds_left = (
-            (interval_start + self.ppss.dfbuyer_ss.consume_interval_seconds) - ts + 60
-        )
+        ts = self.ppss.web3_pp.web3_config.get_current_timestamp()
+        consume_interval_seconds = self.ppss.dfbuyer_ss.consume_interval_seconds
+
+        interval_start = int(ts / consume_interval_seconds) * consume_interval_seconds
+        seconds_left = (interval_start + consume_interval_seconds) - ts + 60
+
         print(
             f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
         )
@@ -135,14 +138,11 @@ class DFBuyerAgent:
         actual_consumes = self._get_consume_so_far(ts)
         expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
 
-        missing_consumes_amt: Dict[str, float] = {}
-
-        for address in self.feeds:
-            missing = expected_consume_per_feed - actual_consumes[address]
-            if missing > 0:
-                missing_consumes_amt[address] = missing
-
-        return missing_consumes_amt
+        return {
+            address: expected_consume_per_feed - actual_consumes[address]
+            for address in self.feeds
+            if expected_consume_per_feed > actual_consumes[address]
+        }
 
     def _prepare_batches(
         self, consume_times: Dict[str, int]
@@ -153,6 +153,7 @@ class DFBuyerAgent:
         batches: List[Tuple[List[str], List[int]]] = []
         addresses_to_consume: List[str] = []
         times_to_consume: List[int] = []
+
         for address, times in consume_times.items():
             while times > 0:
                 current_times_to_consume = min(
@@ -172,6 +173,7 @@ class DFBuyerAgent:
                     batches.append((addresses_to_consume, times_to_consume))
                     addresses_to_consume = []
                     times_to_consume = []
+
         return batches
 
     def _consume(self, addresses_to_consume, times_to_consume):
@@ -184,17 +186,21 @@ class DFBuyerAgent:
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()
+
                 if tx["status"] != 1:
                     print(f"     Tx reverted: {tx_hash}")
                     return False
+
                 print(f"     Tx sent: {tx_hash}")
                 return True
             except Exception as e:
                 print(f"     Attempt {i+1} failed with error: {e}")
                 time.sleep(1)
+
                 if i == 4:
                     print("     Failed to consume contracts after 5 attempts.")
                     raise
+
         return False
 
     def _consume_batch(self, addresses_to_consume, times_to_consume) -> bool:
@@ -213,13 +219,16 @@ class DFBuyerAgent:
         for address, times in zip(addresses_to_consume, times_to_consume):
             if self._consume([address], [times]):
                 continue  # If successful, continue to the next address
+
             # If individual consumption fails, split the consumption into two parts
             half_time = times // 2
+
             if half_time > 0:
                 print(f"          Consuming {address} for {half_time} times")
                 if not self._consume([address], [half_time]):
                     print("Transaction reverted again, please adjust batch size")
                     one_or_more_failed = True
+
                 remaining_times = times - half_time
                 if remaining_times > 0:
                     print(f"          Consuming {address} for {remaining_times} times")
@@ -229,24 +238,27 @@ class DFBuyerAgent:
             else:
                 print(f"          Unable to consume {address} for {times} times")
                 one_or_more_failed = True
+
         return one_or_more_failed
 
     def _batch_txs(self, consume_times: Dict[str, int]) -> bool:
         batches = self._prepare_batches(consume_times)
         print(f"Processing {len(batches)} batches...")
-        one_or_more_failed = False
+
+        failures = 0
+
         for addresses_to_consume, times_to_consume in batches:
-            failed = self._consume_batch(addresses_to_consume, times_to_consume)
-            if failed:
-                one_or_more_failed = True
-        return one_or_more_failed
+            failures += int(self._consume_batch(addresses_to_consume, times_to_consume))
+
+        return bool(failures)
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
-        prices: Dict[str, float] = {}
-        for address in contract_addresses:
-            rate_wei = PredictoorContract(self.ppss.web3_pp, address).get_price()
-            prices[address] = from_wei(rate_wei)
-        return prices
+        return {
+            address: from_wei(
+                PredictoorContract(self.ppss.web3_pp, address).get_price()
+            )
+            for address in contract_addresses
+        }
 
     def _get_consume_so_far(self, ts: int) -> Dict[str, float]:
         week_start = (math.floor(ts / WEEK)) * WEEK
@@ -259,15 +271,12 @@ class DFBuyerAgent:
         return consume_so_far
 
     def _get_expected_amount_per_feed(self, ts: int):
-        amount_per_feed_per_interval = self.ppss.dfbuyer_ss.amount_per_interval / len(
-            self.feeds
-        )
+        ss = self.ppss.dfbuyer_ss
+        amount_per_feed_per_interval = ss.amount_per_interval / len(self.feeds)
         week_start = (math.floor(ts / WEEK)) * WEEK
         time_passed = ts - week_start
 
         # find out how many intervals has passed
-        n_intervals = (
-            int(time_passed / self.ppss.dfbuyer_ss.consume_interval_seconds) + 1
-        )
+        n_intervals = int(time_passed / ss.consume_interval_seconds) + 1
 
         return n_intervals * amount_per_feed_per_interval
