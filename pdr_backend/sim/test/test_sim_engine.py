@@ -1,4 +1,5 @@
 import os
+from unittest import mock
 
 from enforce_typing import enforce_types
 
@@ -46,5 +47,6 @@ def test_sim_engine(tmpdir):
         }
     )
 
-    sim_engine = SimEngine(ppss)
-    sim_engine.run()
+    with mock.patch("pdr_backend.sim.sim_engine.plt.show"):
+        sim_engine = SimEngine(ppss)
+        sim_engine.run()
