@@ -290,13 +290,13 @@ def test_do_sim(monkeypatch):
 
 @enforce_types
 def test_do_main(monkeypatch, capfd):
-    with patch("sys.argv", ["pdrcli", "help"]):
+    with patch("sys.argv", ["pdr", "help"]):
         with pytest.raises(SystemExit):
             _do_main()
 
     assert "Predictoor tool" in capfd.readouterr().out
 
-    with patch("sys.argv", ["pdrcli", "undefined_function"]):
+    with patch("sys.argv", ["pdr", "undefined_function"]):
         with pytest.raises(SystemExit):
             _do_main()
 
@@ -304,7 +304,7 @@ def test_do_main(monkeypatch, capfd):
 
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
-    with patch("sys.argv", ["pdrcli", "sim", "ppss.yaml"]):
+    with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
         _do_main()
 
     assert mock_f.called
