@@ -30,7 +30,7 @@ def test_dfbuyer_agent(mock_fund_accounts, mock_publish_asset):
             cli_module._do_main()
 
             # Verifying outputs
-            mock_print.assert_any_call("dftool publisher: Begin")
+            mock_print.assert_any_call("pdr publisher: Begin")
             mock_print.assert_any_call("Arguments:")
             mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
             mock_print.assert_any_call("NETWORK=development")

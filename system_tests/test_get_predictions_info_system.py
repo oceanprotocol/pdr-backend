@@ -65,7 +65,7 @@ def test_topup(
             cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("dftool get_predictions_info: Begin")
+        mock_print.assert_any_call("pdr get_predictions_info: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")

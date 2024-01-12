@@ -56,7 +56,7 @@ def test_topup(mock_print_stats, mock_check_dfbuyer):
 
         addresses = get_opf_addresses("sapphire-mainnet")
         # Verifying outputs
-        mock_print.assert_any_call("dftool check_network: Begin")
+        mock_print.assert_any_call("pdr check_network: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")

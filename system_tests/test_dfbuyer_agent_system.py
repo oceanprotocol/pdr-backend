@@ -79,7 +79,7 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
             cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("dftool dfbuyer: Begin")
+        mock_print.assert_any_call("pdr dfbuyer: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")

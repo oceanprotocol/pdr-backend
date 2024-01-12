@@ -67,7 +67,7 @@ def test_trueval_batch(
             cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("dftool trueval: Begin")
+        mock_print.assert_any_call("pdr trueval: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")

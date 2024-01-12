@@ -51,7 +51,7 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs):
             cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("dftool claim_OCEAN: Begin")
+        mock_print.assert_any_call("pdr claim_OCEAN: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("Starting payout")
