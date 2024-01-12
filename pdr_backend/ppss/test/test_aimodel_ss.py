@@ -1,7 +1,8 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
 

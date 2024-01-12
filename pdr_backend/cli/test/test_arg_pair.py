@@ -11,6 +11,28 @@ from pdr_backend.cli.arg_pair import (
 
 
 @enforce_types
+def test_arg_pair_main():
+    # basic tests
+    p1 = ArgPair("BTC/USDT")
+    p2 = ArgPair(base_str="BTC", quote_str="USDT")
+    assert p1.pair_str == p2.pair_str == "BTC/USDT"
+    assert p1.base_str == p2.base_str == "BTC"
+    assert p1.quote_str == p2.quote_str == "USDT"
+
+    # test __eq__
+    assert p1 == p2
+    assert p1 == "BTC/USDT"
+
+    assert p1 != ArgPair("ETH/USDT")
+    assert p1 != "ETH/USDT"
+    assert p1 != 3
+
+    # test __str__
+    assert str(p1) == "BTC/USDT"
+    assert str(p2) == "BTC/USDT"
+
+
+@enforce_types
 def test_unpack_pair_str():
     assert ArgPair("BTC/USDT").base_str == "BTC"
     assert ArgPair("BTC/USDT").quote_str == "USDT"
