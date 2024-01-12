@@ -36,6 +36,6 @@ def test_print_args(capfd):
     print_args(parsed_args)
 
     out, _ = capfd.readouterr()
-    assert "dftool sim: Begin" in out
+    assert "pdr sim: Begin" in out
     assert "Arguments:" in out
     assert "PPSS_FILE=ppss.yaml" in out
