@@ -47,9 +47,7 @@ def test_topup(
     mock_web3_config.w3 = Mock()
     mock_web3_pp.web3_config = mock_web3_config
 
-    with patch(
-        "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
-    ):
+    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp):
         # Mock sys.argv
         sys.argv = [
             "pdr",

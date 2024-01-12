@@ -29,9 +29,7 @@ def test_topup(
     mock_web3_config.w3.owner_address = "0xowner"
     mock_web3_pp.web3_config = mock_web3_config
 
-    with patch(
-        "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
-    ):
+    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp):
         # Mock sys.argv
         sys.argv = [
             "pdr",
@@ -51,11 +49,18 @@ def test_topup(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("Get predictions data across many feeds and timeframes.")
-        mock_print.assert_any_call("  Data start: timestamp=1701388800000, dt=2023-12-01_00:00:00.000")
-        mock_print.assert_any_call("  Data fin: timestamp=1703980800000, dt=2023-12-31_00:00:00.000")
-        mock_print.assert_any_call("Chart created:", "./dir/plots/daily_unique_predictoors.png")
-
+        mock_print.assert_any_call(
+            "Get predictions data across many feeds and timeframes."
+        )
+        mock_print.assert_any_call(
+            "  Data start: timestamp=1701388800000, dt=2023-12-01_00:00:00.000"
+        )
+        mock_print.assert_any_call(
+            "  Data fin: timestamp=1703980800000, dt=2023-12-31_00:00:00.000"
+        )
+        mock_print.assert_any_call(
+            "Chart created:", "./dir/plots/daily_unique_predictoors.png"
+        )
 
         # Additional assertions
         mock_get_all_contract_ids_by_owner.assert_called()
