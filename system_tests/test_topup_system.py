@@ -8,9 +8,7 @@ from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.web3_config import Web3Config
 
 
-@patch("pdr_backend.cli.cli_module.fund_accounts_with_OCEAN")
-@patch("pdr_backend.publisher.publish_assets.publish_asset")
-def test_topup(mock_fund_accounts, mock_publish_asset):
+def test_topup():
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
