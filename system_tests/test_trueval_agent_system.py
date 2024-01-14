@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.slot import Slot
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
@@ -79,3 +78,5 @@ def test_trueval_batch(
 
         # Additional assertions
         mock_web3_pp.get_pending_slots.assert_called()
+        mock_time_sleep.assert_called()
+        mock_process.assert_called()

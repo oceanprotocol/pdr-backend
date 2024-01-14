@@ -57,9 +57,9 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs):
         mock_print.assert_any_call("Starting payout")
         mock_print.assert_any_call("Finding pending payouts")
         mock_print.assert_any_call(f"Found {number_of_slots} slots")
-        mock_print.assert_any_call(f"Claiming payouts for 0x1")
-        mock_print.assert_any_call(f"Claiming payouts for 0x2")
-        mock_print.assert_any_call(f"Payout done")
+        mock_print.assert_any_call("Claiming payouts for 0x1")
+        mock_print.assert_any_call("Claiming payouts for 0x2")
+        mock_print.assert_any_call("Payout done")
 
         # Additional assertions
         mock_query_pending_payouts.assert_called_with(

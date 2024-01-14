@@ -1,40 +1,18 @@
 import sys
-
 from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
-from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
 
 
-@patch("pdr_backend.payout.payout.wait_until_subgraph_syncs")
-@patch("pdr_backend.trader.base_trader_agent.time.sleep")
-@patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
-def test_trader_approach_1_and_2(
-    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_run, mock_predictoor_contract
-):
-    _ = mock_wait_until_subgraph_syncs
-    mock_web3_pp = MagicMock(spec=Web3PP)
+def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
         "http://localhost:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
     )
-    feeds = {
-        "0x1": SubgraphFeed(
-            "Feed: binance | BTC/USDT | 5m",
-            "0x1",
-            "BTC",
-            100,
-            300,
-            "0xf",
-            "BTC/USDT",
-            "5m",
-            "binance",
-        )
-    }
     mock_web3_pp.query_feed_contracts.return_value = feeds
 
     mock_web3_config = Mock(spec=Web3Config)
@@ -53,6 +31,20 @@ def test_trader_approach_1_and_2(
     mock_trader_ss.get_feed_from_candidates.return_value = feeds["0x1"]
 
     mock_web3_pp.get_contracts.return_value = {"0x1": mock_predictoor_contract}
+
+    return mock_web3_pp, mock_token, mock_trader_ss
+
+
+@patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
+@patch("pdr_backend.trader.base_trader_agent.time.sleep")
+def test_trader_approach_1(
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds
+):
+    mock_web3_pp = MagicMock(spec=Web3PP)
+
+    mock_web3_pp, mock_token, mock_trader_ss = setup_mock_objects(
+        mock_web3_pp, mock_predictoor_contract, mock_feeds
+    )
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.contract.token.Token", return_value=mock_token
@@ -79,8 +71,31 @@ def test_trader_approach_1_and_2(
 
             # Additional assertions
             mock_web3_pp.query_feed_contracts.assert_called()
-            mock_trader_ss.get_feed_from_candidates.assert_called_with(feeds)
+            mock_trader_ss.get_feed_from_candidates.assert_called_with(mock_feeds)
+            mock_time_sleep.assert_called()
+            mock_run.assert_called()
 
+
+@patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
+@patch("pdr_backend.trader.base_trader_agent.time.sleep")
+def test_trader_approach_2(
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds
+):
+    mock_web3_pp = MagicMock(spec=Web3PP)
+
+    mock_web3_pp, mock_token, mock_trader_ss = setup_mock_objects(
+        mock_web3_pp, mock_predictoor_contract, mock_feeds
+    )
+
+    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
+        "pdr_backend.contract.token.Token", return_value=mock_token
+    ), patch("pdr_backend.payout.payout.WrappedToken", return_value=mock_token), patch(
+        "pdr_backend.payout.payout.PredictoorContract",
+        return_value=mock_predictoor_contract,
+    ), patch(
+        "pdr_backend.ppss.ppss.TraderSS",
+        return_value=mock_trader_ss,
+    ):
         # Mock sys.argv approach 2
         sys.argv = ["pdr", "trader", "2", "ppss.yaml", "development"]
 
@@ -97,4 +112,6 @@ def test_trader_approach_1_and_2(
 
             # Additional assertions
             mock_web3_pp.query_feed_contracts.assert_called()
-            mock_trader_ss.get_feed_from_candidates.assert_called_with(feeds)
+            mock_trader_ss.get_feed_from_candidates.assert_called_with(mock_feeds)
+            mock_time_sleep.assert_called()
+            mock_run.assert_called()
