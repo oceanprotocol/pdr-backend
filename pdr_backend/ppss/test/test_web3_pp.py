@@ -147,6 +147,7 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
 # =========================================================================
 # test utilities for testing
 
+
 @enforce_types
 def test_mock_web3_pp(monkeypatch):
     web3_pp = mock_web3_pp("development")
