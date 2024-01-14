@@ -9,7 +9,9 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.get_traction_info.plot_slot_daily_statistics")
 @patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
+@patch("pdr_backend.analytics.predictoor_stats.plt.savefig")
 def test_topup(
+    mock_savefig,
     mock_get_all_contract_ids_by_owner,
     mock_plot_slot_daily_statistics,
 ):
@@ -63,3 +65,4 @@ def test_topup(
         # Additional assertions
         mock_get_all_contract_ids_by_owner.assert_called()
         mock_plot_slot_daily_statistics.assert_called()
+        mock_savefig.assert_called_with("./dir/plots/daily_unique_predictoors.png")
