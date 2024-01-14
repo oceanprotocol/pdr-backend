@@ -14,7 +14,7 @@ from pdr_backend.util.web3_config import Web3Config
 @patch("pdr_backend.trader.base_trader_agent.time.sleep")
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
 def test_trader_approach_1_and_2(
-    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_run
+    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_run, mock_predictoor_contract
 ):
     _ = mock_wait_until_subgraph_syncs
     mock_web3_pp = MagicMock(spec=Web3PP)
@@ -48,10 +48,6 @@ def test_trader_approach_1_and_2(
     mock_token = MagicMock()
     mock_token.balanceOf.return_value = 100 * 1e18
 
-    mock_predictoor_contract = Mock(spec=PredictoorContract)
-    mock_predictoor_contract.payout_multiple.return_value = None
-    mock_predictoor_contract.get_agg_predval.return_value = (12, 23)
-
     mock_trader_ss = Mock()
     mock_trader_ss.min_buffer = 1
     mock_trader_ss.get_feed_from_candidates.return_value = feeds["0x1"]
@@ -74,7 +70,7 @@ def test_trader_approach_1_and_2(
             cli_module._do_main()
 
             # Verifying outputs
-            mock_print.assert_any_call("dftool trader: Begin")
+            mock_print.assert_any_call("pdr trader: Begin")
             mock_print.assert_any_call("Arguments:")
             mock_print.assert_any_call("APPROACH=1")
             mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
@@ -92,7 +88,7 @@ def test_trader_approach_1_and_2(
             cli_module._do_main()
 
             # Verifying outputs
-            mock_print.assert_any_call("dftool trader: Begin")
+            mock_print.assert_any_call("pdr trader: Begin")
             mock_print.assert_any_call("Arguments:")
             mock_print.assert_any_call("APPROACH=2")
             mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
