@@ -218,7 +218,7 @@ Let's configure the yaml file. In console:
 cp ppss.yaml my_ppss.yaml
 ```
 
-In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
+In `my_ppss.yaml` file, in `web3_pp` ->  `development` section:
 - change the urls and addresses as needed to reflect your VPS
 - including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-predictoor-bot.address.json`, in `"development"` -> `"Ocean"` entry.)
 
@@ -226,7 +226,7 @@ In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
-pdr predictoor 3 my_ppss.yaml barge-predictoor-bot
+pdr predictoor 3 my_ppss.yaml development
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
