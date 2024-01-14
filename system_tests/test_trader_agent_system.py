@@ -34,7 +34,9 @@ def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):
     return mock_web3_pp, mock_token, mock_trader_ss
 
 
-def _test_trader(mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, approach):
+def _test_trader(
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, approach
+):
     mock_web3_pp = MagicMock(spec=Web3PP)
 
     mock_web3_pp, mock_token, mock_trader_ss = setup_mock_objects(
