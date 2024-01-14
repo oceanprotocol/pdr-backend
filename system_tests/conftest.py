@@ -39,8 +39,8 @@ def mock_feeds():
 
 @pytest.fixture(scope="session")
 def mock_predictoor_contract():
-    mock_predictoor_contract = Mock(spec=PredictoorContract)
-    mock_predictoor_contract.payout_multiple.return_value = None
-    mock_predictoor_contract.get_agg_predval.return_value = (12, 23)
-    mock_predictoor_contract.get_current_epoch.return_value = 100
-    return mock_predictoor_contract
+    mock_contract = Mock(spec=PredictoorContract)
+    mock_contract.payout_multiple.return_value = None
+    mock_contract.get_agg_predval.return_value = (12, 23)
+    mock_contract.get_current_epoch.return_value = 100
+    return mock_contract

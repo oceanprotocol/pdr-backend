@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
 

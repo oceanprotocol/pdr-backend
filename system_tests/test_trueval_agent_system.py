@@ -15,7 +15,7 @@ from pdr_backend.util.web3_config import Web3Config
 @patch("pdr_backend.trueval.trueval_agent.time.sleep")
 @patch("pdr_backend.trueval.trueval_agent.TruevalAgent.process_trueval_slot")
 def test_trueval_batch(
-    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_process, web3_pp
+    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_process
 ):
     _ = mock_wait_until_subgraph_syncs
     mock_web3_pp = MagicMock(spec=Web3PP)

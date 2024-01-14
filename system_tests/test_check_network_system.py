@@ -68,6 +68,7 @@ def test_topup(mock_print_stats, mock_check_dfbuyer):
         for key in addresses.values():
             if key.startswith("pred"):
                 mock_print.assert_any_call(
+                    # pylint: disable=line-too-long
                     f"{key}: OCEAN: 5.00 WARNING LOW OCEAN BALANCE!, Native: 0.00 WARNING LOW NATIVE BALANCE!"
                 )
 
