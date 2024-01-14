@@ -45,6 +45,7 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
     mock_web3_config.w3.eth.block_number = 100
     mock_web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
     mock_web3_config.w3.to_checksum_address.return_value = "0x1"
+    mock_web3_config.get_current_timestamp.return_value = 100
 
     mock_web3_pp.web3_config = mock_web3_config
 
