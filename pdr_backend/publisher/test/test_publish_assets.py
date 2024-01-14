@@ -61,9 +61,6 @@ def _test_sapphire(network, monkeypatch):
 
 
 def _setup_and_publish(network, monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
-
     web3_pp = mock_web3_pp(network)
     publisher_ss = mock_publisher_ss()
 

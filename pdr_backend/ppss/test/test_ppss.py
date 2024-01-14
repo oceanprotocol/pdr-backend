@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_feed_ppss, mock_ppss
-from pdr_backend.ppss.web3_pp import del_network_override
 
 
 @enforce_types
@@ -57,8 +56,6 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
 
 @enforce_types
 def test_mock_feed_ppss(monkeypatch):
-    del_network_override(monkeypatch)
-
     feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT", "sapphire-mainnet")
 
     assert feed.timeframe == "5m"
@@ -73,14 +70,12 @@ def test_mock_feed_ppss(monkeypatch):
 
 @enforce_types
 def test_mock_ppss_simple(monkeypatch):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet")
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_default_network_development(monkeypatch):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"])
     assert ppss.web3_pp.network == "development"
 
@@ -98,7 +93,6 @@ def test_mock_ppss_default_network_development(monkeypatch):
 )
 def test_mock_ppss_onefeed1(feed_str, monkeypatch):
     """Thorough test that the 1-feed arg is used everywhere"""
-    del_network_override(monkeypatch)
 
     ppss = mock_ppss([feed_str], "sapphire-mainnet")
 
@@ -115,7 +109,6 @@ def test_mock_ppss_onefeed1(feed_str, monkeypatch):
 @enforce_types
 def test_mock_ppss_manyfeed(monkeypatch):
     """Thorough test that the many-feed arg is used everywhere"""
-    del_network_override(monkeypatch)
 
     feed_strs = ["binance BTC/USDT ETH/USDT c 5m", "kraken BTC/USDT c 5m"]
     feed_str = "binance BTC/USDT c 5m"  # must be the first in feed_strs
@@ -133,8 +126,6 @@ def test_mock_ppss_manyfeed(monkeypatch):
 
 @enforce_types
 def test_verify_feed_dependencies(monkeypatch):
-    del_network_override(monkeypatch)
-
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m", "kraken ETH/USDT c 5m"],
         "sapphire-mainnet",

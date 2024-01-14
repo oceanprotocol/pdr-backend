@@ -6,7 +6,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -24,7 +23,6 @@ def test_update_gql1(
     sample_daily_predictions,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
@@ -45,7 +43,6 @@ def test_update_gql2(
     sample_daily_predictions,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
@@ -66,7 +63,6 @@ def test_update_gql3(
     sample_daily_predictions,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_predictions,
@@ -87,7 +83,6 @@ def test_update_gql_iteratively(
     sample_daily_predictions,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
 
     iterations = [
@@ -197,7 +192,6 @@ def test_load_and_verify_schema(
     sample_daily_predictions,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
 
@@ -247,7 +241,6 @@ def test_get_gql_dfs_calls(
     monkeypatch,
 ):
     """Test core DataFactory functions are being called"""
-    del_network_override(monkeypatch)
 
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -314,7 +307,6 @@ def test_load_missing_parquet(
     monkeypatch,
 ):
     """Test core DataFactory functions are being called"""
-    del_network_override(monkeypatch)
 
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     mock_fetch_filtered_subscriptions.return_value = []
