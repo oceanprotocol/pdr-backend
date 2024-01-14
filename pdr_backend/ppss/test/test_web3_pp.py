@@ -38,13 +38,13 @@ _D = {
 
 
 @enforce_types
-def test_web3_pp__bad_network(monkeypatch):
+def test_web3_pp__bad_network():
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
 
 
 @enforce_types
-def test_web3_pp__yaml_dict(monkeypatch):
+def test_web3_pp__yaml_dict():
     pp = Web3PP(_D, "network1")
 
     assert pp.network == "network1"
@@ -149,7 +149,7 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
 
 
 @enforce_types
-def test_mock_web3_pp(monkeypatch):
+def test_mock_web3_pp():
     web3_pp = mock_web3_pp("development")
     assert isinstance(web3_pp, Web3PP)
     assert web3_pp.network == "development"
@@ -159,7 +159,7 @@ def test_mock_web3_pp(monkeypatch):
 
 
 @enforce_types
-def test_inplace_mocks(monkeypatch):
+def test_inplace_mocks():
     web3_pp = mock_web3_pp("development")
     feed = mock_feed("5m", "binance", "BTC/USDT")
 
@@ -172,7 +172,7 @@ def test_inplace_mocks(monkeypatch):
 
 
 @enforce_types
-def test_tx_gas_price__and__tx_call_params(monkeypatch):
+def test_tx_gas_price__and__tx_call_params():
     web3_pp = mock_web3_pp("sapphire-testnet")
     eth_mock = Mock()
     eth_mock.gas_price = 12

@@ -21,7 +21,6 @@ def test_update_gql1(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
@@ -41,7 +40,6 @@ def test_update_gql2(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
@@ -61,7 +59,6 @@ def test_update_gql3(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
@@ -81,7 +78,6 @@ def test_update_gql_iteratively(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
 
@@ -190,7 +186,6 @@ def test_load_and_verify_schema(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -238,7 +233,6 @@ def test_get_gql_dfs_calls(
     mock_get_all_contract_ids_by_owner,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     """Test core DataFactory functions are being called"""
 
@@ -304,7 +298,6 @@ def test_load_missing_parquet(
     mock_fetch_filtered_predictions,
     tmpdir,
     sample_daily_predictions,
-    monkeypatch,
 ):
     """Test core DataFactory functions are being called"""
 

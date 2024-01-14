@@ -19,7 +19,6 @@ def test_update_gql1(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
@@ -39,7 +38,6 @@ def test_update_gql_iteratively(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     iterations = [
@@ -149,7 +147,6 @@ def test_load_and_verify_schema(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     st_timestr = "2023-11-01_0:00"

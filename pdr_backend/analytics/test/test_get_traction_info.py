@@ -13,7 +13,6 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_get_traction_info_main_mainnet(
     _sample_daily_predictions,
     tmpdir,
-    monkeypatch,
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
@@ -74,7 +73,7 @@ def test_get_traction_info_main_mainnet(
 
 
 @enforce_types
-def test_get_traction_info_empty(tmpdir, capfd, monkeypatch):
+def test_get_traction_info_empty(tmpdir, capfd):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_empty = Mock(return_value=[])

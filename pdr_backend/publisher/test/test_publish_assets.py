@@ -1,4 +1,3 @@
-import os
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types

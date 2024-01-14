@@ -21,7 +21,7 @@ _NETWORKS = [
 
 @enforce_types
 @pytest.mark.parametrize("network", _NETWORKS)
-def test_contract_main(network, monkeypatch):
+def test_contract_main(network):
     # setup
 
     ppss = mock_ppss(["binance BTC/USDT c 5m"], network)
