@@ -26,11 +26,9 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-@patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
-def test_predictoor_approach_1_system(
-    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+def _test_predictoor_system(
+    mock_feeds, mock_predictoor_contract, approach
 ):
-    _ = mock_verify_feed_dependencies  # for type checking
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
@@ -39,7 +37,7 @@ def test_predictoor_approach_1_system(
         "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
     ), patch("pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss):
         # Mock sys.argv
-        sys.argv = ["pdr", "predictoor", "1", "ppss.yaml", "development"]
+        sys.argv = ["pdr", "predictoor", str(approach), "ppss.yaml", "development"]
 
         with patch("builtins.print") as mock_print:
             cli_module._do_main()
@@ -47,7 +45,7 @@ def test_predictoor_approach_1_system(
         # Verifying outputs
         mock_print.assert_any_call("pdr predictoor: Begin")
         mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("APPROACH=1")
+        mock_print.assert_any_call(f"APPROACH={approach}")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
         mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
@@ -57,36 +55,18 @@ def test_predictoor_approach_1_system(
         # Additional assertions
         mock_predictoor_ss.get_feed_from_candidates.assert_called_once()
         mock_predictoor_contract.get_current_epoch.assert_called()
+
+@patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
+def test_predictoor_approach_1_system(
+    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+):
+    _ = mock_verify_feed_dependencies
+    _test_predictoor_system( mock_feeds, mock_predictoor_contract, 1)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_3_system(
     mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
 ):
-    _ = mock_verify_feed_dependencies  # for type checking
-    mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
-        mock_feeds, mock_predictoor_contract
-    )
-
-    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
-    ), patch("pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss):
-        # Mock sys.argv
-        sys.argv = ["pdr", "predictoor", "3", "ppss.yaml", "development"]
-
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
-
-        # Verifying outputs
-        mock_print.assert_any_call("pdr predictoor: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("APPROACH=3")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
-        mock_print.assert_any_call("Starting main loop.")
-        mock_print.assert_any_call("Waiting...", end="")
-
-        # Additional assertions
-        mock_predictoor_ss.get_feed_from_candidates.assert_called_once()
-        mock_predictoor_contract.get_current_epoch.assert_called()
+    _ = mock_verify_feed_dependencies
+    _test_predictoor_system( mock_feeds, mock_predictoor_contract, 3)
