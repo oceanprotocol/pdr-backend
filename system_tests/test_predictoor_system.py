@@ -4,6 +4,7 @@ from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 
+
 def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "development"
@@ -24,8 +25,11 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
 
     return mock_web3_pp, mock_predictoor_ss
 
+
 def test_predictoor_approach_1_system(mock_feeds, mock_predictoor_contract):
-    mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(mock_feeds, mock_predictoor_contract)
+    mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
+        mock_feeds, mock_predictoor_contract
+    )
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
@@ -44,14 +48,17 @@ def test_predictoor_approach_1_system(mock_feeds, mock_predictoor_contract):
         mock_print.assert_any_call("NETWORK=development")
         mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
         mock_print.assert_any_call("Starting main loop.")
-        mock_print.assert_any_call("Waiting...",  end="")
+        mock_print.assert_any_call("Waiting...", end="")
 
         # Additional assertions
         mock_predictoor_ss.get_feed_from_candidates.assert_called_once()
         mock_predictoor_contract.get_current_epoch.assert_called()
 
+
 def test_predictoor_approach_3_system(mock_feeds, mock_predictoor_contract):
-    mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(mock_feeds, mock_predictoor_contract)
+    mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
+        mock_feeds, mock_predictoor_contract
+    )
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
@@ -70,7 +77,7 @@ def test_predictoor_approach_3_system(mock_feeds, mock_predictoor_contract):
         mock_print.assert_any_call("NETWORK=development")
         mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
         mock_print.assert_any_call("Starting main loop.")
-        mock_print.assert_any_call("Waiting...",  end="")
+        mock_print.assert_any_call("Waiting...", end="")
 
         # Additional assertions
         mock_predictoor_ss.get_feed_from_candidates.assert_called_once()

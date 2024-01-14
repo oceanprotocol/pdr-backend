@@ -36,6 +36,7 @@ def mock_feeds():
     }
     return feeds
 
+
 @pytest.fixture(scope="session")
 def mock_predictoor_contract():
     mock_predictoor_contract = Mock(spec=PredictoorContract)
