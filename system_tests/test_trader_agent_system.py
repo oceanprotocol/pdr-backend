@@ -58,19 +58,19 @@ def _test_trader(
         with patch("builtins.print") as mock_print:
             cli_module._do_main()
 
-            # Verifying outputs
-            mock_print.assert_any_call("pdr trader: Begin")
-            mock_print.assert_any_call("Arguments:")
-            mock_print.assert_any_call(f"APPROACH={approach}")
-            mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-            mock_print.assert_any_call("NETWORK=development")
-            mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
+        # Verifying outputs
+        mock_print.assert_any_call("pdr trader: Begin")
+        mock_print.assert_any_call("Arguments:")
+        mock_print.assert_any_call(f"APPROACH={approach}")
+        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
+        mock_print.assert_any_call("NETWORK=development")
+        mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
 
-            # Additional assertions
-            mock_web3_pp.query_feed_contracts.assert_called()
-            mock_trader_ss.get_feed_from_candidates.assert_called_with(mock_feeds)
-            mock_time_sleep.assert_called()
-            mock_run.assert_called()
+        # Additional assertions
+        mock_web3_pp.query_feed_contracts.assert_called()
+        mock_trader_ss.get_feed_from_candidates.assert_called_with(mock_feeds)
+        mock_time_sleep.assert_called()
+        mock_run.assert_called()
 
 
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
