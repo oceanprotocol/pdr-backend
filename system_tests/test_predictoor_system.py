@@ -26,7 +26,11 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-def test_predictoor_approach_1_system(mock_feeds, mock_predictoor_contract):
+@patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
+def test_predictoor_approach_1_system(
+    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+):
+    _ = mock_verify_feed_dependencies  # for type checking
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
@@ -55,7 +59,11 @@ def test_predictoor_approach_1_system(mock_feeds, mock_predictoor_contract):
         mock_predictoor_contract.get_current_epoch.assert_called()
 
 
-def test_predictoor_approach_3_system(mock_feeds, mock_predictoor_contract):
+@patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
+def test_predictoor_approach_3_system(
+    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+):
+    _ = mock_verify_feed_dependencies  # for type checking
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
