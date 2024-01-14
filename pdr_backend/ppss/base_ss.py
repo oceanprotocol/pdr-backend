@@ -18,9 +18,16 @@ class MultiFeedMixin:
         feeds = ArgFeeds.from_strs(self.feeds_strs)
 
         if assert_feed_attributes:
+            missing_attributes = []
             for attr in assert_feed_attributes:
                 for feed in feeds:
-                    assert getattr(feed, attr)
+                    if not getattr(feed, attr):
+                        missing_attributes.append(attr)
+
+            if missing_attributes:
+                raise AssertionError(
+                    f"Missing attributes {missing_attributes} for some feeds."
+                )
 
     # --------------------------------
     # yaml properties

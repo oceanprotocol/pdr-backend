@@ -27,7 +27,7 @@ def test_ppss_main_from_str(tmpdir):
 @enforce_types
 def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     # construct
-    ppss = PPSS(yaml_filename, yaml_str, network, do_verify=True)
+    ppss = PPSS(yaml_filename, yaml_str, network)
 
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     #  - so just do one test for each of this class's pp/ss attribute
@@ -59,13 +59,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
 def test_mock_feed_ppss(monkeypatch):
     del_network_override(monkeypatch)
 
-    feed, ppss = mock_feed_ppss(
-        "5m",
-        "binance",
-        "BTC/USDT",
-        "sapphire-mainnet",
-        do_verify=True,
-    )
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT", "sapphire-mainnet")
 
     assert feed.timeframe == "5m"
     assert feed.source == "binance"
@@ -80,11 +74,7 @@ def test_mock_feed_ppss(monkeypatch):
 @enforce_types
 def test_mock_ppss_simple(monkeypatch):
     del_network_override(monkeypatch)
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        do_verify=True,
-    )
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet")
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
@@ -110,7 +100,7 @@ def test_mock_ppss_onefeed1(feed_str, monkeypatch):
     """Thorough test that the 1-feed arg is used everywhere"""
     del_network_override(monkeypatch)
 
-    ppss = mock_ppss([feed_str], "sapphire-mainnet", do_verify=True)
+    ppss = mock_ppss([feed_str], "sapphire-mainnet")
 
     assert ppss.lake_ss.d["feeds"] == [feed_str]
     assert ppss.predictoor_ss.d["predict_feed"] == feed_str
@@ -129,7 +119,7 @@ def test_mock_ppss_manyfeed(monkeypatch):
 
     feed_strs = ["binance BTC/USDT ETH/USDT c 5m", "kraken BTC/USDT c 5m"]
     feed_str = "binance BTC/USDT c 5m"  # must be the first in feed_strs
-    ppss = mock_ppss(feed_strs, "sapphire-mainnet", do_verify=True)
+    ppss = mock_ppss(feed_strs, "sapphire-mainnet")
 
     assert ppss.lake_ss.d["feeds"] == feed_strs
     assert ppss.predictoor_ss.d["predict_feed"] == feed_str
@@ -148,7 +138,6 @@ def test_verify_feed_dependencies(monkeypatch):
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m", "kraken ETH/USDT c 5m"],
         "sapphire-mainnet",
-        do_verify=True,
     )
     ppss.verify_feed_dependencies()
 
