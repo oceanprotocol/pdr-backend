@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import polars as pl
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
@@ -88,3 +89,12 @@ def test_get_traction_info_empty(tmpdir, capfd):
     assert (
         "No records found. Please adjust start and end times." in capfd.readouterr().out
     )
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.status_code = 503
+        # don't actually sleep in tests
+        with patch("time.sleep"):
+            with pytest.raises(Exception):
+                get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+
+    assert mock_post.call_count == 3
