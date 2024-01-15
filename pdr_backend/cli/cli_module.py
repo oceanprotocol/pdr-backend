@@ -144,7 +144,7 @@ def do_trueval(args, testing=False):
     agent.run(testing)
 
 
-# @enforce_types
+@enforce_types
 def do_dfbuyer(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
@@ -168,8 +168,7 @@ def do_topup(args):
 
 @enforce_types
 def do_create_accounts(args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    create_accounts(args.NUM_ACCOUNTS, ppss.web3_pp)
+    create_accounts(args.NUM)
 
 
 @enforce_types

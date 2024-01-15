@@ -25,7 +25,7 @@ Utilities:
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
-  pdr create_accounts NUM_ACCOUNTS PPSS_FILE NETWORK
+  pdr create_accounts NUM PPSS_FILE NETWORK
   pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
 
@@ -116,9 +116,17 @@ class LOOKBACK_Mixin:
 
 
 @enforce_types
+def check_positive(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise TypeError("%s is an invalid positive int value" % value)
+    return ivalue
+
+
+@enforce_types
 class NUM_Mixin:
     def add_argument_NUM(self):
-        self.add_argument("NUM", type=int, help="1|2|..")
+        self.add_argument("NUM", type=check_positive)
 
 
 @enforce_types
@@ -250,10 +258,7 @@ class _ArgParser_NUM_PPSS_NETWORK(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_NUM()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
+        self.add_arguments_bulk(command_name, ["NUM", "PPSS", "NETWORK"])
 
 
 @enforce_types
@@ -266,10 +271,7 @@ class _ArgParser_ACCOUNTS_PPSS_NETWORK(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
-        self.add_argument_ACCOUNTS()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
+        self.add_arguments_bulk(command_name, ["ACCOUNTS", "PPSS", "NETWORK"])
 
 
 @enforce_types
@@ -285,11 +287,7 @@ class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_argument_TOKEN_AMOUNT()
-        self.add_argument_ACCOUNTS()
-        self.add_argument_PPSS()
-        self.add_argument_NETWORK()
-        self.add_argument_NATIVE_TOKEN()
+        self.add_arguments_bulk(command_name, ["TOKEN_AMOUNT", "ACCOUNTS", "PPSS", "NETWORK", "NATIVE_TOKEN"])
 
 
 # ========================================================================
