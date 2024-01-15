@@ -4,6 +4,8 @@ from argparse import Namespace
 
 from enforce_typing import enforce_types
 
+from eth_utils import to_checksum_address
+
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
 
@@ -88,10 +90,12 @@ def check_addresses(value):
         each string, will be a valid Ethereum address
     """
     addresses = value.split(",")
+    checksummed_addresses = []
     for address in addresses:
         if not address.startswith("0x"):
             raise TypeError(f"{address} is not a valid Ethereum address")
-    return addresses
+        checksummed_addresses.append(to_checksum_address(address.lower()))
+    return checksummed_addresses
 
 
 @enforce_types
