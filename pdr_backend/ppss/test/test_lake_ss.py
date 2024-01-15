@@ -4,7 +4,8 @@ import os
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -51,6 +52,8 @@ def test_lake_ss_basic():
 
     # test str
     assert "LakeSS" in str(ss)
+
+    assert isinstance(ss.copy(), LakeSS)
 
 
 @enforce_types

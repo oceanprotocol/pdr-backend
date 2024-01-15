@@ -6,7 +6,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_schema
 from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.timeutil import timestr_to_ut
 
 # ====================================================================
@@ -20,9 +19,7 @@ def test_update_gql1(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_gql(
         mock_fetch_filtered_subscriptions,
@@ -41,9 +38,7 @@ def test_update_gql_iteratively(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     iterations = [
         ("2023-11-02_0:00", "2023-11-04_17:00", 4),
@@ -152,9 +147,7 @@ def test_load_and_verify_schema(
     mock_fetch_filtered_subscriptions,
     tmpdir,
     sample_subscriptions,
-    monkeypatch,
 ):
-    del_network_override(monkeypatch)
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"

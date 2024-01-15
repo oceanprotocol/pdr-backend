@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Dict, List, Optional
-
-import ccxt
+from enforce_typing import enforce_types
 
 
 class OrderState(Enum):
@@ -54,10 +53,9 @@ class MexcOrder(Order):
         return self.order["timestamp"]
 
 
-def create_order(order: Dict, exchange: ccxt.Exchange) -> Order:
-    if exchange in ("mexc"):
-        return MexcOrder(order)
-    return Order(order)
+@enforce_types
+def create_order(order: Dict, exchange_str: str) -> Order:
+    return MexcOrder(order) if exchange_str == "mexc" else Order(order)
 
 
 class Position:
@@ -103,13 +101,15 @@ class Sheet:
         return position
 
     def close_position(self, close_order: Order) -> Optional[Position]:
-        position = self.open_positions.pop()
-        if position:
-            position.close(close_order)
-            self.closed_positions.append(position)
-            print("     [Position closed in Sheet]")
-            return position
-        return None
+        position = self.open_positions.pop() if self.open_positions else None
+
+        if not position:
+            return None
+
+        position.close(close_order)
+        self.closed_positions.append(position)
+        print("     [Position closed in Sheet]")
+        return position
 
 
 class Portfolio:
@@ -127,14 +127,8 @@ class Portfolio:
 
     def open_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
-        if sheet:
-            return sheet.open_position(order)
-
-        return None
+        return sheet.open_position(order) if sheet else None
 
     def close_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
-        if sheet:
-            return sheet.close_position(order)
-
-        return None
+        return sheet.close_position(order) if sheet else None

@@ -1,7 +1,7 @@
 import time
 from typing import List, Optional
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info

@@ -91,10 +91,10 @@ def fetch_filtered_subscriptions(
 
         offset += chunk_size
 
-        if not "data" in result:
+        if "data" not in result or not result["data"]:
             break
 
-        data = result["data"]["predictSubscriptions"]
+        data = result["data"].get("predictSubscriptions", [])
         if len(data) == 0:
             break
 

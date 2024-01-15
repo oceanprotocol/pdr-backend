@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -14,9 +13,7 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_get_traction_info_main_mainnet(
     _sample_daily_predictions,
     tmpdir,
-    monkeypatch,
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_traction_stat = Mock()
@@ -76,10 +73,7 @@ def test_get_traction_info_main_mainnet(
 
 
 @enforce_types
-def test_get_traction_info_empty(
-    tmpdir,
-    capfd,
-):
+def test_get_traction_info_empty(tmpdir, capfd):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_empty = Mock(return_value=[])

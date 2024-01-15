@@ -15,7 +15,9 @@ class AimodelSS(MultiFeedMixin, StrMixin):
     FEEDS_KEY = "input_feeds"
 
     def __init__(self, d: dict):
-        super().__init__(d)  # yaml_dict["aimodel_ss"]
+        super().__init__(
+            d, assert_feed_attributes=["signal"]
+        )  # yaml_dict["aimodel_ss"]
 
         # test inputs
         if self.approach not in APPROACHES:

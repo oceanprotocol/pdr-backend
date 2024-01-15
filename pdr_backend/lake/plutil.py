@@ -60,10 +60,10 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
         n_new = df.shape[0] - cur_df.shape[0]
-        print(f"  Just appended {n_new} df rows to file {filename}")
+        print(f"      Just appended {n_new} df rows to file {filename}")
     else:  # write new file
         df.write_parquet(filename)
-        print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+        print(f"      Just saved df with {df.shape[0]} rows to new file {filename}")
 
 
 @enforce_types

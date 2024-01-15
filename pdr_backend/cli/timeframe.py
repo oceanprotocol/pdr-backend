@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 
+# don't use @enforce_types, causes problems
 class Timeframe:
     def __init__(self, timeframe_str: str):
         """
@@ -35,6 +36,9 @@ class Timeframe:
         if self.timeframe_str == "1h":
             return 60
         raise ValueError(f"need to support timeframe={self.timeframe_str}")
+
+    def __eq__(self, other):
+        return self.timeframe_str == str(other)
 
     def __str__(self):
         return self.timeframe_str

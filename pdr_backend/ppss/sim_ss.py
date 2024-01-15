@@ -19,8 +19,8 @@ class SimSS(StrMixin):
             print(f"Could not find log dir, creating one at: {self.log_dir}")
             os.makedirs(self.log_dir)
 
-        if not (0 < self.test_n < np.inf):  # pylint: disable=superfluous-parens
-            raise ValueError(f"test_n={self.test_n}, must be >0 and <inf")
+        if not (0 < int(self.test_n) < np.inf):  # pylint: disable=superfluous-parens
+            raise ValueError(f"test_n={self.test_n}, must be an int >0 and <inf")
 
     # --------------------------------
     # properties direct from yaml dict
