@@ -284,19 +284,21 @@ def test_do_sim(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    do_sim(MockArgParser_PPSS_NETWORK().parse_args())
+    with patch("pdr_backend.sim.sim_engine.plt.show"):
+        do_sim(MockArgParser_PPSS_NETWORK().parse_args())
+
     mock_f.assert_called()
 
 
 @enforce_types
 def test_do_main(monkeypatch, capfd):
-    with patch("sys.argv", ["dftool", "help"]):
+    with patch("sys.argv", ["pdr", "help"]):
         with pytest.raises(SystemExit):
             _do_main()
 
     assert "Predictoor tool" in capfd.readouterr().out
 
-    with patch("sys.argv", ["dftool", "undefined_function"]):
+    with patch("sys.argv", ["pdr", "undefined_function"]):
         with pytest.raises(SystemExit):
             _do_main()
 
@@ -304,7 +306,9 @@ def test_do_main(monkeypatch, capfd):
 
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
-    with patch("sys.argv", ["dftool", "sim", "ppss.yaml"]):
-        _do_main()
+
+    with patch("pdr_backend.sim.sim_engine.plt.show"):
+        with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
+            _do_main()
 
     assert mock_f.called

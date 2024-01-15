@@ -45,6 +45,18 @@ def test_timeframe_class_bad():
 
 
 @enforce_types
+def test_timeframe_class_eq():
+    t = Timeframe("1m")
+    assert t == Timeframe("1m")
+    assert t == "1m"
+
+    assert t != Timeframe("5m")
+    assert t != "5m"
+
+    assert t != 5
+
+
+@enforce_types
 def test_pack_timeframe_str_list():
     assert str(Timeframes([])) == ""
     assert str(Timeframes(["1h"])) == "1h"

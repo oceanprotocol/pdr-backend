@@ -3,12 +3,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
+from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.ppss.web3_pp import (
     Web3PP,
-    del_network_override,
     inplace_mock_feedgetters,
     inplace_mock_get_contracts,
     inplace_mock_query_feed_contracts,
@@ -38,17 +38,13 @@ _D = {
 
 
 @enforce_types
-def test_web3_pp__bad_network(monkeypatch):
-    del_network_override(monkeypatch)
-
+def test_web3_pp__bad_network():
     with pytest.raises(ValueError):
         Web3PP(_D, "bad network")
 
 
 @enforce_types
-def test_web3_pp__yaml_dict(monkeypatch):
-    del_network_override(monkeypatch)
-
+def test_web3_pp__yaml_dict():
     pp = Web3PP(_D, "network1")
 
     assert pp.network == "network1"
@@ -57,6 +53,7 @@ def test_web3_pp__yaml_dict(monkeypatch):
     assert pp.rpc_url == "rpc url 1"
     assert pp.subgraph_url == "subgraph url 1"
     assert pp.owner_addrs == "0xOwner1"
+    assert isinstance(pp.account, LocalAccount)
 
     # network2
     pp2 = Web3PP(_D, "network2")
@@ -67,8 +64,6 @@ def test_web3_pp__yaml_dict(monkeypatch):
 
 @enforce_types
 def test_web3_pp__JIT_cached_properties(monkeypatch):
-    del_network_override(monkeypatch)
-
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -97,8 +92,6 @@ def test_web3_pp__JIT_cached_properties(monkeypatch):
 
 @enforce_types
 def test_web3_pp__get_pending_slots(monkeypatch):
-    del_network_override(monkeypatch)
-
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
 
@@ -116,8 +109,6 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
 @enforce_types
 def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
-    del_network_override(monkeypatch)
-
     # test get_feeds() & get_contracts() at once, because one flows into other
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     web3_pp = Web3PP(_D, "network1")
@@ -158,32 +149,7 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
 
 
 @enforce_types
-def test_web3_pp__NETWORK_OVERRIDE(monkeypatch):
-    del_network_override(monkeypatch)
-
-    # does it do what we want with no override?
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network1"
-
-    # does it do what we want _with_ override?
-    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
-    pp = Web3PP(_D, "network1")
-    assert pp.network == "network2"
-
-
-@enforce_types
-def test_web3_pp__del_network_override(monkeypatch):
-    monkeypatch.setenv("NETWORK_OVERRIDE", "network2")
-    assert os.getenv("NETWORK_OVERRIDE") == "network2"
-
-    del_network_override(monkeypatch)
-    assert os.getenv("NETWORK_OVERRIDE") is None
-
-
-@enforce_types
-def test_mock_web3_pp(monkeypatch):
-    del_network_override(monkeypatch)
-
+def test_mock_web3_pp():
     web3_pp = mock_web3_pp("development")
     assert isinstance(web3_pp, Web3PP)
     assert web3_pp.network == "development"
@@ -193,9 +159,7 @@ def test_mock_web3_pp(monkeypatch):
 
 
 @enforce_types
-def test_inplace_mocks(monkeypatch):
-    del_network_override(monkeypatch)
-
+def test_inplace_mocks():
     web3_pp = mock_web3_pp("development")
     feed = mock_feed("5m", "binance", "BTC/USDT")
 

@@ -1,19 +1,16 @@
 import os
 from typing import Dict
 
-import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.lake.constants import (
-    OHLCV_MULT_MAX,
-    OHLCV_MULT_MIN,
     TOHLCV_SCHEMA_PL,
     TOHLCV_COLS,
 )
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -93,6 +90,8 @@ class OhlcvDataFactory:
         print("  Update all rawohlcv files: begin")
         for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
+
+        print()
         print("  Update all rawohlcv files: done")
 
     def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: int):
@@ -104,7 +103,10 @@ class OhlcvDataFactory:
         pair_str = str(feed.pair)
         exch_str = str(feed.exchange)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-        print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}.")
+        print()
+        print(
+            f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: begin"
+        )
 
         filename = self._rawohlcv_filename(feed)
         print(f"      filename={filename}")
@@ -119,39 +121,23 @@ class OhlcvDataFactory:
         # empty ohlcv df
         df = initialize_rawohlcv_df()
         while True:
-            print(f"      Fetch 1000 pts from {pretty_timestr(st_ut)}")
+            limit = 1000
+            print(f"      Fetch up to {limit} pts from {pretty_timestr(st_ut)}")
             exch = feed.exchange.exchange_class()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
                 timeframe=str(feed.timeframe),
                 since=st_ut,
-                limit=1000,
+                limit=limit,
             )
-            if raw_tohlcv_data is None:  # exchange had error
-                return
-            uts = [vec[0] for vec in raw_tohlcv_data]
-            if len(uts) > 1:
-                # Ideally, time between ohclv candles is always 5m or 1h
-                # But exchange data often has gaps. Warn about worst violations
-                diffs_ms = np.array(uts[1:]) - np.array(uts[:-1])  # in ms
-                diffs_m = diffs_ms / 1000 / 60  # in minutes
-                mn_thr = feed.timeframe.m * OHLCV_MULT_MIN
-                mx_thr = feed.timeframe.m * OHLCV_MULT_MAX
-
-                if min(diffs_m) < mn_thr:
-                    print(f"      **WARNING: short candle time: {min(diffs_m)} min")
-                if max(diffs_m) > mx_thr:
-                    print(f"      **WARNING: long candle time: {max(diffs_m)} min")
-
-            # filter out data that's too new
-            raw_tohlcv_data = [vec for vec in raw_tohlcv_data if vec[0] <= fin_ut]
+            tohlcv_data = clean_raw_ohlcv(raw_tohlcv_data, feed, st_ut, fin_ut)
 
             # concat both TOHLCV data
-            next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+            next_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
             df = concat_next_df(df, next_df)
 
-            if len(raw_tohlcv_data) < 1000:  # no more data, we're at newest time
+            if len(tohlcv_data) < limit:  # no more data, we're at newest time
                 break
 
             # prep next iteration
@@ -162,6 +148,9 @@ class OhlcvDataFactory:
 
         # output to file
         save_rawohlcv_file(filename, df)
+
+        # done
+        print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: done")
 
     def _calc_start_ut_maybe_delete(self, timeframe: Timeframe, filename: str) -> int:
         """
@@ -227,6 +216,8 @@ class OhlcvDataFactory:
             assert "datetime" not in rawohlcv_df.columns
 
             rawohlcv_dfs[exch_str][pair_str] = rawohlcv_df
+
+        # rawohlcv_dfs["kraken"] is a DF, with proper cols, and 0 rows
 
         return rawohlcv_dfs
 

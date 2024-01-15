@@ -11,9 +11,6 @@ from pdr_backend.util.fund_accounts import fund_accounts, fund_accounts_with_OCE
 
 @enforce_types
 def test_fund_accounts_with_OCEAN(monkeypatch):
-    if os.getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
-
     web3_pp = mock_web3_pp("development")
 
     path = "pdr_backend.util.fund_accounts"

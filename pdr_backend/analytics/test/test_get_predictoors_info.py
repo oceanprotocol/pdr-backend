@@ -10,7 +10,6 @@ from pdr_backend.lake.table_pdr_predictions import (
 from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.timeutil import timestr_to_ut
-from pdr_backend.ppss.web3_pp import del_network_override
 
 
 @enforce_types
@@ -20,9 +19,8 @@ from pdr_backend.ppss.web3_pp import del_network_override
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_main_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir, monkeypatch
+    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
@@ -65,9 +63,8 @@ def test_get_predictoors_info_main_mainnet(
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_empty_data_frame_timeframe_filter_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir, monkeypatch
+    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
@@ -110,9 +107,8 @@ def test_empty_data_frame_timeframe_filter_mainnet(
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_empty_data_frame_user_address_filter_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir, monkeypatch
+    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)

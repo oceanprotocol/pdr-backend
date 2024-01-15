@@ -66,6 +66,8 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
             pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
         )
 
+    print("Payout done")
+
 
 @enforce_types
 def do_rose_payout(ppss: PPSS, check_network: bool = True):

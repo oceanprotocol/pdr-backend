@@ -185,10 +185,7 @@ class BaseTraderAgent:
         """
         confidence: float = pred_nom / pred_denom
         direction: float = 1 if confidence >= 0.5 else 0
-        if confidence > 0.5:
-            confidence -= 0.5
-        else:
-            confidence = 0.5 - confidence
+        confidence = abs(confidence - 0.5)
         confidence = (confidence / 0.5) * 100
 
         return {

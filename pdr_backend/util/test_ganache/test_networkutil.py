@@ -3,6 +3,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.networkutil import (
     get_sapphire_postfix,
+    get_subgraph_url,
 )
 
 
@@ -23,3 +24,14 @@ def test_get_sapphire_postfix():
     for unwanted in unwanteds:
         with pytest.raises(ValueError):
             assert get_sapphire_postfix(unwanted)
+
+
+def test_get_subgraph():
+    expected = (
+        "https://v4.subgraph.sapphire-testnet.oceanprotocol.com/"
+        "subgraphs/name/oceanprotocol/ocean-subgraph"
+    )
+    assert get_subgraph_url("testnet") == expected
+
+    with pytest.raises(ValueError):
+        get_subgraph_url("sapphire-testnet")

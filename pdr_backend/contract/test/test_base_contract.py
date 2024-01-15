@@ -48,7 +48,7 @@ def test_send_encrypted_tx(
     args = [web3_pp.web3_config.owner, 100]
     sender = web3_pp.web3_config.owner
     receiver = web3_pp.web3_config.w3.eth.accounts[1]
-    rpc_url = "http://localhost:8545"
+    rpc_url = web3_pp.rpc_url
     value = 0
     gasLimit = 10000000
     gasCost = 0

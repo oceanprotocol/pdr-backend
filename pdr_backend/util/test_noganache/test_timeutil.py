@@ -60,6 +60,10 @@ def test_timestr_to_ut():
     assert timestr_to_ut("2022-03-29_17:55") == 1648576500000
     assert timestr_to_ut("2022-03-29_17:55:12.345") == 1648576512345
 
+    # test error
+    with pytest.raises(ValueError):
+        timestr_to_ut("::::::::")
+
 
 @enforce_types
 def test_ut_to_timestr():

@@ -2,7 +2,8 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
@@ -17,9 +18,16 @@ class MultiFeedMixin:
         feeds = ArgFeeds.from_strs(self.feeds_strs)
 
         if assert_feed_attributes:
+            missing_attributes = []
             for attr in assert_feed_attributes:
                 for feed in feeds:
-                    assert getattr(feed, attr)
+                    if not getattr(feed, attr):
+                        missing_attributes.append(attr)
+
+            if missing_attributes:
+                raise AssertionError(
+                    f"Missing attributes {missing_attributes} for some feeds."
+                )
 
     # --------------------------------
     # yaml properties
@@ -76,7 +84,7 @@ class SingleFeedMixin:
 
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
         assert self.__class__.FEED_KEY
-        self.d = d  # yaml_dict["predictor_ss"]
+        self.d = d
         if assert_feed_attributes:
             for attr in assert_feed_attributes:
                 assert getattr(self.feed, attr)

@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -44,7 +44,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 s_per_subscription=_S_PER_SUBSCRIPTION,
                 base=feed.pair.base_str,
                 quote=feed.pair.quote_str,
-                source=feed.exchange,
+                source=str(feed.exchange),
                 timeframe=timeframe_str,
                 trueval_submitter_addr=trueval_submitter_addr,
                 feeCollector_addr=fee_collector_addr,
