@@ -170,7 +170,7 @@ class NATIVE_TOKEN_Mixin:
             "--NATIVE_TOKEN",
             action="store_true",
             default=False,
-            help="Is native token or OCEAN?",
+            help="Transacts with ROSE if --NATIVE_TOKEN is passed, otherwise uses OCEAN. Defaults to false (OCEAN)",
         )
 
 
