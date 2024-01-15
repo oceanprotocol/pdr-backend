@@ -48,7 +48,7 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
 
 @enforce_types
 def fund_accounts(
-    amount: float, to_addressess: List[str], web3_pp: Web3PP, is_native_token: bool
+    amount: float, to_addresses: List[str], web3_pp: Web3PP, is_native_token: bool
 ):
     """
     @description
@@ -74,7 +74,7 @@ def fund_accounts(
 
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
-    for address in to_addressess:
+    for address in to_addresses:
         print(f"Sending {token_name} token to {address} for the amount of {amount} wei")
         token.transfer(
             address,
