@@ -47,10 +47,16 @@ sim_ss: # sim only
 publisher_ss:
   sapphire-mainnet:
     fee_collector_address: 0x0000000000000000000000000000000000000000
+    feeds:
+      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT c 5m,1h
   sapphire-testnet:
     fee_collector_address: 0x0000000000000000000000000000000000000000
+    feeds:
+      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT c 5m,1h
   development:
     fee_collector_address: 0x0000000000000000000000000000000000000000
+    feeds:
+      - binance BTC/USDT ETH/USDT XRP/USDT c 5m
 
 trueval_ss:
   feeds:
