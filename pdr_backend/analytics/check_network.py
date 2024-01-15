@@ -13,7 +13,6 @@ from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
-from pdr_backend.util.timeutil import current_ut
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 
