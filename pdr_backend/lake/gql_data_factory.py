@@ -19,7 +19,15 @@ from pdr_backend.lake.table_pdr_subscriptions import (
     get_pdr_subscriptions_df,
     subscriptions_schema,
 )
-from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df, truevals_schema
+from pdr_backend.lake.table_pdr_truevals import (
+    get_pdr_truevals_df, 
+    truevals_schema
+)
+from pdr_backend.lake.table_pdr_payouts import (
+    get_pdr_payouts_df,
+    payouts_schema,
+)
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -48,6 +56,10 @@ class GQLDataFactory:
             network=network,
         )
         contract_list = [f.lower() for f in contract_list]
+        
+        # For debugging
+        # t_contract_list = [f.lower() for f in contract_list]
+        # contract_list = [t_contract_list[0], t_contract_list[1]]
 
         # configure all tables that will be recorded onto lake
         self.record_config = {
@@ -68,6 +80,12 @@ class GQLDataFactory:
             "pdr_truevals": {
                 "fetch_fn": get_pdr_truevals_df,
                 "schema": truevals_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },"pdr_payouts": {
+                "fetch_fn": get_pdr_payouts_df,
+                "schema": payouts_schema,
                 "config": {
                     "contract_list": contract_list,
                 },
