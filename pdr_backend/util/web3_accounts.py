@@ -34,7 +34,7 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
     # get assets
     native_token = NativeToken(web3_pp)
     OCEAN_addr = get_address(web3_pp, "Ocean")
-    OCEAN_token = Token(web3_pp, OCEAN_addr)
+    OCEAN_token = Token(web3_pp, OCEAN_addr, "OCEAN")
 
     # loop through all addresses and print balances
     for address in addresses:
@@ -60,14 +60,11 @@ def fund_accounts(
         sys.exit(1)
 
     token = None
-    token_name = None
     if is_native_token:
         token = NativeToken(web3_pp)
-        token_name = "ROSE"
     else:
         OCEAN_addr = get_address(web3_pp, "Ocean")
-        token = Token(web3_pp, OCEAN_addr)
-        token_name = "OCEAN"
+        token = Token(web3_pp, OCEAN_addr, "OCEAN")
 
     private_key = getenv("PRIVATE_KEY")
     assert private_key is not None, "Need PRIVATE_KEY env var"
@@ -75,7 +72,7 @@ def fund_accounts(
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
     for address in to_addresses:
-        print(f"Sending {token_name} token to {address} for the amount of {amount} wei")
+        print(f"Sending {token.name} to {address} for the amount of {amount} wei")
         token.transfer(
             address,
             to_wei(amount),
