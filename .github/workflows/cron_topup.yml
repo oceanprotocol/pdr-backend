@@ -15,7 +15,11 @@ jobs:
           uses: actions/setup-python@v2
           with:
             python-version: "3.11"
-  
+        - name: Fetch the address file and move it to contracts directory
+          run: |
+            wget https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/address.json
+            mkdir -p ~/.ocean/ocean-contracts/artifacts/
+            mv address.json ~/.ocean/ocean-contracts/artifacts/
         - name: Install Dependencies
           run: |
             python -m pip install --upgrade pip
@@ -39,6 +43,11 @@ jobs:
           run: |
             python -m pip install --upgrade pip
             pip install -r requirements.txt
+        - name: Fetch the address file and move it to contracts directory
+          run: |
+            wget https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/address.json
+            mkdir -p ~/.ocean/ocean-contracts/artifacts/
+            mv address.json ~/.ocean/ocean-contracts/artifacts/
         - name: Set env variables
           run: |
             echo "PRIVATE_KEY=${{ secrets.TOPUP_SCRIPT_PK }}" >> $GITHUB_ENV
