@@ -159,7 +159,7 @@ class TOKEN_AMOUNT_Mixin:
         self.add_argument(
             "TOKEN_AMOUNT",
             type=float,
-            help="Amount of token to send to each address",
+            help="Amount of token to send to each address (in 1e18, ether)",
         )
 
 
