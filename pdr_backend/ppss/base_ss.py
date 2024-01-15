@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from enforce_typing import enforce_types
@@ -33,7 +34,18 @@ class MultiFeedMixin:
     # yaml properties
     @property
     def feeds_strs(self) -> List[str]:
-        return self.d[self.__class__.FEEDS_KEY]  # eg ["binance BTC/USDT ohlcv",..]
+        nested_attrs = self.__class__.FEEDS_KEY.split(".")
+        lookup = copy.deepcopy(self.d)
+        for attr in nested_attrs:
+            try:
+                lookup = lookup[attr]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Could not find nested attribute {attr} in {nested_attrs}"
+                ) from exc
+
+        assert isinstance(lookup, list)
+        return lookup  # eg ["binance BTC/USDT ohlcv",..]
 
     # --------------------------------
 

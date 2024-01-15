@@ -65,7 +65,7 @@ def _setup_and_publish(network, monkeypatch):
         monkeypatch.delenv("NETWORK_OVERRIDE")
 
     web3_pp = mock_web3_pp(network)
-    publisher_ss = mock_publisher_ss()
+    publisher_ss = mock_publisher_ss(network)
 
     monkeypatch.setattr(f"{_PATH}.get_address", Mock())
 
