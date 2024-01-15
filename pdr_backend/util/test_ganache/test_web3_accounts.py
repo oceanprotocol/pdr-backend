@@ -9,8 +9,7 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.util.web3_accounts import (
     create_accounts,
     fund_accounts,
-    view_accounts,
-    _get_account_balances
+    view_accounts
 )
 
 
@@ -46,10 +45,16 @@ def test_get_account_balances(
     token_instance.balanceOf.return_value = 1
 
     # Set the return value for get_address
-    mock_get_address.return_value = "0x123"
+    mock_get_address.return_value = "0xOCEAN"
     
-    native_token_balance, OCEAN_balance = _get_account_balances("0x123", web3_pp)
+    view_accounts(["0x123", "0x1234"], web3_pp)
 
-    # Assert the right methods were called
-    assert native_token_balance == 2
-    assert OCEAN_balance == 1
+    # Assert methods are returning right values
+    assert mock_get_address(web3_pp, "Ocean") == "0xOCEAN"
+    assert native_token_instance.balanceOf(mock_get_address) == 2
+    assert token_instance.balanceOf(mock_get_address) == 1
+
+    # Assert methods were called the right amount of times
+    assert native_token_instance.balanceOf.call_count == 3
+    assert token_instance.balanceOf.call_count == 3
+    assert mock_get_address.call_count == 2

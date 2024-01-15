@@ -26,36 +26,22 @@ def create_accounts(n_accounts: int):
 
 
 @enforce_types
-def _get_account_balances(checksum_address: str, web3_pp: Web3PP):
-    """
-    @description
-        Get account balances from an address
-    """
-    # loop through n_wallets
-    native_token = NativeToken(web3_pp)
-    OCEAN_addr = get_address(web3_pp, "Ocean")
-    OCEAN_token = Token(web3_pp, OCEAN_addr)
-
-    native_token_balance = native_token.balanceOf(checksum_address)
-    OCEAN_balance = OCEAN_token.balanceOf(checksum_address)
-
-    return native_token_balance, OCEAN_balance
-
-
-@enforce_types
 def view_accounts(addresses: List[str], web3_pp: Web3PP):
     """
     @description
         View account balances for multiple addresses
     """
-    # loop through n_wallets
-    for address in addresses:
-        checksum_address = web3_pp.web3_config.w3.to_checksum_address(address.lower())
-        native_token_balance, OCEAN_balance = _get_account_balances(
-            checksum_address, web3_pp
-        )
+    # get assets
+    native_token = NativeToken(web3_pp)
+    OCEAN_addr = get_address(web3_pp, "Ocean")
+    OCEAN_token = Token(web3_pp, OCEAN_addr)
 
-        print(f"Account {checksum_address}")
+    # loop through all addresses and print balances
+    for address in addresses:
+        native_token_balance = native_token.balanceOf(address)
+        OCEAN_balance = OCEAN_token.balanceOf(address)
+
+        print(f"\nAccount {address}")
         print(f"Native token balance: {from_wei(native_token_balance)}")
         print(f"OCEAN balance: {from_wei(OCEAN_balance)}")
 
