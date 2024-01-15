@@ -1,3 +1,4 @@
+import os
 import time
 from abc import ABC, abstractmethod
 from typing import List, Tuple
@@ -51,6 +52,8 @@ class BasePredictoorAgent(ABC):
         print("Waiting...", end="")
         while True:
             self.take_step()
+            if os.getenv("TEST") == "true":
+                break
 
     @enforce_types
     def take_step(self):

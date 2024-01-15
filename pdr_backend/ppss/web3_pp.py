@@ -21,7 +21,6 @@ class Web3PP(StrMixin):
 
     @enforce_types
     def __init__(self, d: dict, network: str):
-        network = getenv("NETWORK_OVERRIDE") or network  # allow envvar override
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
 
@@ -168,12 +167,6 @@ class Web3PP(StrMixin):
 
 # =========================================================================
 # utilities for testing
-
-
-@enforce_types
-def del_network_override(monkeypatch):
-    if getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
 
 
 @enforce_types

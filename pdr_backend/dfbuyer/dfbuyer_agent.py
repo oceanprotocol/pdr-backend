@@ -1,4 +1,5 @@
 import math
+import os
 import time
 from typing import Dict, List, Tuple
 
@@ -70,7 +71,7 @@ class DFBuyerAgent:
             ts = self.ppss.web3_pp.web3_config.get_current_timestamp()
             self.take_step(ts)
 
-            if testing:
+            if testing or os.getenv("TEST") == "true":
                 break
 
     def take_step(self, ts: int):
