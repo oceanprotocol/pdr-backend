@@ -81,11 +81,25 @@ class NETWORK_Mixin:
 
 
 @enforce_types
+def check_addresses(value):
+    """
+    @description
+        validates that all addressses is a comma-separated list of strings
+        each string, will be a valid Ethereum address
+    """
+    addresses = value.split(",")
+    for address in addresses:
+        if not address.startswith("0x"):
+            raise TypeError(f"{address} is not a valid Ethereum address")
+    return addresses
+
+
+@enforce_types
 class PDRS_Mixin:
     def add_argument_PDRS(self):
         self.add_argument(
             "--PDRS",
-            type=str,
+            type=check_addresses,
             help="Predictoor address(es), separated by comma. If not specified, uses all.",
             required=False,
         )
@@ -96,7 +110,7 @@ class FEEDS_Mixin:
     def add_argument_FEEDS(self):
         self.add_argument(
             "--FEEDS",
-            type=str,
+            type=check_addresses,
             default="",
             help="Predictoor feed address(es). If not specified, uses all.",
             required=False,
@@ -134,8 +148,8 @@ class ACCOUNTS_Mixin:
     def add_argument_ACCOUNTS(self):
         self.add_argument(
             "ACCOUNTS",
-            type=str,
-            help="Comma-separated list of accounts",
+            type=check_addresses,
+            help="Comma-separated list of valid ethereum addresses",
         )
 
 
