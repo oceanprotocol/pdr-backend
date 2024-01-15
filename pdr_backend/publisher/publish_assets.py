@@ -44,7 +44,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
                 s_per_subscription=_S_PER_SUBSCRIPTION,
                 base=feed.pair.base_str,
                 quote=feed.pair.quote_str,
-                source=feed.exchange,
+                source=str(feed.exchange),
                 timeframe=timeframe_str,
                 trueval_submitter_addr=trueval_submitter_addr,
                 feeCollector_addr=fee_collector_addr,

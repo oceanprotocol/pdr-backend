@@ -1,3 +1,4 @@
+import os
 import time
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -39,7 +40,7 @@ class TruevalAgent:
     def run(self, testing: bool = False):
         while True:
             self.take_step()
-            if testing:
+            if testing or os.getenv("TEST") == "true":
                 break
 
     def take_step(self):
