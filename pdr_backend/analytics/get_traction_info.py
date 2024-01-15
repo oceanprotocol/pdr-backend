@@ -22,18 +22,21 @@ def get_traction_info_main(
 ):
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
-
-    if len(gql_dfs) == 0:
-        print("No records found. Please adjust start and end times.")
+    if len(gql_dfs) == 0 or gql_dfs["pdr_predictions"].shape[0] == 0:
+        print("No records found. Please adjust start and end times inside ppss.yaml.")
         return
 
     predictions_df = gql_dfs["pdr_predictions"]
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr))
-        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr))
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
     )
+
+    if predictions_df.shape[0] == 0:
+        print("No records found. Please adjust start and end times params.")
+        return
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions_df)

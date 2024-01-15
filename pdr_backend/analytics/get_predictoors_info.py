@@ -29,9 +29,9 @@ def get_predictoors_info_main(
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr))
-        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr))
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
     )
 
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
-    print(predictoor_summary_df)
+    predictoor_summary_df.show()
