@@ -56,7 +56,7 @@ def fund_accounts(
         Sends a total of (Amount * n_accounts).
     """
     if web3_pp.network not in ["sapphire-testnet", "sapphire-mainnet"]:
-        print("Unknown network")
+        print(f"Unknown network {web3_pp.network}")
         sys.exit(1)
 
     token = None
