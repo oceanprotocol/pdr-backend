@@ -1,4 +1,5 @@
 import math
+import time
 from typing import Union
 
 from enforce_typing import enforce_types
@@ -44,7 +45,7 @@ def check_dfbuyer(
     subgraph_url: str,
     token_amt: int,
 ):
-    cur_ut = current_ut()  # accounts for timezone
+    cur_ut = int(time.time())
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
@@ -92,7 +93,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 def check_network_main(ppss: PPSS, lookback_hours: int):
     web3_pp = ppss.web3_pp
 
-    cur_ut = current_ut()  # accounts for timezone
+    cur_ut = int(time.time())
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
             {
