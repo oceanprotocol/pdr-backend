@@ -1,3 +1,4 @@
+import time
 from typing import Dict
 
 import requests
@@ -18,13 +19,17 @@ def query_subgraph(
     @return
       result -- e.g. {"data" : {"predictContracts": ..}}
     """
-    request = requests.post(subgraph_url, "", json={"query": query}, timeout=timeout)
-    if request.status_code != 200:
+    response = requests.post(subgraph_url, "", json={"query": query}, timeout=timeout)
+    if response.status_code != 200:
         # pylint: disable=broad-exception-raised
         if tries < SUBGRAPH_MAX_TRIES:
+            time.sleep(((tries + 1) / 2) ** (2) * 10)
             return query_subgraph(subgraph_url, query, tries + 1)
+
         raise Exception(
-            f"Query failed. Url: {subgraph_url}. Return code is {request.status_code}\n{query}"
+            f"Query failed. Url: {subgraph_url}. Return code is {response.status_code}\n{query}"
         )
-    result = request.json()
+
+    result = response.json()
+
     return result
