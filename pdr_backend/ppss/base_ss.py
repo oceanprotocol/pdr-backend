@@ -36,8 +36,11 @@ class MultiFeedMixin:
     def feeds_strs(self) -> List[str]:
         nested_attrs = self.__class__.FEEDS_KEY.split(".")
         lookup = copy.deepcopy(self.d)
+
+        # Iterate over each attribute in the nesting
         for attr in nested_attrs:
             try:
+                # Attempt to access the next level in the dict
                 lookup = lookup[attr]
             except KeyError as exc:
                 raise ValueError(
