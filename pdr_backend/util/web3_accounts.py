@@ -55,6 +55,9 @@ def fund_accounts(
         Fund multiple accounts using native or OCEAN tokens.
         Sends a total of (Amount * n_accounts).
     """
+    private_key = getenv("PRIVATE_KEY")
+    assert private_key is not None, "Need PRIVATE_KEY env var"
+
     if web3_pp.network not in ["sapphire-testnet", "sapphire-mainnet"]:
         print(f"Unknown network {web3_pp.network}")
         sys.exit(1)
@@ -65,9 +68,6 @@ def fund_accounts(
     else:
         OCEAN_addr = get_address(web3_pp, "Ocean")
         token = Token(web3_pp, OCEAN_addr, "OCEAN")
-
-    private_key = getenv("PRIVATE_KEY")
-    assert private_key is not None, "Need PRIVATE_KEY env var"
 
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
