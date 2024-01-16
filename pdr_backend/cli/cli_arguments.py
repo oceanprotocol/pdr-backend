@@ -142,7 +142,7 @@ def check_positive(value):
     try:
         ivalue = int(value)
         if ivalue <= 0:
-            raise TypeError("%s is an invalid positive int value" % value)
+            raise Exception("Zero or below.")
     except Exception:
         raise TypeError("%s is an invalid positive int value" % value)
     
