@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Dict, List, Optional
-
-import ccxt
+from enforce_typing import enforce_types
 
 
 class OrderState(Enum):
@@ -36,7 +35,7 @@ class Order:
         return None
 
 
-class MEXCOrder(Order):
+class MexcOrder(Order):
     def __init__(self, order: Dict):  # pylint: disable=useless-parent-delegation
         super().__init__(order)
 
@@ -54,22 +53,18 @@ class MEXCOrder(Order):
         return self.order["timestamp"]
 
 
-def create_order(order: Dict, exchange: ccxt.Exchange) -> Order:
-    if exchange in ("mexc"):
-        return MEXCOrder(order)
-    return Order(order)
+@enforce_types
+def create_order(order: Dict, exchange_str: str) -> Order:
+    return MexcOrder(order) if exchange_str == "mexc" else Order(order)
 
 
 class Position:
     """
     @description
         Has an open and and a close order minimum
-        TO DO - Support many buy/sell orders, balance, etc...
     """
 
     def __init__(self, order: Order):
-        # TO DO - Have N open_orders, have N close_orders
-        # TO DO - Move from __init__(order) to open(order)
         self.open_order: Order = order
         self.close_order: Optional[Order] = None
         self.state: OrderState = OrderState.OPEN
@@ -79,7 +74,6 @@ class Position:
     def __str__(self):
         return f"<{self.open_order}, {self.close_order}, {self.__class__}>"
 
-    # TO DO - Only callable by portfolio
     def close(self, order: Order):
         self.close_order = order
         self.state = OrderState.CLOSED
@@ -107,13 +101,15 @@ class Sheet:
         return position
 
     def close_position(self, close_order: Order) -> Optional[Position]:
-        position = self.open_positions.pop()
-        if position:
-            position.close(close_order)
-            self.closed_positions.append(position)
-            print("     [Position closed in Sheet]")
-            return position
-        return None
+        position = self.open_positions.pop() if self.open_positions else None
+
+        if not position:
+            return None
+
+        position.close(close_order)
+        self.closed_positions.append(position)
+        print("     [Position closed in Sheet]")
+        return position
 
 
 class Portfolio:
@@ -131,14 +127,8 @@ class Portfolio:
 
     def open_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
-        if sheet:
-            return sheet.open_position(order)
-
-        return None
+        return sheet.open_position(order) if sheet else None
 
     def close_position(self, addr: str, order: Order) -> Optional[Position]:
         sheet = self.get_sheet(addr)
-        if sheet:
-            return sheet.close_position(order)
-
-        return None
+        return sheet.close_position(order) if sheet else None

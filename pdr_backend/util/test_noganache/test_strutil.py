@@ -1,10 +1,10 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum, asCurrency
+from pdr_backend.util.strutil import StrMixin, asCurrency, dictStr, prettyBigNum
 
 
-def testStrMixin():
+def testStrMixin1():
     class Foo(StrMixin):
         def __init__(self):
             self.x = 1
@@ -33,6 +33,29 @@ def testStrMixin():
     s3 = f.longstr()
     assert s3 == s
 
+    f.__class__.__STR_GIVES_NEWLINE__ = True
+    s4 = f.longstr()
+    assert "\n" in s4
+    f.__class__.__STR_GIVES_NEWLINE__ = False
+
+
+def testStrMixin2():
+    class Foo(StrMixin):
+        __STR_OBJDIR__ = ["x", "y"]
+
+        def __init__(self):
+            self.x = 1
+            self.y = 2
+            self.z = 3
+
+    f = Foo()
+    s = str(f)
+    s2 = s.replace(" ", "")
+    assert "Foo={" in s
+    assert "x=1" in s2
+    assert "y=2" in s2
+    assert "z=3" not in s2
+
 
 def testDictStr():
     d = {"a": 3, "b": 4}
@@ -42,6 +65,9 @@ def testDictStr():
     assert "'a':3" in s2
     assert "'b':4" in s2
     assert "dict}" in s
+
+    s = dictStr(d, True)
+    assert "\n" in s
 
 
 def testEmptyDictStr():
@@ -66,6 +92,9 @@ def testAsCurrency():
     assert asCurrency(1234.567, False) == "$1,235"
     assert asCurrency(2e6, False) == "$2,000,000"
     assert asCurrency(2e6 + 0.03, False) == "$2,000,000"
+
+    assert asCurrency(-0.03, True) == "-$0.03"
+    assert asCurrency(-0.03, False) == "-$0"
 
 
 def testPrettyBigNum1_DoRemoveZeros_decimalsNeeded():

@@ -1,19 +1,19 @@
 from os import getenv
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-class TraderAgent1(TraderAgent):
+class TraderAgent1(BaseTraderAgent):
     """
     @description
-        TraderAgent Naive CCXT
+        Naive trader agent.
         - Market order buy-only
         - Doesn't save client state or manage pending open trades
         - Only works with MEXC. How to improve:
@@ -25,10 +25,6 @@ class TraderAgent1(TraderAgent):
         1. If existing open position, close it.
         2. If new long prediction meets criteria, open long.
 
-        You can use the ENV_VARS to:
-        1. Configure your strategy: pair, timeframe, etc..
-        2. Configure your exchange: api_key + secret_key
-
         You can improve this by:
         1. Improving how to enter/exit trade w/ orders
         2. Improving when to buy
@@ -36,12 +32,11 @@ class TraderAgent1(TraderAgent):
         4. Using SL and TP
     """
 
-    def __init__(self, config: TraderConfig1):
-        super().__init__(config)
-        self.config: TraderConfig1 = config
+    def __init__(self, ppss: PPSS):
+        super().__init__(ppss)
 
-        # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_str)
+        # Generic exchange class
+        exchange_class = self.ppss.trader_ss.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -60,7 +55,7 @@ class TraderAgent1(TraderAgent):
         self.order: Optional[Dict[str, Any]] = None
         assert self.exchange is not None, "Exchange cannot be None"
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             Logic:
@@ -77,31 +72,34 @@ class TraderAgent1(TraderAgent):
         if self.order is not None and isinstance(self.order, dict):
             # get existing long position
             amount = 0.0
-            if self.config.exchange_str in ("mexc"):
+            if self.ppss.trader_ss.exchange_str == "mexc":
                 amount = float(self.order["info"]["origQty"])
 
             # close it
             order = self.exchange.create_market_sell_order(
-                self.config.exchange_pair, amount
+                self.ppss.trader_ss.pair_str, amount
             )
 
             print(f"     [Trade Closed] {self.exchange}")
             print(f"     [Previous Order] {self.order}")
             print(f"     [Closing Order] {order}")
 
-            # TO DO - Calculate PNL (self.order - order)
             self.order = None
 
         ### Create new order if prediction meets our criteria
         pred_nom, pred_denom = prediction
         print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
 
+        if pred_denom == 0:
+            print("  There's no stake on this, one way or the other. Exiting.")
+            return
+
         pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             order = self.exchange.create_market_buy_order(
-                self.config.exchange_pair, self.config.size
+                self.ppss.trader_ss.pair_str, self.ppss.trader_ss.position_size
             )
 
             # If order is successful, we log the order so we can close it

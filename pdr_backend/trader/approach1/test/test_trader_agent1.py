@@ -1,78 +1,47 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
-from pdr_backend.trader.approach1.trader_config1 import TraderConfig1
-
-
-@enforce_types
-def mock_feed():
-    feed = Mock(spec=Feed)
-    feed.name = "test feed"
-    feed.seconds_per_epoch = 60
-    return feed
+from pdr_backend.trader.test.trader_agent_runner import (
+    do_constructor,
+    do_run,
+    setup_trade,
+)
 
 
 @enforce_types
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
-def test_new_agent(check_subscriptions_and_subscribe_mock, predictoor_contract):
-    trader_config = Mock(spec=TraderConfig1)
-    trader_config.exchange_str = "mexc"
-    trader_config.exchange_pair = "BTC/USDT"
-    trader_config.timeframe = "5m"
-    trader_config.size = 10.0
-    trader_config.get_feeds = Mock()
-    trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
-    trader_config.get_contracts = Mock()
-    trader_config.get_contracts.return_value = {
-        "0x0000000000000000000000000000000000000000": predictoor_contract
-    }
-    agent = TraderAgent1(trader_config)
-    assert agent.config == trader_config
-    check_subscriptions_and_subscribe_mock.assert_called_once()
+def test_trader_agent1_constructor(check_subscriptions_and_subscribe_mock):
+    do_constructor(TraderAgent1, check_subscriptions_and_subscribe_mock)
 
-    no_feeds_config = Mock(spec=TraderConfig1)
-    no_feeds_config.get_feeds.return_value = {}
-    no_feeds_config.max_tries = 10
 
-    with pytest.raises(SystemExit):
-        TraderAgent1(no_feeds_config)
+@enforce_types
+@patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
+def test_trader_agent1_run(check_subscriptions_and_subscribe_mock):
+    do_run(TraderAgent1, check_subscriptions_and_subscribe_mock)
 
 
 @enforce_types
 @pytest.mark.asyncio
 @patch.object(TraderAgent1, "check_subscriptions_and_subscribe")
-async def test_do_trade(
-    check_subscriptions_and_subscribe_mock,
-    predictoor_contract,
-    web3_config,
-):
-    trader_config = Mock(spec=TraderConfig1)
-    trader_config.exchange_str = "mexc"
-    trader_config.exchange_pair = "BTC/USDT"
-    trader_config.timeframe = "5m"
-    trader_config.size = 10.0
-    trader_config.get_feeds.return_value = {
-        "0x0000000000000000000000000000000000000000": mock_feed()
-    }
-    trader_config.get_contracts = Mock()
-    trader_config.get_contracts.return_value = {
-        "0x0000000000000000000000000000000000000000": predictoor_contract
-    }
-    trader_config.max_tries = 10
-    trader_config.web3_config = web3_config
+async def test_trader_agent1_do_trade(check_subscriptions_and_subscribe_mock, capfd):
+    agent, feed = setup_trade(
+        TraderAgent1,
+        check_subscriptions_and_subscribe_mock,
+    )
 
-    agent = TraderAgent1(trader_config)
-    assert agent.config == trader_config
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    agent.exchange = Mock()
-    agent.exchange.create_market_buy_order.return_value = {"info": {"origQty": 1}}
-
-    await agent._do_trade(mock_feed(), (1.0, 1.0))
+    await agent._do_trade(feed, (1.0, 1.0))
     assert agent.exchange.create_market_buy_order.call_count == 1
+
+    await agent._do_trade(feed, (1.0, 0))
+    out, _ = capfd.readouterr()
+    assert "There's no stake on this" in out
+
+    agent.order = {}
+    with patch.object(agent.exchange, "create_market_sell_order", return_value="mock"):
+        await agent._do_trade(feed, (1.0, 1.0))
+
+    out, _ = capfd.readouterr()
+    assert "Closing Order" in out

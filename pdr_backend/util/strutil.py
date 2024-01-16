@@ -20,7 +20,11 @@ class StrMixin:
         obj = self
 
         short_attrs, long_attrs = [], []
-        for attr in dir(obj):
+        if hasattr(self, "__STR_OBJDIR__"):
+            obj_dir = self.__STR_OBJDIR__
+        else:
+            obj_dir = dir(obj)
+        for attr in obj_dir:
             if "__" in attr:
                 continue
             attr_obj = getattr(obj, attr)
@@ -74,12 +78,10 @@ def asCurrency(amount, decimals: bool = True) -> str:
     if decimals:
         if amount >= 0:
             return f"${amount:,.2f}"
+
         return f"-${-amount:,.2f}".format(-amount)
 
-    if amount >= 0:
-        return f"${amount:,.0f}"
-
-    return f"-${-amount:,.0f}"
+    return f"${amount:,.0f}" if amount >= 0 else f"-${-amount:,.0f}"
 
 
 def prettyBigNum(amount, remove_zeroes: bool = True) -> str:

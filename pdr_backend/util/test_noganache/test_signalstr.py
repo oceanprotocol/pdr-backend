@@ -1,11 +1,56 @@
-from enforce_typing import enforce_types
 import pytest
+from enforce_typing import enforce_types
 
 from pdr_backend.util.signalstr import (
+    char_to_signal,
+    signal_to_char,
+    signals_to_chars,
     unpack_signalchar_str,
-    verify_signalchar_str,
     verify_signal_str,
+    verify_signalchar_str,
 )
+
+# ==========================================================================
+# conversions
+
+
+@enforce_types
+def test_single_conversions():
+    tups = [
+        ("o", "open"),
+        ("h", "high"),
+        ("l", "low"),
+        ("c", "close"),
+        ("v", "volume"),
+    ]
+    for char, signal in tups:
+        assert char_to_signal(char) == signal
+        assert signal_to_char(signal) == char
+
+    with pytest.raises(ValueError):
+        signal_to_char("xyz")
+
+    with pytest.raises(ValueError):
+        char_to_signal("x")
+
+
+@enforce_types
+def test_multi_conversions():
+    assert signals_to_chars(["open"]) == "o"
+    assert signals_to_chars(["close", "open"]) == "oc"
+    assert signals_to_chars({"close", "open"}) == "oc"
+
+    for bad_input in [
+        None,
+        "",
+        "foo",
+        "open",
+        "foo",
+        ["open", "foo"],
+        {"open", "foo"},
+    ]:
+        with pytest.raises(ValueError):
+            signals_to_chars(bad_input)
 
 
 # ==========================================================================

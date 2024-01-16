@@ -1,123 +1,169 @@
 from unittest.mock import MagicMock, call, patch
 
-from ccxt.base.exchange import math
 import pytest
+from ccxt.base.exchange import math
+from enforce_typing import enforce_types
+
+from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.dfbuyer.dfbuyer_agent import WEEK, DFBuyerAgent
+from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
 
+PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.get_address")
-def test_new_agent(mock_get_address, mock_token, dfbuyer_config):
+
+@enforce_types
+def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
+    mock_get_address,
+    mock_token,
+    mock_ppss,
+    mock_PredictoorBatcher,
+):
     mock_token.return_value.allowance.return_value = 0
-    mock_get_address.return_value = ZERO_ADDRESS
 
-    agent = DFBuyerAgent(dfbuyer_config)
+    agent = DFBuyerAgent(mock_ppss)
 
     assert len(mock_get_address.call_args_list) == 2
     call1 = mock_get_address.call_args_list[0]
-    assert call1 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "PredictoorHelper")
+    assert call1 == call(mock_ppss.web3_pp, "PredictoorHelper")
     call2 = mock_get_address.call_args_list[1]
-    assert call2 == call(dfbuyer_config.web3_config.w3.eth.chain_id, "Ocean")
+    assert call2 == call(mock_ppss.web3_pp, "Ocean")
 
-    mock_token.assert_called_with(dfbuyer_config.web3_config, agent.token_addr)
+    mock_token.assert_called_with(mock_ppss.web3_pp, agent.OCEAN_addr)
     mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True
     )
 
 
-def test_get_expected_amount_per_feed(dfbuyer_agent):
+@enforce_types
+def test_dfbuyer_agent_constructor_empty():
+    # test with no feeds
+    mock_ppss_empty = MagicMock(spec=PPSS)
+    mock_ppss_empty.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
+    mock_ppss_empty.dfbuyer_ss.filter_feeds_from_candidates.return_value = {}
+    mock_ppss_empty.web3_pp = MagicMock(spec=Web3PP)
+    mock_ppss_empty.web3_pp.query_feed_contracts.return_value = {}
+
+    with pytest.raises(ValueError, match="No feeds found"):
+        DFBuyerAgent(mock_ppss_empty)
+
+
+@enforce_types
+def test_dfbuyer_agent_get_expected_amount_per_feed(mock_dfbuyer_agent):
     ts = 1695211135
-    amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
-        dfbuyer_agent.feeds
+    amount_per_feed_per_interval = (
+        mock_dfbuyer_agent.ppss.dfbuyer_ss.amount_per_interval
+        / len(mock_dfbuyer_agent.feeds)
     )
     week_start = (math.floor(ts / WEEK)) * WEEK
     time_passed = ts - week_start
-    n_intervals = int(time_passed / dfbuyer_agent.config.consume_interval_seconds) + 1
+    n_intervals = (
+        int(time_passed / mock_dfbuyer_agent.ppss.dfbuyer_ss.consume_interval_seconds)
+        + 1
+    )
     expected_result = n_intervals * amount_per_feed_per_interval
-    result = dfbuyer_agent._get_expected_amount_per_feed(ts)
+    result = mock_dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result == expected_result
 
 
-def test_get_expected_amount_per_feed_hardcoded(dfbuyer_agent):
+def test_dfbuyer_agent_get_expected_amount_per_feed_hardcoded(mock_dfbuyer_agent):
     ts = 16958592000
     end = ts + WEEK - 86400  # last day
     just_before_new_week = ts + WEEK - 1  # 1 second before next week
 
-    amount_per_feed_per_interval = dfbuyer_agent.config.amount_per_interval / len(
-        dfbuyer_agent.feeds
+    amount_per_feed_per_interval = (
+        mock_dfbuyer_agent.ppss.dfbuyer_ss.amount_per_interval
+        / len(mock_dfbuyer_agent.feeds)
     )
-    result1 = dfbuyer_agent._get_expected_amount_per_feed(ts)
+    result1 = mock_dfbuyer_agent._get_expected_amount_per_feed(ts)
     assert result1 == amount_per_feed_per_interval
-    assert result1 * len(dfbuyer_agent.feeds) == 37000 / 7  # first day
+    assert result1 * len(mock_dfbuyer_agent.feeds) == 37000 / 7  # first day
 
-    result2 = dfbuyer_agent._get_expected_amount_per_feed(end)
+    result2 = mock_dfbuyer_agent._get_expected_amount_per_feed(end)
     assert result2 == amount_per_feed_per_interval * 7
     assert (
-        result2 * len(dfbuyer_agent.feeds) == 37000
+        result2 * len(mock_dfbuyer_agent.feeds) == 37000
     )  # last day, should distribute all
 
-    result3 = dfbuyer_agent._get_expected_amount_per_feed(just_before_new_week)
+    result3 = mock_dfbuyer_agent._get_expected_amount_per_feed(just_before_new_week)
     assert result3 == amount_per_feed_per_interval * 7
-    assert result3 * len(dfbuyer_agent.feeds) == 37000  # still last day
+    assert result3 * len(mock_dfbuyer_agent.feeds) == 37000  # still last day
 
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract")
-def test_get_consume_so_far(mock_get_consume_so_far, dfbuyer_agent):
+@enforce_types
+@patch(f"{PATH}.get_consume_so_far_per_contract")
+def test_dfbuyer_agent_get_consume_so_far(mock_get_consume_so_far, mock_dfbuyer_agent):
     agent = MagicMock()
-    agent.config.web3_config.owner = "0x123"
+    agent.ppss.web3_pp.web3_config.owner = "0x123"
     agent.feeds = {"feed1": "0x1", "feed2": "0x2"}
     mock_get_consume_so_far.return_value = {"0x1": 10.5}
     expected_result = {"0x1": 10.5}
-    result = dfbuyer_agent._get_consume_so_far(0)
+    result = mock_dfbuyer_agent._get_consume_so_far(0)
     assert result == expected_result
 
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.PredictoorContract")
-def test_get_prices(mock_contract, dfbuyer_agent):
+@enforce_types
+@patch(f"{PATH}.PredictoorContract")
+def test_dfbuyer_agent_get_prices(mock_contract, mock_dfbuyer_agent):
     mock_contract_instance = MagicMock()
     mock_contract.return_value = mock_contract_instance
     mock_contract_instance.get_price.return_value = 10000
-    result = dfbuyer_agent._get_prices(["0x1", "0x2"])
+    result = mock_dfbuyer_agent._get_prices(["0x1", "0x2"])
     assert result["0x1"] == 10000 / 1e18
     assert result["0x2"] == 10000 / 1e18
 
 
-def test_prepare_batches(dfbuyer_agent):
-    dfbuyer_agent.config.batch_size = 10
-
+@enforce_types
+def test_dfbuyer_agent_prepare_batches(mock_dfbuyer_agent):
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    consume_times = dict(zip(addresses, [5, 15, 7, 3, 12, 8]))
-    result = dfbuyer_agent._prepare_batches(consume_times)
+    consume_times = dict(zip(addresses, [10, 30, 14, 6, 24, 16]))
+    result = mock_dfbuyer_agent._prepare_batches(consume_times)
 
     expected_result = [
-        ([addresses[0], addresses[1]], [5, 5]),
-        ([addresses[1]], [10]),
-        ([addresses[2], addresses[3]], [7, 3]),
-        ([addresses[4]], [10]),
-        ([addresses[4], addresses[5]], [2, 8]),
+        ([addresses[0], addresses[1]], [10, 10]),
+        ([addresses[1]], [20]),
+        ([addresses[2], addresses[3]], [14, 6]),
+        ([addresses[4]], [20]),
+        ([addresses[4], addresses[5]], [4, 16]),
     ]
     assert result == expected_result
 
 
-@patch.object(DFBuyerAgent, "_get_consume_so_far")
-@patch.object(DFBuyerAgent, "_get_expected_amount_per_feed")
-def test_get_missing_consumes(
-    mock_get_expected_amount_per_feed, mock_get_consume_so_far, dfbuyer_agent
+@enforce_types
+def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
+    mock_get_address,
+    mock_token,
+    monkeypatch,
 ):
-    ts = 0
+    ppss = MagicMock(spec=PPSS)
+    ppss.web3_pp = MagicMock(spec=Web3PP)
+
     addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
-    consume_amts = {
-        addresses[0]: 10,
-        addresses[1]: 11,
-        addresses[2]: 32,
-        addresses[3]: 24,
-        addresses[4]: 41,
-        addresses[5]: 0,
-    }
-    mock_get_consume_so_far.return_value = consume_amts
-    mock_get_expected_amount_per_feed.return_value = 15
+    feeds = {address: MagicMock() for address in addresses}
+    ppss.web3_pp.query_feed_contracts = MagicMock()
+    ppss.web3_pp.query_feed_contracts.return_value = feeds
+
+    ppss.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
+    ppss.dfbuyer_ss.batch_size = 3
+    ppss.dfbuyer_ss.filter_feeds_from_candidates.return_value = feeds
+
+    batcher_class = MagicMock(spec=PredictoorBatcher)
+    monkeypatch.setattr(f"{PATH}.PredictoorBatcher", batcher_class)
+
+    dfbuyer_agent = DFBuyerAgent(ppss)
+
+    consume_amts = dict(zip(addresses, [10, 11, 32, 24, 41, 0]))
+    dfbuyer_agent._get_consume_so_far = MagicMock()
+    dfbuyer_agent._get_consume_so_far.return_value = consume_amts
+
+    dfbuyer_agent._get_expected_amount_per_feed = MagicMock()
+    dfbuyer_agent._get_expected_amount_per_feed.return_value = 15
+
+    ts = 0
     result = dfbuyer_agent._get_missing_consumes(ts)
     expected_consume = dfbuyer_agent._get_expected_amount_per_feed(ts)
     expected_result = {
@@ -126,25 +172,27 @@ def test_get_missing_consumes(
         if expected_consume - consume_amts[address] >= 0
     }
     assert result == expected_result
-    mock_get_consume_so_far.assert_called_once_with(ts)
+    dfbuyer_agent._get_consume_so_far.assert_called_once_with(ts)
 
 
-def test_get_missing_consume_times(dfbuyer_agent):
+@enforce_types
+def test_dfbuyer_agent_get_missing_consume_times(mock_dfbuyer_agent):
     missing_consumes = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
     prices = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
-    result = dfbuyer_agent._get_missing_consume_times(missing_consumes, prices)
+    result = mock_dfbuyer_agent._get_missing_consume_times(missing_consumes, prices)
     expected_result = {"0x1": 5, "0x2": 7, "0x3": 7}
     assert result == expected_result
 
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs")
+@enforce_types
+@patch(f"{PATH}.wait_until_subgraph_syncs")
 @patch("time.sleep", return_value=None)
 @patch.object(DFBuyerAgent, "_get_missing_consumes")
 @patch.object(DFBuyerAgent, "_get_prices")
 @patch.object(DFBuyerAgent, "_get_missing_consume_times")
 @patch.object(DFBuyerAgent, "_batch_txs")
 @patch.object(Web3Config, "get_block")
-def test_take_step(
+def test_dfbuyer_agent_take_step(
     mock_get_block,
     mock_batch_txs,
     mock_get_missing_consume_times,
@@ -152,7 +200,7 @@ def test_take_step(
     mock_get_missing_consumes,
     mock_sleep,
     mock_subgraph_sync,  # pylint: disable=unused-argument
-    dfbuyer_agent,
+    mock_dfbuyer_agent,
 ):
     ts = 0
     mock_get_missing_consumes.return_value = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
@@ -160,7 +208,7 @@ def test_take_step(
     mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
     mock_get_block.return_value = {"timestamp": 120}
     mock_batch_txs.return_value = False
-    dfbuyer_agent.take_step(ts)
+    mock_dfbuyer_agent.take_step(ts)
     mock_get_missing_consumes.assert_called_once_with(ts)
     mock_get_prices.assert_called_once_with(
         list(mock_get_missing_consumes.return_value.keys())
@@ -172,18 +220,30 @@ def test_take_step(
     mock_get_block.assert_called_once_with("latest")
     mock_sleep.assert_called_once_with(86400 - 60)
 
+    # empty feeds
+    mock_dfbuyer_agent.feeds = []
+    assert mock_dfbuyer_agent.take_step(ts) is None
 
+
+@enforce_types
 @patch.object(DFBuyerAgent, "take_step")
 @patch.object(Web3Config, "get_block")
-def test_run(mock_get_block, mock_take_step, dfbuyer_agent):
+def test_dfbuyer_agent_run(mock_get_block, mock_take_step, mock_dfbuyer_agent):
     mock_get_block.return_value = {"timestamp": 0}
-    dfbuyer_agent.run(testing=True)
+    mock_dfbuyer_agent.run(testing=True)
     mock_get_block.assert_called_once_with("latest")
     mock_take_step.assert_called_once_with(mock_get_block.return_value["timestamp"])
 
+    # empty feeds
+    mock_dfbuyer_agent.feeds = []
+    assert mock_dfbuyer_agent.run(testing=True) is None
 
-@patch("pdr_backend.dfbuyer.dfbuyer_agent.time.sleep", return_value=None)
-def test_consume_method(mock_sleep, dfbuyer_agent):
+
+@enforce_types
+@patch(f"{PATH}.time.sleep", return_value=None)
+def test_dfbuyer_agent_consume_method(mock_sleep, mock_dfbuyer_agent):
+    mock_batcher = mock_dfbuyer_agent.predictoor_batcher
+
     addresses_to_consume = ["0x1", "0x2"]
     times_to_consume = [2, 3]
 
@@ -191,30 +251,28 @@ def test_consume_method(mock_sleep, dfbuyer_agent):
     failed_tx = {"transactionHash": b"some_hash", "status": 0}
     exception_tx = Exception("Error")
 
-    with patch.object(
-        dfbuyer_agent, "predictoor_batcher", autospec=True
-    ) as mock_predictoor_batcher:
-        mock_predictoor_batcher.consume_multiple.return_value = successful_tx
-        assert dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
+    mock_batcher.consume_multiple.return_value = successful_tx
+    assert mock_dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
 
-        mock_predictoor_batcher.consume_multiple.return_value = failed_tx
-        assert not dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
+    mock_batcher.consume_multiple.return_value = failed_tx
+    assert not mock_dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
 
-        mock_predictoor_batcher.consume_multiple.side_effect = exception_tx
-        with pytest.raises(Exception, match="Error"):
-            dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
+    mock_batcher.consume_multiple.side_effect = exception_tx
+    with pytest.raises(Exception, match="Error"):
+        mock_dfbuyer_agent._consume(addresses_to_consume, times_to_consume)
 
-        assert mock_sleep.call_count == dfbuyer_agent.config.max_request_tries
+    assert mock_sleep.call_count == mock_dfbuyer_agent.ppss.dfbuyer_ss.max_request_tries
 
 
-def test_consume_batch_method(dfbuyer_agent):
+@enforce_types
+def test_dfbuyer_agent_consume_batch_method(mock_dfbuyer_agent):
     addresses_to_consume = ["0x1", "0x2"]
     times_to_consume = [2, 3]
 
     with patch.object(
-        dfbuyer_agent, "_consume", side_effect=[False, True, False, False, True]
+        mock_dfbuyer_agent, "_consume", side_effect=[False, True, False, False, True]
     ) as mock_consume:
-        dfbuyer_agent._consume_batch(addresses_to_consume, times_to_consume)
+        mock_dfbuyer_agent._consume_batch(addresses_to_consume, times_to_consume)
         calls = [
             call(addresses_to_consume, times_to_consume),
             call([addresses_to_consume[0]], [times_to_consume[0]]),
@@ -226,3 +284,25 @@ def test_consume_batch_method(dfbuyer_agent):
             ),
         ]
         mock_consume.assert_has_calls(calls)
+
+
+@enforce_types
+def test_dfbuyer_agent_batch_txs(mock_dfbuyer_agent):
+    addresses = [ZERO_ADDRESS[: -len(str(i))] + str(i) for i in range(1, 7)]
+    consume_times = dict(zip(addresses, [10, 30, 14, 6, 24, 16]))
+
+    with patch.object(
+        mock_dfbuyer_agent,
+        "_consume_batch",
+        side_effect=[False, True, False, True, True],
+    ):
+        failures = mock_dfbuyer_agent._batch_txs(consume_times)
+
+    assert failures
+
+    with patch.object(
+        mock_dfbuyer_agent, "_consume_batch", side_effect=[True, True, True, True, True]
+    ):
+        failures = mock_dfbuyer_agent._batch_txs(consume_times)
+
+    assert failures

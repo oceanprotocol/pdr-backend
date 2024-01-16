@@ -1,8 +1,57 @@
-from typing import List
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import CAND_SIGNALS, CHAR_TO_SIGNAL
+
+
+# ==========================================================================
+# conversions
+@enforce_types
+def char_to_signal(char: str) -> str:
+    """eg given "o", return "open" """
+    if char not in CHAR_TO_SIGNAL:
+        raise ValueError()
+    return CHAR_TO_SIGNAL[char]
+
+
+@enforce_types
+def signal_to_char(signal_str: str) -> str:
+    """
+    Example: Given "open"
+    Return "o"
+    """
+    for c, s in CHAR_TO_SIGNAL.items():
+        if s == signal_str:
+            return c
+
+    raise ValueError(signal_str)
+
+
+# don't use @enforce_types, it causes problems
+def signals_to_chars(signal_strs: Union[List[str], Set[str]]) -> str:
+    """
+    Example: Given {"high", "close", "open"}
+    Return "ohc"
+    """
+    # preconditions
+    if not signal_strs:
+        raise ValueError()
+    for signal_str in signal_strs:
+        verify_signal_str(signal_str)
+
+    # main work
+    chars = ""
+    for cand_signal in CAND_SIGNALS:
+        if cand_signal in signal_strs:
+            c = signal_to_char(cand_signal)
+            chars += c
+
+    # postconditions
+    if chars == "":
+        raise ValueError(signal_strs)
+    return chars
+
 
 # ==========================================================================
 # unpack..() functions
@@ -33,7 +82,7 @@ def unpack_signalchar_str(signalchar_str: str) -> List[str]:
 
 
 @enforce_types
-def verify_signalchar_str(signalchar_str: str):
+def verify_signalchar_str(signalchar_str: str, graceful: bool = False):
     """
     @description
       Raise an error if signalchar_str is invalid
@@ -47,8 +96,13 @@ def verify_signalchar_str(signalchar_str: str):
     c_seen = set()
     for c in signalchar_str:
         if c not in "ohlcv" or c in c_seen:
+            if graceful:
+                return False
+
             raise ValueError(signalchar_str)
         c_seen.add(c)
+
+    return True
 
 
 @enforce_types

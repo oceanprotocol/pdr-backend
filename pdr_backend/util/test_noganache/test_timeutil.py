@@ -1,16 +1,17 @@
 import datetime
 from datetime import timezone
 
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.util.timeutil import (
-    pretty_timestr,
-    current_ut,
+    current_ut_ms,
     dt_to_ut,
-    ut_to_dt,
-    timestr_to_ut,
-    ut_to_timestr,
     ms_to_seconds,
+    pretty_timestr,
+    timestr_to_ut,
+    ut_to_dt,
+    ut_to_timestr,
 )
 
 
@@ -24,8 +25,8 @@ def test_pretty_timestr():
 
 
 @enforce_types
-def test_current_ut():
-    ut = current_ut()
+def test_current_ut_ms():
+    ut = current_ut_ms()
     assert isinstance(ut, int)
     assert ut > 1648576500000
 
@@ -58,6 +59,10 @@ def test_timestr_to_ut():
     assert timestr_to_ut("2022-03-29") == 1648512000000
     assert timestr_to_ut("2022-03-29_17:55") == 1648576500000
     assert timestr_to_ut("2022-03-29_17:55:12.345") == 1648576512345
+
+    # test error
+    with pytest.raises(ValueError):
+        timestr_to_ut("::::::::")
 
 
 @enforce_types
@@ -93,6 +98,9 @@ def test_dt_to_ut_and_back():
 
     dt2 = ut_to_dt(ut)
     assert dt2 == dt
+
+    with pytest.raises(AssertionError):
+        ut_to_dt(-1)
 
 
 @enforce_types

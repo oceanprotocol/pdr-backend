@@ -29,7 +29,6 @@ jobs:
         name: Checkout Barge
         with:
           repository: "oceanprotocol/barge"
-          ref: "main"
           path: "barge"
 
       - name: Run Barge
@@ -57,5 +56,10 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          coverage run --omit="*test*" -m pytest
+          coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest
           coverage report
+          coverage xml
+      - name: Publish code coverage
+        uses: paambaati/codeclimate-action@v2.7.5
+        env:
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}

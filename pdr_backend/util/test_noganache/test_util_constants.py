@@ -1,20 +1,20 @@
-from enforce_typing import enforce_types
 import numpy as np
+from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import (
-    ZERO_ADDRESS,
-    SAPPHIRE_TESTNET_RPC,
-    SAPPHIRE_TESTNET_CHAINID,
-    SAPPHIRE_MAINNET_RPC,
-    SAPPHIRE_MAINNET_CHAINID,
-    S_PER_MIN,
+    CAND_SIGNALS,
+    CAND_TIMEFRAMES,
+    CAND_USDCOINS,
+    CHAR_TO_SIGNAL,
     S_PER_DAY,
+    S_PER_MIN,
+    SAPPHIRE_MAINNET_CHAINID,
+    SAPPHIRE_MAINNET_RPC,
+    SAPPHIRE_TESTNET_CHAINID,
+    SAPPHIRE_TESTNET_RPC,
     SUBGRAPH_MAX_TRIES,
     WEB3_MAX_TRIES,
-    CAND_USDCOINS,
-    CAND_TIMEFRAMES,
-    CAND_SIGNALS,
-    CHAR_TO_SIGNAL,
+    ZERO_ADDRESS,
 )
 
 

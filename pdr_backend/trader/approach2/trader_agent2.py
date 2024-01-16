@@ -5,52 +5,33 @@ from typing import List, Optional, Tuple
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.models.feed import Feed
-from pdr_backend.trader.approach2.portfolio import (
-    Portfolio,
-    Order,
-    create_order,
-)
-from pdr_backend.trader.approach2.trader_config2 import TraderConfig2
-from pdr_backend.trader.trader_agent import TraderAgent
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent
 
 
 @enforce_types
-class TraderAgent2(TraderAgent):
+class TraderAgent2(BaseTraderAgent):
     """
     @description
-        TraderAgent Naive CCXT
-
-        This is a naive algorithm. It will simply:
-        1. If open position, close it
-        2. If new prediction up, open long
-        3. If new prediction down, open short
-
-        You can use the ENV_VARS to:
-        1. Configure your strategy: pair, timeframe, etc..
-        2. Configure your exchange: api_key + secret_key
-
-        You can improve this by:
-        1. Improving the type of method to buy/exit (i.e. limit)
-        2. Improving the buy Conditional statement
-        3. Enabling buying and shorting
-        4. Using SL and TP
+        Trader agent that's slightly less naive than agent 1.
     """
 
-    def __init__(self, config: TraderConfig2):
-        # Initialize cache params
+    def __init__(self, ppss: PPSS):
+        # Initialize cache params. Must be *before* calling parent constructor!
         self.portfolio = None
         self.reset_cache = False
 
-        super().__init__(config)
-        self.config: TraderConfig2 = config
+        #
+        super().__init__(ppss)
 
         # If cache params are empty, instantiate
         if self.portfolio is None:
-            self.portfolio = Portfolio(list(self.feeds.keys()))
+            self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
-        exchange_class = getattr(ccxt, self.config.exchange_str)
+        exchange_class = self.ppss.trader_ss.exchange_class
         self.exchange: ccxt.Exchange = exchange_class(
             {
                 "apiKey": getenv("EXCHANGE_API_KEY"),
@@ -65,7 +46,7 @@ class TraderAgent2(TraderAgent):
             }
         )
 
-        self.update_positions(list(self.feeds.keys()))
+        self.update_positions([self.feed.address])
 
     def update_cache(self):
         super().update_cache()
@@ -83,11 +64,11 @@ class TraderAgent2(TraderAgent):
     def should_close(self, order: Order):
         """
         @description
-            Check if order has lapsed in time relative to config.timeframe
+            Check if order has lapsed in time relative to trader_ss.timeframe
         """
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
-        order_lapsed = now_ts - tx_ts > self.config.timedelta * 1000
+        order_lapsed = now_ts - tx_ts > self.ppss.trader_ss.timeframe_ms
         return order_lapsed
 
     def update_positions(self, feeds: Optional[List[str]] = None):
@@ -95,7 +76,7 @@ class TraderAgent2(TraderAgent):
         @description
             Cycle through open positions and asses them
         """
-        feeds = list(self.feeds.keys()) if feeds is None or feeds == [] else feeds
+        feeds = [self.feed.address] if feeds is None or feeds == [] else feeds
         if not feeds:
             return
         if not self.portfolio:
@@ -117,13 +98,13 @@ class TraderAgent2(TraderAgent):
 
                 print("     [Close Position] Requirements met")
                 order = self.exchange.create_market_sell_order(
-                    self.config.exchange_pair,
+                    self.ppss.trader_ss.exchange_str,
                     position.open_order.amount,
                 )
                 self.portfolio.close_position(addr, order)
                 self.update_cache()
 
-    async def do_trade(self, feed: Feed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
         """
         @description
             Logic:
@@ -143,16 +124,21 @@ class TraderAgent2(TraderAgent):
         pred_nom, pred_denom = prediction
         print(f"      {feed.address} has a new prediction: {pred_nom} / {pred_denom}.")
 
+        if pred_denom == 0:
+            print("  There's no stake on this, one way or the other. Exiting.")
+            return
+
         pred_properties = self.get_pred_properties(pred_nom, pred_denom)
         print(f"      prediction properties are: {pred_properties}")
 
         if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
             print("     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
-                symbol=self.config.exchange_pair, amount=self.config.size
+                symbol=self.ppss.trader_ss.exchange_str,
+                amount=self.ppss.trader_ss.position_size,
             )
             if order and self.portfolio:
-                order = create_order(order, self.config.exchange_str)
+                order = create_order(order, self.ppss.trader_ss.exchange_str)
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()
         else:
