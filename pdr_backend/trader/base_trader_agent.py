@@ -94,21 +94,19 @@ class BaseTraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
         print("before:", time.time())
-        tasks = [self._process_block(block["timestamp"])]
-        s_till_epoch_ends, log_list = zip(*await asyncio.gather(*tasks))
+        s_till_epoch_ends, logs = await self._process_block(block["timestamp"])
 
-        for logs in log_list:
-            for log in logs:
-                print(log)
+        for log in logs:
+            print(log)
 
         print("after:", time.time())
-        if -1 in s_till_epoch_ends:
+        if s_till_epoch_ends == -1:
             # -1 means subscription expired for one of the assets
             self.check_subscriptions_and_subscribe()
             return
 
-        sleep_time = min(s_till_epoch_ends) - 1
-        print(f"-- Soonest epoch is in {sleep_time} seconds, waiting... --")
+        sleep_time = s_till_epoch_ends - 1
+        print(f"-- epoch is in {sleep_time} seconds, waiting... --")
 
         time.sleep(sleep_time)
 
