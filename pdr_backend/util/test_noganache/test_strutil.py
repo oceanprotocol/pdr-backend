@@ -33,6 +33,11 @@ def testStrMixin1():
     s3 = f.longstr()
     assert s3 == s
 
+    f.__class__.__STR_GIVES_NEWLINE__ = True
+    s4 = f.longstr()
+    assert "\n" in s4
+    f.__class__.__STR_GIVES_NEWLINE__ = False
+
 
 def testStrMixin2():
     class Foo(StrMixin):
@@ -61,6 +66,9 @@ def testDictStr():
     assert "'b':4" in s2
     assert "dict}" in s
 
+    s = dictStr(d, True)
+    assert "\n" in s
+
 
 def testEmptyDictStr():
     d = {}
@@ -84,6 +92,9 @@ def testAsCurrency():
     assert asCurrency(1234.567, False) == "$1,235"
     assert asCurrency(2e6, False) == "$2,000,000"
     assert asCurrency(2e6 + 0.03, False) == "$2,000,000"
+
+    assert asCurrency(-0.03, True) == "-$0.03"
+    assert asCurrency(-0.03, False) == "-$0"
 
 
 def testPrettyBigNum1_DoRemoveZeros_decimalsNeeded():

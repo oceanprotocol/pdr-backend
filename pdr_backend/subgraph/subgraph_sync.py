@@ -19,11 +19,10 @@ def block_number_is_synced(subgraph_url: str, block_number: int) -> bool:
     )
     try:
         result = query_subgraph(subgraph_url, query)
-        if "errors" in result:
-            return False
-    except Exception as _:
+    except Exception:
         return False
-    return True
+
+    return "errors" not in result
 
 
 @enforce_types

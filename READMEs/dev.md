@@ -32,8 +32,7 @@ source venv/bin/activate
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58"
 
 # Unit tests default to using "development" network -- a locally-run barge.
-# If you need another network such as barge on VPS, then override via e.g.
-export NETWORK_OVERRIDE=barge-pytest
+# If you need another network such as barge on VPS, then override the endpoints for the development network
 ```
 
 All other settings are in [`ppss.yaml`](../ppss.yaml). Some of these are used in unit tests. Whereas most READMEs make a copy `my_ppss.yaml`, for development we typically want to operate directly on `ppss.yaml`.
@@ -68,6 +67,12 @@ pylint pdr_backend/*
 
 # auto-fix some pylint complaints like whitespace
 black ./
+```
+
+Check code coverage:
+```console
+coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
+coverage report # show results
 ```
 
 ### Local Usage: Run a custom agent

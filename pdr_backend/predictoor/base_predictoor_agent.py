@@ -1,3 +1,4 @@
+import os
 import time
 from abc import ABC, abstractmethod
 from typing import List, Tuple
@@ -30,10 +31,10 @@ class BasePredictoorAgent(ABC):
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
         feed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
-        print_feeds({feed.address: feed}, "filtered feeds")
         if not feed:
             raise ValueError("No feeds found.")
 
+        print_feeds({feed.address: feed}, "filtered feed")
         self.feed = feed
 
         contracts = ppss.web3_pp.get_contracts([feed.address])
@@ -51,6 +52,8 @@ class BasePredictoorAgent(ABC):
         print("Waiting...", end="")
         while True:
             self.take_step()
+            if os.getenv("TEST") == "true":
+                break
 
     @enforce_types
     def take_step(self):

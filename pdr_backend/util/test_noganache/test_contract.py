@@ -4,7 +4,6 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.contract import (
     _condition_sapphire_keys,
     get_address,
@@ -22,9 +21,9 @@ _NETWORKS = [
 
 @enforce_types
 @pytest.mark.parametrize("network", _NETWORKS)
-def test_contract_main(network, monkeypatch):
+def test_contract_main(network):
     # setup
-    del_network_override(monkeypatch)
+
     ppss = mock_ppss(["binance BTC/USDT c 5m"], network)
     web3_pp = ppss.web3_pp
     assert web3_pp.network == network
@@ -39,6 +38,9 @@ def test_contract_main(network, monkeypatch):
 
     result = get_contract_filename("ERC20Template3", web3_pp.address_file)
     assert result is not None and isinstance(result, Path)
+
+    with pytest.raises(TypeError):
+        get_contract_abi("xyz", web3_pp.address_file)
 
 
 @enforce_types

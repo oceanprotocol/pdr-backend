@@ -11,6 +11,7 @@ from pdr_backend.util.constants import CAND_USDCOINS
 #   So it converts to "-" just-in-time. That's outside this module.
 
 
+# don't use @enforce_types, causes problems
 class ArgPair:
     def __init__(
         self,
@@ -18,7 +19,7 @@ class ArgPair:
         base_str: Optional[str] = None,
         quote_str: Optional[str] = None,
     ):
-        if not pair_str and [None in [base_str, quote_str]]:
+        if not pair_str and None in [base_str, quote_str]:
             raise ValueError(
                 "Must provide either pair_str, or both base_str and quote_str"
             )
@@ -53,18 +54,6 @@ class ArgPair:
 
 
 class ArgPairs(List[ArgPair]):
-    @staticmethod
-    def from_str(pairs_str: str) -> "ArgPairs":
-        pairs = ArgPairs(_unpack_pairs_str(pairs_str))
-
-        if not pairs:
-            raise ValueError(pairs_str)
-
-        return pairs
-
-    def __eq__(self, other):
-        return set(self) == set(other)
-
     def __init__(self, pairs: Union[List[str], List[ArgPair]]):
         if not isinstance(pairs, list):
             raise TypeError(pairs)
@@ -74,6 +63,13 @@ class ArgPairs(List[ArgPair]):
 
         pairs = [ArgPair(pair) for pair in pairs if pair]
         super().__init__(pairs)
+
+    @staticmethod
+    def from_str(pairs_str: str) -> "ArgPairs":
+        return ArgPairs(_unpack_pairs_str(pairs_str))
+
+    def __eq__(self, other):
+        return set(self) == set(other)
 
     @enforce_types
     def __str__(self) -> str:
@@ -106,7 +102,7 @@ def _unpack_pairs_str(pairs_str: str) -> List[str]:
     pairs_str = pairs_str.replace("-", "/")  # ETH/USDT -> ETH-USDT. Safer files.
     pair_str_list = pairs_str.split(",")
 
-    if not pair_str_list:
+    if not any(pair_str_list):
         raise ValueError(pairs_str)
 
     return pair_str_list

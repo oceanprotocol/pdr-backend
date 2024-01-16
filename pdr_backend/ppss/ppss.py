@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple
 import yaml
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
@@ -37,16 +38,65 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         else:
             d = yaml.safe_load(str(yaml_str))
 
-        # fill attributes from d
+        # fill attributes from d. Same order as ppss.yaml, to help reading
         self.lake_ss = LakeSS(d["lake_ss"])
-        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
-        self.payout_ss = PayoutSS(d["payout_ss"])
-        self.sim_ss = SimSS(d["sim_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
-        self.trueval_ss = TruevalSS(d["trueval_ss"])
+        self.sim_ss = SimSS(d["sim_ss"])
         self.publisher_ss = PublisherSS(network, d["publisher_ss"])
+        self.trueval_ss = TruevalSS(d["trueval_ss"])
+        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
+        self.payout_ss = PayoutSS(d["payout_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
+
+        self.verify_feed_dependencies()
+
+    def verify_feed_dependencies(self):
+        """Raise ValueError if a feed dependency is violated"""
+        lake_fs = self.lake_ss.feeds
+        predict_f = self.predictoor_ss.feed
+        aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
+
+        # is predictoor_ss.predict_feed in lake feeds?
+        # - check for matching {exchange, pair, timeframe} but not {signal}
+        #   because lake holds all signals o,h,l,c,v
+        if not lake_fs.contains_combination(
+            predict_f.exchange, predict_f.pair, predict_f.timeframe
+        ):
+            s = "predictoor_ss.predict_feed not in lake_ss.feeds"
+            s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+            raise ValueError(s)
+
+        # do all aimodel_ss input feeds conform to predict feed timeframe?
+        for aimodel_f in aimodel_fs:
+            if aimodel_f.timeframe != predict_f.timeframe:
+                s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
+                s += f"\n  target={predict_f.timeframe}, in predictoor_ss.feed"
+                s += f"\n  found={aimodel_f.timeframe}, in this aimodel feed:"
+                s += f" {aimodel_f}"
+                raise ValueError(s)
+
+        # is each predictoor_ss.aimodel_ss.input_feeds in lake feeds?
+        # - check for matching {exchange, pair, timeframe} but not {signal}
+        for aimodel_f in aimodel_fs:
+            if not lake_fs.contains_combination(
+                aimodel_f.exchange, aimodel_f.pair, aimodel_f.timeframe
+            ):
+                s = "at least one aimodel_ss.input_feeds not in lake_ss.feeds"
+                s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+                s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
+                s += f"\n  (input_feed not found: {aimodel_f})"
+                raise ValueError(s)
+
+        # is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
+        # - check for matching {exchange, pair, timeframe AND signal}
+        if predict_f not in aimodel_fs:
+            s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
+            s += " (accounting for signal too)"
+            s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
+            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+            raise ValueError(s)
 
     def __str__(self):
         s = ""
@@ -63,7 +113,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
 # =========================================================================
 # utilities for testing
-_CACHED_YAML_FILE_S = None
 
 
 @enforce_types
@@ -75,13 +124,17 @@ def mock_feed_ppss(
     tmpdir=None,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss([f"{exchange} {pair} c {timeframe}"], network, tmpdir)
+    ppss = mock_ppss(
+        [f"{exchange} {pair} c {timeframe}"],
+        network,
+        tmpdir,
+    )
     return (feed, ppss)
 
 
 @enforce_types
 def mock_ppss(
-    feeds: List[str],
+    feeds: List[str],  # eg ["binance BTC/USDT ETH/USDT c 5m", "kraken ..."]
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -89,14 +142,16 @@ def mock_ppss(
 ) -> PPSS:
     network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=yaml_str, network=network)
 
-    assert hasattr(ppss, "lake_ss")
-    assert hasattr(ppss, "predictoor_ss")
+    ppss = PPSS(yaml_str=yaml_str, network=network)
 
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
 
+    arg_feeds: ArgFeeds = ArgFeeds.from_strs(feeds)
+    onefeed = str(arg_feeds[0])  # eg "binance BTC/USDT c 5m"
+
+    assert hasattr(ppss, "lake_ss")
     ppss.lake_ss = LakeSS(
         {
             "feeds": feeds,
@@ -106,9 +161,10 @@ def mock_ppss(
         }
     )
 
+    assert hasattr(ppss, "predictoor_ss")
     ppss.predictoor_ss = PredictoorSS(
         {
-            "predict_feed": feeds[0],
+            "predict_feed": onefeed,
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
                 "input_feeds": feeds,
@@ -119,9 +175,10 @@ def mock_ppss(
         }
     )
 
+    assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(
         {
-            "feed": feeds[0],
+            "feed": onefeed,
             "sim_only": {
                 "buy_amt": "10 USD",
             },
@@ -129,6 +186,11 @@ def mock_ppss(
         }
     )
 
+    assert hasattr(ppss, "trueval_ss")
+    assert "feeds" in ppss.trueval_ss.d
+    ppss.trueval_ss.d["feeds"] = feeds
+
+    assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(
         {
             "feeds": feeds,
@@ -137,8 +199,10 @@ def mock_ppss(
             "weekly_spending_limit": 37000,
         }
     )
-
     return ppss
+
+
+_CACHED_YAML_FILE_S = None
 
 
 @enforce_types

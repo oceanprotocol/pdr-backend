@@ -15,15 +15,21 @@ def merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
     @return
       mergedohlcv_df -- see class docstring
     """
+    # preconditions
     raw_dfs = rawohlcv_dfs
+    _verify_pair_strs(raw_dfs)
 
-    print("  Merge rawohlcv dataframes.")
-    merged_df = None
+    # initialize merged_df with all timestamps seen
+    all_uts_set: set = set()
     for exch_str in raw_dfs.keys():
-        for pair_str, raw_df in raw_dfs[exch_str].items():
-            assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-            assert "timestamp" in raw_df.columns
+        for raw_df in raw_dfs[exch_str].values():
+            all_uts_set = all_uts_set.union(raw_df["timestamp"].to_list())
+    all_uts: list = sorted(all_uts_set)
+    merged_df = pl.DataFrame({"timestamp": all_uts})
 
+    # merge in data from each raw_df. It can handle inconsistent # rows.
+    for exch_str in raw_dfs.keys():
+        for pair_str, raw_df in rawohlcv_dfs[exch_str].items():
             for raw_col in raw_df.columns:
                 if raw_col == "timestamp":
                     continue
@@ -31,7 +37,9 @@ def merge_rawohlcv_dfs(rawohlcv_dfs: dict) -> pl.DataFrame:
                 merged_col = f"{exch_str}:{pair_str}:{signal_str}"
                 merged_df = _add_df_col(merged_df, merged_col, raw_df, raw_col)
 
+    # order the columns
     merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
+    # postconditions, return
     _verify_df_cols(merged_df)
     return merged_df
 
@@ -47,18 +55,31 @@ def _add_df_col(
     Does polars equivalent of: merged_df[merged_col] = raw_df[raw_col].
     Tuned for this factory, by keeping "timestamp"
     """
+    # if raw_df has no rows, then give it many rows with null value
+    # (this is needed to avoid issues in df.join() below)
+    if raw_df.shape[0] == 0:  # empty
+        assert merged_df is not None
+        timestamps = merged_df["timestamp"].to_list()
+        d = {"timestamp": timestamps, raw_col: [None] * len(timestamps)}
+        raw_df = pl.DataFrame(d)
+
+    # newraw_df = copy of raw_df, with raw_col renamed -> merged_col, +timestamp
     newraw_df = raw_df.with_columns(
         pl.col(raw_col).alias(merged_col),
     )
     newraw_df = newraw_df.select(["timestamp", merged_col])
 
+    # now join the cols of newraw_df into merged_df
     if merged_df is None:
         merged_df = newraw_df
     else:
         merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
         merged_df = merge_cols(merged_df, "timestamp", "timestamp_right")
 
+    # re-order merged_df's columns
     merged_df = merged_df.select(_ordered_cols(merged_df.columns))  # type: ignore
+
+    # postconditions, return
     _verify_df_cols(merged_df)
     return merged_df
 
@@ -96,3 +117,10 @@ def _verify_df_cols(df: pl.DataFrame):
         assert "_right" not in col
         assert "_left" not in col
     assert df.columns == _ordered_cols(df.columns)
+
+
+@enforce_types
+def _verify_pair_strs(rawohlcv_dfs):
+    for exch_str in rawohlcv_dfs.keys():
+        for pair_str in rawohlcv_dfs[exch_str].keys():
+            assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"

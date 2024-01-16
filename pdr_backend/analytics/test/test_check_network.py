@@ -9,7 +9,6 @@ from pdr_backend.analytics.check_network import (
     get_expected_consume,
 )
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.mathutil import to_wei
 
@@ -96,7 +95,6 @@ def test_check_network_main(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_get_opf_addresses.return_value = {
@@ -115,3 +113,40 @@ def test_check_network_main(  # pylint: disable=unused-argument
     assert mock_query_subgraph.call_count == 1
     mock_token.assert_called()
     ppss.web3_pp.web3_config.w3.eth.get_balance.assert_called()
+
+
+@enforce_types
+@patch(f"{PATH}.check_dfbuyer")
+@patch(f"{PATH}.get_opf_addresses")
+@patch(f"{PATH}.Token")
+def test_check_network_others(  # pylint: disable=unused-argument
+    mock_token,
+    mock_get_opf_addresses,
+    mock_check_dfbuyer,
+    tmpdir,
+    monkeypatch,
+):
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+    mock_query_subgraph = Mock()
+
+    # test if predictoor contracts are found, iterates through them
+    with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
+        mock_query_subgraph.return_value = {
+            "data": {
+                "predictContracts": [
+                    {
+                        "slots": {},
+                        "token": {"name": "aa"},
+                        "secondsPerEpoch": 86400,
+                    },
+                    {
+                        "slots": {},
+                        "token": {"name": "bb"},
+                        "secondsPerEpoch": 86400,
+                    },
+                ]
+            }
+        }
+        check_network_main(ppss, lookback_hours=24)
+        assert mock_query_subgraph.call_count == 1
+        assert mock_check_dfbuyer.call_count == 1

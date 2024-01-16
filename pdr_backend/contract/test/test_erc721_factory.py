@@ -1,3 +1,6 @@
+from unittest.mock import Mock, patch
+
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.erc721_factory import Erc721Factory
@@ -53,3 +56,19 @@ def test_Erc721Factory(web3_pp, web3_config):
 
     assert len(logs_nft) > 0
     assert len(logs_erc) > 0
+
+    config = Mock()
+    receipt = {"status": 0}
+    config.w3.eth.wait_for_transaction_receipt.return_value = receipt
+
+    with patch.object(factory, "config") as mock_config:
+        mock_config.return_value = config
+        with pytest.raises(ValueError):
+            factory.createNftWithErc20WithFixedRate(nft_data, erc_data, fre_data)
+
+
+@enforce_types
+def test_Erc721Factory_no_address(web3_pp):
+    with patch("pdr_backend.contract.erc721_factory.get_address", return_value=None):
+        with pytest.raises(ValueError):
+            Erc721Factory(web3_pp)

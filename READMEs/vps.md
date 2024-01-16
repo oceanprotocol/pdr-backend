@@ -218,7 +218,7 @@ Let's configure the yaml file. In console:
 cp ppss.yaml my_ppss.yaml
 ```
 
-In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
+In `my_ppss.yaml` file, in `web3_pp` ->  `development` section:
 - change the urls and addresses as needed to reflect your VPS
 - including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-predictoor-bot.address.json`, in `"development"` -> `"Ocean"` entry.)
 
@@ -226,7 +226,7 @@ In `my_ppss.yaml` file, in `web3_pp` ->  `barge-predictoor-bot` section:
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
-pdr predictoor 3 my_ppss.yaml barge-predictoor-bot
+pdr predictoor 3 my_ppss.yaml development
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -259,9 +259,6 @@ export PATH=$PATH:.
 
 # same private key as 'run predictoor bot'
 export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
-
-# Unit tests default to using "development" network. So, override!
-export NETWORK_OVERRIDE=barge-pytest
 ```
 
 ### Set PPSS
@@ -303,4 +300,10 @@ pylint pdr_backend/*
 
 # auto-fix some pylint complaints like whitespace
 black ./
+```
+
+Check code coverage:
+```console
+coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
+coverage report # show results
 ```

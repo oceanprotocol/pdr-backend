@@ -40,7 +40,4 @@ class ArgExchanges(List[ArgExchange]):
         super().__init__(converted)
 
     def __str__(self):
-        if not self:
-            return ""
-
         return ",".join([str(exchange) for exchange in self])

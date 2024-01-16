@@ -66,6 +66,8 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
             pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
         )
 
+    print("Payout done")
+
 
 @enforce_types
 def do_rose_payout(ppss: PPSS, check_network: bool = True):
@@ -92,7 +94,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
 
     print("Converting wROSE to ROSE")
     time.sleep(10)
-    wROSE = WrappedToken(web3_config, wROSE_addr)
+    wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == 0:
         print("wROSE balance is 0")

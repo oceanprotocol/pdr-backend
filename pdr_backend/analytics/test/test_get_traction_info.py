@@ -1,11 +1,11 @@
 from unittest.mock import Mock, patch
 
 import polars as pl
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -14,9 +14,7 @@ from pdr_backend.util.timeutil import timestr_to_ut
 def test_get_traction_info_main_mainnet(
     _sample_daily_predictions,
     tmpdir,
-    monkeypatch,
 ):
-    del_network_override(monkeypatch)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_traction_stat = Mock()
@@ -73,3 +71,30 @@ def test_get_traction_info_main_mainnet(
         pl.DataFrame.equals(mock_traction_stat.call_args, preds_df)
         mock_plot_cumsum.assert_called()
         mock_plot_daily.assert_called()
+
+
+@enforce_types
+def test_get_traction_info_empty(tmpdir, capfd):
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+
+    mock_empty = Mock(return_value=[])
+
+    PATH = "pdr_backend.analytics.get_traction_info"
+    with patch(f"{PATH}.GQLDataFactory.get_gql_dfs", mock_empty):
+        st_timestr = "2023-11-02"
+        fin_timestr = "2023-11-05"
+
+        get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+
+    assert (
+        "No records found. Please adjust start and end times." in capfd.readouterr().out
+    )
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.status_code = 503
+        # don't actually sleep in tests
+        with patch("time.sleep"):
+            with pytest.raises(Exception):
+                get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+
+    assert mock_post.call_count == 3

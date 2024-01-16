@@ -2,13 +2,18 @@ import ccxt
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeed, ArgFeeds
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.base_ss import MultiFeedMixin, SingleFeedMixin
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 class MultiFeedMixinTest(MultiFeedMixin):
     FEEDS_KEY = "feeds"
+
+
+class NestedMultiFeedMixinTest(MultiFeedMixin):
+    FEEDS_KEY = "abc.xyz.feeds"
 
 
 class SingleFeedMixinTest(SingleFeedMixin):
@@ -44,6 +49,28 @@ def test_multi_feed():
         ("binanceus", "ETH/USDT"),
         ("binanceus", "TRX/DAI"),
     }
+
+
+@enforce_types
+def test_nested_multi_feed():
+    d = {
+        "abc": {
+            "xyz": {
+                "feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
+            }
+        }
+    }
+    ss = NestedMultiFeedMixinTest(d)
+    assert ss.n_feeds == 4
+
+    wrong_d = {
+        "abc": {
+            "feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
+        }
+    }
+
+    with pytest.raises(ValueError, match="Could not find nested attribute xyz"):
+        ss = NestedMultiFeedMixinTest(wrong_d)
 
 
 @enforce_types

@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
-from pdr_backend.cli.arg_feed import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
@@ -21,7 +21,6 @@ class Web3PP(StrMixin):
 
     @enforce_types
     def __init__(self, d: dict, network: str):
-        network = getenv("NETWORK_OVERRIDE") or network  # allow envvar override
         if network not in d:
             raise ValueError(f"network '{network}' not found in dict")
 
@@ -144,15 +143,30 @@ class Web3PP(StrMixin):
             allowed_feeds=allowed_feeds,
         )
 
+    @enforce_types
+    def tx_call_params(self, gas=None) -> dict:
+        call_params = {
+            "from": self.web3_config.owner,
+            "gasPrice": self.tx_gas_price(),
+        }
+        if gas is not None:
+            call_params["gas"] = gas
+        return call_params
+
+    @enforce_types
+    def tx_gas_price(self) -> int:
+        """Return gas price for use in call_params of transaction calls."""
+        network = self.network
+        if network in ["sapphire-testnet", "sapphire-mainnet"]:
+            return self.web3_config.w3.eth.gas_price
+            # return 100000000000
+        if network in ["development", "barge-predictoor-bot", "barge-pytest"]:
+            return 0
+        raise ValueError(f"Unknown network {network}")
+
 
 # =========================================================================
 # utilities for testing
-
-
-@enforce_types
-def del_network_override(monkeypatch):
-    if getenv("NETWORK_OVERRIDE"):
-        monkeypatch.delenv("NETWORK_OVERRIDE")
 
 
 @enforce_types
