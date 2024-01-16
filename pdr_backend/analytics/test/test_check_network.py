@@ -14,7 +14,7 @@ from pdr_backend.util.mathutil import to_wei
 
 PATH = "pdr_backend.analytics.check_network"
 
-MOCK_CUR_UT = 1702826080982
+MOCK_CUR_UT = 1702826080
 
 
 @enforce_types
@@ -27,7 +27,7 @@ MOCK_CUR_UT = 1702826080982
     side_effect=Mock(return_value=100),
 )
 @patch(
-    f"{PATH}.current_ut",
+    f"{PATH}.current_ut_s",
     side_effect=Mock(return_value=MOCK_CUR_UT),
 )
 def test_check_dfbuyer(  # pylint: disable=unused-argument
