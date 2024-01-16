@@ -1,4 +1,3 @@
-from typing import Optional
 from enforce_typing import enforce_types
 from web3.types import TxParams, Wei
 
@@ -7,9 +6,8 @@ from pdr_backend.contract.base_contract import BaseContract
 
 @enforce_types
 class Token(BaseContract):
-    def __init__(self, web3_pp, address: str, name: Optional[str] = None):
-        name = name or "ERC20" # make mypy happy
-        super().__init__(web3_pp, address, name)
+    def __init__(self, web3_pp, address: str):
+        super().__init__(web3_pp, address, "ERC20")
 
     def allowance(self, account, spender):
         return self.contract_instance.functions.allowance(account, spender).call()
