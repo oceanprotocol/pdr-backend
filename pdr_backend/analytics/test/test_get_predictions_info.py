@@ -32,7 +32,7 @@ def test_get_predictions_info_main_mainnet(
         fin_timestr = "2023-11-05"
 
         get_predictions_info_main(
-            ppss, "0x123", st_timestr, fin_timestr, "parquet_data/"
+            ppss, ["0x123"], st_timestr, fin_timestr, "parquet_data/"
         )
 
         mock_fetch.assert_called_with(
@@ -64,7 +64,7 @@ def test_get_predictions_info_empty(tmpdir, capfd, monkeypatch):
         fin_timestr = "2023-11-05"
 
         get_predictions_info_main(
-            ppss, "0x123", st_timestr, fin_timestr, "parquet_data/"
+            ppss, ["0x123"], st_timestr, fin_timestr, "parquet_data/"
         )
 
     assert (

@@ -23,7 +23,7 @@ def test_get_predictoors_info_main_mainnet(tmpdir, monkeypatch):
     ), patch(f"{PATH}.get_cli_statistics", mock_getstats):
         get_predictoors_info_main(
             ppss,
-            "0x123",
+            ["0x123"],
             "2023-01-01",
             "2023-01-02",
             "parquet_data/",

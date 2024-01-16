@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List
 
 from enforce_typing import enforce_types
 
@@ -17,7 +17,7 @@ from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
 @enforce_types
 def get_predictions_info_main(
     ppss: PPSS,
-    feed_addrs_str: Union[str, None],
+    feed_addrs: List[str],
     start_timestr: str,
     end_timestr: str,
     pq_dir: str,
@@ -33,9 +33,9 @@ def get_predictions_info_main(
     )
     feed_contract_list = [f.lower() for f in feed_contract_list]
 
-    if feed_addrs_str:
-        keep = feed_addrs_str.lower().split(",")
-        feed_contract_list = [f for f in feed_contract_list if f in keep]
+    if feed_addrs:
+        feed_addrs = [f.lower() for f in feed_addrs]
+        feed_contract_list = [f for f in feed_contract_list if f in feed_addrs]
 
     # fetch predictions
     predictions = fetch_filtered_predictions(

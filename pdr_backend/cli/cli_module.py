@@ -174,12 +174,12 @@ def do_create_accounts(args):
 @enforce_types
 def do_view_accounts(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    accounts = args.ACCOUNTS.split(",")
+    accounts = args.ACCOUNTS
     view_accounts(accounts, ppss.web3_pp)
 
 
 @enforce_types
 def do_fund_accounts(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    to_accounts = args.ACCOUNTS.split(",")
+    to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
