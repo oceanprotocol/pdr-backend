@@ -1,21 +1,41 @@
 import sys
-
 from unittest.mock import Mock, patch, MagicMock
 
+from pdr_backend.lake.table_pdr_predictions import (
+    _object_list_to_df,
+    predictions_schema,
+)
+from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 
 
 @patch("pdr_backend.analytics.get_traction_info.plot_slot_daily_statistics")
-@patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
-@patch("pdr_backend.analytics.predictoor_stats.plt.savefig")
-def test_topup(
-    mock_savefig,
-    mock_get_all_contract_ids_by_owner,
-    mock_plot_slot_daily_statistics,
-):
-    mock_get_all_contract_ids_by_owner.return_value = ["0xfeed"]
+@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_dfs")
+def test_topup(mock_getPolars, mock_plot_stats):
+    feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
+    user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    mock_predictions = [
+        Prediction(
+            "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            "BTC",
+            "5m",
+            True,
+            100.0,
+            False,
+            1701532572,
+            "binance",
+            10.0,
+            10,
+            feed_addr,
+            user_addr,
+        )
+    ]
+
+    predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
+
+    mock_getPolars.return_value = {"pdr_predictions": predictions_df}
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -50,19 +70,8 @@ def test_topup(
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
         mock_print.assert_any_call(
-            "Get predictions data across many feeds and timeframes."
-        )
-        mock_print.assert_any_call(
-            "  Data start: timestamp=1701388800000, dt=2023-12-01_00:00:00.000"
-        )
-        mock_print.assert_any_call(
-            "  Data fin: timestamp=1703980800000, dt=2023-12-31_00:00:00.000"
-        )
-        mock_print.assert_any_call(
             "Chart created:", "./dir/plots/daily_unique_predictoors.png"
         )
 
         # Additional assertions
-        mock_get_all_contract_ids_by_owner.assert_called()
-        mock_plot_slot_daily_statistics.assert_called()
-        mock_savefig.assert_called_with("./dir/plots/daily_unique_predictoors.png")
+        mock_plot_stats.assert_called()

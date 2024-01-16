@@ -34,4 +34,4 @@ def get_predictoors_info_main(
     )
 
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
-    predictoor_summary_df.show()
+    print(predictoor_summary_df)

@@ -36,4 +36,4 @@ def get_predictions_info_main(
     )
 
     feed_summary_df = get_feed_summary_stats(predictions_df)
-    feed_summary_df.show()
+    print(feed_summary_df)
