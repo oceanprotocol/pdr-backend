@@ -6,15 +6,11 @@ from eth_account import Account
 from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.web3_accounts import (
-    create_accounts,
-    fund_accounts,
-    view_accounts
-)
+from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
 
 @enforce_types
-@patch('eth_account.Account.create')
+@patch("eth_account.Account.create")
 def test_create_accounts(mock_create, monkeypatch):
     create_accounts(2)
 
@@ -23,15 +19,12 @@ def test_create_accounts(mock_create, monkeypatch):
 
 
 @enforce_types
-@patch('pdr_backend.util.web3_accounts.Token', autospec=True)
-@patch('pdr_backend.util.web3_accounts.NativeToken', autospec=True)
-@patch('pdr_backend.util.web3_accounts.get_address', autospec=True)
+@patch("pdr_backend.util.web3_accounts.Token", autospec=True)
+@patch("pdr_backend.util.web3_accounts.NativeToken", autospec=True)
+@patch("pdr_backend.util.web3_accounts.get_address", autospec=True)
 def test_get_account_balances(
-    mock_get_address,
-    mock_native_token,
-    mock_token,
-    monkeypatch):
-
+    mock_get_address, mock_native_token, mock_token, monkeypatch
+):
     del_network_override(monkeypatch)
 
     web3_pp = mock_web3_pp("development")
@@ -46,7 +39,7 @@ def test_get_account_balances(
 
     # Set the return value for get_address
     mock_get_address.return_value = "0xOCEAN"
-    
+
     view_accounts(["0x123", "0x1234"], web3_pp)
 
     # Assert methods are returning right values
