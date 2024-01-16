@@ -89,12 +89,16 @@ def check_addresses(value):
         validates that all addressses is a comma-separated list of strings
         each string, will be a valid Ethereum address
     """
+    if not value:
+        return []
+    
     addresses = value.split(",")
     checksummed_addresses = []
     for address in addresses:
-        if not address.startswith("0x"):
+        try:
+            checksummed_addresses.append(to_checksum_address(address.lower()))
+        except Exception:
             raise TypeError(f"{address} is not a valid Ethereum address")
-        checksummed_addresses.append(to_checksum_address(address.lower()))
     return checksummed_addresses
 
 

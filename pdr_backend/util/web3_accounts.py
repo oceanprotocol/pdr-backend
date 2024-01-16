@@ -34,7 +34,7 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
     # get assets
     native_token = NativeToken(web3_pp)
     OCEAN_addr = get_address(web3_pp, "Ocean")
-    OCEAN_token = Token(web3_pp, OCEAN_addr, "OCEAN")
+    OCEAN_token = Token(web3_pp, OCEAN_addr)
 
     # loop through all addresses and print balances
     for address in addresses:
@@ -67,7 +67,7 @@ def fund_accounts(
         token = NativeToken(web3_pp)
     else:
         OCEAN_addr = get_address(web3_pp, "Ocean")
-        token = Token(web3_pp, OCEAN_addr, "OCEAN")
+        token = Token(web3_pp, OCEAN_addr)
 
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
