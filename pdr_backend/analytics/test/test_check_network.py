@@ -31,7 +31,7 @@ MOCK_CUR_UT = 1702826080
     side_effect=Mock(return_value=MOCK_CUR_UT),
 )
 def test_check_dfbuyer(  # pylint: disable=unused-argument
-    mock_current_ut,
+    mock_current_ut_ms,
     mock_get_expected_consume_,
     mock_get_consume_so_far_per_contract_,
     capsys,
