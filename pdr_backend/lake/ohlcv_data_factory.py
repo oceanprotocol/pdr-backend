@@ -22,7 +22,7 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
 )
 from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.util.timeutil import current_ut, pretty_timestr
+from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 
 @enforce_types
@@ -114,7 +114,7 @@ class OhlcvDataFactory:
         assert feed.timeframe
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
         print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
-        if st_ut > min(current_ut(), fin_ut):
+        if st_ut > min(current_ut_ms(), fin_ut):
             print("      Given start time, no data to gather. Exit.")
             return
 
