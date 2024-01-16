@@ -91,7 +91,7 @@ def check_addresses(value):
     """
     if not value:
         return []
-    
+
     addresses = value.split(",")
     checksummed_addresses = []
     for address in addresses:
@@ -309,7 +309,10 @@ class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_argument("command", choices=[command_name])
-        self.add_arguments_bulk(command_name, ["TOKEN_AMOUNT", "ACCOUNTS", "PPSS", "NETWORK", "NATIVE_TOKEN"])
+        self.add_arguments_bulk(
+            command_name,
+            ["TOKEN_AMOUNT", "ACCOUNTS", "PPSS", "NETWORK", "NATIVE_TOKEN"],
+        )
 
 
 # ========================================================================

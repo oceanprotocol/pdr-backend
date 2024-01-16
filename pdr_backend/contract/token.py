@@ -7,7 +7,8 @@ from pdr_backend.contract.base_contract import BaseContract
 
 @enforce_types
 class Token(BaseContract):
-    def __init__(self, web3_pp, address: str, name: Optional[str] = "ERC20"):
+    def __init__(self, web3_pp, address: str, name: Optional[str] = None):
+        name = name or "ERC20" # make mypy happy
         super().__init__(web3_pp, address, name)
 
     def allowance(self, account, spender):
