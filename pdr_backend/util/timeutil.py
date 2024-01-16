@@ -17,9 +17,11 @@ def current_ut() -> int:
     dt = datetime.datetime.now(timezone.utc)
     return dt_to_ut(dt)
 
+
 def current_ut_s() -> int:
     """Returns the current UTC unix time in seconds"""
     return time.time()
+
 
 @enforce_types
 def timestr_to_ut(timestr: str) -> int:
