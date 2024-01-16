@@ -94,10 +94,7 @@ class BaseTraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
         print("before:", time.time())
-        s_till_epoch_ends, logs = await self._process_block(block["timestamp"])
-
-        for log in logs:
-            print(log)
+        s_till_epoch_ends = await self._process_block(block["timestamp"])
 
         print("after:", time.time())
         if s_till_epoch_ends == -1:
@@ -110,9 +107,7 @@ class BaseTraderAgent:
 
         time.sleep(sleep_time)
 
-    async def _process_block(
-        self, timestamp: int, tries: int = 0
-    ) -> Tuple[int, List[str]]:
+    async def _process_block(self, timestamp: int, tries: int = 0) -> int:
         """
         @param:
             timestamp - timestamp/epoch to process
@@ -121,21 +116,21 @@ class BaseTraderAgent:
             epoch_s_left - number of seconds left till the epoch end
             logs - list of strings of function logs
         """
-        logs = []
         predictoor_contract = self.contract
         s_per_epoch = self.feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
-        logs.append(f"{'-'*40} Processing {self.feed} {'-'*40}\nEpoch {epoch}")
-        logs.append(f"Seconds remaining in epoch: {epoch_s_left}")
+
+        print(f"{'-'*40} Processing {self.feed} {'-'*40}\nEpoch {epoch}")
+        print(f"Seconds remaining in epoch: {epoch_s_left}")
 
         if self.prev_traded_epochs and epoch == self.prev_traded_epochs[-1]:
-            logs.append("      Done feed: already traded this epoch")
-            return epoch_s_left, logs
+            print("      Done feed: already traded this epoch")
+            return epoch_s_left
 
         if epoch_s_left < self.ppss.trader_ss.min_buffer:
-            logs.append("      Done feed: not enough time left in epoch")
-            return epoch_s_left, logs
+            print("      Done feed: not enough time left in epoch")
+            return epoch_s_left
 
         try:
             loop = asyncio.get_event_loop()
@@ -144,7 +139,7 @@ class BaseTraderAgent:
             )
         except Exception as e:
             if tries < self.ppss.trader_ss.max_tries:
-                logs.append(e.args[0]["message"])
+                print(e.args[0]["message"])
                 if (
                     len(e.args) > 0
                     and isinstance(e.args[0], dict)
@@ -152,22 +147,18 @@ class BaseTraderAgent:
                 ):
                     revert_reason = e.args[0]["message"]
                     if revert_reason == "reverted: No subscription":
-                        return (
-                            -1,
-                            logs,
-                        )  # -1 means the subscription has expired for this pair
-                logs.append("      Could not get aggpredval, trying again in a second")
+                        return -1
+                print("      Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)
                 return await self._process_block(timestamp, tries + 1)
-            logs.append(
-                f"      Done feed: aggpredval not available, an error occured: {e}"
-            )
-            return epoch_s_left, logs
+            print(f"      Done feed: aggpredval not available, an error occured: {e}")
+            return epoch_s_left
 
         await self._do_trade(self.feed, prediction)
         self.prev_traded_epochs.append(epoch)
         self.update_cache()
-        return epoch_s_left, logs
+
+        return epoch_s_left
 
     def get_pred_properties(
         self, pred_nom: float, pred_denom: float

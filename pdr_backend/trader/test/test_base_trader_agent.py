@@ -88,24 +88,24 @@ async def test_process_block(  # pylint: disable=unused-argument
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end, _ = await agent._process_block(55)
+    s_till_epoch_end = await agent._process_block(55)
     assert len(agent.prev_traded_epochs) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should trade
-    s_till_epoch_end, _ = await agent._process_block(80)
+    s_till_epoch_end = await agent._process_block(80)
     assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end, _ = await agent._process_block(80)
+    s_till_epoch_end = await agent._process_block(80)
     assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     _mock_pdr_contract.get_current_epoch = Mock()
     _mock_pdr_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end, _ = await agent._process_block(140)
+    s_till_epoch_end = await agent._process_block(140)
     assert len(agent.prev_traded_epochs) == 2
     assert s_till_epoch_end == 40
 
