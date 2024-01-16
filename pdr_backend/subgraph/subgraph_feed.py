@@ -1,7 +1,7 @@
-import ccxt
 import random
 from typing import Dict, Optional
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_pair import ArgPair
