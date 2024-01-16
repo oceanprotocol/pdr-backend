@@ -69,6 +69,12 @@ pylint pdr_backend/*
 black ./
 ```
 
+Check code coverage:
+```console
+coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
+coverage report # show results
+```
+
 ### Local Usage: Run a custom agent
 
 Let's say you want to change the trader agent, and use off-the-shelf agents for everything else. Here's how.

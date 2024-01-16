@@ -301,3 +301,9 @@ pylint pdr_backend/*
 # auto-fix some pylint complaints like whitespace
 black ./
 ```
+
+Check code coverage:
+```console
+coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
+coverage report # show results
+```
