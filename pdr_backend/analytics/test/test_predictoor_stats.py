@@ -26,6 +26,7 @@ def test_aggregate_prediction_statistics(_sample_first_predictions):
     assert "predictor" in stats
     assert correct_predictions == 1  # Adjust based on your sample data
 
+
 @enforce_types
 def test_get_cli_statistics(capsys, _sample_first_predictions):
     get_cli_statistics(_sample_first_predictions)
