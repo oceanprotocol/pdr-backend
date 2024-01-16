@@ -20,7 +20,7 @@ def current_ut() -> int:
 
 def current_ut_s() -> int:
     """Returns the current UTC unix time in seconds"""
-    return time.time()
+    return int(time.time())
 
 
 @enforce_types
