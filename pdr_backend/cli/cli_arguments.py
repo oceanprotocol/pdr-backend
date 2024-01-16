@@ -139,9 +139,13 @@ class LOOKBACK_Mixin:
 
 @enforce_types
 def check_positive(value):
-    ivalue = int(value)
-    if ivalue <= 0:
+    try:
+        ivalue = int(value)
+        if ivalue <= 0:
+            raise TypeError("%s is an invalid positive int value" % value)
+    except Exception:
         raise TypeError("%s is an invalid positive int value" % value)
+    
     return ivalue
 
 
