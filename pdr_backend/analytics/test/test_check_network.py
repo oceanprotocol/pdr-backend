@@ -150,3 +150,23 @@ def test_check_network_others(  # pylint: disable=unused-argument
         check_network_main(ppss, lookback_hours=24)
         assert mock_query_subgraph.call_count == 1
         assert mock_check_dfbuyer.call_count == 1
+
+
+
+@enforce_types
+@patch(f"{PATH}.check_dfbuyer")
+@patch(f"{PATH}.get_opf_addresses")
+@patch(f"{PATH}.Token")
+def test_check_network_without_mock(  # pylint: disable=unused-argument
+    mock_token,
+    mock_get_opf_addresses,
+    mock_check_dfbuyer,
+    tmpdir,
+    monkeypatch,
+):
+    mock_token.balanceOf.return_value = 1000e18
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+
+    check_network_main(ppss, lookback_hours=1)
+    assert mock_check_dfbuyer.call_count == 1
+    mock_token.balanceOf.assert_called()
