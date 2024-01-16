@@ -8,7 +8,6 @@ from pdr_backend.analytics.predictoor_stats import (
     aggregate_prediction_statistics,
     calculate_slot_daily_statistics,
     get_cli_statistics,
-    get_endpoint_statistics,
     get_slot_statistics,
     get_traction_statistics,
     plot_slot_daily_statistics,
@@ -26,39 +25,6 @@ def test_aggregate_prediction_statistics(_sample_first_predictions):
     assert "pair_timeframe" in stats
     assert "predictor" in stats
     assert correct_predictions == 1  # Adjust based on your sample data
-
-
-@enforce_types
-def test_get_endpoint_statistics(_sample_first_predictions):
-    accuracy, pair_timeframe_stats, predictoor_stats = get_endpoint_statistics(
-        _sample_first_predictions
-    )
-    assert isinstance(accuracy, float)
-    assert isinstance(pair_timeframe_stats, List)  # List[PairTimeframeStat]
-    assert isinstance(predictoor_stats, List)  # List[PredictoorStat]
-    for pair_timeframe_stat in pair_timeframe_stats:
-        for key in [
-            "pair",
-            "timeframe",
-            "accuracy",
-            "stake",
-            "payout",
-            "number_of_predictions",
-        ]:
-            assert key in pair_timeframe_stat
-
-    for predictoor_stat in predictoor_stats:
-        for key in [
-            "predictoor_address",
-            "accuracy",
-            "stake",
-            "payout",
-            "number_of_predictions",
-            "details",
-        ]:
-            assert key in predictoor_stat
-        assert len(predictoor_stat["details"]) == 2
-
 
 @enforce_types
 def test_get_cli_statistics(capsys, _sample_first_predictions):
