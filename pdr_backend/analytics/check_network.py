@@ -13,7 +13,7 @@ from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
-from pdr_backend.util.timeutil import current_ut
+from pdr_backend.util.timeutil import current_ut_s
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 
@@ -45,7 +45,7 @@ def check_dfbuyer(
     subgraph_url: str,
     token_amt: int,
 ):
-    cur_ut = current_ut() / 1000 # convert to seconds
+    cur_ut = current_ut_s()
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
@@ -93,7 +93,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 def check_network_main(ppss: PPSS, lookback_hours: int):
     web3_pp = ppss.web3_pp
 
-    cur_ut = current_ut()
+    cur_ut = current_ut_s()
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
             {
