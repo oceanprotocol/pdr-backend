@@ -124,10 +124,6 @@ class SingleFeedMixin:
         return str(self.feed.exchange)
 
     @property
-    def exchange_class(self) -> str:
-        return self.feed.exchange.exchange_class
-
-    @property
     def signal_str(self) -> str:
         """Return e.g. 'high'. Only applicable when 1 feed."""
         return str(self.feed.signal) if self.feed.signal else ""
