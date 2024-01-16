@@ -1,3 +1,4 @@
+import ccxt
 import random
 from typing import Dict, Optional
 
@@ -47,6 +48,10 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
     @enforce_types
     def shortstr(self) -> str:
         return f"Feed: {self.timeframe} {self.source} {self.pair} {self.address}"
+
+    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
+        exchange_class = getattr(ccxt, self.source)
+        return exchange_class(*args, **kwargs)
 
     @enforce_types
     def __str__(self) -> str:

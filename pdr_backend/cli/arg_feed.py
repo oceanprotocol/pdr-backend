@@ -1,3 +1,4 @@
+import ccxt
 from collections import defaultdict
 from typing import List, Optional, Union
 
@@ -91,6 +92,12 @@ class ArgFeed:
                 raise ValueError(feed_str)
         feed = feeds[0]
         return feed
+
+    @enforce_types
+    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
+        exchange_class = self.exchange.exchange_class
+
+        return exchange_class(*args, **kwargs)
 
 
 @enforce_types
