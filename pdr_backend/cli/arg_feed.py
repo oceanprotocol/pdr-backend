@@ -1,21 +1,17 @@
-import ccxt
 from collections import defaultdict
 from typing import List, Optional, Union
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
-from pdr_backend.cli.timeframe import (
-    Timeframe,
-    Timeframes,
-    verify_timeframes_str,
-)
+from pdr_backend.cli.timeframe import Timeframe, Timeframes, verify_timeframes_str
 from pdr_backend.util.signalstr import (
     signal_to_char,
     signals_to_chars,
-    verify_signal_str,
     unpack_signalchar_str,
+    verify_signal_str,
     verify_signalchar_str,
 )
 
