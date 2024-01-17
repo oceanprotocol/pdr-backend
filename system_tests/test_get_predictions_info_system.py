@@ -13,7 +13,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
-def test_topup(mock_getPolars, mock_getstats):
+def test_topup(mock_get_polars, mock_get_stats):
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
@@ -34,8 +34,8 @@ def test_topup(mock_getPolars, mock_getstats):
     ]
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
 
-    mock_getstats.return_value = predictions_df
-    mock_getPolars.return_value = {"pdr_predictions": predictions_df}
+    mock_get_stats.return_value = predictions_df
+    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -73,5 +73,5 @@ def test_topup(mock_getPolars, mock_getstats):
         mock_print.assert_any_call("FEEDS={feed_addr}")
 
         # Additional assertions
-        mock_getPolars.assert_called_with()
-        mock_getstats.call_args[0][0].equals(predictions_df)
+        mock_get_polars.assert_called_with()
+        mock_get_stats.call_args[0][0].equals(predictions_df)

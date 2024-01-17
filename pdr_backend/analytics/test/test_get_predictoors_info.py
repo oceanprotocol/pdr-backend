@@ -19,12 +19,12 @@ from pdr_backend.util.timeutil import timestr_to_ut
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_main_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
+    mock_get_polars, mock_get_stats, _sample_first_predictions, tmpdir
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
-    mock_getPolars.return_value = {"pdr_predictions": predictions_df}
+    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
 
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
@@ -44,16 +44,16 @@ def test_get_predictoors_info_main_mainnet(
     )
 
     # data frame after filtering is same as manual filtered dataframe
-    pl.DataFrame.equals(mock_getstats.call_args, preds_df)
+    pl.DataFrame.equals(mock_get_stats.call_args, preds_df)
 
     # number of rows from data frames are the same
-    assert mock_getstats.call_args[0][0][0].shape[0] == preds_df.shape[0]
+    assert mock_get_stats.call_args[0][0][0].shape[0] == preds_df.shape[0]
 
     # the data frame was filtered by user address
-    assert mock_getstats.call_args[0][0][0]["user"][0] == user_addr
+    assert mock_get_stats.call_args[0][0][0]["user"][0] == user_addr
 
-    assert mock_getPolars.call_count == 1
-    assert mock_getstats.call_count == 1
+    assert mock_get_polars.call_count == 1
+    assert mock_get_stats.call_count == 1
 
 
 @enforce_types
@@ -63,12 +63,12 @@ def test_get_predictoors_info_main_mainnet(
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_empty_data_frame_timeframe_filter_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
+    mock_get_polars, mock_get_stats, _sample_first_predictions, tmpdir
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
-    mock_getPolars.return_value = {"pdr_predictions": predictions_df}
+    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
 
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-30"
@@ -88,16 +88,16 @@ def test_empty_data_frame_timeframe_filter_mainnet(
     )
 
     # data frame after filtering is same as manual filtered dataframe
-    pl.DataFrame.equals(mock_getstats.call_args, preds_df)
+    pl.DataFrame.equals(mock_get_stats.call_args, preds_df)
 
     # number of rows from data frames are the same
-    assert mock_getstats.call_args[0][0][0].shape[0] == preds_df.shape[0]
+    assert mock_get_stats.call_args[0][0][0].shape[0] == preds_df.shape[0]
 
     # the data frame is empy
-    assert mock_getstats.call_args[0][0][0].shape[0] == 0
+    assert mock_get_stats.call_args[0][0][0].shape[0] == 0
 
-    assert mock_getPolars.call_count == 1
-    assert mock_getstats.call_count == 1
+    assert mock_get_polars.call_count == 1
+    assert mock_get_stats.call_count == 1
 
 
 @enforce_types
@@ -107,12 +107,12 @@ def test_empty_data_frame_timeframe_filter_mainnet(
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_empty_data_frame_user_address_filter_mainnet(
-    mock_getPolars, mock_getstats, _sample_first_predictions, tmpdir
+    mock_get_polars, mock_get_stats, _sample_first_predictions, tmpdir
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
-    mock_getPolars.return_value = {"pdr_predictions": predictions_df}
+    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
 
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
@@ -132,13 +132,13 @@ def test_empty_data_frame_user_address_filter_mainnet(
     )
 
     # data frame after filtering is same as manual filtered dataframe
-    pl.DataFrame.equals(mock_getstats.call_args, preds_df)
+    pl.DataFrame.equals(mock_get_stats.call_args, preds_df)
 
     # number of rows from data frames are the same
-    assert mock_getstats.call_args[0][0][0].shape[0] == preds_df.shape[0]
+    assert mock_get_stats.call_args[0][0][0].shape[0] == preds_df.shape[0]
 
     # the data frame is empy
-    assert mock_getstats.call_args[0][0][0].shape[0] == 0
+    assert mock_get_stats.call_args[0][0][0].shape[0] == 0
 
-    assert mock_getPolars.call_count == 1
-    assert mock_getstats.call_count == 1
+    assert mock_get_polars.call_count == 1
+    assert mock_get_stats.call_count == 1

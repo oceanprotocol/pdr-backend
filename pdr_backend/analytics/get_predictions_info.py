@@ -6,6 +6,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats
 
+
 @enforce_types
 def get_predictions_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, feed_addrs_str: Union[str, None]
