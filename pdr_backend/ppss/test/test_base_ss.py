@@ -1,4 +1,3 @@
-import ccxt
 import pytest
 from enforce_typing import enforce_types
 
@@ -184,7 +183,7 @@ def test_single_feed():
     assert ss.feed == ArgFeed("kraken", None, "ETH/USDT", "1h")
     assert ss.pair_str == "ETH/USDT"
     assert ss.exchange_str == "kraken"
-    assert ss.exchange_class == ccxt.kraken
+    assert ss.feed.ccxt_exchange().name == "Kraken"
     assert ss.signal_str == ""
     assert ss.base_str == "ETH"
     assert ss.quote_str == "USDT"
