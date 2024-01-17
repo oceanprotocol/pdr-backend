@@ -303,11 +303,11 @@ class _ArgParser_ACCOUNTS_PPSS_NETWORK(
 @enforce_types
 class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
     CustomArgParser,
+    TOKEN_AMOUNT_Mixin,
+    ACCOUNTS_Mixin,
     PPSS_Mixin,
     NETWORK_Mixin,
     NATIVE_TOKEN_Mixin,
-    TOKEN_AMOUNT_Mixin,
-    ACCOUNTS_Mixin,
 ):  # pylint: disable=too-many-ancestors
     @enforce_types
     def __init__(self, description: str, command_name: str):
