@@ -38,7 +38,7 @@ def test_topup(
             "2023-12-31",
             "./dir",
             "ppss.yaml",
-            "sapphire-testnet",
+            "development",
         ]
 
         with patch("builtins.print") as mock_print:
@@ -48,7 +48,7 @@ def test_topup(
         mock_print.assert_any_call("pdr get_traction_info: Begin")
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=sapphire-testnet")
+        mock_print.assert_any_call("NETWORK=development")
         mock_print.assert_any_call(
             "Get predictions data across many feeds and timeframes."
         )
