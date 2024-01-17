@@ -25,7 +25,6 @@ class PublisherSS(MultiFeedMixin, StrMixin):
         """
         return self.d[self.network]["fee_collector_address"]
 
-
     @enforce_types
     def filter_feeds_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
