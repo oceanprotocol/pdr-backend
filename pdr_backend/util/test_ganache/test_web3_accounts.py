@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.web3_pp import del_network_override
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
@@ -21,10 +20,8 @@ def test_create_accounts(mock_create):
 @patch("pdr_backend.util.web3_accounts.NativeToken")
 @patch("pdr_backend.util.web3_accounts.get_address")
 def test_get_account_balances(
-    mock_get_address, mock_native_token, mock_token, monkeypatch
+    mock_get_address, mock_native_token, mock_token
 ):
-    del_network_override(monkeypatch)
-
     web3_pp = mock_web3_pp("development")
 
     # Create Mock instances for NativeToken and Token
@@ -57,10 +54,8 @@ def test_get_account_balances(
 @patch("pdr_backend.util.web3_accounts.NativeToken")
 @patch("pdr_backend.util.web3_accounts.get_address")
 def test_fund_accounts(
-    mock_get_address, mock_native_token, mock_token, mock_account_from_key, monkeypatch
+    mock_get_address, mock_native_token, mock_token, mock_account_from_key
 ):
-    del_network_override(monkeypatch)
-
     web3_pp = mock_web3_pp("sapphire-mainnet")
 
     # Create Mock instances for NativeToken and Token
