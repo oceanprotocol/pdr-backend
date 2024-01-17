@@ -5,7 +5,6 @@ from pdr_backend.predictoor.test.predictoor_agent_runner import (
     run_agent_test,
     get_agent,
 )
-from pdr_backend.ppss.web3_pp import del_network_override
 
 
 def test_predictoor_agent3(tmpdir, monkeypatch):
@@ -22,8 +21,6 @@ def test_predictoor_agent3_data_component(
     @description
         Test that PredictoorAgent3.get_data_components() is called once.
     """
-    del_network_override(monkeypatch)
-
     # initialize agent
     feed, _, _, _ = get_agent(str(tmpdir), monkeypatch, PredictoorAgent3)
 
