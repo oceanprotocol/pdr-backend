@@ -1,11 +1,39 @@
 import asyncio
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections import namedtuple
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache
 from pdr_backend.util.mathutil import sole_value
+
+BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
+
+
+class Prediction(BasePrediction):
+    def __new__(cls, prediction: Tuple):
+        return super().__new__(cls, *prediction)
+
+    @property
+    def confidence(self):
+        return self.pred_nom / self.pred_denom
+
+    @property
+    def direction(self):
+        return 1 if self.confidence >= 0.5 else 0
+
+    @property
+    def stake(self):
+        return self.pred_denom
+
+    @property
+    def properties(self):
+        return {
+            "confidence": self.confidence,
+            "direction": self.direction,
+            "stake": self.pred_denom,
+        }
 
 
 # pylint: disable=too-many-instance-attributes
@@ -160,30 +188,7 @@ class BaseTraderAgent:
 
         return epoch_s_left
 
-    def get_pred_properties(
-        self, pred_nom: float, pred_denom: float
-    ) -> Dict[str, float]:
-        """
-        @description
-            This function calculates the prediction direction and confidence.
-        @returns
-            A dictionary containing the following:
-            - confidence: The confidence of the prediction.
-            - direction: The direction of the prediction.
-            - stake: The stake of the prediction.
-        """
-        confidence: float = pred_nom / pred_denom
-        direction: float = 1 if confidence >= 0.5 else 0
-        confidence = abs(confidence - 0.5)
-        confidence = (confidence / 0.5) * 100
-
-        return {
-            "confidence": confidence,
-            "dir": direction,
-            "stake": pred_denom,
-        }
-
-    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Union[Prediction, Tuple]):
         """
         @description
             This function is called each time there's a new prediction available.
@@ -203,10 +208,12 @@ class BaseTraderAgent:
             the confidence of the prediction. Ensure stake amounts
             are sufficiently large to be considered meaningful.
         """
-        pred_nom, pred_denom = prediction
-        print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
+        if not isinstance(prediction, Prediction):
+            prediction = Prediction(prediction)
 
-        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
-        print(f"      {feed} prediction properties: {pred_properties}.")
+        print(
+            f"      {feed} has a new prediction: {prediction.pred_nom} / {prediction.pred_denom}."
+        )
+        print(f"      {feed} prediction properties: {prediction.properties}.")
         # Trade here
         # ...

@@ -1,6 +1,6 @@
 from datetime import datetime
 from os import getenv
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import ccxt
 from enforce_typing import enforce_types
@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
-from pdr_backend.trader.base_trader_agent import BaseTraderAgent
+from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
 
 
 @enforce_types
@@ -68,6 +68,7 @@ class TraderAgent2(BaseTraderAgent):
         now_ts = int(datetime.now().timestamp() * 1000)
         tx_ts = int(order.timestamp)
         order_lapsed = now_ts - tx_ts > self.ppss.trader_ss.timeframe_ms
+
         return order_lapsed
 
     def update_positions(self, feeds: Optional[List[str]] = None):
@@ -75,10 +76,9 @@ class TraderAgent2(BaseTraderAgent):
         @description
             Cycle through open positions and asses them
         """
-        feeds = [self.feed.address] if feeds is None or feeds == [] else feeds
-        if not feeds:
-            return
-        if not self.portfolio:
+        feeds = feeds if feeds else [self.feed.address]
+
+        if not feeds or not self.portfolio:
             return
 
         for addr in feeds:
@@ -103,7 +103,7 @@ class TraderAgent2(BaseTraderAgent):
                 self.portfolio.close_position(addr, order)
                 self.update_cache()
 
-    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Union[Prediction, Tuple]):
         """
         @description
             Logic:
@@ -115,22 +115,24 @@ class TraderAgent2(BaseTraderAgent):
             2. In epoch 2, we sell.
             3. In epoch 2, if Condition is true, we buy.
         """
-
         ### First, update existing orders
         self.update_positions([feed.address])
 
         ### Then, create new order if our criteria is met
-        pred_nom, pred_denom = prediction
-        print(f"      {feed.address} has a new prediction: {pred_nom} / {pred_denom}.")
+        if not isinstance(prediction, Prediction):
+            prediction = Prediction(prediction)
+        print(
+            f"      {feed.address} has a new prediction: {prediction.pred_nom} "
+            f"/ {prediction.pred_denom}."
+        )
 
-        if pred_denom == 0:
+        if prediction.pred_denom == 0:
             print("  There's no stake on this, one way or the other. Exiting.")
             return
 
-        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
-        print(f"      prediction properties are: {pred_properties}")
+        print(f"      prediction properties are: {prediction.properties}")
 
-        if pred_properties["dir"] == 1 and pred_properties["confidence"] > 0.5:
+        if prediction.direction == 1 and prediction.confidence > 0.5:
             print("     [Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
                 symbol=self.ppss.trader_ss.exchange_str,
@@ -142,5 +144,5 @@ class TraderAgent2(BaseTraderAgent):
                 self.update_cache()
         else:
             print(
-                f"     [No Trade] prediction does not meet requirements: {pred_properties}"
+                f"     [No Trade] prediction does not meet requirements: {prediction.properties}"
             )
