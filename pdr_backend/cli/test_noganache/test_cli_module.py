@@ -79,6 +79,7 @@ class _PDRS:
 class _NUM:
     NUM = 1
 
+
 class _ACCOUNTS:
     ACCOUNTS = "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -154,9 +155,7 @@ class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(_Base):
 
 class MockArgParser_NUM(_Base):
     def parse_args(self):
-        class MockArgs(
-            Namespace, _NUM
-        ):
+        class MockArgs(Namespace, _NUM):
             pass
 
         return MockArgs()
@@ -164,9 +163,7 @@ class MockArgParser_NUM(_Base):
 
 class MockArgParser_ACCOUNTS_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(
-            Namespace, _ACCOUNTS, _PPSS, _NETWORK
-        ):
+        class MockArgs(Namespace, _ACCOUNTS, _PPSS, _NETWORK):
             pass
 
         return MockArgs()
@@ -326,7 +323,9 @@ def test_do_fund_accounts(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.fund_accounts", mock_f)
 
-    do_fund_accounts(MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK().parse_args())
+    do_fund_accounts(
+        MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK().parse_args()
+    )
     mock_f.assert_called()
 
 

@@ -1,17 +1,15 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
-from eth_account import Account
 
 from pdr_backend.ppss.web3_pp import del_network_override
-from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
 
 @enforce_types
 @patch("eth_account.Account.create")
-def test_create_accounts(mock_create, monkeypatch):
+def test_create_accounts(mock_create):
     create_accounts(2)
 
     # assert mock_create was called twice
@@ -88,9 +86,9 @@ def test_fund_accounts(
     fund_accounts(1.0, ["0x123", "0x124"], web3_pp, False)
     fund_accounts(3.5, ["0x125", "0x126", "0x127"], web3_pp, True)
 
-    # Assert internal functions were called twice
+    # Assert internals were called twice, but get_address is only called once
     assert mock_account_from_key.call_count == 2
-    assert mock_get_address.call_count == 2
+    assert mock_get_address.call_count == 1
 
     # Assert 3 native token vs. 2 token transfers
     assert token_instance.transfer.call_count == 2
