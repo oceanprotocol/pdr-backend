@@ -90,6 +90,7 @@ def aggregate_prediction_statistics(
 
     return stats, correct_predictions
 
+
 @enforce_types
 def get_cli_statistics(all_predictions: List[Prediction]) -> None:
     total_predictions = len(all_predictions)
