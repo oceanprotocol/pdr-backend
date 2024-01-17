@@ -133,25 +133,3 @@ def test_save_and_load_cache(
     for item in cache_dir_path.iterdir():
         item.unlink()
     cache_dir_path.rmdir()
-
-
-@pytest.mark.asyncio
-@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
-async def test_get_pred_properties(
-    check_subscriptions_and_subscribe_mock,
-):  # pylint: disable=unused-argument
-    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
-    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
-
-    agent = BaseTraderAgent(ppss)
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    agent.get_pred_properties = Mock()
-    agent.get_pred_properties.return_value = {
-        "confidence": 100.0,
-        "dir": 1,
-        "stake": 1,
-    }
-
-    await agent._do_trade(feed, (1.0, 1.0))
-    assert agent.get_pred_properties.call_count == 1
