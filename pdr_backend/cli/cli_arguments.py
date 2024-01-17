@@ -97,8 +97,8 @@ def check_addresses(value):
     for address in addresses:
         try:
             checksummed_addresses.append(to_checksum_address(address.lower()))
-        except Exception:
-            raise TypeError(f"{address} is not a valid Ethereum address")
+        except Exception as exc:
+            raise TypeError(f"{address} is not a valid Ethereum address") from exc
     return checksummed_addresses
 
 
@@ -143,9 +143,8 @@ def check_positive(value):
         ivalue = int(value)
         if ivalue <= 0:
             raise Exception("Zero or below.")
-    except Exception:
-        raise TypeError("%s is an invalid positive int value" % value)
-    
+    except Exception as exc:
+        raise TypeError("%s is an invalid positive int value" % value) from exc
     return ivalue
 
 
@@ -182,7 +181,7 @@ class NATIVE_TOKEN_Mixin:
             "--NATIVE_TOKEN",
             action="store_true",
             default=False,
-            help="Transacts with ROSE if --NATIVE_TOKEN is passed, otherwise uses OCEAN. Defaults to false (OCEAN)",
+            help="If --NATIVE_TOKEN then transact with ROSE otherwise use OCEAN",
         )
 
 
