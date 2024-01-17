@@ -151,6 +151,7 @@ def test_check_network_others(  # pylint: disable=unused-argument
         assert mock_query_subgraph.call_count == 1
         assert mock_check_dfbuyer.call_count == 1
 
+
 @enforce_types
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
