@@ -72,7 +72,7 @@ def fund_accounts(
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
     for address in to_addresses:
-        print(f"Sending {token.name} to {address} for the amount of {amount} wei")
+        print(f"Sending {token.name} to {address} for the amount of {amount}")
         token.transfer(
             address,
             to_wei(amount),
