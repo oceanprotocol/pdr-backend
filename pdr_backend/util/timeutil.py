@@ -1,3 +1,4 @@
+import time
 import datetime
 from datetime import timezone
 
@@ -11,10 +12,15 @@ def pretty_timestr(ut: int) -> str:
 
 
 @enforce_types
-def current_ut() -> int:
+def current_ut_ms() -> int:
     """Return the current date/time as a unix time (int in # ms)"""
     dt = datetime.datetime.now(timezone.utc)
     return dt_to_ut(dt)
+
+
+def current_ut_s() -> int:
+    """Returns the current UTC unix time in seconds"""
+    return int(time.time())
 
 
 @enforce_types
@@ -33,7 +39,7 @@ def timestr_to_ut(timestr: str) -> int:
     Does not use local time, rather always uses UTC
     """
     if timestr.lower() == "now":
-        return current_ut()
+        return current_ut_ms()
 
     ncolon = timestr.count(":")
     if ncolon == 0:

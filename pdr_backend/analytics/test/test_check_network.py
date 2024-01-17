@@ -14,7 +14,7 @@ from pdr_backend.util.mathutil import to_wei
 
 PATH = "pdr_backend.analytics.check_network"
 
-MOCK_CUR_UT = 1702826080982
+MOCK_CUR_UT = 1702826080
 
 
 @enforce_types
@@ -27,11 +27,11 @@ MOCK_CUR_UT = 1702826080982
     side_effect=Mock(return_value=100),
 )
 @patch(
-    f"{PATH}.current_ut",
+    f"{PATH}.current_ut_s",
     side_effect=Mock(return_value=MOCK_CUR_UT),
 )
 def test_check_dfbuyer(  # pylint: disable=unused-argument
-    mock_current_ut,
+    mock_current_ut_ms,
     mock_get_expected_consume_,
     mock_get_consume_so_far_per_contract_,
     capsys,
@@ -150,3 +150,21 @@ def test_check_network_others(  # pylint: disable=unused-argument
         check_network_main(ppss, lookback_hours=24)
         assert mock_query_subgraph.call_count == 1
         assert mock_check_dfbuyer.call_count == 1
+
+
+@enforce_types
+@patch(f"{PATH}.check_dfbuyer")
+@patch(f"{PATH}.get_opf_addresses")
+@patch(f"{PATH}.Token")
+def test_check_network_without_mock(  # pylint: disable=unused-argument
+    mock_token,
+    mock_get_opf_addresses,
+    mock_check_dfbuyer,
+    tmpdir,
+    monkeypatch,
+):
+    mock_token.balanceOf.return_value = 1000e18
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+
+    check_network_main(ppss, lookback_hours=1)
+    assert mock_check_dfbuyer.call_count == 1

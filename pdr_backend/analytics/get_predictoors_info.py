@@ -1,10 +1,9 @@
 from typing import Union
 
 from enforce_typing import enforce_types
-
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
 

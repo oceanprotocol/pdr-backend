@@ -52,7 +52,6 @@ def aggregate_prediction_statistics(
     for prediction in all_predictions:
         pair_timeframe_key = (prediction.pair, prediction.timeframe, prediction.source)
         predictor_key = prediction.user
-
         is_correct = prediction.prediction == prediction.trueval
 
         if pair_timeframe_key not in stats["pair_timeframe"]:

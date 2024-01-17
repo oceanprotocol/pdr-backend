@@ -13,7 +13,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.timeutil import current_ut, pretty_timestr
+from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 FONTSIZE = 12
 
@@ -70,7 +70,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{current_ut()}.txt"
+        filebase = f"out_{current_ut_ms()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
         with open(self.logfile, "w") as f:
             f.write("\n")

@@ -23,7 +23,6 @@ def test_get_predictions_info_main_mainnet(
     tmpdir,
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
-
     predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
     mock_getPolars.return_value = {"pdr_predictions": predictions_df}
 

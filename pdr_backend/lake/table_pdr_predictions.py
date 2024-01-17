@@ -1,8 +1,8 @@
 from typing import Dict
 
 import polars as pl
-from polars import Utf8, Int64, Float64, Boolean
 from enforce_typing import enforce_types
+from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
@@ -39,7 +39,7 @@ predictoor_summary_df_schema = {
     "user": Utf8,
 }
 
-# PREDICTOOR_SUMMARY_SCHEMA
+# FEED_SUMMARY_SCHEMA
 feed_summary_df_schema = {
     "timeframe": Utf8,
     "pair": Utf8,
