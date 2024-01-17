@@ -64,9 +64,7 @@ def test_topup(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call(
-            f"PDRS=['{_address}']"
-        )
+        mock_print.assert_any_call(f"PDRS=['{_address}']")
 
         # Additional assertions
         mock_fetch_filtered_predictions.assert_called()
