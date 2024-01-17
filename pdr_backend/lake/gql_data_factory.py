@@ -17,7 +17,7 @@ from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df, truevals_sc
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.util.timeutil import current_ut, pretty_timestr
+from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 
 @enforce_types
@@ -121,7 +121,7 @@ class GQLDataFactory:
 
             st_ut = self._calc_start_ut(filename)
             print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
-            if st_ut > min(current_ut(), fin_ut):
+            if st_ut > min(current_ut_ms(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
                 continue
 
