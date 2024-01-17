@@ -42,6 +42,7 @@ def test_topup(
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
     ):
+        _address = "0x0000000000000000000000000000000000000001"
         # Mock sys.argv
         sys.argv = [
             "pdr",
@@ -52,7 +53,7 @@ def test_topup(
             "ppss.yaml",
             "development",
             "--PDRS",
-            "0xpredictoor",
+            _address,
         ]
 
         with patch("builtins.print") as mock_print:
@@ -63,7 +64,9 @@ def test_topup(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("PDRS=0xpredictoor")
+        mock_print.assert_any_call(
+            f"PDRS=['{_address}']"
+        )
 
         # Additional assertions
         mock_fetch_filtered_predictions.assert_called()

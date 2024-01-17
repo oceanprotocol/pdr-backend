@@ -19,10 +19,11 @@ def test_topup(
     mock_fetch_filtered_predictions,
     mock_get_cli_statistics,
 ):
-    mock_get_all_contract_ids_by_owner.return_value = ["0xfeed"]
+    _feed = "0x0000000000000000000000000000000000000001"
+    mock_get_all_contract_ids_by_owner.return_value = [_feed]
     mock_predictions = [
         Prediction(
-            "0xfeed",
+            _feed,
             "BTC",
             "5m",
             True,
@@ -58,7 +59,7 @@ def test_topup(
             "ppss.yaml",
             "development",
             "--FEEDS",
-            "0xfeed",
+            _feed,
         ]
 
         with patch("builtins.print") as mock_print:
@@ -69,7 +70,7 @@ def test_topup(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("FEEDS=0xfeed")
+        mock_print.assert_any_call(f"FEEDS=['{_feed}']")
 
         # Additional assertions
         mock_save_analysis_csv.assert_called_with(mock_predictions, "./dir")
@@ -77,7 +78,7 @@ def test_topup(
         mock_fetch_filtered_predictions.assert_called_with(
             1701388800,
             1703980800,
-            ["0xfeed"],
+            [_feed],
             "mainnet",
             FilterMode.CONTRACT,
             payout_only=True,

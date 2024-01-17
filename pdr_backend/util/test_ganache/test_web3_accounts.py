@@ -19,9 +19,7 @@ def test_create_accounts(mock_create):
 @patch("pdr_backend.util.web3_accounts.Token")
 @patch("pdr_backend.util.web3_accounts.NativeToken")
 @patch("pdr_backend.util.web3_accounts.get_address")
-def test_get_account_balances(
-    mock_get_address, mock_native_token, mock_token
-):
+def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
     web3_pp = mock_web3_pp("development")
 
     # Create Mock instances for NativeToken and Token
