@@ -64,7 +64,7 @@ What it does:
 
 The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
-Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a huge difference too.
+Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
 
 ## Run Trader Bot on Sapphire Testnet
 
