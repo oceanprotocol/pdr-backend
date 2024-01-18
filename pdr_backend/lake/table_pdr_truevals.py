@@ -37,7 +37,7 @@ def get_pdr_truevals_df(
     )
 
     if len(truevals) == 0:
-        print("      No truevals to fetch. Exit.")
+        print("No truevals to fetch. Exit.")
         return pl.DataFrame()
 
     # convert truevals to df and transform timestamp into ms
