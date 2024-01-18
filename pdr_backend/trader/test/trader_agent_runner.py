@@ -61,7 +61,7 @@ def setup_take_step(  # pylint: disable=unused-argument
 
     # Create async mock fn so we can await asyncio.gather(*tasks)
     async def _process_block(timestamp):  # pylint: disable=unused-argument
-        return (-1, [])
+        return -1
 
     agent._process_block = Mock(side_effect=_process_block)
 

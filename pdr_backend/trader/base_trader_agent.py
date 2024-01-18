@@ -1,11 +1,39 @@
 import asyncio
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections import namedtuple
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache
 from pdr_backend.util.mathutil import sole_value
+
+BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
+
+
+class Prediction(BasePrediction):
+    def __new__(cls, prediction: Tuple):
+        return super().__new__(cls, *prediction)
+
+    @property
+    def confidence(self):
+        return self.pred_nom / self.pred_denom
+
+    @property
+    def direction(self):
+        return 1 if self.confidence >= 0.5 else 0
+
+    @property
+    def stake(self):
+        return self.pred_denom
+
+    @property
+    def properties(self):
+        return {
+            "confidence": self.confidence,
+            "direction": self.direction,
+            "stake": self.pred_denom,
+        }
 
 
 # pylint: disable=too-many-instance-attributes
@@ -94,27 +122,20 @@ class BaseTraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
         print("before:", time.time())
-        tasks = [self._process_block(block["timestamp"])]
-        s_till_epoch_ends, log_list = zip(*await asyncio.gather(*tasks))
-
-        for logs in log_list:
-            for log in logs:
-                print(log)
+        s_till_epoch_ends = await self._process_block(block["timestamp"])
 
         print("after:", time.time())
-        if -1 in s_till_epoch_ends:
+        if s_till_epoch_ends == -1:
             # -1 means subscription expired for one of the assets
             self.check_subscriptions_and_subscribe()
             return
 
-        sleep_time = min(s_till_epoch_ends) - 1
-        print(f"-- Soonest epoch is in {sleep_time} seconds, waiting... --")
+        sleep_time = s_till_epoch_ends - 1
+        print(f"-- epoch is in {sleep_time} seconds, waiting... --")
 
         time.sleep(sleep_time)
 
-    async def _process_block(
-        self, timestamp: int, tries: int = 0
-    ) -> Tuple[int, List[str]]:
+    async def _process_block(self, timestamp: int, tries: int = 0) -> int:
         """
         @param:
             timestamp - timestamp/epoch to process
@@ -123,21 +144,21 @@ class BaseTraderAgent:
             epoch_s_left - number of seconds left till the epoch end
             logs - list of strings of function logs
         """
-        logs = []
         predictoor_contract = self.contract
         s_per_epoch = self.feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
-        logs.append(f"{'-'*40} Processing {self.feed} {'-'*40}\nEpoch {epoch}")
-        logs.append(f"Seconds remaining in epoch: {epoch_s_left}")
+
+        print(f"{'-'*40} Processing {self.feed} {'-'*40}\nEpoch {epoch}")
+        print(f"Seconds remaining in epoch: {epoch_s_left}")
 
         if self.prev_traded_epochs and epoch == self.prev_traded_epochs[-1]:
-            logs.append("      Done feed: already traded this epoch")
-            return epoch_s_left, logs
+            print("      Done feed: already traded this epoch")
+            return epoch_s_left
 
         if epoch_s_left < self.ppss.trader_ss.min_buffer:
-            logs.append("      Done feed: not enough time left in epoch")
-            return epoch_s_left, logs
+            print("      Done feed: not enough time left in epoch")
+            return epoch_s_left
 
         try:
             loop = asyncio.get_event_loop()
@@ -146,7 +167,7 @@ class BaseTraderAgent:
             )
         except Exception as e:
             if tries < self.ppss.trader_ss.max_tries:
-                logs.append(e.args[0]["message"])
+                print(e.args[0]["message"])
                 if (
                     len(e.args) > 0
                     and isinstance(e.args[0], dict)
@@ -154,47 +175,20 @@ class BaseTraderAgent:
                 ):
                     revert_reason = e.args[0]["message"]
                     if revert_reason == "reverted: No subscription":
-                        return (
-                            -1,
-                            logs,
-                        )  # -1 means the subscription has expired for this pair
-                logs.append("      Could not get aggpredval, trying again in a second")
+                        return -1
+                print("      Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)
                 return await self._process_block(timestamp, tries + 1)
-            logs.append(
-                f"      Done feed: aggpredval not available, an error occured: {e}"
-            )
-            return epoch_s_left, logs
+            print(f"      Done feed: aggpredval not available, an error occured: {e}")
+            return epoch_s_left
 
         await self._do_trade(self.feed, prediction)
         self.prev_traded_epochs.append(epoch)
         self.update_cache()
-        return epoch_s_left, logs
 
-    def get_pred_properties(
-        self, pred_nom: float, pred_denom: float
-    ) -> Dict[str, float]:
-        """
-        @description
-            This function calculates the prediction direction and confidence.
-        @returns
-            A dictionary containing the following:
-            - confidence: The confidence of the prediction.
-            - direction: The direction of the prediction.
-            - stake: The stake of the prediction.
-        """
-        confidence: float = pred_nom / pred_denom
-        direction: float = 1 if confidence >= 0.5 else 0
-        confidence = abs(confidence - 0.5)
-        confidence = (confidence / 0.5) * 100
+        return epoch_s_left
 
-        return {
-            "confidence": confidence,
-            "dir": direction,
-            "stake": pred_denom,
-        }
-
-    async def do_trade(self, feed: SubgraphFeed, prediction: Tuple[float, float]):
+    async def do_trade(self, feed: SubgraphFeed, prediction: Union[Prediction, Tuple]):
         """
         @description
             This function is called each time there's a new prediction available.
@@ -214,10 +208,12 @@ class BaseTraderAgent:
             the confidence of the prediction. Ensure stake amounts
             are sufficiently large to be considered meaningful.
         """
-        pred_nom, pred_denom = prediction
-        print(f"      {feed} has a new prediction: {pred_nom} / {pred_denom}.")
+        if not isinstance(prediction, Prediction):
+            prediction = Prediction(prediction)
 
-        pred_properties = self.get_pred_properties(pred_nom, pred_denom)
-        print(f"      {feed} prediction properties: {pred_properties}.")
+        print(
+            f"      {feed} has a new prediction: {prediction.pred_nom} / {prediction.pred_denom}."
+        )
+        print(f"      {feed} prediction properties: {prediction.properties}.")
         # Trade here
         # ...

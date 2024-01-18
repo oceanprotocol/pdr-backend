@@ -1,6 +1,5 @@
 from typing import Tuple
 
-import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
@@ -38,8 +37,7 @@ def get_trueval(
     init_timestamp = int(init_timestamp * 1000)
     end_timestamp = int(end_timestamp * 1000)
 
-    exchange_class = getattr(ccxt, feed.source)
-    exchange = exchange_class()
+    exchange = feed.ccxt_exchange()
     tohlcvs = safe_fetch_ohlcv(
         exchange, symbol, feed.timeframe, since=init_timestamp, limit=2
     )

@@ -88,24 +88,24 @@ async def test_process_block(  # pylint: disable=unused-argument
 
     # epoch_s_left = 60 - 55 = 5, so we should not trade
     # because it's too close to the epoch end
-    s_till_epoch_end, _ = await agent._process_block(55)
+    s_till_epoch_end = await agent._process_block(55)
     assert len(agent.prev_traded_epochs) == 0
     assert s_till_epoch_end == 5
 
     # epoch_s_left = 60 + 60 - 80 = 40, so we should trade
-    s_till_epoch_end, _ = await agent._process_block(80)
+    s_till_epoch_end = await agent._process_block(80)
     assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but not again, because we've already traded this epoch
-    s_till_epoch_end, _ = await agent._process_block(80)
+    s_till_epoch_end = await agent._process_block(80)
     assert len(agent.prev_traded_epochs) == 1
     assert s_till_epoch_end == 40
 
     # but we should trade again in the next epoch
     _mock_pdr_contract.get_current_epoch = Mock()
     _mock_pdr_contract.get_current_epoch.return_value = 2
-    s_till_epoch_end, _ = await agent._process_block(140)
+    s_till_epoch_end = await agent._process_block(140)
     assert len(agent.prev_traded_epochs) == 2
     assert s_till_epoch_end == 40
 
@@ -133,25 +133,3 @@ def test_save_and_load_cache(
     for item in cache_dir_path.iterdir():
         item.unlink()
     cache_dir_path.rmdir()
-
-
-@pytest.mark.asyncio
-@patch.object(BaseTraderAgent, "check_subscriptions_and_subscribe")
-async def test_get_pred_properties(
-    check_subscriptions_and_subscribe_mock,
-):  # pylint: disable=unused-argument
-    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
-    inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
-
-    agent = BaseTraderAgent(ppss)
-    check_subscriptions_and_subscribe_mock.assert_called_once()
-
-    agent.get_pred_properties = Mock()
-    agent.get_pred_properties.return_value = {
-        "confidence": 100.0,
-        "dir": 1,
-        "stake": 1,
-    }
-
-    await agent._do_trade(feed, (1.0, 1.0))
-    assert agent.get_pred_properties.call_count == 1
