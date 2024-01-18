@@ -34,10 +34,10 @@ pdr
 
 This will output something like:
 ```text
-Usage: pdr sim|predictoor|trader|..
+Usage: pdr xpmt|predictoor|trader|..
 
 Main tools:
-  pdr sim YAML_FILE
+  pdr xpmt YAML_FILE
   pdr predictoor APPROACH YAML_FILE NETWORK
   pdr trader APPROACH YAML_FILE NETWORK
 ...
@@ -63,21 +63,30 @@ Main tools:
 
 ## Repo structure
 
-This repo implements all bots in Predictoor ecosystem.
+This repo implements all bots in Predictoor ecosystem. Here are each of the sub-directories in the repo.
 
-Each bot has a directory. Alphabetically:
-- `dfbuyer` - buy feeds on behalf of Predictoor DF
+Main bots & user tools:
 - `predictoor` - submit individual predictions
-- `publisher` - publish pdr data feeds
 - `trader` - buy aggregated predictions, then trade
-- `trueval` - report true values to contract
+- `xpmt` - experiments / simulation flow
 
-Other directories, alphabetically:
-- `accuracy` - calculates % correct, for display in predictoor.ai webapp
-- `data_eng` - data engineering & modeling
-- `models` - class-based data structures, and classes to wrap contracts
+OPF-run bots & higher-level tools:
+- `trueval` - report true values to contract
+- `dfbuyer` - buy feeds on behalf of Predictoor DF
+- `publisher` - publish pdr data feeds
+- `analytics` - analytics tools
 - `payout` - OCEAN & ROSE payout
-- `ppss` - settings
-- `sim` - simulation flow
+- `accuracy` - calculates % correct, for display in predictoor.ai webapp
+
+Mid-level building blocks:
+- `cli` - implementation of CLI
+- `ppss` - implements settings
+- `aimodel` - AI/ML modeling engine
+- `lake` - data lake and data pipeline
+- `subgraph` - blockchain queries, complements lake
+
+Lower-level utilities:
+- `contract` - classes to wrap blockchain contracts
+- `models` - simple widely-used data structures
 - `util` - function-based tools
 
