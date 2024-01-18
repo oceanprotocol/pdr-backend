@@ -17,7 +17,7 @@ from pdr_backend.cli.cli_module import (
     do_lake,
     do_predictoor,
     do_publisher,
-    do_sim,
+    do_xpmt,
     do_topup,
     do_trader,
     do_trueval,
@@ -280,12 +280,12 @@ def test_do_trueval(monkeypatch):
 
 
 @enforce_types
-def test_do_sim(monkeypatch):
+def test_do_xpmt(monkeypatch):
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.XpmtEngine.run", mock_f)
 
-    with patch("pdr_backend.sim.sim_engine.plt.show"):
-        do_sim(MockArgParser_PPSS_NETWORK().parse_args())
+    with patch("pdr_backend.xpmt.xpmt_engine.plt.show"):
+        do_xpmt(MockArgParser_PPSS_NETWORK().parse_args())
 
     mock_f.assert_called()
 
@@ -305,10 +305,10 @@ def test_do_main(monkeypatch, capfd):
     assert "Predictoor tool" in capfd.readouterr().out
 
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.XpmtEngine.run", mock_f)
 
-    with patch("pdr_backend.sim.sim_engine.plt.show"):
-        with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
+    with patch("pdr_backend.xpmt.xpmt_engine.plt.show"):
+        with patch("sys.argv", ["pdr", "xpmt", "ppss.yaml"]):
             _do_main()
 
     assert mock_f.called

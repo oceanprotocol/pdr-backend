@@ -123,7 +123,7 @@ class OhlcvDataFactory:
         while True:
             limit = 1000
             print(f"      Fetch up to {limit} pts from {pretty_timestr(st_ut)}")
-            exch = feed.exchange.exchange_class()
+            exch = feed.ccxt_exchange()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
