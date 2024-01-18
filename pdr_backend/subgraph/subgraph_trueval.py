@@ -31,7 +31,7 @@ def get_truevals_query(
             predictTrueVals (
             first: %s
             skip: %s
-            where: { slot_: {slot_gte: %s, slot_lte: %s, predictContract_in: %s}}
+            where: { timestamp_gte: %s, timestamp_lte: %s, slot_: {predictContract_in: %s}}
             ) {
             id
             timestamp
