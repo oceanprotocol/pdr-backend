@@ -141,10 +141,15 @@ class LOOKBACK_Mixin:
 def check_positive(value):
     try:
         ivalue = int(value)
+    except Exception as exc:
+        raise TypeError("%s is not a valid int" % value) from exc
+
+    try:
         if ivalue <= 0:
             raise Exception("Zero or below.")
     except Exception as exc:
         raise TypeError("%s is an invalid positive int value" % value) from exc
+        
     return ivalue
 
 
