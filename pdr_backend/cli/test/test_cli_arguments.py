@@ -28,14 +28,14 @@ def test_do_help_long(capfd):
 
 
 def test_print_args(capfd):
-    SimArgParser = defined_parsers["do_sim"]
-    parser = SimArgParser
-    args = ["sim", "ppss.yaml"]
+    XpmtArgParser = defined_parsers["do_xpmt"]
+    parser = XpmtArgParser
+    args = ["xpmt", "ppss.yaml"]
     parsed_args = parser.parse_args(args)
 
     print_args(parsed_args)
 
     out, _ = capfd.readouterr()
-    assert "pdr sim: Begin" in out
+    assert "pdr xpmt: Begin" in out
     assert "Arguments:" in out
     assert "PPSS_FILE=ppss.yaml" in out
