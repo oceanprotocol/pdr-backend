@@ -62,8 +62,8 @@ class BaseTraderAgent:
             raise ValueError("No feeds found.")
 
         self.feed = feed
-        contracts = ppss.web3_pp.get_contracts([feed.address])
-        self.contract = sole_value(contracts)
+        feed_contracts = ppss.web3_pp.get_contracts([feed.address])
+        self.feed_contract = sole_value(feed_contracts)
 
         # set attribs to track block
         self.prev_block_timestamp: int = 0
@@ -77,9 +77,9 @@ class BaseTraderAgent:
         self.check_subscriptions_and_subscribe()
 
     def check_subscriptions_and_subscribe(self):
-        if not self.contract.is_valid_subscription():
+        if not self.feed_contract.is_valid_subscription():
             print(f"Purchase subscription for feed {self.feed}: begin")
-            self.contract.buy_and_start_subscription(
+            self.feed_contract.buy_and_start_subscription(
                 gasLimit=None,
                 wait_for_receipt=True,
             )
@@ -144,7 +144,7 @@ class BaseTraderAgent:
             epoch_s_left - number of seconds left till the epoch end
             logs - list of strings of function logs
         """
-        predictoor_contract = self.contract
+        feed_contract = self.feed_contract
         s_per_epoch = self.feed.seconds_per_epoch
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
@@ -163,7 +163,7 @@ class BaseTraderAgent:
         try:
             loop = asyncio.get_event_loop()
             prediction = await loop.run_in_executor(
-                None, predictoor_contract.get_agg_predval, (epoch + 1) * s_per_epoch
+                None, feed_contract.get_agg_predval, (epoch + 1) * s_per_epoch
             )
         except Exception as e:
             if tries < self.ppss.trader_ss.max_tries:
