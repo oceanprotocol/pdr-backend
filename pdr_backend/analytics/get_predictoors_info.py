@@ -21,13 +21,11 @@ def get_predictoors_info_main(
     if len(predictions_df) == 0:
         print("No records found. Please adjust start and end times.")
         return
-    
+
     # filter by user addresses
     if pdr_addrs:
         pdr_addrs = [f.lower() for f in pdr_addrs]
-        predictions_df = predictions_df.filter(
-            predictions_df["user"].is_in(pdr_addrs)
-        )
+        predictions_df = predictions_df.filter(predictions_df["user"].is_in(pdr_addrs))
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(

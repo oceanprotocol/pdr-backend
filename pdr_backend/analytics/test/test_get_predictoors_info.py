@@ -74,7 +74,7 @@ def test_empty_data_frame_timeframe_filter_mainnet(
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-30"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
-    
+
     get_predictoors_info_main(
         ppss,
         st_timestr,

@@ -13,7 +13,9 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
-def test_get_predictoors_info_system(mock_get_gql_dfs, get_get_predictoor_summary_stats):
+def test_get_predictoors_info_system(
+    mock_get_gql_dfs, get_get_predictoor_summary_stats
+):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -85,4 +87,3 @@ def test_get_predictoors_info_system(mock_get_gql_dfs, get_get_predictoor_summar
         # Additional assertions
         get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)
         mock_get_gql_dfs.assert_called()
-
