@@ -6,7 +6,18 @@ from enforce_typing import enforce_types
 @enforce_types
 class Payout:
     def __init__(
-        self, ID: str, token: str, user: str, slot: int, timestamp: int, payout: float
+        self,
+        ID: str,
+        token: str,
+        user: str,
+        slot: int,
+        timestamp: int,
+        payout: float,
+        predictedValue: bool,
+        revenue: float,
+        roundSumStakesUp: float,
+        roundSumStakes: float,
+        stake: float,
     ) -> None:
         self.ID = ID
         self.user = user
@@ -14,14 +25,41 @@ class Payout:
         self.token = token
         self.slot = slot
         self.payout = payout
+        self.predictedValue = predictedValue
+        self.revenue = revenue
+        self.roundSumStakesUp = roundSumStakesUp
+        self.roundSumStakes = roundSumStakes
+        self.stake = stake
 
 
 @enforce_types
 def mock_payout(payout_tuple: tuple) -> Payout:
-    (ID, user, timestamp, token, slot, payout) = payout_tuple
+    (
+        ID,
+        user,
+        timestamp,
+        token,
+        slot,
+        payout,
+        predictedValue,
+        revenue,
+        roundSumStakesUp,
+        roundSumStakes,
+        stake,
+    ) = payout_tuple
 
     return Payout(
-        ID=ID, user=user, timestamp=timestamp, token=token, slot=slot, payout=payout
+        ID=ID,
+        user=user,
+        timestamp=timestamp,
+        token=token,
+        slot=slot,
+        payout=payout,
+        predictedValue=predictedValue,
+        revenue=revenue,
+        roundSumStakesUp=roundSumStakesUp,
+        roundSumStakes=roundSumStakes,
+        stake=stake,
     )
 
 
@@ -39,6 +77,11 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704152700,
         0.0,
+        True,
+        0.919372744934776618,
+        7.635901006590730052,
+        17.728238320965607921,
+        0.41,
     ),
     (
         # pylint: disable=line-too-long
@@ -48,6 +91,11 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704152700,
         3.786517720904995824,
+        False,
+        0.919372744934776618,
+        7.635901006590730052,
+        17.728238320965607921,
+        2.049314196396558,
     ),
     (
         # pylint: disable=line-too-long
@@ -57,6 +105,11 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         3.687473663992716148,
+        False,
+        0.919372744934776618,
+        11.201148268567394458,
+        25.423083432944667468,
+        1.9908170679122585,
     ),
     (
         # pylint: disable=line-too-long
@@ -66,6 +119,11 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         6.334665366356455078,
+        False,
+        0.919372744934776618,
+        11.201148268567394458,
+        25.423083432944667468,
+        3.4200000000000004,
     ),
     (
         # pylint: disable=line-too-long
@@ -75,6 +133,11 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         1.463270654801637113,
+        False,
+        0.919372744934776618,
+        11.201148268567394458,
+        25.423083432944667468,
+        0.79,
     ),
     (
         # pylint: disable=line-too-long
@@ -84,5 +147,10 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         0.0,
+        True,
+        0.919372744934776618,
+        11.201148268567394458,
+        25.423083432944667468,
+        0.41,
     ),
 ]
