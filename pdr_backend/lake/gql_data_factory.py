@@ -229,9 +229,11 @@ class GQLDataFactory:
             # drop duplicates
             duplicate_rows = df.filter(pl.struct("ID").is_duplicated())
             if len(duplicate_rows) > 0:
-                print(f"Duplicate rows found. Dropping {len(duplicate_rows)} rows: {duplicate_rows}")
-            df = df.drop(duplicate_rows)
-
+                print(
+                    f"Duplicate rows found. Dropping {len(duplicate_rows)} rows: {duplicate_rows}"
+                )
+            df = df.groupby("ID").first()
+            
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")
@@ -239,9 +241,10 @@ class GQLDataFactory:
             df.write_parquet(filename)
             print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
 
-
     @enforce_types
-    def _post_fetch_process_truevals(self, dfs: Dict[str, pl.DataFrame]) -> pl.DataFrame:
+    def _post_fetch_process_truevals(
+        self, dfs: Dict[str, pl.DataFrame]
+    ) -> pl.DataFrame:
         """
         @description
           Merge the fetched data with the existing data in the parquet file.
@@ -260,41 +263,45 @@ class GQLDataFactory:
 
         # find the predictions we'll be updating
         print(f"post_truevals pdr_truevals: {truevals_ids}")
-        predictions_df = dfs["pdr_predictions"].filter(
-            (pl.col("truevalue_id").is_in(truevals_ids))
-        ).drop(
-            ["truevalue"]
+        predictions_df = (
+            dfs["pdr_predictions"]
+            .filter((pl.col("truevalue_id").is_in(truevals_ids)))
+            .drop(["truevalue"])
         )
 
         # update specific predictions
-        predictions_df = predictions_df.join(
-            truevals_df,
-            left_on=["truevalue_id"],
-            right_on=["ID"],
-            how="left"
-        ).with_columns([
-            pl.col("truevalue").alias("truevalue"),
-        ]).select([
-            "ID",
-            "truevalue_id",
-            "contract",
-            "pair",
-            "timeframe",
-            "prediction",
-            "stake",
-            "truevalue",
-            "timestamp",
-            "source",
-            "payout",
-            "slot",
-            "user",
-        ])
+        predictions_df = (
+            predictions_df.join(
+                truevals_df, left_on=["truevalue_id"], right_on=["ID"], how="left"
+            )
+            .with_columns(
+                [
+                    pl.col("truevalue").alias("truevalue"),
+                ]
+            )
+            .select(
+                [
+                    "ID",
+                    "truevalue_id",
+                    "contract",
+                    "pair",
+                    "timeframe",
+                    "prediction",
+                    "stake",
+                    "truevalue",
+                    "timestamp",
+                    "source",
+                    "payout",
+                    "slot",
+                    "user",
+                ]
+            )
+        )
 
         # save out updated predictions
         # filename = self._parquet_filename("pdr_predictions")
         # self._save_parquet(filename, predictions_df)
         predictions_df.write_parquet("pdr_predictions.parquet")
-
 
     @enforce_types
     def _post_fetch_process_payouts(self, dfs: Dict[str, pl.DataFrame]) -> pl.DataFrame:
@@ -315,34 +322,38 @@ class GQLDataFactory:
         payouts_ids = payouts_df["ID"].to_list()
 
         # find all predictions that we'll be updating
-        predictions_df = dfs["pdr_predictions"].filter(
-            (pl.col("ID").is_in(payouts_ids))
-        ).drop(
-            ["payout", "prediction"]
+        predictions_df = (
+            dfs["pdr_predictions"]
+            .filter((pl.col("ID").is_in(payouts_ids)))
+            .drop(["payout", "prediction"])
         )
 
         # update specific predictions
-        predictions_df = predictions_df.join(
-            payouts_df,
-            on="ID",
-            how="left"
-        ).with_columns([
-            pl.col("predvalue").alias("prediction"),
-        ]).select([
-            "ID",
-            "truevalue_id",
-            "contract",
-            "pair",
-            "timeframe",
-            "prediction",
-            "stake",
-            "truevalue",
-            "timestamp",
-            "source",
-            "payout",
-            "slot",
-            "user",
-        ])
+        predictions_df = (
+            predictions_df.join(payouts_df, on="ID", how="left")
+            .with_columns(
+                [
+                    pl.col("predvalue").alias("prediction"),
+                ]
+            )
+            .select(
+                [
+                    "ID",
+                    "truevalue_id",
+                    "contract",
+                    "pair",
+                    "timeframe",
+                    "prediction",
+                    "stake",
+                    "truevalue",
+                    "timestamp",
+                    "source",
+                    "payout",
+                    "slot",
+                    "user",
+                ]
+            )
+        )
 
         # save out updated predictions
         # filename = self._parquet_filename("pdr_predictions")

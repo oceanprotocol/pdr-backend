@@ -19,6 +19,7 @@ def test_topup(mock_get_polars, mock_plot_stats):
     mock_predictions = [
         Prediction(
             "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            feed_addr,
             "BTC",
             "5m",
             True,
@@ -28,7 +29,6 @@ def test_topup(mock_get_polars, mock_plot_stats):
             "binance",
             10.0,
             10,
-            feed_addr,
             user_addr,
         )
     ]
