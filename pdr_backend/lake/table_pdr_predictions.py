@@ -27,6 +27,29 @@ predictions_schema = {
     "user": Utf8,
 }
 
+# PREDICTOOR_SUMMARY_SCHEMA
+predictoor_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
+    "user": Utf8,
+}
+
+# FEED_SUMMARY_SCHEMA
+feed_summary_df_schema = {
+    "timeframe": Utf8,
+    "pair": Utf8,
+    "source": Utf8,
+    "accuracy": Float64,
+    "sum_stake": Float64,
+    "sum_payout": Float64,
+    "n_predictions": Int64,
+}
+
 
 def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
     df = df.with_columns(

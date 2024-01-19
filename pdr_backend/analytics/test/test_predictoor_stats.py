@@ -1,14 +1,18 @@
-from typing import List
 from unittest.mock import patch
 
 import polars as pl
 from enforce_typing import enforce_types
+from pdr_backend.lake.table_pdr_predictions import (
+    _object_list_to_df,
+    predictions_schema,
+    predictoor_summary_df_schema,
+    feed_summary_df_schema,
+)
 
 from pdr_backend.analytics.predictoor_stats import (
-    aggregate_prediction_statistics,
     calculate_slot_daily_statistics,
-    get_cli_statistics,
-    get_endpoint_statistics,
+    get_feed_summary_stats,
+    get_predictoor_summary_stats,
     get_slot_statistics,
     get_traction_statistics,
     plot_slot_daily_statistics,
@@ -18,67 +22,21 @@ from pdr_backend.analytics.predictoor_stats import (
 
 
 @enforce_types
-def test_aggregate_prediction_statistics(_sample_first_predictions):
-    stats, correct_predictions = aggregate_prediction_statistics(
-        _sample_first_predictions
-    )
-    assert isinstance(stats, dict)
-    assert "pair_timeframe" in stats
-    assert "predictor" in stats
-    assert correct_predictions == 1  # Adjust based on your sample data
+def test_get_feed_statistics(_sample_first_predictions):
+    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    feed_summary_df = get_feed_summary_stats(predictions_df)
+
+    assert isinstance(feed_summary_df, pl.DataFrame)
+    assert len(feed_summary_df.schema) == len(feed_summary_df_schema)
 
 
 @enforce_types
-def test_get_endpoint_statistics(_sample_first_predictions):
-    accuracy, pair_timeframe_stats, predictoor_stats = get_endpoint_statistics(
-        _sample_first_predictions
-    )
-    assert isinstance(accuracy, float)
-    assert isinstance(pair_timeframe_stats, List)  # List[PairTimeframeStat]
-    assert isinstance(predictoor_stats, List)  # List[PredictoorStat]
-    for pair_timeframe_stat in pair_timeframe_stats:
-        for key in [
-            "pair",
-            "timeframe",
-            "accuracy",
-            "stake",
-            "payout",
-            "number_of_predictions",
-        ]:
-            assert key in pair_timeframe_stat
+def test_get_predictoor_statistics(_sample_first_predictions):
+    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
 
-    for predictoor_stat in predictoor_stats:
-        for key in [
-            "predictoor_address",
-            "accuracy",
-            "stake",
-            "payout",
-            "number_of_predictions",
-            "details",
-        ]:
-            assert key in predictoor_stat
-        assert len(predictoor_stat["details"]) == 2
-
-
-@enforce_types
-def test_get_cli_statistics(capsys, _sample_first_predictions):
-    get_cli_statistics(_sample_first_predictions)
-    captured = capsys.readouterr()
-    output = captured.out
-    assert "Overall Accuracy" in output
-    assert "Accuracy for Pair" in output
-    assert "Accuracy for Predictoor Address" in output
-
-    get_cli_statistics([])
-    assert "No predictions found" in capsys.readouterr().out
-
-    with patch(
-        "pdr_backend.analytics.predictoor_stats.aggregate_prediction_statistics"
-    ) as mock:
-        mock.return_value = ({}, 0)
-        get_cli_statistics(_sample_first_predictions)
-
-    assert "No correct predictions found" in capsys.readouterr().out
+    assert isinstance(predictoor_summary_df, pl.DataFrame)
+    assert len(predictoor_summary_df.schema) == len(predictoor_summary_df_schema)
 
 
 @enforce_types

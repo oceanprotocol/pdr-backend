@@ -1,100 +1,68 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import polars as pl
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.subgraph_predictions import FilterMode
 from pdr_backend.util.timeutil import timestr_to_ut
+from pdr_backend.lake.table_pdr_predictions import (
+    _object_list_to_df,
+    predictions_schema,
+)
 
 
 @enforce_types
+@patch("pdr_backend.analytics.get_traction_info.get_traction_statistics")
+@patch("pdr_backend.analytics.get_traction_info.plot_traction_cum_sum_statistics")
+@patch("pdr_backend.analytics.get_traction_info.plot_traction_daily_statistics")
+@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_dfs")
 def test_get_traction_info_main_mainnet(
+    mock_predictions_df,
+    mock_plot_daily,
+    mock_plot_cumsum,
+    mock_traction_stat,
     _sample_daily_predictions,
     tmpdir,
 ):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+    predictions_df = _object_list_to_df(_sample_daily_predictions, predictions_schema)
 
-    mock_traction_stat = Mock()
-    mock_plot_cumsum = Mock()
-    mock_plot_daily = Mock()
-    mock_getids = Mock(return_value=["0x123"])
-    mock_fetch = Mock(return_value=_sample_daily_predictions)
+    mock_predictions_df.return_value = {"pdr_predictions": predictions_df}
 
-    PATH = "pdr_backend.analytics.get_traction_info"
-    PATH2 = "pdr_backend.lake"
-    with patch(f"{PATH}.get_traction_statistics", mock_traction_stat), patch(
-        f"{PATH}.plot_traction_cum_sum_statistics", mock_plot_cumsum
-    ), patch(f"{PATH}.plot_traction_daily_statistics", mock_plot_daily), patch(
-        f"{PATH2}.gql_data_factory.get_all_contract_ids_by_owner", mock_getids
-    ), patch(
-        f"{PATH2}.table_pdr_predictions.fetch_filtered_predictions", mock_fetch
-    ):
-        st_timestr = "2023-11-02"
-        fin_timestr = "2023-11-05"
+    st_timestr = "2023-11-02"
+    fin_timestr = "2023-11-05"
 
-        get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+    get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
 
-        mock_fetch.assert_called_with(
-            1698883200,
-            1699142400,
-            ["0x123"],
-            "mainnet",
-            FilterMode.CONTRACT_TS,
-            payout_only=False,
-            trueval_only=False,
-        )
+    # calculate ms locally so we can filter raw Predictions
+    preds_df = predictions_df.filter(
+        (predictions_df["timestamp"] >= timestr_to_ut(st_timestr) / 1000)
+        & (predictions_df["timestamp"] <= timestr_to_ut(fin_timestr) / 1000)
+    )
 
-        # calculate ms locally so we can filter raw Predictions
-        st_ut = timestr_to_ut(st_timestr)
-        fin_ut = timestr_to_ut(fin_timestr)
-        st_ut_sec = st_ut // 1000
-        fin_ut_sec = fin_ut // 1000
-
-        # Get all predictions into a dataframe
-        preds = [
-            x
-            for x in _sample_daily_predictions
-            if st_ut_sec <= x.timestamp <= fin_ut_sec
-        ]
-        preds = [pred.__dict__ for pred in preds]
-        preds_df = pl.DataFrame(preds)
-        preds_df = preds_df.with_columns(
-            [
-                pl.col("timestamp").mul(1000).alias("timestamp"),
-            ]
-        )
-
-        # Assert calls and values
-        pl.DataFrame.equals(mock_traction_stat.call_args, preds_df)
-        mock_plot_cumsum.assert_called()
-        mock_plot_daily.assert_called()
+    # Assert calls and values
+    pl.DataFrame.equals(mock_traction_stat.call_args, preds_df)
+    mock_plot_cumsum.assert_called()
+    mock_plot_daily.assert_called()
 
 
 @enforce_types
-def test_get_traction_info_empty(tmpdir, capfd):
+@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_dfs")
+def test_get_traction_info_empty(
+    mock_predictions_df,
+    tmpdir,
+    capfd,
+):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
-    mock_empty = Mock(return_value=[])
+    mock_predictions_df.return_value = {"pdr_predictions": pl.DataFrame()}
+    st_timestr = "2023-11-02"
+    fin_timestr = "2023-11-05"
 
-    PATH = "pdr_backend.analytics.get_traction_info"
-    with patch(f"{PATH}.GQLDataFactory.get_gql_dfs", mock_empty):
-        st_timestr = "2023-11-02"
-        fin_timestr = "2023-11-05"
-
-        get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
+    get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
 
     assert (
-        "No records found. Please adjust start and end times." in capfd.readouterr().out
+        "No records found. Please adjust start and end times inside ppss.yaml."
+        in capfd.readouterr().out
     )
-
-    with patch("requests.post") as mock_post:
-        mock_post.return_value.status_code = 503
-        # don't actually sleep in tests
-        with patch("time.sleep"):
-            with pytest.raises(Exception):
-                get_traction_info_main(ppss, st_timestr, fin_timestr, "parquet_data/")
-
-    assert mock_post.call_count == 3

@@ -18,7 +18,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.publisher.publish_assets import publish_assets
-from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.xpmt.xpmt_engine import XpmtEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -49,10 +49,10 @@ def _do_main():
 
 
 @enforce_types
-def do_sim(args):
+def do_xpmt(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="development")
-    sim_engine = SimEngine(ppss)
-    sim_engine.run()
+    xpmt_engine = XpmtEngine(ppss)
+    xpmt_engine.run()
 
 
 @enforce_types
@@ -113,13 +113,13 @@ def do_claim_ROSE(args):
 @enforce_types
 def do_get_predictoors_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictoors_info_main(ppss, args.PDRS, args.ST, args.END, args.PQDIR)
+    get_predictoors_info_main(ppss, args.ST, args.END, args.PDRS)
 
 
 @enforce_types
 def do_get_predictions_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictions_info_main(ppss, args.FEEDS, args.ST, args.END, args.PQDIR)
+    get_predictions_info_main(ppss, args.ST, args.END, args.FEEDS)
 
 
 @enforce_types
