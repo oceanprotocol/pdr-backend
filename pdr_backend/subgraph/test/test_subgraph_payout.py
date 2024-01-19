@@ -1,3 +1,4 @@
+from typing import Dict
 from unittest.mock import patch
 
 from enforce_typing import enforce_types
@@ -16,14 +17,21 @@ MOCK_PAYOUT_QUERY_RESPONSE = {
                 "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1696880700-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
                 "timestamp": 1698527000,
                 "payout": "0",
+                "predictedValue": True,
                 "prediction": {
-                    "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
+                    "stake": "1.2",
+                    "user": {
+                        "id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
+                        },
                     "slot": {
                         "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1696880700",
                         "predictContract": {
                             "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
                             "token": {"name": "ADA/USDT"},
                         },
+                        "revenue": "0.919372744934776618",
+                        "roundSumStakesUp": "7.635901006590730052",
+                        "roundSumStakes": "17.728238320965607921",
                     },
                 },
             }
@@ -31,6 +39,12 @@ MOCK_PAYOUT_QUERY_RESPONSE = {
     }
 }
 
+MOCK_PAYOUT_QUERY_SECOND_RESPONSE: Dict[str, dict] = {
+    "data": {
+        "predictPayouts": [
+        ]
+    }
+}
 
 def test_get_payout_query():
     payout_query = get_payout_query(
@@ -45,7 +59,10 @@ def test_get_payout_query():
 @enforce_types
 @patch("pdr_backend.subgraph.subgraph_payout.query_subgraph")
 def test_fetch_payouts(mock_query_subgraph):
-    mock_query_subgraph.return_value = MOCK_PAYOUT_QUERY_RESPONSE
+    mock_query_subgraph.side_effect = [
+        MOCK_PAYOUT_QUERY_RESPONSE,
+        MOCK_PAYOUT_QUERY_SECOND_RESPONSE,
+    ]
 
     payouts = fetch_payouts(
         addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
@@ -64,4 +81,7 @@ def test_fetch_payouts(mock_query_subgraph):
     assert payouts[0].timestamp == 1698527000
     assert payouts[0].slot == 1696880700
     assert payouts[0].payout == float(0)
-    assert mock_query_subgraph.call_count == 1
+    assert payouts[0].predictedValue is True
+    assert payouts[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
+    assert payouts[0].stake == float(1.2)
+    assert mock_query_subgraph.call_count == 2

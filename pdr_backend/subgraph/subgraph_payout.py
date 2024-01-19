@@ -50,7 +50,9 @@ def get_payout_query(
                 id
                 timestamp
                 payout
+                predictedValue
                 prediction {
+                    stake
                     user {
                         id
                     }
@@ -62,6 +64,9 @@ def get_payout_query(
                                 name
                             }
                         }
+                        revenue
+                        roundSumStakesUp
+                        roundSumStakes
                     }
                 }
             }
@@ -103,41 +108,60 @@ def fetch_payouts(
     skip: int,
     network: str = "mainnet",
 ) -> List[Payout]:
-    records_per_page = 10
-    query = get_payout_query(
-        addresses,
-        start_ts,
-        end_ts,
-        records_per_page,
-        skip,
-    )
+    records_per_page = 1000
 
-    print("payout query", query)
+    payouts = []
 
-    result = query_subgraph(
-        get_subgraph_url(network),
-        query,
-        timeout=20.0,
-    )
-
-    new_payouts = filter_by_addresses(result, addresses)
-
-    if new_payouts is None:
-        return []
-
-    new_payouts = [
-        Payout(
-            **{
-                "payout": float(payout["payout"]),
-                "user": payout["prediction"]["user"]["id"],
-                "timestamp": payout["timestamp"],
-                "ID": payout["id"],
-                "token": payout["prediction"]["slot"]["predictContract"]["token"][
-                    "name"
-                ],
-                "slot": int(payout["id"].split("-")[1]),
-            }
+    while True:
+        query = get_payout_query(
+            addresses,
+            start_ts,
+            end_ts,
+            records_per_page,
+            skip,
         )
-        for payout in new_payouts
-    ]
-    return new_payouts
+
+        print("payout query", query)
+
+        new_payouts = query_subgraph(
+            get_subgraph_url(network),
+            query,
+            timeout=20.0,
+        )
+
+        if len(new_payouts["data"]["predictPayouts"]) == 0:
+            break
+
+        new_payouts = new_payouts["data"]["predictPayouts"]
+
+        print("new_payouts", new_payouts)
+
+        new_payouts = [
+            Payout(
+                **{
+                    "payout": float(payout["payout"]),
+                    "user": payout["prediction"]["user"]["id"],
+                    "timestamp": payout["timestamp"],
+                    "ID": payout["id"],
+                    "token": payout["prediction"]["slot"]["predictContract"]["token"][
+                        "name"
+                    ],
+                    "slot": int(payout["id"].split("-")[1]),
+                    "predictedValue": bool(payout["predictedValue"]),
+                    "revenue": float(payout["prediction"]["slot"]["revenue"]),
+                    "roundSumStakesUp": float(
+                        payout["prediction"]["slot"]["roundSumStakesUp"]
+                    ),
+                    "roundSumStakes": float(
+                        payout["prediction"]["slot"]["roundSumStakes"]
+                    ),
+                    "stake": float(payout["prediction"]["stake"]),
+                }
+            )
+            for payout in new_payouts
+        ]
+
+        payouts.extend(new_payouts)
+        skip += records_per_page
+
+    return payouts
