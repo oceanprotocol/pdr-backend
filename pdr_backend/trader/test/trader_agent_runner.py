@@ -48,7 +48,7 @@ def setup_take_step(  # pylint: disable=unused-argument
 ):
     feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
     inplace_mock_feedgetters(ppss.web3_pp, feed)  # mock publishing feeds
-    _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
+    _mock_feed_contract = inplace_mock_w3_and_contract_with_tracking(
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
