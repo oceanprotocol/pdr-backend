@@ -113,7 +113,7 @@ def fetch_filtered_predictions(
                 }}
             }}"""
 
-        try: 
+        try:
             print("Querying subgraph...", query)
             result = query_subgraph(
                 get_subgraph_url(network),
