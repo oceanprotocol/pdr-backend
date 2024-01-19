@@ -6,10 +6,10 @@ from enforce_typing import enforce_types
 
 HELP_LONG = """Predictoor tool
 
-Usage: pdr sim|predictoor|trader|..
+Usage: pdr xpmt|predictoor|trader|..
 
 Main tools:
-  pdr sim PPSS_FILE
+  pdr xpmt PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr lake PPSS_FILE NETWORK
@@ -223,7 +223,7 @@ def print_args(arguments: Namespace):
         print(f"{arg_k}={arg_v}")
 
 
-SimArgParser = _ArgParser_PPSS
+XpmtArgParser = _ArgParser_PPSS
 
 PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 
@@ -252,7 +252,7 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
 defined_parsers = {
-    "do_sim": SimArgParser("Run simulation", "sim"),
+    "do_xpmt": XpmtArgParser("Run experiment / simulation", "xpmt"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
