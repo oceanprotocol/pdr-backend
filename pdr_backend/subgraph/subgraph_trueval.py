@@ -89,7 +89,7 @@ def fetch_truevals(
             )
         except Exception as e:
             print(
-                f"Error querying subgraph-predictTrueVals, return #{len(truevals)} records... exception: ",
+                f"Error fetching predictTrueVals, got #{len(truevals)} items. Exception: ",
                 e,
             )
             break
