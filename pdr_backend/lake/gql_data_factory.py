@@ -233,7 +233,7 @@ class GQLDataFactory:
                     f"Duplicate rows found. Dropping {len(duplicate_rows)} rows: {duplicate_rows}"
                 )
             df = df.group_by("ID").first()
-            
+
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")
