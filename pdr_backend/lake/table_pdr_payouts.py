@@ -1,7 +1,7 @@
 from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
-from polars import Int64, Float64, Utf8
+from polars import Int64, Float64, Utf8, Boolean
 
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
@@ -16,6 +16,11 @@ payouts_schema = {
     "slot": Int64,
     "timestamp": Int64,
     "payout": Float64,
+    "predictedValue": Boolean,
+    "revenue": Float64,
+    "roundSumStakesUp": Float64,
+    "roundSumStakes": Float64,
+    "stake": Float64,
 }
 
 
