@@ -20,9 +20,7 @@ MOCK_PAYOUT_QUERY_RESPONSE = {
                 "predictedValue": True,
                 "prediction": {
                     "stake": "1.2",
-                    "user": {
-                        "id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
-                        },
+                    "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
                     "slot": {
                         "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1696880700",
                         "predictContract": {
@@ -39,12 +37,8 @@ MOCK_PAYOUT_QUERY_RESPONSE = {
     }
 }
 
-MOCK_PAYOUT_QUERY_SECOND_RESPONSE: Dict[str, dict] = {
-    "data": {
-        "predictPayouts": [
-        ]
-    }
-}
+MOCK_PAYOUT_QUERY_SECOND_RESPONSE: Dict[str, dict] = {"data": {"predictPayouts": []}}
+
 
 def test_get_payout_query():
     payout_query = get_payout_query(
