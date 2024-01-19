@@ -91,7 +91,6 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 @enforce_types
 def check_network_main(ppss: PPSS, lookback_hours: int):
     web3_pp = ppss.web3_pp
-
     cur_ut = current_ut_s()
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
