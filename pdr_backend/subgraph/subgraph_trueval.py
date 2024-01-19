@@ -99,7 +99,6 @@ def fetch_truevals(
         if "data" not in result or not result["data"]:
             break
 
-        
         print(result)
         data = result["data"].get("predictTrueVals", [])
         if len(data) == 0:
