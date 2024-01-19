@@ -42,5 +42,4 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
             cut=_CUT,
             web3_pp=web3_pp,
         )
-
     print("Done publishing.")

@@ -139,7 +139,7 @@ def fetch_filtered_predictions(
             timestamp = prediction_sg_dict["timestamp"]
             slot = prediction_sg_dict["slot"]["slot"]
             user = prediction_sg_dict["user"]["id"]
-
+            address = prediction_sg_dict["id"].split("-")[0]
             trueval = None
             payout = None
             predicted_value = None
@@ -167,6 +167,7 @@ def fetch_filtered_predictions(
                 timestamp=timestamp,
                 source=source,
                 payout=payout,
+                address=address,
                 slot=slot,
                 user=user,
             )
