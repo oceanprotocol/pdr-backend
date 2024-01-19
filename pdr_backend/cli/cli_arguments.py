@@ -148,7 +148,7 @@ def check_positive(value):
             raise Exception("Zero or below.")
     except Exception as exc:
         raise TypeError("%s is an invalid positive int value" % value) from exc
-        
+
     return ivalue
 
 
