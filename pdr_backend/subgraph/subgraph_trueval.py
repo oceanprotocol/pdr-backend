@@ -29,21 +29,21 @@ def get_truevals_query(
     return """
         query {
             predictTrueVals (
-            first: %s
-            skip: %s
-            where: { timestamp_gte: %s, timestamp_lte: %s, slot_: {predictContract_in: %s}}
+                first: %s
+                skip: %s
+                where: { timestamp_gte: %s, timestamp_lte: %s, slot_: {predictContract_in: %s}}
             ) {
-            id
-            timestamp
-            trueValue
-            slot {
                 id
-                predictContract{
-                    token{
-                        name
+                timestamp
+                trueValue
+                slot {
+                    id
+                    predictContract{
+                        token{
+                            name
+                        }
                     }
                 }
-            }
             }
         }
     """ % (
@@ -57,40 +57,73 @@ def get_truevals_query(
 
 @enforce_types
 def fetch_truevals(
-    addresses: List[str],
     start_ts: int,
     end_ts: int,
-    skip: int,
+    addresses: List[str],
     network: str = "mainnet",
 ) -> List[Trueval]:
-    records_per_page = 10
-    query = get_truevals_query(
-        addresses,
-        start_ts,
-        end_ts,
-        records_per_page,
-        skip,
-    )
+    """
+    @description
+        Implements same pattern as fetch_filtered_predictions
+    """
 
-    result = query_subgraph(
-        get_subgraph_url(network),
-        query,
-        timeout=20.0,
-    )
+    chunk_size = 1000
+    offset = 0
+    truevals: List[Trueval] = []
 
-    print(result)
-    new_truevals = result["data"]["predictTrueVals"] or []
-
-    new_truevals = [
-        Trueval(
-            **{
-                "trueval": trueval["trueValue"],
-                "timestamp": trueval["timestamp"],
-                "ID": trueval["id"],
-                "token": trueval["slot"]["predictContract"]["token"]["name"],
-                "slot": int(trueval["id"].split("-")[1]),
-            }
+    while True:
+        query = get_truevals_query(
+            addresses,
+            start_ts,
+            end_ts,
+            chunk_size,
+            offset,
         )
-        for trueval in new_truevals
-    ]
-    return new_truevals
+
+        try:
+            print("Querying subgraph...", query)
+            result = query_subgraph(
+                get_subgraph_url(network),
+                query,
+                timeout=20.0,
+            )
+        except Exception as e:
+            print(
+                f"Error querying subgraph-predictTrueVals, return #{len(truevals)} records... exception: ",
+                e,
+            )
+            break
+
+        offset += chunk_size
+
+        if "data" not in result or not result["data"]:
+            break
+
+        
+        print(result)
+        data = result["data"].get("predictTrueVals", [])
+        if len(data) == 0:
+            break
+
+        for record in data:
+            truevalue = record["trueValue"]
+            timestamp = record["timestamp"]
+            ID = record["id"]
+            token = record["slot"]["predictContract"]["token"]["name"]
+            slot = int(record["id"].split("-")[1])
+
+            trueval = Trueval(
+                ID=ID,
+                token=token,
+                timestamp=timestamp,
+                trueval=truevalue,
+                slot=slot,
+            )
+
+            truevals.append(trueval)
+
+        # avoids doing next fetch if we've reached the end
+        if len(data) < chunk_size:
+            break
+
+    return truevals

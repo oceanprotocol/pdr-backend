@@ -113,7 +113,7 @@ def fetch_filtered_predictions(
                 }}
             }}"""
 
-        try:
+        try: 
             print("Querying subgraph...", query)
             result = query_subgraph(
                 get_subgraph_url(network),
@@ -122,7 +122,7 @@ def fetch_filtered_predictions(
             )
         except Exception as e:
             print(
-                f"Error querying subgraph, return #{len(predictions)} records... exception: ",
+                f"Error querying subgraph-predictPredictions, return #{len(predictions)} records... exception: ",
                 e,
             )
             break

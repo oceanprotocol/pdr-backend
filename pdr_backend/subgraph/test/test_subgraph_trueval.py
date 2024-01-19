@@ -30,7 +30,7 @@ MOCK_TRUEVAL_QUERY_RESPONSE = {
 
 def test_get_trueval_query():
     trueval_query = get_truevals_query(
-        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"], 1622547000, 1622548800, 1, 1
+        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"], 1622547000, 1622548800, 1000, 0
     )
 
     assert "1622547000" in trueval_query
@@ -44,10 +44,9 @@ def test_fetch_filtered_truevals(mock_query_subgraph):
     mock_query_subgraph.return_value = MOCK_TRUEVAL_QUERY_RESPONSE
 
     truevals = fetch_truevals(
+        start_ts=1698526000,
+        end_ts=1698528000,
         addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-        start_ts=1622547000,
-        end_ts=1622548800,
-        skip=1,
         network="mainnet",
     )
     print(truevals)

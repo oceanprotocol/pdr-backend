@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 from polars import Boolean, Int64, Utf8
 
 
+from pdr_backend.subgraph.subgraph_predictions import _transform_timestamp_to_ms
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -33,14 +34,19 @@ def get_pdr_truevals_df(
 
     # fetch truevals
     truevals = fetch_truevals(
-        config["contract_list"], ms_to_seconds(st_ut), ms_to_seconds(fin_ut), 0, network
+        ms_to_seconds(st_ut),
+        ms_to_seconds(fin_ut),
+        config["contract_list"],
+        network
     )
 
     if len(truevals) == 0:
         print("No truevals to fetch. Exit.")
         return pl.DataFrame()
 
-    # convert truevals to df and transform timestamp into ms
+    # convert truevals to df, transform timestamp into ms, return in-order
     trueval_df = _object_list_to_df(truevals, truevals_schema)
+    trueval_df = _transform_timestamp_to_ms(trueval_df)
+    trueval_df = trueval_df.sort("timestamp")
 
     return trueval_df
