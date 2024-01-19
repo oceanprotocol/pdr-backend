@@ -29,68 +29,6 @@ class PredictoorStat(TypedDict):
 
 
 @enforce_types
-def aggregate_prediction_statistics(
-    all_predictions: List[Prediction],
-) -> Tuple[Dict[str, Dict], int]:
-    """
-    Aggregates statistics from a list of prediction objects. It organizes statistics
-    by currency pair and timeframe and predictor address. For each category, it
-    tallies the total number of predictions, the number of correct predictions,
-    and the total stakes and payouts. It also returns the total number of correct
-    predictions across all categories.
-
-    Args:
-        all_predictions (List[Prediction]): A list of Prediction objects to aggregate.
-
-    Returns:
-        Tuple[Dict[str, Dict], int]: A tuple containing a dictionary of aggregated
-        statistics and the total number of correct predictions.
-    """
-    stats: Dict[str, Dict] = {"pair_timeframe": {}, "predictor": {}}
-    correct_predictions = 0
-
-    for prediction in all_predictions:
-        pair_timeframe_key = (prediction.pair, prediction.timeframe, prediction.source)
-        predictor_key = prediction.user
-        is_correct = prediction.prediction == prediction.trueval
-
-        if pair_timeframe_key not in stats["pair_timeframe"]:
-            stats["pair_timeframe"][pair_timeframe_key] = {
-                "correct": 0,
-                "total": 0,
-                "stake": 0,
-                "payout": 0.0,
-            }
-
-        if predictor_key not in stats["predictor"]:
-            stats["predictor"][predictor_key] = {
-                "correct": 0,
-                "total": 0,
-                "stake": 0,
-                "payout": 0.0,
-                "details": set(),
-            }
-
-        if is_correct:
-            correct_predictions += 1
-            stats["pair_timeframe"][pair_timeframe_key]["correct"] += 1
-            stats["predictor"][predictor_key]["correct"] += 1
-
-        stats["pair_timeframe"][pair_timeframe_key]["total"] += 1
-        stats["pair_timeframe"][pair_timeframe_key]["stake"] += prediction.stake
-        stats["pair_timeframe"][pair_timeframe_key]["payout"] += prediction.payout
-
-        stats["predictor"][predictor_key]["total"] += 1
-        stats["predictor"][predictor_key]["stake"] += prediction.stake
-        stats["predictor"][predictor_key]["payout"] += prediction.payout
-        stats["predictor"][predictor_key]["details"].add(
-            (prediction.pair, prediction.timeframe, prediction.source)
-        )
-
-    return stats, correct_predictions
-
-
-@enforce_types
 def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
     df = predictions_df.filter(

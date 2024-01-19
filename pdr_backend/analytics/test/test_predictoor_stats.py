@@ -10,7 +10,6 @@ from pdr_backend.lake.table_pdr_predictions import (
 )
 
 from pdr_backend.analytics.predictoor_stats import (
-    aggregate_prediction_statistics,
     calculate_slot_daily_statistics,
     get_feed_summary_stats,
     get_predictoor_summary_stats,
@@ -20,17 +19,6 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
 )
-
-
-@enforce_types
-def test_aggregate_prediction_statistics(_sample_first_predictions):
-    stats, correct_predictions = aggregate_prediction_statistics(
-        _sample_first_predictions
-    )
-    assert isinstance(stats, dict)
-    assert "pair_timeframe" in stats
-    assert "predictor" in stats
-    assert correct_predictions == 1  # Adjust based on your sample data
 
 
 @enforce_types
