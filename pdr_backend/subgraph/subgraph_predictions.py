@@ -122,7 +122,7 @@ def fetch_filtered_predictions(
             )
         except Exception as e:
             print(
-                f"Error querying subgraph-predictPredictions, return #{len(predictions)} records... exception: ",
+                f"Error fetching predictPredictions, got #{len(predictions)} items. Exception: ",
                 e,
             )
             break
