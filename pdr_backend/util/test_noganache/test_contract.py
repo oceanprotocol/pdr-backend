@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from unittest.mock import patch
 import pytest
 from enforce_typing import enforce_types
 
@@ -41,6 +42,34 @@ def test_contract_main(network):
 
     with pytest.raises(TypeError):
         get_contract_abi("xyz", web3_pp.address_file)
+
+
+@enforce_types
+@patch("pdr_backend.util.contract.get_addresses")
+def test_get_addresses(mock_get_addresses):
+    # setup
+    network = "development"
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], network)
+    web3_pp = ppss.web3_pp
+    assert web3_pp.network == network
+
+    mock_get_addresses.return_value = None
+
+    # Work 1: validate network can't be found
+    with pytest.raises(ValueError) as excinfo:
+        get_address(web3_pp, "Ocean")
+
+    assert 'Cannot find network "development"' in str(excinfo.value)
+
+    mock_get_addresses.return_value = {
+        "Ocean": "0x1234567890123456789012345678901234567890"
+    }
+    with pytest.raises(ValueError) as excinfo:
+        get_address(web3_pp, "ERCUnknown")
+
+    assert 'Cannot find contract "ERCUnknown"' in str(excinfo.value)
+
+    assert get_address(web3_pp, "Ocean") == "0x1234567890123456789012345678901234567890"
 
 
 @enforce_types

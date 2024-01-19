@@ -1,57 +1,41 @@
 from typing import List
 
 from enforce_typing import enforce_types
-
-from pdr_backend.analytics.predictoor_stats import get_cli_statistics
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_predictions import (
-    FilterMode,
-    fetch_filtered_predictions,
-    get_all_contract_ids_by_owner,
-)
-from pdr_backend.util.csvs import save_analysis_csv
-from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.util.timeutil import timestr_to_ut
+from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats
 
 
 @enforce_types
 def get_predictions_info_main(
     ppss: PPSS,
-    feed_addrs: List[str],
     start_timestr: str,
     end_timestr: str,
-    pq_dir: str,
+    feed_addrs: List[str],
 ):
-    network = get_sapphire_postfix(ppss.web3_pp.network)
-    start_ut: int = ms_to_seconds(timestr_to_ut(start_timestr))
-    end_ut: int = ms_to_seconds(timestr_to_ut(end_timestr))
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_dfs = gql_data_factory.get_gql_dfs()
 
-    # filter by feed contract address
-    feed_contract_list = get_all_contract_ids_by_owner(
-        owner_address=ppss.web3_pp.owner_addrs,
-        network=network,
-    )
-    feed_contract_list = [f.lower() for f in feed_contract_list]
-
-    if feed_addrs:
-        feed_addrs = [f.lower() for f in feed_addrs]
-        feed_contract_list = [f for f in feed_contract_list if f in feed_addrs]
-
-    # fetch predictions
-    predictions = fetch_filtered_predictions(
-        start_ut,
-        end_ut,
-        feed_contract_list,
-        network,
-        FilterMode.CONTRACT,
-        payout_only=True,
-        trueval_only=True,
-    )
-
-    if not predictions:
+    predictions_df = gql_dfs["pdr_predictions"]
+    if len(gql_dfs["pdr_predictions"]) == 0:
         print("No records found. Please adjust start and end times.")
         return
 
-    save_analysis_csv(predictions, pq_dir)
+    # filter by feed addresses
+    if feed_addrs:
+        feed_addrs = [f.lower() for f in feed_addrs]
+        predictions_df = predictions_df.filter(
+            predictions_df["ID"]
+            .map_elements(lambda x: x.split("-")[0])
+            .is_in(feed_addrs)
+        )
 
-    get_cli_statistics(predictions)
+    # filter by start and end dates
+    predictions_df = predictions_df.filter(
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
+    )
+
+    feed_summary_df = get_feed_summary_stats(predictions_df)
+    print(feed_summary_df)

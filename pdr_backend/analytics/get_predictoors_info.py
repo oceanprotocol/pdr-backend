@@ -1,38 +1,39 @@
 from typing import List
 
 from enforce_typing import enforce_types
-
-from pdr_backend.analytics.predictoor_stats import get_cli_statistics
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_predictions import (
-    FilterMode,
-    fetch_filtered_predictions,
-)
-from pdr_backend.util.csvs import save_prediction_csv
-from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.util.timeutil import ms_to_seconds, timestr_to_ut
+from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
 def get_predictoors_info_main(
     ppss: PPSS,
-    pdr_addrs: List[str],
     start_timestr: str,
     end_timestr: str,
-    csv_output_dir: str,
+    pdr_addrs: List[str],
 ):
-    network = get_sapphire_postfix(ppss.web3_pp.network)
-    start_ut: int = ms_to_seconds(timestr_to_ut(start_timestr))
-    end_ut: int = ms_to_seconds(timestr_to_ut(end_timestr))
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_dfs = gql_data_factory.get_gql_dfs()
 
-    predictions = fetch_filtered_predictions(
-        start_ut,
-        end_ut,
-        pdr_addrs,
-        network,
-        FilterMode.PREDICTOOR,
+    predictions_df = gql_dfs["pdr_predictions"]
+    if len(predictions_df) == 0:
+        print("No records found. Please adjust start and end times.")
+        return
+    
+    # filter by user addresses
+    if pdr_addrs:
+        pdr_addrs = [f.lower() for f in pdr_addrs]
+        predictions_df = predictions_df.filter(
+            predictions_df["user"].is_in(pdr_addrs)
+        )
+
+    # filter by start and end dates
+    predictions_df = predictions_df.filter(
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
     )
 
-    save_prediction_csv(predictions, csv_output_dir)
-
-    get_cli_statistics(predictions)
+    predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
+    print(predictoor_summary_df)

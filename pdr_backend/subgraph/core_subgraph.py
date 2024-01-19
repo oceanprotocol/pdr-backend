@@ -31,5 +31,4 @@ def query_subgraph(
         )
 
     result = response.json()
-
     return result
