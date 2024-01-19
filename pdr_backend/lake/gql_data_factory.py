@@ -46,11 +46,11 @@ class GQLDataFactory:
             owner_address=self.ppss.web3_pp.owner_addrs,
             network=network,
         )
-        contract_list = [f.lower() for f in contract_list]
+        # contract_list = [f.lower() for f in contract_list]
 
         # For debugging
-        # t_contract_list = [f.lower() for f in contract_list]
-        # contract_list = [t_contract_list[0], t_contract_list[1]]
+        t_contract_list = [f.lower() for f in contract_list]
+        contract_list = [t_contract_list[0], t_contract_list[1]]
 
         # configure all tables that will be recorded onto lake
         self.record_config = {
