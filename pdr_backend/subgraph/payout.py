@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 
 
 @enforce_types
-class Payout:
+class Payout:  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         ID: str,

@@ -19,7 +19,6 @@ from pdr_backend.lake.table_pdr_payouts import (
 )
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
@@ -46,11 +45,7 @@ class GQLDataFactory:
             owner_address=self.ppss.web3_pp.owner_addrs,
             network=network,
         )
-        # contract_list = [f.lower() for f in contract_list]
-
-        # For debugging
-        t_contract_list = [f.lower() for f in contract_list]
-        contract_list = [t_contract_list[0], t_contract_list[1]]
+        contract_list = [f.lower() for f in contract_list]
 
         # configure all tables that will be recorded onto lake
         self.record_config = {
