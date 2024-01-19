@@ -163,6 +163,7 @@ cython_debug/
 #.idea/
 .test_cache/
 .cache/
+dir/
 
 # predictoor-specific
 out*.txt
