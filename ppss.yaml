@@ -35,6 +35,7 @@ trader_ss:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3 # buy/sell this amount in each epoch
+  tradetype: livemock
 
 xpmt_ss: # xpmt only
   do_plot: True

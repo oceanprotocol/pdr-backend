@@ -16,6 +16,8 @@ class TraderSS(SingleFeedMixin, StrMixin):
             d, assert_feed_attributes=["timeframe"]
         )  # yaml_dict["trader_ss"]
 
+        self.tradetype_override = None
+
     # --------------------------------
     # yaml properties: xpmt only
     @property
@@ -30,6 +32,13 @@ class TraderSS(SingleFeedMixin, StrMixin):
     @property
     def init_holdings_strs(self) -> List[str]:
         return self.d["xpmt_only"]["init_holdings"]  # eg ["1000 USDT", ..]
+
+    @property
+    def tradetype(self) -> str:
+        if self.tradetype_override is not None:
+            return self.tradetype_override
+
+        return self.d["tradetype"]
 
     # feed defined in base
 

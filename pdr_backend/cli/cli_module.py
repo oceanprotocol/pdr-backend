@@ -84,6 +84,8 @@ def do_trader(args):
     else:
         raise ValueError(f"Unknown trader approach {approach}")
 
+    ppss.trader_ss.tradetype_override = args.TRADETYPE
+
     agent.run()
 
 

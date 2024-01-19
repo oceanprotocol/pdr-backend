@@ -11,7 +11,7 @@ Usage: pdr xpmt|predictoor|trader|..
 Main tools:
   pdr xpmt PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
-  pdr trader APPROACH PPSS_FILE NETWORK
+  pdr trader APPROACH PPSS_FILE NETWORK --TRADETYPE
   pdr lake PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
@@ -112,6 +112,18 @@ class LOOKBACK_Mixin:
         )
 
 
+@enforce_types
+class TRADETYPE_Mixin:
+    def add_argument_TRADETYPE(self):
+        self.add_argument(
+            "--TRADETYPE",
+            default=None,
+            choices=["livemock", "livereal"],
+            help="livemock|livereal",
+            required=False,
+        )
+
+
 # ========================================================================
 # argparser base classes
 class CustomArgParser(ArgParser):
@@ -149,6 +161,22 @@ class _ArgParser_APPROACH_PPSS_NETWORK(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["APPROACH", "PPSS", "NETWORK"])
+
+
+@enforce_types
+class _ArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(
+    CustomArgParser,
+    APPROACH_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    TRADETYPE_Mixin,
+):
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(
+            command_name,
+            ["APPROACH", "PPSS", "NETWORK", "TRADETYPE"]
+        )
 
 
 @enforce_types
@@ -227,7 +255,7 @@ XpmtArgParser = _ArgParser_PPSS
 
 PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 
-TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK_TRADETYPE
 
 LakeArgParser = _ArgParser_PPSS_NETWORK
 

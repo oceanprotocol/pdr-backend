@@ -73,6 +73,18 @@ class _PDRS:
     PDRS = "0xa5222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe4"
 
 
+class _TRADETYPE:
+    TRADETYPE = None
+
+
+class _TRADETYPE_LIVEMOCK:
+    TRADETYPE = "livemock"
+
+
+class _TRADETYPE_BAD:
+    TRADETYPE = "xyz"
+
+
 class _Base:
     def __init__(self, *args, **kwargs):
         pass
@@ -101,6 +113,19 @@ class MockArgParser_APPROACH_PPSS_NETWORK(_Base):
 
     def parse_args(self):
         class MockArgs(Namespace, self.approach, _PPSS, _NETWORK):
+            pass
+
+        return MockArgs()
+
+
+class MockArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(_Base):
+    def __init__(self, approach=_APPROACH, tradetype=_TRADETYPE):
+        self.approach = approach
+        self.tradetype = tradetype
+        super().__init__()
+
+    def parse_args(self):
+        class MockArgs(Namespace, self.approach, _PPSS, _NETWORK, self.tradetype):
             pass
 
         return MockArgs()
@@ -259,16 +284,19 @@ def test_do_topup(monkeypatch):
 def test_do_trader(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.TraderAgent1", MockAgent)
 
-    do_trader(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
+    do_trader(MockArgParser_APPROACH_PPSS_NETWORK_TRADETYPE().parse_args())
     assert MockAgent.was_run
 
     monkeypatch.setattr(f"{_CLI_PATH}.TraderAgent2", MockAgent)
 
-    do_trader(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH2).parse_args())
+    do_trader(MockArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(_APPROACH2, _TRADETYPE_LIVEMOCK).parse_args())
     assert MockAgent.was_run
 
     with pytest.raises(ValueError):
-        do_trader(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH_BAD).parse_args())
+        do_trader(MockArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(_APPROACH_BAD).parse_args())
+
+    with pytest.raises(ValueError):
+        do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(_APPROACH2, _TRADETYPE_BAD).parse_args())
 
 
 @enforce_types
