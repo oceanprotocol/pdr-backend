@@ -16,13 +16,7 @@ from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
-
-def recursive_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, dict) and k in d and isinstance(d[k], dict):
-            recursive_update(d[k], v)
-        else:
-            d[k] = v
+from pdr_backend.util.dictutil import recursive_update
 
 @enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
