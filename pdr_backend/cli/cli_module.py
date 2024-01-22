@@ -51,14 +51,14 @@ def _do_main():
 
 
 @enforce_types
-def do_xpmt(args):
+def do_xpmt(args, nested_args=None):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="development")
     xpmt_engine = XpmtEngine(ppss)
     xpmt_engine.run()
 
 
 @enforce_types
-def do_predictoor(args, nested_args):
+def do_predictoor(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -79,7 +79,7 @@ def do_predictoor(args, nested_args):
 
 
 @enforce_types
-def do_trader(args, nested_args):
+def do_trader(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -98,7 +98,7 @@ def do_trader(args, nested_args):
 
 
 @enforce_types
-def do_lake(args, nested_args):
+def do_lake(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -113,19 +113,19 @@ def do_lake(args, nested_args):
 
 
 @enforce_types
-def do_claim_OCEAN(args, nested_args):
+def do_claim_OCEAN(args, nested_args=None):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_ocean_payout(ppss)
 
 
 @enforce_types
-def do_claim_ROSE(args, nested_args):
+def do_claim_ROSE(args, nested_args=None):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet")
     do_rose_payout(ppss)
 
 
 @enforce_types
-def do_get_predictoors_info(args, nested_args):
+def do_get_predictoors_info(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -135,7 +135,7 @@ def do_get_predictoors_info(args, nested_args):
 
 
 @enforce_types
-def do_get_predictions_info(args, nested_args):
+def do_get_predictions_info(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -145,7 +145,7 @@ def do_get_predictions_info(args, nested_args):
 
 
 @enforce_types
-def do_get_traction_info(args, nested_args):
+def do_get_traction_info(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -155,7 +155,7 @@ def do_get_traction_info(args, nested_args):
 
 
 @enforce_types
-def do_check_network(args, nested_args):
+def do_check_network(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -165,7 +165,7 @@ def do_check_network(args, nested_args):
 
 
 @enforce_types
-def do_trueval(args, testing=False):
+def do_trueval(args, nested_args=None, testing=False):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -178,7 +178,7 @@ def do_trueval(args, testing=False):
 
 
 @enforce_types
-def do_dfbuyer(args, nested_args):
+def do_dfbuyer(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -189,7 +189,7 @@ def do_dfbuyer(args, nested_args):
 
 
 @enforce_types
-def do_publisher(args, nested_args):
+def do_publisher(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -202,7 +202,7 @@ def do_publisher(args, nested_args):
 
 
 @enforce_types
-def do_topup(args, nested_args):
+def do_topup(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -212,12 +212,12 @@ def do_topup(args, nested_args):
 
 
 @enforce_types
-def do_create_accounts(args, nested_args):
+def do_create_accounts(args, nested_args=None):
     create_accounts(args.NUM)
 
 
 @enforce_types
-def do_view_accounts(args, nested_args):
+def do_view_accounts(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -228,7 +228,7 @@ def do_view_accounts(args, nested_args):
 
 
 @enforce_types
-def do_fund_accounts(args, nested_args):
+def do_fund_accounts(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
