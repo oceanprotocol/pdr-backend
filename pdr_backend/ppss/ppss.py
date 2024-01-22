@@ -17,6 +17,12 @@ from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 
+def recursive_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, dict) and k in d and isinstance(d[k], dict):
+            recursive_update(d[k], v)
+        else:
+            d[k] = v
 
 @enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
@@ -25,6 +31,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
         network: Optional[str] = None,  # eg "development", "sapphire-testnet"
+        nested_override_args: Optional[dict] = None,
     ):
         # preconditions
         assert (
@@ -37,6 +44,9 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
                 d = yaml.safe_load(f)
         else:
             d = yaml.safe_load(str(yaml_str))
+
+        if nested_override_args is not None:
+            recursive_update(d, nested_override_args)
 
         # fill attributes from d. Same order as ppss.yaml, to help reading
         self.lake_ss = LakeSS(d["lake_ss"])
