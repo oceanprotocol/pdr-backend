@@ -6,6 +6,8 @@ from enforce_typing import enforce_types
 
 from eth_utils import to_checksum_address
 
+from pdr_backend.cli.nested_arg_parser import NestedArgParser
+
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
 
@@ -191,7 +193,7 @@ class NATIVE_TOKEN_Mixin:
 
 # ========================================================================
 # argparser base classes
-class CustomArgParser(ArgParser):
+class CustomArgParser(NestedArgParser):
     def add_arguments_bulk(self, command_name, arguments):
         self.add_argument("command", choices=[command_name])
 
