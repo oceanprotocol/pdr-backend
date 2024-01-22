@@ -23,8 +23,9 @@ from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.contract import get_address
-from pdr_backend.util.fund_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.topup import topup_main
+from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
+from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 
 
 @enforce_types
@@ -145,7 +146,7 @@ def do_trueval(args, testing=False):
     agent.run(testing)
 
 
-# @enforce_types
+@enforce_types
 def do_dfbuyer(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     agent = DFBuyerAgent(ppss)
@@ -165,3 +166,22 @@ def do_publisher(args):
 def do_topup(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
     topup_main(ppss)
+
+
+@enforce_types
+def do_create_accounts(args):
+    create_accounts(args.NUM)
+
+
+@enforce_types
+def do_view_accounts(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    accounts = args.ACCOUNTS
+    view_accounts(accounts, ppss.web3_pp)
+
+
+@enforce_types
+def do_fund_accounts(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    to_accounts = args.ACCOUNTS
+    fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)

@@ -29,12 +29,12 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
 
     OCEAN_addr = get_address(web3_pp, "Ocean")
     OCEAN = Token(web3_pp, OCEAN_addr)
-    fund_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
+    _fund_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
     print("Done funding.")
 
 
 @enforce_types
-def fund_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
+def _fund_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
     """Worker function to actually fund accounts"""
     for private_key_name, amount in accounts_to_fund:
         if private_key_name in os.environ:

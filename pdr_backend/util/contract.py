@@ -17,8 +17,16 @@ def get_address(web3_pp, contract_name: str):
     """
     network = get_addresses(web3_pp)
     if not network:
-        raise ValueError(f"Cannot figure out {contract_name} address")
+        raise ValueError(f'Cannot find network "{web3_pp.network}" in addresses.json')
+
     address = network.get(contract_name)
+    if not address:
+        error = (
+            f'Cannot find contract "{contract_name}" in address.json '
+            f'for network "{web3_pp.network}"'
+        )
+        raise ValueError(error)
+
     return address
 
 
