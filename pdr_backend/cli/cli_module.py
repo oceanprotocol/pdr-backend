@@ -52,7 +52,11 @@ def _do_main():
 
 @enforce_types
 def do_xpmt(args, nested_args=None):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="development", nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="development",
+        nested_override_args=nested_args,
+    )
     xpmt_engine = XpmtEngine(ppss)
     xpmt_engine.run()
 
@@ -114,13 +118,21 @@ def do_lake(args, nested_args=None):
 
 @enforce_types
 def do_claim_OCEAN(args, nested_args=None):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet", nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
     do_ocean_payout(ppss)
 
 
 @enforce_types
 def do_claim_ROSE(args, nested_args=None):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network="sapphire-mainnet", nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
     do_rose_payout(ppss)
 
 
