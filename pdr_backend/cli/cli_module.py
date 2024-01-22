@@ -59,7 +59,11 @@ def do_xpmt(args):
 
 @enforce_types
 def do_predictoor(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
 
     approach = args.APPROACH
     if approach == 1:
@@ -76,7 +80,11 @@ def do_predictoor(args, nested_args):
 
 @enforce_types
 def do_trader(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     approach = args.APPROACH
 
     if approach == 1:
@@ -91,7 +99,11 @@ def do_trader(args, nested_args):
 
 @enforce_types
 def do_lake(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
@@ -114,31 +126,51 @@ def do_claim_ROSE(args, nested_args):
 
 @enforce_types
 def do_get_predictoors_info(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     get_predictoors_info_main(ppss, args.ST, args.END, args.PDRS)
 
 
 @enforce_types
 def do_get_predictions_info(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     get_predictions_info_main(ppss, args.ST, args.END, args.FEEDS)
 
 
 @enforce_types
 def do_get_traction_info(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
 
 
 @enforce_types
 def do_check_network(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
 @enforce_types
 def do_trueval(args, testing=False):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
     agent = TruevalAgent(ppss, predictoor_batcher_addr)
 
@@ -147,14 +179,22 @@ def do_trueval(args, testing=False):
 
 @enforce_types
 def do_dfbuyer(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     agent = DFBuyerAgent(ppss)
     agent.run()
 
 
 @enforce_types
 def do_publisher(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
 
     if ppss.web3_pp.network == "development":
         fund_accounts_with_OCEAN(ppss.web3_pp)
@@ -163,7 +203,11 @@ def do_publisher(args, nested_args):
 
 @enforce_types
 def do_topup(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     topup_main(ppss)
 
 
@@ -174,13 +218,21 @@ def do_create_accounts(args, nested_args):
 
 @enforce_types
 def do_view_accounts(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     accounts = args.ACCOUNTS
     view_accounts(accounts, ppss.web3_pp)
 
 
 @enforce_types
 def do_fund_accounts(args, nested_args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK, nested_override_args=nested_args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
     to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)

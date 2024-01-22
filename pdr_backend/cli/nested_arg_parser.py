@@ -1,6 +1,7 @@
 import argparse
 import ast
 
+
 class NestedArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -12,14 +13,14 @@ class NestedArgParser(argparse.ArgumentParser):
         # process nested args
         for arg in remaining_args:
             if arg.startswith("--"):
-                key, eq, value = arg[2:].partition('=')
+                key, eq, value = arg[2:].partition("=")
                 if eq:  # Only proceed if '=' is found
                     self._process_nested_arg(key, value)
 
         return namespace, self.nested_args
 
     def _process_nested_arg(self, key, value):
-        keys = key.split('.')
+        keys = key.split(".")
         current_dict = self.nested_args
 
         for i, k in enumerate(keys):
@@ -33,7 +34,7 @@ class NestedArgParser(argparse.ArgumentParser):
             current_dict = current_dict[k]
 
     def _convert_value(self, value):
-        if '[' in value and ']' in value:
+        if "[" in value and "]" in value:
             return ast.literal_eval(value)
         try:
             return int(value)

@@ -18,6 +18,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
 
+
 @enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
     def __init__(
