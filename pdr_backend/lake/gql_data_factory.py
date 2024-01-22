@@ -4,7 +4,13 @@ from typing import Callable, Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.plutil import has_data, newest_ut
+from pdr_backend.lake.plutil import (
+    has_data,
+    newest_ut,
+    left_join_with,
+    filter_and_drop_columns,
+    pick_df_and_ids_on_period
+)
 from pdr_backend.lake.table_pdr_predictions import (
     get_pdr_predictions_df,
     predictions_schema,
@@ -17,7 +23,6 @@ from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_ow
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
-
 
 @enforce_types
 class GQLDataFactory:
@@ -60,6 +65,22 @@ class GQLDataFactory:
                 },
             },
         }
+
+        self.pdr_prediction_columns = [
+                    "ID",
+                    "truevalue_id",
+                    "contract",
+                    "pair",
+                    "timeframe",
+                    "prediction",
+                    "stake",
+                    "truevalue",
+                    "timestamp",
+                    "source",
+                    "payout",
+                    "slot",
+                    "user",
+                ]
 
     def get_gql_dfs(self) -> Dict[str, pl.DataFrame]:
         """
@@ -244,7 +265,7 @@ class GQLDataFactory:
     @enforce_types
     def _post_fetch_process_truevals(
         self, dfs: Dict[str, pl.DataFrame]
-    ) -> pl.DataFrame:
+    ): # -> pl.DataFrame:
         """
         @description
           Merge the fetched data with the existing data in the parquet file.
@@ -304,7 +325,8 @@ class GQLDataFactory:
         predictions_df.write_parquet("pdr_predictions.parquet")
 
     @enforce_types
-    def _post_fetch_process_payouts(self, dfs: Dict[str, pl.DataFrame]) -> pl.DataFrame:
+    def _post_fetch_process_payouts(self, dfs: Dict[str, pl.DataFrame]):
+        # -> pl.DataFrame:
         """
         @description
           Merge the fetched data with the existing data in the parquet file.
@@ -316,46 +338,25 @@ class GQLDataFactory:
         # Work 2: update prediction based on payouts
         # process recent payouts => update predictions
         # fetch recent payouts added
-        payouts_df = dfs["pdr_payouts"].filter(
-            (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
-        )
-        payouts_ids = payouts_df["ID"].to_list()
-
-        # find all predictions that we'll be updating
-        predictions_df = (
-            dfs["pdr_predictions"]
-            .filter((pl.col("ID").is_in(payouts_ids)))
-            .drop(["payout", "prediction"])
+        payouts_df, payouts_ids = pick_df_and_ids_on_period(
+            target=dfs["pdr_payouts"],
+            start_timestamp=st_ut,
+            finish_timestamp=fin_ut,
         )
 
-        # update specific predictions
-        predictions_df = (
-            predictions_df.join(payouts_df, on="ID", how="left")
-            .with_columns(
-                [
-                    pl.col("predvalue").alias("prediction"),
-                ]
-            )
-            .select(
-                [
-                    "ID",
-                    "truevalue_id",
-                    "contract",
-                    "pair",
-                    "timeframe",
-                    "prediction",
-                    "stake",
-                    "truevalue",
-                    "timestamp",
-                    "source",
-                    "payout",
-                    "slot",
-                    "user",
-                ]
-            )
+        predictions_df = filter_and_drop_columns(
+            df=dfs["pdr_predictions"],
+            ids=payouts_ids,
+            columns_to_drop=["payout", "prediction"],
         )
 
-        # save out updated predictions
-        # filename = self._parquet_filename("pdr_predictions")
-        # self._save_parquet(filename, predictions_df)
+        predictions_df = left_join_with(
+            target=predictions_df,
+            other=payouts_df,
+            w_columns=[
+                pl.col("predvalue").alias("prediction"),
+            ],
+            select_columns=self.pdr_prediction_columns,
+        )
+
         predictions_df.write_parquet("pdr_predictions.parquet")
