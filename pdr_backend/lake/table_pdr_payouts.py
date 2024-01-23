@@ -7,6 +7,7 @@ from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 # RAW PAYOUT SCHEMA
 payouts_schema = {
@@ -47,5 +48,11 @@ def get_pdr_payouts_df(
 
     # convert payouts to df and transform timestamp into ms
     payout_df = _object_list_to_df(payouts, payouts_schema)
+    payout_df = _transform_timestamp_to_ms(payout_df)
+
+    # cull any records outside of our time range and sort them by timestamp
+    payout_df = payout_df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
+        "timestamp"
+    )
 
     return payout_df
