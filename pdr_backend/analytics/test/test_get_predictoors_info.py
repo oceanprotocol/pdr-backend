@@ -4,10 +4,6 @@ import pytest
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.lake.table_pdr_predictions import (
-    _object_list_to_df,
-    predictions_schema,
-)
 from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 
