@@ -113,19 +113,25 @@ def do_claim_ROSE(args):
 @enforce_types
 def do_get_predictoors_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictoors_info_main(ppss, args.ST, args.END, args.PDRS)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_predictoors_info_main(ppss, args.PDRS)
 
 
 @enforce_types
 def do_get_predictions_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_predictions_info_main(ppss, args.ST, args.END, args.FEEDS)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_predictions_info_main(ppss, args.FEEDS)
 
 
 @enforce_types
 def do_get_traction_info(args):
     ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-    get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_traction_info_main(ppss)
 
 
 @enforce_types
