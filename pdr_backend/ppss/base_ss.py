@@ -1,6 +1,7 @@
 import copy
 from typing import Dict, List, Optional, Set, Tuple, Union
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -114,9 +115,9 @@ class SingleFeedMixin:
     # --------------------------------
 
     @property
-    def pair_str(self) -> ArgPair:
+    def pair_str(self) -> str:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
-        return self.feed.pair
+        return str(self.feed.pair)
 
     @property
     def exchange_str(self) -> str:
@@ -174,3 +175,36 @@ class SingleFeedMixin:
                 return feed
 
         return None
+
+    @enforce_types
+    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
+        if not hasattr(self, "tradetype") or self.tradetype != "livemock":
+            return self.feed.ccxt_exchange(*args, **kwargs)
+
+        class MockOrder(dict):
+            def __str__(self):
+                return f"mocked order: {self.get('amount')} {self['pair_str']}"
+
+        class MockExchange(ccxt.Exchange):
+            def create_market_buy_order(self, pair_str, amount):
+                return MockOrder(
+                    {
+                        "order_type": "buy",
+                        "amount": str(amount),
+                        "pair_str": pair_str,
+                    }
+                )
+
+            def create_market_sell_order(self, pair_str, position_size):
+                return MockOrder(
+                    {
+                        "order_type": "sell",
+                        "position_size": str(position_size),
+                        "pair_str": pair_str,
+                    }
+                )
+
+            def __str__(self):
+                return "mocked exchange"
+
+        return MockExchange()
