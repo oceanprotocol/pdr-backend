@@ -76,9 +76,7 @@ def test_get_predictions_info_system(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call(
-            f"FEEDS=['0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152']"
-        )
+        mock_print.assert_any_call("FEEDS=['0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152']")
 
         # # Additional assertions
         mock_get_feed_summary_stats.assert_called_once()
