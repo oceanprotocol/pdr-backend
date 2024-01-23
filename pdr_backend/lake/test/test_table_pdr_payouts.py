@@ -15,18 +15,17 @@ pdr_payouts_record = "pdr_payouts"
 @patch("pdr_backend.lake.table_pdr_payouts.fetch_payouts")
 @patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_update_payout_gql_proxy(
-    mock_get_all_contract_ids_by_owner,
-    mock_fetch_payouts,
-    tmpdir,
-    sample_payouts,
+    mock_get_all_contract_ids_by_owner, mock_fetch_payouts, tmpdir, sample_payouts
 ):
+    st_timestr = "2023-01-01_0:00"
+    fin_timestr = "2024-01-04_17:00"
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     _test_update_payout_gql(
         mock_fetch_payouts,
         tmpdir,
         sample_payouts,
-        "2023-01-01_0:00",  # earlier date
-        "2024-01-04_17:00",  # later date
+        st_timestr,  # earlier date
+        fin_timestr,  # later date
         n_items=6,
     )
 
@@ -35,7 +34,7 @@ def test_update_payout_gql_proxy(
 def _test_update_payout_gql(
     mock_fetch_payouts,
     tmpdir,
-    sample_payouts,
+    subgraph_payouts,
     st_timestr: str,
     fin_timestr: str,
     n_items: int,
@@ -70,7 +69,7 @@ def _test_update_payout_gql(
     st_ut_sec = st_ut // 1000
     fin_ut_sec = fin_ut // 1000
 
-    mock_fetch_payouts.return_value = sample_payouts
+    mock_fetch_payouts.return_value = subgraph_payouts
 
     # work 1: update parquet
     gql_data_factory._update(fin_ut)
@@ -104,10 +103,7 @@ def _test_update_payout_gql(
 @patch("pdr_backend.lake.table_pdr_payouts.fetch_payouts")
 @patch("pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner")
 def test_load_and_verify_payout_schema(
-    mock_get_all_contract_ids_by_owner,
-    mock_fetch_payouts,
-    tmpdir,
-    sample_payouts,
+    mock_get_all_contract_ids_by_owner, mock_fetch_payouts, tmpdir, sample_payouts
 ):
     mock_get_all_contract_ids_by_owner.return_value = ["0x123"]
     st_timestr = "2023-01-01_0:00"
@@ -117,8 +113,8 @@ def test_load_and_verify_payout_schema(
         mock_fetch_payouts,
         tmpdir,
         sample_payouts,
-        "2023-01-01_0:00",  # earlier date
-        "2024-01-04_17:00",  # later date
+        st_timestr,  # earlier date
+        fin_timestr,  # later date
         n_items=6,
     )
 
@@ -135,7 +131,6 @@ def test_load_and_verify_payout_schema(
     )
 
     fin_ut = timestr_to_ut(fin_timestr)
-
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
 
     assert len(gql_dfs) == 1
