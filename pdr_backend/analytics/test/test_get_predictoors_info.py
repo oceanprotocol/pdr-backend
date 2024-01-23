@@ -29,11 +29,12 @@ def test_get_predictoors_info_main_mainnet(
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+
     get_predictoors_info_main(
         ppss,
         st_timestr,
         fin_timestr,
-        user_addr,
+        [user_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -73,11 +74,12 @@ def test_empty_data_frame_timeframe_filter_mainnet(
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-30"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+
     get_predictoors_info_main(
         ppss,
         st_timestr,
         fin_timestr,
-        user_addr,
+        [user_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -117,11 +119,12 @@ def test_empty_data_frame_user_address_filter_mainnet(
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"
+
     get_predictoors_info_main(
         ppss,
         st_timestr,
         fin_timestr,
-        user_addr,
+        [user_addr],
     )
 
     # manualy filter predictions for latter check Predictions

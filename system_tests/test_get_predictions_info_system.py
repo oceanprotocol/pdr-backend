@@ -13,12 +13,16 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
-def test_topup(mock_get_polars, mock_get_stats):
-    feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
-    user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+def test_get_predictions_info_system(
+    mock_get_gql_dfs,
+    mock_get_feed_summary_stats,
+):
+    _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
+    _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+
     mock_predictions = [
         Prediction(
-            "{feed_addr}-31232-{user_addr}",
+            "{_feed}-31232-{_user}",
             "BTC",
             "5m",
             True,
@@ -28,14 +32,13 @@ def test_topup(mock_get_polars, mock_get_stats):
             "binance",
             10.0,
             10,
-            feed_addr,
-            user_addr,
+            _feed,
+            _user,
         )
     ]
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
-
-    mock_get_stats.return_value = predictions_df
-    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
+    mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
+    mock_get_feed_summary_stats.return_value = predictions_df
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -46,7 +49,7 @@ def test_topup(mock_get_polars, mock_get_stats):
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
     mock_web3_pp.web3_config = mock_web3_config
-    mock_web3_pp.owner_addrs = user_addr
+    mock_web3_pp.owner_addrs = _user
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp):
         # Mock sys.argv
@@ -59,7 +62,7 @@ def test_topup(mock_get_polars, mock_get_stats):
             "ppss.yaml",
             "development",
             "--FEEDS",
-            "{feed_addr}",
+            _feed,
         ]
 
         with patch("builtins.print") as mock_print:
@@ -70,8 +73,9 @@ def test_topup(mock_get_polars, mock_get_stats):
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("FEEDS={feed_addr}")
+        mock_print.assert_any_call(f"FEEDS=['{_feed}']")
 
-        # Additional assertions
-        mock_get_polars.assert_called_with()
-        mock_get_stats.call_args[0][0].equals(predictions_df)
+        # # Additional assertions
+        mock_get_feed_summary_stats.assert_called_once()
+        mock_get_gql_dfs.assert_called_once()
+        mock_get_feed_summary_stats.call_args[0][0].equals(predictions_df)
