@@ -171,6 +171,7 @@ def do_get_traction_info(args, nested_args=None):
     )
     ppss.lake_ss.d["st_timestr"] = args.ST
     ppss.lake_ss.d["fin_timestr"] = args.END
+    ppss.lake_ss.d["parquet_dir"] = args.PQDIR
     get_traction_info_main(ppss)
 
 
