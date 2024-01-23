@@ -18,7 +18,7 @@ from pdr_backend.ppss.ppss import mock_ppss
 def test_get_predictoors_info_main_mainnet(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     st_timestr = "2023-12-03"
@@ -31,7 +31,7 @@ def test_get_predictoors_info_main_mainnet(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -44,8 +44,8 @@ def test_get_predictoors_info_main_mainnet(
     # manualy filter predictions for latter check Predictions
     predictions_df = predictions_df.filter(predictions_df["user"].is_in([user_addr]))
     preds_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp / 1000)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp / 1000)
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     # data frame after filtering is same as manual filtered dataframe
@@ -70,7 +70,7 @@ def test_get_predictoors_info_main_mainnet(
 def test_get_predictoors_info_bad_date_range(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     st_timestr = "2023-12-20"
@@ -83,7 +83,7 @@ def test_get_predictoors_info_bad_date_range(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -101,8 +101,8 @@ def test_get_predictoors_info_bad_date_range(
     assert len(predictions_df) == 2
 
     preds_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp / 1000)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp / 1000)
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     assert len(preds_df) == 0
@@ -120,7 +120,7 @@ def test_get_predictoors_info_bad_date_range(
 def test_get_predictoors_info_bad_user_address(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     st_timestr = "2023-12-03"
@@ -133,7 +133,7 @@ def test_get_predictoors_info_bad_user_address(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"

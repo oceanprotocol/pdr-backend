@@ -16,7 +16,7 @@ from pdr_backend.ppss.ppss import mock_ppss
 def test_get_predictions_info_main_mainnet(
     mock_get_gql_dfs,
     mock_get_feed_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     """
@@ -32,7 +32,7 @@ def test_get_predictions_info_main_mainnet(
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -49,8 +49,8 @@ def test_get_predictions_info_main_mainnet(
     assert len(predictions_df) == 1
 
     preds_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp / 1000)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp / 1000)
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     assert len(preds_df) == 1
@@ -77,7 +77,7 @@ def test_get_predictions_info_main_mainnet(
 def test_get_predictions_info_bad_date_range(
     mock_get_gql_dfs,
     get_feed_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     """
@@ -94,7 +94,7 @@ def test_get_predictions_info_bad_date_range(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -114,8 +114,8 @@ def test_get_predictions_info_bad_date_range(
     assert len(predictions_df) == 1
 
     preds_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp / 1000)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp / 1000)
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     assert len(preds_df) == 0
@@ -130,7 +130,7 @@ def test_get_predictions_info_bad_date_range(
 def test_get_predictions_info_bad_feed(
     mock_get_gql_dfs,
     mock_get_feed_summary_stats,
-    _sample_first_predictions,
+    _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
     """
@@ -147,7 +147,7 @@ def test_get_predictions_info_bad_feed(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
