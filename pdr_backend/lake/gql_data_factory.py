@@ -226,13 +226,8 @@ class GQLDataFactory:
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
 
-            # check for duplicates and throw error if any found
-            duplicate_rows = df.filter(pl.struct("ID").is_duplicated())
-            if len(duplicate_rows) > 0:
-                raise Exception(
-                    f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}"
-                )
-
+            # drop duplicates
+            df = df.filter(pl.struct("ID").is_unique())
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")

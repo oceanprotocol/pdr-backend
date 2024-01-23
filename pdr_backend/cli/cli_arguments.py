@@ -1,10 +1,11 @@
 import sys
-from argparse import ArgumentParser as ArgParser
 from argparse import Namespace
 
 from enforce_typing import enforce_types
 
 from eth_utils import to_checksum_address
+
+from pdr_backend.cli.nested_arg_parser import NestedArgParser
 
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
@@ -202,7 +203,7 @@ class NATIVE_TOKEN_Mixin:
 
 # ========================================================================
 # argparser base classes
-class CustomArgParser(ArgParser):
+class CustomArgParser(NestedArgParser):
     def add_arguments_bulk(self, command_name, arguments):
         self.add_argument("command", choices=[command_name])
 
@@ -228,6 +229,7 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
 
 
 @enforce_types
+# pylint: disable=too-many-ancestors
 class _ArgParser_APPROACH_PPSS_NETWORK(
     CustomArgParser,
     APPROACH_Mixin,
@@ -237,22 +239,6 @@ class _ArgParser_APPROACH_PPSS_NETWORK(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["APPROACH", "PPSS", "NETWORK"])
-
-
-@enforce_types
-class _ArgParser_APPROACH_PPSS_NETWORK_TRADETYPE(
-    CustomArgParser,
-    APPROACH_Mixin,
-    PPSS_Mixin,
-    NETWORK_Mixin,
-    TRADETYPE_Mixin,
-):
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_arguments_bulk(
-            command_name,
-            ["APPROACH", "PPSS", "NETWORK", "TRADETYPE"]
-        )
 
 
 @enforce_types
