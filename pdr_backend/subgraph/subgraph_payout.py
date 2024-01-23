@@ -110,7 +110,7 @@ def fetch_payouts(
 ) -> List[Payout]:
     records_per_page = 1000
 
-    payouts = []
+    payouts: List[Payout] = []
 
     while True:
         query = get_payout_query(
@@ -121,20 +121,28 @@ def fetch_payouts(
             skip,
         )
 
-        print("payout query", query)
-
-        new_payouts = query_subgraph(
-            get_subgraph_url(network),
-            query,
-            timeout=20.0,
-        )
-
-        if len(new_payouts["data"]["predictPayouts"]) == 0:
+        try:
+            print("Querying subgraph...", query)
+            result = query_subgraph(
+                get_subgraph_url(network),
+                query,
+                timeout=20.0,
+            )
+        except Exception as e:
+            print(
+                f"Error fetching predictPayouts, got #{len(payouts)} items. Exception: ",
+                e,
+            )
             break
 
-        new_payouts = new_payouts["data"]["predictPayouts"]
+        skip += records_per_page
 
-        print("new_payouts", new_payouts)
+        if "data" not in result or not result["data"]:
+            break
+
+        data = result["data"].get("predictPayouts", [])
+        if len(data) == 0:
+            break
 
         new_payouts = [
             Payout(
@@ -158,10 +166,13 @@ def fetch_payouts(
                     "stake": float(payout["prediction"]["stake"]),
                 }
             )
-            for payout in new_payouts
+            for payout in data
         ]
 
         payouts.extend(new_payouts)
-        skip += records_per_page
+
+        # avoids doing next fetch if we've reached the end
+        if len(data) < records_per_page:
+            break
 
     return payouts
