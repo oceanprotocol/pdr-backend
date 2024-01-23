@@ -51,7 +51,7 @@ class ETL:
         self,
         table: Tables,
         force: bool = False,
-    ):
+    ) -> pl.DataFrame:
         """
         Read data from the source
         """
