@@ -6,10 +6,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table_pdr_predictions import (
-    _object_list_to_df,
-    predictions_schema,
-)
 
 
 @enforce_types
@@ -26,12 +22,11 @@ def test_get_traction_info_main_mainnet(
     mock_plot_traction_daily_statistics,
     mock_plot_traction_cum_sum_statistics,
     mock_get_traction_statistics,
-    _sample_daily_predictions,
+    _gql_datafactory_daily_predictions_df,
     tmpdir,
 ):
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-07"
-
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
@@ -39,7 +34,8 @@ def test_get_traction_info_main_mainnet(
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-    predictions_df = _object_list_to_df(_sample_daily_predictions, predictions_schema)
+    
+    predictions_df = _gql_datafactory_daily_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
     get_traction_info_main(ppss)
 
@@ -47,8 +43,8 @@ def test_get_traction_info_main_mainnet(
 
     # calculate ms locally so we can filter raw Predictions
     preds_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp / 1000)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp / 1000)
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     assert len(predictions_df) == 6

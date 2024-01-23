@@ -27,8 +27,8 @@ def get_traction_info_main(ppss: PPSS):
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= int(ppss.lake_ss.st_timestamp / 1000))
-        & (predictions_df["timestamp"] <= int(ppss.lake_ss.fin_timestamp / 1000))
+        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
+        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
