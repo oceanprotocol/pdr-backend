@@ -34,7 +34,7 @@ def test_get_traction_info_main_mainnet(
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-    
+
     predictions_df = _gql_datafactory_daily_predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
     get_traction_info_main(ppss)
