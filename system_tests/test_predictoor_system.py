@@ -31,9 +31,16 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach):
         mock_feeds, mock_predictoor_contract
     )
 
+    merged_ohlcv_df = Mock()
+
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
-    ), patch("pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss):
+    ), patch(
+        "pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss
+    ), patch(
+        "pdr_backend.lake.ohlcv_data_factory.OhlcvDataFactory.get_mergedohlcv_df",
+        return_value=merged_ohlcv_df,
+    ):
         # Mock sys.argv
         sys.argv = ["pdr", "predictoor", str(approach), "ppss.yaml", "development"]
 
@@ -65,7 +72,9 @@ def test_predictoor_approach_1_system(
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_3_system(
-    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+    mock_verify_feed_dependencies,
+    mock_feeds,
+    mock_predictoor_contract,
 ):
     _ = mock_verify_feed_dependencies
     _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3)

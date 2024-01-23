@@ -57,9 +57,10 @@ class BaseTraderAgent:
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
         feed = ppss.trader_ss.get_feed_from_candidates(cand_feeds)
-        print_feeds({feed.address: feed}, "filtered feeds")
         if not feed:
             raise ValueError("No feeds found.")
+
+        print_feeds({feed.address: feed}, "filtered feeds")
 
         self.feed = feed
         feed_contracts = ppss.web3_pp.get_contracts([feed.address])
@@ -174,7 +175,7 @@ class BaseTraderAgent:
                     and "message" in e.args[0]
                 ):
                     revert_reason = e.args[0]["message"]
-                    if revert_reason == "reverted: No subscription":
+                    if "No subscription" in revert_reason:
                         return -1
                 print("      Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)

@@ -1,10 +1,14 @@
 import sys
-from argparse import ArgumentParser as ArgParser
 from argparse import Namespace
 
 from enforce_typing import enforce_types
 
+from eth_utils import to_checksum_address
+
+from pdr_backend.cli.nested_arg_parser import NestedArgParser
+
 HELP_LONG = """Predictoor tool
+  Transactions are signed with envvar 'PRIVATE_KEY`.
 
 Usage: pdr xpmt|predictoor|trader|..
 
@@ -23,8 +27,9 @@ Utilities:
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
-
-Transactions are signed with envvar 'PRIVATE_KEY`.
+  pdr create_accounts NUM PPSS_FILE NETWORK
+  pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
+  pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -78,11 +83,31 @@ class NETWORK_Mixin:
 
 
 @enforce_types
+def check_addresses(value):
+    """
+    @description
+        validates that all addressses is a comma-separated list of strings
+        each string, will be a valid Ethereum address
+    """
+    if not value:
+        return []
+
+    addresses = value.split(",")
+    checksummed_addresses = []
+    for address in addresses:
+        try:
+            checksummed_addresses.append(to_checksum_address(address.lower()))
+        except Exception as exc:
+            raise TypeError(f"{address} is not a valid Ethereum address") from exc
+    return checksummed_addresses
+
+
+@enforce_types
 class PDRS_Mixin:
     def add_argument_PDRS(self):
         self.add_argument(
             "--PDRS",
-            type=str,
+            type=check_addresses,
             help="Predictoor address(es), separated by comma. If not specified, uses all.",
             required=False,
         )
@@ -93,7 +118,7 @@ class FEEDS_Mixin:
     def add_argument_FEEDS(self):
         self.add_argument(
             "--FEEDS",
-            type=str,
+            type=check_addresses,
             default="",
             help="Predictoor feed address(es). If not specified, uses all.",
             required=False,
@@ -112,9 +137,62 @@ class LOOKBACK_Mixin:
         )
 
 
+@enforce_types
+def check_positive(value):
+    try:
+        ivalue = int(value)
+    except Exception as exc:
+        raise TypeError("%s is not a valid int" % value) from exc
+
+    try:
+        if ivalue <= 0:
+            raise Exception("Zero or below.")
+    except Exception as exc:
+        raise TypeError("%s is an invalid positive int value" % value) from exc
+
+    return ivalue
+
+
+@enforce_types
+class NUM_Mixin:
+    def add_argument_NUM(self):
+        self.add_argument("NUM", type=check_positive)
+
+
+@enforce_types
+class ACCOUNTS_Mixin:
+    def add_argument_ACCOUNTS(self):
+        self.add_argument(
+            "ACCOUNTS",
+            type=check_addresses,
+            help="Comma-separated list of valid ethereum addresses",
+        )
+
+
+@enforce_types
+class TOKEN_AMOUNT_Mixin:
+    def add_argument_TOKEN_AMOUNT(self):
+        self.add_argument(
+            "TOKEN_AMOUNT",
+            type=float,
+            help="Amount of token to send to each address (in 1e18, ether)",
+        )
+
+
+@enforce_types
+class NATIVE_TOKEN_Mixin:
+    def add_argument_NATIVE_TOKEN(self):
+        self.add_argument(
+            "--NATIVE_TOKEN",
+            action="store_true",
+            default=False,
+            help="If --NATIVE_TOKEN then transact with ROSE otherwise use OCEAN",
+        )
+
+
 # ========================================================================
 # argparser base classes
-class CustomArgParser(ArgParser):
+class CustomArgParser(NestedArgParser):
     def add_arguments_bulk(self, command_name, arguments):
         self.add_argument("command", choices=[command_name])
 
@@ -140,6 +218,7 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
 
 
 @enforce_types
+# pylint: disable=too-many-ancestors
 class _ArgParser_APPROACH_PPSS_NETWORK(
     CustomArgParser,
     APPROACH_Mixin,
@@ -152,6 +231,7 @@ class _ArgParser_APPROACH_PPSS_NETWORK(
 
 
 @enforce_types
+# pylint: disable=too-many-ancestors
 class _ArgParser_PPSS_NETWORK_LOOKBACK(
     CustomArgParser,
     PPSS_Mixin,
@@ -197,6 +277,51 @@ class _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(
         super().__init__(description=description)
         self.add_arguments_bulk(
             command_name, ["ST", "END", "PQDIR", "PPSS", "NETWORK", "FEEDS"]
+        )
+
+
+@enforce_types
+class _ArgParser_NUM_PPSS_NETWORK(
+    CustomArgParser,
+    NUM_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["NUM", "PPSS", "NETWORK"])
+
+
+@enforce_types
+class _ArgParser_ACCOUNTS_PPSS_NETWORK(
+    CustomArgParser,
+    ACCOUNTS_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["ACCOUNTS", "PPSS", "NETWORK"])
+
+
+@enforce_types
+class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
+    CustomArgParser,
+    TOKEN_AMOUNT_Mixin,
+    ACCOUNTS_Mixin,
+    PPSS_Mixin,
+    NETWORK_Mixin,
+    NATIVE_TOKEN_Mixin,
+):  # pylint: disable=too-many-ancestors
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_argument("command", choices=[command_name])
+        self.add_arguments_bulk(
+            command_name,
+            ["TOKEN_AMOUNT", "ACCOUNTS", "PPSS", "NETWORK", "NATIVE_TOKEN"],
         )
 
 
@@ -251,6 +376,12 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
+CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
+
+AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
+
+FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
+
 defined_parsers = {
     "do_xpmt": XpmtArgParser("Run experiment / simulation", "xpmt"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
@@ -275,6 +406,15 @@ defined_parsers = {
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+    "do_create_accounts": CreateAccountsArgParser(
+        "Create multiple accounts..", "create_accounts"
+    ),
+    "do_view_accounts": AccountsArgParser(
+        "View balances from 1 or more accounts", "view_accounts"
+    ),
+    "do_fund_accounts": FundAccountsArgParser(
+        "Fund multiple wallets from a single address", "fund_accounts"
+    ),
 }
 
 

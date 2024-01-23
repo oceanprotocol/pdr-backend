@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
@@ -9,23 +9,26 @@ from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats
 
 @enforce_types
 def get_predictions_info_main(
-    ppss: PPSS, start_timestr: str, end_timestr: str, feed_addrs_str: Union[str, None]
+    ppss: PPSS,
+    start_timestr: str,
+    end_timestr: str,
+    feed_addrs: List[str],
 ):
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
+    predictions_df = gql_dfs["pdr_predictions"]
     if len(gql_dfs["pdr_predictions"]) == 0:
         print("No records found. Please adjust start and end times.")
         return
-    predictions_df = gql_dfs["pdr_predictions"]
 
     # filter by feed addresses
-    if feed_addrs_str:
-        feed_addrs_list = feed_addrs_str.lower().split(",")
+    if feed_addrs:
+        feed_addrs = [f.lower() for f in feed_addrs]
         predictions_df = predictions_df.filter(
             predictions_df["ID"]
             .map_elements(lambda x: x.split("-")[0])
-            .is_in(feed_addrs_list)
+            .is_in(feed_addrs)
         )
 
     # filter by start and end dates

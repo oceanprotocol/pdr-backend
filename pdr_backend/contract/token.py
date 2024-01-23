@@ -49,6 +49,10 @@ class NativeToken:
     def w3(self):
         return self.web3_pp.web3_config.w3
 
+    @property
+    def name(self):
+        return "ROSE"
+
     @enforce_types
     def balanceOf(self, account):
         return self.w3.eth.get_balance(account)
