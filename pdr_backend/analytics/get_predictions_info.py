@@ -21,7 +21,7 @@ def get_predictions_info_main(ppss: PPSS, feed_addrs_str: Union[str, None]):
         feed_addrs = [f.lower() for f in feed_addrs]
         predictions_df = predictions_df.filter(
             predictions_df["ID"]
-            .map_elements(lambda x: x.split("-")[0])
+            .map_elements(lambda x: x.split("-")[0].lower())
             .is_in(feed_addrs)
         )
 
