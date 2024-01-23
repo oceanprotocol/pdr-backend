@@ -84,7 +84,9 @@ def test_get_predictoors_info_system(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("PDRS=['0xaaaA4CB4Ff2584BaD80fF5F109034A891C3D88Dd']")
+        mock_print.assert_any_call(
+            "PDRS=['0xaaaA4CB4Ff2584BaD80fF5F109034A891C3D88Dd']"
+        )
 
         # Additional assertions
         get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)
