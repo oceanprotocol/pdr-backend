@@ -13,7 +13,9 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
-def test_topup(mock_get_polars, mock_get_stats):
+def test_get_predictoors_info_system(
+    mock_get_gql_dfs, get_get_predictoor_summary_stats
+):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -52,12 +54,13 @@ def test_topup(mock_get_polars, mock_get_stats):
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
 
-    mock_get_stats.return_value = predictions_df
-    mock_get_polars.return_value = {"pdr_predictions": predictions_df}
+    get_get_predictoor_summary_stats.return_value = predictions_df
+    mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
     ):
+        user_addr = "0x0000000000000000000000000000000000000001"
         # Mock sys.argv
         sys.argv = [
             "pdr",
@@ -68,7 +71,7 @@ def test_topup(mock_get_polars, mock_get_stats):
             "ppss.yaml",
             "development",
             "--PDRS",
-            "{user_addr}",
+            user_addr,
         ]
 
         with patch("builtins.print") as mock_print:
@@ -79,8 +82,8 @@ def test_topup(mock_get_polars, mock_get_stats):
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("PDRS={user_addr}")
+        mock_print.assert_any_call(f"PDRS=['{user_addr}']")
 
         # Additional assertions
-        mock_get_polars.assert_called()
-        mock_get_stats.call_args[0][0].equals(predictions_df)
+        get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)
+        mock_get_gql_dfs.assert_called()

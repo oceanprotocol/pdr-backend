@@ -23,6 +23,11 @@ class BaseContract(ABC):
             address=self.config.w3.to_checksum_address(address),
             abi=get_contract_abi(contract_name, web3_pp.address_file),
         )
+        self.contract_name = contract_name
+
+    @property
+    def name(self):
+        return self.contract_name
 
     def send_encrypted_tx(
         self,

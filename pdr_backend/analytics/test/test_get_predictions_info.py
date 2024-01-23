@@ -34,7 +34,7 @@ def test_get_predictions_info_main_mainnet(
         ppss,
         st_timestr,
         fin_timestr,
-        feed_addr,
+        [feed_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -85,7 +85,7 @@ def test_empty_data_frame_timeframe_filter_mainnet(
         ppss,
         st_timestr,
         fin_timestr,
-        feed_addr,
+        [feed_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -133,7 +133,7 @@ def test_empty_data_frame_feed_addr_filter_mainnet(
         ppss,
         st_timestr,
         fin_timestr,
-        feed_addr,
+        [feed_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -163,11 +163,15 @@ def test_get_predictions_info_empty(mock_get_polars, tmpdir, capfd):
 
     mock_get_polars.return_value = {"pdr_predictions": pl.DataFrame()}
 
+    st_timestr = "2023-11-03"
+    fin_timestr = "2023-11-05"
+    feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
+
     get_predictions_info_main(
         ppss,
-        "2023-11-03",
-        "2023-11-05",
-        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
+        st_timestr,
+        fin_timestr,
+        [feed_addr],
     )
 
     assert (
