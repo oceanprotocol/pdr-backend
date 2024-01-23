@@ -66,22 +66,6 @@ class GQLDataFactory:
             },
         }
 
-        self.pdr_prediction_columns = [
-                    "ID",
-                    "truevalue_id",
-                    "contract",
-                    "pair",
-                    "timeframe",
-                    "prediction",
-                    "stake",
-                    "truevalue",
-                    "timestamp",
-                    "source",
-                    "payout",
-                    "slot",
-                    "user",
-                ]
-
     def get_gql_dfs(self) -> Dict[str, pl.DataFrame]:
         """
         @description
