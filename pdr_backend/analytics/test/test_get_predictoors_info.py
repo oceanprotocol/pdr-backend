@@ -31,9 +31,10 @@ def test_get_predictoors_info_main_mainnet(
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+
     get_predictoors_info_main(
         ppss,
-        user_addr,
+        [user_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -87,7 +88,7 @@ def test_get_predictoors_info_bad_date_range(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
-            user_addr,
+            [user_addr],
         )
 
     # Show filter leading to an empty dataframe
@@ -137,7 +138,7 @@ def test_get_predictoors_info_bad_user_address(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
-            user_addr,
+            [user_addr],
         )
 
     # Show filter leading to an empty dataframe

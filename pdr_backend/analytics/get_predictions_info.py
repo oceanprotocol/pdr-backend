@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
@@ -7,7 +7,7 @@ from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats
 
 
 @enforce_types
-def get_predictions_info_main(ppss: PPSS, feed_addrs_str: Union[str, None]):
+def get_predictions_info_main(ppss: PPSS, feed_addrs: List[str]):
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
@@ -17,12 +17,12 @@ def get_predictions_info_main(ppss: PPSS, feed_addrs_str: Union[str, None]):
     ), "Lake has no predictions."
 
     # filter by feed addresses
-    if feed_addrs_str:
-        feed_addrs_list = feed_addrs_str.lower().split(",")
+    if len(feed_addrs) > 0:
+        feed_addrs = [f.lower() for f in feed_addrs]
         predictions_df = predictions_df.filter(
             predictions_df["ID"]
             .map_elements(lambda x: x.split("-")[0])
-            .is_in(feed_addrs_list)
+            .is_in(feed_addrs)
         )
 
     # filter by start and end dates
