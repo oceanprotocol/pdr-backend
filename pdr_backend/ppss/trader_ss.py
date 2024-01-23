@@ -35,6 +35,10 @@ class TraderSS(SingleFeedMixin, StrMixin):
     def tradetype(self) -> str:
         return self.d.get("tradetype", "livemock")
 
+    @property
+    def allowed_tradetypes(self) -> List[str]:
+        return ["livemock", "livereal"]
+
     # feed defined in base
 
     # --------------------------------

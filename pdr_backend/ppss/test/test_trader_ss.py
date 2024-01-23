@@ -1,3 +1,4 @@
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.trader_ss import TraderSS, inplace_make_trader_fast
@@ -47,6 +48,11 @@ def test_trader_ss():
 
     # str
     assert "TraderSS" in str(ss)
+
+    bad_dict = _D.copy()
+    bad_dict["tradetype"] = "xyx"
+    with pytest.raises(ValueError):
+        TraderSS(bad_dict)
 
 
 @enforce_types

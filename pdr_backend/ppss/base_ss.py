@@ -105,6 +105,14 @@ class SingleFeedMixin:
             for attr in assert_feed_attributes:
                 assert getattr(self.feed, attr)
 
+        if hasattr(self, "tradetype"):
+            assert hasattr(self, "allowed_tradetypes")
+            if self.tradetype not in self.allowed_tradetypes:
+                raise ValueError(
+                    f"{self.tradetype} not in allowed tradetypes "
+                    f"{', '.join(self.allowed_tradetypes)}"
+                )
+
     # --------------------------------
     # yaml properties
     @property
