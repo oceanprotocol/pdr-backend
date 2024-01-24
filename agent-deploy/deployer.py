@@ -25,10 +25,10 @@ def generate_deployment_templates(
     deploy_config: DeployConfig = parse_config(path, config_name)
     config: AgentsDeployConfig = deploy_config.agent_config
     # set the private keys
-    predictoor_keys = read_keys_json("predictoor")
+    predictoor_keys = read_keys_json(config_name)
     diff_keys = len(config.agents) - len(predictoor_keys)
     if diff_keys > 0:
-        predictoor_keys = generate_new_keys("predictoor", diff_keys)
+        predictoor_keys = generate_new_keys(config_name, diff_keys)
     for idx in range(len(config.agents)):
         config.agents[idx].set_private_key(predictoor_keys[idx].private_key)
 
