@@ -22,16 +22,15 @@ def generate_deployment_templates(
         print(f"Output path {output_path} is not empty")
         sys.exit(1)
 
-    deploy_config: DeployConfig = parse_config(path)
-    if getattr(deploy_config, config_name) is not None:
-        config: AgentsDeployConfig = getattr(deploy_config, config_name)
-        # set the private keys
-        predictoor_keys = read_keys_json("predictoor")
-        diff_keys = len(config.agents) - len(predictoor_keys)
-        if diff_keys > 0:
-            predictoor_keys = generate_new_keys("predictoor", diff_keys)
-        for idx in range(len(config.agents)):
-            config.agents[idx].set_private_key(predictoor_keys[idx].private_key)
+    deploy_config: DeployConfig = parse_config(path, config_name)
+    config: AgentsDeployConfig = deploy_config.agent_config
+    # set the private keys
+    predictoor_keys = read_keys_json("predictoor")
+    diff_keys = len(config.agents) - len(predictoor_keys)
+    if diff_keys > 0:
+        predictoor_keys = generate_new_keys("predictoor", diff_keys)
+    for idx in range(len(config.agents)):
+        config.agents[idx].set_private_key(predictoor_keys[idx].private_key)
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -46,7 +45,7 @@ def generate_deployment_templates(
     print(f"  Output path: {output_path}")
     print(f"  Config name: {config_name}")
     print(f"  Deployment method: {deployment_method}")
-    print(f"  Number of agents: {len(getattr(deploy_config, config_name).agents)}")
+    print(f"  Number of agents: {len(config.agents)}")
     run_cmd = deployment_method.run_command(output_path, config_name)
     print(f"Run command: {run_cmd}")
 
@@ -80,27 +79,13 @@ if __name__ == "__main__":
     parser_generate = subparsers.add_parser("generate", help="generate help")
     parser_generate.add_argument("config_path", help="Path to the configuration file")
     parser_generate.add_argument("config_name", help="Name of the configuration")
-    parser_generate.add_argument("deployment_method", help="Method of deployment")
+    parser_generate.add_argument(
+        "deployment_method",
+        help="Method of deployment",
+        choices=["k8s", "pm2", "docker-compose"]
+    )
     parser_generate.add_argument(
         "output_dir", help="Output directory for the generated files"
-    )
-
-    # Adding the 'deploy' command
-    parser_deploy = subparsers.add_parser("deploy", help="deploy help")
-    parser_deploy.add_argument("deployment_name", help="Name of the deployment")
-
-    # Adding the 'logs' command
-    parser_logs = subparsers.add_parser("logs", help="logs help")
-    parser_logs.add_argument("deployment_name", help="Name of the deployment for logs")
-
-    # Adding the 'kill' command
-    parser_kill = subparsers.add_parser("kill", help="kill help")
-    parser_kill.add_argument("deployment_name", help="Name of the deployment to kill")
-
-    # Adding the 'delete' command
-    parser_delete = subparsers.add_parser("delete", help="delete help")
-    parser_delete.add_argument(
-        "deployment_name", help="Name of the deployment to delete"
     )
 
     # Parse the arguments
