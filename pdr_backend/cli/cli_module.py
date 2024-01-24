@@ -138,41 +138,57 @@ def do_claim_ROSE(args, nested_args=None):
 
 @enforce_types
 def do_get_predictoors_info(args, nested_args=None):
+    """
+    @description
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+        PDRS = List of predictoor addresses to filter on (e.g. ["0x1", "0x2"])
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    ppss.lake_ss.d["st_timestr"] = args.ST
-    ppss.lake_ss.d["fin_timestr"] = args.END
     pdrs = args.PDRS or []
-    get_predictoors_info_main(ppss, pdrs)
+    get_predictoors_info_main(ppss, args.ST, args.END, pdrs)
 
 
 @enforce_types
 def do_get_predictions_info(args, nested_args=None):
+    """
+    @description
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+        PDRS = List of feed addresses to filter on (e.g. ["0x1", "0x2"])
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    ppss.lake_ss.d["st_timestr"] = args.ST
-    ppss.lake_ss.d["fin_timestr"] = args.END
     feeds = args.FEEDS or []
-    get_predictions_info_main(ppss, feeds)
+    get_predictions_info_main(ppss, args.ST, args.END, feeds)
 
 
 @enforce_types
 def do_get_traction_info(args, nested_args=None):
+    """
+    @description
+        PQDIR = overrides lake parquet dir
+
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    ppss.lake_ss.d["st_timestr"] = args.ST
-    ppss.lake_ss.d["fin_timestr"] = args.END
     ppss.lake_ss.d["parquet_dir"] = args.PQDIR
-    get_traction_info_main(ppss)
+    get_traction_info_main(ppss, args.ST, args.END)
 
 
 @enforce_types

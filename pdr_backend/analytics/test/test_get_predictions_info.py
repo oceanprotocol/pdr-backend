@@ -34,6 +34,8 @@ def test_get_predictions_info_main_mainnet(
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     get_predictions_info_main(
         ppss,
+        st_timestr,
+        fin_timestr,
         [feed_addr],
     )
 
@@ -99,6 +101,8 @@ def test_get_predictions_info_bad_date_range(
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
+            st_timestr,
+            fin_timestr,
             [feed_addr],
         )
 
@@ -152,6 +156,8 @@ def test_get_predictions_info_bad_feed(
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
+            st_timestr,
+            fin_timestr,
             [feed_addr],
         )
 
@@ -192,5 +198,7 @@ def test_get_predictions_info_empty(mock_get_gql_dfs, tmpdir):
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
+            st_timestr,
+            fin_timestr,
             [feed_addr],
         )

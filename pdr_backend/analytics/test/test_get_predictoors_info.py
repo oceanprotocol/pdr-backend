@@ -34,6 +34,8 @@ def test_get_predictoors_info_main_mainnet(
 
     get_predictoors_info_main(
         ppss,
+        st_timestr,
+        fin_timestr,
         [user_addr],
     )
 
@@ -88,6 +90,8 @@ def test_get_predictoors_info_bad_date_range(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
+            st_timestr,
+            fin_timestr,
             [user_addr],
         )
 
@@ -138,6 +142,8 @@ def test_get_predictoors_info_bad_user_address(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
+            st_timestr,
+            fin_timestr,
             [user_addr],
         )
 
