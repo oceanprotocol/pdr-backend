@@ -175,3 +175,8 @@ parquet_data/
 pdr_backend/accuracy/output/*.json
 # pm2 configs
 scripts/pm2-config/*private*
+
+# agent deployer
+config.yaml
+.keys.json
+.deployments/
