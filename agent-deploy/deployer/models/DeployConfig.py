@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
-from deployer.docker_compose import get_docker_compose_template
-from deployer.k8s import get_k8s_predictoor_template
 from deployer.models.AgentDeployConfig import AgentsDeployConfig
 from deployer.models.DeployFile import DeployFile
-
 from deployer.models.DeploymentMethod import DeploymentMethod
-from deployer.pm2 import get_pm2_deploy_template
-
-
+from deployer.templates.docker_compose import get_docker_compose_template
+from deployer.templates.k8s import get_k8s_predictoor_template
+from deployer.templates.pm2 import get_pm2_deploy_template
 @dataclass
 class DeployConfig:
     agent_config: Optional[AgentsDeployConfig] = None
