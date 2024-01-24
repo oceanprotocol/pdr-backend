@@ -8,6 +8,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.util.mocks import MockExchange
 
 
 class MultiFeedMixin:
@@ -188,31 +189,5 @@ class SingleFeedMixin:
     def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
         if not hasattr(self, "tradetype") or self.tradetype != "livemock":
             return self.feed.ccxt_exchange(*args, **kwargs)
-
-        class MockOrder(dict):
-            def __str__(self):
-                return f"mocked order: {self.get('amount')} {self['pair_str']}"
-
-        class MockExchange(ccxt.Exchange):
-            def create_market_buy_order(self, pair_str, amount):
-                return MockOrder(
-                    {
-                        "order_type": "buy",
-                        "amount": str(amount),
-                        "pair_str": pair_str,
-                    }
-                )
-
-            def create_market_sell_order(self, pair_str, position_size):
-                return MockOrder(
-                    {
-                        "order_type": "sell",
-                        "position_size": str(position_size),
-                        "pair_str": pair_str,
-                    }
-                )
-
-            def __str__(self):
-                return "mocked exchange"
 
         return MockExchange()
