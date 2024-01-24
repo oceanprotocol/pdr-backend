@@ -1,12 +1,14 @@
 import copy
 from typing import Dict, List, Optional, Set, Tuple, Union
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.util.mocks import MockExchange
 
 
 class MultiFeedMixin:
@@ -104,6 +106,14 @@ class SingleFeedMixin:
             for attr in assert_feed_attributes:
                 assert getattr(self.feed, attr)
 
+        if hasattr(self, "tradetype"):
+            assert hasattr(self, "allowed_tradetypes")
+            if self.tradetype not in self.allowed_tradetypes:
+                raise ValueError(
+                    f"{self.tradetype} not in allowed tradetypes "
+                    f"{', '.join(self.allowed_tradetypes)}"
+                )
+
     # --------------------------------
     # yaml properties
     @property
@@ -114,9 +124,9 @@ class SingleFeedMixin:
     # --------------------------------
 
     @property
-    def pair_str(self) -> ArgPair:
+    def pair_str(self) -> str:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
-        return self.feed.pair
+        return str(self.feed.pair)
 
     @property
     def exchange_str(self) -> str:
@@ -174,3 +184,10 @@ class SingleFeedMixin:
                 return feed
 
         return None
+
+    @enforce_types
+    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
+        if not hasattr(self, "tradetype") or self.tradetype != "livemock":
+            return self.feed.ccxt_exchange(*args, **kwargs)
+
+        return MockExchange()

@@ -31,6 +31,14 @@ class TraderSS(SingleFeedMixin, StrMixin):
     def init_holdings_strs(self) -> List[str]:
         return self.d["xpmt_only"]["init_holdings"]  # eg ["1000 USDT", ..]
 
+    @property
+    def tradetype(self) -> str:
+        return self.d.get("tradetype", "livemock")
+
+    @property
+    def allowed_tradetypes(self) -> List[str]:
+        return ["livemock", "livereal"]
+
     # feed defined in base
 
     # --------------------------------
