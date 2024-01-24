@@ -11,19 +11,18 @@ from deployer.pm2 import get_pm2_deploy_template
 
 @dataclass
 class DeployConfig:
-    predictoor_config: Optional[AgentsDeployConfig] = None
-    trader_config: Optional[AgentsDeployConfig] = None
+    agent_config: Optional[AgentsDeployConfig] = None
     pdr_backend_image_source: str = "oceanprotocol/pdr-backend:latest"
     yaml_path: str = "./ppss.yaml"
 
     def update_defaults(self):
-        for agent in self.predictoor_config.agents:
-            agent.update_with_defaults(self.predictoor_config)
+        for agent in self.agent_config.agents:
+            agent.update_with_defaults(self.agent_config)
 
     def predictoor_templates(self, method: DeploymentMethod) -> List[DeployFile]:
         if method == DeploymentMethod.DOCKER_COMPOSE:
             combined_template = "version: '3'\nservices:\n"
-            for idx in range(len(self.predictoor_config.agents)):
+            for idx in range(len(self.agent_config.agents)):
                 template, name = self.predictoor_template(idx, method)
                 combined_template += template + "\n"
 
@@ -36,7 +35,7 @@ class DeployConfig:
             ]
         else:
             templates: List[DeployFile] = []
-            for idx in range(len(self.predictoor_config.agents)):
+            for idx in range(len(self.agent_config.agents)):
                 template, name = self.predictoor_template(idx, method)
                 deploy_file = DeployFile(
                     method=method, content=template, name=f"{name}.{method.extension}"
@@ -45,7 +44,7 @@ class DeployConfig:
             return templates
 
     def predictoor_template(self, index, type: DeploymentMethod) -> Tuple[str, str]:
-        predictoor = self.predictoor_config.agents[index]
+        predictoor = self.agent_config.agents[index]
         full_pair_name = (
             f"{predictoor.source} {predictoor.pair} c {predictoor.timeframe}"
         )
