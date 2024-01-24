@@ -47,10 +47,8 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 
 Let's simulate! In console:
 ```console
-pdr xpmt my_ppss.yaml
+pdr sim my_ppss.yaml
 ```
-
-"xpmt" is short for "experiment". (The xpmt tool is evolving beyond just simulation.)
 
 What it does:
 1. Set simulation parameters.

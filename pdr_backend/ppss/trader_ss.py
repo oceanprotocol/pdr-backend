@@ -17,19 +17,19 @@ class TraderSS(SingleFeedMixin, StrMixin):
         )  # yaml_dict["trader_ss"]
 
     # --------------------------------
-    # yaml properties: xpmt only
+    # yaml properties: sim only
     @property
     def buy_amt_str(self) -> Union[int, float]:
         """How much to buy. Eg 10."""
-        return self.d["xpmt_only"]["buy_amt"]
+        return self.d["sim_only"]["buy_amt"]
 
     @property
     def fee_percent(self) -> str:
-        return self.d["xpmt_only"]["fee_percent"]  # Eg 0.001 is 0.1%.Trading fee
+        return self.d["sim_only"]["fee_percent"]  # Eg 0.001 is 0.1%.Trading fee
 
     @property
     def init_holdings_strs(self) -> List[str]:
-        return self.d["xpmt_only"]["init_holdings"]  # eg ["1000 USDT", ..]
+        return self.d["sim_only"]["init_holdings"]  # eg ["1000 USDT", ..]
 
     @property
     def tradetype(self) -> str:
