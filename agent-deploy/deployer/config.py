@@ -10,8 +10,7 @@ def parse_config(file_path: str, config_name: str) -> DeployConfig:
     
     config_data = config_file_data[config_name]
 
-    if config_data.get("type") != "predictoor":
-        raise ValueError(f"Config type {config_data.get('type')} is not supported")
+
     
 
     agents = []
@@ -22,6 +21,8 @@ def parse_config(file_path: str, config_name: str) -> DeployConfig:
         agents = [
             PredictoorAgentConfig(**agent) for agent in config_data["agents"]
         ]
+    else:
+        raise ValueError(f"Config type {config_data.get('type')} is not supported")
 
     agents_deploy_config = AgentsDeployConfig(
         cpu=config_data.get("cpu"),
