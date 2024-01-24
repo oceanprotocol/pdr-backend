@@ -67,26 +67,27 @@ class ETL:
             fp_type: FetchProcessTypes,
             st_ut: int,
             fin_ut: int,
-            dfs: Dict[str, pl.DataFrame]):
+            dfs: Dict[str, pl.DataFrame]
+        ):
         """
         Perform post-fetch processing on the data
         """
         if fp_type == "payout":
             self._post_fetch_processing_payout(
-                st_ut=st_ut,
-                fin_ut=fin_ut,
-                dfs=dfs
+                st_ut, fin_ut, dfs
             )
         elif fp_type == "trueval":
-            self._post_fetch_processing_trueval()
+            self._post_fetch_processing_trueval(
+                st_ut, fin_ut, dfs
+            )
         else:
             raise ValueError("Invalid fp_type")
 
     def _post_fetch_processing_payout(
             self,
-            st_ut: int,
-            fin_ut: int,
-            dfs: Dict[str, pl.DataFrame]
+            st_ut,
+            fin_ut,
+            dfs
         ):
         """
         Perform post-fetch processing on the data
@@ -99,6 +100,7 @@ class ETL:
 
         predictions_df = filter_and_drop_columns(
             df=dfs["pdr_predictions"],
+            target_column="ID",
             ids=payouts_ids,
             columns_to_drop=["payout", "prediction"],
         )
@@ -115,9 +117,38 @@ class ETL:
         predictions_df.write_parquet("pdr_predictions.parquet")
 
 
-    def _post_fetch_processing_trueval(self):
+    def _post_fetch_processing_trueval(
+            self,
+            st_ut: int,
+            fin_ut: int,
+            dfs: Dict[str, pl.DataFrame]
+        ):
         """
         Perform post-fetch processing on the data
         """
-        pass
+        truevals_df, truevals_ids = pick_df_and_ids_on_period(
+            target=dfs["pdr_truevals"],
+            start_timestamp=st_ut,
+            finish_timestamp=fin_ut,
+        )
+
+        predictions_df = filter_and_drop_columns(
+            df=dfs["pdr_predictions"],
+            target_column="truevalue_id",
+            ids=truevals_ids,
+            columns_to_drop=["truevalue"],
+        )
+
+        predictions_df = left_join_with(
+            target=predictions_df,
+            other=truevals_df,
+            left_on="truevalue_id",
+            right_on="ID",
+            w_columns=[
+                pl.col("truevalue").alias("truevalue"),
+            ],
+            select_columns=self.pdr_prediction_columns,
+        )
+
+        predictions_df.write_parquet("pdr_predictions.parquet")
     

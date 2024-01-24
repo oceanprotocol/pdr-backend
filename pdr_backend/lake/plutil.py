@@ -196,6 +196,8 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
 def left_join_with(
     target: pl.DataFrame,
     other: pl.DataFrame,
+    left_on: str = "ID",
+    right_on: str = "ID",
     w_columns: Iterable[Union[pl.Expr, str]] = [],
     select_columns: Iterable[Union[pl.Expr, str]] = []
     ) -> pl.DataFrame:
@@ -211,7 +213,11 @@ def left_join_with(
         @returns
             joined dataframe
     """
-    return target.join(other, on="ID", how="left").with_columns(w_columns).select(select_columns)
+    return target.join(
+        other,
+        left_on=left_on,
+        right_on=right_on,
+        how="left").with_columns(w_columns).select(select_columns)
 
 @enforce_types
 def pick_df_and_ids_on_period(
@@ -238,6 +244,7 @@ def pick_df_and_ids_on_period(
 @enforce_types
 def filter_and_drop_columns(
     df: pl.DataFrame,
+    target_column: str,
     ids: List[str],
     columns_to_drop: List[str]
 ) -> pl.DataFrame:
@@ -246,9 +253,10 @@ def filter_and_drop_columns(
             Filter dataframe based on ID and drop specified columns.
         @arguments
             df -- dataframe to be filtered and modified
+            target_column -- column to filter on
             ids -- list of IDs to filter
             columns_to_drop -- list of columns to drop
         @returns
             Modified dataframe
     """
-    return df.filter(pl.col("ID").is_in(ids)).drop(columns_to_drop)
+    return df.filter(pl.col(target_column).is_in(ids)).drop(columns_to_drop)
