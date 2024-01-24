@@ -25,7 +25,7 @@ predictoor_ss:
 
 trader_ss:
   feed: binance BTC/USDT c 1h
-  xpmt_only:
+  sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     init_holdings:
@@ -36,7 +36,7 @@ trader_ss:
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3 # buy/sell this amount in each epoch
 
-xpmt_ss: # xpmt only
+sim_ss: # sim only
   do_plot: True
   log_dir: logs
   test_n : 200 # number of epochs to simulate

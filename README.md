@@ -34,10 +34,10 @@ pdr
 
 This will output something like:
 ```text
-Usage: pdr xpmt|predictoor|trader|..
+Usage: pdr sim|predictoor|trader|..
 
 Main tools:
-  pdr xpmt YAML_FILE
+  pdr sim YAML_FILE
   pdr predictoor APPROACH YAML_FILE NETWORK
   pdr trader APPROACH YAML_FILE NETWORK
 ...
@@ -68,7 +68,7 @@ This repo implements all bots in Predictoor ecosystem. Here are each of the sub-
 Main bots & user tools:
 - `predictoor` - submit individual predictions
 - `trader` - buy aggregated predictions, then trade
-- `xpmt` - experiments / simulation flow
+- `sim` - experiments / simulation flow
 
 OPF-run bots & higher-level tools:
 - `trueval` - report true values to contract
