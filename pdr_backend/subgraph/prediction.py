@@ -101,7 +101,7 @@ def mock_daily_predictions() -> List[Prediction]:
 # In subgraph, timestamp will be in seconds
 _FIRST_PREDICTION_TUPS = [
     (
-        "0xaaaa",
+        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "ADA/USDT",
         "5m",
         True,
@@ -111,11 +111,10 @@ _FIRST_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701503100,  # Dec 02 2023
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xbbbb",
+        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
         "BTC/USDT",
         "5m",
         True,
@@ -125,14 +124,13 @@ _FIRST_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701589500,  # Dec 03 2023
-        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
         "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
 ]
 
 _SECOND_PREDICTION_TUPS = [
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "5m",
         True,
@@ -142,11 +140,10 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1701675900,  # Dec 04
-        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xbbbb",
+        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
         "BTC/USDT",
         "1h",
         True,
@@ -156,11 +153,10 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701503000,  # Dec 02 2023
-        "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xaaaa",
+        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "ADA/USDT",
         "5m",
         True,
@@ -170,11 +166,10 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1701589500,  # Dec 03 2023
-        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xbnnn",
+        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
         "BNB/USDT",
         "1h",
         True,
@@ -184,11 +179,10 @@ _SECOND_PREDICTION_TUPS = [
         "kraken",
         0.0500,
         1701675900,  # Dec 04 2023
-        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
         "0xbbbb4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "1h",
         True,
@@ -201,7 +195,7 @@ _SECOND_PREDICTION_TUPS = [
         "0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "5m",
         True,
@@ -217,7 +211,7 @@ _SECOND_PREDICTION_TUPS = [
 
 _DAILY_PREDICTION_TUPS = [
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "5m",
         True,
@@ -230,7 +224,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xbbbb",
+        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
         "BTC/USDT",
         "1h",
         True,
@@ -243,7 +237,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xaaaa",
+        "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
         "ADA/USDT",
         "5m",
         True,
@@ -256,7 +250,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xbnnn",
+        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
         "BNB/USDT",
         "1h",
         True,
@@ -269,7 +263,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "1h",
         True,
@@ -282,7 +276,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0xeeee",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
         "5m",
         True,

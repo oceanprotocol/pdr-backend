@@ -34,7 +34,9 @@ def test_get_predictoors_info_main_mainnet(
 
     get_predictoors_info_main(
         ppss,
-        user_addr,
+        st_timestr,
+        fin_timestr,
+        [user_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -88,7 +90,9 @@ def test_get_predictoors_info_bad_date_range(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
-            user_addr,
+            st_timestr,
+            fin_timestr,
+            [user_addr],
         )
 
     # Show filter leading to an empty dataframe
@@ -138,7 +142,9 @@ def test_get_predictoors_info_bad_user_address(
     with pytest.raises(AssertionError):
         get_predictoors_info_main(
             ppss,
-            user_addr,
+            st_timestr,
+            fin_timestr,
+            [user_addr],
         )
 
     # Show filter leading to an empty dataframe

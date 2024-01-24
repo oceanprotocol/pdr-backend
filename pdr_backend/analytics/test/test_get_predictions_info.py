@@ -34,7 +34,9 @@ def test_get_predictions_info_main_mainnet(
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     get_predictions_info_main(
         ppss,
-        feed_addr,
+        st_timestr,
+        fin_timestr,
+        [feed_addr],
     )
 
     # manualy filter predictions for latter check Predictions
@@ -99,7 +101,9 @@ def test_get_predictions_info_bad_date_range(
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
-            feed_addr,
+            st_timestr,
+            fin_timestr,
+            [feed_addr],
         )
 
     # Work 1: Internal filter returns 0 rows due to date mismatch
@@ -152,7 +156,9 @@ def test_get_predictions_info_bad_feed(
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
-            feed_addr,
+            st_timestr,
+            fin_timestr,
+            [feed_addr],
         )
 
     # show that feed address can't be found
@@ -192,5 +198,7 @@ def test_get_predictions_info_empty(mock_get_gql_dfs, tmpdir):
     with pytest.raises(AssertionError):
         get_predictions_info_main(
             ppss,
-            feed_addr,
+            st_timestr,
+            fin_timestr,
+            [feed_addr],
         )

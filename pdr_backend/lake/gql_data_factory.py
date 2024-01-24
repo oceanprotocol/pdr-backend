@@ -19,10 +19,7 @@ from pdr_backend.lake.table_pdr_subscriptions import (
     get_pdr_subscriptions_df,
     subscriptions_schema,
 )
-from pdr_backend.lake.table_pdr_truevals import (
-    get_pdr_truevals_df, 
-    truevals_schema
-)
+from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df, truevals_schema
 from pdr_backend.lake.table_pdr_payouts import (
     get_pdr_payouts_df,
     payouts_schema,
@@ -79,7 +76,8 @@ class GQLDataFactory:
                 "config": {
                     "contract_list": contract_list,
                 },
-            },"pdr_payouts": {
+            },
+            "pdr_payouts": {
                 "fetch_fn": get_pdr_payouts_df,
                 "schema": payouts_schema,
                 "config": {

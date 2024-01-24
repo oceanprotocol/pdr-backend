@@ -13,10 +13,11 @@ from pdr_backend.analytics.predictoor_stats import (
 )
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.timeutil import timestr_to_ut
 
 
 @enforce_types
-def get_traction_info_main(ppss: PPSS):
+def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
@@ -27,8 +28,8 @@ def get_traction_info_main(ppss: PPSS):
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= ppss.lake_ss.st_timestamp)
-        & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
+        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr))
+        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr))
     )
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
