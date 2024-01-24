@@ -137,33 +137,27 @@ def do_claim_ROSE(args, nested_args=None):
 
 
 @enforce_types
-def do_get_predictoors_info(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-    get_predictoors_info_main(ppss, args.ST, args.END, args.PDRS)
+def do_get_predictoors_info(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_predictoors_info_main(ppss, args.PDRS)
 
 
 @enforce_types
-def do_get_predictions_info(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-    get_predictions_info_main(ppss, args.ST, args.END, args.FEEDS)
+def do_get_predictions_info(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_predictions_info_main(ppss, args.FEEDS)
 
 
 @enforce_types
-def do_get_traction_info(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-    get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
+def do_get_traction_info(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
+    ppss.lake_ss.d["st_timestr"] = args.ST
+    ppss.lake_ss.d["fin_timestr"] = args.END
+    get_traction_info_main(ppss)
 
 
 @enforce_types
