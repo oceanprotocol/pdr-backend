@@ -1,9 +1,10 @@
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.trader_ss import TraderSS, inplace_make_trader_fast
 
 _D = {
-    "xpmt_only": {
+    "sim_only": {
         "buy_amt": "10 USD",
         "fee_percent": 0.01,
         "init_holdings": ["10000.0 USDT", "0 BTC"],
@@ -47,6 +48,11 @@ def test_trader_ss():
 
     # str
     assert "TraderSS" in str(ss)
+
+    bad_dict = _D.copy()
+    bad_dict["tradetype"] = "xyx"
+    with pytest.raises(ValueError):
+        TraderSS(bad_dict)
 
 
 @enforce_types
