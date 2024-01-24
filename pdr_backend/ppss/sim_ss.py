@@ -7,11 +7,11 @@ from pdr_backend.util.strutil import StrMixin
 
 
 @enforce_types
-class XpmtSS(StrMixin):
+class SimSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
-        self.d = d  # yaml_dict["xpmt_ss"]
+        self.d = d  # yaml_dict["sim_ss"]
 
         # handle log_dir
         assert self.log_dir == os.path.abspath(self.log_dir)

@@ -11,11 +11,12 @@ from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.publisher_ss import PublisherSS
-from pdr_backend.ppss.xpmt_ss import XpmtSS
+from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
+from pdr_backend.util.dictutil import recursive_update
 
 
 @enforce_types
@@ -25,6 +26,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
         network: Optional[str] = None,  # eg "development", "sapphire-testnet"
+        nested_override_args: Optional[dict] = None,
     ):
         # preconditions
         assert (
@@ -38,11 +40,14 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         else:
             d = yaml.safe_load(str(yaml_str))
 
+        if nested_override_args is not None:
+            recursive_update(d, nested_override_args)
+
         # fill attributes from d. Same order as ppss.yaml, to help reading
         self.lake_ss = LakeSS(d["lake_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
-        self.xpmt_ss = XpmtSS(d["xpmt_ss"])
+        self.sim_ss = SimSS(d["sim_ss"])
         self.publisher_ss = PublisherSS(network, d["publisher_ss"])
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
@@ -105,7 +110,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s += f"payout_ss={self.payout_ss}\n"
         s += f"predictoor_ss={self.predictoor_ss}\n"
         s += f"trader_ss={self.trader_ss}\n"
-        s += f"xpmt_ss={self.xpmt_ss}\n"
+        s += f"sim_ss={self.sim_ss}\n"
         s += f"trueval_ss={self.trueval_ss}\n"
         s += f"web3_pp={self.web3_pp}\n"
         return s
@@ -179,7 +184,7 @@ def mock_ppss(
     ppss.trader_ss = TraderSS(
         {
             "feed": onefeed,
-            "xpmt_only": {
+            "sim_only": {
                 "buy_amt": "10 USD",
             },
             "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
