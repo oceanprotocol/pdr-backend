@@ -6,6 +6,8 @@ from deployer.models.DeploymentMethod import DeploymentMethod
 from deployer.templates.docker_compose import get_docker_compose_template
 from deployer.templates.k8s import get_k8s_predictoor_template
 from deployer.templates.pm2 import get_pm2_deploy_template
+
+
 @dataclass
 class DeployConfig:
     agent_config: Optional[AgentsDeployConfig] = None
