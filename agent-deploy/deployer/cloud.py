@@ -164,3 +164,7 @@ def build_and_push_docker_image(
     )
     run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
 
+
+def deploy_agents_to_k8s(config_folder: str):
+    print("Deploying agents...")
+    run_command(f"kubectl apply -f {config_folder}/")
