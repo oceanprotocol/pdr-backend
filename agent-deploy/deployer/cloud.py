@@ -124,3 +124,28 @@ class AzureProvider(CloudProvider):
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
+
+def check_requirements(provider_name):
+    # check if kubectl is installed
+    if not shutil.which("kubectl"):
+        raise Exception("kubectl is not installed")
+
+    if provider_name == "gcp":
+        # check if gcloud is installed
+        if not shutil.which("gcloud"):
+            raise Exception("gcloud is not installed")
+
+        if not shutil.which("gke-gcloud-auth-plugin"):
+            raise Exception(
+                "gke-gcloud-auth-plugin is not installed, run 'gcloud components install gke-gcloud-auth-plugin'"
+            )
+
+    if provider_name == "aws":
+        # check if aws is installed
+        if not shutil.which("aws"):
+            raise Exception("aws is not installed")
+
+    if provider_name == "azure":
+        # check if az is installed
+        if not shutil.which("az"):
+            raise Exception("az is not installed")
