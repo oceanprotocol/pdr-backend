@@ -117,7 +117,7 @@ web3_pp:
     owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
 deployment_configs:
-  predictoor_deployment:
+  testnet_predictoor_deployment:
     cpu: '1'
     memory: '512Mi'
     source: "binance"

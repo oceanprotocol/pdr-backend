@@ -13,7 +13,7 @@ Here is an example structure for your reference:
 
 ```yaml
 deployment_configs:
-  predictoor_deployment:
+  testnet_predictoor_deployment:
     cpu: '1'
     memory: '512Mi'
     source: "binance"
@@ -57,10 +57,10 @@ deployer generate <config_path> <config_name> <deployment_method> <output_dir>
 **Example:**
 
 ```shell
-$ python agent-deploy/deployer.py generate ppss.yaml predictoor_deployment pm2 ./pm2dir
-Generated pm2 templates for predictoor_deployment
+$ python agent-deploy/deployer.py generate ppss.yaml testnet_predictoor_deployment pm2 ./pm2dir
+Generated pm2 templates for testnet_predictoor_deployment
   Output path: ./pm2dir
-  Config name: predictoor_deployment
+  Config name: testnet_predictoor_deployment
   Deployment method: pm2
   Number of agents: 2
 Run command: pm2 start ./pm2dir/*.js
