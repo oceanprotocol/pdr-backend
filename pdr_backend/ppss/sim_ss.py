@@ -13,6 +13,7 @@ class SimSS(StrMixin, SingleFeedMixinCCXT):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
+        super().__init__(d)
         self.d = d  # yaml_dict["sim_ss"]
 
         # handle log_dir

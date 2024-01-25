@@ -181,6 +181,7 @@ class SingleFeedMixin:
 class SingleFeedMixinCCXT:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if hasattr(self, "tradetype"):
             assert hasattr(self, "allowed_tradetypes")
             if self.tradetype not in self.allowed_tradetypes:
