@@ -149,3 +149,7 @@ def check_requirements(provider_name):
         # check if az is installed
         if not shutil.which("az"):
             raise Exception("az is not installed")
+def check_image_build_requirements():
+    # check if docker is installed
+    if not shutil.which("docker"):
+        raise Exception("docker is not installed")
