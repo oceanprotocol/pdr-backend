@@ -35,3 +35,6 @@ class CloudProvider(ABC):
     @abstractmethod
     def cluster_exists(self, cluster_name) -> bool:
         pass
+def sanitize_name(name):
+    return name.replace("_", "-")
+
