@@ -106,14 +106,6 @@ class SingleFeedMixin:
             for attr in assert_feed_attributes:
                 assert getattr(self.feed, attr)
 
-        if hasattr(self, "tradetype"):
-            assert hasattr(self, "allowed_tradetypes")
-            if self.tradetype not in self.allowed_tradetypes:
-                raise ValueError(
-                    f"{self.tradetype} not in allowed tradetypes "
-                    f"{', '.join(self.allowed_tradetypes)}"
-                )
-
     # --------------------------------
     # yaml properties
     @property
@@ -185,9 +177,42 @@ class SingleFeedMixin:
 
         return None
 
+
+class SingleFeedMixinCCXT:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "tradetype"):
+            assert hasattr(self, "allowed_tradetypes")
+            if self.tradetype not in self.allowed_tradetypes:
+                raise ValueError(
+                    f"{self.tradetype} not in allowed tradetypes "
+                    f"{', '.join(self.allowed_tradetypes)}"
+                )
+
+    @property
+    def base_str(self) -> str:
+        """Return e.g. 'ETH'. Only applicable when 1 feed."""
+        return ArgPair(self.pair_str).base_str or ""
+
+    @property
+    def quote_str(self) -> str:
+        """Return e.g. 'USDT'. Only applicable when 1 feed."""
+        return ArgPair(self.pair_str).quote_str or ""
+
+    @property
+    def pair_str(self) -> str:
+        """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
+        return str(self.feed.pair)
+
     @enforce_types
     def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
-        if not hasattr(self, "tradetype") or self.tradetype != "livemock":
+        if not self.feed:
+            raise ValueError("No feed defined")
+
+        if not hasattr(self, "tradetype") or self.tradetype not in [
+            "livemock",
+            "histmock",
+        ]:
             return self.feed.ccxt_exchange(*args, **kwargs)
 
         return MockExchange()

@@ -1,13 +1,15 @@
 import os
+from typing import List
 
 import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.ppss.base_ss import SingleFeedMixinCCXT
 
 
 @enforce_types
-class SimSS(StrMixin):
+class SimSS(StrMixin, SingleFeedMixinCCXT):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
@@ -39,3 +41,11 @@ class SimSS(StrMixin):
     @property
     def test_n(self) -> int:
         return self.d["test_n"]  # eg 200
+
+    @property
+    def tradetype(self) -> str:
+        return self.d.get("tradetype", "histmock")
+
+    @property
+    def allowed_tradetypes(self) -> List[str]:
+        return ["livemock", "livereal", "histmock"]

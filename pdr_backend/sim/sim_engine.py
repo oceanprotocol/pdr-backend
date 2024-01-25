@@ -1,5 +1,6 @@
 import copy
 import os
+from os import getenv
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -58,15 +59,31 @@ class SimEngine:
         if self.ppss.sim_ss.do_plot:
             self.plot_state = PlotState()
 
+        # set feed for exchange purposes
+        self.ppss.sim_ss.feed = self.ppss.predictoor_ss.feed
+        self.exchange = self.ppss.sim_ss.ccxt_exchange(
+            {
+                "apiKey": getenv("EXCHANGE_API_KEY"),
+                "secret": getenv("EXCHANGE_SECRET_KEY"),
+                "timeout": 30000,
+                "options": {
+                    # We're going to enable spot market purchases w/ default price
+                    # Disable safety w/ createMarketBuyOrderRequiresPrice
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot",
+                },
+            }
+        )
+
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.ppss.predictoor_ss.base_str
+        return self.ppss.sim_ss.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.ppss.predictoor_ss.quote_str
+        return self.ppss.sim_ss.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -197,6 +214,10 @@ class SimEngine:
         tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
         self.holdings[self.tokcoin] += tokcoin_amt_recd
 
+        self.exchange.create_market_buy_order(
+            self.ppss.sim_ss.pair_str, tokcoin_amt_recd
+        )
+
         self._log(
             f"  TX: BUY : send {usdcoin_amt_sent:8.2f} {self.usdcoin:4}"
             f", receive {tokcoin_amt_recd:8.2f} {self.tokcoin:4}"
@@ -219,6 +240,10 @@ class SimEngine:
         usdcoin_amt_fee = p * tokcoin_amt_sent * price
         usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
         self.holdings[self.usdcoin] += usdcoin_amt_recd
+
+        self.exchange.create_market_sell_order(
+            self.ppss.sim_ss.pair_str, tokcoin_amt_sent
+        )
 
         self._log(
             f"  TX: SELL: send {tokcoin_amt_sent:8.2f} {self.tokcoin:4}"

@@ -2,11 +2,11 @@ from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.base_ss import SingleFeedMixin
+from pdr_backend.ppss.base_ss import SingleFeedMixin, SingleFeedMixinCCXT
 from pdr_backend.util.strutil import StrMixin
 
 
-class TraderSS(SingleFeedMixin, StrMixin):
+class TraderSS(SingleFeedMixinCCXT, SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEED_KEY = "feed"
 
