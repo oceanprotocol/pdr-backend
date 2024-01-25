@@ -10,15 +10,16 @@ from pdr_backend.lake.plutil import (
     pick_df_and_ids_on_period,
 )
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
 bronze_pdr_predictions_schema = {
-    "ID": Utf8,
-    "truevalue_id": Utf8,
-    "contract": Utf8,
+    "ID": Utf8,  # f"{contract}-{slot}-{user}"
+    "contract": Utf8,  # f"{contract}"
+    "slot_id": Utf8,  # f"{contract}-{slot}"
     "pair": Utf8,
     "timeframe": Utf8,
     "predvalue": Boolean,
@@ -33,24 +34,55 @@ bronze_pdr_predictions_schema = {
 }
 
 
-def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
-    df = df.with_columns(
-        [
-            pl.col("timestamp").mul(1000).alias("timestamp"),
-        ]
-    )
-    return df
-
-
 def _process_predictions(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
-    Perform post-fetch processing on the data
+    @description
+        Perform post-fetch processing on the data.
+        1. Find predictions within the update
+        2. Transform prediction as needed
+        3. Add predictions to the existing bronze_pdr_predictions table
+        4. Update predictions that already exist in the bronze_pdr_predictions table
     """
-    predictions_df = pl.DataFrame()
+    predictions_df, predictions_ids = pick_df_and_ids_on_period(
+        target=dfs["pdr_predictions"],
+        start_timestamp=ppss.lake_ss.st_timestamp,
+        finish_timestamp=ppss.lake_ss.fin_timestamp,
+    )
 
-    dfs[bronze_pdr_predictions_table_name] = predictions_df
+    def get_contract(row) -> str:
+        contract = row.split("-")[0]
+        return f"{contract}"
+
+    def get_slot_id(row) -> str:
+        slot_id = row.split("-")[0] + "-" + row.split("-")[1]
+        return f"{slot_id}"
+
+    # transform from raw to bronze prediction
+    bronze_predictions_df = predictions_df.with_columns(
+        [
+            pl.col("ID")
+            .map_elements(get_contract, return_dtype=Utf8)
+            .alias("contract"),
+            pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
+            pl.col("prediction").alias("predvalue"),
+            pl.col("trueval").alias("truevalue"),
+            pl.lit(None).alias("revenue"),
+        ]
+    ).select(bronze_pdr_predictions_schema)
+
+    # Append new predictions
+    # Upsert existing predictions
+    # print(f'>>>>>bronze_predictions_df<<<<< {bronze_predictions_df}')
+
+    # df = dfs[bronze_pdr_predictions_table_name]
+    # print(f">>>>>>bronze_pdr_predictions_table_name<<<<<: {df.columns}")
+
+    # df = df.join(bronze_predictions_df, left_on="ID", right_on="ID", how="left")
+    # print(f">>>>>>joined bronze_pdr_predictions<<<<<: {df}")
+
+    dfs[bronze_pdr_predictions_table_name] = bronze_predictions_df
     return dfs
 
 
@@ -100,7 +132,7 @@ def _process_truevals(
 
     predictions_df = filter_and_drop_columns(
         df=dfs[bronze_pdr_predictions_table_name],
-        target_column="truevalue_id",
+        target_column="slot_id",
         ids=truevals_ids,
         columns_to_drop=["truevalue"],
     )
@@ -108,7 +140,7 @@ def _process_truevals(
     predictions_df = left_join_with(
         target=predictions_df,
         other=truevals_df,
-        left_on="truevalue_id",
+        left_on="slot_id",
         right_on="ID",
         w_columns=[
             pl.col("truevalue").alias("truevalue"),
@@ -130,16 +162,16 @@ def get_bronze_pdr_predictions_df(
     """
     # do post_sync processing
     gql_dfs = _process_predictions(gql_dfs, ppss)
-    gql_dfs = _process_payouts(gql_dfs, ppss)
-    gql_dfs = _process_truevals(gql_dfs, ppss)
+    # gql_dfs = _process_payouts(gql_dfs, ppss)
+    # gql_dfs = _process_truevals(gql_dfs, ppss)
 
-    df = _transform_timestamp_to_ms(gql_dfs[bronze_pdr_predictions_table_name])
+    # df = _transform_timestamp_to_ms(gql_dfs[bronze_pdr_predictions_table_name])
 
-    # cull any records outside of our time range and sort them by timestamp
-    df = df.filter(
-        pl.col("timestamp").is_between(
-            ppss.lake_ss.st_timestamp, ppss.lake_ss.fin_timestamp
-        )
-    ).sort("timestamp")
+    # # cull any records outside of our time range and sort them by timestamp
+    # df = df.filter(
+    #     pl.col("timestamp").is_between(
+    #         ppss.lake_ss.st_timestamp, ppss.lake_ss.fin_timestamp
+    #     )
+    # ).sort("timestamp")
 
-    return df
+    return gql_dfs[bronze_pdr_predictions_table_name]

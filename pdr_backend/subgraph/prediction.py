@@ -22,10 +22,6 @@ class Prediction:
         user: str,
     ) -> None:
         self.ID = ID
-        # self.prediction_id = f"{contract}-{slot}-{user}"
-        # self.payout_id = f"{contract}-{slot}-{user}"
-        # self.slot_id = f"{contract}-{slot}"
-        # self.trueval_id = f"{contract}-{slot}"
         self.contract = contract
         self.pair = pair
         self.timeframe = timeframe

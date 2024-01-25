@@ -16,7 +16,7 @@ class ETL:
         self.ppss = ppss
 
         self.gql_data_factory = gql_data_factory
-        self.gql_dfs: Dict[str, pl.DataFrame] = {}
+        self.dfs: Dict[str, pl.DataFrame] = {}
 
     def do_sync_step(self):
         """
@@ -28,7 +28,10 @@ class ETL:
         for i in range(_retries):
             try:
                 gql_dfs = self.gql_data_factory.get_gql_dfs()
-                self.gql_dfs = gql_dfs
+
+                # rather than override the whole dict, we update the dict
+                for key in gql_dfs:
+                    self.dfs[key] = gql_dfs[key]
 
                 print("Fetch data from data_factory successfully")
                 break
@@ -40,11 +43,11 @@ class ETL:
     def do_bronze_step(self):
         """
         @description
-            We now updated our lake's raw data, we want to clean and transform it
-            We're going to process 2 key tables: bronze_pdr_predictions and bronze_pdr_slots
-            We're going to save them to the lake.
-            These are kept clean, up-to-date, where timestamp in _ms
+            We have updated our lake's raw data
+            Now,, let's build the bronze tables
+            key tables: [bronze_pdr_predictions and bronze_pdr_slots]
         """
+        # Load existing bronze tables
         filename = self.gql_data_factory._parquet_filename(
             bronze_pdr_predictions_table_name
         )
@@ -53,7 +56,9 @@ class ETL:
         else:
             df = pl.DataFrame(schema=bronze_pdr_predictions_schema)
 
-        self.gql_dfs[bronze_pdr_predictions_table_name] = df
+        self.dfs[bronze_pdr_predictions_table_name] = df
+
+        # Update bronze tables
         self.update_bronze_pdr_predictions()
 
     def update_bronze_pdr_predictions(self):
@@ -61,9 +66,11 @@ class ETL:
         @description
             Update bronze_pdr_predictions table
         """
-        df = get_bronze_pdr_predictions_df(self.gql_dfs, self.ppss)
+        df = get_bronze_pdr_predictions_df(self.dfs, self.ppss)
 
         filename = self.gql_data_factory._parquet_filename(
             bronze_pdr_predictions_table_name
         )
-        self.gql_data_factory._save_parquet(df, filename)
+        self.gql_data_factory._save_parquet(filename, df)
+
+        self.dfs[bronze_pdr_predictions_table_name] = df

@@ -209,7 +209,7 @@ def left_join_with(
     @arguments
         target -- dataframe to be joined with
         other -- dataframe to join with
-        with_columns -- columns to join on
+        with_columns -- columns to create
         select_columns -- columns to select from the right dataframe
     @returns
         joined dataframe
