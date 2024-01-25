@@ -36,10 +36,12 @@ def generate_deployment_templates(
         os.makedirs(output_path)
 
     deployment_names = []
-    if config_name == "predictoor_config":
+    if config.type == "predictoor":
         for template in deploy_config.predictoor_templates(deployment_method):
             template.write(output_path)
             deployment_names.append(template.name)
+    else:
+        raise ValueError(f"Config type {config.type} is not supported")
 
     print(f"Generated {deployment_method} templates for {config_name}")
     print(f"  Output path: {output_path}")
