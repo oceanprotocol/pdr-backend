@@ -7,29 +7,30 @@ Agent Deployment Tool is a streamlined command-line utility designed for efficie
 ### Step 1. Generate Deployment Templates
 
 #### Agent Configurations
-Firstly, you need to set up your agents configuration. This is done by creating a `config.yaml` file.
+Firstly, you need to set up your agents configuration. This is done by creating a config entry under `deployment_configs` in `ppss.yaml` file. 
 
 Here is an example structure for your reference:
 
 ```yaml
-predictoor_config:
-  cpu: '1'
-  memory: '512Mi'
-  source: "binance"
-  type: "predictoor"
-  approach: 3
-  network: "sapphire-testnet"
-  s_until_epoch_end: 20
-  pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
-  agents:
-    - pair: 'BTC/USDT'
-      stake_amt: 15
-      timeframe: 5m
-      approach: 1
-    - pair: 'ETH/USDT'
-      stake_amt: 20
-      timeframe: 1h
-      s_until_epoch_end: 60
+deployment_configs:
+  predictoor_deployment:
+    cpu: '1'
+    memory: '512Mi'
+    source: "binance"
+    type: "predictoor"
+    approach: 3
+    network: "sapphire-testnet"
+    s_until_epoch_end: 20
+    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
+    agents:
+      - pair: 'BTC/USDT'
+        stake_amt: 15
+        timeframe: 5m
+        approach: 1
+      - pair: 'ETH/USDT'
+        stake_amt: 20
+        timeframe: 1h
+        s_until_epoch_end: 60
 ```
 
 *Tip: Specific agent settings (like source, timeframe) will override general settings if provided.*
@@ -56,10 +57,10 @@ deployer generate <config_path> <config_name> <deployment_method> <output_dir>
 **Example:**
 
 ```shell
-$ python agent-deploy/deployer.py generate agent-deploy/config.yaml predictoor_config pm2 ./pm2dir
-Generated pm2 templates for predictoor_config
+$ python agent-deploy/deployer.py generate ppss.yaml predictoor_deployment pm2 ./pm2dir
+Generated pm2 templates for predictoor_deployment
   Output path: ./pm2dir
-  Config name: predictoor_config
+  Config name: predictoor_deployment
   Deployment method: pm2
   Number of agents: 2
 Run command: pm2 start ./pm2dir/*.js
