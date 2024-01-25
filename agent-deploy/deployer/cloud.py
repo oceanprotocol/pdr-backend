@@ -153,3 +153,14 @@ def check_image_build_requirements():
     # check if docker is installed
     if not shutil.which("docker"):
         raise Exception("docker is not installed")
+def build_and_push_docker_image(
+    provider: CloudProvider, image_name, image_tag, registry_name
+):
+    print("Building docker image...")
+    run_command(f"docker build -t {image_name}:{image_tag} .")
+    print("Pushing docker image...")
+    run_command(
+        f"docker tag {image_name}:{image_tag} {registry_name}/{image_name}:{image_tag}"
+    )
+    run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
+
