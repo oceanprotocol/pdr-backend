@@ -12,6 +12,18 @@ from deployer.models.DeployConfig import DeployConfig
 from deployer.models.DeploymentInfo import DeploymentInfo
 from deployer.models.DeploymentMethod import DeploymentMethod
 from deployer.wallet import generate_new_keys, read_keys_json
+from deployer.cloud import (
+    AWSProvider,
+    AzureProvider,
+    CloudProvider,
+    GCPProvider,
+    deploy_agents_to_k8s,
+    deploy_cluster,
+)
+from deployer.cloud import (
+    check_requirements as check_cloud_requirements,
+    check_image_build_requirements,
+)
 
 
 def generate_deployment_templates(
@@ -56,7 +68,6 @@ def generate_deployment_templates(
         foldername=output_path,
         config_name=config_name,
         deployment_method=str(deployment_method),
-        is_deployed=False,
         ts_created=int(time.time()),
         deployment_names=deployment_names,
     )
@@ -68,7 +79,31 @@ def generate_deployment_templates(
     deploymentinfo.write("./.deployments")
 
 
-if __name__ == "__main__":
+def deploy_existing_config(config_file: str, cloud_provider: CloudProvider):
+    # read config from ./.deployments
+    deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
+    deployment_name = deploymentinfo.config_name
+    should_build_image = False
+    image_name = deploymentinfo.config["deployment_configs"][deployment_name][
+        "pdr_backend_image_source"
+    ]
+
+    if not image_name.startswith("oceanprotocol/"):
+        check_image_build_requirements()
+        should_build_image = True
+
+    if should_build_image:
+        raise Exception("Image build is not supported yet")
+
+    print(f"Deploying {deployment_name}...")
+    deploy_cluster(cloud_provider, deployment_name)
+
+    print(f"Cluster is ready, deploying the agents...")
+    deployment_folder = deploymentinfo.foldername
+    deploy_agents_to_k8s(deployment_folder)
+
+
+def main():
     parser = argparse.ArgumentParser(
         prog="deployer",
         description="Generate and manage deployments Predictoor",
@@ -90,6 +125,27 @@ if __name__ == "__main__":
         "output_dir", help="Output directory for the generated files"
     )
 
+    # Adding the 'deploy' command
+    parser_deploy = subparsers.add_parser("deploy", help="deploy help")
+    parser_deploy.add_argument("config_name", help="Name of the configuration")
+    parser_deploy.add_argument(
+        "-p",
+        "--provider",
+        help="Cloud provider",
+        required=True,
+        choices=["aws", "azure", "gcp"],
+    )
+    parser_deploy.add_argument(
+        "-r",
+        "--region",
+        required=True,
+        help="Deployment zone/region",
+    )
+    parser_deploy.add_argument(
+        "--project_id",
+        help="Google Cloud project id",
+        required=False,
+    )
     # Parse the arguments
     args = parser.parse_args()
 
@@ -100,3 +156,16 @@ if __name__ == "__main__":
             DeploymentMethod.from_str(args.deployment_method),
             args.config_name,
         )
+    elif args.command == "deploy":
+        if args.provider == "gcp":
+            if not args.project_id:
+                raise Exception("Google Cloud project id is required")
+            provider = GCPProvider(args.region, args.project_id)
+        elif args.provider == "aws":
+            provider = AWSProvider(args.region)
+        elif args.provider == "azure":
+            provider = AzureProvider(args.region)
+
+        check_cloud_requirements(provider)
+
+        deploy_existing_config(args.config_name + "-k8s", provider)
