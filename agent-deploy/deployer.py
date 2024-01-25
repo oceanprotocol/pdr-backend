@@ -84,7 +84,7 @@ if __name__ == "__main__":
     parser_generate.add_argument(
         "deployment_method",
         help="Method of deployment",
-        choices=["k8s", "pm2", "docker-compose"]
+        choices=["k8s", "pm2", "docker-compose"],
     )
     parser_generate.add_argument(
         "output_dir", help="Output directory for the generated files"
