@@ -116,3 +116,22 @@ web3_pp:
     subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
     owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
+deployment_configs:
+  predictoor_deployment:
+    cpu: '1'
+    memory: '512Mi'
+    source: "binance"
+    type: "predictoor"
+    approach: 3
+    network: "sapphire-testnet"
+    s_until_epoch_end: 20
+    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
+    agents:
+      - pair: 'BTC/USDT'
+        stake_amt: 15
+        timeframe: 5m
+        approach: 1
+      - pair: 'ETH/USDT'
+        stake_amt: 20
+        timeframe: 1h
+        s_until_epoch_end: 60
