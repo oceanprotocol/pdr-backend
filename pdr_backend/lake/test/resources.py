@@ -14,7 +14,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.lake.etl import ETL
+
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
@@ -182,10 +182,3 @@ RAW_DF4 = text_to_df(  # kraken ETH/USDT
 4|40.4|41.4
 """
 )
-
-# ==================================================================
-def _etl_instance(tmpdir):
-    return ETL(
-        source=str(tmpdir),
-        destination=str(tmpdir),
-    )

@@ -29,9 +29,9 @@ class Prediction:
         self.contract = contract
         self.pair = pair
         self.timeframe = timeframe
-        self.prediction = prediction
+        self.prediction = prediction  # predvalue
         self.stake = stake
-        self.trueval = trueval
+        self.trueval = trueval  # truevalue
         self.timestamp = timestamp
         self.source = source
         self.payout = payout
@@ -60,6 +60,8 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
     ) = prediction_tuple
 
     ID = f"{contract}-{slot}-{user}"
+    # truevalue_id = f"{contract}-{slot}"
+
     return Prediction(
         ID=ID,
         contract=contract,

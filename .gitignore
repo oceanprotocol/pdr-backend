@@ -170,6 +170,7 @@ out*.txt
 my_ppss.yaml
 csvs/
 parquet_data/
+pdr_predictions.parquet 
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json

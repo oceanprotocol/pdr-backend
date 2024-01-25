@@ -1,154 +1,69 @@
-from typing import Literal, Dict
+from typing import Dict
+import os
 import polars as pl
 
-from pdr_backend.lake.plutil import (
-
-    left_join_with,
-    filter_and_drop_columns,
-    pick_df_and_ids_on_period
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.bronze_table_pdr_predictions import (
+    bronze_pdr_predictions_table_name,
+    bronze_pdr_predictions_schema,
+    get_bronze_pdr_predictions_df,
 )
 
-Tables = Literal["payouts", "trueval", "predictins"]
-FetchProcessTypes = Literal["payout", "trueval"]
 
 class ETL:
-    def __init__(self, source, destination):
-        self.source = source
-        self.destination = destination
+    def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
+        self.ppss = ppss
 
-        self.pdr_prediction_columns = [
-            "ID",
-            "truevalue_id",
-            "contract",
-            "pair",
-            "timeframe",
-            "prediction",
-            "stake",
-            "truevalue",
-            "timestamp",
-            "source",
-            "payout",
-            "slot",
-            "user",
-        ]
+        self.gql_data_factory = gql_data_factory
+        self.gql_dfs: Dict[str, pl.DataFrame] = {}
 
-        self.table_data = {
-            "payouts": {
-                "source": "pdr_payouts.parquet",
-                "data": None,
-            },
-            "trueval": {
-                "source": "pdr_truevalue.parquet",
-                "data": None,
-            },
-            "predictions": {
-                "source": "pdr_predictions.parquet",
-                "data": None,
-            },
-        }
-
-    def read(
-        self,
-        table: Tables,
-        force: bool = False,
-    ) -> pl.DataFrame:
+    def do_sync_step(self):
         """
-        Read data from the source
+        @description
+            Call data factory to fetch data and update lake
+            The sync will try 3 times to fetch from data_factory, and update the local gql_dfs
         """
-        if self.table_data[table]["data"] is None or force:
-            self.table_data[table]["data"] = pl.read_parquet(
-                f"{self.source}/{self.table_data[table]['source']}"
-            )
+        _retries = 3
+        for i in range(_retries):
+            try:
+                gql_dfs = self.gql_data_factory.get_gql_dfs()
+                self.gql_dfs = gql_dfs
 
-        return self.table_data[table]["data"]
+                print("Fetch data from data_factory successfully")
+                break
+            except Exception as e:
+                print(f"Error when syncing data_factory: {e}")
+                print(f"Retrying {_retries - i} times")
+                continue
 
-    def post_fetch_processing(
-            self,
-            fp_type: FetchProcessTypes,
-            st_ut: int,
-            fin_ut: int,
-            dfs: Dict[str, pl.DataFrame]
-        ):
+    def do_bronze_step(self):
         """
-        Perform post-fetch processing on the data
+        @description
+            We now updated our lake's raw data, we want to clean and transform it
+            We're going to process 2 key tables: bronze_pdr_predictions and bronze_pdr_slots
+            We're going to save them to the lake.
+            These are kept clean, up-to-date, where timestamp in _ms
         """
-        if fp_type == "payout":
-            self._post_fetch_processing_payout(
-                st_ut, fin_ut, dfs
-            )
-        elif fp_type == "trueval":
-            self._post_fetch_processing_trueval(
-                st_ut, fin_ut, dfs
-            )
+        filename = self.gql_data_factory._parquet_filename(
+            bronze_pdr_predictions_table_name
+        )
+        if os.path.exists(filename):
+            df = pl.read_parquet(filename)
         else:
-            raise ValueError("Invalid fp_type")
+            df = pl.DataFrame(schema=bronze_pdr_predictions_schema)
 
-    def _post_fetch_processing_payout(
-            self,
-            st_ut,
-            fin_ut,
-            dfs
-        ):
+        self.gql_dfs[bronze_pdr_predictions_table_name] = df
+        self.update_bronze_pdr_predictions()
+
+    def update_bronze_pdr_predictions(self):
         """
-        Perform post-fetch processing on the data
+        @description
+            Update bronze_pdr_predictions table
         """
-        payouts_df, payouts_ids = pick_df_and_ids_on_period(
-            target=dfs["pdr_payouts"],
-            start_timestamp=st_ut,
-            finish_timestamp=fin_ut,
+        df = get_bronze_pdr_predictions_df(self.gql_dfs, self.ppss)
+
+        filename = self.gql_data_factory._parquet_filename(
+            bronze_pdr_predictions_table_name
         )
-
-        predictions_df = filter_and_drop_columns(
-            df=dfs["pdr_predictions"],
-            target_column="ID",
-            ids=payouts_ids,
-            columns_to_drop=["payout", "prediction"],
-        )
-
-        predictions_df = left_join_with(
-            target=predictions_df,
-            other=payouts_df,
-            w_columns=[
-                pl.col("predvalue").alias("prediction"),
-            ],
-            select_columns=self.pdr_prediction_columns,
-        )
-
-        predictions_df.write_parquet("pdr_predictions.parquet")
-
-
-    def _post_fetch_processing_trueval(
-            self,
-            st_ut: int,
-            fin_ut: int,
-            dfs: Dict[str, pl.DataFrame]
-        ):
-        """
-        Perform post-fetch processing on the data
-        """
-        truevals_df, truevals_ids = pick_df_and_ids_on_period(
-            target=dfs["pdr_truevals"],
-            start_timestamp=st_ut,
-            finish_timestamp=fin_ut,
-        )
-
-        predictions_df = filter_and_drop_columns(
-            df=dfs["pdr_predictions"],
-            target_column="truevalue_id",
-            ids=truevals_ids,
-            columns_to_drop=["truevalue"],
-        )
-
-        predictions_df = left_join_with(
-            target=predictions_df,
-            other=truevals_df,
-            left_on="truevalue_id",
-            right_on="ID",
-            w_columns=[
-                pl.col("truevalue").alias("truevalue"),
-            ],
-            select_columns=self.pdr_prediction_columns,
-        )
-
-        predictions_df.write_parquet("pdr_predictions.parquet")
-    
+        self.gql_data_factory._save_parquet(df, filename)

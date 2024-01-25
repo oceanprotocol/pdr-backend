@@ -9,10 +9,11 @@ class Trueval:
     def __init__(
         self,
         ID: str,
+        # contract?
         timestamp: int,
         token: str,
         trueval: Union[bool, None],
-        slot: int,  # slot/epoch timestamp
+        slot: int,  # slot timestamp
     ) -> None:
         self.ID = ID
         self.trueval = trueval
@@ -45,10 +46,10 @@ def mock_truevals() -> List[Trueval]:
 _TRUEVAL_TUPS = [
     (
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
-        1696838400,
+        1696838400,  # Oct 09 2023
         "ETH/USDT",
         False,
-        1696882021,
+        1696882021,  # Oct 09 2023
     ),
     (
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838100",

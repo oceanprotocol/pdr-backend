@@ -8,12 +8,14 @@ class Payout:  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         ID: str,
+        # contract: str,
         token: str,
         user: str,
         slot: int,
         timestamp: int,
         payout: float,
         predictedValue: bool,
+        # trueval: bool,
         revenue: float,
         roundSumStakesUp: float,
         roundSumStakes: float,
@@ -72,16 +74,16 @@ _PAYOUT_TUPS = [
     (
         # pylint: disable=line-too-long
         "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1704152700-0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",
-        "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",
-        1704153558,
-        "ADA/USDT",
-        1704152700,
-        0.0,
-        True,
-        0.919372744934776618,
-        7.635901006590730052,
-        17.728238320965607921,
-        0.41,
+        "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",  # user
+        1704153558,  # timestamp
+        "ADA/USDT",  # token
+        1704152700,  # slot
+        0.0,  # payout
+        True,  # predictedValue
+        0.919372744934776618,  # revenue
+        7.635901006590730052,  # roundSumStakesUp
+        17.728238320965607921,  # roundSumStakes
+        0.41,  # stake
     ),
     (
         # pylint: disable=line-too-long
