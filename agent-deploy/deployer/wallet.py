@@ -38,7 +38,7 @@ def read_keys_json(config: str) -> List[Wallet]:
     if not config in keys:
         print(f"Config {config} does not exist in key file")
         return []
-    wallets = [Wallet(key) for key in keys]
+    wallets = [Wallet(key) for key in keys[config]]
     return wallets
 
 
