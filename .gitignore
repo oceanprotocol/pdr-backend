@@ -177,6 +177,5 @@ pdr_backend/accuracy/output/*.json
 scripts/pm2-config/*private*
 
 # agent deployer
-config.yaml
 .keys.json
 .deployments/
