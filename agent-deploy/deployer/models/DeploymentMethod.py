@@ -34,4 +34,4 @@ class DeploymentMethod(Enum):
         if self == DeploymentMethod.PM2:
             return f"pm2 start {foldername}/*.js"
         if self == DeploymentMethod.K8S:
-            return f"kubectl apply -f {foldername}"
+            return f"deployer deploy"
