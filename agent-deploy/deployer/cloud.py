@@ -168,3 +168,9 @@ def build_and_push_docker_image(
 def deploy_agents_to_k8s(config_folder: str):
     print("Deploying agents...")
     run_command(f"kubectl apply -f {config_folder}/")
+def deploy_cluster(provider: CloudProvider, cluster_name):
+    cluster_name = sanitize_name(cluster_name)
+    if not provider.cluster_exists(cluster_name):
+        print("Creating Kubernetes cluster...")
+        provider.create_kubernetes_cluster(cluster_name)
+
