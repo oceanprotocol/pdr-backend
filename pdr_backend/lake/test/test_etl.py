@@ -79,11 +79,13 @@ def test_etl_do_bronze_step(
     )
 
     gql_dfs = {
+        "pdr_payouts": _gql_datafactory_etl_payouts_df,
         "pdr_predictions": _gql_datafactory_etl_predictions_df,
         "pdr_truevals": _gql_datafactory_etl_truevals_df,
-        "pdr_payouts": _gql_datafactory_etl_payouts_df,
     }
     mock_get_gql_dfs.return_value = gql_dfs
+
+    print("gql_dfs[pdr_predictions]:", _gql_datafactory_etl_predictions_df)
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
@@ -96,5 +98,11 @@ def test_etl_do_bronze_step(
     # Work 3: Do bronze
     etl.do_bronze_step()
 
-    # assert bronze_pdr_predictions_df
+    # assert bronze_pdr_predictions_df is created
+    # it should have 5 rows because of st_timestr and fin_timestr
     assert len(etl.dfs["bronze_pdr_predictions"]) == 5
+    
+    bronze_pdr_predictions_df = etl.dfs["bronze_pdr_predictions"]
+    assert bronze_pdr_predictions_df["contract"][0] == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
+    assert bronze_pdr_predictions_df["contract"][0] == _gql_datafactory_etl_predictions_df["contract"][1]
+    assert bronze_pdr_predictions_df["contract"][1] == _gql_datafactory_etl_predictions_df["contract"][2]

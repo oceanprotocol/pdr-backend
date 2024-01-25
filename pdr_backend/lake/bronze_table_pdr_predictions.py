@@ -51,20 +51,13 @@ def _process_predictions(
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
-    def get_contract(row) -> str:
-        contract = row.split("-")[0]
-        return f"{contract}"
-
-    def get_slot_id(row) -> str:
-        slot_id = row.split("-")[0] + "-" + row.split("-")[1]
+    def get_slot_id(_id: str) -> str:
+        slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
         return f"{slot_id}"
 
     # transform from raw to bronze prediction
     bronze_predictions_df = predictions_df.with_columns(
         [
-            pl.col("ID")
-            .map_elements(get_contract, return_dtype=Utf8)
-            .alias("contract"),
             pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
             pl.col("prediction").alias("predvalue"),
             pl.col("trueval").alias("truevalue"),
@@ -72,17 +65,14 @@ def _process_predictions(
         ]
     ).select(bronze_pdr_predictions_schema)
 
+    bronze_predictions_df = _transform_timestamp_to_ms(bronze_predictions_df)
+
     # Append new predictions
     # Upsert existing predictions
-    # print(f'>>>>>bronze_predictions_df<<<<< {bronze_predictions_df}')
-
-    # df = dfs[bronze_pdr_predictions_table_name]
-    # print(f">>>>>>bronze_pdr_predictions_table_name<<<<<: {df.columns}")
-
-    # df = df.join(bronze_predictions_df, left_on="ID", right_on="ID", how="left")
-    # print(f">>>>>>joined bronze_pdr_predictions<<<<<: {df}")
-
-    dfs[bronze_pdr_predictions_table_name] = bronze_predictions_df
+    cur_bronze = dfs[bronze_pdr_predictions_table_name]
+    df = pl.concat([cur_bronze, bronze_predictions_df])
+    df = df.filter(pl.struct("ID").is_unique())
+    dfs[bronze_pdr_predictions_table_name] = df
     return dfs
 
 
