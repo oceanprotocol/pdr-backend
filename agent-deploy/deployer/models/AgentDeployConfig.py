@@ -8,6 +8,7 @@ class AgentsDeployConfig:
     cpu: str
     memory: str
     agents: List[SingleAgentConfig]
+    type: str
     approach: Optional[int] = None
     pdr_backend_image_source: Optional[str] = None
     source: Optional[str] = None
