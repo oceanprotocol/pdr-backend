@@ -4,23 +4,18 @@ from deployer.models.AgentDeployConfig import AgentsDeployConfig
 from deployer.models.DeployConfig import DeployConfig
 from deployer.models.PredictoorAgentConfig import PredictoorAgentConfig
 
+
 def parse_config(file_path: str, config_name: str) -> DeployConfig:
     with open(file_path, "r") as file:
         config_file_data = yaml.safe_load(file)
-    
-    config_data = config_file_data[config_name]
 
-
-    
-
+    config_data = config_file_data["deployment_configs"][config_name]
     agents = []
     if not "approach" in config_data:
         config_data["approach"] = None
 
     if config_data.get("type") == "predictoor":
-        agents = [
-            PredictoorAgentConfig(**agent) for agent in config_data["agents"]
-        ]
+        agents = [PredictoorAgentConfig(**agent) for agent in config_data["agents"]]
     else:
         raise ValueError(f"Config type {config_data.get('type')} is not supported")
 
@@ -33,6 +28,7 @@ def parse_config(file_path: str, config_name: str) -> DeployConfig:
         source=config_data.get("source"),
         network=config_data.get("network"),
         s_until_epoch_end=config_data.get("s_until_epoch_end"),
+        type=config_data.get("type"),
     )
 
     deploy_config = DeployConfig(
