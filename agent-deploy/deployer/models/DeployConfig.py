@@ -48,6 +48,7 @@ class DeployConfig:
             f"{predictoor.source} {predictoor.pair} c {predictoor.timeframe}"
         )
         full_name = f"pdr-predictoor{index + 1}-{predictoor.approach}-{predictoor.pair}-{predictoor.timeframe}-{predictoor.source}"
+        full_name = full_name.replace("/", "-")
         run_command = predictoor.get_run_command(
             predictoor.stake_amt,
             predictoor.approach,
@@ -61,7 +62,7 @@ class DeployConfig:
                 get_k8s_predictoor_template(
                     name=full_name,
                     app=f"pdr-predictoor",
-                    docker_image=predictoor.pdr_backend_image_source,
+                    docker_image=self.agent_config.pdr_backend_image_source,
                     cpu=predictoor.cpu,
                     memory=predictoor.memory,
                     private_key=predictoor.private_key,
