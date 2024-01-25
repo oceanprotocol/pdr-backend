@@ -35,8 +35,11 @@ class CloudProvider(ABC):
     @abstractmethod
     def cluster_exists(self, cluster_name) -> bool:
         pass
+
+
 def sanitize_name(name):
     return name.replace("_", "-")
+
 
 class GCPProvider(CloudProvider):
     def __init__(self, zone, project_id):
@@ -149,10 +152,14 @@ def check_requirements(provider_name):
         # check if az is installed
         if not shutil.which("az"):
             raise Exception("az is not installed")
+
+
 def check_image_build_requirements():
     # check if docker is installed
     if not shutil.which("docker"):
         raise Exception("docker is not installed")
+
+
 def build_and_push_docker_image(
     provider: CloudProvider, image_name, image_tag, registry_name
 ):
@@ -168,9 +175,17 @@ def build_and_push_docker_image(
 def deploy_agents_to_k8s(config_folder: str):
     print("Deploying agents...")
     run_command(f"kubectl apply -f {config_folder}/")
+
+
 def deploy_cluster(provider: CloudProvider, cluster_name):
     cluster_name = sanitize_name(cluster_name)
     if not provider.cluster_exists(cluster_name):
         print("Creating Kubernetes cluster...")
         provider.create_kubernetes_cluster(cluster_name)
 
+
+def deploy_registry(provider: CloudProvider, registry_name):
+    registry_name = sanitize_name(registry_name)
+    if not provider.registry_exists(registry_name):
+        print("Creating container registry...")
+        provider.create_container_registry(registry_name)
