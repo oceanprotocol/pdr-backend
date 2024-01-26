@@ -105,6 +105,7 @@ def deploy_existing_config(config_file: str, cloud_provider: CloudProvider):
     deployment_folder = deploymentinfo.foldername
     deploy_agents_to_k8s(deployment_folder)
 
+
 def destroy_existing_config(config_file: str, cloud_provider: CloudProvider):
     deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
     deployment_name = deploymentinfo.config_name
@@ -139,6 +140,7 @@ def add_remote_parsers(subparser):
         required=False,
     )
 
+
 def get_provider(args):
     if args.provider == "gcp":
         if not args.project_id:
@@ -151,6 +153,7 @@ def get_provider(args):
     else:
         raise Exception(f"Unknown provider {args.provider}")
     return provider
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -188,7 +191,7 @@ def main():
 
     # Adding the 'build' command
     parser_build = subparsers.add_parser("build", help="build help")
-    
+
     # Adding the 'push' command
     parser_push = subparsers.add_parser("push", help="push help")
     parser_push.add_argument("registry_name", help="Registry name")

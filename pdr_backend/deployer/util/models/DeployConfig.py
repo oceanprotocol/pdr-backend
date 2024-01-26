@@ -3,7 +3,9 @@ from typing import List, Optional, Tuple
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
 from pdr_backend.deployer.util.models.DeployFile import DeployFile
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
-from pdr_backend.deployer.util.templates.docker_compose import get_docker_compose_template
+from pdr_backend.deployer.util.templates.docker_compose import (
+    get_docker_compose_template,
+)
 from pdr_backend.deployer.util.templates.k8s import get_k8s_predictoor_template
 from pdr_backend.deployer.util.templates.pm2 import get_pm2_deploy_template
 
