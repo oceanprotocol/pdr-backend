@@ -125,10 +125,10 @@ _ETL_PREDICTIONS_TUPS = [
         None,
         None,
         None,
-        1698865200,  # Nov 01 2023 19:00:00 GMT
+        1698865100,  # Nov 01 2023 19:00:00 GMT
         "binance",
         None,
-        1698865100,
+        1698865200,
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (

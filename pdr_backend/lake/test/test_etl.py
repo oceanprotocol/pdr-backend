@@ -106,3 +106,10 @@ def test_etl_do_bronze_step(
     assert bronze_pdr_predictions_df["contract"][0] == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     assert bronze_pdr_predictions_df["contract"][0] == _gql_datafactory_etl_predictions_df["contract"][1]
     assert bronze_pdr_predictions_df["contract"][1] == _gql_datafactory_etl_predictions_df["contract"][2]
+
+    assert bronze_pdr_predictions_df["timestamp"][0] == 1698951500000
+    assert bronze_pdr_predictions_df["timestamp"][1] == 1699037900000
+
+    # Assert that the last_event_timestamp == payout.timestamp
+    # assert bronze_pdr_predictions_df["last_event_timestamp"][0] == 1698865202000
+    # assert bronze_pdr_predictions_df["last_event_timestamp"][1] == 1698951602000

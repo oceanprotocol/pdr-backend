@@ -26,54 +26,13 @@ bronze_pdr_predictions_schema = {
     "stake": Float64,
     "truevalue": Boolean,
     "timestamp": Int64,
+    "last_event_timestamp": Int64,
     "source": Utf8,
     "payout": Float64,
     "revenue": Float64,
     "slot": Int64,
     "user": Utf8,
 }
-
-
-def _process_predictions(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
-    """
-    @description
-        Perform post-fetch processing on the data.
-        1. Find predictions within the update
-        2. Transform prediction as needed
-        3. Add predictions to the existing bronze_pdr_predictions table
-        4. Update predictions that already exist in the bronze_pdr_predictions table
-    """
-    predictions_df, predictions_ids = pick_df_and_ids_on_period(
-        target=dfs["pdr_predictions"],
-        start_timestamp=ppss.lake_ss.st_timestamp,
-        finish_timestamp=ppss.lake_ss.fin_timestamp,
-    )
-
-    def get_slot_id(_id: str) -> str:
-        slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
-        return f"{slot_id}"
-
-    # transform from raw to bronze prediction
-    bronze_predictions_df = predictions_df.with_columns(
-        [
-            pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
-            pl.col("prediction").alias("predvalue"),
-            pl.col("trueval").alias("truevalue"),
-            pl.lit(None).alias("revenue"),
-        ]
-    ).select(bronze_pdr_predictions_schema)
-
-    bronze_predictions_df = _transform_timestamp_to_ms(bronze_predictions_df)
-
-    # Append new predictions
-    # Upsert existing predictions
-    cur_bronze = dfs[bronze_pdr_predictions_table_name]
-    df = pl.concat([cur_bronze, bronze_predictions_df])
-    df = df.filter(pl.struct("ID").is_unique())
-    dfs[bronze_pdr_predictions_table_name] = df
-    return dfs
 
 
 def _process_payouts(
@@ -100,11 +59,60 @@ def _process_payouts(
         other=payouts_df,
         w_columns=[
             pl.col("predvalue").alias("prediction"),
+            pl.col("timestamp").alias("last_event_timestamp"),
         ],
         select_columns=bronze_pdr_predictions_schema.keys(),
     )
 
     dfs[bronze_pdr_predictions_table_name] = predictions_df
+    return dfs
+
+
+def _process_predictions(
+    dfs: Dict[str, pl.DataFrame], ppss: PPSS
+) -> Dict[str, pl.DataFrame]:
+    """
+    @description
+        Perform post-fetch processing on the data.
+        1. Find predictions within the update
+        2. Transform prediction as needed
+        3. Add predictions to the existing bronze_pdr_predictions table
+        4. Update predictions that already exist in the bronze_pdr_predictions table
+    """
+    print(">>>>> dfs:", dfs)
+
+    predictions_df, predictions_ids = pick_df_and_ids_on_period(
+        target=dfs["pdr_predictions"],
+        start_timestamp=ppss.lake_ss.st_timestamp,
+        finish_timestamp=ppss.lake_ss.fin_timestamp,
+    )
+
+    print(">>>>> predictions_df:", predictions_df)
+
+    def get_slot_id(_id: str) -> str:
+        slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
+        return f"{slot_id}"
+
+    # transform from raw to bronze_prediction
+    bronze_predictions_df = predictions_df.with_columns(
+        [
+            pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
+            pl.col("prediction").alias("predvalue"),
+            pl.col("trueval").alias("truevalue"),
+            pl.lit(None).alias("revenue"),
+            pl.col("timestamp").alias("timestamp"),
+            pl.col("timestamp").alias("last_event_timestamp"),
+        ]
+    ).select(bronze_pdr_predictions_schema)
+
+    print(">>>>> bronze_predictions_df:", bronze_predictions_df)
+
+    # Append new predictions
+    # Upsert existing predictions
+    cur_bronze = dfs[bronze_pdr_predictions_table_name]
+    df = pl.concat([cur_bronze, bronze_predictions_df])
+    df = df.filter(pl.struct("ID").is_unique())
+    dfs[bronze_pdr_predictions_table_name] = df
     return dfs
 
 
@@ -134,6 +142,7 @@ def _process_truevals(
         right_on="ID",
         w_columns=[
             pl.col("truevalue").alias("truevalue"),
+            pl.col("timestamp").alias("last_event_timestamp"),
         ],
         select_columns=bronze_pdr_predictions_schema.keys(),
     )
@@ -150,6 +159,7 @@ def get_bronze_pdr_predictions_df(
     @description
         Updates/Creates clean predictions from existing raw tables
     """
+
     # do post_sync processing
     gql_dfs = _process_predictions(gql_dfs, ppss)
     # gql_dfs = _process_payouts(gql_dfs, ppss)

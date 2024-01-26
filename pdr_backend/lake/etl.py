@@ -68,6 +68,8 @@ class ETL:
         """
         df = get_bronze_pdr_predictions_df(self.dfs, self.ppss)
 
+        print(">>>>> bronze_pdr_predictions_df:", df)
+
         filename = self.gql_data_factory._parquet_filename(
             bronze_pdr_predictions_table_name
         )
