@@ -1,13 +1,15 @@
 import os
+from typing import List
 
 import numpy as np
 from enforce_typing import enforce_types
 
+from pdr_backend.ppss.base_ss import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 
 @enforce_types
-class SimSS(StrMixin):
+class SimSS(StrMixin, CCXTExchangeMixin):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
@@ -21,6 +23,12 @@ class SimSS(StrMixin):
 
         if not (0 < int(self.test_n) < np.inf):  # pylint: disable=superfluous-parens
             raise ValueError(f"test_n={self.test_n}, must be an int >0 and <inf")
+
+        if self.tradetype not in self.allowed_tradetypes:
+            raise ValueError(
+                f"{self.tradetype} not in allowed tradetypes "
+                f"{', '.join(self.allowed_tradetypes)}"
+            )
 
     # --------------------------------
     # properties direct from yaml dict
@@ -39,3 +47,11 @@ class SimSS(StrMixin):
     @property
     def test_n(self) -> int:
         return self.d["test_n"]  # eg 200
+
+    @property
+    def tradetype(self) -> str:
+        return self.d.get("tradetype", "histmock")
+
+    @property
+    def allowed_tradetypes(self) -> List[str]:
+        return ["livemock", "livereal", "histmock"]

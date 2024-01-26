@@ -188,6 +188,13 @@ def mock_ppss(
                 "buy_amt": "10 USD",
             },
             "bot_only": {"min_buffer": 30, "max_tries": 10, "position_size": 3},
+            "exchange_only": {
+                "timeout": 30000,
+                "options": {
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot"
+                }
+            }
         }
     )
 

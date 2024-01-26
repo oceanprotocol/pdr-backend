@@ -1,4 +1,5 @@
 import copy
+from os import getenv
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import ccxt
@@ -8,7 +9,6 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
-from pdr_backend.util.mocks import MockExchange
 
 
 class MultiFeedMixin:
@@ -186,8 +186,23 @@ class SingleFeedMixin:
         return None
 
     @enforce_types
-    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
-        if not hasattr(self, "tradetype") or self.tradetype != "livemock":
-            return self.feed.ccxt_exchange(*args, **kwargs)
+    def ccxt_exchange(self) -> ccxt.Exchange:
+        mock = not hasattr(self, "tradetype") or self.tradetype != "livemock"
 
-        return MockExchange()
+        return self.feed.ccxt_exchange(
+            self.exchange_params,
+            mock=mock,
+        )
+
+
+class CCXTExchangeMixin:
+    @property
+    def exchange_params(self) -> Dict[str, str]:
+        d = {
+            "apiKey": getenv("EXCHANGE_API_KEY"),
+            "secret": getenv("EXCHANGE_SECRET_KEY"),
+        }
+
+        d.update(self.d["exchange_only"])
+
+        return d
