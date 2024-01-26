@@ -159,18 +159,16 @@ def check_image_build_requirements():
     if not shutil.which("docker"):
         raise Exception("docker is not installed")
 
-
-def build_and_push_docker_image(
-    provider: CloudProvider, image_name, image_tag, registry_name
-):
+def build_image(image_name, image_tag):
     print("Building docker image...")
     run_command(f"docker build -t {image_name}:{image_tag} .")
+
+def push_image(image_name, image_tag, registry_name):
     print("Pushing docker image...")
     run_command(
         f"docker tag {image_name}:{image_tag} {registry_name}/{image_name}:{image_tag}"
     )
     run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
-
 
 def deploy_agents_to_k8s(config_folder: str):
     print("Deploying agents...")
