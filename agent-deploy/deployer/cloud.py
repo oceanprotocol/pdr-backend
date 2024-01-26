@@ -199,3 +199,17 @@ def deploy_registry(provider: CloudProvider, registry_name):
     if not provider.registry_exists(registry_name):
         print("Creating container registry...")
         provider.create_container_registry(registry_name)
+
+def delete_all_pods(provider: CloudProvider, cluster_name):
+    cluster_name = sanitize_name(cluster_name)
+    if provider.cluster_exists(cluster_name):
+        print("Deleting all pods...")
+        command = f"kubectl delete pods --all"
+        run_command(command)
+
+def cluster_logs(provider: CloudProvider, cluster_name, app_name):
+    cluster_name = sanitize_name(cluster_name)
+    if provider.cluster_exists(cluster_name):
+        print("Getting cluster logs...")
+        command = f"kubectl logs -l app={app_name}"
+        run_command(command)
