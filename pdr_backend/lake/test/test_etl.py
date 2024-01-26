@@ -99,13 +99,22 @@ def test_etl_do_bronze_step(
     # assert bronze_pdr_predictions_df is created
     # it should have 5 rows because of st_timestr and fin_timestr
     assert len(etl.dfs["bronze_pdr_predictions"]) == 4
-    
+
     bronze_pdr_predictions_df = etl.dfs["bronze_pdr_predictions"]
-    
+
     # Assert that "contract" column was created and filled correctly
-    assert bronze_pdr_predictions_df["contract"][0] == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
-    assert bronze_pdr_predictions_df["contract"][0] == _gql_datafactory_etl_predictions_df["contract"][1]
-    assert bronze_pdr_predictions_df["contract"][1] == _gql_datafactory_etl_predictions_df["contract"][2]
+    assert (
+        bronze_pdr_predictions_df["contract"][0]
+        == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
+    )
+    assert (
+        bronze_pdr_predictions_df["contract"][0]
+        == _gql_datafactory_etl_predictions_df["contract"][1]
+    )
+    assert (
+        bronze_pdr_predictions_df["contract"][1]
+        == _gql_datafactory_etl_predictions_df["contract"][2]
+    )
 
     # Assert that the timestamp is in ms
     assert bronze_pdr_predictions_df["timestamp"][0] == 1698951500000
