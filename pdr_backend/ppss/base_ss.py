@@ -198,6 +198,8 @@ class SingleFeedMixin:
 class CCXTExchangeMixin:
     @property
     def exchange_params(self) -> Dict[str, str]:
+        assert hasattr(self, "d")
+
         d = {
             "apiKey": getenv("EXCHANGE_API_KEY"),
             "secret": getenv("EXCHANGE_SECRET_KEY"),

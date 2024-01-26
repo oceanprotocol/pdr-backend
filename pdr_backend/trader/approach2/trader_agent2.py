@@ -31,19 +31,7 @@ class TraderAgent2(BaseTraderAgent):
             self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
-        self.exchange: ccxt.Exchange = self.ppss.trader_ss.feed.ccxt_exchange(
-            {
-                "apiKey": getenv("EXCHANGE_API_KEY"),
-                "secret": getenv("EXCHANGE_SECRET_KEY"),
-                "timeout": 30000,
-                "options": {
-                    # We're going to enable spot market purchases w/ default price
-                    # Disable safety w/ createMarketBuyOrderRequiresPrice
-                    "createMarketBuyOrderRequiresPrice": False,
-                    "defaultType": "spot",
-                },
-            }
-        )
+        self.exchange: ccxt.Exchange = self.ppss.trader_ss.ccxt_exchange()
 
         self.update_positions([self.feed.address])
 

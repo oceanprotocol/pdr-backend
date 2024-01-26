@@ -1,5 +1,4 @@
 from typing import Dict, List, Union
-from os import getenv
 
 from enforce_typing import enforce_types
 

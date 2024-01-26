@@ -27,4 +27,3 @@ class MockExchange(ccxt.Exchange):
 
     def __str__(self):
         return "mocked exchange"
-
