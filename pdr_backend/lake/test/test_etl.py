@@ -124,6 +124,13 @@ def test_etl_do_bronze_step(
     assert bronze_pdr_predictions_df["last_event_timestamp"][0] == _gql_datafactory_etl_payouts_df["timestamp"][1]
     assert bronze_pdr_predictions_df["last_event_timestamp"][1] == _gql_datafactory_etl_payouts_df["timestamp"][2]
 
+    # Assert predictions.truevalue == gql truevals_df
+    assert bronze_pdr_predictions_df["truevalue"][0] == True
+    assert bronze_pdr_predictions_df["truevalue"][1] == False
+
+    assert bronze_pdr_predictions_df["truevalue"][0] == _gql_datafactory_etl_truevals_df["trueval"][1]
+    assert bronze_pdr_predictions_df["truevalue"][1] == _gql_datafactory_etl_truevals_df["trueval"][2]
+
     # Assert payout ts > prediction ts
     assert bronze_pdr_predictions_df["last_event_timestamp"][0] > bronze_pdr_predictions_df["timestamp"][0]
     assert bronze_pdr_predictions_df["last_event_timestamp"][1] > bronze_pdr_predictions_df["timestamp"][1]

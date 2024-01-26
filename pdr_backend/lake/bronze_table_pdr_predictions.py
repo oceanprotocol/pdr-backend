@@ -100,13 +100,14 @@ def _process_payouts(
         columns_to_drop=[],
     )
 
+    # do work to join from pdr_payout onto bronze_pdr_predictions
     predictions_df = predictions_df.join(payouts_df,on=["ID"],how="left")\
-    .with_columns(
+    .with_columns([
         pl.col("payout_right").fill_null(pl.col("payout")),
         pl.col("predictedValue").fill_null(pl.col("predvalue")),
         pl.col("stake_right").fill_null(pl.col("stake")),
         pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
-    )\
+    ])\
     .drop(["payout","predvalue","stake", "last_event_timestamp"])\
     .rename({
         "payout_right": "payout",
@@ -126,31 +127,34 @@ def _process_truevals(
     """
     Perform post-fetch processing on the data
     """
+    # get truevals within the update
     truevals_df, truevals_ids = pick_df_and_ids_on_period(
         target=dfs["pdr_truevals"],
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
-    predictions_df = filter_and_drop_columns(
-        df=dfs[bronze_pdr_predictions_table_name],
-        target_column="slot_id",
-        ids=truevals_ids,
-        columns_to_drop=["truevalue"],
-    )
+    # get existing bronze_predictions we'll be updating
+    predictions_df = dfs[bronze_pdr_predictions_table_name]
 
-    predictions_df = left_join_with(
-        target=predictions_df,
-        other=truevals_df,
+    # do work to join from pdr_truevals onto bronze_pdr_predictions
+    predictions_df = predictions_df.join(
+        truevals_df,
         left_on="slot_id",
         right_on="ID",
-        w_columns=[
-            pl.col("truevalue").alias("truevalue"),
-            pl.col("timestamp").alias("last_event_timestamp"),
-        ],
-        select_columns=bronze_pdr_predictions_schema.keys(),
-    )
+        how="left"
+    ).with_columns([
+        pl.col("trueval").fill_null(pl.col("truevalue")),
+        pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
+    ])\
+    .drop(["truevalue", "last_event_timestamp"])\
+    .rename({
+        "trueval": "truevalue",
+        "timestamp_right": "last_event_timestamp",
+    })\
+    .select(bronze_pdr_predictions_schema.keys())
 
+    # update the predictions_df
     dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 
@@ -166,9 +170,9 @@ def get_bronze_pdr_predictions_df(
 
     # do post_sync processing
     gql_dfs = _process_predictions(gql_dfs, ppss)
+    gql_dfs = _process_truevals(gql_dfs, ppss)
     gql_dfs = _process_payouts(gql_dfs, ppss)
-    # gql_dfs = _process_truevals(gql_dfs, ppss)
-
+    
     # # cull any records outside of our time range and sort them by timestamp
     # df = df.filter(
     #     pl.col("timestamp").is_between(
