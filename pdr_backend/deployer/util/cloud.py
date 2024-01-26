@@ -81,11 +81,35 @@ class AWSProvider(CloudProvider):
     def __init__(self, region):
         self.region = region
 
-    def create_container_registry(self):
+    def create_container_registry(self, registry_name):
         print("Creating container registry in AWS...")
+        command = f"aws ecr create-repository --repository-name {registry_name}"
+        run_command(command)
 
-    def create_kubernetes_cluster(self):
+    def create_kubernetes_cluster(self, cluster_name):
         print("Creating Kubernetes cluster in AWS...")
+        command = f"eksctl create cluster --name {cluster_name} --region {self.region}"
+        run_command(command)
+
+    def delete_registry(self, registry_name):
+        print("Destroying container registry...")
+        command = f"aws ecr delete-repository --repository-name {registry_name}"
+        run_command(command)
+
+    def delete_kubernetes_cluster(self, cluster_name):
+        print("Destroying Kubernetes cluster...")
+        command = f"eksctl delete cluster --name {cluster_name} --region {self.region}"
+        run_command(command)
+
+    def registry_exists(self, registry_name):
+        command = f"aws ecr describe-repositories --repository-names {registry_name}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        return result.returncode == 0
+
+    def cluster_exists(self, cluster_name):
+        command = f"eksctl get cluster --name {cluster_name} --region {self.region}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        return result.returncode == 0
 
 
 class AzureProvider(CloudProvider):
@@ -159,9 +183,11 @@ def check_image_build_requirements():
     if not shutil.which("docker"):
         raise Exception("docker is not installed")
 
+
 def build_image(image_name, image_tag):
     print("Building docker image...")
     run_command(f"docker build -t {image_name}:{image_tag} .")
+
 
 def push_image(image_name, image_tag, registry_name):
     print("Pushing docker image...")
@@ -169,6 +195,7 @@ def push_image(image_name, image_tag, registry_name):
         f"docker tag {image_name}:{image_tag} {registry_name}/{image_name}:{image_tag}"
     )
     run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
+
 
 def deploy_agents_to_k8s(config_folder: str):
     print("Deploying agents...")
@@ -180,6 +207,7 @@ def deploy_cluster(provider: CloudProvider, cluster_name):
     if not provider.cluster_exists(cluster_name):
         print("Creating Kubernetes cluster...")
         provider.create_kubernetes_cluster(cluster_name)
+
 
 def destroy_cluster(provider: CloudProvider, cluster_name):
     cluster_name = sanitize_name(cluster_name)
@@ -194,11 +222,13 @@ def destroy_cluster(provider: CloudProvider, cluster_name):
             print("Not destroying the cluster")
             delete_all_pods(provider, cluster_name)
 
+
 def deploy_registry(provider: CloudProvider, registry_name):
     registry_name = sanitize_name(registry_name)
     if not provider.registry_exists(registry_name):
         print("Creating container registry...")
         provider.create_container_registry(registry_name)
+
 
 def delete_all_pods(provider: CloudProvider, cluster_name):
     cluster_name = sanitize_name(cluster_name)
@@ -206,6 +236,7 @@ def delete_all_pods(provider: CloudProvider, cluster_name):
         print("Deleting all pods...")
         command = f"kubectl delete pods --all"
         run_command(command)
+
 
 def cluster_logs(provider: CloudProvider, cluster_name, app_name):
     cluster_name = sanitize_name(cluster_name)
