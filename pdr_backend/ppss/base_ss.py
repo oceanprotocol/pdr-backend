@@ -1,6 +1,6 @@
 import copy
 from os import getenv
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import ccxt
 from enforce_typing import enforce_types
@@ -187,6 +187,8 @@ class SingleFeedMixin:
 
     @enforce_types
     def ccxt_exchange(self) -> ccxt.Exchange:
+        assert hasattr(self, "exchange_params")
+
         mock = not hasattr(self, "tradetype") or self.tradetype != "livemock"
 
         return self.feed.ccxt_exchange(
@@ -197,14 +199,14 @@ class SingleFeedMixin:
 
 class CCXTExchangeMixin:
     @property
-    def exchange_params(self) -> Dict[str, str]:
+    def exchange_params(self) -> Dict[str, Any]:
         assert hasattr(self, "d")
 
-        d = {
+        exc_d = {
             "apiKey": getenv("EXCHANGE_API_KEY"),
             "secret": getenv("EXCHANGE_SECRET_KEY"),
         }
 
-        d.update(self.d["exchange_only"])
+        exc_d.update(self.d["exchange_only"])
 
-        return d
+        return exc_d

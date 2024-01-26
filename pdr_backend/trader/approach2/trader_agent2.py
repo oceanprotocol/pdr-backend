@@ -1,5 +1,4 @@
 from datetime import datetime
-from os import getenv
 from typing import List, Optional, Tuple, Union
 
 import ccxt

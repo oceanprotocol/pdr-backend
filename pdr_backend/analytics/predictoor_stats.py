@@ -229,9 +229,11 @@ def calculate_slot_daily_statistics(
     slots_daily_df = (
         slots_df.group_by(["pair_timeframe", "datetime"])
         .map_groups(
-            lambda df: get_mean_slots_slots_df(df.sample(5))
-            if len(df) > 5
-            else get_mean_slots_slots_df(df)
+            lambda df: (
+                get_mean_slots_slots_df(df.sample(5))
+                if len(df) > 5
+                else get_mean_slots_slots_df(df)
+            )
         )
         .group_by("datetime")
         .agg(
