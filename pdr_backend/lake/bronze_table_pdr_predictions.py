@@ -35,39 +35,6 @@ bronze_pdr_predictions_schema = {
 }
 
 
-def _process_payouts(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
-    """
-    Perform post-fetch processing on the data
-    """
-    payouts_df, payouts_ids = pick_df_and_ids_on_period(
-        target=dfs["pdr_payouts"],
-        start_timestamp=ppss.lake_ss.st_timestamp,
-        finish_timestamp=ppss.lake_ss.fin_timestamp,
-    )
-
-    predictions_df = filter_and_drop_columns(
-        df=dfs[bronze_pdr_predictions_table_name],
-        target_column="ID",
-        ids=payouts_ids,
-        columns_to_drop=["payout", "prediction"],
-    )
-
-    predictions_df = left_join_with(
-        target=predictions_df,
-        other=payouts_df,
-        w_columns=[
-            pl.col("predvalue").alias("prediction"),
-            pl.col("timestamp").alias("last_event_timestamp"),
-        ],
-        select_columns=bronze_pdr_predictions_schema.keys(),
-    )
-
-    dfs[bronze_pdr_predictions_table_name] = predictions_df
-    return dfs
-
-
 def _process_predictions(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
@@ -75,19 +42,14 @@ def _process_predictions(
     @description
         Perform post-fetch processing on the data.
         1. Find predictions within the update
-        2. Transform prediction as needed
-        3. Add predictions to the existing bronze_pdr_predictions table
-        4. Update predictions that already exist in the bronze_pdr_predictions table
+        2. Transform predictions to bronze
+        3. Concat to existing table
     """
-    print(">>>>> dfs:", dfs)
-
-    predictions_df, predictions_ids = pick_df_and_ids_on_period(
+    predictions_df, _ = pick_df_and_ids_on_period(
         target=dfs["pdr_predictions"],
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
-
-    print(">>>>> predictions_df:", predictions_df)
 
     def get_slot_id(_id: str) -> str:
         slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
@@ -105,7 +67,7 @@ def _process_predictions(
         ]
     ).select(bronze_pdr_predictions_schema)
 
-    print(">>>>> bronze_predictions_df:", bronze_predictions_df)
+    print(">>>> _process_predictions bronze_predictions_df:", bronze_predictions_df)
 
     # Append new predictions
     # Upsert existing predictions
@@ -113,6 +75,51 @@ def _process_predictions(
     df = pl.concat([cur_bronze, bronze_predictions_df])
     df = df.filter(pl.struct("ID").is_unique())
     dfs[bronze_pdr_predictions_table_name] = df
+    return dfs
+
+
+def _process_payouts(
+    dfs: Dict[str, pl.DataFrame], ppss: PPSS
+) -> Dict[str, pl.DataFrame]:
+    """
+    @description
+        Perform post-fetch processing on the data
+        1. Find payouts within the update
+
+    """
+    payouts_df, payouts_ids = pick_df_and_ids_on_period(
+        target=dfs["pdr_payouts"],
+        start_timestamp=ppss.lake_ss.st_timestamp,
+        finish_timestamp=ppss.lake_ss.fin_timestamp,
+    )
+
+    print(">>>>_process_payouts payouts_df:", payouts_df)
+
+    predictions_df = filter_and_drop_columns(
+        df=dfs[bronze_pdr_predictions_table_name],
+        target_column="ID",
+        ids=payouts_ids,
+        columns_to_drop=["payout", "predvalue"],
+    )
+
+    print(">>>>_process_payouts predictions_df filter:", predictions_df)
+
+    predictions_df = left_join_with(
+        target=predictions_df,
+        other=payouts_df,
+        w_columns=[
+            pl.col("predictedValue").alias("predvalue"),
+            pl.col("timestamp").alias("last_event_timestamp"),
+        ],
+        select_columns=bronze_pdr_predictions_schema.keys(),
+    )
+
+    print(">>>>_process_payouts predictions_df left_join:", predictions_df)
+    print(">>> columns:", predictions_df.columns)
+    print(">>> timestamp:", predictions_df["timestamp"])
+    print(">>> last_event_timestamp:", predictions_df["last_event_timestamp"])
+
+    dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 
 
@@ -162,10 +169,8 @@ def get_bronze_pdr_predictions_df(
 
     # do post_sync processing
     gql_dfs = _process_predictions(gql_dfs, ppss)
-    # gql_dfs = _process_payouts(gql_dfs, ppss)
+    gql_dfs = _process_payouts(gql_dfs, ppss)
     # gql_dfs = _process_truevals(gql_dfs, ppss)
-
-    # df = _transform_timestamp_to_ms(gql_dfs[bronze_pdr_predictions_table_name])
 
     # # cull any records outside of our time range and sort them by timestamp
     # df = df.filter(

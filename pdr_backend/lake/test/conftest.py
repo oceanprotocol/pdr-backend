@@ -59,9 +59,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152-1698951600-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1698951600,  # slot # Nov 02 2023 19:00:00 GMT
-        "BTC/USDT",  # token
         1698951602,  # timestamp
+        "BTC/USDT",  # token
+        1698951600,  # slot # Nov 02 2023 19:00:00 GMT
         10.928642693189679,  # payout
         False,  # predictedValue
         # False,  # trueValue
@@ -73,9 +73,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1699038000-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699038000,  # slot # Nov 03 2023 19:00:00 GMT
-        "ADA/USDT",  # token
         1699038002,  # timestamp
+        "ADA/USDT",  # token
+        1699038000,  # slot # Nov 03 2023 19:00:00 GMT
         7.041434095860760067,  # payout
         False,  # predictedValue
         # False,  # trueValue
