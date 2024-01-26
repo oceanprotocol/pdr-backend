@@ -29,7 +29,6 @@ bronze_pdr_predictions_schema = {
     "last_event_timestamp": Int64,
     "source": Utf8,
     "payout": Float64,
-    "revenue": Float64,
     "slot": Int64,
     "user": Utf8,
 }
@@ -61,7 +60,6 @@ def _process_predictions(
             pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
             pl.col("prediction").alias("predvalue"),
             pl.col("trueval").alias("truevalue"),
-            pl.lit(None).alias("revenue"),
             pl.col("timestamp").alias("timestamp"),
             pl.col("timestamp").alias("last_event_timestamp"),
         ]
@@ -87,38 +85,37 @@ def _process_payouts(
         1. Find payouts within the update
 
     """
+    # get payouts within the update
     payouts_df, payouts_ids = pick_df_and_ids_on_period(
         target=dfs["pdr_payouts"],
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
-    print(">>>>_process_payouts payouts_df:", payouts_df)
-
+    # get bronze_predictions we'll be updating
     predictions_df = filter_and_drop_columns(
         df=dfs[bronze_pdr_predictions_table_name],
         target_column="ID",
         ids=payouts_ids,
-        columns_to_drop=["payout", "predvalue"],
+        columns_to_drop=[],
     )
 
-    print(">>>>_process_payouts predictions_df filter:", predictions_df)
-
-    predictions_df = left_join_with(
-        target=predictions_df,
-        other=payouts_df,
-        w_columns=[
-            pl.col("predictedValue").alias("predvalue"),
-            pl.col("timestamp").alias("last_event_timestamp"),
-        ],
-        select_columns=bronze_pdr_predictions_schema.keys(),
-    )
-
-    print(">>>>_process_payouts predictions_df left_join:", predictions_df)
-    print(">>> columns:", predictions_df.columns)
-    print(">>> timestamp:", predictions_df["timestamp"])
-    print(">>> last_event_timestamp:", predictions_df["last_event_timestamp"])
-
+    predictions_df = predictions_df.join(payouts_df,on=["ID"],how="left")\
+    .with_columns(
+        pl.col("payout_right").fill_null(pl.col("payout")),
+        pl.col("predictedValue").fill_null(pl.col("predvalue")),
+        pl.col("stake_right").fill_null(pl.col("stake")),
+        pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
+    )\
+    .drop(["payout","predvalue","stake", "last_event_timestamp"])\
+    .rename({
+        "payout_right": "payout",
+        "predictedValue": "predvalue",
+        "stake_right": "stake",
+        "timestamp_right": "last_event_timestamp",
+    })\
+    .select(bronze_pdr_predictions_schema.keys())
+    
     dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 

@@ -115,7 +115,6 @@ _ETL_PAYOUT_TUPS = [
 ]
 
 
-# Create test data fixture for etl tests
 # pylint: disable=line-too-long
 _ETL_PREDICTIONS_TUPS = [
     (

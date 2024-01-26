@@ -125,5 +125,5 @@ def test_etl_do_bronze_step(
     assert round(bronze_pdr_predictions_df["payout"][1], 3) == 7.041
 
     # Assert that the last_event_timestamp == payout.timestamp
-    # assert bronze_pdr_predictions_df["last_event_timestamp"][0] == 1698865202000
-    # assert bronze_pdr_predictions_df["last_event_timestamp"][1] == 1698951602000
+    assert bronze_pdr_predictions_df["last_event_timestamp"][0] == 1698951602000
+    assert bronze_pdr_predictions_df["last_event_timestamp"][1] == 1699038002000
