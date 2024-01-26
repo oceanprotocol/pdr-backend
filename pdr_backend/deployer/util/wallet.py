@@ -2,7 +2,7 @@ import json
 import os
 from typing import List
 from attr import dataclass
-from deployer.constants import KEY_FILE
+from pdr_backend.deployer.util.constants import KEY_FILE
 from web3 import Web3
 from enforce_typing import enforce_types
 

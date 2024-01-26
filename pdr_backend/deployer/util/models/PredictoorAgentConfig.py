@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from deployer.models.AgentDeployConfig import AgentsDeployConfig
+from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
 
-from deployer.models.SingleAgentConfig import SingleAgentConfig
+from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 
 @dataclass

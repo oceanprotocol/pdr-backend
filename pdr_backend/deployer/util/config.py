@@ -1,8 +1,8 @@
 import yaml
-from deployer.models.AgentDeployConfig import AgentsDeployConfig
+from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
 
-from deployer.models.DeployConfig import DeployConfig
-from deployer.models.PredictoorAgentConfig import PredictoorAgentConfig
+from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
+from pdr_backend.deployer.util.models.PredictoorAgentConfig import PredictoorAgentConfig
 
 
 def parse_config(file_path: str, config_name: str) -> DeployConfig:

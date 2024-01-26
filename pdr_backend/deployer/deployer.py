@@ -6,13 +6,13 @@ import time
 
 import yaml
 
-from deployer.config import parse_config
-from deployer.models.AgentDeployConfig import AgentsDeployConfig
-from deployer.models.DeployConfig import DeployConfig
-from deployer.models.DeploymentInfo import DeploymentInfo
-from deployer.models.DeploymentMethod import DeploymentMethod
-from deployer.wallet import generate_new_keys, read_keys_json
-from deployer.cloud import (
+from pdr_backend.deployer.util.config import parse_config
+from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
+from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
+from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
+from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
+from pdr_backend.deployer.util.wallet import generate_new_keys, read_keys_json
+from pdr_backend.deployer.util.cloud import (
     AWSProvider,
     AzureProvider,
     CloudProvider,
@@ -24,7 +24,7 @@ from deployer.cloud import (
     destroy_cluster,
     push_image,
 )
-from deployer.cloud import (
+from pdr_backend.deployer.util.cloud import (
     check_requirements as check_cloud_requirements,
     check_image_build_requirements,
 )

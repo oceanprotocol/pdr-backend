@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from deployer.models.DeploymentMethod import DeploymentMethod
+from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
 
 
 @dataclass
