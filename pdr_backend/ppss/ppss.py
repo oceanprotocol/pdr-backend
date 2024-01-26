@@ -192,9 +192,9 @@ def mock_ppss(
                 "timeout": 30000,
                 "options": {
                     "createMarketBuyOrderRequiresPrice": False,
-                    "defaultType": "spot"
-                }
-            }
+                    "defaultType": "spot",
+                },
+            },
         }
     )
 

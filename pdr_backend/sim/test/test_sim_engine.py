@@ -48,9 +48,9 @@ def test_sim_engine(tmpdir):
                 "timeout": 30000,
                 "options": {
                     "createMarketBuyOrderRequiresPrice": False,
-                    "defaultType": "spot"
-                }
-            }
+                    "defaultType": "spot",
+                },
+            },
         }
     )
 
