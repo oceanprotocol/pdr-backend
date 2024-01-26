@@ -181,6 +181,18 @@ def deploy_cluster(provider: CloudProvider, cluster_name):
         print("Creating Kubernetes cluster...")
         provider.create_kubernetes_cluster(cluster_name)
 
+def destroy_cluster(provider: CloudProvider, cluster_name):
+    cluster_name = sanitize_name(cluster_name)
+    if provider.cluster_exists(cluster_name):
+        should_destroy_cluster = input(
+            "Deleting all the pods. Would you like to destroy the cluster? (y/n): "
+        )
+        if should_destroy_cluster == "y":
+            provider.delete_kubernetes_cluster(cluster_name)
+            print("Destroying Kubernetes cluster...")
+        else:
+            print("Not destroying the cluster")
+            delete_all_pods(provider, cluster_name)
 
 def deploy_registry(provider: CloudProvider, registry_name):
     registry_name = sanitize_name(registry_name)
