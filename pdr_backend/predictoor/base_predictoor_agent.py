@@ -11,7 +11,6 @@ from pdr_backend.util.mathutil import sole_value
 
 
 class BasePredictoorAgent(ABC):
-
     """
     What it does
     - Fetches Predictoor contracts from subgraph, and filters them
