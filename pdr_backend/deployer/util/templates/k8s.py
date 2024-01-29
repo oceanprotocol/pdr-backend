@@ -15,8 +15,7 @@ def get_k8s_predictoor_template(
     app = app.lower()
     name = name.lower()
     for arg in run_command[1:]:
-        arg_escaped = arg.replace('"', '\\"')
-        run_command_args += f'          - "{arg_escaped}"\n'
+        run_command_args += f'          - {arg}\n'
     template = f"""apiVersion: apps/v1
 kind: Deployment
 metadata:
