@@ -83,20 +83,9 @@ def generate_deployment_templates(
     deploymentinfo.write("./.deployments")
 
 
-def deploy_existing_config(config_file: str, cloud_provider: CloudProvider):
+def deploy_config(config_file: str, cloud_provider: CloudProvider):
     deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
     deployment_name = deploymentinfo.config_name
-    should_build_image = False
-    image_name = deploymentinfo.config["deployment_configs"][deployment_name][
-        "pdr_backend_image_source"
-    ]
-
-    if not image_name.startswith("oceanprotocol/"):
-        check_image_build_requirements()
-        should_build_image = True
-
-    if should_build_image:
-        raise Exception("Image build is not supported yet")
 
     print(f"Deploying {deployment_name}...")
     deploy_cluster(cloud_provider, deployment_name)
@@ -104,6 +93,14 @@ def deploy_existing_config(config_file: str, cloud_provider: CloudProvider):
     print(f"Cluster is ready, deploying the agents...")
     deployment_folder = deploymentinfo.foldername
     deploy_agents_to_k8s(deployment_folder)
+
+    deploymentinfo.deployments[cloud_provider.json["type"]] = cloud_provider.json
+    deploymentinfo.deployments[cloud_provider.json["type"]].update({
+        "deployment_name": deployment_name,
+        "deployment_ts": int(time.time()),
+        "deployment_method": deploymentinfo.deployment_method,
+    })
+    deploymentinfo.write("./.deployments")
 
 
 def destroy_existing_config(config_file: str, cloud_provider: CloudProvider):
@@ -126,7 +123,7 @@ def add_remote_parsers(subparser):
     subparser.add_argument(
         "-r",
         "--region",
-        required=True,
+        required=False,
         help="Deployment zone/region",
     )
     subparser.add_argument(
@@ -142,6 +139,10 @@ def add_remote_parsers(subparser):
 
 
 def get_provider(args):
+    config =  DeploymentInfo.read("./.deployments", args.config_name)
+    if config.deployments.get(args.provider):
+        return CloudProvider.from_json(config.deployments[args.provider])
+
     if args.provider == "gcp":
         if not args.project_id:
             raise Exception("Google Cloud project id is required")
@@ -215,11 +216,11 @@ def main():
     elif args.command == "deploy":
         provider = get_provider(args)
         check_cloud_requirements(provider)
-        deploy_existing_config(args.config_name + "-k8s", provider)
+        deploy_config(args.config_name, provider)
     elif args.command == "destroy":
         provider = get_provider(args)
         check_cloud_requirements(provider)
-        destroy_existing_config(args.config_name + "-k8s", provider)
+        destroy_existing_config(args.config_name, provider)
     elif args.command == "logs":
         provider = get_provider(args)
         check_cloud_requirements(provider)
