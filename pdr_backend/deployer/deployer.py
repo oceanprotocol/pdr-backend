@@ -167,6 +167,10 @@ def main(args):
             deploy_registry(provider, args.registry_name)
         elif args.action == "destroy":
             delete_registry(provider, args.registry_name)
+        elif args.action == "url":
+            provider.print_registry_url(args.registry_name)
+        elif args.action == "auth":
+            provider.auth_registry(args.registry_name)
         else:
             raise Exception(f"Unknown subcommand {args.subcommand}")
 
