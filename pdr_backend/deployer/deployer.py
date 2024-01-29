@@ -19,8 +19,10 @@ from pdr_backend.deployer.util.cloud import (
     GCPProvider,
     build_image,
     cluster_logs,
+    delete_registry,
     deploy_agents_to_k8s,
     deploy_cluster,
+    deploy_registry,
     destroy_cluster,
     push_image,
 )
@@ -114,9 +116,10 @@ def destroy_existing_config(config_file: str, cloud_provider: CloudProvider):
 
 
 def get_provider(args):
-    config = DeploymentInfo.read("./.deployments", args.config_name)
-    if config.deployments.get(args.provider):
-        return CloudProvider.from_json(config.deployments[args.provider])
+    if hasattr(args, "config_name"):
+        config = DeploymentInfo.read("./.deployments", args.config_name)
+        if config.deployments.get(args.provider):
+            return CloudProvider.from_json(config.deployments[args.provider])
 
     if args.provider == "gcp":
         if not args.project_id:
@@ -157,14 +160,15 @@ def main(args):
     elif args.subcommand == "push":
         check_image_build_requirements()
         push_image(args.image_name, args.image_tag, args.registry_name, args.image_name)
-    elif args.subcommand == "deploy_registry":
+    elif args.subcommand == "registry":
         provider = get_provider(args)
         check_cloud_requirements(provider)
-        provider.deploy_registry(args.registry_name)
-    elif args.subcommand == "destroy_registry":
-        provider = get_provider(args)
-        check_cloud_requirements(provider)
-        provider.destroy_registry(args.registry_name)
+        if args.action == "deploy":
+            deploy_registry(provider, args.registry_name)
+        elif args.action == "destroy":
+            delete_registry(provider, args.registry_name)
+        else:
+            raise Exception(f"Unknown subcommand {args.subcommand}")
 
 
 if __name__ == "__main__":
