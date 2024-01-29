@@ -191,10 +191,14 @@ def main():
 
     # Adding the 'build' command
     parser_build = subparsers.add_parser("build", help="build help")
+    parser_build.add_argument("image_name", help="Image name", default="pdr_backend")
+    parser_build.add_argument("image_tag", help="Image tag", default="deployer")
 
     # Adding the 'push' command
     parser_push = subparsers.add_parser("push", help="push help")
     parser_push.add_argument("registry_name", help="Registry name")
+    parser_push.add_argument("image_name", help="Image name", default="pdr_backend")
+    parser_push.add_argument("image_tag", help="Image tag", default="deployer")
 
     # Parse the arguments
     args = parser.parse_args()
@@ -222,10 +226,10 @@ def main():
         cluster_logs(provider, args.config_name, "pdr-predictoor")
     elif args.command == "build":
         check_image_build_requirements()
-        build_image("pdr-backend", "deployer")
+        build_image(args.image_name, args.image_tag)
     elif args.command == "push":
         check_image_build_requirements()
-        push_image("pdr-backend", "deployer", args.registry_name)
+        push_image(args.image_name, args.image_tag, args.registry_name, args.image_name)
 
 
 if __name__ == "__main__":
