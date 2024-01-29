@@ -17,6 +17,14 @@ class CloudProvider(ABC):
         pass
 
     @abstractmethod
+    def print_registry_url(self, registry_name):
+        pass
+
+    @abstractmethod
+    def auth_registry(self, registry_name):
+        pass
+
+    @abstractmethod
     def create_kubernetes_cluster(self, cluster_name):
         pass
 
@@ -60,6 +68,16 @@ class GCPProvider(CloudProvider):
     def create_container_registry(self, registry_name):
         print("Creating container registry in GCP...")
         command = f"gcloud artifacts repositories create {registry_name} --repository-format=docker --location={self.zone} --project={self.project_id}"
+        run_command(command)
+
+    def print_registry_url(self, registry_name):
+        print("Printing container registry URL...")
+        command_url = f'gcloud artifacts repositories describe {registry_name} --location={self.zone} --project={self.project_id} --format="value(name)"'
+        run_command(command_url)
+
+    def auth_registry(self, registry_name):
+        print("Authenticating to container registry...")
+        command = f"gcloud auth configure-docker {self.zone}-docker.pkg.dev --quiet"
         run_command(command)
 
     def create_kubernetes_cluster(self, cluster_name):
@@ -112,6 +130,17 @@ class AWSProvider(CloudProvider):
         command = f"aws ecr create-repository --repository-name {registry_name}"
         run_command(command)
 
+    def print_registry_url(self, registry_name):
+        print("Printing container registry URL...")
+        print(
+            f"AWS ECR URL: {self.region}.dkr.ecr.{self.region}.amazonaws.com/{registry_name}"
+        )
+
+    def auth_registry(self, registry_name):
+        print("Authenticating to container registry...")
+        command = f"aws ecr get-login-password --region {self.region} | docker login --username AWS --password-stdin {self.region}.dkr.ecr.{self.region}.amazonaws.com"
+        run_command(command)
+
     def create_kubernetes_cluster(self, cluster_name):
         print("Creating Kubernetes cluster in AWS...")
         command = f"eksctl create cluster --name {cluster_name} --region {self.region}"
@@ -159,6 +188,15 @@ class AzureProvider(CloudProvider):
     def create_container_registry(self, registry_name):
         print("Creating container registry in Azure...")
         command = f"az acr create --name {registry_name} --resource-group {self.resource_group} --sku Basic"
+        run_command(command)
+
+    def print_registry_url(self, registry_name):
+        print("Printing container registry URL...")
+        print(f"Azure Container Registry URL: {registry_name}.azurecr.io")
+
+    def auth_registry(self, registry_name):
+        print("Authenticating to container registry...")
+        command = f"az acr login --name {registry_name} --resource-group {self.resource_group}"
         run_command(command)
 
     def create_kubernetes_cluster(self, cluster_name):
@@ -282,12 +320,16 @@ def deploy_registry(provider: CloudProvider, registry_name):
     if not provider.registry_exists(registry_name):
         print("Creating container registry...")
         provider.create_container_registry(registry_name)
+        provider.print_registry_url(registry_name)
+        provider.auth_registry(registry_name)
+
 
 def delete_registry(provider: CloudProvider, registry_name):
     registry_name = sanitize_name(registry_name)
     if provider.registry_exists(registry_name):
         print("Destroying container registry...")
         provider.delete_registry(registry_name)
+
 
 def delete_all_pods(provider: CloudProvider, cluster_name):
     cluster_name = sanitize_name(cluster_name)
