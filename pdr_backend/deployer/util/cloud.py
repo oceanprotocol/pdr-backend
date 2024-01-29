@@ -38,14 +38,15 @@ class CloudProvider(ABC):
 
     @classmethod
     def from_json(cls, data):
-        if 'type' in data:
-            if data['type'] == 'gcp':
+        if "type" in data:
+            if data["type"] == "gcp":
                 return GCPProvider.from_json(data)
-            elif data['type'] == 'azure':
+            elif data["type"] == "azure":
                 return AzureProvider.from_json(data)
-            elif data['type'] == 'aws':
+            elif data["type"] == "aws":
                 return AWSProvider.from_json(data)
         raise ValueError("Invalid JSON data for class instantiation")
+
 
 def sanitize_name(name):
     return name.replace("_", "-")
@@ -93,13 +94,14 @@ class GCPProvider(CloudProvider):
             "project_id": self.project_id,
             "zone": self.zone,
         }
-    
+
     @classmethod
     def from_json(cls, json):
         return cls(
-            json['zone'],
-            json['project_id'],
+            json["zone"],
+            json["project_id"],
         )
+
 
 class AWSProvider(CloudProvider):
     def __init__(self, region):
@@ -141,12 +143,13 @@ class AWSProvider(CloudProvider):
             "type": "aws",
             "region": self.region,
         }
-    
+
     @classmethod
     def from_json(cls, json):
         return cls(
-            json['region'],
+            json["region"],
         )
+
 
 class AzureProvider(CloudProvider):
     def __init__(self, subscription_id, resource_group):
@@ -194,12 +197,12 @@ class AzureProvider(CloudProvider):
             "subscription_id": self.subscription_id,
             "resource_group": self.resource_group,
         }
-    
+
     @classmethod
     def from_json(cls, json):
         return cls(
-            json['subscription_id'],
-            json['resource_group'],
+            json["subscription_id"],
+            json["resource_group"],
         )
 
 
