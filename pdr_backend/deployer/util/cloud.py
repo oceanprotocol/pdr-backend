@@ -283,6 +283,11 @@ def deploy_registry(provider: CloudProvider, registry_name):
         print("Creating container registry...")
         provider.create_container_registry(registry_name)
 
+def delete_registry(provider: CloudProvider, registry_name):
+    registry_name = sanitize_name(registry_name)
+    if provider.registry_exists(registry_name):
+        print("Destroying container registry...")
+        provider.delete_registry(registry_name)
 
 def delete_all_pods(provider: CloudProvider, cluster_name):
     cluster_name = sanitize_name(cluster_name)
