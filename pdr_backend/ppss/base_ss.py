@@ -2,7 +2,6 @@ import copy
 from os import getenv
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -184,17 +183,6 @@ class SingleFeedMixin:
                 return feed
 
         return None
-
-    @enforce_types
-    def ccxt_exchange(self) -> ccxt.Exchange:
-        assert hasattr(self, "exchange_params")
-
-        mock = not hasattr(self, "tradetype") or self.tradetype != "livemock"
-
-        return self.feed.ccxt_exchange(
-            self.exchange_params,
-            mock=mock,
-        )
 
 
 class CCXTExchangeMixin:
