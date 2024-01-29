@@ -34,4 +34,4 @@ class DeploymentMethod(Enum):
         if self == DeploymentMethod.PM2:
             return f"pm2 start {foldername}/*.js"
         if self == DeploymentMethod.K8S:
-            return f"deployer deploy"
+            return f"pdr deployer deploy"
