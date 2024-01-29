@@ -347,6 +347,7 @@ class _ArgParser_DEPLOYER:
         self._add_logs_parser()
         self._add_build_parser()
         self._add_push_parser()
+        self._add_remote_registry()
 
     def parse_args(self):
         return self.parser.parse_args()
@@ -377,6 +378,16 @@ class _ArgParser_DEPLOYER:
         parser_destroy = self.subparsers.add_parser("destroy", help="destroy help")
         self._add_remote_parsers(parser_destroy)
 
+    def _add_remote_registry(self):
+        parser_deploy = self.subparsers.add_parser(
+            "registry", help="deploy_registry help"
+        )
+        parser_deploy.add_argument(
+            "action", help="Action", choices=["deploy", "destroy", "auth", "url"]
+        )
+        parser_deploy.add_argument("registry_name", help="Registry name")
+        self._add_remote_parsers(parser_deploy, False)
+
     def _add_logs_parser(self):
         parser_logs = self.subparsers.add_parser("logs", help="logs help")
         self._add_remote_parsers(parser_logs)
@@ -394,8 +405,9 @@ class _ArgParser_DEPLOYER:
         parser_push.add_argument("image_name", help="Image name", default="pdr_backend")
         parser_push.add_argument("image_tag", help="Image tag", default="deployer")
 
-    def _add_remote_parsers(self, subparser):
-        subparser.add_argument("config_name", help="Name of the configuration")
+    def _add_remote_parsers(self, subparser, with_config=True):
+        if with_config:
+            subparser.add_argument("config_name", help="Name of the configuration")
         subparser.add_argument(
             "-p",
             "--provider",
