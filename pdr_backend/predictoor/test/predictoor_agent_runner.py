@@ -2,6 +2,7 @@
 This file exposes run_agent_test()
 which is used by test_predictoor_agent{1,3}.py
 """
+
 import os
 
 from enforce_typing import enforce_types
