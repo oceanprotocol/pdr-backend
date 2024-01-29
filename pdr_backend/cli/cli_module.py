@@ -254,4 +254,5 @@ def do_fund_accounts(args, nested_args=None):
 @enforce_types
 def do_deployer(args, nested_args=None):
     from pdr_backend.deployer.deployer import main as deployer_main
+
     deployer_main(args)

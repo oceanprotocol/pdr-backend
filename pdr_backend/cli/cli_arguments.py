@@ -333,7 +333,9 @@ class _ArgParser_DEPLOYER:
             prog="pdr",
             description="Generate and manage agent deployments",
         )
-        self.parser.add_argument("command",choices=["deployer"], help="The deployer command")
+        self.parser.add_argument(
+            "command", choices=["deployer"], help="The deployer command"
+        )
 
         self.subparsers = self.parser.add_subparsers(
             dest="subcommand", help="sub-command help"
