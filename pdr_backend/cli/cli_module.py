@@ -249,3 +249,9 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+
+
+@enforce_types
+def do_deployer(args, nested_args=None):
+    from pdr_backend.deployer.deployer import main as deployer_main
+    deployer_main(args)
