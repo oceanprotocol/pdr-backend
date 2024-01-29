@@ -33,7 +33,14 @@ class PredictoorAgentConfig(SingleAgentConfig):
                 raise ValueError(f"Field {field} is required but is not set")
 
     def get_run_command(
-        self, stake_amt, approach, full_pair_name, network, s_until_epoch_end, yaml_path
+        self,
+        stake_amt,
+        approach,
+        full_pair_name,
+        network,
+        s_until_epoch_end,
+        yaml_path,
+        with_apostrophe=False,
     ):
         lake_feed_name = full_pair_name.replace(" c", "")
         override_feed = [
@@ -41,13 +48,19 @@ class PredictoorAgentConfig(SingleAgentConfig):
             f'--predictoor_ss.aimodel_ss.input_feeds=["{full_pair_name}"]',
             f'--lake_ss.feeds=["{lake_feed_name}"]',
         ]
+        if with_apostrophe:
+            override_feed = [
+                f'--predictoor_ss.predict_feed="{full_pair_name}"',
+                f"--predictoor_ss.aimodel_ss.input_feeds='[\"{full_pair_name}\"]'",
+                f"--lake_ss.feeds='[\"{lake_feed_name}\"]'",
+            ]
         override_stake = [f"--predictoor_ss.bot_only.stake_amount={stake_amt}"]
         override_s_until = [
             f"--predictoor_ss.bot_only.s_until_epoch_end={s_until_epoch_end}"
         ]
 
         return (
-            [f"pdr", "predictoor", f'"{approach}"', yaml_path, network]
+            [f"./pdr", "predictoor", f'"{approach}"', yaml_path, network]
             + override_feed
             + override_stake
             + override_s_until

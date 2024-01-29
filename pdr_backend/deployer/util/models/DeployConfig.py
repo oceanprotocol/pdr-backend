@@ -58,6 +58,7 @@ class DeployConfig:
             predictoor.network,
             predictoor.s_until_epoch_end,
             self.yaml_path,
+            with_apostrophe=type==DeploymentMethod.PM2 or type==DeploymentMethod.DOCKER_COMPOSE,
         )
         if type == DeploymentMethod.K8S:
             return (
