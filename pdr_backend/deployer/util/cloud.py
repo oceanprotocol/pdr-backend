@@ -36,6 +36,16 @@ class CloudProvider(ABC):
     def cluster_exists(self, cluster_name) -> bool:
         pass
 
+    @classmethod
+    def from_json(cls, data):
+        if 'type' in data:
+            if data['type'] == 'gcp':
+                return GCPProvider.from_json(data)
+            elif data['type'] == 'azure':
+                return AzureProvider.from_json(data)
+            elif data['type'] == 'aws':
+                return AWSProvider.from_json(data)
+        raise ValueError("Invalid JSON data for class instantiation")
 
 def sanitize_name(name):
     return name.replace("_", "-")
@@ -76,6 +86,20 @@ class GCPProvider(CloudProvider):
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
+    @property
+    def json(self):
+        return {
+            "type": "gcp",
+            "project_id": self.project_id,
+            "zone": self.zone,
+        }
+    
+    @classmethod
+    def from_json(cls, json):
+        return cls(
+            json['zone'],
+            json['project_id'],
+        )
 
 class AWSProvider(CloudProvider):
     def __init__(self, region):
@@ -111,9 +135,21 @@ class AWSProvider(CloudProvider):
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
+    @property
+    def json(self):
+        return {
+            "type": "aws",
+            "region": self.region,
+        }
+    
+    @classmethod
+    def from_json(cls, json):
+        return cls(
+            json['region'],
+        )
 
 class AzureProvider(CloudProvider):
-    def __init__(self, subscription_id, resource_group, region):
+    def __init__(self, subscription_id, resource_group):
         self.subscription_id = subscription_id
         self.resource_group = resource_group
 
@@ -150,6 +186,21 @@ class AzureProvider(CloudProvider):
         )
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
+
+    @property
+    def json(self):
+        return {
+            "type": "azure",
+            "subscription_id": self.subscription_id,
+            "resource_group": self.resource_group,
+        }
+    
+    @classmethod
+    def from_json(cls, json):
+        return cls(
+            json['subscription_id'],
+            json['resource_group'],
+        )
 
 
 def check_requirements(provider_name):
