@@ -157,6 +157,14 @@ def main(args):
     elif args.subcommand == "push":
         check_image_build_requirements()
         push_image(args.image_name, args.image_tag, args.registry_name, args.image_name)
+    elif args.subcommand == "deploy_registry":
+        provider = get_provider(args)
+        check_cloud_requirements(provider)
+        provider.deploy_registry(args.registry_name)
+    elif args.subcommand == "destroy_registry":
+        provider = get_provider(args)
+        check_cloud_requirements(provider)
+        provider.destroy_registry(args.registry_name)
 
 
 if __name__ == "__main__":
