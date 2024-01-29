@@ -14,7 +14,7 @@ def get_k8s_predictoor_template(
     run_command_args = ""
     app = app.lower()
     name = name.lower()
-    for arg in run_command:
+    for arg in run_command[1:]:
         arg_escaped = arg.replace('"', '\\"')
         run_command_args += f'          - "{arg_escaped}"\n'
     template = f"""apiVersion: apps/v1
@@ -38,6 +38,7 @@ spec:
       containers:
       - name: {name}
         image: {docker_image}
+        command: ["./pdr"]
         args:
 {run_command_args}
         resources:
