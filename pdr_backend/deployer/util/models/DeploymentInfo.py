@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import List
+from collections import defaultdict
 
 
 @dataclass
@@ -11,10 +12,11 @@ class DeploymentInfo:
     deployment_method: str
     ts_created: int
     deployment_names: List[str]
+    deployments: dict = field(default_factory=defaultdict)
 
     @property
     def name(self):
-        return f"{self.config_name}-{self.deployment_method}"
+        return f"{self.config_name}"
 
     def write(self, path):
         with open(f"{path}/{self.name}.json", "w") as f:
