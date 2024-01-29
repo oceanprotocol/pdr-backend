@@ -65,7 +65,7 @@ def generate_deployment_templates(
     print(f"  Deployment method: {deployment_method}")
     print(f"  Number of agents: {len(config.agents)}")
     run_cmd = deployment_method.run_command(output_path, config_name)
-    print(f"Run command: {run_cmd}")
+    print(f"Run subcommand: {run_cmd}")
 
     deploymentinfo = DeploymentInfo(
         config=yaml.safe_load(open(path, "r")),
@@ -95,11 +95,13 @@ def deploy_config(config_file: str, cloud_provider: CloudProvider):
     deploy_agents_to_k8s(deployment_folder)
 
     deploymentinfo.deployments[cloud_provider.json["type"]] = cloud_provider.json
-    deploymentinfo.deployments[cloud_provider.json["type"]].update({
-        "deployment_name": deployment_name,
-        "deployment_ts": int(time.time()),
-        "deployment_method": deploymentinfo.deployment_method,
-    })
+    deploymentinfo.deployments[cloud_provider.json["type"]].update(
+        {
+            "deployment_name": deployment_name,
+            "deployment_ts": int(time.time()),
+            "deployment_method": deploymentinfo.deployment_method,
+        }
+    )
     deploymentinfo.write("./.deployments")
 
 
@@ -111,35 +113,8 @@ def destroy_existing_config(config_file: str, cloud_provider: CloudProvider):
     print(f"Cluster is destroyed")
 
 
-def add_remote_parsers(subparser):
-    subparser.add_argument("config_name", help="Name of the configuration")
-    subparser.add_argument(
-        "-p",
-        "--provider",
-        help="Cloud provider",
-        required=True,
-        choices=["aws", "azure", "gcp"],
-    )
-    subparser.add_argument(
-        "-r",
-        "--region",
-        required=False,
-        help="Deployment zone/region",
-    )
-    subparser.add_argument(
-        "--project_id",
-        help="Google Cloud project id",
-        required=False,
-    )
-    subparser.add_argument(
-        "--resource_group",
-        help="Azure resource group",
-        required=False,
-    )
-
-
 def get_provider(args):
-    config =  DeploymentInfo.read("./.deployments", args.config_name)
+    config = DeploymentInfo.read("./.deployments", args.config_name)
     if config.deployments.get(args.provider):
         return CloudProvider.from_json(config.deployments[args.provider])
 
@@ -156,79 +131,30 @@ def get_provider(args):
     return provider
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="deployer",
-        description="Generate and manage deployments Predictoor",
-    )
-
-    # Create a subparser for the commands
-    subparsers = parser.add_subparsers(dest="command", help="sub-command help")
-
-    # Adding the 'generate' command
-    parser_generate = subparsers.add_parser("generate", help="generate help")
-    parser_generate.add_argument("config_path", help="Path to the configuration file")
-    parser_generate.add_argument("config_name", help="Name of the configuration")
-    parser_generate.add_argument(
-        "deployment_method",
-        help="Method of deployment",
-        choices=["k8s", "pm2", "docker-compose"],
-    )
-    parser_generate.add_argument(
-        "output_dir", help="Output directory for the generated files"
-    )
-
-    # Adding the 'deploy' command
-    parser_deploy = subparsers.add_parser("deploy", help="deploy help")
-    add_remote_parsers(parser_deploy)
-
-    # Adding the 'destroy' command
-    parser_destroy = subparsers.add_parser("destroy", help="destroy help")
-    add_remote_parsers(parser_destroy)
-
-    # Adding the 'logs' command
-    parser_logs = subparsers.add_parser("logs", help="logs help")
-    add_remote_parsers(parser_logs)
-
-    # Adding the 'build' command
-    parser_build = subparsers.add_parser("build", help="build help")
-    parser_build.add_argument("image_name", help="Image name", default="pdr_backend")
-    parser_build.add_argument("image_tag", help="Image tag", default="deployer")
-
-    # Adding the 'push' command
-    parser_push = subparsers.add_parser("push", help="push help")
-    parser_push.add_argument("registry_name", help="Registry name")
-    parser_push.add_argument("image_name", help="Image name", default="pdr_backend")
-    parser_push.add_argument("image_tag", help="Image tag", default="deployer")
-
-    # Parse the arguments
-    args = parser.parse_args()
-
-    print(args)
-
-    if args.command == "generate":
+def main(args):
+    if args.subcommand == "generate":
         generate_deployment_templates(
             args.config_path,
             args.output_dir,
             DeploymentMethod.from_str(args.deployment_method),
             args.config_name,
         )
-    elif args.command == "deploy":
+    elif args.subcommand == "deploy":
         provider = get_provider(args)
         check_cloud_requirements(provider)
         deploy_config(args.config_name, provider)
-    elif args.command == "destroy":
+    elif args.subcommand == "destroy":
         provider = get_provider(args)
         check_cloud_requirements(provider)
         destroy_existing_config(args.config_name, provider)
-    elif args.command == "logs":
+    elif args.subcommand == "logs":
         provider = get_provider(args)
         check_cloud_requirements(provider)
         cluster_logs(provider, args.config_name, "pdr-predictoor")
-    elif args.command == "build":
+    elif args.subcommand == "build":
         check_image_build_requirements()
         build_image(args.image_name, args.image_tag)
-    elif args.command == "push":
+    elif args.subcommand == "push":
         check_image_build_requirements()
         push_image(args.image_name, args.image_tag, args.registry_name, args.image_name)
 
