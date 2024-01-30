@@ -44,6 +44,13 @@ def test_sim_engine(tmpdir):
             "do_plot": True,
             "log_dir": os.path.join(tmpdir, "logs"),
             "test_n": 10,
+            "exchange_only": {
+                "timeout": 30000,
+                "options": {
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot",
+                },
+            },
         }
     )
 

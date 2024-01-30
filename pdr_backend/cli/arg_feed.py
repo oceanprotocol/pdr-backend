@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
 from pdr_backend.cli.timeframe import Timeframe, Timeframes, verify_timeframes_str
+from pdr_backend.util.mocks import MockExchange
 from pdr_backend.util.signalstr import (
     signal_to_char,
     signals_to_chars,
@@ -91,8 +92,11 @@ class ArgFeed:
 
     @enforce_types
     def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
-        exchange_class = self.exchange.exchange_class
+        if "mock" in kwargs and kwargs["mock"] is True:
+            return MockExchange()
 
+        kwargs.pop("mock", None)
+        exchange_class = self.exchange.exchange_class
         return exchange_class(*args, **kwargs)
 
 
