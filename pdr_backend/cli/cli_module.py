@@ -26,6 +26,7 @@ from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
+from pdr_backend.deployer.deployer import main as deployer_main
 
 
 @enforce_types
@@ -252,7 +253,6 @@ def do_fund_accounts(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_deployer(args, nested_args=None):
-    from pdr_backend.deployer.deployer import main as deployer_main
-
     deployer_main(args)
