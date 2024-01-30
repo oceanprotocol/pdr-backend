@@ -134,4 +134,4 @@ deployment_configs:
       - pair: 'ETH/USDT'
         stake_amt: 1
         timeframe: 1h
-        s_until_epoch_end: 60
+        s_until_epoch_end: 100
