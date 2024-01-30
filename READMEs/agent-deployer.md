@@ -1,6 +1,6 @@
 # Agent Deployment Tool
 
-Agent Deployment Tool is a streamlined command-line utility designed for efficiently generating and managing Predictoor agent deployments.
+`deployer` is a streamlined command-line utility designed for efficiently generating and managing Predictoor agent deployments.
 
 ## Usage
 
@@ -64,7 +64,7 @@ Take a note of the `config_name`, you will need it later!
 The `deploy` command is used to deploy agents based on a specified config name.
 
 ```
-pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP]
+pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP] [--subscription_id SUBSCRIPTION_ID]
 ```
 
 - `<config_name>`: Name of the config.
@@ -72,6 +72,7 @@ pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJEC
 - -r, --region: Deployment zone/region (optional).
 - --project_id: Google Cloud project id (optional).
 - --resource_group: Azure resource group (optional).
+- --subscription_id: Azure subscription id (optional).
 
 ### Destroy Config
 
