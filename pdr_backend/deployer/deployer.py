@@ -63,8 +63,8 @@ def generate_deployment_templates(
     print(f"  Config name: {config_name}")
     print(f"  Deployment method: {deployment_method}")
     print(f"  Number of agents: {len(config.agents)}")
-    run_cmd = deployment_method.run_command(output_path, config_name)
-    print(f"Run subcommand: {run_cmd}")
+    deploy_command = deployment_method.deploy_command(output_path, config_name)
+    print(f"To deploy: {deploy_command}")
 
     with open(path, "r") as file:
         deploymentinfo = DeploymentInfo(
