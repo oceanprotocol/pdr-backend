@@ -12,7 +12,7 @@ from pdr_backend.deployer.util.templates.pm2 import get_pm2_deploy_template
 
 @dataclass
 class DeployConfig:
-    agent_config: Optional[AgentsDeployConfig] = None
+    agent_config: AgentsDeployConfig
     pdr_backend_image_source: str = "oceanprotocol/pdr-backend:latest"
     yaml_path: str = "./ppss.yaml"
 
