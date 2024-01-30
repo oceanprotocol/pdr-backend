@@ -44,7 +44,7 @@ class ETL:
         """
         @description
             We have updated our lake's raw data
-            Now,, let's build the bronze tables
+            Now, let's build the bronze tables
             key tables: [bronze_pdr_predictions and bronze_pdr_slots]
         """
         # Load existing bronze tables
@@ -67,8 +67,6 @@ class ETL:
             Update bronze_pdr_predictions table
         """
         df = get_bronze_pdr_predictions_df(self.dfs, self.ppss)
-
-        print(">>>>> bronze_pdr_predictions_df:", df)
 
         filename = self.gql_data_factory._parquet_filename(
             bronze_pdr_predictions_table_name

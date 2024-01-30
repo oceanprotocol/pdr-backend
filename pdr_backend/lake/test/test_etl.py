@@ -67,8 +67,8 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
-    # setup test
-    st_timestr = "2023-11-02_0:00"
+    # please note date, skipping Nov 1st
+    st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
 
     ppss, gql_data_factory = _gql_data_factory(
@@ -97,55 +97,54 @@ def test_etl_do_bronze_step(
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    # it should have 5 rows because of st_timestr and fin_timestr
-    assert len(etl.dfs["bronze_pdr_predictions"]) == 4
+    assert len(etl.dfs["bronze_pdr_predictions"]) == 6
 
     bronze_pdr_predictions_df = etl.dfs["bronze_pdr_predictions"]
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
         bronze_pdr_predictions_df["contract"][0]
-        == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
-    )
-    assert (
-        bronze_pdr_predictions_df["contract"][0]
-        == _gql_datafactory_etl_predictions_df["contract"][1]
+        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
     )
     assert (
         bronze_pdr_predictions_df["contract"][1]
+        == _gql_datafactory_etl_predictions_df["contract"][1]
+    )
+    assert (
+        bronze_pdr_predictions_df["contract"][2]
         == _gql_datafactory_etl_predictions_df["contract"][2]
     )
 
     # Assert timestamp == predictions timestamp
     assert (
-        bronze_pdr_predictions_df["timestamp"][0]
+        bronze_pdr_predictions_df["timestamp"][1]
         == _gql_datafactory_etl_predictions_df["timestamp"][1]
     )
     assert (
-        bronze_pdr_predictions_df["timestamp"][1]
+        bronze_pdr_predictions_df["timestamp"][2]
         == _gql_datafactory_etl_predictions_df["timestamp"][2]
     )
 
     # Assert last_event_timestamp == payout.timestamp
     assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][0]
+        bronze_pdr_predictions_df["last_event_timestamp"][1]
         == _gql_datafactory_etl_payouts_df["timestamp"][1]
     )
     assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][1]
+        bronze_pdr_predictions_df["last_event_timestamp"][2]
         == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][0] == True
-    assert bronze_pdr_predictions_df["truevalue"][1] == False
+    assert bronze_pdr_predictions_df["truevalue"][1] == True
+    assert bronze_pdr_predictions_df["truevalue"][2] == False
 
     assert (
-        bronze_pdr_predictions_df["truevalue"][0]
+        bronze_pdr_predictions_df["truevalue"][1]
         == _gql_datafactory_etl_truevals_df["trueval"][1]
     )
     assert (
-        bronze_pdr_predictions_df["truevalue"][1]
+        bronze_pdr_predictions_df["truevalue"][2]
         == _gql_datafactory_etl_truevals_df["trueval"][2]
     )
 
@@ -160,17 +159,17 @@ def test_etl_do_bronze_step(
     )
 
     # Assert payout came from payouts
-    assert round(bronze_pdr_predictions_df["payout"][0], 3) == round(
+    assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
         _gql_datafactory_etl_payouts_df["payout"][1], 3
     )
-    assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
+    assert round(bronze_pdr_predictions_df["payout"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["payout"][2], 3
     )
 
     # Assert stake in the bronze_table came from payouts
-    assert round(bronze_pdr_predictions_df["stake"][0], 3) == round(
+    assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][1], 3
     )
-    assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
+    assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )

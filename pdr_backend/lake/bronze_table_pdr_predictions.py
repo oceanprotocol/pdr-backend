@@ -16,19 +16,19 @@ bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
 bronze_pdr_predictions_schema = {
     "ID": Utf8,  # f"{contract}-{slot}-{user}"
-    "contract": Utf8,  # f"{contract}"
     "slot_id": Utf8,  # f"{contract}-{slot}"
-    "pair": Utf8,
-    "timeframe": Utf8,
-    "predvalue": Boolean,
-    "stake": Float64,
-    "truevalue": Boolean,
-    "timestamp": Int64,
-    "last_event_timestamp": Int64,
-    "source": Utf8,
-    "payout": Float64,
+    "contract": Utf8,  # f"{contract}"
     "slot": Int64,
     "user": Utf8,
+    "pair": Utf8,
+    "timeframe": Utf8,
+    "source": Utf8,
+    "predvalue": Boolean,
+    "truevalue": Boolean,
+    "stake": Float64,
+    "payout": Float64,
+    "timestamp": Int64,
+    "last_event_timestamp": Int64,
 }
 
 
@@ -72,57 +72,6 @@ def _process_predictions(
     return dfs
 
 
-def _process_payouts(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
-    """
-    @description
-        Perform post-fetch processing on the data
-        1. Find payouts within the update
-
-    """
-    # get payouts within the update
-    payouts_df, payouts_ids = pick_df_and_ids_on_period(
-        target=dfs["pdr_payouts"],
-        start_timestamp=ppss.lake_ss.st_timestamp,
-        finish_timestamp=ppss.lake_ss.fin_timestamp,
-    )
-
-    # get bronze_predictions we'll be updating
-    predictions_df = filter_and_drop_columns(
-        df=dfs[bronze_pdr_predictions_table_name],
-        target_column="ID",
-        ids=payouts_ids,
-        columns_to_drop=[],
-    )
-
-    # do work to join from pdr_payout onto bronze_pdr_predictions
-    predictions_df = (
-        predictions_df.join(payouts_df, on=["ID"], how="left")
-        .with_columns(
-            [
-                pl.col("payout_right").fill_null(pl.col("payout")),
-                pl.col("predictedValue").fill_null(pl.col("predvalue")),
-                pl.col("stake_right").fill_null(pl.col("stake")),
-                pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
-            ]
-        )
-        .drop(["payout", "predvalue", "stake", "last_event_timestamp"])
-        .rename(
-            {
-                "payout_right": "payout",
-                "predictedValue": "predvalue",
-                "stake_right": "stake",
-                "timestamp_right": "last_event_timestamp",
-            }
-        )
-        .select(bronze_pdr_predictions_schema.keys())
-    )
-
-    dfs[bronze_pdr_predictions_table_name] = predictions_df
-    return dfs
-
-
 def _process_truevals(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
@@ -159,6 +108,52 @@ def _process_truevals(
     )
 
     # update the predictions_df
+    dfs[bronze_pdr_predictions_table_name] = predictions_df
+    return dfs
+
+
+def _process_payouts(
+    dfs: Dict[str, pl.DataFrame], ppss: PPSS
+) -> Dict[str, pl.DataFrame]:
+    """
+    @description
+        Perform post-fetch processing on the data
+        1. Find payouts within the update
+
+    """
+    # get payouts within the update
+    payouts_df, _ = pick_df_and_ids_on_period(
+        target=dfs["pdr_payouts"],
+        start_timestamp=ppss.lake_ss.st_timestamp,
+        finish_timestamp=ppss.lake_ss.fin_timestamp,
+    )
+
+    # get existing bronze_predictions we'll be updating
+    predictions_df = dfs[bronze_pdr_predictions_table_name]
+
+    # do work to join from pdr_payout onto bronze_pdr_predictions
+    predictions_df = (
+        predictions_df.join(payouts_df, on=["ID"], how="left")
+        .with_columns(
+            [
+                pl.col("payout_right").fill_null(pl.col("payout")),
+                pl.col("predictedValue").fill_null(pl.col("predvalue")),
+                pl.col("stake_right").fill_null(pl.col("stake")),
+                pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
+            ]
+        )
+        .drop(["payout", "predvalue", "stake", "last_event_timestamp"])
+        .rename(
+            {
+                "payout_right": "payout",
+                "predictedValue": "predvalue",
+                "stake_right": "stake",
+                "timestamp_right": "last_event_timestamp",
+            }
+        )
+        .select(bronze_pdr_predictions_schema.keys())
+    )
+
     dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 
