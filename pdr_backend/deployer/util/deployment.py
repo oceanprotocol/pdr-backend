@@ -18,16 +18,16 @@ def pm2_logs():
     run_command("pm2 logs")
 
 
-def deploy_agents_with_docker_compose(path):
-    run_command(f"docker-compose -f {path}/*.yml up")
+def deploy_agents_with_docker_compose(path, config_name):
+    run_command(f"docker-compose -f {path}/{config_name}.yml up")
 
 
-def destroy_agents_with_docker_compose(path):
-    run_command(f"docker-compose -f {path}/*.yml down")
+def destroy_agents_with_docker_compose(path, config_name):
+    run_command(f"docker-compose -f {path}/{config_name}.yml down")
 
 
-def docker_compose_logs():
-    run_command("docker-compose logs -f")
+def docker_compose_logs(path, config_name):
+    run_command(f"docker-compose -f {path}/{config_name}.yml logs -f")
 
 
 def check_cloud_provider_requirements(provider_name):
@@ -168,7 +168,7 @@ def deploy_config(config_file: str, cloud_provider: CloudProvider):
     if deploymentinfo.deployment_method == "pm2":
         deploy_agents_with_pm2(deployment_folder)
     if deploymentinfo.deployment_method == "docker-compose":
-        deploy_agents_with_docker_compose(deployment_folder + "/docker-compose.yml")
+        deploy_agents_with_docker_compose(deployment_folder, deploymentinfo.config_name)
 
 
 def destroy_config(config_file: str, cloud_provider: CloudProvider):
@@ -186,7 +186,7 @@ def destroy_config(config_file: str, cloud_provider: CloudProvider):
 
     if deploymentinfo.deployment_method == "docker-compose":
         deployment_folder = deploymentinfo.foldername
-        destroy_agents_with_docker_compose(deployment_folder + "/docker-compose.yml")
+        destroy_agents_with_docker_compose(deployment_folder, deploymentinfo.config_name)
 
 
 def logs_config(config_file: str, cloud_provider: CloudProvider):
@@ -201,4 +201,4 @@ def logs_config(config_file: str, cloud_provider: CloudProvider):
         pm2_logs()
 
     if deploymentinfo.deployment_method == "docker-compose":
-        docker_compose_logs()
+        docker_compose_logs(deploymentinfo.foldername, deploymentinfo.config_name)

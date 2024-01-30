@@ -30,10 +30,4 @@ class DeploymentMethod(Enum):
         raise ValueError(f"Invalid deployment method: {s}")
 
     def run_command(self, foldername, config_name) -> str:
-        if self == DeploymentMethod.DOCKER_COMPOSE:
-            return f"docker-compose -f {foldername}/{config_name}.yml up"
-        if self == DeploymentMethod.PM2:
-            return f"pm2 start {foldername}/*.js"
-        if self == DeploymentMethod.K8S:
-            return "pdr deployer deploy"
-        raise ValueError(f"Invalid deployment method: {self}")
+        return f"pdr deployer deploy {config_name}"
