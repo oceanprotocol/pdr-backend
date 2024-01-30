@@ -364,7 +364,7 @@ class _ArgParser_DEPLOYER:
         parser_generate.add_argument(
             "deployment_method",
             help="Method of deployment",
-            choices=["k8s", "pm2", "docker-compose"],
+            choices=["k8s"],
         )
         parser_generate.add_argument(
             "output_dir", help="Output directory for the generated files"

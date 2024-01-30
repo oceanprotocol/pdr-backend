@@ -54,7 +54,7 @@ pdr deployer generate <config_path> <config_name> <deployment_method> <output_di
 
 - `<config_path>`: Path to the yaml config file.
 - `<config_name>`: Name of the config.
-- `<deployment_method>`: Method of deployment (choices: "k8s", "pm2", "docker-compose").
+- `<deployment_method>`: Method of deployment (choices: "k8s").
 - `<output_dir>`: Output directory for the generated files.
 
 Take a note of the `config_name`, you will need it later!
@@ -139,30 +139,6 @@ pdr deployer push <registry_name> [<image_name>] [<image_tag>]
 
 
 ## Examples
-
-### PM2
-
-```shell
-$ pdr deployer generate ppss.yaml testnet_predictoor_deployment pm2 ./pm2dir
-Generated pm2 templates for testnet_predictoor_deployment
-  Output path: ./pm2dir
-  Config name: testnet_predictoor_deployment
-  Deployment method: pm2
-  Number of agents: 2
-Run command: pdr deployer deploy testnet_predictoor_deployment
-$ pdr deployer deploy testnet_predictoor_deployment
-┌────┬──────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
-│ id │ name                                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
-├────┼──────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ pdr-predictoor1-1-BTC/USDT-5m-binance    │ default     │ N/A     │ fork    │ 72470    │ 0s     │ 0    │ online    │ 0%       │ 7.6mb    │ user   │ disabled │
-│ 1  │ pdr-predictoor2-3-ETH/USDT-1h-binance    │ default     │ N/A     │ fork    │ 72471    │ 0s     │ 0    │ online    │ 0%       │ 5.0mb    │ user   │ disabled │
-
-$ pdr deployer logs testnet_predictoor_deployment
-....
-
-$ pdr deployer destroy testnet_predictoor_deployment
-....
-```
 
 ### K8S with GCP
 

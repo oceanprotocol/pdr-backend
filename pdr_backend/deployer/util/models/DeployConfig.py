@@ -7,7 +7,6 @@ from pdr_backend.deployer.util.templates.docker_compose import (
     get_docker_compose_template,
 )
 from pdr_backend.deployer.util.templates.k8s import get_k8s_predictoor_template
-from pdr_backend.deployer.util.templates.pm2 import get_pm2_deploy_template
 
 
 @dataclass
@@ -59,8 +58,7 @@ class DeployConfig:
             predictoor.network,
             predictoor.s_until_epoch_end,
             self.yaml_path,
-            with_apostrophe=method == DeploymentMethod.PM2
-            or method == DeploymentMethod.DOCKER_COMPOSE,
+            with_apostrophe=method == DeploymentMethod.DOCKER_COMPOSE,
         )
         if method == DeploymentMethod.K8S:
             return (
@@ -86,16 +84,6 @@ class DeployConfig:
                     run_command=run_command,
                     cpu=predictoor.cpu,
                     memory=predictoor.memory,
-                ),
-                full_name,
-            )
-
-        if method == DeploymentMethod.PM2:
-            return (
-                get_pm2_deploy_template(
-                    name=full_name,
-                    private_key=predictoor.private_key,
-                    run_command=run_command,
                 ),
                 full_name,
             )

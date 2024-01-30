@@ -195,7 +195,7 @@ pdr deployer generate ppss.yaml testnet_predictoor_deployment k8s testnet_deploy
 
 Where `ppss.yaml` is the config file, `testnet_predictoor_deployment` is the config name, `k8s` is the deployment method, and `testnet_deployments` is the output directory for the generated files.
 
-Available deployment methods are `k8s`, `pm2`, and `docker-compose`.
+Available deployment methods are `k8s`.
 
 ### Deploy
 

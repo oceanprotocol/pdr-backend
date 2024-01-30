@@ -7,18 +7,6 @@ from pdr_backend.deployer.util.cloud import CloudProvider, run_command, sanitize
 from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
 
 
-def deploy_agents_with_pm2(path):
-    run_command(f"pm2 start {path}/*.js")
-
-
-def destroy_agents_with_pm2(path):
-    run_command(f"pm2 delete {path}/*.js")
-
-
-def pm2_logs():
-    run_command("pm2 logs")
-
-
 def deploy_agents_with_docker_compose(path, config_name):
     run_command(f"docker-compose -f {path}/{config_name}.yml up")
 
@@ -182,8 +170,6 @@ def deploy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
             }
         )
         deploymentinfo.write("./.deployments")
-    if deploymentinfo.deployment_method == "pm2":
-        deploy_agents_with_pm2(deployment_folder)
     if deploymentinfo.deployment_method == "docker-compose":
         deploy_agents_with_docker_compose(deployment_folder, deploymentinfo.config_name)
 
@@ -200,10 +186,6 @@ def destroy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
         print(f"Destroying {deployment_name}...")
         destroy_cluster(cloud_provider, deployment_name, deploymentinfo.config_name)
         print("Cluster is destroyed")
-
-    if deploymentinfo.deployment_method == "pm2":
-        deployment_folder = deploymentinfo.foldername
-        destroy_agents_with_pm2(deployment_folder)
 
     if deploymentinfo.deployment_method == "docker-compose":
         deployment_folder = deploymentinfo.foldername
@@ -228,9 +210,6 @@ def logs_config(config_file: str, cloud_provider: Optional[CloudProvider]):
             "pdr-predictoor",
             deploymentinfo.config_name,
         )
-
-    if deploymentinfo.deployment_method == "pm2":
-        pm2_logs()
 
     if deploymentinfo.deployment_method == "docker-compose":
         docker_compose_logs(deploymentinfo.foldername, deploymentinfo.config_name)
