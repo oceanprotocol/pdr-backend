@@ -86,8 +86,14 @@ def generate_deployment_templates(
 def get_provider(args):
     if hasattr(args, "config_name"):
         config = DeploymentInfo.read("./.deployments", args.config_name)
-        if config.deployments.get(args.provider):
+        provider_name = config.deployments.get(args.provider)
+        if provider_name:
             return CloudProvider.from_json(config.deployments[args.provider])
+        
+        # check if there's only one deployment config, in that case, use that
+        if len(config.deployments) == 1:
+            return CloudProvider.from_json(list(config.deployments.values())[0])
+        
 
     if args.provider is None:
         return None
