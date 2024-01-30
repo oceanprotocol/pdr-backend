@@ -128,10 +128,10 @@ deployment_configs:
     pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
     agents:
       - pair: 'BTC/USDT'
-        stake_amt: 15
+        stake_amt: 0.1
         timeframe: 5m
         approach: 1
       - pair: 'ETH/USDT'
-        stake_amt: 20
+        stake_amt: 1
         timeframe: 1h
         s_until_epoch_end: 60
