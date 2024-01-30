@@ -412,7 +412,7 @@ class _ArgParser_DEPLOYER:
             "-p",
             "--provider",
             help="Cloud provider",
-            required=True,
+            required=False,
             choices=["aws", "azure", "gcp"],
         )
         subparser.add_argument(
