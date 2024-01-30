@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 
 import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.lake.bronze_table_pdr_predictions import (
+from pdr_backend.lake.table_bronze_pdr_predictions import (
     _process_predictions,
     _process_truevals,
     _process_payouts,
@@ -53,6 +53,7 @@ def test_table_bronze_pdr_predictions(
     # In our mock, we're going to have 1 truevalue missing
     assert gql_dfs["bronze_pdr_predictions"]["truevalue"].null_count() == 1
 
+    # Work 3: Append from bronze_pdr_payouts table
     gql_dfs = _process_payouts(gql_dfs, ppss)
 
     assert len(gql_dfs["bronze_pdr_predictions"]) == 6
@@ -67,11 +68,11 @@ def test_table_bronze_pdr_predictions(
         else:
             assert round(actual_stake, 2) == expected_stake
 
-    # Assert that there could be Nones in the payout column
+    # Assert that there is a None in the payout column
     assert gql_dfs["bronze_pdr_predictions"]["payout"].null_count() == 1
     target_payout = [0.00, 10.93, 7.04, 7.16, None]
     bronze_pdr_predictions_payout = gql_dfs["bronze_pdr_predictions"][
-        "payout"
+         "payout"
     ].to_list()
     for actual_payout, expected_payout in zip(
         bronze_pdr_predictions_payout, target_payout

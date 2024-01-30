@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from enforce_typing import enforce_types
 
+import polars as pl
 from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
@@ -19,10 +20,32 @@ def test_setup_etl(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
-    # setup test
+    # setup test start-end date
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
 
+    # Mock dfs based on configured st/fin timestamps
+    preds = _gql_datafactory_etl_predictions_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+    truevals = _gql_datafactory_etl_truevals_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+    payouts = _gql_datafactory_etl_payouts_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+
+    gql_dfs = {
+        "pdr_predictions": preds,
+        "pdr_truevals": truevals,
+        "pdr_payouts": payouts,
+    }
+    mock_get_gql_dfs.return_value = gql_dfs
+    
+    # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus ETH/USDT h 5m",
@@ -41,21 +64,22 @@ def test_setup_etl(
     assert len(etl.dfs) == 0
 
     # Work 2: Complete ETL sync step - Assert 3 gql_dfs
-    gql_dfs = {
-        "pdr_predictions": _gql_datafactory_etl_predictions_df,
-        "pdr_truevals": _gql_datafactory_etl_truevals_df,
-        "pdr_payouts": _gql_datafactory_etl_payouts_df,
-    }
-    mock_get_gql_dfs.return_value = gql_dfs
     etl.do_sync_step()
 
+    # Assert original gql has 6 predictions, but we only got 5 due to date
     assert len(etl.dfs) == 3
-    assert len(etl.dfs["pdr_predictions"]) == 6
+    assert len(etl.dfs["pdr_predictions"]) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
-    assert len(etl.dfs["pdr_payouts"]) == len(_gql_datafactory_etl_payouts_df)
-    assert len(etl.dfs["pdr_predictions"]) == len(_gql_datafactory_etl_predictions_df)
-    assert len(etl.dfs["pdr_truevals"]) == len(_gql_datafactory_etl_truevals_df)
+    # Assert all 3 dfs are not the same because we filtered Nov 01 out
+    assert len(etl.dfs["pdr_payouts"]) != len(_gql_datafactory_etl_payouts_df)
+    assert len(etl.dfs["pdr_predictions"]) != len(_gql_datafactory_etl_predictions_df)
+    assert len(etl.dfs["pdr_truevals"]) != len(_gql_datafactory_etl_truevals_df)
+
+    # Assert len of all 3 dfs
+    assert len(etl.dfs["pdr_payouts"]) == 4
+    assert len(etl.dfs["pdr_predictions"]) == 5
+    assert len(etl.dfs["pdr_truevals"]) == 5
 
 
 @enforce_types
@@ -67,7 +91,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
-    # please note date, skipping Nov 1st
+    # please note date, including Nov 1st
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
 
@@ -78,11 +102,26 @@ def test_etl_do_bronze_step(
         fin_timestr,
     )
 
+    preds = _gql_datafactory_etl_predictions_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+    truevals = _gql_datafactory_etl_truevals_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+    payouts = _gql_datafactory_etl_payouts_df.filter(
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
+        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+    )
+
+    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
     gql_dfs = {
-        "pdr_payouts": _gql_datafactory_etl_payouts_df,
-        "pdr_predictions": _gql_datafactory_etl_predictions_df,
-        "pdr_truevals": _gql_datafactory_etl_truevals_df,
+        "pdr_predictions": preds,
+        "pdr_truevals": truevals,
+        "pdr_payouts": payouts,
     }
+    
     mock_get_gql_dfs.return_value = gql_dfs
 
     # Work 1: Initialize ETL

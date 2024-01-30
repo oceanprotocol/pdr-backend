@@ -4,7 +4,7 @@ import polars as pl
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.bronze_table_pdr_predictions import (
+from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_df,
@@ -12,6 +12,16 @@ from pdr_backend.lake.bronze_table_pdr_predictions import (
 
 
 class ETL:
+    """
+    @description
+        The ETL class is responsible for performing the ETL process on the lake
+        The ETL process is broken into 2 steps:
+            1. Sync: Fetch data from data_factory
+            2. Bronze: Build bronze tables
+        
+        The ETL class is meant to be kept around in memory and in it's own process.
+        To access data/lake, use the table objects.
+    """
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
 

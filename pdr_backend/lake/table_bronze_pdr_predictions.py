@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.plutil import (
-    filter_and_drop_columns,
     pick_df_and_ids_on_period,
 )
 from pdr_backend.ppss.ppss import PPSS
@@ -173,6 +172,7 @@ def get_bronze_pdr_predictions_df(
     gql_dfs = _process_payouts(gql_dfs, ppss)
 
     df = gql_dfs[bronze_pdr_predictions_table_name]
+    
     # cull any records outside of our time range and sort them by timestamp
     df = df.filter(
         pl.col("timestamp").is_between(
