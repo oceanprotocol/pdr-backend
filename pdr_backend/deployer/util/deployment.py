@@ -1,6 +1,7 @@
 # pylint: disable=line-too-long
 import shutil
 import time
+from typing import Optional
 
 from pdr_backend.deployer.util.cloud import CloudProvider, run_command, sanitize_name
 from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
@@ -142,7 +143,7 @@ def cluster_logs(provider: CloudProvider, cluster_name, app_name):
         run_command(command)
 
 
-def deploy_config(config_file: str, cloud_provider: CloudProvider):
+def deploy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
     deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
     deployment_name = deploymentinfo.config_name
 
@@ -150,7 +151,11 @@ def deploy_config(config_file: str, cloud_provider: CloudProvider):
     deployment_folder = deploymentinfo.foldername
 
     if deploymentinfo.deployment_method == "k8s":
-        check_cloud_provider_requirements(cloud_provider)
+        if cloud_provider is None:
+            raise Exception(
+                "Cloud provider is required to deploy a Kubernetes deployment"
+            )
+        check_cloud_provider_requirements(cloud_provider.json["type"])
         deploy_cluster(cloud_provider, deployment_name)
 
         print("Cluster is ready, deploying the agents...")
@@ -171,10 +176,14 @@ def deploy_config(config_file: str, cloud_provider: CloudProvider):
         deploy_agents_with_docker_compose(deployment_folder, deploymentinfo.config_name)
 
 
-def destroy_config(config_file: str, cloud_provider: CloudProvider):
+def destroy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
     deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
     if deploymentinfo.deployment_method == "k8s":
-        check_cloud_provider_requirements(cloud_provider)
+        if cloud_provider is None:
+            raise Exception(
+                "Cloud provider is required to destroy a Kubernetes deployment"
+            )
+        check_cloud_provider_requirements(cloud_provider.json["type"])
         deployment_name = deploymentinfo.config_name
         print(f"Destroying {deployment_name}...")
         destroy_cluster(cloud_provider, deployment_name)
@@ -191,10 +200,14 @@ def destroy_config(config_file: str, cloud_provider: CloudProvider):
         )
 
 
-def logs_config(config_file: str, cloud_provider: CloudProvider):
+def logs_config(config_file: str, cloud_provider: Optional[CloudProvider]):
     deploymentinfo = DeploymentInfo.read("./.deployments", config_file)
     if deploymentinfo.deployment_method == "k8s":
-        check_cloud_provider_requirements(cloud_provider)
+        if cloud_provider is None:
+            raise Exception(
+                "Cloud provider is required to get logs for a Kubernetes deployment"
+            )
+        check_cloud_provider_requirements(cloud_provider.json["type"])
         deployment_name = deploymentinfo.config_name
         print(f"Getting logs for {deployment_name}...")
         cluster_logs(cloud_provider, deployment_name, "pdr-predictoor")
