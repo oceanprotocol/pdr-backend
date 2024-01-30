@@ -29,5 +29,5 @@ class DeploymentMethod(Enum):
             return cls.K8S
         raise ValueError(f"Invalid deployment method: {s}")
 
-    def run_command(self, foldername, config_name) -> str:
+    def deploy_command(self, config_name) -> str:
         return f"pdr deployer deploy {config_name}"
