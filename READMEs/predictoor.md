@@ -144,44 +144,98 @@ Once you're familiar with the above, you can make your own model and optimize it
 
 ## Run Many Bots at Once
 
-[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online."
+`deployer` is a streamlined command-line utility designed for efficiently generating and managing agent deployments.
 
-This section shows first how to use PM2 to run one bot on testnet. It then shows how to extend this to mainnet, and many bots at once.
+This section shows how to use `deployer` to deploy bots on testnet.
 
-First, install PM2: `npm install pm2 -g`
+The config that will be deployed can be found in `ppss.yaml` under `deployment_configs` section. You can create your own config by copying the existing one and modifying it as you wish. For the sake of this example, the existing config will be used.
 
-Then, prepare the PM2 config file:
-- Skim over [`pm2-testnet-predictoor.config.js`](../pm2-testnet-predictoor.config.js). It names the script, and sets envvars like we did above, but automatically.
-- Open the local version of this file. It's in the root of your `pdr-backend/` directory. In the file, set `YOUR_PRIVATE_KEY`.
-
-Now, run the bot with PM2. In console:
-```console
-pm2 start pm2-testnet-predictoor.config.js
+`ppss.yaml`:
+```yaml
+deployment_configs:
+  testnet_predictoor_deployment:
+    cpu: '1'
+    memory: '512Mi'
+    source: "binance"
+    type: "predictoor"
+    approach: 3
+    network: "sapphire-testnet"
+    s_until_epoch_end: 20
+    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
+    agents:
+      - pair: 'BTC/USDT'
+        stake_amt: 0.1
+        timeframe: 5m
+        approach: 1
+      - pair: 'ETH/USDT'
+        stake_amt: 1
+        timeframe: 1h
+        s_until_epoch_end: 100
 ```
 
-Your bot's running on testnet again! This time with the help of PM2.
+### Private Keys
+Create a `.keys.json` file and add the following:
+```
+{
+    "testnet_predictoor_deployment": ["pk1", "pk2"]
+}
+```
 
-Next, monitor the logs: `pm2 logs pm2-testnet-predictoor` (ctrl-c to stop)
+Each agent requires a private key. If you have fewer private keys than number of agents, the tool will create new wallets and update the `.keys.json` file. Make sure the wallets have enough ROSE and OCEAN to pay for gas and stake.
 
-Finally, stop the bot: `pm2 stop pm2-testnet-predictoor`
 
-Congrats! You've used PM2 to start, monitor, and stop a bot on testnet.
+### Generate Templates
 
-To run on _mainnet_: it's a mainnet config file [`pm2-mainnet-predictoor.config.js`](../pm2-mainnet-predictoor.config.js). It's like testnet, with different envvars. Work with the local version of this file.
+The `generate` command is used to create deployment template files based on a configuration file.
 
-To run 20 bots: alter the config file as needed. Or, have 20 config files.
+Execute the following command to generate the deployment templates:
+```
+pdr deployer generate ppss.yaml testnet_predictoor_deployment k8s testnet_deployments
+```
 
-Other interesting PM2 commands:
-- List all running processes: `pm2 ls`
-- Stop process with id=0: `pm2 stop 0 # (similar for other cmds)`
-- Stop all processes: `pm2 stop all`
-- Top-level help: `pm2 help`
-- Help for "start" command: `pm2 help start # (similar for other cmds)`
-- More yet: **[PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)**
+Where `ppss.yaml` is the config file, `testnet_predictoor_deployment` is the config name, `k8s` is the deployment method, and `testnet_deployments` is the output directory for the generated files.
 
-## Run Bots Remotely
+Available deployment methods are `k8s`, `pm2`, and `docker-compose`.
 
-To scale up compute or run without tying up your local machine, you can run bots remotely. Get started [here](remotebot.md).
+### Deploy
+
+The `deploy` command is used to deploy the generated templates.
+
+Execute the following command to deploy the generated config:
+```
+pdr deployer deploy testnet_predictoor_deployment -p gcp -r europe-west2 --project-id
+```
+
+Where `testnet_predictoor_deployment` is the config name.
+
+Since k8s is used as the deployment method, the following additional parameters are required:
+- `-p` or `--provider`: The cloud provider to use. Available options are `gcp`, `aws`, and `azure`.
+- `-r` or `--region`: The region to deploy to.
+- `--project-id`: The cloud provider project id. Only required for GCP.
+- `--resource-group`: The cloud provider resource group. Only required Azure.
+- `--subscription-id`: The cloud provider subscription id. Only required for Azure.
+
+### Monitoring logs
+
+The `logs` command is used to retrieve logs from deployed agents.
+
+Execute the following command to retrieve logs from the deployed agents:
+```
+pdr deployer logs testnet_predictoor_deployment
+```
+
+Where `testnet_predictoor_deployment` is the config name.
+
+### Destroy
+
+The `destroy` command is used to destroy agents deployed based on a specified configuration.
+
+Execute the following command to destroy the deployed agents:
+```
+pdr deployer destroy testnet_predictoor_deployment
+```
+
+Where `testnet_predictoor_deployment` is the config name.
 
 ## Run Local Network
 
