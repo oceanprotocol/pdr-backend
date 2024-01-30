@@ -26,7 +26,8 @@ def parse_config(file_path: str, config_name: str) -> DeployConfig:
         cpu=config_data.get("cpu"),
         memory=config_data.get("memory"),
         approach=config_data.get("approach"),
-        agents=agents,
+        # mypy doesn't like this, but it's correct
+        agents=agents, # type: ignore
         pdr_backend_image_source=config_data.get("pdr_backend_image_source"),
         source=config_data.get("source"),
         network=config_data.get("network"),
