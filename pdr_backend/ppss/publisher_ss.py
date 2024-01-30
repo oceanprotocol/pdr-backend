@@ -9,7 +9,7 @@ from pdr_backend.util.strutil import StrMixin
 
 class PublisherSS(MultiFeedMixin, StrMixin):
     @enforce_types
-    def __init__(self, network: str, d: dict):
+    def __init__(self, d: dict, network: str):
         self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
         self.__class__.FEEDS_KEY = network + ".feeds"
         super().__init__(
@@ -50,4 +50,4 @@ def mock_publisher_ss(network) -> PublisherSS:
             "feeds": feeds,
         }
     }
-    return PublisherSS(network, d)
+    return PublisherSS(d, network)

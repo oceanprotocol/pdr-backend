@@ -9,6 +9,11 @@ class Token(BaseContract):
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
 
+    @property
+    def name(self):
+        # TODO: check!!!
+        return "OCEAN"
+
     def allowance(self, account, spender):
         return self.contract_instance.functions.allowance(account, spender).call()
 

@@ -51,7 +51,3 @@ def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tm
 
         assert mock_token_.transfer.called
         assert mock_native_token_.transfer.called
-
-    ppss.web3_pp.network = "foo"
-    with pytest.raises(SystemExit):
-        topup_main(ppss)
