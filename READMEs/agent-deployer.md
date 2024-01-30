@@ -52,10 +52,10 @@ The `generate` command is used to create deployment template files based on a co
 pdr deployer generate <config_path> <config_name> <deployment_method> <output_dir>
 ```
 
-- <config_path>: Path to the yaml config file.
-- <config_name>: Name of the config.
-- <deployment_method>: Method of deployment (choices: "k8s", "pm2", "docker-compose").
-- <output_dir>: Output directory for the generated files.
+- `<config_path>`: Path to the yaml config file.
+- `<config_name>`: Name of the config.
+- `<deployment_method>`: Method of deployment (choices: "k8s", "pm2", "docker-compose").
+- `<output_dir>`: Output directory for the generated files.
 
 Take a note of the `config_name`, you will need it later!
 
@@ -67,7 +67,7 @@ The `deploy` command is used to deploy agents based on a specified config name.
 pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP]
 ```
 
-- <config_name>: Name of the config.
+- `<config_name>`: Name of the config.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 - -r, --region: Deployment zone/region (optional).
 - --project_id: Google Cloud project id (optional).
@@ -81,7 +81,7 @@ The `destroy` command is used to destroy agents deployed based on a specified co
 pdr deployer destroy <config_name> [-p PROVIDER]
 ```
 
-- <config_name>: Name of the config.
+- `<config_name>`: Name of the config.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 
 ### Logs
@@ -92,7 +92,7 @@ The `logs` command is used to retrieve logs from deployed agents.
 pdr deployer logs <config_name> [-p PROVIDER]
 ```
 
-- <config_name>: Name of the config.
+- `<config_name>`: Name of the config.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 
 
@@ -104,8 +104,8 @@ The `registry` command is used to manage remote registries for agent deployment.
 pdr deployer registry <action> <registry_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP]
 ```
 
-- <action>: Action (choices: "deploy", "destroy", "auth", "url").
-- <registry_name>: Registry name.
+- `<action>`: Action (choices: "deploy", "destroy", "auth", "url").
+- `<registry_name>`: Registry name.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp").
 - -r, --region: Deployment zone/region (optional).
 - --project_id: Google Cloud project id (optional).
@@ -120,8 +120,8 @@ The build command is used to build a container image.
 pdr deployer build <image_name> <image_tag>
 ```
 
-- <image_name>: Image name (default: "pdr_backend").
-- <image_tag>: Image tag (default: "deployer").
+- `<image_name>`: Image name (default: "pdr_backend").
+- `<image_tag>`: Image tag (default: "deployer").
 
 
 #### Push
@@ -132,9 +132,9 @@ The `push` command is used to push container images to a remote registry.
 pdr deployer push <registry_name> [<image_name>] [<image_tag>]
 ```
 
-- <registry_name>: Registry name.
-- <image_name>: Image name (default: "pdr_backend").
-- <image_tag>: Image tag (default: "deployer").
+- `<registry_name>`: Registry name.
+- `<image_name>`: Image name (default: "pdr_backend").
+- `<image_tag>`: Image tag (default: "deployer").
 
 
 ## Examples
