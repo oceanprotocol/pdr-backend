@@ -100,6 +100,7 @@ def get_provider(args):
     elif args.provider == "aws":
         provider = AWSProvider(args.region)
     elif args.provider == "azure":
+        # pylint: disable=abstract-class-instantiated
         provider = AzureProvider(args.region, args.resource_group)
     else:
         raise Exception(f"Unknown provider {args.provider}")
