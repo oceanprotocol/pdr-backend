@@ -6,8 +6,8 @@ from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfi
 from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 
-# pylint: disable=too-many-instance-attributes
 @dataclass
+# pylint: disable=too-many-instance-attributes
 class PredictoorAgentConfig(SingleAgentConfig):
     pair: str
     timeframe: str
