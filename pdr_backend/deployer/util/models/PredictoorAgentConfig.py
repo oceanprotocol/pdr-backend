@@ -6,6 +6,7 @@ from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfi
 from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class PredictoorAgentConfig(SingleAgentConfig):
     pair: str
@@ -60,7 +61,7 @@ class PredictoorAgentConfig(SingleAgentConfig):
         ]
 
         return (
-            [f"./pdr", "predictoor", f'"{approach}"', yaml_path, network]
+            ["./pdr", "predictoor", f'"{approach}"', yaml_path, network]
             + override_feed
             + override_stake
             + override_s_until

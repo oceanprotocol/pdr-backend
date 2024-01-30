@@ -8,7 +8,7 @@ class DeployFile:
     content: str
     name: str
 
-    def write(self, dir):
+    def write(self, directory):
         file_name = self.name.replace("/", "-")
-        with open(f"{dir}/{file_name}", "w", encoding="utf-8") as f:
+        with open(f"{directory}/{file_name}", "w", encoding="utf-8") as f:
             f.write(self.content)

@@ -17,6 +17,7 @@ class DeploymentMethod(Enum):
             return "config.js"
         if self == DeploymentMethod.K8S:
             return "yaml"
+        raise ValueError(f"Invalid deployment method: {self}")
 
     @classmethod
     def from_str(cls, s: str):
@@ -34,4 +35,5 @@ class DeploymentMethod(Enum):
         if self == DeploymentMethod.PM2:
             return f"pm2 start {foldername}/*.js"
         if self == DeploymentMethod.K8S:
-            return f"pdr deployer deploy"
+            return "pdr deployer deploy"
+        raise ValueError(f"Invalid deployment method: {self}")

@@ -3,6 +3,7 @@ from typing import List, Optional
 from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class AgentsDeployConfig:
     cpu: str

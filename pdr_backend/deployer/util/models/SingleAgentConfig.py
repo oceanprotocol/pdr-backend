@@ -3,5 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class SingleAgentConfig:
+    # disable: attribute-defined-outside-init
     def set_private_key(self, private_key):
         self.private_key = private_key
