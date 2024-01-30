@@ -186,7 +186,9 @@ def destroy_config(config_file: str, cloud_provider: CloudProvider):
 
     if deploymentinfo.deployment_method == "docker-compose":
         deployment_folder = deploymentinfo.foldername
-        destroy_agents_with_docker_compose(deployment_folder, deploymentinfo.config_name)
+        destroy_agents_with_docker_compose(
+            deployment_folder, deploymentinfo.config_name
+        )
 
 
 def logs_config(config_file: str, cloud_provider: CloudProvider):
