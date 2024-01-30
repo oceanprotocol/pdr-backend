@@ -1,12 +1,14 @@
 from typing import Dict, List, Union
 
+import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import SingleFeedMixin
+from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 
-class TraderSS(SingleFeedMixin, StrMixin):
+class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
     __STR_OBJDIR__ = ["d"]
     FEED_KEY = "feed"
 
@@ -17,19 +19,27 @@ class TraderSS(SingleFeedMixin, StrMixin):
         )  # yaml_dict["trader_ss"]
 
     # --------------------------------
-    # yaml properties: xpmt only
+    # yaml properties: sim only
     @property
     def buy_amt_str(self) -> Union[int, float]:
         """How much to buy. Eg 10."""
-        return self.d["xpmt_only"]["buy_amt"]
+        return self.d["sim_only"]["buy_amt"]
 
     @property
     def fee_percent(self) -> str:
-        return self.d["xpmt_only"]["fee_percent"]  # Eg 0.001 is 0.1%.Trading fee
+        return self.d["sim_only"]["fee_percent"]  # Eg 0.001 is 0.1%.Trading fee
 
     @property
     def init_holdings_strs(self) -> List[str]:
-        return self.d["xpmt_only"]["init_holdings"]  # eg ["1000 USDT", ..]
+        return self.d["sim_only"]["init_holdings"]  # eg ["1000 USDT", ..]
+
+    @property
+    def tradetype(self) -> str:
+        return self.d.get("tradetype", "livemock")
+
+    @property
+    def allowed_tradetypes(self) -> List[str]:
+        return ["livemock", "livereal"]
 
     # feed defined in base
 
@@ -79,6 +89,17 @@ class TraderSS(SingleFeedMixin, StrMixin):
             amt = float(amt_s)
             d[coin] = amt
         return d
+
+    @enforce_types
+    def ccxt_exchange(self) -> ccxt.Exchange:
+        assert hasattr(self, "exchange_params")
+
+        mock = not hasattr(self, "tradetype") or self.tradetype != "livemock"
+
+        return self.feed.ccxt_exchange(
+            self.exchange_params,
+            mock=mock,
+        )
 
 
 # =========================================================================

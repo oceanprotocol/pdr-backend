@@ -6,12 +6,12 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.ppss.xpmt_ss import XpmtSS
-from pdr_backend.xpmt.xpmt_engine import XpmtEngine
+from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.sim.sim_engine import SimEngine
 
 
 @enforce_types
-def test_xpmt_engine(tmpdir):
+def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
@@ -38,15 +38,22 @@ def test_xpmt_engine(tmpdir):
         }
     )
 
-    assert hasattr(ppss, "xpmt_ss")
-    ppss.xpmt_ss = XpmtSS(
+    assert hasattr(ppss, "sim_ss")
+    ppss.sim_ss = SimSS(
         {
             "do_plot": True,
             "log_dir": os.path.join(tmpdir, "logs"),
             "test_n": 10,
+            "exchange_only": {
+                "timeout": 30000,
+                "options": {
+                    "createMarketBuyOrderRequiresPrice": False,
+                    "defaultType": "spot",
+                },
+            },
         }
     )
 
-    with mock.patch("pdr_backend.xpmt.xpmt_engine.plt.show"):
-        xpmt_engine = XpmtEngine(ppss)
-        xpmt_engine.run()
+    with mock.patch("pdr_backend.sim.sim_engine.plt.show"):
+        sim_engine = SimEngine(ppss)
+        sim_engine.run()

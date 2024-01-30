@@ -104,6 +104,14 @@ class SingleFeedMixin:
             for attr in assert_feed_attributes:
                 assert getattr(self.feed, attr)
 
+        if hasattr(self, "tradetype"):
+            assert hasattr(self, "allowed_tradetypes")
+            if self.tradetype not in self.allowed_tradetypes:
+                raise ValueError(
+                    f"{self.tradetype} not in allowed tradetypes "
+                    f"{', '.join(self.allowed_tradetypes)}"
+                )
+
     # --------------------------------
     # yaml properties
     @property
@@ -114,9 +122,9 @@ class SingleFeedMixin:
     # --------------------------------
 
     @property
-    def pair_str(self) -> ArgPair:
+    def pair_str(self) -> str:
         """Return e.g. 'ETH/USDT'. Only applicable when 1 feed."""
-        return self.feed.pair
+        return str(self.feed.pair)
 
     @property
     def exchange_str(self) -> str:

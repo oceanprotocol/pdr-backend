@@ -13,8 +13,13 @@ from pdr_backend.lake.table_pdr_subscriptions import (
     get_pdr_subscriptions_df,
     subscriptions_schema,
 )
-from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
+from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df, truevals_schema
+from pdr_backend.lake.table_pdr_payouts import (
+    get_pdr_payouts_df,
+    payouts_schema,
+)
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
@@ -55,6 +60,20 @@ class GQLDataFactory:
             "pdr_subscriptions": {
                 "fetch_fn": get_pdr_subscriptions_df,
                 "schema": subscriptions_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
+            "pdr_truevals": {
+                "fetch_fn": get_pdr_truevals_df,
+                "schema": truevals_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
+            "pdr_payouts": {
+                "fetch_fn": get_pdr_payouts_df,
+                "schema": payouts_schema,
                 "config": {
                     "contract_list": contract_list,
                 },
@@ -226,13 +245,8 @@ class GQLDataFactory:
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
 
-            # check for duplicates and throw error if any found
-            duplicate_rows = df.filter(pl.struct("ID").is_duplicated())
-            if len(duplicate_rows) > 0:
-                raise Exception(
-                    f"Not saved. Duplicate rows found. {len(duplicate_rows)} rows: {duplicate_rows}"
-                )
-
+            # drop duplicates
+            df = df.filter(pl.struct("ID").is_unique())
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")

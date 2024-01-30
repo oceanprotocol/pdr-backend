@@ -17,8 +17,11 @@ from pdr_backend.cli.cli_module import (
     do_lake,
     do_predictoor,
     do_publisher,
-    do_xpmt,
+    do_sim,
     do_topup,
+    do_create_accounts,
+    do_view_accounts,
+    do_fund_accounts,
     do_trader,
     do_trueval,
 )
@@ -71,6 +74,22 @@ class _FEEDS:
 
 class _PDRS:
     PDRS = "0xa5222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe4"
+
+
+class _NUM:
+    NUM = 1
+
+
+class _ACCOUNTS:
+    ACCOUNTS = "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
+
+
+class _TOKEN_AMOUNT:
+    TOKEN_AMOUNT = 13
+
+
+class _NATIVE_TOKEN:
+    NATIVE_TOKEN = True
 
 
 class _Base:
@@ -128,6 +147,32 @@ class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(_Base):
     def parse_args(self):
         class MockArgs(  # pylint: disable=too-many-ancestors
             Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _FEEDS
+        ):
+            pass
+
+        return MockArgs()
+
+
+class MockArgParser_NUM(_Base):
+    def parse_args(self):
+        class MockArgs(Namespace, _NUM):
+            pass
+
+        return MockArgs()
+
+
+class MockArgParser_ACCOUNTS_PPSS_NETWORK(_Base):
+    def parse_args(self):
+        class MockArgs(Namespace, _ACCOUNTS, _PPSS, _NETWORK):
+            pass
+
+        return MockArgs()
+
+
+class MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK(_Base):
+    def parse_args(self):
+        class MockArgs(
+            Namespace, _TOKEN_AMOUNT, _ACCOUNTS, _PPSS, _NETWORK, _NATIVE_TOKEN
         ):
             pass
 
@@ -256,6 +301,35 @@ def test_do_topup(monkeypatch):
 
 
 @enforce_types
+def test_do_create_accounts(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.create_accounts", mock_f)
+
+    do_create_accounts(MockArgParser_NUM().parse_args())
+    mock_f.assert_called()
+
+
+@enforce_types
+def test_do_view_accounts(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.view_accounts", mock_f)
+
+    do_view_accounts(MockArgParser_ACCOUNTS_PPSS_NETWORK().parse_args())
+    mock_f.assert_called()
+
+
+@enforce_types
+def test_do_fund_accounts(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.fund_accounts", mock_f)
+
+    do_fund_accounts(
+        MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK().parse_args()
+    )
+    mock_f.assert_called()
+
+
+@enforce_types
 def test_do_trader(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.TraderAgent1", MockAgent)
 
@@ -280,12 +354,12 @@ def test_do_trueval(monkeypatch):
 
 
 @enforce_types
-def test_do_xpmt(monkeypatch):
+def test_do_sim(monkeypatch):
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.XpmtEngine.run", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    with patch("pdr_backend.xpmt.xpmt_engine.plt.show"):
-        do_xpmt(MockArgParser_PPSS_NETWORK().parse_args())
+    with patch("pdr_backend.sim.sim_engine.plt.show"):
+        do_sim(MockArgParser_PPSS_NETWORK().parse_args())
 
     mock_f.assert_called()
 
@@ -305,10 +379,10 @@ def test_do_main(monkeypatch, capfd):
     assert "Predictoor tool" in capfd.readouterr().out
 
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.XpmtEngine.run", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    with patch("pdr_backend.xpmt.xpmt_engine.plt.show"):
-        with patch("sys.argv", ["pdr", "xpmt", "ppss.yaml"]):
+    with patch("pdr_backend.sim.sim_engine.plt.show"):
+        with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
             _do_main()
 
     assert mock_f.called

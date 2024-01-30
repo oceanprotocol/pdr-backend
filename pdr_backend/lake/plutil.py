@@ -2,11 +2,12 @@
 plutil: polars dataframe & csv/parquet utilities. 
 These utilities are specific to the time-series dataframe columns we're using.
 """
+
 import os
 import shutil
 from io import StringIO
 from tempfile import mkdtemp
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 import polars as pl
@@ -258,3 +259,31 @@ def _filter_and_sort_pdr_records(
     lazy_df = _transform_timestamp_to_ms_lazy(lazy_df)
     lazy_df = _filter_with_timestamps_lazy(lazy_df, st_ut, fin_ut)
     return lazy_df.collect()
+
+@enforce_types
+def check_df_len(
+    lazy_df: pl.LazyFrame,
+    min_len: Optional[int],
+    max_len: Optional[int],
+    identifier: str = "df",
+):
+    """
+    @description
+        Check if lazy_df has the right number of records
+        + If not, raise an error
+
+    @arguments
+        lazy_df -- dataframe
+        min_len -- minimum number of records
+        max_len -- maximum number of records
+
+    @return
+        void
+    """
+    df = lazy_df.collect()
+    if max_len is not None:
+        assert len(df) <= max_len, f"{identifier} has {len(df)} records, but should have at most {max_len} records"
+    if min_len is not None:
+        assert len(df) >= min_len, f"{identifier} has {len(df)} records, but should have at least {min_len} records"
+
+    assert len(df) > 0, f"No records to summarize {identifier}. Please adjust params."

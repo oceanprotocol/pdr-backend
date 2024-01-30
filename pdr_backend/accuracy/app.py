@@ -122,9 +122,9 @@ def aggregate_statistics(
         and the total counts of correct predictions and slots evaluated.
     """
 
-    total_staked_yesterday = (
-        total_staked_today
-    ) = total_correct_predictions = total_slots_evaluated = 0
+    total_staked_yesterday = total_staked_today = total_correct_predictions = (
+        total_slots_evaluated
+    ) = 0
     for slot in slots:
         slot_results = process_single_slot(slot, end_of_previous_day_timestamp)
         if slot_results:
