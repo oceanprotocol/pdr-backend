@@ -85,9 +85,10 @@ def push_image(image_name, image_tag, registry_name):
     run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
 
 
-def deploy_agents_to_k8s(config_folder: str):
-    print("Deploying agents...")
-    run_command(f"kubectl apply -f {config_folder}/")
+def deploy_agents_to_k8s(config_folder: str, config_name: str):
+    config_name_sanitized = sanitize_name(config_name)
+    create_namespace(config_name_sanitized)
+    run_command(f"kubectl apply -f {config_folder}/ -n {config_name_sanitized}")
 
 
 def deploy_cluster(provider: CloudProvider, cluster_name):
@@ -97,19 +98,24 @@ def deploy_cluster(provider: CloudProvider, cluster_name):
         provider.create_kubernetes_cluster(cluster_name)
 
 
-def destroy_cluster(provider: CloudProvider, cluster_name):
-    cluster_name = sanitize_name(cluster_name)
-    if provider.cluster_exists(cluster_name):
+def create_namespace(namespace: str):
+    run_command(f"kubectl create namespace {namespace}")
+
+def destroy_cluster(provider: CloudProvider, cluster_name, config_name):
+    cluster_name_sanitized = sanitize_name(cluster_name)
+    config_name_sanitized = sanitize_name(config_name)
+    if provider.cluster_exists(cluster_name_sanitized):
         should_destroy_cluster = input(
             "Deleting all the pods. Would you like to destroy the cluster? (y/n): "
         )
         if should_destroy_cluster == "y":
-            provider.delete_kubernetes_cluster(cluster_name)
+            provider.delete_kubernetes_cluster(cluster_name_sanitized)
             print("Destroying Kubernetes cluster...")
         else:
             print("Not destroying the cluster")
-            delete_all_pods(provider, cluster_name)
-
+            delete_all_pods(provider, cluster_name_sanitized, config_name_sanitized)
+    else:
+        raise Exception("Cluster does not exist")
 
 def deploy_registry(provider: CloudProvider, registry_name):
     registry_name = sanitize_name(registry_name)
@@ -127,19 +133,23 @@ def delete_registry(provider: CloudProvider, registry_name):
         provider.delete_registry(registry_name)
 
 
-def delete_all_pods(provider: CloudProvider, cluster_name):
+def delete_all_pods(provider: CloudProvider, cluster_name, config_name):
     cluster_name = sanitize_name(cluster_name)
+    config_name = sanitize_name(config_name)
     if provider.cluster_exists(cluster_name):
         print("Deleting all pods...")
-        command = "kubectl delete pods --all"
+        command = f"kubectl delete pods --all -n {config_name}"
         run_command(command)
 
 
-def cluster_logs(provider: CloudProvider, cluster_name, app_name):
+def cluster_logs(provider: CloudProvider, cluster_name, app_name, config_name):
     cluster_name = sanitize_name(cluster_name)
+    config_name = sanitize_name(config_name)
     if provider.cluster_exists(cluster_name):
         print("Getting cluster logs...")
-        command = f"kubectl logs -l app={app_name}"
+        command = f"kubectl get pods -n {config_name}"
+        run_command(command)
+        command = f"kubectl logs -l app={app_name} -f -n {config_name}"
         run_command(command)
 
 
@@ -157,9 +167,9 @@ def deploy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
             )
         check_cloud_provider_requirements(cloud_provider.json["type"])
         deploy_cluster(cloud_provider, deployment_name)
-
+        cloud_provider.auth_kubernetes_cluster(deployment_name)
         print("Cluster is ready, deploying the agents...")
-        deploy_agents_to_k8s(deployment_folder)
+        deploy_agents_to_k8s(deployment_folder, deploymentinfo.config_name)
 
         deploymentinfo.deployments[cloud_provider.json["type"]] = cloud_provider.json
         deploymentinfo.deployments[cloud_provider.json["type"]].update(
@@ -186,7 +196,7 @@ def destroy_config(config_file: str, cloud_provider: Optional[CloudProvider]):
         check_cloud_provider_requirements(cloud_provider.json["type"])
         deployment_name = deploymentinfo.config_name
         print(f"Destroying {deployment_name}...")
-        destroy_cluster(cloud_provider, deployment_name)
+        destroy_cluster(cloud_provider, deployment_name, deploymentinfo.config_name)
         print("Cluster is destroyed")
 
     if deploymentinfo.deployment_method == "pm2":
@@ -210,7 +220,7 @@ def logs_config(config_file: str, cloud_provider: Optional[CloudProvider]):
         check_cloud_provider_requirements(cloud_provider.json["type"])
         deployment_name = deploymentinfo.config_name
         print(f"Getting logs for {deployment_name}...")
-        cluster_logs(cloud_provider, deployment_name, "pdr-predictoor")
+        cluster_logs(cloud_provider, deployment_name, "pdr-predictoor", deploymentinfo.config_name)
 
     if deploymentinfo.deployment_method == "pm2":
         pm2_logs()
