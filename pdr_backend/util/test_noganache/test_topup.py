@@ -12,7 +12,13 @@ from pdr_backend.util.topup import topup_main
 @pytest.fixture(name="mock_token_")
 def mock_token():
     token = MagicMock(spec=Token)
-    token.balanceOf.side_effect = [to_wei(500), 0, 0]  # Mock balance in wei
+    token.balanceOf.side_effect = [
+        to_wei(500),
+        to_wei(500),
+        0,
+        0,
+        0,
+    ]  # Mock balance in wei
     token.transfer.return_value = None
     return token
 
@@ -20,7 +26,13 @@ def mock_token():
 @pytest.fixture(name="mock_native_token_")
 def mock_native_token():
     native_token = MagicMock(spec=NativeToken)
-    native_token.balanceOf.side_effect = [to_wei(500), 0, 0]  # Mock balance in wei
+    native_token.balanceOf.side_effect = [
+        to_wei(500),
+        to_wei(500),
+        0,
+        0,
+        0,
+    ]  # Mock balance in wei
     native_token.transfer.return_value = None
     return native_token
 

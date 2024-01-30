@@ -60,12 +60,12 @@ def topup_main(ppss: PPSS):
 def do_transfer(token, address, addr_label, owner, owner_bal):
     bal = from_wei(token.balanceOf(address))
 
-    if token.name == "OCEAN":
-        min_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
-        topup_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
-    elif token.name == "ROSE":
+    if token.name == "ROSE":
         min_bal = 250 if addr_label == "dfbuyer" else 30
         topup_bal = 250 if addr_label == "dfbuyer" else 30
+    else:
+        min_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        topup_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
 
     failed = False
     transfered_amount = 0
