@@ -29,6 +29,10 @@ class CloudProvider(ABC):
         pass
 
     @abstractmethod
+    def auth_kubernetes_cluster(self, cluster_name):
+        pass
+
+    @abstractmethod
     def delete_registry(self, registry_name):
         pass
 
@@ -87,6 +91,11 @@ class GCPProvider(CloudProvider):
     def create_kubernetes_cluster(self, cluster_name):
         print("Creating Kubernetes cluster in GCP...")
         command = f"gcloud container clusters create-auto {cluster_name} --project={self.project_id} --zone={self.zone}"
+        run_command(command)
+
+    def auth_kubernetes_cluster(self, cluster_name):
+        print("Authenticating to Kubernetes cluster...")
+        command = f"gcloud container clusters get-credentials {cluster_name} --project={self.project_id} --zone={self.zone}"
         run_command(command)
 
     def delete_registry(self, registry_name):
@@ -154,6 +163,11 @@ class AWSProvider(CloudProvider):
         command = f"eksctl create cluster --name {cluster_name} --region {self.region}"
         run_command(command)
 
+    def auth_kubernetes_cluster(self, cluster_name):
+        print("Authenticating to Kubernetes cluster...")
+        command = f"aws eks --region {self.region} update-kubeconfig --name {cluster_name}"
+        run_command(command)
+
     def delete_registry(self, registry_name):
         print("Destroying container registry...")
         command = f"aws ecr delete-repository --repository-name {registry_name}"
@@ -214,6 +228,11 @@ class AzureProvider(CloudProvider):
     def create_kubernetes_cluster(self, cluster_name):
         print("Creating Kubernetes cluster in Azure...")
         command = f"az aks create --resource-group {self.resource_group} --name {cluster_name} --enable-managed-identity --generate-ssh-keys"
+        run_command(command)
+
+    def auth_kubernetes_cluster(self, cluster_name):
+        print("Authenticating to Kubernetes cluster...")
+        command = f"az aks get-credentials --resource-group {self.resource_group} --name {cluster_name}"
         run_command(command)
 
     def delete_registry_azure(self, registry_name):
