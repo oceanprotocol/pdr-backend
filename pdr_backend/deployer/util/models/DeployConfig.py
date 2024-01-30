@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
 from pdr_backend.deployer.util.models.DeployFile import DeployFile
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod

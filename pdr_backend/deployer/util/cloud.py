@@ -1,4 +1,4 @@
-# pylint: disable=line-too-long
+# pylint: disable=line-too-long, subprocess-run-check
 from abc import ABC, abstractmethod
 import subprocess
 
