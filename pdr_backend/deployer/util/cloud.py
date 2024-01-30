@@ -1,11 +1,11 @@
+# pylint: disable=line-too-long
 from abc import ABC, abstractmethod
-import shutil
 import subprocess
 
 
 def run_command(command):
     print(f"Running command: {command}")
-    result = subprocess.run(command, shell=True, text=True)
+    result = subprocess.run(command, shell=True, text=True, check=True)
     if result.returncode != 0:
         raise Exception(f"Error executing {' '.join(command)}: {result.stderr}")
     return result.stdout
@@ -49,9 +49,9 @@ class CloudProvider(ABC):
         if "type" in data:
             if data["type"] == "gcp":
                 return GCPProvider.from_json(data)
-            elif data["type"] == "azure":
+            if data["type"] == "azure":
                 return AzureProvider.from_json(data)
-            elif data["type"] == "aws":
+            if data["type"] == "aws":
                 return AWSProvider.from_json(data)
         raise ValueError("Invalid JSON data for class instantiation")
 
@@ -97,12 +97,16 @@ class GCPProvider(CloudProvider):
 
     def registry_exists(self, registry_name):
         command = f"gcloud artifacts repositories describe {registry_name} --location={self.zone} --project={self.project_id}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     def cluster_exists(self, cluster_name):
         command = f"gcloud container clusters describe {cluster_name} --project={self.project_id} --zone={self.zone}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     @property
@@ -114,10 +118,10 @@ class GCPProvider(CloudProvider):
         }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, data):
         return cls(
-            json["zone"],
-            json["project_id"],
+            data["zone"],
+            data["project_id"],
         )
 
 
@@ -158,12 +162,16 @@ class AWSProvider(CloudProvider):
 
     def registry_exists(self, registry_name):
         command = f"aws ecr describe-repositories --repository-names {registry_name}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     def cluster_exists(self, cluster_name):
         command = f"eksctl get cluster --name {cluster_name} --region {self.region}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     @property
@@ -174,9 +182,9 @@ class AWSProvider(CloudProvider):
         }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, data):
         return cls(
-            json["region"],
+            data["region"],
         )
 
 
@@ -218,14 +226,18 @@ class AzureProvider(CloudProvider):
         command = (
             f"az acr show --name {registry_name} --resource-group {self.resource_group}"
         )
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     def azure_cluster_exists(self, cluster_name):
         command = (
             f"az aks show --name {cluster_name} --resource-group {self.resource_group}"
         )
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=True
+        )
         return result.returncode == 0
 
     @property
@@ -237,111 +249,8 @@ class AzureProvider(CloudProvider):
         }
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, data):
         return cls(
-            json["subscription_id"],
-            json["resource_group"],
+            data["subscription_id"],
+            data["resource_group"],
         )
-
-
-def check_requirements(provider_name):
-    # check if kubectl is installed
-    if not shutil.which("kubectl"):
-        raise Exception("kubectl is not installed")
-
-    if provider_name == "gcp":
-        # check if gcloud is installed
-        if not shutil.which("gcloud"):
-            raise Exception("gcloud is not installed")
-
-        if not shutil.which("gke-gcloud-auth-plugin"):
-            raise Exception(
-                "gke-gcloud-auth-plugin is not installed, run 'gcloud components install gke-gcloud-auth-plugin'"
-            )
-
-    if provider_name == "aws":
-        # check if aws is installed
-        if not shutil.which("aws"):
-            raise Exception("aws is not installed")
-
-    if provider_name == "azure":
-        # check if az is installed
-        if not shutil.which("az"):
-            raise Exception("az is not installed")
-
-
-def check_image_build_requirements():
-    # check if docker is installed
-    if not shutil.which("docker"):
-        raise Exception("docker is not installed")
-
-
-def build_image(image_name, image_tag):
-    print("Building docker image...")
-    run_command(f"docker build -t {image_name}:{image_tag} .")
-
-
-def push_image(image_name, image_tag, registry_name):
-    print("Pushing docker image...")
-    run_command(
-        f"docker tag {image_name}:{image_tag} {registry_name}/{image_name}:{image_tag}"
-    )
-    run_command(f"docker push {registry_name}/{image_name}:{image_tag}")
-
-
-def deploy_agents_to_k8s(config_folder: str):
-    print("Deploying agents...")
-    run_command(f"kubectl apply -f {config_folder}/")
-
-
-def deploy_cluster(provider: CloudProvider, cluster_name):
-    cluster_name = sanitize_name(cluster_name)
-    if not provider.cluster_exists(cluster_name):
-        print("Creating Kubernetes cluster...")
-        provider.create_kubernetes_cluster(cluster_name)
-
-
-def destroy_cluster(provider: CloudProvider, cluster_name):
-    cluster_name = sanitize_name(cluster_name)
-    if provider.cluster_exists(cluster_name):
-        should_destroy_cluster = input(
-            "Deleting all the pods. Would you like to destroy the cluster? (y/n): "
-        )
-        if should_destroy_cluster == "y":
-            provider.delete_kubernetes_cluster(cluster_name)
-            print("Destroying Kubernetes cluster...")
-        else:
-            print("Not destroying the cluster")
-            delete_all_pods(provider, cluster_name)
-
-
-def deploy_registry(provider: CloudProvider, registry_name):
-    registry_name = sanitize_name(registry_name)
-    if not provider.registry_exists(registry_name):
-        print("Creating container registry...")
-        provider.create_container_registry(registry_name)
-        provider.print_registry_url(registry_name)
-        provider.auth_registry(registry_name)
-
-
-def delete_registry(provider: CloudProvider, registry_name):
-    registry_name = sanitize_name(registry_name)
-    if provider.registry_exists(registry_name):
-        print("Destroying container registry...")
-        provider.delete_registry(registry_name)
-
-
-def delete_all_pods(provider: CloudProvider, cluster_name):
-    cluster_name = sanitize_name(cluster_name)
-    if provider.cluster_exists(cluster_name):
-        print("Deleting all pods...")
-        command = f"kubectl delete pods --all"
-        run_command(command)
-
-
-def cluster_logs(provider: CloudProvider, cluster_name, app_name):
-    cluster_name = sanitize_name(cluster_name)
-    if provider.cluster_exists(cluster_name):
-        print("Getting cluster logs...")
-        command = f"kubectl logs -l app={app_name}"
-        run_command(command)
