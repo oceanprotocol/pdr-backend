@@ -38,7 +38,9 @@ def check_cloud_provider_requirements(provider_name):
     if provider_name == "gcp":
         # check if gcloud is installed
         if not shutil.which("gcloud"):
-            raise Exception("gcloud is not installed, install it from https://cloud.google.com/sdk/docs/install")
+            raise Exception(
+                "gcloud is not installed, install it from https://cloud.google.com/sdk/docs/install"
+            )
 
         if not shutil.which("gke-gcloud-auth-plugin"):
             # pylint: disable=line-too-long
@@ -49,18 +51,24 @@ def check_cloud_provider_requirements(provider_name):
     if provider_name == "aws":
         # check if aws is installed
         if not shutil.which("aws"):
-            raise Exception("aws is not installed, install it from https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html")
+            raise Exception(
+                "aws is not installed, install it from https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html"
+            )
 
     if provider_name == "azure":
         # check if az is installed
         if not shutil.which("az"):
-            raise Exception("az is not installed, install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli")
+            raise Exception(
+                "az is not installed, install it from https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
+            )
 
 
 def check_image_build_requirements():
     # check if docker is installed
     if not shutil.which("docker"):
-        raise Exception("docker is not installed, install it from https://docs.docker.com/get-docker/")
+        raise Exception(
+            "docker is not installed, install it from https://docs.docker.com/get-docker/"
+        )
 
 
 def build_image(image_name, image_tag):

@@ -15,7 +15,10 @@ def parse_config(file_path: str, config_name: str) -> DeployConfig:
         config_data["approach"] = None
 
     if config_data.get("type") == "predictoor":
-        agents = [PredictoorAgentConfig(private_key="", **agent) for agent in config_data["agents"]]
+        agents = [
+            PredictoorAgentConfig(private_key="", **agent)
+            for agent in config_data["agents"]
+        ]
     else:
         raise ValueError(f"Config type {config_data.get('type')} is not supported")
 

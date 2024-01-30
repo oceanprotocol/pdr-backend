@@ -30,7 +30,6 @@ from pdr_backend.deployer.util.cloud import (
 )
 
 
-
 def generate_deployment_templates(
     path, output_path, deployment_method: DeploymentMethod, config_name: str
 ):
