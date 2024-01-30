@@ -34,21 +34,22 @@ class DeployConfig:
                     name=f"docker-compose.{method.extension}",
                 )
             ]
-        else:
-            templates: List[DeployFile] = []
-            for idx in range(len(self.agent_config.agents)):
-                template, name = self.predictoor_template(idx, method)
-                deploy_file = DeployFile(
-                    method=method, content=template, name=f"{name}.{method.extension}"
-                )
-                templates.append(deploy_file)
-            return templates
 
-    def predictoor_template(self, index, type: DeploymentMethod) -> Tuple[str, str]:
+        templates: List[DeployFile] = []
+        for idx in range(len(self.agent_config.agents)):
+            template, name = self.predictoor_template(idx, method)
+            deploy_file = DeployFile(
+                method=method, content=template, name=f"{name}.{method.extension}"
+            )
+            templates.append(deploy_file)
+        return templates
+
+    def predictoor_template(self, index, method: DeploymentMethod) -> Tuple[str, str]:
         predictoor = self.agent_config.agents[index]
         full_pair_name = (
             f"{predictoor.source} {predictoor.pair} c {predictoor.timeframe}"
         )
+        # pylint: disable=line-too-long
         full_name = f"pdr-predictoor{index + 1}-{predictoor.approach}-{predictoor.pair}-{predictoor.timeframe}-{predictoor.source}"
         full_name = full_name.replace("/", "-")
         run_command = predictoor.get_run_command(
@@ -58,14 +59,14 @@ class DeployConfig:
             predictoor.network,
             predictoor.s_until_epoch_end,
             self.yaml_path,
-            with_apostrophe=type == DeploymentMethod.PM2
-            or type == DeploymentMethod.DOCKER_COMPOSE,
+            with_apostrophe=method == DeploymentMethod.PM2
+            or method == DeploymentMethod.DOCKER_COMPOSE,
         )
-        if type == DeploymentMethod.K8S:
+        if method == DeploymentMethod.K8S:
             return (
                 get_k8s_predictoor_template(
                     name=full_name,
-                    app=f"pdr-predictoor",
+                    app="pdr-predictoor",
                     docker_image=self.agent_config.pdr_backend_image_source,
                     cpu=predictoor.cpu,
                     memory=predictoor.memory,
@@ -75,11 +76,11 @@ class DeployConfig:
                 full_name,
             )
 
-        if type == DeploymentMethod.DOCKER_COMPOSE:
+        if method == DeploymentMethod.DOCKER_COMPOSE:
             return (
                 get_docker_compose_template(
                     name=full_name,
-                    app=f"pdr-predictoor",
+                    app="pdr-predictoor",
                     docker_image=predictoor.pdr_backend_image_source,
                     private_key=predictoor.private_key,
                     run_command=run_command,
@@ -89,7 +90,7 @@ class DeployConfig:
                 full_name,
             )
 
-        if type == DeploymentMethod.PM2:
+        if method == DeploymentMethod.PM2:
             return (
                 get_pm2_deploy_template(
                     name=full_name,
@@ -98,6 +99,8 @@ class DeployConfig:
                 ),
                 full_name,
             )
+
+        raise Exception(f"Deployment method {type} not supported")
 
     def to_dict(self):
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
