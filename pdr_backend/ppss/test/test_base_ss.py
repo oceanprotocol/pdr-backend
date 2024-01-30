@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.ppss.base_ss import CCXTExchangeMixin, MultiFeedMixin, SingleFeedMixin
+from pdr_backend.ppss.base_ss import MultiFeedMixin, SingleFeedMixin
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
@@ -17,10 +17,6 @@ class NestedMultiFeedMixinTest(MultiFeedMixin):
 
 class SingleFeedMixinTest(SingleFeedMixin):
     FEED_KEY = "feed"
-
-
-class CCXTExchangeMixinTest(SingleFeedMixinTest, CCXTExchangeMixin):
-    pass
 
 
 @enforce_types
@@ -287,13 +283,3 @@ def test_single_feed_filter():
     }
 
     assert ss.get_feed_from_candidates(cand_feeds) == cand_feeds["0x12345"]
-
-
-def test_ccxt_mixin():
-    ccxt_mixin = CCXTExchangeMixinTest(
-        {"feed": "binance ETH/USDT 5m", "exchange_only": {"key1": "val1"}}
-    )
-    assert len(ccxt_mixin.exchange_params.keys()) == 3
-    assert "apiKey" in ccxt_mixin.exchange_params
-    assert "secret" in ccxt_mixin.exchange_params
-    assert ccxt_mixin.exchange_params["key1"] == "val1"

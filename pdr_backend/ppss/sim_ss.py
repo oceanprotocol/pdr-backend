@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.base_ss import CCXTExchangeMixin
+from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 

@@ -3,7 +3,8 @@ from typing import Dict, List, Union
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.base_ss import CCXTExchangeMixin, SingleFeedMixin
+from pdr_backend.ppss.base_ss import SingleFeedMixin
+from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 
