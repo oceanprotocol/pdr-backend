@@ -16,7 +16,6 @@ class PredictoorAgentConfig(SingleAgentConfig):
     source: Optional[str] = None
     cpu: Optional[str] = None
     memory: Optional[str] = None
-    private_key: Optional[str] = None
     network: Optional[str] = None
     s_until_epoch_end: Optional[int] = None
 
