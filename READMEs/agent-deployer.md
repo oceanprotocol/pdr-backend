@@ -137,7 +137,9 @@ pdr deployer push <registry_name> [<image_name>] [<image_tag>]
 - <image_tag>: Image tag (default: "deployer").
 
 
-**Example:**
+## Examples
+
+### PM2
 
 ```shell
 $ pdr deployer generate ppss.yaml testnet_predictoor_deployment pm2 ./pm2dir
@@ -159,4 +161,43 @@ $ pdr deployer logs testnet_predictoor_deployment
 
 $ pdr deployer destroy testnet_predictoor_deployment
 ....
+```
+
+### K8S with GCP
+
+Outputs are truncated for brevity.
+
+```shell
+$ pdr deployer generate ppss.yaml predictoors_cluster k8s ./predictoors_approach3
+Generated k8s templates for predictoors_cluster
+  Output path: ./predictoor_approach3
+  Config name: predictoors_cluster
+  Deployment method: k8s
+  Number of agents: 2
+To deploy: pdr deployer deploy predictoors_cluster
+```
+
+```shell
+$ pdr deployer deploy predictoors_cluster -p gcp -r europe-west2 --project_id id_goes_here
+Deploying predictoors_cluster...
+Authenticating to Kubernetes cluster...
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for predictoors_cluster.
+Cluster is ready, deploying the agents...
+namespace/predictoors_cluster created
+deployment.apps/pdr-predictoor1-3-btc-usdt-5m-binance created
+deployment.apps/pdr-predictoor2-3-eth-usdt-5m-binance created
+```
+
+```shell
+$ pdr deployer logs predictoors_cluster
+Getting logs for predictoors_cluster...
+Getting cluster logs...
+NAME                                                     READY   STATUS    RESTARTS   AGE
+pdr-predictoor1-3-btc-usdt-5m-binance-1294c5aa3-fjc65    1/1     Running   0          91s
+pdr-predictoor2-3-eth-usdt-5m-binance-21dfcf3bc4-b6nnk   1/1     Running   0          91s
+-> Submit predict tx result: success.
+====================================================================================================================================================================================
+cur_epoch=5688716, cur_block_number=4658908, cur_timestamp=1706615099, next_slot=1706615100, target_slot=1706615400. 295 s left in epoch (predict if <= 30 s left). s_per_epoch=300
+...
 ```
