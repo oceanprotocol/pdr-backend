@@ -7,8 +7,10 @@ from polars import Int64, Utf8, Float32
 from pdr_backend.subgraph.subgraph_subscriptions import (
     fetch_filtered_subscriptions,
 )
-from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.plutil import (
+    _object_list_to_df,
+    _filter_and_sort_pdr_records
+)
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
@@ -49,11 +51,6 @@ def get_pdr_subscriptions_df(
 
     # convert subscriptions to df and transform timestamp into ms
     subscriptions_df = _object_list_to_df(subscriptions, subscriptions_schema)
-    subscriptions_df = _transform_timestamp_to_ms(subscriptions_df)
-
-    # cull any records outside of our time range and sort them by timestamp
-    subscriptions_df = subscriptions_df.filter(
-        pl.col("timestamp").is_between(st_ut, fin_ut)
-    ).sort("timestamp")
+    subscriptions_df = _filter_and_sort_pdr_records(subscriptions_df, st_ut, fin_ut)
 
     return subscriptions_df

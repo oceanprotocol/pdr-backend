@@ -191,3 +191,70 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     assert obj_df.schema == schema
 
     return obj_df
+
+@enforce_types
+def _transform_timestamp_to_ms_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
+    """
+    Transform timestamp to ms
+    @precondition
+        lazy_df must have a column named "timestamp"
+    
+    @description
+        Transform timestamp to ms
+
+    @return
+        lazy_df with timestamp column transformed to ms
+    """
+
+    lazy_df = lazy_df.with_columns(
+        pl.col("timestamp").mul(1000).alias("timestamp"))
+    return lazy_df
+
+@enforce_types
+def _filter_with_timestamps_lazy(
+    lazy_df: pl.LazyFrame, st_ut: int, fin_ut: int
+) -> pl.LazyFrame:
+    """
+    @precondition
+        lazy_df must have a column named "timestamp"
+
+    @arguments
+        st_ut -- start timestamp in ms
+        fin_ut -- finish timestamp in ms
+    
+    @description
+        Filter lazy_df with timestamps
+        + Cull any records outside of our time range
+        + Sort them by timestamp
+
+    @return
+        lazy_df with timestamps filtered and sorted
+    """
+
+    lazy_df = lazy_df.filter(
+        pl.col("timestamp").is_between(st_ut, fin_ut)
+    ).sort("timestamp")
+    return lazy_df
+
+@enforce_types
+def _filter_and_sort_pdr_records(
+    df: pl.DataFrame, st_ut: int, fin_ut: int
+) -> pl.DataFrame:
+    """
+    @description
+        A wrapper for _filter_with_timestamps_lazy and _sort_by_timestamp_lazy
+        it takes a dataframe and filters and sorts it by timestamp
+        and returns the dataframe
+
+    @arguments
+        df -- dataframe
+        st_ut -- start timestamp in seconds
+        fin_ut -- finish timestamp in seconds
+
+    @return
+        df -- dataframe with timestamps filtered and sorted
+    """
+    lazy_df = df.lazy()
+    lazy_df = _transform_timestamp_to_ms_lazy(lazy_df)
+    lazy_df = _filter_with_timestamps_lazy(lazy_df, st_ut, fin_ut)
+    return lazy_df.collect()

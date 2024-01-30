@@ -45,6 +45,23 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
 
     return df
 
+@enforce_types
+def get_feed_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
+    # 1 - filter from lake only the rows that you're looking for
+    lazy_df = lazy_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
+
+    # Group by pair
+    lazy_df = lazy_df.group_by(["pair", "timeframe"]).agg(
+        pl.col("source").first().alias("source"),
+        pl.col("payout").sum().alias("sum_payout"),
+        pl.col("stake").sum().alias("sum_stake"),
+        pl.col("prediction").count().alias("num_predictions"),
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+    )
+
+    return lazy_df
 
 @enforce_types
 def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
@@ -64,13 +81,32 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
 
     return df
 
+@enforce_types
+def get_predictoor_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
+    # 1 - filter from lake only the rows that you're looking for
+    lazy_df = lazy_df.filter(
+        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+    )
+
+    # Group by pair
+    lazy_df = lazy_df.group_by(["user", "pair", "timeframe"]).agg(
+        pl.col("source").first().alias("source"),
+        pl.col("payout").sum().alias("sum_payout"),
+        pl.col("stake").sum().alias("sum_stake"),
+        pl.col("prediction").count().alias("num_predictions"),
+        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+    )
+
+    return lazy_df
 
 @enforce_types
 def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
+    # Lazy DataFrame
+    lazy_df = preds_df.lazy()
     # Calculate predictoor traction statistics
     # Predictoor addresses are aggregated historically
     stats_df = (
-        preds_df.with_columns(
+        lazy_df.with_columns(
             [
                 # use strftime(%Y-%m-%d %H:00:00) to get hourly intervals
                 pl.from_epoch("timestamp", time_unit="s")
@@ -101,7 +137,7 @@ def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
                 "daily_unique_predictoors_count",
                 "cum_daily_unique_predictoors_count",
             ]
-        )
+        ).collect()
     )
 
     return stats_df
@@ -167,9 +203,11 @@ def plot_traction_cum_sum_statistics(stats_df: pl.DataFrame, pq_dir: str) -> Non
 
 @enforce_types
 def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
+    # Lazy DataFrame
+    lazy_df = preds_df.lazy()
     # Create a <pair-timeframe-slot> key to group predictions
     slots_df = (
-        preds_df.with_columns(
+        lazy_df.with_columns(
             [
                 (pl.col("pair").cast(str) + "-" + pl.col("timeframe").cast(str)).alias(
                     "pair_timeframe"
@@ -204,6 +242,7 @@ def get_slot_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
             ]
         )
         .sort(["pair", "timeframe", "slot"])
+        .collect()
     )
 
     return slots_df

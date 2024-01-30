@@ -1,11 +1,11 @@
 from typing import Union
+import polars as pl
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.util.timeutil import timestr_to_ut
-from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats
-
+from pdr_backend.analytics.predictoor_stats import get_feed_summary_stats_lazy
 
 @enforce_types
 def get_predictions_info_main(
@@ -19,20 +19,24 @@ def get_predictions_info_main(
         return
     predictions_df = gql_dfs["pdr_predictions"]
 
+    lazy_df = predictions_df.lazy()
     # filter by feed addresses
     if feed_addrs_str:
         feed_addrs_list = feed_addrs_str.lower().split(",")
-        predictions_df = predictions_df.filter(
-            predictions_df["ID"]
-            .map_elements(lambda x: x.split("-")[0])
+        lazy_df = lazy_df.filter(
+            pl.col("ID")
+            .apply(lambda x: x.split("-")[0], return_dtype=pl.Utf8)
             .is_in(feed_addrs_list)
         )
 
     # filter by start and end dates
-    predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
-        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
+    lazy_df = lazy_df.filter(
+        pl.col("timestamp").is_between(
+            timestr_to_ut(start_timestr) / 1000, timestr_to_ut(end_timestr) / 1000
+        )
     )
 
-    feed_summary_df = get_feed_summary_stats(predictions_df)
+    lazy_feed_summary_df = get_feed_summary_stats_lazy(lazy_df)
+
+    feed_summary_df = lazy_feed_summary_df.collect()
     print(feed_summary_df)

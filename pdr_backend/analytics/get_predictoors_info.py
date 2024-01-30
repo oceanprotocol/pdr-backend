@@ -1,8 +1,9 @@
 from typing import Union
+import polars as pl
 
 from enforce_typing import enforce_types
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats
+from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats_lazy
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.timeutil import timestr_to_ut
 
@@ -19,18 +20,22 @@ def get_predictoors_info_main(
         return
     predictions_df = gql_dfs["pdr_predictions"]
 
+    lazy_df = predictions_df.lazy()
     # filter by user addresses
     if pdr_addrs_str:
         pdr_addrs_list = pdr_addrs_str.lower().split(",")
-        predictions_df = predictions_df.filter(
+        lazy_df = lazy_df.filter(
             predictions_df["user"].is_in(pdr_addrs_list)
         )
 
     # filter by start and end dates
-    predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
-        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
+    lazy_df = lazy_df.filter(
+        pl.col("timestamp").is_between(
+            timestr_to_ut(start_timestr) / 1000, timestr_to_ut(end_timestr) / 1000
+        )
     )
 
-    predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
+    lazy_predictoor_summary_df = get_predictoor_summary_stats_lazy(lazy_df)
+
+    predictoor_summary_df = lazy_predictoor_summary_df.collect()
     print(predictoor_summary_df)

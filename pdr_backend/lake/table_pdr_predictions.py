@@ -8,7 +8,10 @@ from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
     fetch_filtered_predictions,
 )
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.plutil import (
+    _object_list_to_df,
+    _filter_and_sort_pdr_records
+)
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
@@ -50,16 +53,6 @@ feed_summary_df_schema = {
     "n_predictions": Int64,
 }
 
-
-def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
-    df = df.with_columns(
-        [
-            pl.col("timestamp").mul(1000).alias("timestamp"),
-        ]
-    )
-    return df
-
-
 @enforce_types
 def get_pdr_predictions_df(
     network: str, st_ut: int, fin_ut: int, config: Dict
@@ -89,11 +82,5 @@ def get_pdr_predictions_df(
 
     # convert predictions to df and transform timestamp into ms
     predictions_df = _object_list_to_df(predictions, predictions_schema)
-    predictions_df = _transform_timestamp_to_ms(predictions_df)
-
-    # cull any records outside of our time range and sort them by timestamp
-    predictions_df = predictions_df.filter(
-        pl.col("timestamp").is_between(st_ut, fin_ut)
-    ).sort("timestamp")
-
+    predictions_df = _filter_and_sort_pdr_records(predictions_df, st_ut, fin_ut)
     return predictions_df

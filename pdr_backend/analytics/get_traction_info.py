@@ -3,6 +3,7 @@ At some point, we can expand it into traction info wrt traders & txs too.
 """
 
 from enforce_typing import enforce_types
+import polars as pl
 
 from pdr_backend.analytics.predictoor_stats import (
     get_slot_statistics,
@@ -28,12 +29,15 @@ def get_traction_info_main(
 
     predictions_df = gql_dfs["pdr_predictions"]
 
+    lazy_df = predictions_df.lazy()
     # filter by start and end dates
-    predictions_df = predictions_df.filter(
-        (predictions_df["timestamp"] >= timestr_to_ut(start_timestr) / 1000)
-        & (predictions_df["timestamp"] <= timestr_to_ut(end_timestr) / 1000)
+    lazy_df = lazy_df.filter(
+        pl.col("timestamp").is_between(
+            timestr_to_ut(start_timestr) / 1000, timestr_to_ut(end_timestr) / 1000
+        )
     )
 
+    predictions_df = lazy_df.collect()
     if predictions_df.shape[0] == 0:
         print("No records found. Please adjust start and end times params.")
         return
