@@ -4,7 +4,7 @@ Agent Deployment Tool is a streamlined command-line utility designed for efficie
 
 ## Usage
 
-#### Agent Configurations
+### Agent Configurations
 Firstly, you need to set up your agents configuration. This is done by creating a config entry under `deployment_configs` in `ppss.yaml` file. 
 
 Here is an example structure for your reference:
@@ -33,7 +33,7 @@ deployment_configs:
 
 *Tip: Specific agent settings (like source, timeframe) will override general settings if provided.*
 
-#### Private Keys
+### Private Keys
 
 Create a `.keys.json` file and format it as follows:
 ```
@@ -44,7 +44,7 @@ Create a `.keys.json` file and format it as follows:
 
 *Note: If you have fewer private keys than number of agents, the tool will create new wallets and update the .keys.json file.*
 
-#### Generate Templates
+### Generate Templates
 
 The `generate` command is used to create deployment template files based on a configuration file.
 
@@ -59,7 +59,7 @@ pdr deployer generate <config_path> <config_name> <deployment_method> <output_di
 
 Take a note of the `config_name`, you will need it later!
 
-#### Deploy Config
+### Deploy Config
 
 The `deploy` command is used to deploy agents based on a specified config name.
 
@@ -73,7 +73,7 @@ pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJEC
 - --project_id: Google Cloud project id (optional).
 - --resource_group: Azure resource group (optional).
 
-#### Destroy Config
+### Destroy Config
 
 The `destroy` command is used to destroy agents deployed based on a specified configuration.
 
@@ -84,7 +84,7 @@ pdr deployer destroy <config_name> [-p PROVIDER]
 - <config_name>: Name of the config.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 
-#### Logs
+### Logs
 
 The `logs` command is used to retrieve logs from deployed agents.
 
@@ -96,7 +96,7 @@ pdr deployer logs <config_name> [-p PROVIDER]
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 
 
-#### Remote Container Registry
+### Remote Container Registry
 
 The `registry` command is used to manage remote registries for agent deployment.
 
@@ -112,7 +112,7 @@ pdr deployer registry <action> <registry_name> [-p PROVIDER] [-r REGION] [--proj
 - --resource_group: Azure resource group (optional).
 
 
-#### Build
+### Build
 
 The build command is used to build a container image.
 
