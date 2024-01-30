@@ -55,6 +55,10 @@ class CloudProvider(ABC):
                 return AWSProvider.from_json(data)
         raise ValueError("Invalid JSON data for class instantiation")
 
+    @property
+    def json(self):
+        raise NotImplementedError()
+
 
 def sanitize_name(name):
     return name.replace("_", "-")
