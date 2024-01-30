@@ -110,16 +110,12 @@ class GCPProvider(CloudProvider):
 
     def registry_exists(self, registry_name):
         command = f"gcloud artifacts repositories describe {registry_name} --location={self.zone} --project={self.project_id}"
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     def cluster_exists(self, cluster_name):
         command = f"gcloud container clusters describe {cluster_name} --project={self.project_id} --zone={self.zone}"
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     @property
@@ -165,7 +161,9 @@ class AWSProvider(CloudProvider):
 
     def auth_kubernetes_cluster(self, cluster_name):
         print("Authenticating to Kubernetes cluster...")
-        command = f"aws eks --region {self.region} update-kubeconfig --name {cluster_name}"
+        command = (
+            f"aws eks --region {self.region} update-kubeconfig --name {cluster_name}"
+        )
         run_command(command)
 
     def delete_registry(self, registry_name):
@@ -180,16 +178,12 @@ class AWSProvider(CloudProvider):
 
     def registry_exists(self, registry_name):
         command = f"aws ecr describe-repositories --repository-names {registry_name}"
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     def cluster_exists(self, cluster_name):
         command = f"eksctl get cluster --name {cluster_name} --region {self.region}"
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     @property
@@ -249,18 +243,14 @@ class AzureProvider(CloudProvider):
         command = (
             f"az acr show --name {registry_name} --resource-group {self.resource_group}"
         )
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     def azure_cluster_exists(self, cluster_name):
         command = (
             f"az aks show --name {cluster_name} --resource-group {self.resource_group}"
         )
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True
-        )
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
     @property

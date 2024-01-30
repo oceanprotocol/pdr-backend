@@ -101,6 +101,7 @@ def deploy_cluster(provider: CloudProvider, cluster_name):
 def create_namespace(namespace: str):
     run_command(f"kubectl create namespace {namespace}")
 
+
 def destroy_cluster(provider: CloudProvider, cluster_name, config_name):
     cluster_name_sanitized = sanitize_name(cluster_name)
     config_name_sanitized = sanitize_name(config_name)
@@ -116,6 +117,7 @@ def destroy_cluster(provider: CloudProvider, cluster_name, config_name):
             delete_all_pods(provider, cluster_name_sanitized, config_name_sanitized)
     else:
         raise Exception("Cluster does not exist")
+
 
 def deploy_registry(provider: CloudProvider, registry_name):
     registry_name = sanitize_name(registry_name)
@@ -220,7 +222,12 @@ def logs_config(config_file: str, cloud_provider: Optional[CloudProvider]):
         check_cloud_provider_requirements(cloud_provider.json["type"])
         deployment_name = deploymentinfo.config_name
         print(f"Getting logs for {deployment_name}...")
-        cluster_logs(cloud_provider, deployment_name, "pdr-predictoor", deploymentinfo.config_name)
+        cluster_logs(
+            cloud_provider,
+            deployment_name,
+            "pdr-predictoor",
+            deploymentinfo.config_name,
+        )
 
     if deploymentinfo.deployment_method == "pm2":
         pm2_logs()
