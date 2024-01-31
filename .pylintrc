@@ -37,8 +37,6 @@ ignore=
   Dockerfile,
   entrypoint.sh,
   pdr_backend.egg-info,
-  pm2-mainnet-predictoor.config.js,
-  pm2-testnet-predictoor.config.js,
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
