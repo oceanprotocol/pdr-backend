@@ -193,13 +193,14 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
 
     return obj_df
 
+
 @enforce_types
 def _transform_timestamp_to_ms_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
     """
     Transform timestamp to ms
     @precondition
         lazy_df must have a column named "timestamp"
-    
+
     @description
         Transform timestamp to ms
 
@@ -207,9 +208,9 @@ def _transform_timestamp_to_ms_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
         lazy_df with timestamp column transformed to ms
     """
 
-    lazy_df = lazy_df.with_columns(
-        pl.col("timestamp").mul(1000).alias("timestamp"))
+    lazy_df = lazy_df.with_columns(pl.col("timestamp").mul(1000).alias("timestamp"))
     return lazy_df
+
 
 @enforce_types
 def _filter_with_timestamps_lazy(
@@ -222,7 +223,7 @@ def _filter_with_timestamps_lazy(
     @arguments
         st_ut -- start timestamp in ms
         fin_ut -- finish timestamp in ms
-    
+
     @description
         Filter lazy_df with timestamps
         + Cull any records outside of our time range
@@ -232,10 +233,11 @@ def _filter_with_timestamps_lazy(
         lazy_df with timestamps filtered and sorted
     """
 
-    lazy_df = lazy_df.filter(
-        pl.col("timestamp").is_between(st_ut, fin_ut)
-    ).sort("timestamp")
+    lazy_df = lazy_df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
+        "timestamp"
+    )
     return lazy_df
+
 
 @enforce_types
 def _filter_and_sort_pdr_records(
@@ -260,6 +262,7 @@ def _filter_and_sort_pdr_records(
     lazy_df = _filter_with_timestamps_lazy(lazy_df, st_ut, fin_ut)
     return lazy_df.collect()
 
+
 @enforce_types
 def check_df_len(
     lazy_df: pl.LazyFrame,
@@ -282,8 +285,21 @@ def check_df_len(
     """
     df = lazy_df.collect()
     if max_len is not None:
-        assert len(df) <= max_len, f"{identifier} has {len(df)} records, but should have at most {max_len} records"
+        assert (
+            len(df) <= max_len
+        ), f"{identifier} has {len(df)} records, but should have at most {max_len} records"
     if min_len is not None:
-        assert len(df) >= min_len, f"{identifier} has {len(df)} records, but should have at least {min_len} records"
+        assert (
+            len(df) >= min_len
+        ), f"{identifier} has {len(df)} records, but should have at least {min_len} records"
 
     assert len(df) > 0, f"No records to summarize {identifier}. Please adjust params."
+
+
+def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
+    df = df.with_columns(
+        [
+            pl.col("timestamp").mul(1000).alias("timestamp"),
+        ]
+    )
+    return df

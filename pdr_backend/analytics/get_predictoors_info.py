@@ -1,5 +1,5 @@
+from typing import List
 import polars as pl
-from typing import List, Union
 
 from enforce_typing import enforce_types
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
@@ -7,6 +7,7 @@ from pdr_backend.analytics.predictoor_stats import get_predictoor_summary_stats_
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.lake.plutil import check_df_len
+
 
 @enforce_types
 def get_predictoors_info_main(
@@ -25,9 +26,7 @@ def get_predictoors_info_main(
 
     if len(pdr_addrs) > 0:
         pdr_addrs = [f.lower() for f in pdr_addrs]
-        lazy_df = lazy_df.filter(
-            pl.col("user").is_in(pdr_addrs)
-        )
+        lazy_df = lazy_df.filter(pl.col("user").is_in(pdr_addrs))
 
     # filter by start and end dates
     lazy_df = lazy_df.filter(
@@ -37,10 +36,7 @@ def get_predictoors_info_main(
     )
 
     check_df_len(
-        lazy_df=lazy_df,
-        max_len=None,
-        min_len=None,
-        identifier="predictions_df"
+        lazy_df=lazy_df, max_len=None, min_len=None, identifier="predictions_df"
     )
 
     lazy_predictoor_summary_df = get_predictoor_summary_stats_lazy(lazy_df)

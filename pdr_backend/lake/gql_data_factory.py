@@ -162,6 +162,7 @@ class GQLDataFactory:
         @return
           start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
+        print("  Calculate start timestamp for fetching data.", filename)
         if not os.path.exists(filename):
             print("      No file exists yet, so will fetch all data")
             return self.ppss.lake_ss.st_timestamp

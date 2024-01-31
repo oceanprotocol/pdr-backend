@@ -45,6 +45,7 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
 
     return df
 
+
 @enforce_types
 def get_feed_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
     # 1 - filter from lake only the rows that you're looking for
@@ -62,6 +63,7 @@ def get_feed_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
     )
 
     return lazy_df
+
 
 @enforce_types
 def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
@@ -81,6 +83,7 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
 
     return df
 
+
 @enforce_types
 def get_predictoor_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
     # 1 - filter from lake only the rows that you're looking for
@@ -98,6 +101,7 @@ def get_predictoor_summary_stats_lazy(lazy_df: pl.LazyFrame) -> pl.LazyFrame:
     )
 
     return lazy_df
+
 
 @enforce_types
 def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
@@ -137,7 +141,8 @@ def get_traction_statistics(preds_df: pl.DataFrame) -> pl.DataFrame:
                 "daily_unique_predictoors_count",
                 "cum_daily_unique_predictoors_count",
             ]
-        ).collect()
+        )
+        .collect()
     )
 
     return stats_df

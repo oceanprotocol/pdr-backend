@@ -8,10 +8,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
     fetch_filtered_predictions,
 )
-from pdr_backend.lake.plutil import (
-    _object_list_to_df,
-    _filter_and_sort_pdr_records
-)
+from pdr_backend.lake.plutil import _object_list_to_df, _filter_and_sort_pdr_records
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
@@ -52,6 +49,7 @@ feed_summary_df_schema = {
     "sum_payout": Float64,
     "n_predictions": Int64,
 }
+
 
 @enforce_types
 def get_pdr_predictions_df(
