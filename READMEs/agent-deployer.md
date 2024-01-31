@@ -12,14 +12,14 @@ Here is an example structure for your reference:
 ```yaml
 deployment_configs:
   testnet_predictoor_deployment:
-    cpu: '1' # k8s
-    memory: '512Mi' # k8s
+    cpu: '1'
+    memory: '512Mi'
     source: "binance"
     type: "predictoor"
     approach: 3
     network: "sapphire-testnet"
     s_until_epoch_end: 20
-    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest" # docker-compose and k8s
+    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
     agents:
       - pair: 'BTC/USDT'
         stake_amt: 15

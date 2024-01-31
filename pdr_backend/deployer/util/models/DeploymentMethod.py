@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class DeploymentMethod(Enum):
-    DOCKER_COMPOSE = "docker-compose"
     K8S = "k8s"
 
     def __str__(self):
@@ -18,8 +17,6 @@ class DeploymentMethod(Enum):
 
     @classmethod
     def from_str(cls, s: str):
-        if s == "docker-compose":
-            return cls.DOCKER_COMPOSE
         if s == "k8s":
             return cls.K8S
         raise ValueError(f"Invalid deployment method: {s}")

@@ -20,20 +20,6 @@ class DeployConfig:
             agent.update_with_defaults(self.agent_config)
 
     def predictoor_templates(self, method: DeploymentMethod) -> List[DeployFile]:
-        if method == DeploymentMethod.DOCKER_COMPOSE:
-            combined_template = "version: '3'\nservices:\n"
-            for idx in range(len(self.agent_config.agents)):
-                template, name = self.predictoor_template(idx, method)
-                combined_template += template + "\n"
-
-            return [
-                DeployFile(
-                    method=method,
-                    content=combined_template,
-                    name=f"docker-compose.{method.extension}",
-                )
-            ]
-
         templates: List[DeployFile] = []
         for idx in range(len(self.agent_config.agents)):
             template, name = self.predictoor_template(idx, method)
