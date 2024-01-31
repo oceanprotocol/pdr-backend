@@ -283,17 +283,20 @@ def check_df_len(
     @return
         void
     """
-    df = lazy_df.collect()
+    df_shape_row_count = lazy_df.collect().shape[0]
+    print("check_df_len.shape", df_shape_row_count)
     if max_len is not None:
         assert (
-            len(df) <= max_len
-        ), f"{identifier} has {len(df)} records, but should have at most {max_len} records"
+            df_shape_row_count <= max_len
+        ), f"{identifier} has {df_shape_row_count} records, but should have at most {max_len} records"
     if min_len is not None:
         assert (
-            len(df) >= min_len
-        ), f"{identifier} has {len(df)} records, but should have at least {min_len} records"
+            df_shape_row_count >= min_len
+        ), f"{identifier} has {df_shape_row_count} records, but should have at least {min_len} records"
 
-    assert len(df) > 0, f"No records to summarize {identifier}. Please adjust params."
+    assert (
+        df_shape_row_count > 0
+    ), f"No records to summarize {identifier}. Please adjust params."
 
 
 def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:

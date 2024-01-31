@@ -35,7 +35,7 @@ def get_predictions_info_main(
     # filter by start and end dates
     lazy_df = lazy_df.filter(
         pl.col("timestamp").is_between(
-            timestr_to_ut(start_timestr) / 1000, timestr_to_ut(end_timestr) / 1000
+            timestr_to_ut(start_timestr), timestr_to_ut(end_timestr)
         )
     )
 

@@ -7,11 +7,11 @@ from pdr_backend.ppss.ppss import mock_ppss
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats_lazy")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictions_info_main_mainnet(
     mock_get_gql_dfs,
-    mock_get_feed_summary_stats,
+    mock_get_feed_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -19,7 +19,7 @@ def test_get_predictions_info_main_mainnet(
     @description
         assert everything works as expected under normal conditions
     """
-    st_timestr = "2023-12-03"
+    st_timestr = "2023-12-02"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
@@ -53,28 +53,31 @@ def test_get_predictions_info_main_mainnet(
 
     assert len(preds_df) == 1
 
+    mock_call_arg = mock_get_feed_summary_stats_lazy.call_args[0][0]
+
+    assert isinstance(mock_call_arg, pl.LazyFrame)
+
+    mock_call_arg_collected = mock_call_arg.collect()
+
     # number of rows from data frames are the same
-    assert mock_get_feed_summary_stats.call_args[0][0][0].shape[0] == preds_df.shape[0]
+    assert mock_call_arg_collected[0].shape[0] == preds_df.shape[0]
 
     # the data frame was filtered by feed address
-    assert (
-        mock_get_feed_summary_stats.call_args[0][0][0]["ID"][0].split("-")[0]
-        == feed_addr
-    )
+    assert mock_call_arg_collected[0]["ID"][0].split("-")[0] == feed_addr
 
     # data frame after filtering is same as manual filtered dataframe
-    pl.DataFrame.equals(mock_get_feed_summary_stats.call_args, preds_df)
+    pl.DataFrame.equals(mock_call_arg_collected, preds_df)
 
     assert mock_get_gql_dfs.call_count == 1
-    assert mock_get_feed_summary_stats.call_count == 1
+    assert mock_get_feed_summary_stats_lazy.call_count == 1
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats_lazy")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictions_info_bad_date_range(
     mock_get_gql_dfs,
-    get_feed_summary_stats,
+    get_feed_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -121,15 +124,15 @@ def test_get_predictions_info_bad_date_range(
     assert len(preds_df) == 0
 
     assert mock_get_gql_dfs.call_count == 1
-    assert get_feed_summary_stats.call_count == 0
+    assert get_feed_summary_stats_lazy.call_count == 0
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats_lazy")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictions_info_bad_feed(
     mock_get_gql_dfs,
-    mock_get_feed_summary_stats,
+    mock_get_feed_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -169,7 +172,7 @@ def test_get_predictions_info_bad_feed(
     assert len(predictions_df) == 0
 
     assert mock_get_gql_dfs.call_count == 1
-    assert mock_get_feed_summary_stats.call_count == 0
+    assert mock_get_feed_summary_stats_lazy.call_count == 0
 
 
 @enforce_types
