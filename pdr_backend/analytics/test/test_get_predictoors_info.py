@@ -51,15 +51,12 @@ def test_get_predictoors_info_main_mainnet(
     assert isinstance(mock_call_arg, pl.LazyFrame)
 
     mock_call_arg_collected = mock_call_arg.collect()
-    
+
     # data frame after filtering is same as manual filtered dataframe
     pl.DataFrame.equals(mock_call_arg_collected, preds_df)
 
     # number of rows from data frames are the same
-    assert (
-        mock_call_arg_collected[0].shape[0]
-        == preds_df.shape[0]
-    )
+    assert mock_call_arg_collected[0].shape[0] == preds_df.shape[0]
 
     # the data frame was filtered by user address
     assert mock_call_arg_collected[0]["user"][0] == user_addr
