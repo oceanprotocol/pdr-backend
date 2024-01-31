@@ -58,14 +58,14 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+```console
+cp ppss.yaml my_ppss.yaml
+```
 
 Let's simulate! In console:
 ```console
-pdr xpmt my_ppss.yaml
+pdr sim my_ppss.yaml
 ```
-
-"xpmt" is short for "experiment". (The xpmt tool is evolving beyond just simulation.)
-
 
 What it does:
 1. Set simulation parameters.
@@ -98,7 +98,7 @@ Update `my_ppss.yaml` as desired.
 
 Then, run a bot with modeling-on-the fly (approach 3). In console:
 ```console
-pdr predictoor 3 my_ppss.yaml sapphire-testnet 
+pdr predictoor 3 my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -125,7 +125,7 @@ Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
 ```console
-pdr predictoor 3 my_ppss.yaml sapphire-mainnet 
+pdr predictoor 3 my_ppss.yaml sapphire-mainnet
 ```
 
 This is where there's real $ at stake. Good luck!

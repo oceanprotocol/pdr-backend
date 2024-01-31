@@ -9,6 +9,7 @@ from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 
 @patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
@@ -53,6 +54,7 @@ def test_get_predictoors_info_system(
     ]
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
+    predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     get_get_predictoor_summary_stats.return_value = predictions_df
     mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
@@ -60,7 +62,7 @@ def test_get_predictoors_info_system(
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
     ):
-        user_addr = "0x0000000000000000000000000000000000000001"
+        user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
         # Mock sys.argv
         sys.argv = [
             "pdr",
@@ -82,7 +84,9 @@ def test_get_predictoors_info_system(
         mock_print.assert_any_call("Arguments:")
         mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
         mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call(f"PDRS=['{user_addr}']")
+        mock_print.assert_any_call(
+            "PDRS=['0xaaaA4CB4Ff2584BaD80fF5F109034A891C3D88Dd']"
+        )
 
         # Additional assertions
         get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)

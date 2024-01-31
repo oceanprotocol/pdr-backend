@@ -11,10 +11,10 @@ from pdr_backend.cli.nested_arg_parser import NestedArgParser
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
 
-Usage: pdr xpmt|predictoor|trader|..
+Usage: pdr sim|predictoor|trader|..
 
 Main tools:
-  pdr xpmt PPSS_FILE
+  pdr sim PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr lake PPSS_FILE NETWORK
@@ -456,7 +456,7 @@ def print_args(arguments: Namespace):
         print(f"{arg_k}={arg_v}")
 
 
-XpmtArgParser = _ArgParser_PPSS
+SimArgParser = _ArgParser_PPSS
 
 PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 
@@ -493,7 +493,7 @@ FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 DeployerArgPaser = _ArgParser_DEPLOYER
 
 defined_parsers = {
-    "do_xpmt": XpmtArgParser("Run experiment / simulation", "xpmt"),
+    "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),

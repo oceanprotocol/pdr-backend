@@ -5,8 +5,8 @@ lake_ss:
     - binance BTC/USDT 1h
 #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 1h
 #    - kraken BTC/USDT 1h
-  st_timestr: 2023-06-01_00:00 # starting date for data
-  fin_timestr: now # ending date for data
+  st_timestr: 2024-01-01_00:00 # starting date for data
+  fin_timestr: 2024-01-02_00:00 # ending date for data
 
 predictoor_ss:
   predict_feed: binance BTC/USDT c 1h
@@ -25,7 +25,7 @@ predictoor_ss:
 
 trader_ss:
   feed: binance BTC/USDT c 1h
-  xpmt_only:
+  sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     init_holdings:
@@ -35,11 +35,21 @@ trader_ss:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3 # buy/sell this amount in each epoch
+  exchange_only:
+    timeout: 30000
+    options:
+      createMarketBuyOrderRequiresPrice": False
+      defaultType: spot
 
-xpmt_ss: # xpmt only
+sim_ss: # sim only
   do_plot: True
   log_dir: logs
   test_n : 200 # number of epochs to simulate
+  exchange_only:
+    timeout: 30000
+    options:
+      createMarketBuyOrderRequiresPrice": False
+      defaultType: spot
 
 # ------------------------------------------------------------------
 # Bots run by OPF

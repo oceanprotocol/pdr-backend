@@ -18,7 +18,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
 from pdr_backend.publisher.publish_assets import publish_assets
-from pdr_backend.xpmt.xpmt_engine import XpmtEngine
+from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -52,14 +52,14 @@ def _do_main():
 
 
 @enforce_types
-def do_xpmt(args, nested_args=None):
+def do_sim(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network="development",
         nested_override_args=nested_args,
     )
-    xpmt_engine = XpmtEngine(ppss)
-    xpmt_engine.run()
+    sim_engine = SimEngine(ppss)
+    sim_engine.run()
 
 
 @enforce_types
@@ -139,32 +139,57 @@ def do_claim_ROSE(args, nested_args=None):
 
 @enforce_types
 def do_get_predictoors_info(args, nested_args=None):
+    """
+    @description
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+        PDRS = List of predictoor addresses to filter on (e.g. ["0x1", "0x2"])
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    get_predictoors_info_main(ppss, args.ST, args.END, args.PDRS)
+    pdrs = args.PDRS or []
+    get_predictoors_info_main(ppss, args.ST, args.END, pdrs)
 
 
 @enforce_types
 def do_get_predictions_info(args, nested_args=None):
+    """
+    @description
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+        PDRS = List of feed addresses to filter on (e.g. ["0x1", "0x2"])
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    get_predictions_info_main(ppss, args.ST, args.END, args.FEEDS)
+    feeds = args.FEEDS or []
+    get_predictions_info_main(ppss, args.ST, args.END, feeds)
 
 
 @enforce_types
 def do_get_traction_info(args, nested_args=None):
+    """
+    @description
+        PQDIR = overrides lake parquet dir
+
+        The following args are post-lake filters:
+        ST = Start time string (e.g. "2021-01-01")
+        END = End time string (e.g. "2022-01-01")
+    """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    get_traction_info_main(ppss, args.ST, args.END, args.PQDIR)
+    ppss.lake_ss.d["parquet_dir"] = args.PQDIR
+    get_traction_info_main(ppss, args.ST, args.END)
 
 
 @enforce_types

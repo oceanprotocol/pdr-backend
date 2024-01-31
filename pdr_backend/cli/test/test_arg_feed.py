@@ -1,7 +1,9 @@
+import ccxt
 import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.util.mocks import MockExchange
 
 
 @enforce_types
@@ -62,3 +64,10 @@ def test_ArgFeed_str():
     target_feed_str = "binance BTC/USDT 5m"
     assert str(ArgFeed("binance", None, "BTC/USDT", "5m")) == target_feed_str
     assert str(ArgFeed("binance", None, "BTC-USDT", "5m")) == target_feed_str
+
+
+def test_ccxt_exchange():
+    feed = ArgFeed("binance", "open", "BTC/USDT")
+    assert isinstance(feed.ccxt_exchange(), ccxt.Exchange)
+    assert isinstance(feed.ccxt_exchange(mock=False), ccxt.Exchange)
+    assert isinstance(feed.ccxt_exchange(mock=True), MockExchange)

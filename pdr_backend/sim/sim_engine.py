@@ -1,4 +1,3 @@
-"""Experiments engine: simulation or otherwise. Combines predicting & trading"""
 import copy
 import os
 from typing import List
@@ -28,7 +27,7 @@ class PlotState:
 
 
 # pylint: disable=too-many-instance-attributes
-class XpmtEngine:
+class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
@@ -56,8 +55,13 @@ class XpmtEngine:
         self.logfile = ""
 
         self.plot_state = None
-        if self.ppss.xpmt_ss.do_plot:
+        if self.ppss.sim_ss.do_plot:
             self.plot_state = PlotState()
+
+        self.exchange = self.ppss.predictoor_ss.feed.ccxt_exchange(
+            mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
+            exchange_params=self.ppss.sim_ss.exchange_params,
+        )
 
     @property
     def tokcoin(self) -> str:
@@ -72,7 +76,7 @@ class XpmtEngine:
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{current_ut_ms()}.txt"
-        self.logfile = os.path.join(self.ppss.xpmt_ss.log_dir, filebase)
+        self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
         with open(self.logfile, "w") as f:
             f.write("\n")
 
@@ -89,9 +93,9 @@ class XpmtEngine:
         # main loop!
         pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
-        for test_i in range(self.ppss.xpmt_ss.test_n):
+        for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
-            self._plot(test_i, self.ppss.xpmt_ss.test_n)
+            self._plot(test_i, self.ppss.sim_ss.test_n)
 
         log("Done all iters.")
 
@@ -102,7 +106,7 @@ class XpmtEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         log = self._log
-        testshift = self.ppss.xpmt_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+        testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
@@ -158,7 +162,7 @@ class XpmtEngine:
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
         log(
-            f"Iter #{test_i+1:3}/{self.ppss.xpmt_ss.test_n}: "
+            f"Iter #{test_i+1:3}/{self.ppss.sim_ss.test_n}: "
             f" ut{pretty_timestr(ut)[9:][:-9]}"
             # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
             f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"
@@ -198,6 +202,10 @@ class XpmtEngine:
         tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
         self.holdings[self.tokcoin] += tokcoin_amt_recd
 
+        self.exchange.create_market_buy_order(
+            self.ppss.predictoor_ss.pair_str, tokcoin_amt_recd
+        )
+
         self._log(
             f"  TX: BUY : send {usdcoin_amt_sent:8.2f} {self.usdcoin:4}"
             f", receive {tokcoin_amt_recd:8.2f} {self.tokcoin:4}"
@@ -221,6 +229,10 @@ class XpmtEngine:
         usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
         self.holdings[self.usdcoin] += usdcoin_amt_recd
 
+        self.exchange.create_market_sell_order(
+            self.ppss.predictoor_ss.pair_str, tokcoin_amt_sent
+        )
+
         self._log(
             f"  TX: SELL: send {tokcoin_amt_sent:8.2f} {self.tokcoin:4}"
             f", receive {usdcoin_amt_recd:8.2f} {self.usdcoin:4}"
@@ -229,7 +241,7 @@ class XpmtEngine:
 
     @enforce_types
     def _plot(self, i, N):
-        if not self.ppss.xpmt_ss.do_plot:
+        if not self.ppss.sim_ss.do_plot:
             return
 
         # don't plot first 5 iters -> not interesting
