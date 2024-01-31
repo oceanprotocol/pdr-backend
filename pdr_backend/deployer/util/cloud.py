@@ -229,24 +229,24 @@ class AzureProvider(CloudProvider):
         command = f"az aks get-credentials --resource-group {self.resource_group} --name {cluster_name}"
         run_command(command)
 
-    def delete_registry_azure(self, registry_name):
+    def delete_registry(self, registry_name):
         print("Destroying container registry...")
         command = f"az acr delete --name {registry_name} --resource-group {self.resource_group} --yes"
         run_command(command)
 
-    def delete_kubernetes_cluster_azure(self, cluster_name):
+    def delete_kubernetes_cluster(self, cluster_name):
         print("Destroying Kubernetes cluster...")
         command = f"az aks delete --name {cluster_name} --resource-group {self.resource_group} --yes"
         run_command(command)
 
-    def azure_registry_exists(self, registry_name):
+    def registry_exists(self, registry_name):
         command = (
             f"az acr show --name {registry_name} --resource-group {self.resource_group}"
         )
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         return result.returncode == 0
 
-    def azure_cluster_exists(self, cluster_name):
+    def cluster_exists(self, cluster_name):
         command = (
             f"az aks show --name {cluster_name} --resource-group {self.resource_group}"
         )
