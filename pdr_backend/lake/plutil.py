@@ -284,15 +284,14 @@ def check_df_len(
         void
     """
     df_shape_row_count = lazy_df.collect().shape[0]
-    print("check_df_len.shape", df_shape_row_count)
     if max_len is not None:
         assert (
             df_shape_row_count <= max_len
-        ), f"{identifier} has {df_shape_row_count} records, but should have at most {max_len} records"
+        ), f"{identifier} has {df_shape_row_count} records, but should have at most {max_len} records"  # pylint: disable=line-too-long
     if min_len is not None:
         assert (
             df_shape_row_count >= min_len
-        ), f"{identifier} has {df_shape_row_count} records, but should have at least {min_len} records"
+        ), f"{identifier} has {df_shape_row_count} records, but should have at least {min_len} records"  # pylint: disable=line-too-long
 
     assert (
         df_shape_row_count > 0
