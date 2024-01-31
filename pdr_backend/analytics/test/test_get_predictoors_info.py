@@ -9,11 +9,11 @@ from pdr_backend.ppss.ppss import mock_ppss
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats_lazy")
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_main_mainnet(
     mock_get_gql_dfs,
-    mock_get_predictoor_summary_stats,
+    mock_get_predictoor_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -46,28 +46,34 @@ def test_get_predictoors_info_main_mainnet(
         & (predictions_df["timestamp"] <= ppss.lake_ss.fin_timestamp)
     )
 
+    mock_call_arg = mock_get_predictoor_summary_stats_lazy.call_args[0][0]
+
+    assert isinstance(mock_call_arg, pl.LazyFrame)
+
+    mock_call_arg_collected = mock_call_arg.collect()
+    
     # data frame after filtering is same as manual filtered dataframe
-    pl.DataFrame.equals(mock_get_predictoor_summary_stats.call_args, preds_df)
+    pl.DataFrame.equals(mock_call_arg_collected, preds_df)
 
     # number of rows from data frames are the same
     assert (
-        mock_get_predictoor_summary_stats.call_args[0][0][0].shape[0]
+        mock_call_arg_collected[0].shape[0]
         == preds_df.shape[0]
     )
 
     # the data frame was filtered by user address
-    assert mock_get_predictoor_summary_stats.call_args[0][0][0]["user"][0] == user_addr
+    assert mock_call_arg_collected[0]["user"][0] == user_addr
 
     assert mock_get_gql_dfs.call_count == 1
-    assert mock_get_predictoor_summary_stats.call_count == 1
+    assert mock_get_predictoor_summary_stats_lazy.call_count == 1
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats_lazy")
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_bad_date_range(
     mock_get_gql_dfs,
-    mock_get_predictoor_summary_stats,
+    mock_get_predictoor_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -109,17 +115,17 @@ def test_get_predictoors_info_bad_date_range(
 
     # show that summary_stats was never called
     assert mock_get_gql_dfs.call_count == 1
-    assert mock_get_predictoor_summary_stats.call_count == 0
+    assert mock_get_predictoor_summary_stats_lazy.call_count == 0
 
 
 @enforce_types
 @patch(
-    "pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats",
+    "pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats_lazy",
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_bad_user_address(
     mock_get_gql_dfs,
-    mock_get_predictoor_summary_stats,
+    mock_get_predictoor_summary_stats_lazy,
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
@@ -153,4 +159,4 @@ def test_get_predictoors_info_bad_user_address(
 
     # show that summary_stats was never called
     assert mock_get_gql_dfs.call_count == 1
-    assert mock_get_predictoor_summary_stats.call_count == 0
+    assert mock_get_predictoor_summary_stats_lazy.call_count == 0
