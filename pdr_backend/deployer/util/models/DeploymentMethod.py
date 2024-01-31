@@ -9,8 +9,6 @@ class DeploymentMethod(Enum):
 
     @property
     def extension(self) -> str:
-        if self == DeploymentMethod.DOCKER_COMPOSE:
-            return "yml"
         if self == DeploymentMethod.K8S:
             return "yaml"
         raise ValueError(f"Invalid deployment method: {self}")
