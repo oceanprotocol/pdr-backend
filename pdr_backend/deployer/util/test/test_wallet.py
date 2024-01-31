@@ -1,10 +1,18 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from pdr_backend.deployer.util.wallet import Wallet, generate_wallet, generate_wallets, read_keys_json, generate_new_keys
+from pdr_backend.deployer.util.wallet import (
+    Wallet,
+    generate_wallet,
+    generate_wallets,
+    read_keys_json,
+    generate_new_keys,
+)
+
 
 def test_wallet():
     wallet = Wallet("private_key")
     assert str(wallet) == "private_key"
+
 
 @patch("pdr_backend.deployer.util.wallet.Web3")
 def test_generate_wallet(mock_web3):
@@ -16,6 +24,7 @@ def test_generate_wallet(mock_web3):
     assert wallet.private_key == "private_key"
     mock_web3_instance.eth.account.create.assert_called_once()
 
+
 @patch("pdr_backend.deployer.util.wallet.generate_wallet")
 def test_generate_wallets(mock_generate_wallet):
     mock_generate_wallet.return_value = Wallet("private_key")
@@ -23,6 +32,7 @@ def test_generate_wallets(mock_generate_wallet):
     assert len(wallets) == 3
     assert all(wallet.private_key == "private_key" for wallet in wallets)
     assert mock_generate_wallet.call_count == 3
+
 
 @patch("pdr_backend.deployer.util.wallet.os.path.exists")
 @patch("pdr_backend.deployer.util.wallet.json.load")
@@ -33,6 +43,7 @@ def test_read_keys_json(mock_json_load, mock_os_path_exists):
     assert len(wallets) == 2
     assert wallets[0].private_key == "private_key1"
     assert wallets[1].private_key == "private_key2"
+
 
 @patch("pdr_backend.deployer.util.wallet.generate_wallets")
 @patch("pdr_backend.deployer.util.wallet.read_keys_json")
