@@ -17,7 +17,6 @@ PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
 @enforce_types
 def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
-    mock_get_address,
     mock_token,
     mock_ppss,
     mock_PredictoorBatcher,
@@ -25,12 +24,6 @@ def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
     mock_token.return_value.allowance.return_value = 0
 
     agent = DFBuyerAgent(mock_ppss)
-
-    assert len(mock_get_address.call_args_list) == 2
-    call1 = mock_get_address.call_args_list[0]
-    assert call1 == call(mock_ppss.web3_pp, "PredictoorHelper")
-    call2 = mock_get_address.call_args_list[1]
-    assert call2 == call(mock_ppss.web3_pp, "Ocean")
 
     mock_token.assert_called_with(mock_ppss.web3_pp, agent.OCEAN_addr)
     mock_token_instance = mock_token()
@@ -135,7 +128,6 @@ def test_dfbuyer_agent_prepare_batches(mock_dfbuyer_agent):
 
 @enforce_types
 def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
-    mock_get_address,
     mock_token,
     monkeypatch,
 ):

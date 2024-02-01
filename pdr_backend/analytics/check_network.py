@@ -4,13 +4,11 @@ from typing import Union
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.timeframe import s_to_timeframe_str
-from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.timeutil import current_ut_s
 
@@ -89,8 +87,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 
 
 @enforce_types
-def check_network_main(ppss: PPSS, lookback_hours: int):
-    web3_pp = ppss.web3_pp
+def do_query_network(subgraph_url: str, lookback_hours: int):
     cur_ut = current_ut_s()
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
@@ -133,15 +130,19 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         cur_ut,
         start_ut,
     )
-    result = query_subgraph(web3_pp.subgraph_url, query, timeout=10.0)
+    return query_subgraph(subgraph_url, query, timeout=10.0)
+
+
+@enforce_types
+def check_network_main(ppss: PPSS, lookback_hours: int):
+    web3_pp = ppss.web3_pp
+    result = do_query_network(web3_pp.subgraph_url, lookback_hours)
 
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
-    if no_of_contracts >= 11:
-        print(f"Number of Predictoor contracts: {no_of_contracts} - OK")
-    else:
-        print(f"Number of Predictoor contracts: {no_of_contracts} - FAILED")
+    status = "OK" if no_of_contracts >= 11 else "FAILED"
 
+    print(f"Number of Predictoor contracts: {no_of_contracts} - {status}")
     print("-" * 60)
 
     # check number of predictions
@@ -155,14 +156,15 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     print("True Values:")
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "trueValues")
+
     print("\nChecking account balances")
 
-    OCEAN_address = get_address(web3_pp, "Ocean")
-    OCEAN = Token(web3_pp, OCEAN_address)
+    OCEAN = web3_pp.OCEAN_Token
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
         ocean_bal = from_wei(OCEAN.balanceOf(address))
+        # TODO: wrap in web3 pp?
         native_bal = from_wei(web3_pp.web3_config.w3.eth.get_balance(address))
 
         ocean_warning = (

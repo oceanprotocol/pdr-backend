@@ -4,63 +4,11 @@ import os
 from pathlib import Path
 from typing import Union
 
-import addresses
 import artifacts
 from enforce_typing import enforce_types
 
 
-@enforce_types
-def get_address(web3_pp, contract_name: str):
-    """
-    Returns address for this contract
-    in web3_pp.address_file, in web3_pp.network
-    """
-    network = get_addresses(web3_pp)
-    if not network:
-        raise ValueError(f'Cannot find network "{web3_pp.network}" in addresses.json')
-
-    address = network.get(contract_name)
-    if not address:
-        error = (
-            f'Cannot find contract "{contract_name}" in address.json '
-            f'for network "{web3_pp.network}"'
-        )
-        raise ValueError(error)
-
-    return address
-
-
-@enforce_types
-def get_addresses(web3_pp) -> Union[dict, None]:
-    """
-    Returns addresses in web3_pp.address_file, in web3_pp.network
-    """
-    address_file = web3_pp.address_file
-
-    path = None
-    if address_file:
-        address_file = os.path.expanduser(address_file)
-        path = Path(address_file)
-    else:
-        path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
-
-    if not path.exists():
-        raise TypeError(f"Cannot find address.json file at {path}")
-
-    with open(path) as f:
-        d = json.load(f)
-
-    d = _condition_sapphire_keys(d)
-
-    if "barge" in web3_pp.network:  # eg "barge-pytest"
-        return d["development"]
-
-    if web3_pp.network in d:  # eg "development", "oasis_sapphire"
-        return d[web3_pp.network]
-
-    return None
-
-
+# TODO: I think some of these others functions warrant being moved to web3_pp.py
 @enforce_types
 def get_contract_abi(contract_name: str, address_file: Union[str, None]):
     """Returns the abi dict for a contract name."""

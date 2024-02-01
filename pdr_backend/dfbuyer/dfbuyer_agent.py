@@ -13,7 +13,6 @@ from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
 
 WEEK = 7 * 86400
@@ -37,8 +36,8 @@ class DFBuyerAgent:
             raise ValueError("No feeds found.")
 
         # addresses
-        batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
-        self.OCEAN_addr = get_address(ppss.web3_pp, "Ocean")
+        batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
+        self.OCEAN_addr = ppss.web3_pp.OCEAN_address
 
         # set attribs to track progress
         self.last_consume_ts = 0

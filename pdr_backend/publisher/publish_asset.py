@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 from pdr_backend.contract.data_nft import DataNft
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import to_wei
 
 MAX_UINT256 = 2**256 - 1
@@ -30,8 +29,8 @@ def publish_asset(
     pair = base + "/" + quote
     trueval_timeout = 60 * 60 * 24 * 3
     owner = web3_config.owner
-    ocean_address = get_address(web3_pp, "Ocean")
-    fre_address = get_address(web3_pp, "FixedPrice")
+    ocean_address = web3_pp.OCEAN_address
+    fre_address = web3_pp.get_address("FixedPrice")
     factory = Erc721Factory(web3_pp)
 
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)

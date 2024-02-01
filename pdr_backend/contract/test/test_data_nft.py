@@ -8,7 +8,6 @@ from web3.logs import DISCARD
 from pdr_backend.contract.data_nft import DataNft
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import to_wei
 
 
@@ -28,8 +27,8 @@ def test_set_ddo(web3_pp, web3_config):
         private_key=private_key
     )
     factory = Erc721Factory(web3_pp)
-    ocean_address = get_address(web3_pp, "Ocean")
-    fre_address = get_address(web3_pp, "FixedPrice")
+    ocean_address = web3_pp.OCEAN_address
+    fre_address = web3_pp.get_address("FixedPrice")
 
     feeCollector = owner.address
 

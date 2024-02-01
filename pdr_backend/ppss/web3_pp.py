@@ -1,6 +1,8 @@
 import random
-from os import getenv
-from typing import Any, Dict, List, Optional
+import os
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -13,7 +15,10 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.contract import _condition_sapphire_keys
 from pdr_backend.util.web3_config import Web3Config
+import addresses
+from pdr_backend.contract.token import Token
 
 
 class Web3PP(StrMixin):
@@ -37,7 +42,7 @@ class Web3PP(StrMixin):
     def web3_config(self) -> Web3Config:
         if self._web3_config is None:
             rpc_url = self.rpc_url
-            private_key = getenv("PRIVATE_KEY")
+            private_key = os.getenv("PRIVATE_KEY")
             self._web3_config = Web3Config(rpc_url, private_key)
         return self._web3_config  # type: ignore[return-value]
 
@@ -163,6 +168,60 @@ class Web3PP(StrMixin):
         if network in ["development", "barge-predictoor-bot", "barge-pytest"]:
             return 0
         raise ValueError(f"Unknown network {network}")
+
+    @enforce_types
+    def get_address(self, contract_name: str) -> str:
+        network = self.get_addresses()
+        if not network:
+            raise ValueError(f'Cannot find network "{self.network}" in addresses.json')
+
+        address = network.get(contract_name)
+        if not address:
+            error = (
+                f'Cannot find contract "{contract_name}" in address.json '
+                f'for network "{self.network}"'
+            )
+            raise ValueError(error)
+
+        return address
+
+    @enforce_types
+    def get_addresses(self) -> Union[dict, None]:
+        """
+        Returns addresses in web3_pp.address_file, in web3_pp.network
+        """
+        address_file = self.address_file
+
+        path = None
+        if address_file:
+            address_file = os.path.expanduser(address_file)
+            path = Path(address_file)
+        else:
+            path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
+
+        if not path.exists():
+            raise TypeError(f"Cannot find address.json file at {path}")
+
+        with open(path) as f:
+            d = json.load(f)
+
+        d = _condition_sapphire_keys(d)
+
+        if "barge" in self.network:  # eg "barge-pytest"
+            return d["development"]
+
+        if self.network in d:  # eg "development", "oasis_sapphire"
+            return d[self.network]
+
+        return None
+
+    @property
+    def OCEAN_address(self) -> str:
+        return self.get_address("Ocean")
+
+    @property
+    def OCEAN_Token(self) -> str:
+        return Token(self, self.OCEAN_address)
 
 
 # =========================================================================
