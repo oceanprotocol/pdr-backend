@@ -14,7 +14,7 @@ def get_predictions_info_main(
     gql_data_factory = GQLDataFactory(ppss)
     gql_dfs = gql_data_factory.get_gql_dfs()
 
-    predictions_df = gql_dfs["pdr_predictions"]
+    predictions_df = gql_dfs["pdr_predictions"].df
     assert (
         predictions_df is not None and len(predictions_df) > 0
     ), "Lake has no predictions."

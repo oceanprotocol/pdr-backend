@@ -15,7 +15,6 @@ class Table:
         self.df_schema = df_schema
         self.build = build_df_fn
         self.df = pl.DataFrame()
-        self.load()
 
     @enforce_types
     def load(self):
@@ -39,7 +38,6 @@ class Table:
         df = df.filter((pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut))
 
         # save data frame in memory
-        print(df)
         self.df = df
 
     @enforce_types
@@ -53,6 +51,7 @@ class Table:
         print(self.df)
         # precondition
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
+        print(self.df)
         assert len(self.df) > 0
         if len(self.df) > 1:
             assert (

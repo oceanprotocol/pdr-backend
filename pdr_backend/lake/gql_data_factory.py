@@ -80,7 +80,7 @@ class GQLDataFactory:
             },
         }
 
-    def get_gql_dfs(self) -> Dict[str, pl.DataFrame]:
+    def get_gql_dfs(self) -> Dict[str, Table]:
         """
         @description
           Get historical dataframes across many feeds and timeframes.
@@ -126,12 +126,11 @@ class GQLDataFactory:
 
         for _, table in self.record_config["tables"].items():
             print(f"      Updating {table}")
-            print(table)
             table.update(self.record_config["config"])
 
-    def _load_parquet(self):
-        """
-        """
-        print("  Load parquet.")
+    def _load_parquet(self) -> Dict[str, Table]:
+        """ """
         for _, table in self.record_config["tables"].items():
+            print(f"  Loading parquet for {table}")
             table.load()
+        return self.record_config["tables"]

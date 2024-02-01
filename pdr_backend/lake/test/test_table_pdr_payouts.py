@@ -130,10 +130,9 @@ def test_load_and_verify_payout_schema(
         gql_data_factory.record_config, pdr_payouts_record
     )
 
-    fin_ut = timestr_to_ut(fin_timestr)
-    gql_dfs = gql_data_factory._load_parquet(fin_ut)
+    tables = gql_data_factory._load_parquet()
 
-    assert len(gql_dfs) == 1
-    assert len(gql_dfs[pdr_payouts_record]) == 6
-    assert round(gql_dfs[pdr_payouts_record]["payout"].sum(), 0) == 15.0
-    assert gql_dfs[pdr_payouts_record].schema == payouts_schema
+    assert len(tables.items()) == 1
+    assert len(tables[pdr_payouts_record]) == 6
+    assert round(tables[pdr_payouts_record].df["payout"].sum(), 0) == 15.0
+    assert tables[pdr_payouts_record].df.schema == payouts_schema
