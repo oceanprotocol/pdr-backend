@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from enforce_typing import enforce_types
 
@@ -9,9 +9,10 @@ from pdr_backend.util.strutil import StrMixin
 
 class PublisherSS(MultiFeedMixin, StrMixin):
     @enforce_types
-    def __init__(self, d: dict, network: str):
-        self.network = network  # e.g. "sapphire-testnet", "sapphire-mainnet"
-        self.__class__.FEEDS_KEY = network + ".feeds"
+    def __init__(self, d: dict, network: Optional[str] = None):
+        self.network = network or "development"
+        assert network in d, f"PublisherSS needs a '{network}' key"
+        self.__class__.FEEDS_KEY = self.network + ".feeds"
         super().__init__(
             d, assert_feed_attributes=["signal", "timeframe"]
         )  # yaml_dict["publisher_ss"]

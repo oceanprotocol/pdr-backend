@@ -63,15 +63,17 @@ def do_transfer(token, address, addr_label, owner, owner_bal):
     if token.name == "ROSE":
         min_bal = 250 if addr_label == "dfbuyer" else 30
         topup_bal = 250 if addr_label == "dfbuyer" else 30
+        symbol = "ROSE"
     else:
         min_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
         topup_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        symbol = "OCEAN"
 
     failed = False
     transfered_amount = 0
 
     if min_bal > 0 and bal < min_bal:
-        print(f"\t Transferring {topup_bal} {token.name} to {address}...")
+        print(f"\t Transferring {topup_bal} {symbol} to {address}...")
         if owner_bal > topup_bal:
             token.transfer(
                 address,
@@ -82,6 +84,6 @@ def do_transfer(token, address, addr_label, owner, owner_bal):
             transfered_amount = topup_bal
         else:
             failed = True
-            print(f"Not enough {token.name} :(")
+            print(f"Not enough {symbol} :(")
 
     return transfered_amount, failed

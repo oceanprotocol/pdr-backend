@@ -48,9 +48,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
-        # TODO: raises an interesting issue! what if we only want to use parts of ppss.yaml?
-        # why do I have to specify publisher_ss variables if I only use other modules?
-        self.publisher_ss = PublisherSS(d["publisher_ss"], network) if network else None
+        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.payout_ss = PayoutSS(d["payout_ss"])

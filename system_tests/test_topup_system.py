@@ -25,6 +25,7 @@ def test_topup():
     balances_arr = [int(5000 * 1e18)] + [int(5 * 1e18)] * 100
     mock_token_rose.balanceOf.side_effect = balances_arr
     mock_token_rose.transfer.return_value = True
+    mock_token_rose.name = "ROSE"
 
     mock_token = MagicMock(spec=Token)
     balances_arr = [int(5000 * 1e18)] + [int(5 * 1e18)] * 100
