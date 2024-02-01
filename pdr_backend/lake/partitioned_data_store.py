@@ -105,7 +105,7 @@ class PartitionedDataStore:
 
         # DuckDB automatically recognizes the partition scheme when reading from a directory
         self.duckdb_conn.execute(
-            f"CREATE OR REPLACE VIEW {view_name} AS SELECT * FROM read_parquet('{dataset_path}/*/*/*.parquet', hive_partitioning=1)" # pylint: disable=line-too-long
+            f"CREATE OR REPLACE VIEW {view_name} AS SELECT * FROM read_parquet('{dataset_path}/*/*/*.parquet', hive_partitioning=1)"  # pylint: disable=line-too-long
         )
 
         # Execute the provided SQL query
