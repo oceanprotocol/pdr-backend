@@ -1,5 +1,4 @@
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
-from pdr_backend.deployer.util.models.PredictoorAgentConfig import PredictoorAgentConfig
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 
 

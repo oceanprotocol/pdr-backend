@@ -1,4 +1,3 @@
-import pytest
 from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 

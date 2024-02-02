@@ -1,5 +1,6 @@
-import pytest
+# pylint: disable=redefined-outer-name, unused-argument
 from unittest.mock import MagicMock, patch
+import pytest
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod

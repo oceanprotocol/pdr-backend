@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import pytest
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig

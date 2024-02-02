@@ -1,5 +1,5 @@
+from unittest.mock import patch
 import pytest
-from unittest.mock import patch, MagicMock
 from pdr_backend.deployer.deployer import main, get_provider
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
 

@@ -12,7 +12,7 @@ def test_extension_property_valid():
 
 def test_extension_property_invalid():
     with pytest.raises(ValueError) as err:
-        invalid_method = DeploymentMethod("invalid")
+        DeploymentMethod("invalid")
     assert "'invalid' is not a valid DeploymentMethod" in str(err.value)
 
 

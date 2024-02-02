@@ -1,6 +1,7 @@
-import pytest
+# pylint: disable=redefined-outer-name, unused-argument
 from unittest.mock import Mock, patch
 from unittest.mock import MagicMock
+import pytest
 from pdr_backend.deployer.util import deployment
 
 
@@ -68,12 +69,9 @@ def test_create_namespace(mock_shutil_which):
 def test_destroy_cluster(mock_shutil_which):
     mock_provider = Mock()
     mock_provider.cluster_exists.return_value = True
-    with patch("pdr_backend.deployer.util.deployment.run_command") as mock_run_command:
-        with patch("builtins.input", return_value="y"):
-            deployment.destroy_cluster(mock_provider, "cluster_name", "config_name")
-            mock_provider.delete_kubernetes_cluster.assert_called_once_with(
-                "cluster-name"
-            )
+    with patch("builtins.input", return_value="y"):
+        deployment.destroy_cluster(mock_provider, "cluster_name", "config_name")
+        mock_provider.delete_kubernetes_cluster.assert_called_once_with("cluster-name")
 
 
 def test_destroy_cluster_pods(mock_shutil_which):

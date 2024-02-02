@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 from pdr_backend.deployer.util.cloud import GCPProvider, AWSProvider, AzureProvider
 

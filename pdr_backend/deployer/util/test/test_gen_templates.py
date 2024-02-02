@@ -1,4 +1,4 @@
-import pytest
+# pylint: disable=unused-argument
 from unittest.mock import patch, mock_open, MagicMock
 from pdr_backend.deployer.util.gen_templates import generate_deployment_templates
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod

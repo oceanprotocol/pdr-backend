@@ -1,5 +1,4 @@
 import json
-import os
 from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
 
 sample_data = {
