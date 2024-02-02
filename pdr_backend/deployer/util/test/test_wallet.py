@@ -1,3 +1,4 @@
+# pylint: disable=unused-variable
 from unittest.mock import patch, MagicMock
 from pdr_backend.deployer.util.wallet import (
     Wallet,
