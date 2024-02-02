@@ -34,8 +34,9 @@ def test_generate_wallets(mock_generate_wallet):
 
 
 @patch("pdr_backend.deployer.util.wallet.os.path.exists")
+@patch("pdr_backend.deployer.util.wallet.open")
 @patch("pdr_backend.deployer.util.wallet.json.load")
-def test_read_keys_json(mock_json_load, mock_os_path_exists):
+def test_read_keys_json(mock_json_load, mock_open, mock_os_path_exists):
     mock_os_path_exists.return_value = True
     mock_json_load.return_value = {"config": ["private_key1", "private_key2"]}
     wallets = read_keys_json("config")
@@ -46,8 +47,11 @@ def test_read_keys_json(mock_json_load, mock_os_path_exists):
 
 @patch("pdr_backend.deployer.util.wallet.generate_wallets")
 @patch("pdr_backend.deployer.util.wallet.read_keys_json")
+@patch("pdr_backend.deployer.util.wallet.open")
 @patch("pdr_backend.deployer.util.wallet.json.dump")
-def test_generate_new_keys(mock_json_dump, mock_read_keys_json, mock_generate_wallets):
+def test_generate_new_keys(
+    mock_json_dump, mock_open, mock_read_keys_json, mock_generate_wallets
+):
     mock_read_keys_json.return_value = [Wallet("private_key1")]
     mock_generate_wallets.return_value = [Wallet("private_key2")]
     wallets = generate_new_keys("config", 1)
