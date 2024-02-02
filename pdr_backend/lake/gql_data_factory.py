@@ -91,7 +91,7 @@ class GQLDataFactory:
         @return
           predictions_df -- *polars* Dataframe. See class docstring
         """
-        print("Get predictions data across many feeds and timeframes.")
+        print("get_gql_dfs - Update lake with subgraph data.")
 
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
@@ -104,7 +104,7 @@ class GQLDataFactory:
         self._update(fin_ut)
         gql_dfs = self._load_parquet(fin_ut)
 
-        print("Get historical data across many subgraphs. Done.")
+        print("get_gql_dfs - Update lake with subgraph data. Done.")
 
         # postconditions
         assert len(gql_dfs.values()) > 0
@@ -151,7 +151,7 @@ class GQLDataFactory:
                 assert df.schema == record["schema"]
 
                 # save to parquet
-                self._save_parquet(filename, df)
+                self._append_parquet(filename, df)
 
     def _calc_start_ut(self, filename: str) -> int:
         """
@@ -230,6 +230,30 @@ class GQLDataFactory:
         return filename
 
     @enforce_types
+    def _append_parquet(self, filename: str, df: pl.DataFrame):
+        """append to existing parquet file, save as parquet"""
+
+        # precondition
+        assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
+        assert len(df) > 0
+        if len(df) > 1:
+            assert (
+                df.head(1)["timestamp"].to_list()[0]
+                <= df.tail(1)["timestamp"].to_list()[0]
+            )
+
+        if os.path.exists(filename):  # "append" existing file
+            cur_df = pl.read_parquet(filename)
+            df = pl.concat([cur_df, df])
+            df.write_parquet(filename)
+            n_new = df.shape[0] - cur_df.shape[0]
+            print(f"  Just appended {n_new} df rows to file {filename}")
+        else:  # write new file
+            df.write_parquet(filename)
+            print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+
+    
+    @enforce_types
     def _save_parquet(self, filename: str, df: pl.DataFrame):
         """write to parquet file
         parquet only supports appending via the pyarrow engine
@@ -244,15 +268,5 @@ class GQLDataFactory:
                 <= df.tail(1)["timestamp"].to_list()[0]
             )
 
-        if os.path.exists(filename):  # "append" existing file
-            cur_df = pl.read_parquet(filename)
-            df = pl.concat([cur_df, df])
-
-            # drop duplicates
-            df = df.filter(pl.struct("ID").is_unique())
-            df.write_parquet(filename)
-            n_new = df.shape[0] - cur_df.shape[0]
-            print(f"  Just appended {n_new} df rows to file {filename}")
-        else:  # write new file
-            df.write_parquet(filename)
-            print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+        df.write_parquet(filename)
+        print(f"  Just saved df with {df.shape[0]} rows to file {filename}")

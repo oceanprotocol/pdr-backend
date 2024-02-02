@@ -205,7 +205,7 @@ def test_etl_do_bronze_step(
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
-def test_etl_do_bronze_step(
+def test_etl_do_bronze_step_incremental(
     mock_get_gql_dfs,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,

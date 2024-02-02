@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -32,7 +32,9 @@ bronze_pdr_predictions_schema = {
 
 
 def _process_predictions(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
+    collision_ids: pl.Series,
+    dfs: Dict[str, pl.DataFrame],
+    ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
     @description
@@ -41,17 +43,22 @@ def _process_predictions(
         2. Transform predictions to bronze
         3. Concat to existing table
     """
-    predictions_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_predictions"],
-        start_timestamp=ppss.lake_ss.st_timestamp,
-        finish_timestamp=ppss.lake_ss.fin_timestamp,
+
+    # only add new predictions
+    predictions_df = dfs["pdr_predictions"].filter(
+        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp) 
+        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+        & (pl.col("ID").is_in(collision_ids).not_())
     )
 
+    if len(predictions_df) == 0:
+        return dfs
+
+    # transform from raw to bronze_prediction
     def get_slot_id(_id: str) -> str:
         slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
         return f"{slot_id}"
 
-    # transform from raw to bronze_prediction
     bronze_predictions_df = predictions_df.with_columns(
         [
             pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
@@ -62,12 +69,9 @@ def _process_predictions(
         ]
     ).select(bronze_pdr_predictions_schema)
 
-    # Append new predictions
-    # Upsert existing predictions
-    cur_bronze = dfs[bronze_pdr_predictions_table_name]
-    df = pl.concat([cur_bronze, bronze_predictions_df])
-    df = df.filter(pl.struct("ID").is_unique())
-    dfs[bronze_pdr_predictions_table_name] = df
+    # append to existing dataframe
+    new_bronze_df = pl.concat([dfs[bronze_pdr_predictions_table_name], bronze_predictions_df])
+    dfs[bronze_pdr_predictions_table_name] = new_bronze_df
     return dfs
 
 
@@ -84,10 +88,10 @@ def _process_truevals(
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
-    # get existing bronze_predictions we'll be updating
+    # get ref to bronze_predictions
     predictions_df = dfs[bronze_pdr_predictions_table_name]
 
-    # do work to join from pdr_truevals onto bronze_pdr_predictions
+    # update only the ones within this time range
     predictions_df = (
         predictions_df.join(truevals_df, left_on="slot_id", right_on="ID", how="left")
         .with_columns(
@@ -106,7 +110,7 @@ def _process_truevals(
         .select(bronze_pdr_predictions_schema.keys())
     )
 
-    # update the predictions_df
+    # update dfs
     dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 
@@ -153,6 +157,7 @@ def _process_payouts(
         .select(bronze_pdr_predictions_schema.keys())
     )
 
+    # update dfs
     dfs[bronze_pdr_predictions_table_name] = predictions_df
     return dfs
 
@@ -166,18 +171,17 @@ def get_bronze_pdr_predictions_df(
         Updates/Creates clean predictions from existing raw tables
     """
 
-    # do post_sync processing
-    gql_dfs = _process_predictions(gql_dfs, ppss)
+    # retrieve pred ids that are already in the lake
+    collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(
+        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp) 
+        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+    )["ID"]
+
+    # do post sync processing
+    gql_dfs = _process_predictions(collision_ids, gql_dfs, ppss)
     gql_dfs = _process_truevals(gql_dfs, ppss)
     gql_dfs = _process_payouts(gql_dfs, ppss)
-
-    df = gql_dfs[bronze_pdr_predictions_table_name]
     
-    # cull any records outside of our time range and sort them by timestamp
-    df = df.filter(
-        pl.col("timestamp").is_between(
-            ppss.lake_ss.st_timestamp, ppss.lake_ss.fin_timestamp
-        )
-    ).sort("timestamp")
-
+    # after all post processing, return bronze_predictions
+    df = gql_dfs[bronze_pdr_predictions_table_name]
     return df
