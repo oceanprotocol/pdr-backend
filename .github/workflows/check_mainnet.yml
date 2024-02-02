@@ -32,7 +32,7 @@ jobs:
         run: |
           output=$(python pdr check_network ppss.yaml sapphire-mainnet | grep -E 'FAIL|WARNING|error' || true)
           
-          if [ -n "$output" ]; then
+          if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
           else
             trivia_response=$(curl -s "https://opentdb.com/api.php?amount=1&difficulty=medium&type=multiple&category=18")
