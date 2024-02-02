@@ -1,3 +1,4 @@
+from pdr_backend.deployer.util.gen_templates import generate_deployment_templates
 from pdr_backend.deployer.util.deployment import (
     build_image,
     check_image_build_requirements,
