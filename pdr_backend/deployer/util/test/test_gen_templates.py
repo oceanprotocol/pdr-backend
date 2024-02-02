@@ -35,6 +35,7 @@ def test_generate_deployment_templates_empty_output_path(
     mock_read_keys_json.assert_called_once_with("config_name")
     mock_generate_new_keys.assert_called_once_with("config_name", 2)
 
+
 @patch("pdr_backend.deployer.util.gen_templates.generate_new_keys")
 @patch("pdr_backend.deployer.util.gen_templates.read_keys_json")
 @patch("pdr_backend.deployer.util.gen_templates.parse_config")
@@ -65,6 +66,7 @@ def test_generate_deployment_templates_with_existing_keys(
     mock_parse_config.assert_called_once_with("path", "config_name")
     mock_read_keys_json.assert_called_once_with("config_name")
     mock_generate_new_keys.assert_not_called()
+
 
 @patch("pdr_backend.deployer.util.gen_templates.generate_new_keys")
 @patch("pdr_backend.deployer.util.gen_templates.read_keys_json")
