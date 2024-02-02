@@ -125,7 +125,7 @@ def do_analytics(args, nested_args=None):
         2. All analytic data will be built
         3. Lake contains all required data
         4. Dashboards read from lake
-        
+
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, parquet_dir
     """

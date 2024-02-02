@@ -18,10 +18,11 @@ class ETL:
         The ETL process is broken into 2 steps:
             1. Sync: Fetch data from data_factory
             2. Bronze: Build bronze tables
-        
+
         The ETL class is meant to be kept around in memory and in it's own process.
         To access data/lake, use the table objects.
     """
+
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
 
@@ -34,7 +35,7 @@ class ETL:
             Run the ETL process
         """
         print("do_etl - Start ETL.")
-                
+
         try:
             self.do_sync_step()
             self.do_bronze_step()
@@ -67,13 +68,12 @@ class ETL:
         # Update bronze tables
         self.update_bronze_pdr_predictions()
 
-
     def update_bronze_pdr_predictions(self):
         """
         @description
             Update bronze_pdr_predictions table
         """
-        if not bronze_pdr_predictions_schema in self.dfs:
+        if bronze_pdr_predictions_table_name not in self.dfs:
             # Load existing bronze tables
             filename = self.gql_data_factory._parquet_filename(
                 bronze_pdr_predictions_table_name

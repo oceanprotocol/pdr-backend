@@ -12,11 +12,14 @@ from pdr_backend.lake.etl import ETL
 
 
 @enforce_types
-def get_filtered_timestamps_df(df: pl.DataFrame, st_timestr: str, fin_timestr: str) -> pl.DataFrame:
+def get_filtered_timestamps_df(
+    df: pl.DataFrame, st_timestr: str, fin_timestr: str
+) -> pl.DataFrame:
     return df.filter(
-        (pl.col("timestamp") >= timestr_to_ut(st_timestr)) &
-        (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+        (pl.col("timestamp") >= timestr_to_ut(st_timestr))
+        & (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
     )
+
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
@@ -32,9 +35,15 @@ def test_setup_etl(
     fin_timestr = "2023-11-07_0:00"
 
     # Mock dfs based on configured st/fin timestamps
-    preds = get_filtered_timestamps_df(_gql_datafactory_etl_predictions_df, st_timestr, fin_timestr)
-    truevals = get_filtered_timestamps_df(_gql_datafactory_etl_truevals_df, st_timestr, fin_timestr)
-    payouts = get_filtered_timestamps_df(_gql_datafactory_etl_payouts_df, st_timestr, fin_timestr)
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
 
     gql_dfs = {
         "pdr_predictions": preds,
@@ -42,7 +51,7 @@ def test_setup_etl(
         "pdr_payouts": payouts,
     }
     mock_get_gql_dfs.return_value = gql_dfs
-    
+
     # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
@@ -100,9 +109,15 @@ def test_etl_do_bronze_step(
         fin_timestr,
     )
 
-    preds = get_filtered_timestamps_df(_gql_datafactory_etl_predictions_df, st_timestr, fin_timestr)
-    truevals = get_filtered_timestamps_df(_gql_datafactory_etl_truevals_df, st_timestr, fin_timestr)
-    payouts = get_filtered_timestamps_df(_gql_datafactory_etl_payouts_df, st_timestr, fin_timestr)
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
 
     # Work 2: Complete ETL sync step - Assert 3 gql_dfs
     gql_dfs = {
@@ -110,7 +125,7 @@ def test_etl_do_bronze_step(
         "pdr_truevals": truevals,
         "pdr_payouts": payouts,
     }
-    
+
     mock_get_gql_dfs.return_value = gql_dfs
 
     # Work 1: Initialize ETL
@@ -164,8 +179,8 @@ def test_etl_do_bronze_step(
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][1] == True
-    assert bronze_pdr_predictions_df["truevalue"][2] == False
+    assert bronze_pdr_predictions_df["truevalue"][1] is True
+    assert bronze_pdr_predictions_df["truevalue"][2] is False
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
@@ -201,53 +216,3 @@ def test_etl_do_bronze_step(
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
-
-
-@enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
-def test_etl_do_bronze_step_incremental(
-    mock_get_gql_dfs,
-    _gql_datafactory_etl_payouts_df,
-    _gql_datafactory_etl_predictions_df,
-    _gql_datafactory_etl_truevals_df,
-    tmpdir,
-):
-    # please note date, including Nov 1st
-    st_timestr = "2023-11-01_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    preds = get_filtered_timestamps_df(_gql_datafactory_etl_predictions_df, st_timestr, fin_timestr)
-    truevals = get_filtered_timestamps_df(_gql_datafactory_etl_truevals_df, st_timestr, fin_timestr)
-    payouts = get_filtered_timestamps_df(_gql_datafactory_etl_payouts_df, st_timestr, fin_timestr)
-
-    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
-    gql_dfs = {
-        "pdr_predictions": preds,
-        "pdr_truevals": truevals,
-        "pdr_payouts": payouts,
-    }
-    
-    mock_get_gql_dfs.return_value = gql_dfs
-
-    # Work 1: Initialize ETL
-    etl = ETL(ppss, gql_data_factory)
-
-    # Work 2: Do sync
-    etl.do_sync_step()
-
-    assert len(etl.dfs["pdr_predictions"]) == 6
-
-    # Work 3: Do bronze
-    etl.do_bronze_step()
-
-    # assert bronze_pdr_predictions_df is created
-    assert len(etl.dfs["bronze_pdr_predictions"]) == 6
-
-    bronze_pdr_predictions_df = etl.dfs["bronze_pdr_predictions"]

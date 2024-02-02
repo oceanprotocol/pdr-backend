@@ -391,7 +391,7 @@ defined_parsers = {
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_analytics":  LakeArgParser("Run the analytics tool", "analytics"),
+    "do_analytics": LakeArgParser("Run the analytics tool", "analytics"),
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(

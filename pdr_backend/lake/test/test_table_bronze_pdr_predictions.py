@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from enforce_typing import enforce_types
 
 import polars as pl
@@ -40,7 +39,7 @@ def test_table_bronze_pdr_predictions(
     # Work 1: Append new predictions onto bronze_table
     # In our mock, all predictions have None truevalue, payout, etc...
     # This shows that all of this data will come from other tables
-    gql_dfs = _process_predictions(gql_dfs, ppss)
+    gql_dfs = _process_predictions([], gql_dfs, ppss)
     assert len(gql_dfs["bronze_pdr_predictions"]) == 6
     assert gql_dfs["bronze_pdr_predictions"]["truevalue"].null_count() == 6
     assert gql_dfs["bronze_pdr_predictions"]["payout"].null_count() == 6
@@ -72,7 +71,7 @@ def test_table_bronze_pdr_predictions(
     assert gql_dfs["bronze_pdr_predictions"]["payout"].null_count() == 1
     target_payout = [0.00, 10.93, 7.04, 7.16, None]
     bronze_pdr_predictions_payout = gql_dfs["bronze_pdr_predictions"][
-         "payout"
+        "payout"
     ].to_list()
     for actual_payout, expected_payout in zip(
         bronze_pdr_predictions_payout, target_payout

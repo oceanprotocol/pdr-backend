@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -32,9 +32,7 @@ bronze_pdr_predictions_schema = {
 
 
 def _process_predictions(
-    collision_ids: pl.Series,
-    dfs: Dict[str, pl.DataFrame],
-    ppss: PPSS
+    collision_ids: pl.Series, dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
     @description
@@ -46,7 +44,7 @@ def _process_predictions(
 
     # only add new predictions
     predictions_df = dfs["pdr_predictions"].filter(
-        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp) 
+        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
     )
@@ -70,7 +68,9 @@ def _process_predictions(
     ).select(bronze_pdr_predictions_schema)
 
     # append to existing dataframe
-    new_bronze_df = pl.concat([dfs[bronze_pdr_predictions_table_name], bronze_predictions_df])
+    new_bronze_df = pl.concat(
+        [dfs[bronze_pdr_predictions_table_name], bronze_predictions_df]
+    )
     dfs[bronze_pdr_predictions_table_name] = new_bronze_df
     return dfs
 
@@ -173,7 +173,7 @@ def get_bronze_pdr_predictions_df(
 
     # retrieve pred ids that are already in the lake
     collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(
-        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp) 
+        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
     )["ID"]
 
@@ -181,7 +181,7 @@ def get_bronze_pdr_predictions_df(
     gql_dfs = _process_predictions(collision_ids, gql_dfs, ppss)
     gql_dfs = _process_truevals(gql_dfs, ppss)
     gql_dfs = _process_payouts(gql_dfs, ppss)
-    
+
     # after all post processing, return bronze_predictions
     df = gql_dfs[bronze_pdr_predictions_table_name]
     return df

@@ -255,12 +255,11 @@ class GQLDataFactory:
             df.write_parquet(filename)
             print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
 
-    
     @enforce_types
     def _save_parquet(self, filename: str, df: pl.DataFrame):
         """
         @description
-            overwrite the existing parquet file with the dataframe 
+            overwrite the existing parquet file with the dataframe
         """
 
         # precondition
