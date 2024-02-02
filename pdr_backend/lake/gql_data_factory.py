@@ -150,7 +150,7 @@ class GQLDataFactory:
             if len(df) > 0:
                 assert df.schema == record["schema"]
 
-                # save to parquet
+                # append to existing parquet
                 self._append_parquet(filename, df)
 
     def _calc_start_ut(self, filename: str) -> int:
@@ -231,7 +231,10 @@ class GQLDataFactory:
 
     @enforce_types
     def _append_parquet(self, filename: str, df: pl.DataFrame):
-        """append to existing parquet file, save as parquet"""
+        """
+        @description
+            append to existing parquet data, overwrite the parquet
+        """
 
         # precondition
         assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
@@ -242,7 +245,7 @@ class GQLDataFactory:
                 <= df.tail(1)["timestamp"].to_list()[0]
             )
 
-        if os.path.exists(filename):  # "append" existing file
+        if os.path.exists(filename):  # "append" to existing parquet data
             cur_df = pl.read_parquet(filename)
             df = pl.concat([cur_df, df])
             df.write_parquet(filename)
@@ -255,8 +258,9 @@ class GQLDataFactory:
     
     @enforce_types
     def _save_parquet(self, filename: str, df: pl.DataFrame):
-        """write to parquet file
-        parquet only supports appending via the pyarrow engine
+        """
+        @description
+            overwrite the existing parquet file with the dataframe 
         """
 
         # precondition
