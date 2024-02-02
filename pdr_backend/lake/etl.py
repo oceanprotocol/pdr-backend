@@ -1,6 +1,7 @@
 from typing import Dict
 import os
 import polars as pl
+import time
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
@@ -34,15 +35,19 @@ class ETL:
         @description
             Run the ETL process
         """
+
+        st_ts = time.time_ns() / 1e9
         print("do_etl - Start ETL.")
 
         try:
             self.do_sync_step()
             self.do_bronze_step()
+
+            end_ts = time.time_ns() / 1e9
+            print(f"do_etl - Completed in {end_ts - st_ts} sec.")
+
         except Exception as e:
             print(f"Error when executing ETL: {e}")
-
-            print("do_etl - Completed ETL.")
 
     def do_sync_step(self):
         """
@@ -66,7 +71,13 @@ class ETL:
         print("do_bronze_step - Build bronze tables.")
 
         # Update bronze tables
+        # let's keep track of time passed so we can log how long it takes for this step to complete
+        st_ts = time.time_ns() / 1e9
+        
         self.update_bronze_pdr_predictions()
+
+        end_ts = time.time_ns() / 1e9
+        print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def update_bronze_pdr_predictions(self):
         """
