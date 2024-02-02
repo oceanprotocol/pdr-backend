@@ -37,7 +37,7 @@ class DFBuyerAgent:
 
         # addresses
         batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
-        self.OCEAN_addr = ppss.web3_pp.OCEAN_address
+        self.OCEAN_addr = ppss.web3_pp.get_address("Ocean")
 
         # set attribs to track progress
         self.last_consume_ts = 0

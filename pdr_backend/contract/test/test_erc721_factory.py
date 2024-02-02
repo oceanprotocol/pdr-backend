@@ -68,6 +68,6 @@ def test_Erc721Factory(web3_pp, web3_config):
 
 @enforce_types
 def test_Erc721Factory_no_address(web3_pp):
-    with patch("pdr_backend.contract.erc721_factory.get_address", return_value=None):
+    with patch.object(web3_pp, "get_address", return_value=None):
         with pytest.raises(ValueError):
             Erc721Factory(web3_pp)

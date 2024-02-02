@@ -225,4 +225,3 @@ def test_get_addresses(mock_ppss):
     assert 'Cannot find contract "ERCUnknown"' in str(excinfo.value)
 
     assert web3_pp.OCEAN_address == "0x1234567890123456789012345678901234567890"
-

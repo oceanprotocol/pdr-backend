@@ -16,9 +16,9 @@ def test_create_accounts(mock_create):
 
 
 @enforce_types
-@patch("pdr_backend.util.web3_accounts.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 @patch("pdr_backend.util.web3_accounts.NativeToken")
-@patch("pdr_backend.util.web3_accounts.get_address")
+@patch("pdr_backend.ppss.web3_pp.Web3PP.get_address")
 def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
     web3_pp = mock_web3_pp("development")
 
@@ -48,9 +48,9 @@ def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
 
 @enforce_types
 @patch("eth_account.Account.from_key")
-@patch("pdr_backend.util.web3_accounts.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 @patch("pdr_backend.util.web3_accounts.NativeToken")
-@patch("pdr_backend.util.web3_accounts.get_address")
+@patch("pdr_backend.ppss.web3_pp.Web3PP.get_address")
 def test_fund_accounts(
     mock_get_address, mock_native_token, mock_token, mock_account_from_key
 ):

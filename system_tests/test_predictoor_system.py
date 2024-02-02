@@ -34,8 +34,6 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach):
     merged_ohlcv_df = Mock()
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
-    ), patch(
         "pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss
     ), patch(
         "pdr_backend.lake.ohlcv_data_factory.OhlcvDataFactory.get_mergedohlcv_df",

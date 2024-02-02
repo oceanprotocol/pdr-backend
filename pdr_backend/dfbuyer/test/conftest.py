@@ -51,7 +51,5 @@ def mock_dfbuyer_agent(  # pylint: disable=unused-argument, redefined-outer-name
     mock_ppss,
     mock_PredictoorBatcher,
 ):
-    with patch.object(
-        mock_ppss.web3_pp, "get_address", return_value=ZERO_ADDRESS
-    ):
+    with patch.object(mock_ppss.web3_pp, "get_address", return_value=ZERO_ADDRESS):
         return DFBuyerAgent(mock_ppss)
