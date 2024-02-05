@@ -75,7 +75,7 @@ def deploy_cluster(provider: CloudProvider, cluster_name):
 
 
 def create_namespace(namespace: str):
-    run_command(f"kubectl create namespace {namespace}")
+    run_command(f"kubectl create namespace {namespace}", False)
 
 
 def destroy_cluster(provider: CloudProvider, cluster_name, config_name):
