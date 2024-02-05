@@ -18,7 +18,7 @@ from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.contract import _condition_sapphire_keys
 from pdr_backend.util.web3_config import Web3Config
 import addresses
-from pdr_backend.contract.token import Token
+from pdr_backend.contract.token import Token, NativeToken
 
 
 class Web3PP(StrMixin):
@@ -222,6 +222,10 @@ class Web3PP(StrMixin):
     @property
     def OCEAN_Token(self) -> str:
         return Token(self, self.OCEAN_address)
+
+    @property
+    def NativeToken(self) -> str:
+        return NativeToken(self)
 
 
 # =========================================================================

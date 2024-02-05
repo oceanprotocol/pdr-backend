@@ -17,7 +17,7 @@ def topup_main(ppss: PPSS):
     web3_pp = ppss.web3_pp
     owner = web3_pp.web3_config.owner
     OCEAN = web3_pp.OCEAN_Token
-    ROSE = NativeToken(ppss.web3_pp)
+    ROSE = web3_pp.NativeToken
 
     owner_OCEAN_bal = from_wei(OCEAN.balanceOf(owner))
     owner_ROSE_bal = from_wei(ROSE.balanceOf(owner))

@@ -32,7 +32,7 @@ def test_token(web3_pp, web3_config):
 
 @enforce_types
 def test_native_token(web3_pp):
-    token = NativeToken(web3_pp)
+    token = web3_pp.NativeToken
     assert token.w3
 
     owner = web3_pp.web3_config.owner

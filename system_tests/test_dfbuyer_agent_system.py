@@ -60,12 +60,8 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
     }
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.cli.cli_module.get_address", return_value="0x1"
-    ), patch("pdr_backend.dfbuyer.dfbuyer_agent.Token", return_value=mock_token), patch(
         "pdr_backend.dfbuyer.dfbuyer_agent.PredictoorBatcher",
         return_value=mock_predictoor_batcher,
-    ), patch(
-        "pdr_backend.dfbuyer.dfbuyer_agent.get_address", return_value="0x1"
     ), patch(
         "pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract",
         mock_get_consume_so_far_per_contract,

@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 
 from eth_account import Account
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.contract.token import NativeToken
 from pdr_backend.util.mathutil import to_wei, from_wei
 
 
@@ -31,7 +30,7 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
         View account balances for multiple addresses
     """
     # get assets
-    native_token = NativeToken(web3_pp)
+    native_token = web3_pp.NativeToken
     OCEAN_token = web3_pp.OCEAN_Token
 
     # loop through all addresses and print balances
@@ -62,7 +61,7 @@ def fund_accounts(
 
     token = None
     if is_native_token:
-        token = NativeToken(web3_pp)
+        token = web3_pp.NativeToken
     else:
         token = web3_pp.OCEAN_Token
 
