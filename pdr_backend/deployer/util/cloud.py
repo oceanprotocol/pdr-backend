@@ -3,10 +3,10 @@ from abc import ABC, abstractmethod
 import subprocess
 
 
-def run_command(command):
+def run_command(command, check_return_code=True):
     print(f"Running command: {command}")
     result = subprocess.run(command, shell=True, text=True)
-    if result.returncode != 0:
+    if result.returncode != 0 and check_return_code:
         raise Exception(f"Error executing {' '.join(command)}: {result.stderr}")
     return result.stdout
 
