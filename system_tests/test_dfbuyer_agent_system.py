@@ -38,6 +38,9 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
     mock_token.balanceOf.return_value = 100 * 1e18
     mock_token.allowance.return_value = 1e128
 
+    mock_web3_pp.get_address.return_value = "0x1"
+    mock_web3_pp.OCEAN_Token = mock_token
+
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.get_block.return_value = {"timestamp": 100}
     mock_web3_config.owner = "0x00000000000000000000000000000000000c0ffe"

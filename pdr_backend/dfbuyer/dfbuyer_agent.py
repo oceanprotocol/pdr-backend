@@ -7,7 +7,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.contract.predictoor_contract import PredictoorContract
-from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.subgraph.subgraph_feed import print_feeds
@@ -50,7 +49,7 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         print("Checking allowance...")
-        OCEAN = Token(ppss.web3_pp, self.OCEAN_addr)
+        OCEAN = ppss.web3_pp.OCEAN_Token
         allowance = OCEAN.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,

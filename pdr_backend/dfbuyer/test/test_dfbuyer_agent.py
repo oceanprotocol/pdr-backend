@@ -138,6 +138,7 @@ def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
     feeds = {address: MagicMock() for address in addresses}
     ppss.web3_pp.query_feed_contracts = MagicMock()
     ppss.web3_pp.query_feed_contracts.return_value = feeds
+    ppss.web3_pp.OCEAN_Token.allowance.return_value = MAX_UINT
 
     ppss.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
     ppss.dfbuyer_ss.batch_size = 3

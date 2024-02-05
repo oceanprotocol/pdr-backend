@@ -216,9 +216,7 @@ def test_get_addresses():
 
     assert 'Cannot find network "development"' in str(excinfo.value)
 
-    return_value = {
-        "Ocean": "0x1234567890123456789012345678901234567890"
-    }
+    return_value = {"Ocean": "0x1234567890123456789012345678901234567890"}
     with patch.object(web3_pp, "get_addresses", return_value=return_value):
         with pytest.raises(ValueError) as excinfo:
             web3_pp.get_address("ERCUnknown")
