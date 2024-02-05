@@ -1,24 +1,24 @@
-import random
-import os
 import json
+import os
+import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
 
+import addresses
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
-from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.contract import _condition_sapphire_keys
+from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
-import addresses
-from pdr_backend.contract.token import Token, NativeToken
 
 
 class Web3PP(StrMixin):

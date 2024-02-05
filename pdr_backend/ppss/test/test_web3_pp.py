@@ -5,7 +5,6 @@ import pytest
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
-from pdr_backend.util.constants import ZERO_ADDRESS
 from pdr_backend.ppss.ppss import mock_feed_ppss
 
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
@@ -212,7 +211,7 @@ def test_get_addresses():
     # Work 1: validate network can't be found
     with patch.object(web3_pp, "get_addresses", return_value=None):
         with pytest.raises(ValueError) as excinfo:
-            web3_pp.OCEAN_address
+            web3_pp.OCEAN_address  # pylint: disable=pointless-statement
 
     assert 'Cannot find network "development"' in str(excinfo.value)
 

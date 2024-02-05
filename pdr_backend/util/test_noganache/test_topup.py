@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.mathutil import to_wei
 from pdr_backend.util.topup import topup_main
 
@@ -52,8 +53,6 @@ def mock_get_opf_addresses():
 @enforce_types
 def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tmpdir):
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
-
-    from pdr_backend.ppss.web3_pp import Web3PP
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-testnet"

@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.token import NativeToken, Token
+from pdr_backend.contract.token import Token
 
 
 @enforce_types
