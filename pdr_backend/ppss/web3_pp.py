@@ -220,11 +220,11 @@ class Web3PP(StrMixin):
         return self.get_address("Ocean")
 
     @property
-    def OCEAN_Token(self) -> str:
+    def OCEAN_Token(self) -> Token:
         return Token(self, self.OCEAN_address)
 
     @property
-    def NativeToken(self) -> str:
+    def NativeToken(self) -> NativeToken:
         return NativeToken(self)
 
 

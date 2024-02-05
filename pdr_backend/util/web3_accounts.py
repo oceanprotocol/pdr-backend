@@ -59,11 +59,10 @@ def fund_accounts(
         print(f"Unknown network {web3_pp.network}")
         sys.exit(1)
 
-    token = None
-    if is_native_token:
-        token = web3_pp.NativeToken
-    else:
-        token = web3_pp.OCEAN_Token
+    token = web3_pp.NativeToken if is_native_token else web3_pp.OCEAN_Token
+
+    assert hasattr(token, "name")
+    assert hasattr(token, "transfer")
 
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
