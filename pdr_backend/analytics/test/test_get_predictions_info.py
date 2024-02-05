@@ -2,15 +2,18 @@ from unittest.mock import patch
 import pytest
 from enforce_typing import enforce_types
 import polars as pl
+from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.ppss.ppss import mock_ppss
+
+table_name = "pdr_predictions"
 
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_predictions_info_main_mainnet(
-    mock_get_gql_dfs,
+    mock_get_gql_tables,
     mock_get_feed_summary_stats,
     _gql_datafactory_first_predictions_df,
     tmpdir,
@@ -29,7 +32,9 @@ def test_get_predictions_info_main_mainnet(
         fin_timestr=fin_timestr,
     )
     predictions_df = _gql_datafactory_first_predictions_df
-    mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
+    predictions_table = Table(table_name, predictions_df.schema, None, ppss)
+    predictions_table.df = predictions_df
+    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     get_predictions_info_main(
@@ -65,15 +70,15 @@ def test_get_predictions_info_main_mainnet(
     # data frame after filtering is same as manual filtered dataframe
     pl.DataFrame.equals(mock_get_feed_summary_stats.call_args, preds_df)
 
-    assert mock_get_gql_dfs.call_count == 1
+    assert mock_get_gql_tables.call_count == 1
     assert mock_get_feed_summary_stats.call_count == 1
 
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_predictions_info_bad_date_range(
-    mock_get_gql_dfs,
+    mock_get_gql_tables,
     get_feed_summary_stats,
     _gql_datafactory_first_predictions_df,
     tmpdir,
@@ -93,7 +98,9 @@ def test_get_predictions_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
+    mock_get_gql_tables.return_value = {
+        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+    }
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -120,15 +127,15 @@ def test_get_predictions_info_bad_date_range(
 
     assert len(preds_df) == 0
 
-    assert mock_get_gql_dfs.call_count == 1
+    assert mock_get_gql_tables.call_count == 1
     assert get_feed_summary_stats.call_count == 0
 
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_predictions_info_bad_feed(
-    mock_get_gql_dfs,
+    mock_get_gql_tables,
     mock_get_feed_summary_stats,
     _gql_datafactory_first_predictions_df,
     tmpdir,
@@ -148,7 +155,9 @@ def test_get_predictions_info_bad_feed(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    mock_get_gql_dfs.return_value = {"pdr_predictions": predictions_df}
+    mock_get_gql_tables.return_value = {
+        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+    }
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -168,13 +177,13 @@ def test_get_predictions_info_bad_feed(
 
     assert len(predictions_df) == 0
 
-    assert mock_get_gql_dfs.call_count == 1
+    assert mock_get_gql_tables.call_count == 1
     assert mock_get_feed_summary_stats.call_count == 0
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
-def test_get_predictions_info_empty(mock_get_gql_dfs, tmpdir):
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
+def test_get_predictions_info_empty(mock_get_gql_tables, tmpdir):
     """
     @description
         assert data factory returns valid records before calculating stats
@@ -190,7 +199,9 @@ def test_get_predictions_info_empty(mock_get_gql_dfs, tmpdir):
     )
 
     # mockt he gql data factory not having any records
-    mock_get_gql_dfs.return_value = {"pdr_predictions": pl.DataFrame()}
+    mock_get_gql_tables.return_value = {
+        "pdr_predictions": Table(table_name, {}, None, ppss)
+    }
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 

@@ -80,7 +80,7 @@ class GQLDataFactory:
             },
         }
 
-    def get_gql_dfs(self) -> Dict[str, Table]:
+    def get_gql_tables(self) -> Dict[str, Table]:
         """
         @description
           Get historical dataframes across many feeds and timeframes.

@@ -6,6 +6,9 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 
 def test_gql_data_factory():
+    """
+    Test GQLDataFactory initialization
+    """
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -24,6 +27,9 @@ def test_gql_data_factory():
 
 @patch("pdr_backend.lake.gql_data_factory.Table.update")
 def test_update(mock_update_table):
+    """
+    Test GQLDataFactory update calls the update function for all the tables
+    """
     mock_update_table.return_value = {}
 
     st_timestr = "2023-12-03"
@@ -49,6 +55,9 @@ def test_update(mock_update_table):
 
 @patch("pdr_backend.lake.gql_data_factory.Table.load")
 def test_load_parquet(mock_load_table):
+    """
+    Test GQLDataFactory loads the data for all the tables
+    """
     mock_load_table.return_value = []
 
     st_timestr = "2023-12-03"
@@ -74,7 +83,10 @@ def test_load_parquet(mock_load_table):
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._load_parquet")
-def test_get_gql_dfs(mock_load_parquet, mock_update):
+def test_get_gql_tables(mock_load_parquet, mock_update):
+    """
+    Test GQLDataFactory's get_gql_tablesreturns all the tables
+    """
     mock_load_parquet.return_value = None
     mock_update.return_value = None
 
@@ -90,6 +102,6 @@ def test_get_gql_dfs(mock_load_parquet, mock_update):
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    gql_dfs = gql_data_factory.get_gql_dfs()
+    gql_dfs = gql_data_factory.get_gql_tables()
 
     assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())

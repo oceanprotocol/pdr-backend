@@ -21,7 +21,7 @@ class Table:
         """
         Read the data from the Parquet file into a DataFrame object
         """
-        filename = self._parquet_filename(self.table_name)
+        filename = self._parquet_filename()
         print(f"      filename={filename}")
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
@@ -31,6 +31,7 @@ class Table:
         # if file doesn't exist, return an empty dataframe with the expected schema
         if os.path.exists(filename):
             df = pl.read_parquet(filename)
+            print(df)
         else:
             print("file doesn't exist")
             df = pl.DataFrame(schema=self.df_schema)
@@ -59,7 +60,7 @@ class Table:
                 <= self.df.tail(1)["timestamp"].to_list()[0]
             )
 
-        filename = self._parquet_filename(self.table_name)
+        filename = self._parquet_filename()
 
         if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
@@ -81,7 +82,7 @@ class Table:
         """
         Get the data from subgraph and write it to Parquet file
         """
-        filename = self._parquet_filename(self.table_name)
+        filename = self._parquet_filename()
         st_ut = self._calc_start_ut(filename)
         fin_ut = self.ppss.lake_ss.fin_timestamp
         print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
@@ -105,18 +106,18 @@ class Table:
             self.save()
 
     @enforce_types
-    def _parquet_filename(self, filename_str: str) -> str:
+    def _parquet_filename(self) -> str:
         """
         @description
-          Computes the lake-path for the parquet file.
+            Computes the lake-path for the parquet file.
 
         @arguments
-          filename_str -- eg "subgraph_predictions"
+            filename_str -- eg "subgraph_predictions"
 
         @return
-          parquet_filename -- name for parquet file.
+            parquet_filename -- name for parquet file.
         """
-        basename = f"{filename_str}.parquet"
+        basename = f"{self.table_name}.parquet"
         filename = os.path.join(self.ppss.lake_ss.parquet_dir, basename)
         return filename
 
