@@ -20,7 +20,7 @@ def get_predictoors_info_main(
     ), "Lake has no predictions."
 
     # filter by user addresses
-    if pdr_addrs:
+    if len(pdr_addrs) > 0:
         pdr_addrs = [f.lower() for f in pdr_addrs]
         predictions_df = predictions_df.filter(predictions_df["user"].is_in(pdr_addrs))
 

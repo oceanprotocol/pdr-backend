@@ -21,8 +21,8 @@ from pdr_backend.lake.table_pdr_payouts import (
     get_pdr_payouts_df,
     payouts_schema,
 )
-from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 

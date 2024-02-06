@@ -31,10 +31,27 @@ jobs:
       - name: Notify Slack
         run: |
           output=$(python pdr check_network ppss.yaml sapphire-mainnet | grep -E 'FAIL|WARNING|error' || true)
-          fact=$(curl -s https://catfact.ninja/fact | jq -r '.fact')
+          
           if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
           else
-            message="Mainnet Check script failed: \n${output}\n\n🐱 Anyways here's a random fact about cats 🐱:\n${fact}"
+            trivia_response=$(curl -s "https://opentdb.com/api.php?amount=1&difficulty=medium&type=multiple&category=18")
+            question=$(echo "$trivia_response" | jq -r '.results[0].question')
+            correct_answer=$(echo "$trivia_response" | jq -r '.results[0].correct_answer')
+            incorrect_answers=$(echo "$trivia_response" | jq -r '.results[0].incorrect_answers[]' | paste -sd "," -)
+
+            IFS=',' read -r -a answers <<< "$correct_answer,$incorrect_answers"
+            shuffled_answers=($(shuf -e "${answers[@]}"))
+
+
+            options=("A" "B" "C" "D")
+            shuffled_options=()
+            for i in "${!shuffled_answers[@]}"; do
+              shuffled_options+=("${options[$i]}: ${shuffled_answers[$i]}")
+            done
+
+            trivia_message="Trivia question: $question\nOptions:\n${shuffled_options[0]}\n${shuffled_options[1]}\n${shuffled_options[2]}\n${shuffled_options[3]}\n"
+            
+            message="Mainnet Check script failed: \n${output}\n\n${trivia_message}"
             curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
           fi

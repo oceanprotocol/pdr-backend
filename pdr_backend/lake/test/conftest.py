@@ -1,6 +1,7 @@
 from typing import List
 from enforce_typing import enforce_types
 import pytest
+import polars as pl
 
 import polars as pl
 

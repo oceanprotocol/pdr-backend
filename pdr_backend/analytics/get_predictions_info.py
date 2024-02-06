@@ -20,7 +20,7 @@ def get_predictions_info_main(
     ), "Lake has no predictions."
 
     # filter by feed addresses
-    if feed_addrs:
+    if len(feed_addrs) > 0:
         feed_addrs = [f.lower() for f in feed_addrs]
         predictions_df = predictions_df.filter(
             predictions_df["ID"]
