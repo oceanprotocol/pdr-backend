@@ -21,6 +21,7 @@ from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
 
 
+# pylint: disable=too-many-public-methods
 class Web3PP(StrMixin):
     __STR_OBJDIR__ = ["network", "d"]
 
