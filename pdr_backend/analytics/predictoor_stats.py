@@ -226,6 +226,8 @@ def calculate_slot_daily_statistics(
     # for each <pair_timeframe,datetime> take a sample of up-to 5
     # then for each <pair_timeframe,datetime> calc daily mean_stake, mean_payout, ...
     # then for each <datetime> sum those numbers across all feeds
+
+    # this comment introduced just to create a new commit and show issue with map_groups
     slots_daily_df = (
         slots_df.group_by(["pair_timeframe", "datetime"])
         .map_groups(
