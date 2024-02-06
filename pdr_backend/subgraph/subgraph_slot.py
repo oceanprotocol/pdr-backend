@@ -10,7 +10,7 @@ from pdr_backend.util.networkutil import get_subgraph_url
 @dataclass
 class PredictSlot:
     ID: str
-    slot: str
+    slot: int
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
     roundSumStakes: float

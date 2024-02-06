@@ -15,7 +15,7 @@ from pdr_backend.subgraph.subgraph_slot import PredictSlot
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
-    slot="12345",
+    slot=12345,
     trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
