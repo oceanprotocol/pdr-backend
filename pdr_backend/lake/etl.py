@@ -1,7 +1,7 @@
 from typing import Dict
 import os
-import polars as pl
 import time
+import polars as pl
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
@@ -73,7 +73,7 @@ class ETL:
         # Update bronze tables
         # let's keep track of time passed so we can log how long it takes for this step to complete
         st_ts = time.time_ns() / 1e9
-        
+
         self.update_bronze_pdr_predictions()
 
         end_ts = time.time_ns() / 1e9
