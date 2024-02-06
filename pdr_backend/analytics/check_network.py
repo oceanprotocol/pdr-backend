@@ -164,8 +164,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
         ocean_bal = from_wei(OCEAN.balanceOf(address))
-        # TODO: wrap in web3 pp?
-        native_bal = from_wei(web3_pp.web3_config.w3.eth.get_balance(address))
+        native_bal = from_wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
             " WARNING LOW OCEAN BALANCE!"

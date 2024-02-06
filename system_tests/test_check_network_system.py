@@ -19,7 +19,6 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer):
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
-    mock_web3_config.w3.eth.get_balance.return_value = 100
     mock_web3_pp.web3_config = mock_web3_config
     mock_web3_pp.web3_config.owner = "0xowner"
 
@@ -29,6 +28,7 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer):
 
     mock_web3_pp.OCEAN_Token = mock_token
     mock_web3_pp.NativeToken = mock_token
+    mock_web3_pp.get_token_balance.return_value = 100
 
     mock_query_subgraph = Mock()
     mock_query_subgraph.return_value = {

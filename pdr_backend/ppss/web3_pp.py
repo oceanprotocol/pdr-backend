@@ -227,6 +227,9 @@ class Web3PP(StrMixin):
     def NativeToken(self) -> NativeToken:
         return NativeToken(self)
 
+    def get_token_balance(self, address):
+        return self.web3_config.w3.eth.get_balance(address)
+
 
 # =========================================================================
 # utilities for testing
