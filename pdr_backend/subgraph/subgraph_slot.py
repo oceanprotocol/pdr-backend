@@ -10,6 +10,7 @@ from pdr_backend.util.networkutil import get_subgraph_url
 @dataclass
 class PredictSlot:
     ID: str
+    timestamp: int
     slot: int
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
@@ -51,6 +52,7 @@ def get_predict_slots_query(
             slot
             trueValues {
                 id
+                timestamp
                 trueValue
             }
             roundSumStakesUp
@@ -117,6 +119,7 @@ def get_slots(
         PredictSlot(
             **{
                 "ID": slot["id"],
+                "timestamp": slot["slot"] * 1000,
                 "slot": slot["slot"],
                 "trueValues": slot["trueValues"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
@@ -140,7 +143,7 @@ def get_slots(
 
 
 @enforce_types
-def fetch_slots_for_all_assets(
+def fetch_slots(
     asset_ids: List[str],
     start_ts_param: int,
     end_ts_param: int,
@@ -165,7 +168,6 @@ def fetch_slots_for_all_assets(
     slots_by_asset: Dict[str, List[PredictSlot]] = {}
     for slot in all_slots:
         slot_id = slot.ID
-        # split the id to get the asset id
         asset_id = slot_id.split("-")[0]
         if asset_id not in slots_by_asset:
             slots_by_asset[asset_id] = []

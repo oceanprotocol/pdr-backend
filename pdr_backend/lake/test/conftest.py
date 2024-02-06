@@ -12,6 +12,7 @@ from pdr_backend.subgraph.prediction import (
 from pdr_backend.subgraph.subscription import mock_subscriptions
 from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
 from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
+from pdr_backend.subgraph.slot import mock_slots
 
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
@@ -37,6 +38,11 @@ def sample_subscriptions():
 @pytest.fixture()
 def sample_truevals():
     return mock_truevals()
+
+
+@pytest.fixture()
+def sample_slots():
+    return mock_slots()
 
 
 # pylint: disable=line-too-long

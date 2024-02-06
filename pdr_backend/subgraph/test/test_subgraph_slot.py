@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_slot import (
     PredictSlot,
-    fetch_slots_for_all_assets,
+    fetch_slots,
     get_predict_slots_query,
     get_slots,
 )
@@ -85,7 +85,7 @@ def test_get_slots(mock_query_subgraph):
 )
 def test_fetch_slots_for_all_assets(mock_query_subgraph):
     # Test the fetch_slots_for_all_assets function
-    result = fetch_slots_for_all_assets(
+    result = fetch_slots(
         asset_ids=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
     )
 

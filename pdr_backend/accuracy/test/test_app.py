@@ -15,6 +15,7 @@ from pdr_backend.subgraph.subgraph_slot import PredictSlot
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
+    timestamp=12345,
     slot=12345,
     trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
@@ -68,7 +69,7 @@ def test_aggregate_statistics():
 
 
 @enforce_types
-@patch("pdr_backend.accuracy.app.fetch_slots_for_all_assets")
+@patch("pdr_backend.accuracy.app.fetch_slots")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Mocks
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}

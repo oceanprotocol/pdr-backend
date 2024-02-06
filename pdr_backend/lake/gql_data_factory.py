@@ -21,6 +21,10 @@ from pdr_backend.lake.table_pdr_payouts import (
     get_pdr_payouts_df,
     payouts_schema,
 )
+from pdr_backend.lake.table_pdr_slots import (
+    get_pdr_slots_df,
+    slots_schema,
+)
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -77,6 +81,13 @@ class GQLDataFactory:
             "pdr_payouts": {
                 "fetch_fn": get_pdr_payouts_df,
                 "schema": payouts_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
+            "pdr_slots": {
+                "fetch_fn": get_pdr_slots_df,
+                "schema": slots_schema,
                 "config": {
                     "contract_list": contract_list,
                 },

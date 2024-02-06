@@ -11,7 +11,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots_for_all_assets, PredictSlot
+from pdr_backend.subgraph.subgraph_slot import fetch_slots, PredictSlot
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -169,9 +169,7 @@ def calculate_statistics_for_all_assets(
         calculated statistics such as average accuracy and total staked amounts.
     """
 
-    slots_by_asset = fetch_slots_for_all_assets(
-        asset_ids, start_ts_param, end_ts_param, network
-    )
+    slots_by_asset = fetch_slots(asset_ids, start_ts_param, end_ts_param, network)
 
     overall_stats = {}
     for asset_id, slots in slots_by_asset.items():

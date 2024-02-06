@@ -9,12 +9,14 @@ class Slot:
     def __init__(
         self,
         ID: str,
+        timestamp: int,
         slot: int,
         trueValues: List[Dict[str, Any]],
         roundSumStakesUp: float,
         roundSumStakes: float,
     ) -> None:
         self.ID = ID
+        self.timestamp = timestamp
         self.slot = slot
         self.trueValues = trueValues
         self.roundSumStakesUp = roundSumStakesUp
@@ -28,9 +30,10 @@ class Slot:
 
 @enforce_types
 def mock_slot(slot_tuple: tuple) -> Slot:
-    (ID, slot, trueValues, roundSumStakesUp, roundSumStakes) = slot_tuple
+    (ID, timestamp, slot, trueValues, roundSumStakesUp, roundSumStakes) = slot_tuple
     return Slot(
         ID=ID,
+        timestamp=timestamp,
         slot=slot,
         trueValues=trueValues,
         roundSumStakesUp=roundSumStakesUp,
@@ -46,6 +49,7 @@ def mock_slots() -> List[Slot]:
 _SLOT_TUPS = [
     (
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
+        1696838400000,
         1696838400,
         [
             {
@@ -58,6 +62,7 @@ _SLOT_TUPS = [
     ),
     (
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838100",
+        1696838100000,
         1696838100,
         [
             {
@@ -70,6 +75,7 @@ _SLOT_TUPS = [
     ),
     (
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
+        1696838400000,
         1696838400,
         [
             {
@@ -82,6 +88,7 @@ _SLOT_TUPS = [
     ),
     (
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838100",
+        1696838100000,
         1696838100,
         [
             {
@@ -94,6 +101,7 @@ _SLOT_TUPS = [
     ),
     (
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838400",
+        1696838400000,
         1696838400,
         [
             {
@@ -106,6 +114,7 @@ _SLOT_TUPS = [
     ),
     (
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838700",
+        1696838700000,
         1696838700,
         [
             {
