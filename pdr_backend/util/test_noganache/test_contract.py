@@ -6,7 +6,6 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.contract import (
     _condition_sapphire_keys,
-    get_contract_abi,
     get_contract_filename,
 )
 
@@ -26,14 +25,14 @@ def test_contract_main(network):
     web3_pp = ppss.web3_pp
     assert web3_pp.network == network
 
-    result = get_contract_abi("ERC20Template3", web3_pp.address_file)
+    result = web3_pp.get_contract_abi("ERC20Template3")
     assert len(result) > 0 and isinstance(result, list)
 
     result = get_contract_filename("ERC20Template3", web3_pp.address_file)
     assert result is not None and isinstance(result, Path)
 
     with pytest.raises(TypeError):
-        get_contract_abi("xyz", web3_pp.address_file)
+        web3_pp.get_contract_abi("xyz")
 
 
 @enforce_types

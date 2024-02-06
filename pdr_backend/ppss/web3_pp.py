@@ -16,7 +16,7 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
-from pdr_backend.util.contract import _condition_sapphire_keys
+from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_filename
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
 
@@ -229,6 +229,19 @@ class Web3PP(StrMixin):
 
     def get_token_balance(self, address):
         return self.web3_config.w3.eth.get_balance(address)
+
+    def get_contract_abi(self, contract_name: str):
+        """
+        Returns the ABI for the specified contract
+        """
+        path = get_contract_filename(contract_name, self.address_file)
+
+        if not path.exists():
+            raise TypeError("Contract name does not exist in artifacts.")
+
+        with open(path) as f:
+            data = json.load(f)
+            return data["abi"]
 
 
 # =========================================================================

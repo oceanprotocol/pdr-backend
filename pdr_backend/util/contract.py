@@ -1,25 +1,10 @@
 import copy
-import json
 import os
 from pathlib import Path
 from typing import Union
 
 import artifacts
 from enforce_typing import enforce_types
-
-
-# TODO: I think some of these others functions warrant being moved to web3_pp.py
-@enforce_types
-def get_contract_abi(contract_name: str, address_file: Union[str, None]):
-    """Returns the abi dict for a contract name."""
-    path = get_contract_filename(contract_name, address_file)
-
-    if not path.exists():
-        raise TypeError("Contract name does not exist in artifacts.")
-
-    with open(path) as f:
-        data = json.load(f)
-        return data["abi"]
 
 
 @enforce_types
