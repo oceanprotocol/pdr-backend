@@ -174,25 +174,26 @@ def _process_predictions(
 
 
 @enforce_types
-def get_bronze_pdr_predictions_df(
+def get_bronze_pdr_slots_df(
     gql_dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> pl.DataFrame:
     """
     @description
-        Updates/Creates clean predictions from existing raw tables
+        Updates/Creates clean slots from existing raw tables
     """
 
     # retrieve pred ids that are already in the lake
-    collision_ids = gql_dfs[bronze_pdr_slots_table_name].filter(
-        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
-        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
-    )["ID"]
+    if len(gql_dfs[bronze_pdr_slots_table_name] > 0):
+        collision_ids = gql_dfs[bronze_pdr_slots_table_name].filter(
+            (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
+            & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+        )["ID"]
 
     # do post sync processing
     gql_dfs = _process_slots(collision_ids, gql_dfs, ppss)
     gql_dfs = _process_predictions(gql_dfs, ppss)
     gql_dfs = _process_truevals(gql_dfs, ppss)
 
-    # after all post processing, return bronze_predictions
+    # after all post processing, return bronze_slots
     df = gql_dfs[bronze_pdr_slots_table_name]
     return df

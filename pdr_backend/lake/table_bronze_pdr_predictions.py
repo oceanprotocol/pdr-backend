@@ -172,10 +172,11 @@ def get_bronze_pdr_predictions_df(
     """
 
     # retrieve pred ids that are already in the lake
-    collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(
-        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
-        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
-    )["ID"]
+    if len(gql_dfs[bronze_pdr_predictions_table_name] > 0):
+        collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(
+            (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
+            & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+        )["ID"]
 
     # do post sync processing
     gql_dfs = _process_predictions(collision_ids, gql_dfs, ppss)
