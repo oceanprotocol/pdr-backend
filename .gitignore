@@ -174,5 +174,3 @@ pdr_predictions.parquet
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json
-# pm2 configs
-scripts/pm2-config/*private*

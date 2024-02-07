@@ -1,7 +1,6 @@
 from typing import List
 from enforce_typing import enforce_types
 import pytest
-
 import polars as pl
 
 from pdr_backend.subgraph.prediction import (

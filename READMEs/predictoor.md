@@ -47,6 +47,9 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+```console
+cp ppss.yaml my_ppss.yaml
+```
 
 Let's simulate! In console:
 ```console
@@ -138,43 +141,6 @@ Once you're familiar with the above, you can make your own model and optimize it
 1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
-
-## Run Many Bots at Once
-
-[PM2](https://pm2.keymetrics.io/docs/usage/quick-start/) is "a daemon process manager that will help you manage and keep your application online."
-
-This section shows first how to use PM2 to run one bot on testnet. It then shows how to extend this to mainnet, and many bots at once.
-
-First, install PM2: `npm install pm2 -g`
-
-Then, prepare the PM2 config file:
-- Skim over [`pm2-testnet-predictoor.config.js`](../pm2-testnet-predictoor.config.js). It names the script, and sets envvars like we did above, but automatically.
-- Open the local version of this file. It's in the root of your `pdr-backend/` directory. In the file, set `YOUR_PRIVATE_KEY`.
-
-Now, run the bot with PM2. In console:
-```console
-pm2 start pm2-testnet-predictoor.config.js
-```
-
-Your bot's running on testnet again! This time with the help of PM2.
-
-Next, monitor the logs: `pm2 logs pm2-testnet-predictoor` (ctrl-c to stop)
-
-Finally, stop the bot: `pm2 stop pm2-testnet-predictoor`
-
-Congrats! You've used PM2 to start, monitor, and stop a bot on testnet.
-
-To run on _mainnet_: it's a mainnet config file [`pm2-mainnet-predictoor.config.js`](../pm2-mainnet-predictoor.config.js). It's like testnet, with different envvars. Work with the local version of this file.
-
-To run 20 bots: alter the config file as needed. Or, have 20 config files.
-
-Other interesting PM2 commands:
-- List all running processes: `pm2 ls`
-- Stop process with id=0: `pm2 stop 0 # (similar for other cmds)`
-- Stop all processes: `pm2 stop all`
-- Top-level help: `pm2 help`
-- Help for "start" command: `pm2 help start # (similar for other cmds)`
-- More yet: **[PM2 docs](https://pm2.keymetrics.io/docs/usage/quick-start/)**
 
 ## Run Bots Remotely
 
