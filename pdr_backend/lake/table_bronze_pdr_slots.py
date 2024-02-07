@@ -22,10 +22,7 @@ bronze_pdr_slots_schema = {
     "slot": Int64,
     "roundSumStakesUp": Float64,
     "roundSumStakes": Float64,
-    "predvalue": Boolean,
-    "truevalue": Boolean,
-    "stake": Float64,
-    "payout": Float64,
+    "trueval": Boolean,
     "timestamp": Int64,
     "last_event_timestamp": Int64,
 }
@@ -37,16 +34,31 @@ def _process_slots(
     """
     @description
         Perform post-fetch processing on the data.
-        1. Find predictions within the update
-        2. Transform predictions to bronze
+        1. Find slots within the update
+        2. Transform slots to bronze
         3. Concat to existing table
     """
 
-    # only add new predictions
+    # only add new slots
     slots_df = dfs["pdr_slots"].filter(
         (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
+    )
+
+    # select only the columns that we need
+    columns_to_select = [
+        "ID",
+        "slot",
+        "timestamp",
+        "roundSumStakesUp",
+        "roundSumStakes",
+    ]
+    slots_df = slots_df.select(columns_to_select)
+
+    # create contract column from the ID column
+    slots_df = slots_df.with_columns(
+        contract=pl.col("ID").map_elements(lambda s: s.split("-")[0])
     )
 
     if len(slots_df) == 0:
@@ -58,7 +70,7 @@ def _process_slots(
     return dfs
 
 
-def _process_predictions(
+def _process_truevals(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
@@ -71,77 +83,93 @@ def _process_predictions(
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
-    # get ref to bronze_predictions
-    predictions_df = dfs[bronze_pdr_slots_table_name]
+    # get ref to bronze_slots
+    slots_df = dfs[bronze_pdr_slots_table_name]
+
+    # add columns that are going to be populated
+    slots_df = slots_df.with_columns(last_event_timestamp=pl.lit(None))
+    slots_df = slots_df.with_columns(trueval=pl.lit(None))
+
+    initial_schema_keys = slots_df.schema.keys()
 
     # update only the ones within this time range
-    predictions_df = (
-        predictions_df.join(truevals_df, left_on="slot_id", right_on="ID", how="left")
+    slots_df = (
+        slots_df.join(truevals_df, left_on="ID", right_on="ID", how="left")
         .with_columns(
             [
-                pl.col("trueval").fill_null(pl.col("truevalue")),
+                pl.col("trueval").fill_null(pl.col("trueval")),
                 pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
             ]
         )
-        .drop(["truevalue", "last_event_timestamp"])
+        .drop(["trueval", "last_event_timestamp"])
         .rename(
             {
-                "trueval": "truevalue",
+                "trueval_right": "trueval",
                 "timestamp_right": "last_event_timestamp",
             }
         )
-        .select(bronze_pdr_slots_schema.keys())
+        .select(initial_schema_keys)
     )
 
     # update dfs
-    dfs[bronze_pdr_slots_table_name] = predictions_df
+    dfs[bronze_pdr_slots_table_name] = slots_df
     return dfs
 
 
-def _process_payouts(
+def _process_predictions(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
     @description
         Perform post-fetch processing on the data
-        1. Find payouts within the update
+        1. Find predictions( within the update
 
     """
-    # get payouts within the update
-    payouts_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_payouts"],
+    # get predictions within the update
+    predictions_df, _ = pick_df_and_ids_on_period(
+        target=dfs["pdr_predictions"],
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
     # get existing bronze_predictions we'll be updating
-    predictions_df = dfs[bronze_pdr_slots_table_name]
+    slots_df = dfs[bronze_pdr_slots_table_name]
+
+    # add columns that are going to be populated
+    slots_df = slots_df.with_columns(pair=pl.lit(None))
+    slots_df = slots_df.with_columns(source=pl.lit(None))
+    slots_df = slots_df.with_columns(timeframe=pl.lit(None))
+
+    initial_schema_keys = slots_df.schema.keys()
 
     # do work to join from pdr_payout onto bronze_pdr_predictions
-    predictions_df = (
-        predictions_df.join(payouts_df, on=["ID"], how="left")
+    slots_df = (
+        slots_df.join(predictions_df, on=["contract"], how="left")
         .with_columns(
             [
-                pl.col("payout_right").fill_null(pl.col("payout")),
-                pl.col("predictedValue").fill_null(pl.col("predvalue")),
-                pl.col("stake_right").fill_null(pl.col("stake")),
-                pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
+                pl.col("pair").fill_null(pl.col("pair")),
+                pl.col("source").fill_null(pl.col("source")),
+                pl.col("timeframe").fill_null(pl.col("timeframe")),
             ]
         )
-        .drop(["payout", "predvalue", "stake", "last_event_timestamp"])
+        .drop(["pair", "source", "timeframe"])
         .rename(
             {
-                "payout_right": "payout",
-                "predictedValue": "predvalue",
-                "stake_right": "stake",
-                "timestamp_right": "last_event_timestamp",
+                "pair_right": "pair",
+                "source_right": "source",
+                "timeframe_right": "timeframe",
             }
         )
-        .select(bronze_pdr_slots_schema.keys())
+        .select(initial_schema_keys)
     )
 
+    slots_df = slots_df.unique(subset=["ID"])
+
+    print(slots_df)
+    print(slots_df.columns)
+
     # update dfs
-    dfs[bronze_pdr_slots_table_name] = predictions_df
+    dfs[bronze_pdr_slots_table_name] = slots_df
     return dfs
 
 
@@ -163,7 +191,7 @@ def get_bronze_pdr_predictions_df(
     # do post sync processing
     gql_dfs = _process_slots(collision_ids, gql_dfs, ppss)
     gql_dfs = _process_predictions(gql_dfs, ppss)
-    gql_dfs = _process_payouts(gql_dfs, ppss)
+    gql_dfs = _process_truevals(gql_dfs, ppss)
 
     # after all post processing, return bronze_predictions
     df = gql_dfs[bronze_pdr_slots_table_name]
