@@ -10,7 +10,7 @@ from pdr_backend.analytics.predictoor_stats import (
     get_traction_statistics,
     plot_slot_daily_statistics,
     plot_traction_cum_sum_statistics,
-    plot_traction_daily_statistics
+    plot_traction_daily_statistics,
 )
 from pdr_backend.util.timeutil import timestr_to_ut
 

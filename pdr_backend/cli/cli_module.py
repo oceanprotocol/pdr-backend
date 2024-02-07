@@ -3,7 +3,11 @@ import sys
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.check_network import check_network_main
-from pdr_backend.analytics.get_predictions_info import get_predictions_info_main, get_predictoors_info_main, get_traction_info_main
+from pdr_backend.analytics.get_predictions_info import (
+    get_predictions_info_main,
+    get_predictoors_info_main,
+    get_traction_info_main,
+)
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     get_arg_parser,
