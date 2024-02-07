@@ -5,7 +5,6 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.token import Token
-from pdr_backend.util.contract import get_address
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
 
 @enforce_types
 def test_base_contract(web3_pp, web3_config):
-    OCEAN_address = get_address(web3_pp, "Ocean")
+    OCEAN_address = web3_pp.OCEAN_address
 
     # success
     Token(web3_pp, OCEAN_address)
@@ -34,7 +33,7 @@ def test_send_encrypted_tx(
     ocean_token,
     web3_pp,
 ):
-    OCEAN_address = get_address(web3_pp, "Ocean")
+    OCEAN_address = web3_pp.OCEAN_address
     contract = Token(web3_pp, OCEAN_address)
 
     # Set up dummy return value for the mocked function

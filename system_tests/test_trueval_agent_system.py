@@ -35,6 +35,7 @@ def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_pro
         )
     }
     mock_web3_pp.get_pending_slots.return_value = [Slot(1, feeds["0x1"])]
+    mock_web3_pp.get_address.return_value = "0x1"
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.get_block.return_value = {"timestamp": 100}
@@ -47,8 +48,6 @@ def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_pro
     mock_predictoor_batcher = Mock(spec=PredictoorBatcher)
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.cli.cli_module.get_address", return_value="0x1"
-    ), patch(
         "pdr_backend.trueval.trueval_agent.PredictoorBatcher",
         return_value=mock_predictoor_batcher,
     ), patch(

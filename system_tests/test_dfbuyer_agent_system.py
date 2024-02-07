@@ -38,6 +38,9 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
     mock_token.balanceOf.return_value = 100 * 1e18
     mock_token.allowance.return_value = 1e128
 
+    mock_web3_pp.get_address.return_value = "0x1"
+    mock_web3_pp.OCEAN_Token = mock_token
+
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.get_block.return_value = {"timestamp": 100}
     mock_web3_config.owner = "0x00000000000000000000000000000000000c0ffe"
@@ -60,12 +63,8 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
     }
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.cli.cli_module.get_address", return_value="0x1"
-    ), patch("pdr_backend.dfbuyer.dfbuyer_agent.Token", return_value=mock_token), patch(
         "pdr_backend.dfbuyer.dfbuyer_agent.PredictoorBatcher",
         return_value=mock_predictoor_batcher,
-    ), patch(
-        "pdr_backend.dfbuyer.dfbuyer_agent.get_address", return_value="0x1"
     ), patch(
         "pdr_backend.dfbuyer.dfbuyer_agent.get_consume_so_far_per_contract",
         mock_get_consume_so_far_per_contract,
