@@ -1,7 +1,7 @@
 from typing import Dict
 import os
-import polars as pl
 import time
+import polars as pl
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from enforce_typing import enforce_types
 
@@ -12,7 +12,7 @@ class PredictSlot:
     ID: str
     timestamp: int
     slot: int
-    trueValues: List[Dict[str, Any]]
+    trueval: bool
     roundSumStakesUp: float
     roundSumStakes: float
 
@@ -121,7 +121,7 @@ def get_slots(
                 "ID": slot["id"],
                 "timestamp": slot["slot"] * 1000,
                 "slot": slot["slot"],
-                "trueValues": slot["trueValues"],
+                "trueval": slot["trueValues"][0]["trueValue"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
             }

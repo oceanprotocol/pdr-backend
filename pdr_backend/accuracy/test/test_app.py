@@ -17,7 +17,7 @@ SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
     timestamp=12345,
     slot=12345,
-    trueValues=[{"ID": "1", "trueValue": True}],
+    trueval=True,
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
 )

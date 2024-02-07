@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import List
 
 from enforce_typing import enforce_types
 
@@ -11,14 +11,14 @@ class Slot:
         ID: str,
         timestamp: int,
         slot: int,
-        trueValues: List[Dict[str, Any]],
+        trueval: bool,
         roundSumStakesUp: float,
         roundSumStakes: float,
     ) -> None:
         self.ID = ID
         self.timestamp = timestamp
         self.slot = slot
-        self.trueValues = trueValues
+        self.trueval = trueval
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.slot = slot
@@ -30,12 +30,12 @@ class Slot:
 
 @enforce_types
 def mock_slot(slot_tuple: tuple) -> Slot:
-    (ID, timestamp, slot, trueValues, roundSumStakesUp, roundSumStakes) = slot_tuple
+    (ID, timestamp, slot, trueval, roundSumStakesUp, roundSumStakes) = slot_tuple
     return Slot(
         ID=ID,
         timestamp=timestamp,
         slot=slot,
-        trueValues=trueValues,
+        trueval=trueval,
         roundSumStakesUp=roundSumStakesUp,
         roundSumStakes=roundSumStakes,
     )
@@ -51,12 +51,7 @@ _SLOT_TUPS = [
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
         1696838400000,
         1696838400,
-        [
-            {
-                "id": "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
-                "trueValue": False,
-            }
-        ],
+        False,
         10.5,
         2.5,
     ),
@@ -64,12 +59,7 @@ _SLOT_TUPS = [
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838100",
         1696838100000,
         1696838100,
-        [
-            {
-                "id": "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838100",
-                "trueValue": False,
-            }
-        ],
+        False,
         2.5,
         10.5,
     ),
@@ -77,12 +67,7 @@ _SLOT_TUPS = [
         "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
         1696838400000,
         1696838400,
-        [
-            {
-                "id": "0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-1696838400",
-                "trueValue": True,
-            }
-        ],
+        True,
         1.5,
         20.5,
     ),
@@ -90,12 +75,7 @@ _SLOT_TUPS = [
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838100",
         1696838100000,
         1696838100,
-        [
-            {
-                "id": "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838100",
-                "trueValue": False,
-            }
-        ],
+        False,
         10.5,
         2.5,
     ),
@@ -103,12 +83,7 @@ _SLOT_TUPS = [
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838400",
         1696838400000,
         1696838400,
-        [
-            {
-                "id": "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838400",
-                "trueValue": True,
-            }
-        ],
+        True,
         1.5,
         2.5,
     ),
@@ -116,12 +91,7 @@ _SLOT_TUPS = [
         "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838700",
         1696838700000,
         1696838700,
-        [
-            {
-                "id": "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690-1696838700",
-                "trueValue": True,
-            }
-        ],
+        True,
         10.5,
         20.5,
     ),

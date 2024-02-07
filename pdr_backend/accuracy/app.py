@@ -93,13 +93,12 @@ def process_single_slot(
             slots_evaluated,
         )
 
-    true_values: List[Dict[str, Any]] = slot.trueValues or []
-    true_value: Optional[bool] = true_values[0]["trueValue"] if true_values else None
+    true_value = slot.trueval
 
-    if len(true_values) > 0 and prediction_result == true_value:
+    if prediction_result == true_value:
         correct_predictions_count += 1
 
-    if len(true_values) > 0 and true_value is not None:
+    if true_value is not None:
         slots_evaluated += 1
 
     return staked_yesterday, staked_today, correct_predictions_count, slots_evaluated
@@ -122,9 +121,9 @@ def aggregate_statistics(
         and the total counts of correct predictions and slots evaluated.
     """
 
-    total_staked_yesterday = (
-        total_staked_today
-    ) = total_correct_predictions = total_slots_evaluated = 0
+    total_staked_yesterday = total_staked_today = total_correct_predictions = (
+        total_slots_evaluated
+    ) = 0
     for slot in slots:
         slot_results = process_single_slot(slot, end_of_previous_day_timestamp)
         if slot_results:
