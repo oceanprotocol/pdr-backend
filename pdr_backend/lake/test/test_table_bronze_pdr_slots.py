@@ -47,18 +47,16 @@ def test_table_bronze_pdr_slots(
     assert gql_dfs["bronze_pdr_slots"]["roundSumStakesUp"] is not None
     assert gql_dfs["bronze_pdr_slots"]["roundSumStakes"] is not None
 
-    # Work 2: Append from pdr_predictions table
+    # Work 2: Append from pdr_truevals table
     gql_dfs = _process_truevals(gql_dfs, ppss)
 
     assert len(gql_dfs["bronze_pdr_slots"]) == 6
-    print(gql_dfs["bronze_pdr_slots"])
 
-    # Work 3: Append from pdr_payouts table
+    # Work 3: Append from pdr_predictions table
     gql_dfs = _process_predictions(gql_dfs, ppss)
 
     # We should still have 6 rows
     assert len(gql_dfs["bronze_pdr_slots"]) == 6
-    print(gql_dfs["bronze_pdr_slots"])
 
     # Check final data frame has all the required columns
     assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema

@@ -36,8 +36,6 @@ def get_pdr_slots_df(
         config["contract_list"], ms_to_seconds(st_ut), ms_to_seconds(fin_ut), network
     )
 
-    print(slots)
-
     if len(slots) == 0:
         print("No slots to fetch. Exit.")
         return pl.DataFrame()

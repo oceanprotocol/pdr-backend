@@ -71,8 +71,6 @@ def _test_update_slot_gql(
     st_ut_sec = st_ut // 1000
     fin_ut_sec = fin_ut // 1000
 
-    print(subgraph_slots)
-
     mock_fetch_slots.return_value = subgraph_slots
 
     # work 1: update parquet
@@ -94,7 +92,7 @@ def _test_update_slot_gql(
 
     # assert expected length of slots in parquet
     slots: List[int] = _slots_in_parquet(filename)
-    print(slots)
+
     if isinstance(n_items, int):
         assert len(slots) == n_items
     elif n_items == ">1K":
@@ -138,7 +136,6 @@ def test_load_and_verify_slot_schema(
 
     fin_ut = timestr_to_ut(fin_timestr)
     gql_dfs = gql_data_factory._load_parquet(fin_ut)
-    print(gql_dfs[pdr_slots_record])
 
     assert len(gql_dfs) == 1
     assert len(gql_dfs[pdr_slots_record]) == 6
