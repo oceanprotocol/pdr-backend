@@ -96,6 +96,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
     tmpdir,
 ):
     # please note date, including Nov 1st
@@ -118,12 +119,16 @@ def test_etl_do_bronze_step(
     payouts = get_filtered_timestamps_df(
         _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
     )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
 
-    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
+    # Work 2: Complete ETL sync step - Assert 4 gql_dfs
     gql_dfs = {
         "pdr_predictions": preds,
         "pdr_truevals": truevals,
         "pdr_payouts": payouts,
+        "pdr_slots": slots,
     }
 
     mock_get_gql_dfs.return_value = gql_dfs

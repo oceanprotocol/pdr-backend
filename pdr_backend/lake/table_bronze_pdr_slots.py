@@ -64,6 +64,11 @@ def _process_slots(
     if len(slots_df) == 0:
         return dfs
 
+    if dfs[bronze_pdr_slots_table_name].schema == bronze_pdr_slots_schema:
+        dfs[bronze_pdr_slots_table_name] = dfs[bronze_pdr_slots_table_name].select(
+            slots_df.schema
+        )
+
     # append to existing dataframe
     new_bronze_df = pl.concat([dfs[bronze_pdr_slots_table_name], slots_df])
     dfs[bronze_pdr_slots_table_name] = new_bronze_df
@@ -181,7 +186,7 @@ def get_bronze_pdr_slots_df(
 
     collision_ids = pl.Series([])
     # retrieve pred ids that are already in the lake
-    if len(gql_dfs[bronze_pdr_slots_table_name] > 0):
+    if len(gql_dfs[bronze_pdr_slots_table_name]) > 0:
         collision_ids = gql_dfs[bronze_pdr_slots_table_name].filter(
             (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
             & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
@@ -194,4 +199,5 @@ def get_bronze_pdr_slots_df(
 
     # after all post processing, return bronze_slots
     df = gql_dfs[bronze_pdr_slots_table_name]
+    df = df.sort("timestamp")
     return df

@@ -10,6 +10,11 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_df,
 )
+from pdr_backend.lake.table_bronze_pdr_slots import (
+    bronze_pdr_slots_table_name,
+    bronze_pdr_slots_schema,
+    get_bronze_pdr_slots_df,
+)
 
 
 class ETL:
@@ -75,6 +80,7 @@ class ETL:
         st_ts = time.time_ns() / 1e9
 
         self.update_bronze_pdr_predictions()
+        self.update_bronze_pdr_slots()
 
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
@@ -104,3 +110,27 @@ class ETL:
         self.gql_data_factory._save_parquet(filename, df)
 
         self.dfs[bronze_pdr_predictions_table_name] = df
+
+    def update_bronze_pdr_slots(self):
+        """
+        @description
+            Update bronze_pdr_slots table
+        """
+        if bronze_pdr_slots_table_name not in self.dfs:
+            # Load existing bronze tables
+            filename = self.gql_data_factory._parquet_filename(
+                bronze_pdr_slots_table_name
+            )
+            if os.path.exists(filename):
+                df = pl.read_parquet(filename)
+            else:
+                df = pl.DataFrame(schema=bronze_pdr_slots_schema)
+
+            self.dfs[bronze_pdr_slots_table_name] = df
+
+        df = get_bronze_pdr_slots_df(self.dfs, self.ppss)
+
+        filename = self.gql_data_factory._parquet_filename(bronze_pdr_slots_table_name)
+        self.gql_data_factory._save_parquet(filename, df)
+
+        self.dfs[bronze_pdr_slots_table_name] = df
