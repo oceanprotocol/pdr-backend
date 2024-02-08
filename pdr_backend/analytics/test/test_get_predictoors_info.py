@@ -4,13 +4,13 @@ import pytest
 from enforce_typing import enforce_types
 import polars as pl
 
-from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
+from pdr_backend.analytics.get_predictions_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_main_mainnet(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
@@ -63,8 +63,8 @@ def test_get_predictoors_info_main_mainnet(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_bad_date_range(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
@@ -114,9 +114,9 @@ def test_get_predictoors_info_bad_date_range(
 
 @enforce_types
 @patch(
-    "pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats",
+    "pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats",
 )
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_bad_user_address(
     mock_get_gql_dfs,
     mock_get_predictoor_summary_stats,
