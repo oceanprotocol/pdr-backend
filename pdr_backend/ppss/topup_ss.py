@@ -22,10 +22,10 @@ class TopupSS(StrMixin):
     def all_topup_addresses(self, network) -> str:
         addresses: Dict[str, str] = {}
 
-        if "default" in addresses:
+        if "default" in self.addresses:
             addresses = get_opf_addresses(network)
 
-        for i, address in enumerate(addresses):
+        for i, address in enumerate(self.addresses):
             if address == "default":
                 continue
 
