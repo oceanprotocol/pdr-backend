@@ -61,10 +61,12 @@ def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tm
 
     ppss.web3_pp = mock_web3_pp
 
+    topup_ss = MagicMock()
+    topup_ss.all_topup_addresses = mock_get_opf_addresses_
+    ppss.topup_ss = topup_ss
+
     PATH = "pdr_backend.util.topup"
-    with patch(f"{PATH}.get_opf_addresses", mock_get_opf_addresses_), patch(
-        f"{PATH}.sys.exit"
-    ) as mock_exit:
+    with patch(f"{PATH}.sys.exit") as mock_exit:
         topup_main(ppss)
 
         mock_exit.assert_called_with(0)

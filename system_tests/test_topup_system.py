@@ -36,16 +36,23 @@ def test_topup():
     mock_web3_pp.OCEAN_Token = mock_token
     mock_web3_pp.NativeToken = mock_token_rose
 
+    opf_addresses = {
+        "predictoor1": "0x1",
+        "predictoor2": "0x2",
+    }
+    topup_ss = MagicMock()
+    topup_ss.all_topup_addresses.return_value = opf_addresses
+
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "sys.exit"
-    ):
+        "pdr_backend.ppss.ppss.TopupSS", return_value=topup_ss
+    ), patch("sys.exit"):
         # Mock sys.argv
         sys.argv = ["pdr", "topup", "ppss.yaml", "sapphire-testnet"]
 
         with patch("builtins.print") as mock_print:
             cli_module._do_main()
 
-        addresses = get_opf_addresses("sapphire-mainnet")
+        addresses = opf_addresses
         # Verifying outputs
         for key, value in addresses.items():
             mock_print.assert_any_call(f"{key}: 5.00 OCEAN, 5.00 ROSE")

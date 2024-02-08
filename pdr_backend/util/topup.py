@@ -4,7 +4,6 @@ from typing import Dict
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.mathutil import from_wei, to_wei
 
 
@@ -26,7 +25,7 @@ def topup_main(ppss: PPSS):
         + f"{owner_OCEAN_bal:.2f} OCEAN and {owner_ROSE_bal:.2f} ROSE\n\n"
     )
 
-    addresses: Dict[str, str] = get_opf_addresses(web3_pp.network)
+    addresses: Dict[str, str] = ppss.topup_ss.all_topup_addresses(web3_pp.network)
 
     for addr_label, address in addresses.items():
         OCEAN_bal = from_wei(OCEAN.balanceOf(address))

@@ -88,6 +88,11 @@ dfbuyer_ss:
 payout_ss:
   batch_size: 250
 
+topup_ss:
+  addresses:
+     - default
+#    - 0xabcd...
+
 # ------------------------------------------------------------------
 # Network settings
 
