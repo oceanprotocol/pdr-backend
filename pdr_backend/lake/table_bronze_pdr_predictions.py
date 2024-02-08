@@ -171,6 +171,7 @@ def get_bronze_pdr_predictions_df(
         Updates/Creates clean predictions from existing raw tables
     """
 
+    collision_ids = pl.Series([])
     # retrieve pred ids that are already in the lake
     if len(gql_dfs[bronze_pdr_predictions_table_name] > 0):
         collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(

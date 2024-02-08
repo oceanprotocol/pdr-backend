@@ -43,7 +43,42 @@ def test_bronze_tables_coraltion(
     # Create bronze slots table
     gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_df(gql_dfs, ppss)
     assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
+    assert len(gql_dfs["bronze_pdr_slots"]) == 6
 
     # Create bronze predictions table
     gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_df(gql_dfs, ppss)
     assert gql_dfs["bronze_pdr_predictions"].schema == bronze_pdr_predictions_schema
+    assert len(gql_dfs["bronze_pdr_predictions"]) == 6
+
+    # Get predictions data from predictions table for slots within slots table
+    slots_with_predictions_df = gql_dfs["bronze_pdr_slots"].join(
+        gql_dfs["bronze_pdr_predictions"].select(
+            ["slot", "user", "payout", "predvalue"]
+        ),
+        on=["slot"],
+        how="left",
+    )
+
+    users = slots_with_predictions_df["user"].to_list()
+    assert len(users) == 6
+
+    predvalues = slots_with_predictions_df["predvalue"].to_list()
+    assert len(predvalues) == 6
+
+    payouts = slots_with_predictions_df["payout"].to_list()
+    assert len(payouts) == 6
+
+    # filter data frame by slot
+    filtered_by_slot = slots_with_predictions_df.filter(
+        slots_with_predictions_df["slot"] == 1698951600
+    )
+
+    # create lists of payouts and users for selected slot
+    payouts_for_slot = filtered_by_slot["payout"].to_list()
+    users_for_slot = filtered_by_slot["user"].to_list()
+
+    assert len(payouts_for_slot) == 1
+    assert int(payouts_for_slot[0]) == 10
+
+    assert len(users_for_slot) == len(payouts_for_slot)
+    assert users_for_slot[0] == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"

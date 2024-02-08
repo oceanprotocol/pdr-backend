@@ -165,9 +165,6 @@ def _process_predictions(
 
     slots_df = slots_df.unique(subset=["ID"])
 
-    print(slots_df)
-    print(slots_df.columns)
-
     # update dfs
     dfs[bronze_pdr_slots_table_name] = slots_df
     return dfs
@@ -182,6 +179,7 @@ def get_bronze_pdr_slots_df(
         Updates/Creates clean slots from existing raw tables
     """
 
+    collision_ids = pl.Series([])
     # retrieve pred ids that are already in the lake
     if len(gql_dfs[bronze_pdr_slots_table_name] > 0):
         collision_ids = gql_dfs[bronze_pdr_slots_table_name].filter(
