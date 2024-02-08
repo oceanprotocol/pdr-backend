@@ -15,6 +15,7 @@ def topup_main(ppss: PPSS):
 
     web3_pp = ppss.web3_pp
     owner = web3_pp.web3_config.owner
+
     OCEAN = web3_pp.OCEAN_Token
     ROSE = web3_pp.NativeToken
 
@@ -26,49 +27,61 @@ def topup_main(ppss: PPSS):
     )
 
     addresses: Dict[str, str] = get_opf_addresses(web3_pp.network)
+
     for addr_label, address in addresses.items():
         OCEAN_bal = from_wei(OCEAN.balanceOf(address))
         ROSE_bal = from_wei(ROSE.balanceOf(address))
 
-        min_OCEAN_bal, topup_OCEAN_bal = (
-            (0, 0) if addr_label in ["trueval", "dfbuyer"] else (20, 20)
-        )
-        min_ROSE_bal, topup_ROSE_bal = (
-            (250, 250) if addr_label == "dfbuyer" else (30, 30)
-        )
-
         print(f"{addr_label}: {OCEAN_bal:.2f} OCEAN, {ROSE_bal:.2f} ROSE")
 
-        # check if we need to transfer
-        if min_OCEAN_bal > 0 and OCEAN_bal < min_OCEAN_bal:
-            print(f"\t Transferring {topup_OCEAN_bal} OCEAN to {address}...")
-            if owner_OCEAN_bal > topup_OCEAN_bal:
-                OCEAN.transfer(
-                    address,
-                    to_wei(topup_OCEAN_bal),
-                    owner,
-                    True,
-                )
-                owner_OCEAN_bal = owner_OCEAN_bal - topup_OCEAN_bal
-            else:
-                failed = True
-                print("Not enough OCEAN :(")
+        OCEAN_transferred, failed_OCEAN = do_transfer(
+            OCEAN, address, addr_label, owner, owner_OCEAN_bal
+        )
 
-        if min_ROSE_bal > 0 and ROSE_bal < min_ROSE_bal:
-            print(f"\t Transferring {topup_ROSE_bal} ROSE to {address}...")
-            if owner_ROSE_bal > topup_ROSE_bal:
-                ROSE.transfer(
-                    address,
-                    to_wei(topup_ROSE_bal),
-                    owner,
-                    True,
-                )
-                owner_ROSE_bal = owner_ROSE_bal - topup_ROSE_bal
-            else:
-                failed = True
-                print("Not enough ROSE :(")
+        owner_OCEAN_bal = owner_OCEAN_bal - OCEAN_transferred
+
+        ROSE_transferred, failed_ROSE = do_transfer(
+            ROSE, address, addr_label, owner, owner_ROSE_bal
+        )
+
+        owner_ROSE_bal = owner_ROSE_bal - ROSE_transferred
+
+        if failed_ROSE or failed_OCEAN:
+            failed = True
 
     if failed:
         sys.exit(1)
 
     sys.exit(0)
+
+
+def do_transfer(token, address, addr_label, owner, owner_bal):
+    bal = from_wei(token.balanceOf(address))
+
+    if token.name == "ROSE":
+        min_bal = 250 if addr_label == "dfbuyer" else 30
+        topup_bal = 250 if addr_label == "dfbuyer" else 30
+        symbol = "ROSE"
+    else:
+        min_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        topup_bal = 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        symbol = "OCEAN"
+
+    failed = False
+    transfered_amount = 0
+
+    if min_bal > 0 and bal < min_bal:
+        print(f"\t Transferring {topup_bal} {symbol} to {address}...")
+        if owner_bal > topup_bal:
+            token.transfer(
+                address,
+                to_wei(topup_bal),
+                owner,
+                True,
+            )
+            transfered_amount = topup_bal
+        else:
+            failed = True
+            print(f"Not enough {symbol} :(")
+
+    return transfered_amount, failed
