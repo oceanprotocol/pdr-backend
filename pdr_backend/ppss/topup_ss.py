@@ -19,7 +19,7 @@ class TopupSS(StrMixin):
     def addresses(self) -> List[str]:
         return self.d["addresses"]
 
-    def all_topup_addresses(self, network) -> str:
+    def all_topup_addresses(self, network) -> Dict[str, str]:
         addresses: Dict[str, str] = {}
 
         if "default" in self.addresses:
@@ -29,6 +29,6 @@ class TopupSS(StrMixin):
             if address == "default":
                 continue
 
-            addresses[i] = address
+            addresses[str(i)] = address
 
         return addresses
