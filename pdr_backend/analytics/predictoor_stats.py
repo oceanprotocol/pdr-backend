@@ -227,7 +227,10 @@ def calculate_slot_daily_statistics(
     # then for each <pair_timeframe,datetime> calc daily mean_stake, mean_payout, ...
     # then for each <datetime> sum those numbers across all feeds
     slots_daily_df = (
-        slots_df.group_by(["pair_timeframe", "datetime"])
+        slots_df.with_columns(
+            pl.concat_str(["pair_timeframe", "datetime"]).alias("group_key")
+        )
+        .group_by("group_key")
         .map_groups(
             lambda df: (
                 get_mean_slots_slots_df(df.sample(5))

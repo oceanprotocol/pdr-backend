@@ -7,7 +7,6 @@ from pytest import approx
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.contract.token import Token
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei, to_wei
 
 
@@ -54,8 +53,7 @@ def test_get_exchanges(predictoor_contract):
 @enforce_types
 def test_get_stake_token(predictoor_contract, web3_pp):
     stake_token = predictoor_contract.get_stake_token()
-    ocean_address = get_address(web3_pp, "Ocean")
-    assert stake_token == ocean_address
+    assert stake_token == web3_pp.OCEAN_address
 
 
 @enforce_types

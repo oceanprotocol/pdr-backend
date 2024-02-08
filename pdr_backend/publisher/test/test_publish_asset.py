@@ -3,7 +3,6 @@ from pytest import approx
 
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish_asset import publish_asset
-from pdr_backend.util.contract import get_address
 
 
 @enforce_types
@@ -43,7 +42,6 @@ def test_publish_asset(web3_pp, web3_config):
     )
     assert contract.get_price() / 1e18 == approx(3 * (1.201))
 
-    ocean_address = get_address(web3_pp, "Ocean")
-    assert contract.get_stake_token() == ocean_address
+    assert contract.get_stake_token() == web3_pp.OCEAN_address
 
     assert contract.get_trueValSubmitTimeout() == 3 * 24 * 60 * 60

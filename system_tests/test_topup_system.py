@@ -32,13 +32,10 @@ def test_topup():
     mock_token.balanceOf.side_effect = balances_arr
     mock_token.transfer.return_value = True
 
-    with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
-        "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
-    ), patch("pdr_backend.util.topup.Token", return_value=mock_token), patch(
-        "pdr_backend.util.topup.NativeToken", return_value=mock_token_rose
-    ), patch(
-        "pdr_backend.util.topup.get_address", return_value="0x1"
-    ), patch(
+    mock_web3_pp.OCEAN_Token = mock_token
+    mock_web3_pp.NativeToken = mock_token
+
+    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "sys.exit"
     ):
         # Mock sys.argv

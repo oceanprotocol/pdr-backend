@@ -7,13 +7,11 @@ from enforce_typing import enforce_types
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.contract.predictoor_contract import PredictoorContract
-from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
 
 WEEK = 7 * 86400
@@ -37,8 +35,8 @@ class DFBuyerAgent:
             raise ValueError("No feeds found.")
 
         # addresses
-        batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
-        self.OCEAN_addr = get_address(ppss.web3_pp, "Ocean")
+        batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
+        self.OCEAN_addr = ppss.web3_pp.get_address("Ocean")
 
         # set attribs to track progress
         self.last_consume_ts = 0
@@ -51,7 +49,7 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         print("Checking allowance...")
-        OCEAN = Token(ppss.web3_pp, self.OCEAN_addr)
+        OCEAN = ppss.web3_pp.OCEAN_Token
         allowance = OCEAN.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,

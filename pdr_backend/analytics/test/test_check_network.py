@@ -86,7 +86,7 @@ def test_get_expected_consume():
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
 @patch(f"{PATH}.query_subgraph")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_main(  # pylint: disable=unused-argument
     mock_token,
     mock_query_subgraph,
@@ -118,7 +118,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
 @enforce_types
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_others(  # pylint: disable=unused-argument
     mock_token,
     mock_get_opf_addresses,
@@ -155,7 +155,7 @@ def test_check_network_others(  # pylint: disable=unused-argument
 @enforce_types
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_without_mock(  # pylint: disable=unused-argument
     mock_token,
     mock_get_opf_addresses,
