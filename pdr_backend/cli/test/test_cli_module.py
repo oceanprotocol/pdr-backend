@@ -218,7 +218,7 @@ def test_do_analytics(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
-    
+
     do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
@@ -273,7 +273,7 @@ def test_do_get_predictoors_info(monkeypatch):
 def test_do_get_traction_info(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.get_traction_info_main", mock_f)
-    
+
     do_get_traction_info(MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS().parse_args())
     mock_f.assert_called()
 
