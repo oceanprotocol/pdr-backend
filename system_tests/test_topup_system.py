@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
 from pdr_backend.contract.token import NativeToken, Token
+from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 
@@ -39,8 +40,10 @@ def test_topup():
         "predictoor1": "0x1",
         "predictoor2": "0x2",
     }
-    topup_ss = MagicMock()
+    topup_ss = MagicMock(spec=TopupSS)
     topup_ss.all_topup_addresses.return_value = opf_addresses
+    topup_ss.get_min_bal.side_effect = [20, 30, 20, 30]
+    topup_ss.get_topup_bal.side_effect = [20, 30, 20, 30]
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.ppss.ppss.TopupSS", return_value=topup_ss

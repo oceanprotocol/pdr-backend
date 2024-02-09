@@ -63,6 +63,8 @@ def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tm
 
     topup_ss = MagicMock()
     topup_ss.all_topup_addresses = mock_get_opf_addresses_
+    topup_ss.get_min_bal.side_effect = [20, 30, 20, 30]
+    topup_ss.get_topup_bal.side_effect = [20, 30, 20, 30]
     ppss.topup_ss = topup_ss
 
     PATH = "pdr_backend.util.topup"
