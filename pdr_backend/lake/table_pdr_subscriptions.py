@@ -28,7 +28,7 @@ subscriptions_schema = {
 
 @enforce_types
 def get_pdr_subscriptions_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
+    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
 ) -> pl.DataFrame:
     """
     @description
@@ -40,7 +40,12 @@ def get_pdr_subscriptions_df(
 
     # fetch subscriptions
     subscriptions = fetch_filtered_subscriptions(
-        ms_to_seconds(st_ut), ms_to_seconds(fin_ut), config["contract_list"], network
+        ms_to_seconds(st_ut),
+        ms_to_seconds(fin_ut),
+        first,
+        skip,
+        config["contract_list"],
+        network,
     )
 
     if len(subscriptions) == 0:

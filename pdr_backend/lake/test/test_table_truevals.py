@@ -15,6 +15,8 @@ def test_get_pdr_truevals_df(mock_fetch_truevals):
         "sapphire-testnet",
         1696879672,
         1696885995,
+        1000,
+        0,
         {
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
@@ -35,6 +37,8 @@ def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, capfd):
         "sapphire-testnet",
         1696879672,
         1696885995,
+        1000,
+        0,
         {
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],

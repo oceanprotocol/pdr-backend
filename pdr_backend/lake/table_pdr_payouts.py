@@ -27,7 +27,7 @@ payouts_schema = {
 
 @enforce_types
 def get_pdr_payouts_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
+    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
 ) -> pl.DataFrame:
     """
     @description
@@ -39,7 +39,12 @@ def get_pdr_payouts_df(
 
     # fetch payouts
     payouts = fetch_payouts(
-        config["contract_list"], ms_to_seconds(st_ut), ms_to_seconds(fin_ut), 0, network
+        config["contract_list"],
+        ms_to_seconds(st_ut),
+        ms_to_seconds(fin_ut),
+        first,
+        skip,
+        network,
     )
 
     if len(payouts) == 0:

@@ -29,6 +29,8 @@ def fetch_filtered_predictions(
     start_ts: int,
     end_ts: int,
     filters: List[str],
+    first: int,
+    skip: int,
     network: str,
     filter_mode: FilterMode,
     payout_only: bool = True,
@@ -62,8 +64,6 @@ def fetch_filtered_predictions(
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
 
-    chunk_size = 1000
-    offset = 0
     predictions: List[Prediction] = []
 
     # Convert filters to lowercase
@@ -79,111 +79,103 @@ def fetch_filtered_predictions(
     elif filter_mode == FilterMode.PREDICTOOR:
         where_clause = f", where: {{user_: {{id_in: {json.dumps(filters)}}}, slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
 
-    while True:
-        query = f"""
-            {{
-                predictPredictions(skip: {offset}, first: {chunk_size} {where_clause}) {{
+    query = f"""
+        {{
+            predictPredictions(skip: {skip}, first: {first} {where_clause}) {{
+                id
+                timestamp
+                user {{
                     id
-                    timestamp
-                    user {{
+                }}
+                stake
+                payout {{
+                    payout
+                    trueValue
+                    predictedValue
+                }}
+                slot {{
+                    slot
+                    predictContract {{
                         id
-                    }}
-                    stake
-                    payout {{
-                        payout
-                        trueValue
-                        predictedValue
-                    }}
-                    slot {{
-                        slot
-                        predictContract {{
+                        token {{
                             id
-                            token {{
-                                id
-                                name
-                                nft{{
-                                    nftData {{
-                                    key
-                                    value
-                                    }}
+                            name
+                            nft{{
+                                nftData {{
+                                key
+                                value
                                 }}
                             }}
                         }}
                     }}
                 }}
-            }}"""
+            }}
+        }}"""
 
-        try:
-            print("Querying subgraph...", query)
-            result = query_subgraph(
-                get_subgraph_url(network),
-                query,
-                timeout=20.0,
-            )
-        except Exception as e:
-            print(
-                f"Error fetching predictPredictions, got #{len(predictions)} items. Exception: ",
-                e,
-            )
-            break
+    try:
+        print("Querying subgraph...", query)
+        result = query_subgraph(
+            get_subgraph_url(network),
+            query,
+            timeout=20.0,
+        )
+    except Exception as e:
+        print(
+            f"Error fetching predictPredictions, got #{len(predictions)} items. Exception: ",
+            e,
+        )
 
-        offset += chunk_size
+    if "data" not in result or not result["data"]:
+        return []
 
-        if "data" not in result or not result["data"]:
-            break
+    data = result["data"].get("predictPredictions", [])
+    if len(data) == 0:
+        return []
 
-        data = result["data"].get("predictPredictions", [])
-        if len(data) == 0:
-            break
+    for prediction_sg_dict in data:
+        info725 = prediction_sg_dict["slot"]["predictContract"]["token"]["nft"][
+            "nftData"
+        ]
+        info = info725_to_info(info725)
+        pair = info["pair"]
+        timeframe = info["timeframe"]
+        source = info["source"]
+        timestamp = prediction_sg_dict["timestamp"]
+        slot = prediction_sg_dict["slot"]["slot"]
+        user = prediction_sg_dict["user"]["id"]
+        address = prediction_sg_dict["id"].split("-")[0]
+        trueval = None
+        payout = None
+        predicted_value = None
+        stake = None
 
-        for prediction_sg_dict in data:
-            info725 = prediction_sg_dict["slot"]["predictContract"]["token"]["nft"][
-                "nftData"
-            ]
-            info = info725_to_info(info725)
-            pair = info["pair"]
-            timeframe = info["timeframe"]
-            source = info["source"]
-            timestamp = prediction_sg_dict["timestamp"]
-            slot = prediction_sg_dict["slot"]["slot"]
-            user = prediction_sg_dict["user"]["id"]
-            address = prediction_sg_dict["id"].split("-")[0]
-            trueval = None
-            payout = None
-            predicted_value = None
-            stake = None
+        if payout_only is True and prediction_sg_dict["payout"] is None:
+            continue
 
-            if payout_only is True and prediction_sg_dict["payout"] is None:
-                continue
+        if not prediction_sg_dict["payout"] is None:
+            stake = float(prediction_sg_dict["stake"])
+            trueval = prediction_sg_dict["payout"]["trueValue"]
+            predicted_value = prediction_sg_dict["payout"]["predictedValue"]
+            payout = float(prediction_sg_dict["payout"]["payout"])
 
-            if not prediction_sg_dict["payout"] is None:
-                stake = float(prediction_sg_dict["stake"])
-                trueval = prediction_sg_dict["payout"]["trueValue"]
-                predicted_value = prediction_sg_dict["payout"]["predictedValue"]
-                payout = float(prediction_sg_dict["payout"]["payout"])
+        if trueval_only is True and trueval is None:
+            continue
 
-            if trueval_only is True and trueval is None:
-                continue
-
-            prediction = Prediction(
-                ID=prediction_sg_dict["id"],
-                pair=pair,
-                timeframe=timeframe,
-                prediction=predicted_value,
-                stake=stake,
-                trueval=trueval,
-                timestamp=timestamp,
-                source=source,
-                payout=payout,
-                address=address,
-                slot=slot,
-                user=user,
-            )
-            predictions.append(prediction)
-
-        # avoids doing next fetch if we've reached the end
-        if len(data) < chunk_size:
-            break
+        prediction = Prediction(
+            ID=prediction_sg_dict["id"],
+            pair=pair,
+            timeframe=timeframe,
+            prediction=predicted_value,
+            stake=stake,
+            trueval=trueval,
+            timestamp=timestamp,
+            source=source,
+            payout=payout,
+            address=address,
+            slot=slot,
+            user=user,
+        )
+        predictions.append(prediction)
 
     return predictions
 

@@ -62,7 +62,7 @@ def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
 
 @enforce_types
 def get_pdr_predictions_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
+    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
 ) -> pl.DataFrame:
     """
     @description
@@ -77,6 +77,8 @@ def get_pdr_predictions_df(
         ms_to_seconds(st_ut),
         ms_to_seconds(fin_ut),
         config["contract_list"],
+        first,
+        skip,
         network,
         FilterMode.CONTRACT_TS,
         payout_only=False,

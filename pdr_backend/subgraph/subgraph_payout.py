@@ -105,74 +105,65 @@ def fetch_payouts(
     addresses: List[str],
     start_ts: int,
     end_ts: int,
+    first: int,
     skip: int,
     network: str = "mainnet",
 ) -> List[Payout]:
-    records_per_page = 1000
 
     payouts: List[Payout] = []
 
-    while True:
-        query = get_payout_query(
-            addresses,
-            start_ts,
-            end_ts,
-            records_per_page,
-            skip,
+    query = get_payout_query(
+        addresses,
+        start_ts,
+        end_ts,
+        first,
+        skip,
+    )
+
+    try:
+        print("Querying subgraph...", query)
+        result = query_subgraph(
+            get_subgraph_url(network),
+            query,
+            timeout=20.0,
         )
+    except Exception as e:
+        print(
+            f"Error fetching predictPayouts, got #{len(payouts)} items. Exception: ",
+            e,
+        )
+        return payouts
 
-        try:
-            print("Querying subgraph...", query)
-            result = query_subgraph(
-                get_subgraph_url(network),
-                query,
-                timeout=20.0,
-            )
-        except Exception as e:
-            print(
-                f"Error fetching predictPayouts, got #{len(payouts)} items. Exception: ",
-                e,
-            )
-            break
+    if "data" not in result or not result["data"]:
+        return payouts
 
-        skip += records_per_page
+    data = result["data"].get("predictPayouts", [])
+    if len(data) == 0:
+        return payouts
 
-        if "data" not in result or not result["data"]:
-            break
+    new_payouts = [
+        Payout(
+            **{
+                "payout": float(payout["payout"]),
+                "user": payout["prediction"]["user"]["id"],
+                "timestamp": payout["timestamp"],
+                "ID": payout["id"],
+                "token": payout["prediction"]["slot"]["predictContract"]["token"][
+                    "name"
+                ],
+                "slot": int(payout["id"].split("-")[1]),
+                "predictedValue": bool(payout["predictedValue"]),
+                "revenue": float(payout["prediction"]["slot"]["revenue"]),
+                "roundSumStakesUp": float(
+                    payout["prediction"]["slot"]["roundSumStakesUp"]
+                ),
+                "roundSumStakes": float(payout["prediction"]["slot"]["roundSumStakes"]),
+                "stake": float(payout["prediction"]["stake"]),
+            }
+        )
+        for payout in data
+    ]
 
-        data = result["data"].get("predictPayouts", [])
-        if len(data) == 0:
-            break
-
-        new_payouts = [
-            Payout(
-                **{
-                    "payout": float(payout["payout"]),
-                    "user": payout["prediction"]["user"]["id"],
-                    "timestamp": payout["timestamp"],
-                    "ID": payout["id"],
-                    "token": payout["prediction"]["slot"]["predictContract"]["token"][
-                        "name"
-                    ],
-                    "slot": int(payout["id"].split("-")[1]),
-                    "predictedValue": bool(payout["predictedValue"]),
-                    "revenue": float(payout["prediction"]["slot"]["revenue"]),
-                    "roundSumStakesUp": float(
-                        payout["prediction"]["slot"]["roundSumStakesUp"]
-                    ),
-                    "roundSumStakes": float(
-                        payout["prediction"]["slot"]["roundSumStakes"]
-                    ),
-                    "stake": float(payout["prediction"]["stake"]),
-                }
-            )
-            for payout in data
-        ]
-
-        payouts.extend(new_payouts)
-
-        # avoids doing next fetch if we've reached the end
-        if len(data) < records_per_page:
-            break
+    payouts.extend(new_payouts)
 
     return payouts

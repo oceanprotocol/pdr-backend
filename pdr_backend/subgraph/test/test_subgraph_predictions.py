@@ -117,6 +117,8 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     predictions = fetch_filtered_predictions(
         start_ts=1622547000,
         end_ts=1622548800,
+        first=1000,
+        skip=0,
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
         filter_mode=FilterMode.PREDICTOOR,
@@ -158,6 +160,8 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     predictions = fetch_filtered_predictions(
         start_ts=1622547000,
         end_ts=1622548800,
+        first=1000,
+        skip=0,
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
         filter_mode=FilterMode.PREDICTOOR,
@@ -174,6 +178,8 @@ def test_fetch_filtered_predictions_no_data():
         fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
+            first=1000,
+            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
             filter_mode=FilterMode.PREDICTOOR,
@@ -186,6 +192,8 @@ def test_fetch_filtered_predictions_no_data():
         predictions = fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
+            first=1000,
+            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
             filter_mode=FilterMode.PREDICTOOR,
@@ -199,6 +207,8 @@ def test_fetch_filtered_predictions_no_data():
         predictions = fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
+            first=1000,
+            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
             filter_mode=FilterMode.PREDICTOOR,

@@ -59,6 +59,8 @@ def get_truevals_query(
 def fetch_truevals(
     start_ts: int,
     end_ts: int,
+    first: int,
+    skip: int,
     addresses: List[str],
     network: str = "mainnet",
 ) -> List[Trueval]:
@@ -66,62 +68,56 @@ def fetch_truevals(
     @description
         Implements same pattern as fetch_filtered_predictions
     """
-
-    chunk_size = 1000
-    offset = 0
     truevals: List[Trueval] = []
 
-    while True:
-        query = get_truevals_query(
-            addresses,
-            start_ts,
-            end_ts,
-            chunk_size,
-            offset,
+    query = get_truevals_query(
+        addresses,
+        start_ts,
+        end_ts,
+        first,
+        skip,
+    )
+
+    try:
+        print("Querying subgraph...", query)
+        result = query_subgraph(
+            get_subgraph_url(network),
+            query,
+            timeout=20.0,
+        )
+    except Exception as e:
+        print(
+            f"Error fetching predictTrueVals, got #{len(truevals)} items. Exception: ",
+            e,
+        )
+        return []
+
+    if "data" not in result or not result["data"]:
+        return []
+
+    data = result["data"].get("predictTrueVals", [])
+    if len(data) == 0:
+        return []
+
+    for record in data:
+        truevalue = record["trueValue"]
+        timestamp = record["timestamp"]
+        ID = record["id"]
+        token = record["slot"]["predictContract"]["token"]["name"]
+        slot = int(record["id"].split("-")[1])
+
+        trueval = Trueval(
+            ID=ID,
+            token=token,
+            timestamp=timestamp,
+            trueval=truevalue,
+            slot=slot,
         )
 
-        try:
-            print("Querying subgraph...", query)
-            result = query_subgraph(
-                get_subgraph_url(network),
-                query,
-                timeout=20.0,
-            )
-        except Exception as e:
-            print(
-                f"Error fetching predictTrueVals, got #{len(truevals)} items. Exception: ",
-                e,
-            )
-            break
+        truevals.append(trueval)
 
-        offset += chunk_size
-
-        if "data" not in result or not result["data"]:
-            break
-
-        data = result["data"].get("predictTrueVals", [])
-        if len(data) == 0:
-            break
-
-        for record in data:
-            truevalue = record["trueValue"]
-            timestamp = record["timestamp"]
-            ID = record["id"]
-            token = record["slot"]["predictContract"]["token"]["name"]
-            slot = int(record["id"].split("-")[1])
-
-            trueval = Trueval(
-                ID=ID,
-                token=token,
-                timestamp=timestamp,
-                trueval=truevalue,
-                slot=slot,
-            )
-
-            truevals.append(trueval)
-
-        # avoids doing next fetch if we've reached the end
-        if len(data) < chunk_size:
-            break
+    # avoids doing next fetch if we've reached the end
+    if len(data) < first:
+        return []
 
     return truevals

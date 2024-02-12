@@ -50,6 +50,13 @@ class GQLDataFactory:
 
         # configure all tables that will be recorded onto lake
         self.record_config = {
+            "pdr_payouts": {
+                "fetch_fn": get_pdr_payouts_df,
+                "schema": payouts_schema,
+                "config": {
+                    "contract_list": contract_list,
+                },
+            },
             "pdr_predictions": {
                 "fetch_fn": get_pdr_predictions_df,
                 "schema": predictions_schema,
@@ -67,13 +74,6 @@ class GQLDataFactory:
             "pdr_truevals": {
                 "fetch_fn": get_pdr_truevals_df,
                 "schema": truevals_schema,
-                "config": {
-                    "contract_list": contract_list,
-                },
-            },
-            "pdr_payouts": {
-                "fetch_fn": get_pdr_payouts_df,
-                "schema": payouts_schema,
                 "config": {
                     "contract_list": contract_list,
                 },
@@ -137,18 +137,34 @@ class GQLDataFactory:
                 continue
 
             # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, Dict], pl.DataFrame] = record["fetch_fn"]
+            do_fetch: Callable[[str, int, int, int, int, Dict], pl.DataFrame] = record[
+                "fetch_fn"
+            ]
+            records_per_page = 1000
+            offset = 0
+            while True:
+                # call the function
+                print(f"    Fetching {k}")
+                df = do_fetch(
+                    self.ppss.web3_pp.network,
+                    st_ut,
+                    fin_ut,
+                    records_per_page,
+                    offset,
+                    record["config"],
+                )
 
-            # call the function
-            print(f"    Fetching {k}")
-            df = do_fetch(self.ppss.web3_pp.network, st_ut, fin_ut, record["config"])
+                # postcondition
+                if len(df) > 0:
+                    assert df.schema == record["schema"]
 
-            # postcondition
-            if len(df) > 0:
-                assert df.schema == record["schema"]
+                    # save to parquet
+                    self._save_parquet(filename, df)
 
-                # save to parquet
-                self._save_parquet(filename, df)
+                # avoids doing next fetch if we've reached the end
+                if len(df) < records_per_page:
+                    break
+                offset += records_per_page
 
     def _calc_start_ut(self, filename: str) -> int:
         """
