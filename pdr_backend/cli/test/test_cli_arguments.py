@@ -11,6 +11,9 @@ from pdr_backend.cli.cli_arguments import (
 
 def test_arg_parser():
     for arg in defined_parsers:
+        if arg == "do_deployer":
+            # deployer uses subparsers, not compatible with CustomArgParser
+            continue
         parser = get_arg_parser(arg)
         assert isinstance(parser, CustomArgParser)
 
