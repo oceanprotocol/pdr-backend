@@ -12,8 +12,8 @@ from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_system(
     mock_get_gql_dfs, get_get_predictoor_summary_stats
 ):

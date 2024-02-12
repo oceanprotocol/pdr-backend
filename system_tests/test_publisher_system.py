@@ -9,7 +9,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.cli.cli_module.fund_accounts_with_OCEAN")
 @patch("pdr_backend.publisher.publish_assets.publish_asset")
-def test_dfbuyer_agent(mock_fund_accounts, mock_publish_asset):
+def test_publisher(mock_fund_accounts, mock_publish_asset):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "development"
     mock_web3_pp.subgraph_url = (
@@ -20,9 +20,7 @@ def test_dfbuyer_agent(mock_fund_accounts, mock_publish_asset):
     mock_web3_config.w3 = Mock()
     mock_web3_pp.web3_config = mock_web3_config
 
-    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.publisher.publish_assets.get_address", return_value="0x1"
-    ):
+    with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp):
         # Mock sys.argv
         sys.argv = ["pdr", "publisher", "ppss.yaml", "development"]
 

@@ -3,9 +3,11 @@ import sys
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.check_network import check_network_main
-from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
-from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
-from pdr_backend.analytics.get_traction_info import get_traction_info_main
+from pdr_backend.analytics.get_predictions_info import (
+    get_predictions_info_main,
+    get_predictoors_info_main,
+    get_traction_info_main,
+)
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     get_arg_parser,
@@ -22,7 +24,6 @@ from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
@@ -209,7 +210,7 @@ def do_trueval(args, nested_args=None, testing=False):
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
+    predictoor_batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
     agent = TruevalAgent(ppss, predictoor_batcher_addr)
 
     agent.run(testing)

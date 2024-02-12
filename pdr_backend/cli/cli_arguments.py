@@ -76,11 +76,19 @@ class PPSS_Mixin:
 @enforce_types
 class NETWORK_Mixin:
     def add_argument_NETWORK(self):
-        self.add_argument(
-            "NETWORK",
-            type=str,
-            help="sapphire-testnet|sapphire-mainnet|development|barge-pytest|..",
-        )
+        if hasattr(self, "network_choices"):
+            self.add_argument(
+                "NETWORK",
+                type=str,
+                choices=self.network_choices,
+                help="|".join(self.network_choices),
+            )
+        else:
+            self.add_argument(
+                "NETWORK",
+                type=str,
+                help="sapphire-testnet|sapphire-mainnet|development|barge-pytest|..",
+            )
 
 
 @enforce_types
@@ -482,7 +490,12 @@ DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 
 PublisherArgParser = _ArgParser_PPSS_NETWORK
 
-TopupArgParser = _ArgParser_PPSS_NETWORK
+
+class TopupArgParser(_ArgParser_PPSS_NETWORK):
+    @property
+    def network_choices(self):
+        return ["sapphire-testnet", "sapphire-mainnet"]
+
 
 CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
 
