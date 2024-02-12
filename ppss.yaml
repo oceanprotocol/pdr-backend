@@ -88,6 +88,13 @@ dfbuyer_ss:
 payout_ss:
   batch_size: 250
 
+topup_ss:
+  addresses:
+     - opf_addresses
+#    - 0xabcd...
+#  min_bal: 20
+#  topup_bal: 30
+
 # ------------------------------------------------------------------
 # Network settings
 

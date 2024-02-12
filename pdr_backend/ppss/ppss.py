@@ -12,6 +12,7 @@ from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -53,6 +54,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.payout_ss = PayoutSS(d["payout_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
+        self.topup_ss = TopupSS(d["topup_ss"])
 
         self.verify_feed_dependencies()
 
