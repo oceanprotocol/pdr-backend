@@ -173,3 +173,7 @@ parquet_data/
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json
+
+# agent deployer
+.keys.json
+.deployments/

@@ -27,6 +27,7 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
+from pdr_backend.deployer.deployer import main as deployer_main
 
 
 @enforce_types
@@ -275,3 +276,9 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_deployer(args, nested_args=None):
+    deployer_main(args)
