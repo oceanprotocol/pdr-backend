@@ -5,6 +5,7 @@ import pytest
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
+from pdr_backend.ppss.ppss import mock_feed_ppss
 
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.ppss.web3_pp import (
@@ -198,3 +199,28 @@ def test_tx_gas_price__and__tx_call_params():
         web3_pp.tx_gas_price()
     with pytest.raises(ValueError):
         web3_pp.tx_call_params()
+
+
+@enforce_types
+def test_get_addresses():
+    network = "development"
+    _, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
+    web3_pp = ppss.web3_pp
+    assert web3_pp.network == network
+
+    # Work 1: validate network can't be found
+    with patch.object(web3_pp, "get_addresses", return_value=None):
+        with pytest.raises(ValueError) as excinfo:
+            web3_pp.OCEAN_address  # pylint: disable=pointless-statement
+
+    assert 'Cannot find network "development"' in str(excinfo.value)
+
+    return_value = {"Ocean": "0x1234567890123456789012345678901234567890"}
+    with patch.object(web3_pp, "get_addresses", return_value=return_value):
+        with pytest.raises(ValueError) as excinfo:
+            web3_pp.get_address("ERCUnknown")
+
+    assert 'Cannot find contract "ERCUnknown"' in str(excinfo.value)
+
+    with patch.object(web3_pp, "get_addresses", return_value=return_value):
+        assert web3_pp.OCEAN_address == "0x1234567890123456789012345678901234567890"

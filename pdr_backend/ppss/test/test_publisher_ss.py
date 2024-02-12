@@ -23,10 +23,10 @@ def test_publisher_ss():
         },
     }
 
-    ss1 = PublisherSS("sapphire-mainnet", d)
+    ss1 = PublisherSS(d, "sapphire-mainnet")
     assert ss1.fee_collector_address == "0x1"
 
-    ss2 = PublisherSS("sapphire-testnet", d)
+    ss2 = PublisherSS(d, "sapphire-testnet")
     assert ss2.fee_collector_address == "0x2"
 
     with pytest.raises(NotImplementedError):

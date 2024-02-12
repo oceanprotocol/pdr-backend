@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.publisher_ss import mock_publisher_ss
-from pdr_backend.ppss.web3_pp import mock_web3_pp
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publish_assets import publish_assets
 
 _PATH = "pdr_backend.publisher.publish_assets"
@@ -60,10 +60,9 @@ def _test_sapphire(network, monkeypatch):
 
 
 def _setup_and_publish(network, monkeypatch):
-    web3_pp = mock_web3_pp(network)
+    web3_pp = Mock(spec=Web3PP)
+    web3_pp.network = "development"
     publisher_ss = mock_publisher_ss(network)
-
-    monkeypatch.setattr(f"{_PATH}.get_address", Mock())
 
     mock_publish_asset = Mock()
     monkeypatch.setattr(f"{_PATH}.publish_asset", mock_publish_asset)

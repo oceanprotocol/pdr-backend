@@ -3,12 +3,11 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.wrapped_token import WrappedToken
-from pdr_backend.util.contract import get_address
 
 
 @enforce_types
 def test_native_token(web3_pp):
-    token_address = get_address(web3_pp, "Ocean")
+    token_address = web3_pp.get_address("Ocean")
     mock_wrapped_contract = Mock()
     mock_transaction = Mock()
     mock_transaction.transact.return_value = "mock_tx"

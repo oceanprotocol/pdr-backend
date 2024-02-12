@@ -6,7 +6,6 @@ from eth_account import Account
 
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.contract import get_address
 
 
 @enforce_types
@@ -27,8 +26,7 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
         ("PDR_MM_USER", 10000.0),
     ]
 
-    OCEAN_addr = get_address(web3_pp, "Ocean")
-    OCEAN = Token(web3_pp, OCEAN_addr)
+    OCEAN = web3_pp.OCEAN_Token
     _fund_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
     print("Done funding.")
 
