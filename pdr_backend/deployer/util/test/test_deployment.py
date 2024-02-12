@@ -63,7 +63,9 @@ def test_deploy_cluster(mock_shutil_which):
 def test_create_namespace(mock_shutil_which):
     with patch("pdr_backend.deployer.util.deployment.run_command") as mock_run_command:
         deployment.create_namespace("namespace")
-        mock_run_command.assert_called_once_with("kubectl create namespace namespace", False)
+        mock_run_command.assert_called_once_with(
+            "kubectl create namespace namespace", False
+        )
 
 
 def test_destroy_cluster(mock_shutil_which):
