@@ -46,7 +46,7 @@ def test_deploy_agents_to_k8s():
     with patch("pdr_backend.deployer.util.deployment.run_command") as mock_run_command:
         deployment.deploy_agents_to_k8s("config_folder", "config_name")
         mock_run_command.assert_any_call(
-            "kubectl create namespace config-name"
+            "kubectl create namespace config-name", False
         )  # sanitizes name _ => -
         mock_run_command.assert_any_call(
             "kubectl apply -f config_folder/ -n config-name"
@@ -63,7 +63,7 @@ def test_deploy_cluster(mock_shutil_which):
 def test_create_namespace(mock_shutil_which):
     with patch("pdr_backend.deployer.util.deployment.run_command") as mock_run_command:
         deployment.create_namespace("namespace")
-        mock_run_command.assert_called_once_with("kubectl create namespace namespace")
+        mock_run_command.assert_called_once_with("kubectl create namespace namespace", False)
 
 
 def test_destroy_cluster(mock_shutil_which):
