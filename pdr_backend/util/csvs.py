@@ -73,7 +73,7 @@ def _save_prediction_csv(
                     ]
                 )
 
-        logger.info(f"CSV file '{filename}' created successfully.")
+        logger.info("CSV file '%s' created successfully.", filename)
 
 
 def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):

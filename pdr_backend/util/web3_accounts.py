@@ -21,9 +21,9 @@ def create_accounts(n_accounts: int):
     for i in range(n_accounts):
         # pylint: disable=no-value-for-parameter
         new_account = Account.create()
-        logger.info(f"\nWallet #{i}")
-        logger.info(f"Private Key: {new_account._private_key.hex()}")
-        logger.info(f"Public Key: {new_account.address}")
+        logger.info("Wallet #%s", i)
+        logger.info("Private Key: %s", new_account._private_key.hex())
+        logger.info("Public Key: %s", new_account.address)
 
 
 @enforce_types
@@ -41,9 +41,9 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
         native_token_balance = native_token.balanceOf(address)
         OCEAN_balance = OCEAN_token.balanceOf(address)
 
-        logger.info(f"\nAccount {address}")
-        logger.info(f"Native token balance: {from_wei(native_token_balance)}")
-        logger.info(f"OCEAN balance: {from_wei(OCEAN_balance)}")
+        logger.info("Account %s", address)
+        logger.info("Native token balance: %s", from_wei(native_token_balance))
+        logger.info("OCEAN balance: %s", from_wei(OCEAN_balance))
 
 
 @enforce_types
@@ -59,7 +59,7 @@ def fund_accounts(
     assert private_key is not None, "Need PRIVATE_KEY env var"
 
     if web3_pp.network not in ["sapphire-testnet", "sapphire-mainnet"]:
-        logger.error(f"Unknown network {web3_pp.network}")
+        logger.error("Unknown network %s", web3_pp.network)
         sys.exit(1)
 
     token = web3_pp.NativeToken if is_native_token else web3_pp.OCEAN_Token
@@ -70,7 +70,9 @@ def fund_accounts(
     account = Account.from_key(private_key)  # pylint: disable=no-value-for-parameter
 
     for address in to_addresses:
-        logger.info(f"Sending {token.name} to {address} for the amount of {amount}")
+        logger.info(
+            "Sending %s to %s for the amount of %s", token.name, address, amount
+        )
         token.transfer(
             address,
             to_wei(amount),

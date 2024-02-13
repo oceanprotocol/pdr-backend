@@ -58,10 +58,10 @@ def test_topup(caplog):
         for key, value in addresses.items():
             assert f"{key}: 5.00 OCEAN, 5.00 ROSE" in caplog.text
             if key.startswith("pred"):
-                assert f"\t Transferring 20 OCEAN to {value}..." in caplog.text
-                assert f"\t Transferring 30 ROSE to {value}..." in caplog.text
+                assert f"Transferring 20 OCEAN to {value}..." in caplog.text
+                assert f"Transferring 30 ROSE to {value}..." in caplog.text
             if key.startswith("dfbuyer"):
-                assert f"\t Transferring 250 ROSE to {value}..." in caplog.text
+                assert f"Transferring 250 ROSE to {value}..." in caplog.text
 
         # Additional assertions
         mock_token.transfer.assert_called()

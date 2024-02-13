@@ -17,7 +17,7 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
     Fund accounts, with opinions: use OCEAN, and choices of amounts.
     Meant to be used from CLI.
     """
-    logger.info(f"Fund accounts with OCEAN, network = {web3_pp.network}")
+    logger.info("Fund accounts with OCEAN, network = %s", web3_pp.network)
     accounts_to_fund = [
         #    account_key_env,   OCEAN_to_send
         ("PREDICTOOR_PRIVATE_KEY", 2000.0),
@@ -44,7 +44,8 @@ def _fund_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
                 private_key
             )
             logger.info(
-                f"Sending OCEAN to account defined by envvar {private_key_name}"
-                f", with address {account.address}"
+                "Sending OCEAN to account defined by envvar %s, with address %s",
+                private_key_name,
+                account.address,
             )
             token.transfer(account.address, amount * 1e18, owner)

@@ -47,7 +47,7 @@ class Web3Config:
             block_data = self.w3.eth.get_block(block)
             return block_data
         except Exception as e:
-            logger.warn(f"An error occured while getting block, error: {e}")
+            logger.warning("An error occured while getting block, error: {%s}", e)
             if tries < WEB3_MAX_TRIES:
                 logger.info("Trying again...")
                 # sleep times for the first 5 tries:
