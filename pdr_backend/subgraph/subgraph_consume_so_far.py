@@ -1,9 +1,12 @@
 from collections import defaultdict
+import logging
 from typing import Dict, List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -16,7 +19,7 @@ def get_consume_so_far_per_contract(
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
-    print("Getting consume so far...")
+    logger.info("Getting consume so far...")
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {

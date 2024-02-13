@@ -43,7 +43,7 @@ def test_check_dfbuyer(  # pylint: disable=unused-argument
     check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, token_amt)
 
     target_str = (
-        "Checking consume amounts (dfbuyer), " "expecting 100 consume per contract"
+        "Checking consume amounts (dfbuyer), expecting 100 consume per contract"
     )
     assert target_str in caplog.text
     assert "got 120 consume for contract: 0x1, expected 100" in caplog.text

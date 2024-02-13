@@ -50,7 +50,7 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, capl
         assert f"APPROACH={approach}" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
         assert "NETWORK=development" in caplog.text
-        assert "  Feed: 5m binance BTC/USDT 0x1" in caplog.text
+        assert "Feed: 5m binance BTC/USDT 0x1" in caplog.text
         assert "Starting main loop." in caplog.text
         assert "Waiting..." in caplog.text
 
@@ -61,17 +61,15 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, capl
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_1_system(
-    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract
+    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract, caplog
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1)
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_3_system(
-    mock_verify_feed_dependencies,
-    mock_feeds,
-    mock_predictoor_contract,
+    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract, caplog
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3)
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3, caplog)

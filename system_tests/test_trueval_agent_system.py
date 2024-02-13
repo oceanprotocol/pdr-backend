@@ -70,7 +70,7 @@ def test_trueval_batch(
         assert "NETWORK=development" in caplog.text
         assert "Found 1 pending slots, processing 30" in caplog.text
         assert "Submitting transaction..." in caplog.text
-        assert "Tx sent: 0xbatch_submit_tx, sleeping for 30 seconds..."
+        assert "Tx sent: 0xbatch_submit_tx, sleeping for 30 seconds..." in caplog.text
 
         # Additional assertions
         mock_web3_pp.get_pending_slots.assert_called()

@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Any, List
 
@@ -10,6 +11,8 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
+
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -30,17 +33,16 @@ def request_payout_batches(
             try:
                 wait_for_receipt = True
                 predictoor_contract.payout_multiple(batch, wait_for_receipt)
-                print(".", end="", flush=True)
                 success = True
             except Exception as e:
                 retries += 1
-                print(f"Error: {e}. Retrying... {retries}/5", flush=True)
+                logger.warning("Error: %s. Retrying... %d/5", e, retries)
                 time.sleep(1)
 
         if not success:
-            print("\nFailed after 5 attempts. Moving to next batch.", flush=True)
+            logger.error("Failed after 5 attempts. Moving to next batch.")
 
-    print("\nBatch completed")
+    logger.info("Batch completed")
 
 
 @enforce_types
@@ -52,21 +54,21 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
         assert ppss.web3_pp.network == "sapphire-mainnet"
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
 
-    print("Starting payout")
+    logger.info("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
-    print("Finding pending payouts")
+    logger.info("Finding pending payouts")
     pending_payouts = query_pending_payouts(subgraph_url, web3_config.owner)
     total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
-    print(f"Found {total_timestamps} slots")
+    logger.info("Found %d slots", total_timestamps)
 
     for pdr_contract_addr in pending_payouts:
-        print(f"Claiming payouts for {pdr_contract_addr}")
+        logger.info("Claiming payouts for %s", pdr_contract_addr)
         pdr_contract = PredictoorContract(ppss.web3_pp, pdr_contract_addr)
         request_payout_batches(
             pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
         )
 
-    print("Payout done")
+    logger.info("Payout done")
 
 
 @enforce_types
@@ -84,22 +86,22 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     claimable_rewards = dfrewards_contract.get_claimable_rewards(
         web3_config.owner, wROSE_addr
     )
-    print(f"Found {claimable_rewards} wROSE available to claim")
+    logger.info("Found %s wROSE available to claim", claimable_rewards)
 
     if claimable_rewards > 0:
-        print("Claiming wROSE rewards...")
+        logger.info("Claiming wROSE rewards...")
         dfrewards_contract.claim_rewards(web3_config.owner, wROSE_addr)
     else:
-        print("No rewards available to claim")
+        logger.warning("No rewards available to claim")
 
-    print("Converting wROSE to ROSE")
+    logger.info("Converting wROSE to ROSE")
     time.sleep(10)
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == 0:
-        print("wROSE balance is 0")
+        logger.warning("wROSE balance is 0")
     else:
-        print(f"Found {wROSE_bal/1e18} wROSE, converting to ROSE...")
+        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal / 1e18)
         wROSE.withdraw(wROSE_bal)
 
-    print("ROSE reward claim done")
+    logger.info("ROSE reward claim done")

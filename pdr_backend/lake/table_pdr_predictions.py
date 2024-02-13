@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 import polars as pl
@@ -11,6 +12,8 @@ from pdr_backend.subgraph.subgraph_predictions import (
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
+
+logger = logging.getLogger(__name__)
 
 # RAW PREDICTOOR PREDICTIONS SCHEMA
 predictions_schema = {
@@ -84,7 +87,7 @@ def get_pdr_predictions_df(
     )
 
     if len(predictions) == 0:
-        print("      No predictions to fetch. Exit.")
+        logger.warning("No predictions to fetch. Exit.")
         return pl.DataFrame()
 
     # convert predictions to df and transform timestamp into ms

@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict
 
@@ -23,6 +24,8 @@ from pdr_backend.lake.plutil import (
 )
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -66,33 +69,32 @@ class OhlcvDataFactory:
         @return
           mergedohlcv_df -- *polars* Dataframe. See class docstring
         """
-        print("Get historical data, across many exchanges & pairs: begin.")
+        logger.info("Get historical data, across many exchanges & pairs: begin.")
 
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
         fin_ut = self.ss.fin_timestamp
 
-        print(f"  Data start: {pretty_timestr(self.ss.st_timestamp)}")
-        print(f"  Data fin: {pretty_timestr(fin_ut)}")
+        logger.info("Data start: %s", pretty_timestr(self.ss.st_timestamp))
+        logger.info("Data fin: %s", pretty_timestr(fin_ut))
 
         self._update_rawohlcv_files(fin_ut)
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-        print("Get historical data, across many exchanges & pairs: done.")
+        logger.info("Get historical data, across many exchanges & pairs: done.")
 
         # postconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
 
     def _update_rawohlcv_files(self, fin_ut: int):
-        print("  Update all rawohlcv files: begin")
+        logger.info("Update all rawohlcv files: begin")
         for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
 
-        print()
-        print("  Update all rawohlcv files: done")
+        logger.info("Update all rawohlcv files: done")
 
     def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: int):
         """
@@ -103,26 +105,26 @@ class OhlcvDataFactory:
         pair_str = str(feed.pair)
         exch_str = str(feed.exchange)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-        print()
-        print(
-            f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: begin"
+
+        logger.info(
+            "Update rawohlcv file at exchange=%s, pair=%s: begin", exch_str, pair_str
         )
 
         filename = self._rawohlcv_filename(feed)
-        print(f"      filename={filename}")
+        logger.info("filename=%s", filename)
 
         assert feed.timeframe
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
-        print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
+        logger.info("Aim to fetch data from start time: %s", pretty_timestr(st_ut))
         if st_ut > min(current_ut_ms(), fin_ut):
-            print("      Given start time, no data to gather. Exit.")
+            logger.info("Given start time, no data to gather. Exit.")
             return
 
         # empty ohlcv df
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
-            print(f"      Fetch up to {limit} pts from {pretty_timestr(st_ut)}")
+            logger.info("Fetch up to %s pts from %s", limit, pretty_timestr(st_ut))
             exch = feed.ccxt_exchange()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
@@ -143,14 +145,16 @@ class OhlcvDataFactory:
             # prep next iteration
             newest_ut_value = df.tail(1)["timestamp"][0]
 
-            print(f"      newest_ut_value: {newest_ut_value}")
+            logger.info("newest_ut_value: %s", newest_ut_value)
             st_ut = newest_ut_value + feed.timeframe.ms
 
         # output to file
         save_rawohlcv_file(filename, df)
 
         # done
-        print(f"    Update rawohlcv file at exchange={exch_str}, pair={pair_str}: done")
+        logger.info(
+            "Update rawohlcv file at exchange=%s, pair=%s: done", exch_str, pair_str
+        )
 
     def _calc_start_ut_maybe_delete(self, timeframe: Timeframe, filename: str) -> int:
         """
@@ -166,24 +170,24 @@ class OhlcvDataFactory:
           start_ut - timestamp (ut) to start grabbing data for
         """
         if not os.path.exists(filename):
-            print("      No file exists yet, so will fetch all data")
+            logger.info("No file exists yet, so will fetch all data")
             return self.ss.st_timestamp
 
-        print("      File already exists")
+        logger.info("File already exists")
         if not has_data(filename):
-            print("      File has no data, so delete it")
+            logger.info("File has no data, so delete it")
             os.remove(filename)
             return self.ss.st_timestamp
 
         file_ut0, file_utN = oldest_ut(filename), newest_ut(filename)
-        print(f"      File starts at: {pretty_timestr(file_ut0)}")
-        print(f"      File finishes at: {pretty_timestr(file_utN)}")
+        logger.info("File starts at: %s", pretty_timestr(file_ut0))
+        logger.info("File finishes at: %s", pretty_timestr(file_utN))
 
         if self.ss.st_timestamp >= file_ut0:
-            print("      User-specified start >= file start, so append file")
+            logger.info("User-specified start >= file start, so append file")
             return file_utN + timeframe.ms
 
-        print("      User-specified start < file start, so delete file")
+        logger.info("User-specified start < file start, so delete file")
         os.remove(filename)
         return self.ss.st_timestamp
 
@@ -197,7 +201,7 @@ class OhlcvDataFactory:
             Where df has columns: TOHLCV_COLS
             And pair_str is eg "BTC/USDT", *not* "BTC-USDT"
         """
-        print("  Load rawohlcv file.")
+        logger.info("Load rawohlcv file.")
         st_ut = self.ss.st_timestamp
 
         rawohlcv_dfs: Dict[str, Dict[str, pl.DataFrame]] = {}  # [exch][pair] : df

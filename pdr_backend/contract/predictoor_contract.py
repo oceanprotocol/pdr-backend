@@ -93,7 +93,8 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             except Exception as e:
                 logger.warning(
                     "Estimate gasLimit had error in estimate_gas(): %s. "
-                    "Because of error, use get_max_gas() as workaround"
+                    "Because of error, use get_max_gas() as workaround",
+                    e,
                 )
                 gasLimit = self.config.get_max_gas()
         assert gasLimit is not None, "should have non-None gasLimit by now"
@@ -293,7 +294,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 ).transact(call_params)
                 txhash = tx.hex()
             self.last_allowance -= stake_amt_wei
-            logger.info(f"Submitted prediction, txhash: %s", txhash)
+            logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
                 return txhash

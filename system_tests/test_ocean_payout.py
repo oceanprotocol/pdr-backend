@@ -47,8 +47,7 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
         # Mock sys.argv
         sys.argv = ["pdr", "claim_OCEAN", "ppss.yaml"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
         assert "pdr claim_OCEAN: Begin" in caplog.text

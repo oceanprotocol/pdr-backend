@@ -1,4 +1,7 @@
+import logging
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+
+logger = logging.getLogger(__name__)
 
 
 def get_consume_so_far(
@@ -11,7 +14,7 @@ def get_consume_so_far(
         query = """
         {
             predictContracts(skip:%s, first:%s){
-                id	
+                id
                 token{
                     orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}){
         		        createdTimestamp
@@ -43,6 +46,6 @@ def get_consume_so_far(
                                 buy["lastPriceValue"]
                             )
         except Exception as e:
-            print(e)
+            logger.warning(e)
             return consume_so_far
     return consume_so_far

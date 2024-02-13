@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List
 
 from enforce_typing import enforce_types
@@ -7,6 +8,8 @@ from pdr_backend.subgraph.subscription import Subscription
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
+
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -82,7 +85,7 @@ def fetch_filtered_subscriptions(
                 }}
             }}"""
 
-        print("Querying subgraph...", query)
+        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,

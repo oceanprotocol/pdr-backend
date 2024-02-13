@@ -60,7 +60,7 @@ class DFBuyerAgent:
             tx = OCEAN.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
-            logger.info(f"Done: {tx['transactionHash'].hex()}")
+            logger.info("Done: %s", tx["transactionHash"].hex())
 
     def run(self, testing: bool = False):
         if not self.feeds:
@@ -187,7 +187,7 @@ class DFBuyerAgent:
                 tx_hash = tx["transactionHash"].hex()
 
                 if tx["status"] != 1:
-                    logger.warning(f"Tx reverted: %s", tx_hash)
+                    logger.warning("Tx reverted: %s", tx_hash)
                     return False
 
                 logger.info("Tx sent: %s", tx_hash)
