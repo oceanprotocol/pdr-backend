@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
 
@@ -20,7 +20,7 @@ def test_aimodel_factory_basic():
                 "input_feeds": ["binance BTC/USDT c"],
             }
         )
-        factory = AimodelFactory(aimodel_ss)
+        factory = RegressionModelFactory(aimodel_ss)
         assert isinstance(factory.aimodel_ss, AimodelSS)
 
         (X_train, y_train, X_test, y_test) = _data()
@@ -90,7 +90,7 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
 def test_aimodel_factory_bad_approach():
     aimodel_ss = Mock(spec=AimodelSS)
     aimodel_ss.approach = "BAD"
-    factory = AimodelFactory(aimodel_ss)
+    factory = RegressionModelFactory(aimodel_ss)
 
     X_train, y_train, _, _ = _data()
 

@@ -9,7 +9,7 @@ from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
@@ -114,7 +114,7 @@ class SimEngine:
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
+        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.aimodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]

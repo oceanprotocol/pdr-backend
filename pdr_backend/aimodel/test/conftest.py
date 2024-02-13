@@ -1,7 +1,7 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 
 
@@ -16,4 +16,4 @@ def aimodel_factory():
             "input_feeds": ["binance BTC/USDT c"],
         }
     )
-    return AimodelFactory(aimodel_ss)
+    return RegressionModelFactory(aimodel_ss)
