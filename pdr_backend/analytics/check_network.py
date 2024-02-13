@@ -181,5 +181,9 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     # ---------------- dfbuyer ----------------
 
     dfbuyer_addr = addresses["dfbuyer"].lower()
-    token_amt = 44460
+    # 37500 * 1.201 = rewards + fees = total consume
+    token_amt = 37500 * 1.201
+    # If token_amt is not a multiple of 60, adjust it to the next multiple of 60
+    if token_amt % 60 != 0:
+        token_amt = ((token_amt // 60) + 1) * 60
     check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
