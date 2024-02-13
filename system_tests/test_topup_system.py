@@ -9,7 +9,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 
 
-def test_topup():
+def test_topup(caplog):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -51,18 +51,17 @@ def test_topup():
         # Mock sys.argv
         sys.argv = ["pdr", "topup", "ppss.yaml", "sapphire-testnet"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         addresses = opf_addresses
         # Verifying outputs
         for key, value in addresses.items():
-            mock_print.assert_any_call(f"{key}: 5.00 OCEAN, 5.00 ROSE")
+            assert f"{key}: 5.00 OCEAN, 5.00 ROSE" in caplog.text
             if key.startswith("pred"):
-                mock_print.assert_any_call(f"\t Transferring 20 OCEAN to {value}...")
-                mock_print.assert_any_call(f"\t Transferring 30 ROSE to {value}...")
+                assert f"\t Transferring 20 OCEAN to {value}..." in caplog.text
+                assert f"\t Transferring 30 ROSE to {value}..." in caplog.text
             if key.startswith("dfbuyer"):
-                mock_print.assert_any_call(f"\t Transferring 250 ROSE to {value}...")
+                assert f"\t Transferring 250 ROSE to {value}..." in caplog.text
 
         # Additional assertions
         mock_token.transfer.assert_called()

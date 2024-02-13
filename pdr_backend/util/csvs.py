@@ -1,10 +1,13 @@
 import csv
+import logging
 import os
 from typing import Dict, List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import Prediction
+
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -70,7 +73,7 @@ def _save_prediction_csv(
                     ]
                 )
 
-        print(f"CSV file '{filename}' created successfully.")
+        logger.info(f"CSV file '{filename}' created successfully.")
 
 
 def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):

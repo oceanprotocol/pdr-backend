@@ -1,6 +1,9 @@
+import logging
 import os
 import pickle
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class Cache:
@@ -10,7 +13,7 @@ class Cache:
 
         if not self.cache_path.exists():
             self.cache_path.mkdir()
-            print("Created dir")
+            logger.info("Created dir")
 
     def save(self, key, value):
         file_path = self.cache_path / f"{key}.pkl"
