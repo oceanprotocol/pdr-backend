@@ -15,8 +15,7 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictions_info_system(
-    mock_get_gql_dfs,
-    mock_get_feed_summary_stats,
+    mock_get_gql_dfs, mock_get_feed_summary_stats, caplog
 ):
     _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -68,17 +67,14 @@ def test_get_predictions_info_system(
             _feed,
         ]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr get_predictions_info: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call(
-            "FEEDS=['0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152']"
-        )
+        assert "pdr get_predictions_info: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "FEEDS=['0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152']" in caplog.text
 
         # # Additional assertions
         mock_get_feed_summary_stats.assert_called_once()

@@ -26,7 +26,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach):
+def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
@@ -42,18 +42,17 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach):
         # Mock sys.argv
         sys.argv = ["pdr", "predictoor", str(approach), "ppss.yaml", "development"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr predictoor: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call(f"APPROACH={approach}")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
-        mock_print.assert_any_call("Starting main loop.")
-        mock_print.assert_any_call("Waiting...", end="")
+        assert "pdr predictoor: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert f"APPROACH={approach}" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "  Feed: 5m binance BTC/USDT 0x1" in caplog.text
+        assert "Starting main loop." in caplog.text
+        assert "Waiting..." in caplog.text
 
         # Additional assertions
         mock_predictoor_ss.get_feed_from_candidates.assert_called_once()
