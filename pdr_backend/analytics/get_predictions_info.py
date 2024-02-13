@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from enforce_typing import enforce_types
@@ -13,6 +14,8 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_daily_statistics,
 )
 from pdr_backend.util.timeutil import timestr_to_ut
+
+logger = logging.getLogger(__name__)
 
 
 class PredFilter:
@@ -74,7 +77,7 @@ def get_predictions_info_main(
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
 
     feed_summary_df = get_feed_summary_stats(predictions_df)
-    print(feed_summary_df)
+    logger.info(feed_summary_df)
 
 
 @enforce_types
@@ -89,7 +92,7 @@ def get_predictoors_info_main(
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
 
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
-    print(predictoor_summary_df)
+    logger.info(predictoor_summary_df)
 
 
 @enforce_types

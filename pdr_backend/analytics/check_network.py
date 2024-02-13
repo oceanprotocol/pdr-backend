@@ -1,3 +1,4 @@
+import logging
 import math
 from typing import Union
 
@@ -13,6 +14,7 @@ from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.timeutil import current_ut_s
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
+logger = logging.getLogger(__name__)
 
 
 @enforce_types
@@ -29,9 +31,14 @@ def print_stats(contract_dict: dict, field_name: str, threshold: float = 0.9):
 
     s_per_epoch = int(contract_dict["secondsPerEpoch"])
     timeframe_str = s_to_timeframe_str(s_per_epoch)
-    print(
-        f"{token_name} {timeframe_str}: "
-        f"{n_slots_with_field}/{n_slots} {field_name} - {status}"
+    logger.info(
+        "%s %s: %s/%s %s - %s",
+        token_name,
+        timeframe_str,
+        n_slots_with_field,
+        n_slots,
+        field_name,
+        status,
     )
 
 
@@ -56,16 +63,15 @@ def check_dfbuyer(
         contract_addresses,
     )
     expect_amt_consume = get_expected_consume(cur_ut, token_amt)
-    print(
-        "Checking consume amounts (dfbuyer)"
-        f", expecting {expect_amt_consume} consume per contract"
+    logger.info(
+        "Checking consume amounts (dfbuyer), expecting %s consume per contract",
+        expect_amt_consume,
     )
     for addr in contract_addresses:
         x = amt_consume_so_far[addr]
-        log_text = "PASS" if x >= expect_amt_consume else "FAIL"
-        print(
-            f"    {log_text}... got {x} consume for contract: {addr}"
-            f", expected {expect_amt_consume}"
+        lfunc = logger.info if x >= expect_amt_consume else logger.error
+        lfunc(
+            "got %s consume for contract: %s, expected %s", x, addr, expect_amt_consume
         )
 
 
@@ -141,23 +147,21 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
     status = "OK" if no_of_contracts >= 11 else "FAILED"
+    lfunc = logger.info if status == "OK" else logger.error
 
-    print(f"Number of Predictoor contracts: {no_of_contracts} - {status}")
-    print("-" * 60)
+    lfunc("Number of Predictor contracts: %s - %s", no_of_contracts, status)
 
     # check number of predictions
-    print("Predictions:")
+    logger.info("Predictions:")
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "predictions")
 
-    print()
-
     # Check number of truevals
-    print("True Values:")
+    logger.info("True Values:")
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "trueValues")
 
-    print("\nChecking account balances")
+    logger.info("Checking account balances")
 
     OCEAN = web3_pp.OCEAN_Token
 
@@ -167,15 +171,19 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         native_bal = from_wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
-            " WARNING LOW OCEAN BALANCE!"
-            if ocean_bal < 10 and name != "trueval"
-            else " OK "
+            " LOW OCEAN BALANCE!" if ocean_bal < 10 and name != "trueval" else ""
         )
-        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 10 else " OK "
+        native_warning = " LOW NATIVE BALANCE!" if native_bal < 10 else ""
 
-        print(
-            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}"
-            f", Native: {native_bal:.2f}{native_warning}"
+        lfunc = logger.warning if ocean_warning or native_warning else logger.info
+
+        lfunc(
+            "%s: OCEAN: %.2f%s, Native: %.2f%s",
+            name,
+            ocean_bal,
+            ocean_warning,
+            native_bal,
+            native_warning,
         )
 
     # ---------------- dfbuyer ----------------
