@@ -1,19 +1,16 @@
 import os
-from typing import Callable
 import polars as pl
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 
 @enforce_types
 class Table:
-    def __init__(self, table_name: str, df_schema: object, build_df_fn, ppss: PPSS):
+    def __init__(self, table_name: str, df_schema: object, ppss: PPSS):
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        self.build = build_df_fn
         self.df = pl.DataFrame()
 
     @enforce_types
@@ -50,9 +47,7 @@ class Table:
         """
 
         print(self.df)
-        # precondition
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
-        print(self.df)
         assert len(self.df) > 0
         if len(self.df) > 1:
             assert (
@@ -76,34 +71,6 @@ class Table:
             print(
                 f"  Just saved df with {self.df.shape[0]} rows to new file {filename}"
             )
-
-    @enforce_types
-    def update(self, config: object):
-        """
-        Get the data from subgraph and write it to Parquet file
-        """
-        filename = self._parquet_filename()
-        st_ut = self._calc_start_ut(filename)
-        fin_ut = self.ppss.lake_ss.fin_timestamp
-        print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
-        if st_ut > min(current_ut_ms(), fin_ut):
-            print("      Given start time, no data to gather. Exit.")
-
-        # to satisfy mypy, get an explicit function pointer
-        do_fetch: Callable[[str, int, int, object], pl.DataFrame] = self.build
-
-        # call the function
-        print(f"    Fetching {self.table_name}")
-        df = do_fetch(self.ppss.web3_pp.network, st_ut, fin_ut, config)
-
-        # postcondition
-        if len(df) > 0:
-            assert df.schema == self.df_schema
-
-        self.df = df
-        # save to parquet
-        if len(df) > 0:
-            self.save()
 
     @enforce_types
     def _parquet_filename(self) -> str:

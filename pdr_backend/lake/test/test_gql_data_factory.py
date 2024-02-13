@@ -25,12 +25,12 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-@patch("pdr_backend.lake.gql_data_factory.Table.update")
-def test_update(mock_update_table):
+@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update.do_fetch")
+def test_update(mock_table_build):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
-    mock_update_table.return_value = {}
+    mock_table_build.return_value = {}
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
