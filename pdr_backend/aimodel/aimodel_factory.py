@@ -3,12 +3,12 @@ from sklearn import linear_model, svm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.aimodel_ss import RegressionModelSS
 
 
 @enforce_types
 class RegressionModelFactory:
-    def __init__(self, aimodel_ss: AimodelSS):
+    def __init__(self, aimodel_ss: RegressionModelSS):
         self.aimodel_ss = aimodel_ss
 
     def build(self, X_train, y_train):

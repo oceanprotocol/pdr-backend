@@ -10,7 +10,7 @@ APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
 
 
 @enforce_types
-class AimodelSS(MultiFeedMixin, StrMixin):
+class RegressionModelSS(MultiFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEEDS_KEY = "input_feeds"
 
@@ -56,4 +56,4 @@ class AimodelSS(MultiFeedMixin, StrMixin):
     def copy(self):
         d2 = copy.deepcopy(self.d)
 
-        return AimodelSS(d2)
+        return RegressionModelSS(d2)

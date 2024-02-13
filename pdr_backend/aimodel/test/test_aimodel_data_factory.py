@@ -17,7 +17,7 @@ from pdr_backend.lake.test.resources import (
     _df_from_raw_data,
     _mergedohlcv_df_ETHUSDT,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.aimodel_ss import RegressionModelSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -361,7 +361,7 @@ def test_create_xy__handle_nan(tmpdir):
 
 @enforce_types
 def _assert_pd_df_shape(
-    ss: AimodelSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
+    ss: RegressionModelSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
 ):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
