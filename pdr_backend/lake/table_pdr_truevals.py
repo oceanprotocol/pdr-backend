@@ -44,7 +44,7 @@ def get_pdr_truevals_df(
 
     if len(truevals) == 0:
         print("No truevals to fetch. Exit.")
-        return pl.DataFrame()
+        return pl.DataFrame([], schema=truevals_schema)
 
     # convert truevals to df, transform timestamp into ms, return in-order
     trueval_df = _object_list_to_df(truevals, truevals_schema)

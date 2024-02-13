@@ -79,6 +79,7 @@ def _test_update_payout_gql(
         ["0x123"],
         st_ut_sec,
         fin_ut_sec,
+        1000,
         0,
         "mainnet",
     )

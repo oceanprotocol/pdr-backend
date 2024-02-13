@@ -116,8 +116,4 @@ def fetch_truevals(
 
         truevals.append(trueval)
 
-    # avoids doing next fetch if we've reached the end
-    if len(data) < first:
-        return []
-
     return truevals

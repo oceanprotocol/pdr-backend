@@ -49,7 +49,7 @@ def get_pdr_payouts_df(
 
     if len(payouts) == 0:
         print("No payouts to fetch. Exit.")
-        return pl.DataFrame()
+        return pl.DataFrame([], schema=payouts_schema)
 
     # convert payouts to df and transform timestamp into ms
     payout_df = _object_list_to_df(payouts, payouts_schema)

@@ -87,7 +87,7 @@ def get_pdr_predictions_df(
 
     if len(predictions) == 0:
         print("      No predictions to fetch. Exit.")
-        return pl.DataFrame()
+        return pl.DataFrame([], schema=predictions_schema)
 
     # convert predictions to df and transform timestamp into ms
     predictions_df = _object_list_to_df(predictions, predictions_schema)

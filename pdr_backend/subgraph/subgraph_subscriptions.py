@@ -121,8 +121,4 @@ def fetch_filtered_subscriptions(
         )
         subscriptions.append(subscription)
 
-    # avoids doing next fetch if we've reached the end
-    if len(data) < first:
-        return []
-
     return subscriptions

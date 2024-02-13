@@ -141,7 +141,11 @@ class GQLDataFactory:
                 "fetch_fn"
             ]
             records_per_page = 1000
+            # save to file when this amount of data is fetched
+            save_to_file_offset = 5000
             offset = 0
+            fetched_since_last_save = 0
+            final_df = pl.DataFrame()
             while True:
                 # call the function
                 print(f"    Fetching {k}")
@@ -154,12 +158,23 @@ class GQLDataFactory:
                     record["config"],
                 )
 
-                # postcondition
-                if len(df) > 0:
-                    assert df.schema == record["schema"]
+                if len(final_df) == 0:
+                    final_df = df
+                else:
+                    final_df = pl.concat([final_df, df])
 
+                fetched_since_last_save += len(df)
+
+                # save to file if requred number of data has been fetched
+                if (
+                    fetched_since_last_save > save_to_file_offset
+                    or len(df) < records_per_page
+                ) and len(final_df) > 0:
+                    assert df.schema == record["schema"]
                     # save to parquet
-                    self._save_parquet(filename, df)
+                    self._save_parquet(filename, final_df)
+                    final_df = pl.DataFrame()
+                    fetched_since_last_save = 0
 
                 # avoids doing next fetch if we've reached the end
                 if len(df) < records_per_page:

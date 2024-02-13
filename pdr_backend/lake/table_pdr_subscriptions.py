@@ -50,7 +50,7 @@ def get_pdr_subscriptions_df(
 
     if len(subscriptions) == 0:
         print("      No subscriptions fetched. Exit.")
-        return pl.DataFrame()
+        return pl.DataFrame([], schema=subscriptions_schema)
 
     # convert subscriptions to df and transform timestamp into ms
     subscriptions_df = _object_list_to_df(subscriptions, subscriptions_schema)

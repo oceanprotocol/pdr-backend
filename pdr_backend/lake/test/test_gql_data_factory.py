@@ -150,6 +150,8 @@ def _test_update_gql(
         st_ut_sec,
         fin_ut_sec,
         ["0x123"],
+        1000,
+        0,
         "mainnet",
         FilterMode.CONTRACT_TS,
         payout_only=False,

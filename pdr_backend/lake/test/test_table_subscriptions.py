@@ -110,6 +110,8 @@ def _test_update_gql(
     mock_fetch_filtered_subscriptions.assert_called_with(
         st_ut_sec,
         fin_ut_sec,
+        1000,
+        0,
         ["0x123"],
         "mainnet",
     )
