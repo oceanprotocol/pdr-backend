@@ -1,7 +1,7 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
+from pdr_backend.regressionmodel.aimodel_factory import RegressionModelFactory
 from pdr_backend.ppss.regressionmodel_ss import RegressionModelSS
 
 

@@ -8,8 +8,8 @@ import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
+from pdr_backend.regressionmodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.aimodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
