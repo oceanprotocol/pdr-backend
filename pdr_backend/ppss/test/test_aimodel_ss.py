@@ -5,11 +5,11 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.ppss.aimodel_ss import APPROACHES, RegressionModelSS
+from pdr_backend.ppss.regressionmodel_ss import APPROACHES, RegressionModelSS
 
 
 @enforce_types
-def test_aimodel_ss_happy1():
+def test_regressionmodel_ss_happy1():
     d = {
         "approach": "LIN",
         "max_n_train": 7,
@@ -41,7 +41,7 @@ def test_aimodel_ss_happy1():
 
 
 @enforce_types
-def test_aimodel_ss_happy2():
+def test_regressionmodel_ss_happy2():
     for approach in APPROACHES:
         ss = RegressionModelSS(
             {
@@ -65,7 +65,7 @@ def test_aimodel_ss_happy2():
 
 
 @enforce_types
-def test_aimodel_ss_unhappy1():
+def test_regressionmodel_ss_unhappy1():
     d = {
         "approach": "LIN",
         "max_n_train": 7,

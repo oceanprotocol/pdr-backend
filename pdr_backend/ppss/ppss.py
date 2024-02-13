@@ -62,7 +62,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         """Raise ValueError if a feed dependency is violated"""
         lake_fs = self.lake_ss.feeds
         predict_f = self.predictoor_ss.feed
-        aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
+        aimodel_fs = self.predictoor_ss.regressionmodel_ss.feeds
 
         # is predictoor_ss.predict_feed in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
@@ -75,7 +75,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             s += f"\n  predictoor_ss.predict_feed = {predict_f}"
             raise ValueError(s)
 
-        # do all aimodel_ss input feeds conform to predict feed timeframe?
+        # do all regressionmodel_ss input feeds conform to predict feed timeframe?
         for aimodel_f in aimodel_fs:
             if aimodel_f.timeframe != predict_f.timeframe:
                 s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
@@ -84,22 +84,22 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
                 s += f" {aimodel_f}"
                 raise ValueError(s)
 
-        # is each predictoor_ss.aimodel_ss.input_feeds in lake feeds?
+        # is each predictoor_ss.regressionmodel_ss.input_feeds in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
         for aimodel_f in aimodel_fs:
             if not lake_fs.contains_combination(
                 aimodel_f.exchange, aimodel_f.pair, aimodel_f.timeframe
             ):
-                s = "at least one aimodel_ss.input_feeds not in lake_ss.feeds"
+                s = "at least one regressionmodel_ss.input_feeds not in lake_ss.feeds"
                 s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
                 s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
                 s += f"\n  (input_feed not found: {aimodel_f})"
                 raise ValueError(s)
 
-        # is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
+        # is predictoor_ss.predict_feed in regressionmodel_ss.input_feeds?
         # - check for matching {exchange, pair, timeframe AND signal}
         if predict_f not in aimodel_fs:
-            s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
+            s = "predictoor_ss.predict_feed not in regressionmodel_ss.input_feeds"
             s += " (accounting for signal too)"
             s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
             s += f"\n  predictoor_ss.predict_feed = {predict_f}"
@@ -173,7 +173,7 @@ def mock_ppss(
         {
             "predict_feed": onefeed,
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
+            "regressionmodel_ss": {
                 "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,

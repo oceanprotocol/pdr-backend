@@ -67,7 +67,7 @@ def _predictoor_ss(feed, feeds):
             "predict_feed": feed,
             "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
+            "regressionmodel_ss": {
                 "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,

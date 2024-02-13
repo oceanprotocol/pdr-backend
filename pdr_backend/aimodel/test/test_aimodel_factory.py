@@ -6,13 +6,13 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import RegressionModelFactory
-from pdr_backend.ppss.aimodel_ss import APPROACHES, RegressionModelSS
+from pdr_backend.ppss.regressionmodel_ss import APPROACHES, RegressionModelSS
 
 
 @enforce_types
 def test_aimodel_factory_basic():
     for approach in APPROACHES:
-        aimodel_ss = RegressionModelSS(
+        regressionmodel_ss = RegressionModelSS(
             {
                 "approach": approach,
                 "max_n_train": 7,
@@ -20,8 +20,8 @@ def test_aimodel_factory_basic():
                 "input_feeds": ["binance BTC/USDT c"],
             }
         )
-        factory = RegressionModelFactory(aimodel_ss)
-        assert isinstance(factory.aimodel_ss, RegressionModelSS)
+        factory = RegressionModelFactory(regressionmodel_ss)
+        assert isinstance(factory.regressionmodel_ss, RegressionModelSS)
 
         (X_train, y_train, X_test, y_test) = _data()
 
@@ -88,9 +88,9 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
 
 @enforce_types
 def test_aimodel_factory_bad_approach():
-    aimodel_ss = Mock(spec=RegressionModelSS)
-    aimodel_ss.approach = "BAD"
-    factory = RegressionModelFactory(aimodel_ss)
+    regressionmodel_ss = Mock(spec=RegressionModelSS)
+    regressionmodel_ss.approach = "BAD"
+    factory = RegressionModelFactory(regressionmodel_ss)
 
     X_train, y_train, _, _ = _data()
 

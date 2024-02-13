@@ -37,7 +37,7 @@ class SimEngine:
         assert (
             str(predict_feed.exchange),
             str(predict_feed.pair),
-        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+        ) in ppss.predictoor_ss.regressionmodel_ss.exchange_pair_tups
 
         # pp & ss values
         self.ppss = ppss
@@ -114,7 +114,7 @@ class SimEngine:
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.aimodel_ss)
+        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.regressionmodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]

@@ -17,7 +17,7 @@ class RegressionModelSS(MultiFeedMixin, StrMixin):
     def __init__(self, d: dict):
         super().__init__(
             d, assert_feed_attributes=["signal"]
-        )  # yaml_dict["aimodel_ss"]
+        )  # yaml_dict["regressionmodel_ss"]
 
         # test inputs
         if self.approach not in APPROACHES:

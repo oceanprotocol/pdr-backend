@@ -16,7 +16,7 @@ class PredictoorAgent3(BasePredictoorAgent):
 
     @enforce_types
     def get_data_components(self):
-        # Compute aimodel_ss
+        # Compute regressionmodel_ss
         lake_ss = self.ppss.lake_ss
 
         # From lake_ss, build X/y
@@ -51,7 +51,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.aimodel_ss)
+        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.regressionmodel_ss)
         model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data
