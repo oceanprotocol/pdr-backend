@@ -149,7 +149,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     status = "OK" if no_of_contracts >= 11 else "FAILED"
     lfunc = logger.info if status == "OK" else logger.error
 
-    lfunc("Number of Predictor contracts: %s - %s", no_of_contracts, status)
+    lfunc("Number of Predictoor contracts: %s", no_of_contracts)
 
     # check number of predictions
     logger.info("Predictions:")
