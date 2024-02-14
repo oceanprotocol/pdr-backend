@@ -7,6 +7,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache
+from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
 
 BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
@@ -49,8 +50,8 @@ class BaseTraderAgent:
     ):
         # ppss
         self.ppss = ppss
-        # TODO
-        print("\n" + "-" * 80)
+        if logging_has_stdout():
+            print("\n" + "-" * 80)
         logger.info(self.ppss)
 
         # _do_trade

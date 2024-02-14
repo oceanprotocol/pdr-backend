@@ -1,6 +1,9 @@
 from enum import Enum
+import logging
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
+
+logger = logging.getLogger("portfolio")
 
 
 class OrderState(Enum):
@@ -69,7 +72,7 @@ class Position:
         self.close_order: Optional[Order] = None
         self.state: OrderState = OrderState.OPEN
 
-        print(f"     [Opening Order] {self.open_order}")
+        logger.info("[Opening Order] %s", self.open_order)
 
     def __str__(self):
         return f"<{self.open_order}, {self.close_order}, {self.__class__}>"
@@ -79,8 +82,8 @@ class Position:
         self.state = OrderState.CLOSED
 
         # calculate costs, profits, and PNL
-        print(f"     [Opening Order]: {self.open_order}")
-        print(f"     [Closing Order] {self.close_order}")
+        logger.info("[Opening Order]: %s", self.open_order)
+        logger.info("[Closing Order]: %s", self.close_order)
 
 
 class Sheet:
@@ -97,7 +100,7 @@ class Sheet:
     def open_position(self, open_order: Order) -> Position:
         position = Position(open_order)
         self.open_positions.append(position)
-        print("     [Position added to Sheet]")
+        logger.info("[Position added to Sheet]")
         return position
 
     def close_position(self, close_order: Order) -> Optional[Position]:
@@ -108,7 +111,7 @@ class Sheet:
 
         position.close(close_order)
         self.closed_positions.append(position)
-        print("     [Position closed in Sheet]")
+        logger.info("[Position closed in Sheet]")
         return position
 
 

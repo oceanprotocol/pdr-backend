@@ -104,7 +104,7 @@ def _warn_if_uts_have_gaps(uts: List[int], timeframe: Timeframe):
     if min(diffs_m) < mn_thr:
         logger.warning("**short candle time: %s min", min(diffs_m))
     if max(diffs_m) > mx_thr:
-        print("long candle time: %s min", max(diffs_m))
+        logger.warning("long candle time: %s min", max(diffs_m))
 
 
 @enforce_types

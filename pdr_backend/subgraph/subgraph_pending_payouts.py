@@ -4,6 +4,7 @@ from typing import Dict, List
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.util.logutil import logging_has_stdout
 
 logger = logging.getLogger("subgraph")
 
@@ -38,8 +39,10 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
             offset,
         )
         offset += chunk_size
-        # TODO
-        print(".", end="", flush=True)
+
+        if logging_has_stdout():
+            print(".", end="", flush=True)
+
         try:
             result = query_subgraph(subgraph_url, query)
             if "data" not in result or not result["data"]:

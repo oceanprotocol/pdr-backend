@@ -1,4 +1,5 @@
 import json
+import logging
 import threading
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -16,6 +17,7 @@ from pdr_backend.subgraph.subgraph_slot import fetch_slots_for_all_assets, Predi
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
 SECONDS_IN_A_DAY = 86400
+logger = logging.getLogger("accuracy_app")
 
 
 @enforce_types
@@ -316,9 +318,9 @@ def save_statistics_to_file():
             with open(JSON_FILE_PATH, "w") as f:
                 json.dump(output, f)
 
-            print("Data saved to JSON")
+            logger.info("Data saved to JSON")
         except Exception as e:
-            print("Error:", e)
+            logger.error("Error:", e)
 
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 

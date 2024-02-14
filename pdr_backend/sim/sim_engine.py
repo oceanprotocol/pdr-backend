@@ -295,6 +295,7 @@ class SimEngine:
     @enforce_types
     def _log(self, s: str):
         """Log to both stdout and to file"""
+        # TODO: log configuring?
         print(s)
         with open(self.logfile, "a") as f:
             f.write(s + "\n")

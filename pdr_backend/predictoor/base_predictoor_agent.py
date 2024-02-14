@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
+from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
 
 logger = logging.getLogger("predictoor_agent")
@@ -60,8 +61,8 @@ class BasePredictoorAgent(ABC):
     def take_step(self):
         # at new block number yet?
         if self.cur_block_number <= self.prev_block_number:
-            # TODO
-            print(".", end="", flush=True)
+            if logging_has_stdout():
+                print(".", end="", flush=True)
             time.sleep(1)
             return
 
@@ -98,8 +99,8 @@ class BasePredictoorAgent(ABC):
         self.prev_submit_epochs.append(submit_epoch)
         logger.info("-> Submit predict tx result: success.")
 
-        # TODO
-        print("" + "=" * 180)
+        if logging_has_stdout():
+            print("" + "=" * 180)
 
         # start printing for next round
         logger.info(self.status_str())

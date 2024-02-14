@@ -13,6 +13,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.trueval.get_trueval import get_trueval
+from pdr_backend.util.logutil import logging_has_stdout
 
 logger = logging.getLogger("trueval_agent")
 
@@ -68,8 +69,8 @@ class TruevalAgent:
         # get the trueval for each slot
         for slot in trueval_slots:
             self.process_trueval_slot(slot)
-            # TODO
-            print(".", end="", flush=True)
+            if logging_has_stdout():
+                print(".", end="", flush=True)
 
         logger.debug("Submitting transaction...")
 
