@@ -6,7 +6,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 
 
-def test_rose_payout_test():
+def test_rose_payout_test(caplog):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
@@ -33,15 +33,14 @@ def test_rose_payout_test():
         # Mock sys.argv
         sys.argv = ["pdr", "claim_ROSE", "ppss.yaml"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("Found 100 wROSE available to claim")
-        mock_print.assert_any_call("Claiming wROSE rewards...")
-        mock_print.assert_any_call("Converting wROSE to ROSE")
-        mock_print.assert_any_call("Found 100.0 wROSE, converting to ROSE...")
-        mock_print.assert_any_call("ROSE reward claim done")
+        assert "Found 100 wROSE available to claim" in caplog.text
+        assert "Claiming wROSE rewards..." in caplog.text
+        assert "Converting wROSE to ROSE" in caplog.text
+        assert "Found 100.0 wROSE, converting to ROSE..." in caplog.text
+        assert "ROSE reward claim done" in caplog.text
 
         # Additional assertions
         mock_dfrewards.get_claimable_rewards.assert_called_with(

@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 from argparse import Namespace
 
@@ -7,6 +8,8 @@ from enforce_typing import enforce_types
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
+
+logger = logging.getLogger("cli")
 
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
@@ -457,11 +460,11 @@ def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
-    print(f"pdr {command}: Begin")
-    print("Arguments:")
+    logger.info("pdr %s: Begin", command)
+    logger.info("Arguments:")
 
     for arg_k, arg_v in arguments_dict.items():
-        print(f"{arg_k}={arg_v}")
+        logger.info("%s=%s", arg_k, arg_v)
 
 
 SimArgParser = _ArgParser_PPSS

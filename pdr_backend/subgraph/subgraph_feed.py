@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import Dict, Optional
 
@@ -7,6 +8,9 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.strutil import StrMixin
+
+
+logger = logging.getLogger("subgraph_feed")
 
 
 class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
@@ -61,12 +65,12 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
 @enforce_types
 def print_feeds(feeds: Dict[str, SubgraphFeed], label: Optional[str] = None):
     label = label or "feeds"
-    print(f"{len(feeds)} {label}:")
+    logger.info("%s %s:", len(feeds), label)
     if not feeds:
-        print("  <no feeds>")
+        logger.warning("<no feeds>")
         return
     for feed in feeds.values():
-        print(f"  {feed}")
+        logger.info("%s", feed)
 
 
 # =========================================================================

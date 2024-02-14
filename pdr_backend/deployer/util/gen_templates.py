@@ -1,3 +1,4 @@
+import logging
 import sys
 import os
 
@@ -12,13 +13,15 @@ from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
 from pdr_backend.deployer.util.wallet import generate_new_keys, read_keys_json
 
+logger = logging.getLogger("deployer_templates")
+
 
 def generate_deployment_templates(
     path, output_path, deployment_method: DeploymentMethod, config_name: str
 ):
     # check if any files in output_path
     if os.path.exists(output_path) and len(os.listdir(output_path)) > 0:
-        print(f"Output path {output_path} is not empty")
+        logger.error("Output path %s is not empty", output_path)
         sys.exit(1)
 
     deployment_config: DeployConfig = parse_config(path, config_name)
@@ -41,13 +44,13 @@ def generate_deployment_templates(
     else:
         raise ValueError(f"Config type {config.type} is not supported")
 
-    print(f"Generated {deployment_method} templates for {config_name}")
-    print(f"  Output path: {output_path}")
-    print(f"  Config name: {config_name}")
-    print(f"  Deployment method: {deployment_method}")
-    print(f"  Number of agents: {len(config.agents)}")
+    logger.info("Generated %s templates for %s", deployment_method, config_name)
+    logger.info("  Output path: %s", output_path)
+    logger.info("  Config name: %s", config_name)
+    logger.info("  Deployment method: %s", deployment_method)
+    logger.info("  Number of agents: %d", len(config.agents))
     deploy_command = deployment_method.deploy_command(config_name)
-    print(f"To deploy: {deploy_command}")
+    logger.info("To deploy: %s", deploy_command)
 
     with open(path, "r") as file:
         deploymentinfo = DeploymentInfo(

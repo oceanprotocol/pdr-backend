@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from enforce_typing import enforce_types
@@ -29,6 +30,8 @@ from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 from pdr_backend.deployer.deployer import main as deployer_main
 
+logger = logging.getLogger("cli")
+
 
 @enforce_types
 def _do_main():
@@ -43,7 +46,7 @@ def _do_main():
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
     print_args(args)
-    print(nested_args)
+    logger.info(nested_args)
 
     func(args, nested_args)
 

@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, Optional, Tuple, Union
 
 import ccxt
@@ -6,6 +7,8 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
+
+logger = logging.getLogger("trader_approach1")
 
 
 @enforce_types
@@ -65,9 +68,9 @@ class TraderAgent1(BaseTraderAgent):
                 self.ppss.trader_ss.pair_str, amount
             )
 
-            print(f"     [Trade Closed] {self.exchange}")
-            print(f"     [Previous Order] {self.order}")
-            print(f"     [Closing Order] {order}")
+            logger.info("[Trade Closed] %s", self.exchange)
+            logger.info("[Previous Order] %s", self.order)
+            logger.info("[Closing Order] %s", order)
 
             self.order = None
 
@@ -75,15 +78,18 @@ class TraderAgent1(BaseTraderAgent):
         if not isinstance(prediction, Prediction):
             prediction = Prediction(prediction)
 
-        print(
-            f"      {feed} has a new prediction: {prediction.pred_nom} / {prediction.pred_denom}."
+        logger.info(
+            "%s has a new prediction: %s / %s.",
+            feed,
+            prediction.pred_nom,
+            prediction.pred_denom,
         )
 
         if prediction.pred_denom == 0:
-            print("  There's no stake on this, one way or the other. Exiting.")
+            logger.warning("There's no stake on this, one way or the other. Exiting.")
             return
 
-        print(f"      prediction properties are: {prediction.properties}")
+        logger.info("prediction properties are: %s", prediction.properties)
 
         if prediction.direction == 1 and prediction.confidence > 0.5:
             order = self.exchange.create_market_buy_order(
@@ -93,9 +99,10 @@ class TraderAgent1(BaseTraderAgent):
             # If order is successful, we log the order so we can close it
             if order is not None and isinstance(order, dict):
                 self.order = order
-                print(f"     [Trade Opened] {self.exchange}")
-                print(f"     [Opening Order] {order}")
+                logger.info("[Trade Opened] %s", self.exchange)
+                logger.info("[Opening Order] %s", order)
         else:
-            print(
-                f"     [No Trade] prediction does not meet requirements: {prediction.properties}"
+            logger.info(
+                "[No Trade] prediction does not meet requirements: %s",
+                prediction.properties,
             )

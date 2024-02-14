@@ -30,7 +30,7 @@ def test_do_help_long(capfd):
     assert "Main tools:" in out
 
 
-def test_print_args(capfd):
+def test_print_args(caplog):
     SimArgParser = defined_parsers["do_sim"]
     parser = SimArgParser
     args = ["sim", "ppss.yaml"]
@@ -38,7 +38,6 @@ def test_print_args(capfd):
 
     print_args(parsed_args)
 
-    out, _ = capfd.readouterr()
-    assert "pdr sim: Begin" in out
-    assert "Arguments:" in out
-    assert "PPSS_FILE=ppss.yaml" in out
+    assert "pdr sim: Begin" in caplog.text
+    assert "Arguments:" in caplog.text
+    assert "PPSS_FILE=ppss.yaml" in caplog.text

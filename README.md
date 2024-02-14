@@ -23,6 +23,13 @@ A "ppss" yaml file, like [`ppss.yaml`](ppss.yaml), holds parameters for all bots
 
 When you run a bot from the CLI, you specify your PPSS YAML file.
 
+pdr has basic stdout logging, but supports customisations.
+To customise logging, copy and edit the existing `logging.yaml`:
+
+```console
+cp logging.yaml my_logging.yaml
+```
+
 ## CLI
 
 (First, [install pdr-backend](READMEs/predictoor.md#install-pdr-backend-repo) first.)

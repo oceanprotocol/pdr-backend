@@ -15,7 +15,7 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_get_predictoors_info_system(
-    mock_get_gql_dfs, get_get_predictoor_summary_stats
+    mock_get_gql_dfs, get_get_predictoor_summary_stats, caplog
 ):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -76,17 +76,14 @@ def test_get_predictoors_info_system(
             user_addr,
         ]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr get_predictoors_info: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call(
-            "PDRS=['0xaaaA4CB4Ff2584BaD80fF5F109034A891C3D88Dd']"
-        )
+        assert "pdr get_predictoors_info: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "PDRS=['0xaaaA4CB4Ff2584BaD80fF5F109034A891C3D88Dd']" in caplog.text
 
         # Additional assertions
         get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)

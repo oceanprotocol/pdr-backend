@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Dict
 
@@ -5,6 +6,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import from_wei, to_wei
+
+logger = logging.getLogger("topup")
 
 
 @enforce_types
@@ -21,9 +24,11 @@ def topup_main(ppss: PPSS):
 
     owner_OCEAN_bal = from_wei(OCEAN.balanceOf(owner))
     owner_ROSE_bal = from_wei(ROSE.balanceOf(owner))
-    print(
-        f"Topup address ({owner}) has "
-        + f"{owner_OCEAN_bal:.2f} OCEAN and {owner_ROSE_bal:.2f} ROSE\n\n"
+    logger.info(
+        "Topup address %s has %.2f OCEAN and %.2f ROSE",
+        owner,
+        owner_OCEAN_bal,
+        owner_ROSE_bal,
     )
 
     addresses: Dict[str, str] = ppss.topup_ss.all_topup_addresses(web3_pp.network)
@@ -32,7 +37,7 @@ def topup_main(ppss: PPSS):
         OCEAN_bal = from_wei(OCEAN.balanceOf(address))
         ROSE_bal = from_wei(ROSE.balanceOf(address))
 
-        print(f"{addr_label}: {OCEAN_bal:.2f} OCEAN, {ROSE_bal:.2f} ROSE")
+        logger.info("%s: %.2f OCEAN, %.2f ROSE", addr_label, OCEAN_bal, ROSE_bal)
 
         min_bal = topup_ss.get_min_bal(OCEAN, addr_label)
         topup_bal = topup_ss.get_topup_bal(OCEAN, addr_label)
@@ -70,7 +75,7 @@ def do_transfer(token, address, owner, owner_bal, min_bal, topup_bal):
     transfered_amount = 0
 
     if min_bal > 0 and bal < min_bal:
-        print(f"\t Transferring {topup_bal} {symbol} to {address}...")
+        logger.info("Transferring %s %s to %s...", topup_bal, symbol, address)
         if owner_bal > topup_bal:
             token.transfer(
                 address,
@@ -81,6 +86,6 @@ def do_transfer(token, address, owner, owner_bal, min_bal, topup_bal):
             transfered_amount = topup_bal
         else:
             failed = True
-            print(f"Not enough {symbol} :(")
+            logger.error("Not enough %s :(", symbol)
 
     return transfered_amount, failed
