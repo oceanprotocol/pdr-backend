@@ -11,7 +11,7 @@ from pdr_backend.lake.constants import (
     OHLCV_MULT_MIN,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fetch_ohlcv")
 
 
 @enforce_types

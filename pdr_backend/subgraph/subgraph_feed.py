@@ -10,7 +10,7 @@ from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.util.strutil import StrMixin
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("subgraph_feed")
 
 
 class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes

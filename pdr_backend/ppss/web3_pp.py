@@ -21,7 +21,7 @@ from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_fil
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("web3_pp")
 
 
 # pylint: disable=too-many-public-methods

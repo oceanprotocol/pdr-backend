@@ -9,7 +9,7 @@ from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("subgraph")
 
 
 @enforce_types

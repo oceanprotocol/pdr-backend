@@ -9,7 +9,7 @@ from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cli")
 
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.

@@ -1,4 +1,3 @@
-import logging
 import sys
 from unittest.mock import Mock, patch, MagicMock
 
@@ -6,8 +5,6 @@ from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
-
-logger = logging.getLogger(__name__)
 
 
 def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):

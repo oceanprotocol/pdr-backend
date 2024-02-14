@@ -6,7 +6,7 @@ from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.trueval import Trueval
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("subgraph")
 
 
 @enforce_types

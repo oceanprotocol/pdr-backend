@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import from_wei, to_wei
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("topup")
 
 
 @enforce_types

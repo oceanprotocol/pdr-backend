@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.csvs import get_plots_dir
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("predictoor_stats")
 
 
 class PairTimeframeStat(TypedDict):

@@ -14,7 +14,7 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.trueval.get_trueval import get_trueval
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("trueval_agent")
 
 
 @enforce_types

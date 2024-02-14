@@ -8,7 +8,7 @@ from eth_account import Account
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import Web3PP
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("core_accounts")
 
 
 @enforce_types

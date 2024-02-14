@@ -14,7 +14,7 @@ from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.timeutil import current_ut_s
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("check_network")
 
 
 @enforce_types

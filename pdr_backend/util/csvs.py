@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import Prediction
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("csvs")
 
 
 @enforce_types

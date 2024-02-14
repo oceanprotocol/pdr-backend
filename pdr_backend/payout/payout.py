@@ -12,7 +12,7 @@ from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("payout")
 
 
 @enforce_types

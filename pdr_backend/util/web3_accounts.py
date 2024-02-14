@@ -8,7 +8,7 @@ from eth_account import Account
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.mathutil import to_wei, from_wei
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("web3_accounts")
 
 
 @enforce_types

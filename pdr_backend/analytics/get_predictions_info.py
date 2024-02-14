@@ -15,7 +15,7 @@ from pdr_backend.analytics.predictoor_stats import (
 )
 from pdr_backend.util.timeutil import timestr_to_ut
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("get_predictions_info")
 
 
 class PredFilter:

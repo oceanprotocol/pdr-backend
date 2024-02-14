@@ -22,7 +22,7 @@ from pdr_backend.util.constants import (
 )
 
 _KEYS = KeyAPI(NativeECCBackend)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("web3_config")
 
 
 @enforce_types

@@ -1,7 +1,7 @@
 import logging
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("subgraph")
 
 
 def get_consume_so_far(

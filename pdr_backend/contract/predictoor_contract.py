@@ -10,7 +10,7 @@ from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("predictoor_contract")
 
 
 @enforce_types

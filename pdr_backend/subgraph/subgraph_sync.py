@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.web3_config import Web3Config
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("subgraph")
 
 
 @enforce_types

@@ -5,7 +5,7 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("env")
 
 
 @enforce_types

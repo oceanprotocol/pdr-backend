@@ -8,7 +8,7 @@ from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.mathutil import to_wei
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("publisher")
 MAX_UINT256 = 2**256 - 1
 
 

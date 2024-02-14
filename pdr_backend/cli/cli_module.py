@@ -30,7 +30,7 @@ from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 from pdr_backend.deployer.deployer import main as deployer_main
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cli")
 
 
 @enforce_types

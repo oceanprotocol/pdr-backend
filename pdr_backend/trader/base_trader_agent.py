@@ -11,7 +11,7 @@ from pdr_backend.util.mathutil import sole_value
 
 BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("trader_agent")
 
 
 class Prediction(BasePrediction):

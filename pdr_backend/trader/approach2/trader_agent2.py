@@ -10,7 +10,7 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("trader_approach2")
 
 
 @enforce_types

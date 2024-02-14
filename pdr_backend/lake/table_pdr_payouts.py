@@ -10,7 +10,7 @@ from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("lake_pdr_payouts")
 
 # RAW PAYOUT SCHEMA
 payouts_schema = {

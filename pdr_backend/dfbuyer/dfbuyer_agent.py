@@ -16,7 +16,7 @@ from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.mathutil import from_wei
 
 WEEK = 7 * 86400
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dfbuyer_agent")
 
 
 @enforce_types

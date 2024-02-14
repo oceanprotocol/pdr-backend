@@ -25,7 +25,7 @@ from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("gql_data_factory")
 
 
 @enforce_types

@@ -10,7 +10,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.mathutil import sole_value
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("predictoor_agent")
 
 
 class BasePredictoorAgent(ABC):

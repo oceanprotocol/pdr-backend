@@ -16,7 +16,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("lake_plutil")
 
 
 @enforce_types

@@ -25,7 +25,7 @@ from pdr_backend.lake.plutil import (
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ohlcv_data_factory")
 
 
 @enforce_types

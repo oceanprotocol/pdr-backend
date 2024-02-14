@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("lake_ss")
 
 
 class LakeSS(MultiFeedMixin):
