@@ -4,7 +4,7 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.classifiermodel.classifiermodel_data_factory import AimodelDataFactory
+from pdr_backend.classifiermodel.classifiermodel_data_factory import ClassifierModelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
@@ -41,7 +41,7 @@ def test_create_xy__0():
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
-            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by AimodelDataFactory
+            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by ClassifierModelDataFactory
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
             "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
             "binanceus:ETH/USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
@@ -67,7 +67,7 @@ def test_create_xy__0():
         }
     )
 
-    factory = AimodelDataFactory(predictoor_ss)
+    factory = ClassifierModelDataFactory(predictoor_ss)
     X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(predictoor_ss.classifiermodel_ss, X, y, x_df)
@@ -78,7 +78,7 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, aimodel_data_factory = _predictoor_ss_1feed(
+    ss, _, classifiermodel_data_factory = _predictoor_ss_1feed(
         tmpdir, "binanceus ETH/USDT h 5m"
     )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
@@ -117,7 +117,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.classifiermodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -157,7 +157,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.classifiermodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -187,7 +187,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert "max_n_train" in ss.classifiermodel_ss.d
     ss.classifiermodel_ss.d["max_n_train"] = 5
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.classifiermodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -217,8 +217,8 @@ def test_create_xy__2exchanges_2coins_2signals():
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    aimodel_data_factory = AimodelDataFactory(ss)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    classifiermodel_data_factory = ClassifierModelDataFactory(ss)
+    X, y, x_df = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.classifiermodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
@@ -298,23 +298,23 @@ def test_create_xy__check_timestamp_order(tmpdir):
 
 @enforce_types
 def test_create_xy__input_type(tmpdir):
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, classifiermodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(aimodel_data_factory, AimodelDataFactory)
+    assert isinstance(classifiermodel_data_factory, ClassifierModelDataFactory)
 
     # create_xy() input should be pl
-    aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     # create_xy() inputs shouldn't be pd
     with pytest.raises(AssertionError):
-        aimodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
+        classifiermodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
 
 
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, classifiermodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
@@ -335,7 +335,7 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df = classifiermodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=False
     )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
@@ -345,13 +345,13 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df = classifiermodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=True
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 

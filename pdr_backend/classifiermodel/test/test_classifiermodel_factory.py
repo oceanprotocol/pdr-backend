@@ -10,7 +10,7 @@ from pdr_backend.ppss.classifiermodel_ss import APPROACHES, ClassifierModelSS
 
 
 @enforce_types
-def test_aimodel_factory_basic():
+def test_classifiermodel_factory_basic():
     for approach in APPROACHES:
         classifiermodel_ss = ClassifierModelSS(
             {
@@ -34,15 +34,15 @@ def test_aimodel_factory_basic():
 
 
 @enforce_types
-def test_aimodel_accuracy_from_xy(aimodel_factory):
+def test_classifiermodel_accuracy_from_xy(classifiermodel_factory):
     (X_train, y_train, X_test, y_test) = _data()
 
-    aimodel = aimodel_factory.build(X_train, y_train)
+    classifiermodel = classifiermodel_factory.build(X_train, y_train)
 
-    y_train_hat = aimodel.predict(X_train)
+    y_train_hat = classifiermodel.predict(X_train)
     assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
 
-    y_test_hat = aimodel.predict(X_test)
+    y_test_hat = classifiermodel.predict(X_test)
     assert sum(abs(y_test - y_test_hat)) < 1e-10
 
 
@@ -65,7 +65,7 @@ def f(X: np.ndarray) -> np.ndarray:
 
 
 @enforce_types
-def test_aimodel_accuracy_from_create_xy(aimodel_factory):
+def test_classifiermodel_accuracy_from_create_xy(classifiermodel_factory):
     # This is from a test function in test_model_data_factory.py
 
     # The underlying AR process is: close[t] = close[t-1] + open[t-1]
@@ -80,14 +80,14 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
     )  # newest
     y_train = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
 
-    aimodel = aimodel_factory.build(X_train, y_train)
+    classifiermodel = classifiermodel_factory.build(X_train, y_train)
 
-    y_train_hat = aimodel.predict(X_train)
+    y_train_hat = classifiermodel.predict(X_train)
     assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
 
 
 @enforce_types
-def test_aimodel_factory_bad_approach():
+def test_classifiermodel_factory_bad_approach():
     classifiermodel_ss = Mock(spec=ClassifierModelSS)
     classifiermodel_ss.approach = "BAD"
     factory = ClassifierModelFactory(classifiermodel_ss)
