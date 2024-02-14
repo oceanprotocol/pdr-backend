@@ -320,7 +320,7 @@ def save_statistics_to_file():
 
             logger.info("Data saved to JSON")
         except Exception as e:
-            logger.error("Error:", e)
+            logger.error("Error: %s", e)
 
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
