@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 from typing import List
 
@@ -15,6 +16,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
+logger = logging.getLogger("sim_engine")
 FONTSIZE = 12
 
 
@@ -77,8 +79,10 @@ class SimEngine:
     def _init_loop_attributes(self):
         filebase = f"out_{current_ut_ms()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
-        with open(self.logfile, "w") as f:
-            f.write("\n")
+
+        fh = logging.FileHandler(self.logfile)
+        fh.setLevel(logging.INFO)
+        logger.addHandler(fh)
 
         self.tot_profit_usd = 0.0
         self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
@@ -87,8 +91,7 @@ class SimEngine:
     @enforce_types
     def run(self):
         self._init_loop_attributes()
-        log = self._log
-        log("Start run")
+        logger.info("Start run")
 
         # main loop!
         pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
@@ -97,15 +100,14 @@ class SimEngine:
             self.run_one_iter(test_i, mergedohlcv_df)
             self._plot(test_i, self.ppss.sim_ss.test_n)
 
-        log("Done all iters.")
+        logger.info("Done all iters.")
 
         nmse_train = np.average(self.nmses_train)
         nmse_test = nmse(self.ys_testhat, self.ys_test)
-        log(f"Final nmse_train={nmse_train:.5f}, nmse_test={nmse_test:.5f}")
+        logger.info("Final nmse_train=%.5f, nmse_test=%.5f", nmse_train, nmse_test)
 
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
-        log = self._log
         testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
@@ -161,16 +163,24 @@ class SimEngine:
         correct_s = "Y" if correct else "N"
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
-        log(
-            f"Iter #{test_i+1:3}/{self.ppss.sim_ss.test_n}: "
-            f" ut{pretty_timestr(ut)[9:][:-9]}"
-            # f". Predval|true|err {predprice:.2f}|{trueprice:.2f}|{err:6.2f}"
-            f". Preddir|true|correct = {pred_dir}|{true_dir}|{correct_s}"
-            f". Total correct {sum(self.corrects):3}/{len(self.corrects):3}"
-            f" ({acc:.1f}%)"
-            # f". Spent ${amt_usdcoin_sell:9.2f}, recd ${amt_usdcoin_recd:9.2f}"
-            f", profit ${profit_usd:7.2f}"
-            f", tot_profit ${self.tot_profit_usd:9.2f}"
+        logger.info(
+            "Iter #%d/%d: ut%s."
+            ". Preddir|true|correct = %s|%s|%s"
+            ". Total correct %d/%d"
+            " (%.1f%%)"
+            ", profit $%7.2f}"
+            ", tot_profit $%9.2f",
+            test_i + 1,
+            self.ppss.sim_ss.test_n,
+            pretty_timestr(ut)[9:][:-9],
+            pred_dir,
+            true_dir,
+            correct_s,
+            sum(self.corrects),
+            len(self.corrects),
+            acc,
+            profit_usd,
+            self.tot_profit_usd,
         )
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
@@ -206,10 +216,14 @@ class SimEngine:
             self.ppss.predictoor_ss.pair_str, tokcoin_amt_recd
         )
 
-        self._log(
-            f"  TX: BUY : send {usdcoin_amt_sent:8.2f} {self.usdcoin:4}"
-            f", receive {tokcoin_amt_recd:8.2f} {self.tokcoin:4}"
-            f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}"
+        logger.info(
+            "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
+            usdcoin_amt_sent,
+            self.usdcoin,
+            tokcoin_amt_recd,
+            self.tokcoin,
+            usdcoin_amt_fee,
+            self.usdcoin,
         )
 
     def _sell(self, price: float, tokcoin_amt_sell: float):
@@ -233,10 +247,14 @@ class SimEngine:
             self.ppss.predictoor_ss.pair_str, tokcoin_amt_sent
         )
 
-        self._log(
-            f"  TX: SELL: send {tokcoin_amt_sent:8.2f} {self.tokcoin:4}"
-            f", receive {usdcoin_amt_recd:8.2f} {self.usdcoin:4}"
-            f", fee = {usdcoin_amt_fee:8.4f} {self.usdcoin:4}"
+        logger.info(
+            "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
+            tokcoin_amt_sent,
+            self.tokcoin,
+            usdcoin_amt_recd,
+            self.usdcoin,
+            usdcoin_amt_fee,
+            self.usdcoin,
         )
 
     @enforce_types
@@ -291,11 +309,3 @@ class SimEngine:
         fig.set_size_inches(WIDTH, HEIGHT)
         fig.tight_layout(pad=1.0)  # add space between plots
         plt.pause(0.001)
-
-    @enforce_types
-    def _log(self, s: str):
-        """Log to both stdout and to file"""
-        # TODO: log configuring?
-        print(s)
-        with open(self.logfile, "a") as f:
-            f.write(s + "\n")
