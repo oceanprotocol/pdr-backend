@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 
 import numpy as np
@@ -6,6 +7,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
+
+logger = logging.getLogger(__name__)
 
 
 class LakeSS(MultiFeedMixin):
@@ -19,7 +22,9 @@ class LakeSS(MultiFeedMixin):
         # handle parquet_dir
         assert self.parquet_dir == os.path.abspath(self.parquet_dir)
         if not os.path.exists(self.parquet_dir):
-            print(f"Could not find parquet dir, creating one at: {self.parquet_dir}")
+            logger.warning(
+                "Could not find parquet dir, creating one at: %s", self.parquet_dir
+            )
             os.makedirs(self.parquet_dir)
 
         # test inputs

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from collections import namedtuple
 from typing import Any, Callable, List, Optional, Tuple, Union
@@ -9,6 +10,8 @@ from pdr_backend.util.cache import Cache
 from pdr_backend.util.mathutil import sole_value
 
 BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
+
+logger = logging.getLogger(__name__)
 
 
 class Prediction(BasePrediction):
@@ -46,8 +49,9 @@ class BaseTraderAgent:
     ):
         # ppss
         self.ppss = ppss
+        # TODO
         print("\n" + "-" * 80)
-        print(self.ppss)
+        logger.info(self.ppss)
 
         # _do_trade
         self._do_trade = _do_trade or self.do_trade
@@ -79,12 +83,12 @@ class BaseTraderAgent:
 
     def check_subscriptions_and_subscribe(self):
         if not self.feed_contract.is_valid_subscription():
-            print(f"Purchase subscription for feed {self.feed}: begin")
+            logger.info("Purchase subscription for feed %s: begin", self.feed)
             self.feed_contract.buy_and_start_subscription(
                 gasLimit=None,
                 wait_for_receipt=True,
             )
-            print(f"Purchase new subscription for feed {self.feed}: done")
+            logger.info("Purchase subscription for feed %s: done", self.feed)
         time.sleep(1)
 
     def update_cache(self):
@@ -122,17 +126,17 @@ class BaseTraderAgent:
 
         self.prev_block_number = block_number
         self.prev_block_timestamp = block["timestamp"]
-        print("before:", time.time())
+        logger.debug("before: %s", time.time())
         s_till_epoch_ends = await self._process_block(block["timestamp"])
 
-        print("after:", time.time())
+        logger.debug("after: %s", time.time())
         if s_till_epoch_ends == -1:
             # -1 means subscription expired for one of the assets
             self.check_subscriptions_and_subscribe()
             return
 
         sleep_time = s_till_epoch_ends - 1
-        print(f"-- epoch is in {sleep_time} seconds, waiting... --")
+        logger.info("epoch is in %d seconds, waiting...", sleep_time)
 
         time.sleep(sleep_time)
 
@@ -150,15 +154,16 @@ class BaseTraderAgent:
         epoch = int(timestamp / s_per_epoch)
         epoch_s_left = epoch * s_per_epoch + s_per_epoch - timestamp
 
-        print(f"{'-'*40} Processing {self.feed} {'-'*40}\nEpoch {epoch}")
-        print(f"Seconds remaining in epoch: {epoch_s_left}")
+        logger.info("Processing %s", self.feed)
+        logger.info("Epoch %s", epoch)
+        logger.info("Seconds remaining in epoch: %d", epoch_s_left)
 
         if self.prev_traded_epochs and epoch == self.prev_traded_epochs[-1]:
-            print("      Done feed: already traded this epoch")
+            logger.info("Done feed: already traded this epoch")
             return epoch_s_left
 
         if epoch_s_left < self.ppss.trader_ss.min_buffer:
-            print("      Done feed: not enough time left in epoch")
+            logger.info("Done feed: not enough time left in epoch")
             return epoch_s_left
 
         try:
@@ -168,7 +173,7 @@ class BaseTraderAgent:
             )
         except Exception as e:
             if tries < self.ppss.trader_ss.max_tries:
-                print(e.args[0]["message"])
+                logger.warning(e.args[0]["message"])
                 if (
                     len(e.args) > 0
                     and isinstance(e.args[0], dict)
@@ -177,10 +182,12 @@ class BaseTraderAgent:
                     revert_reason = e.args[0]["message"]
                     if "No subscription" in revert_reason:
                         return -1
-                print("      Could not get aggpredval, trying again in a second")
+                logger.warning("Could not get aggpredval, trying again in a second")
                 await asyncio.sleep(1)
                 return await self._process_block(timestamp, tries + 1)
-            print(f"      Done feed: aggpredval not available, an error occured: {e}")
+            logger.warning(
+                "Done feed: aggpredval not available, an error occured: %s", e
+            )
             return epoch_s_left
 
         await self._do_trade(self.feed, prediction)
@@ -212,9 +219,12 @@ class BaseTraderAgent:
         if not isinstance(prediction, Prediction):
             prediction = Prediction(prediction)
 
-        print(
-            f"      {feed} has a new prediction: {prediction.pred_nom} / {prediction.pred_denom}."
+        logger.info(
+            "%s has a new prediction: %s / %s.",
+            feed,
+            prediction.pred_nom,
+            prediction.pred_denom,
         )
-        print(f"      {feed} prediction properties: {prediction.properties}.")
+        logger.info("%s prediction properties: %s", feed, str(prediction.properties))
         # Trade here
         # ...
