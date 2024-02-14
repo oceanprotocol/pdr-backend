@@ -13,8 +13,12 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         super().__init__(d, assert_feed_attributes=["timeframe"])
-        self.regressionmodel_ss = RegressionModelSS(d["regressionmodel_ss"])
-        self.classifiermodel_ss = ClassifierModelSS(d["classifiermodel_ss"])
+        if "regressionmodel_ss" in d:
+            self.regressionmodel_ss = RegressionModelSS(d["regressionmodel_ss"])
+        if "classifiermodel_ss" in d:
+            self.classifiermodel_ss = ClassifierModelSS(d["classifiermodel_ss"])
+        if not "classifiermodel_ss" in d and not "regressionmodel_ss" in d:
+            raise ValueError("No model provided")
 
     # --------------------------------
     # yaml properties
