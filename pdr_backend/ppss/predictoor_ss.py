@@ -2,6 +2,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import SingleFeedMixin
 from pdr_backend.ppss.regressionmodel_ss import RegressionModelSS
+from pdr_backend.ppss.classifiermodel_ss import ClassifierModelSS
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -12,7 +13,8 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         super().__init__(d, assert_feed_attributes=["timeframe"])
-        self.regressionmodel_ss = RegressionModelSS(d["regressionmodel_ss"])
+        self.classifiermodel_ss = RegressionModelSS(d["regressionmodel_ss"])
+        self.classifiermodel_ss = ClassifierModelSS(d["classifiermodel_ss"])
 
     # --------------------------------
     # yaml properties
