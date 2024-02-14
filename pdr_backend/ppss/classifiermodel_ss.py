@@ -31,7 +31,7 @@ class ClassifierModelSS(MultiFeedMixin, StrMixin):
 
     @property
     def approach(self) -> str:
-        return self.d["approach"]  # eg "LIN"
+        return "LIN"
 
     @property
     def max_n_train(self) -> int:
