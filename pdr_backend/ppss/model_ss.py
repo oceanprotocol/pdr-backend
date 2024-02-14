@@ -1,0 +1,55 @@
+import copy
+from abc import ABC, abstractmethod 
+
+import numpy as np
+from enforce_typing import enforce_types
+from pdr_backend.ppss.base_ss import MultiFeedMixin
+from pdr_backend.util.strutil import StrMixin
+
+VALID_APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
+
+
+@enforce_types
+class BaseModelSS(MultiFeedMixin, StrMixin, ABC):
+    __STR_OBJDIR__ = ["d"]
+    FEEDS_KEY = "input_feeds"
+
+    def __init__(self, d: dict):
+        super().__init__(
+            d, assert_feed_attributes=["signal"]
+        )  # yaml_dict["regressionmodel_ss"]
+
+        # test inputs
+        if self.approach not in VALID_APPROACHES:
+            raise ValueError(self.approach)
+
+        assert 0 < self.max_n_train
+        assert 0 < self.autoregressive_n < np.inf
+
+    # --------------------------------
+    # yaml properties
+
+    @property
+    def approach(self) -> str:
+        return self.d["approach"]  # eg "LIN"
+
+    @property
+    def max_n_train(self) -> int:
+        return self.d["max_n_train"]
+
+    @property
+    def autoregressive_n(self) -> int:
+        return self.d["max_n_train"]  # eg 50000. S.t. what data is available
+
+    # input feeds defined in base
+
+    # --------------------------------
+    # derivative properties
+    @property
+    def n(self) -> int:
+        """Number of input dimensions == # columns in X"""
+        return self.n_feeds * self.autoregressive_n
+
+    @abstractmethod
+    def copy(self):
+        raise Exception("Cannot copy abstract class")
