@@ -18,6 +18,7 @@ from pdr_backend.lake.table_pdr_payouts import (
     get_pdr_payouts_df,
     payouts_schema,
 )
+
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -128,8 +129,6 @@ class GQLDataFactory:
 
         for k, record in self.record_config.items():
             filename = self._parquet_filename(k)
-            print(f"      filename={filename}")
-
             st_ut = self._calc_start_ut(filename)
             print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
             if st_ut > min(current_ut_ms(), fin_ut):
@@ -137,52 +136,25 @@ class GQLDataFactory:
                 continue
 
             # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, int, int, Dict], pl.DataFrame] = record[
-                "fetch_fn"
-            ]
+            do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
+                record["fetch_fn"]
+            )
 
-            # save to file when this amount of data is fetched
+            # number of data at which we want to save to file
             save_backoff_limit = 5000
-            save_backoff_count = 0
-
+            # number of data fetched from the subgraph at a time
             pagination_limit = 1000
-            pagination_offset = 0
 
-            final_df = pl.DataFrame()
-            while True:
-                # call the function
-                print(f"    Fetching {k}")
-                df = do_fetch(
-                    self.ppss.web3_pp.network,
-                    st_ut,
-                    fin_ut,
-                    pagination_limit,
-                    pagination_offset,
-                    record["config"],
-                )
-
-                if len(final_df) == 0:
-                    final_df = df
-                else:
-                    final_df = pl.concat([final_df, df])
-
-                save_backoff_count += len(df)
-
-                # save to file if requred number of data has been fetched
-                if (
-                    save_backoff_count > save_backoff_limit
-                    or len(df) < pagination_limit
-                ) and len(final_df) > 0:
-                    assert df.schema == record["schema"]
-                    # save to parquet
-                    self._save_parquet(filename, final_df)
-                    final_df = pl.DataFrame()
-                    save_backoff_count = 0
-
-                # avoids doing next fetch if we've reached the end
-                if len(df) < pagination_limit:
-                    break
-                pagination_offset += pagination_limit
+            print(f"    Fetching {k}")
+            do_fetch(
+                self.ppss.web3_pp.network,
+                st_ut,
+                fin_ut,
+                save_backoff_limit,
+                pagination_limit,
+                record["config"],
+                filename,
+            )
 
     def _calc_start_ut(self, filename: str) -> int:
         """
@@ -259,31 +231,3 @@ class GQLDataFactory:
         basename = f"{filename_str}.parquet"
         filename = os.path.join(self.ppss.lake_ss.parquet_dir, basename)
         return filename
-
-    @enforce_types
-    def _save_parquet(self, filename: str, df: pl.DataFrame):
-        """write to parquet file
-        parquet only supports appending via the pyarrow engine
-        """
-
-        # precondition
-        assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
-        assert len(df) > 0
-        if len(df) > 1:
-            assert (
-                df.head(1)["timestamp"].to_list()[0]
-                <= df.tail(1)["timestamp"].to_list()[0]
-            )
-
-        if os.path.exists(filename):  # "append" existing file
-            cur_df = pl.read_parquet(filename)
-            df = pl.concat([cur_df, df])
-
-            # drop duplicates
-            df = df.filter(pl.struct("ID").is_unique())
-            df.write_parquet(filename)
-            n_new = df.shape[0] - cur_df.shape[0]
-            print(f"  Just appended {n_new} df rows to file {filename}")
-        else:  # write new file
-            df.write_parquet(filename)
-            print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")

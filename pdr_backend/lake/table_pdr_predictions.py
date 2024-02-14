@@ -8,6 +8,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     FilterMode,
     fetch_filtered_predictions,
 )
+from pdr_backend.lake.plutil import save_df_to_parquet
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
@@ -62,8 +63,14 @@ def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
 
 @enforce_types
 def get_pdr_predictions_df(
-    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
-) -> pl.DataFrame:
+    network: str,
+    st_ut: int,
+    fin_ut: int,
+    save_backoff_limit: int,
+    pagination_limit: int,
+    config: Dict,
+    filename: str,
+):
     """
     @description
         Fetch raw predictions from predictoor subgraph
@@ -72,30 +79,50 @@ def get_pdr_predictions_df(
     """
     network = get_sapphire_postfix(network)
 
-    # fetch predictions
-    predictions = fetch_filtered_predictions(
-        ms_to_seconds(st_ut),
-        ms_to_seconds(fin_ut),
-        config["contract_list"],
-        first,
-        skip,
-        network,
-        FilterMode.CONTRACT_TS,
-        payout_only=False,
-        trueval_only=False,
-    )
+    # save to file when this amount of data is fetched
+    save_backoff_count = 0
+    pagination_offset = 0
 
-    if len(predictions) == 0:
-        print("      No predictions to fetch. Exit.")
-        return pl.DataFrame([], schema=predictions_schema)
+    final_df = pl.DataFrame()
+    while True:
+        # call the function
+        predictions = fetch_filtered_predictions(
+            ms_to_seconds(st_ut),
+            ms_to_seconds(fin_ut),
+            config["contract_list"],
+            pagination_limit,
+            pagination_offset,
+            network,
+            FilterMode.CONTRACT_TS,
+            payout_only=False,
+            trueval_only=False,
+        )
+        # convert predictions to df and transform timestamp into ms
+        prediction_df = _object_list_to_df(predictions, predictions_schema)
+        prediction_df = _transform_timestamp_to_ms(prediction_df)
+        prediction_df = prediction_df.filter(
+            pl.col("timestamp").is_between(st_ut, fin_ut)
+        ).sort("timestamp")
 
-    # convert predictions to df and transform timestamp into ms
-    predictions_df = _object_list_to_df(predictions, predictions_schema)
-    predictions_df = _transform_timestamp_to_ms(predictions_df)
+        if len(final_df) == 0:
+            final_df = prediction_df
+        else:
+            final_df = pl.concat([final_df, prediction_df])
 
-    # cull any records outside of our time range and sort them by timestamp
-    predictions_df = predictions_df.filter(
-        pl.col("timestamp").is_between(st_ut, fin_ut)
-    ).sort("timestamp")
+        save_backoff_count += len(prediction_df)
 
-    return predictions_df
+        # save to file if requred number of data has been fetched
+        if (
+            save_backoff_count > save_backoff_limit
+            or len(prediction_df) < pagination_limit
+        ) and len(final_df) > 0:
+            assert prediction_df.schema == predictions_schema
+            # save to parquet
+            save_df_to_parquet(filename, final_df)
+            final_df = pl.DataFrame()
+            save_backoff_count = 0
+
+        # avoids doing next fetch if we've reached the end
+        if len(prediction_df) < pagination_limit:
+            break
+        pagination_offset += pagination_limit

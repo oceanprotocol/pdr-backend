@@ -192,3 +192,31 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     assert obj_df.schema == schema
 
     return obj_df
+
+
+@enforce_types
+def save_df_to_parquet(filename: str, df: pl.DataFrame):
+    """write to parquet file
+    parquet only supports appending via the pyarrow engine
+    """
+
+    # precondition
+    assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
+    assert len(df) > 0
+    if len(df) > 1:
+        assert (
+            df.head(1)["timestamp"].to_list()[0] <= df.tail(1)["timestamp"].to_list()[0]
+        )
+
+    if os.path.exists(filename):  # "append" existing file
+        cur_df = pl.read_parquet(filename)
+        df = pl.concat([cur_df, df])
+
+        # drop duplicates
+        df = df.filter(pl.struct("ID").is_unique())
+        df.write_parquet(filename)
+        n_new = df.shape[0] - cur_df.shape[0]
+        print(f"  Just appended {n_new} df rows to file {filename}")
+    else:  # write new file
+        df.write_parquet(filename)
+        print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")

@@ -3,6 +3,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars import Int64, Float64, Utf8, Boolean
 
+from pdr_backend.lake.plutil import save_df_to_parquet
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -27,8 +28,14 @@ payouts_schema = {
 
 @enforce_types
 def get_pdr_payouts_df(
-    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
-) -> pl.DataFrame:
+    network: str,
+    st_ut: int,
+    fin_ut: int,
+    save_backoff_limit: int,
+    pagination_limit: int,
+    config: Dict,
+    filename: str,
+):
     """
     @description
         Fetch raw payouts from predictoor subgraph
@@ -37,27 +44,46 @@ def get_pdr_payouts_df(
     """
     network = get_sapphire_postfix(network)
 
-    # fetch payouts
-    payouts = fetch_payouts(
-        config["contract_list"],
-        ms_to_seconds(st_ut),
-        ms_to_seconds(fin_ut),
-        first,
-        skip,
-        network,
-    )
+    # save to file when this amount of data is fetched
+    save_backoff_count = 0
+    pagination_offset = 0
 
-    if len(payouts) == 0:
-        print("No payouts to fetch. Exit.")
-        return pl.DataFrame([], schema=payouts_schema)
+    final_df = pl.DataFrame()
+    while True:
+        # call the function
+        payouts = fetch_payouts(
+            config["contract_list"],
+            ms_to_seconds(st_ut),
+            ms_to_seconds(fin_ut),
+            pagination_limit,
+            pagination_offset,
+            network,
+        )
+        # convert payouts to df and transform timestamp into ms
+        payout_df = _object_list_to_df(payouts, payouts_schema)
+        payout_df = _transform_timestamp_to_ms(payout_df)
+        payout_df = payout_df.filter(
+            pl.col("timestamp").is_between(st_ut, fin_ut)
+        ).sort("timestamp")
 
-    # convert payouts to df and transform timestamp into ms
-    payout_df = _object_list_to_df(payouts, payouts_schema)
-    payout_df = _transform_timestamp_to_ms(payout_df)
+        if len(final_df) == 0:
+            final_df = payout_df
+        else:
+            final_df = pl.concat([final_df, payout_df])
 
-    # cull any records outside of our time range and sort them by timestamp
-    payout_df = payout_df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
-        "timestamp"
-    )
+        save_backoff_count += len(payout_df)
 
-    return payout_df
+        # save to file if requred number of data has been fetched
+        if (
+            save_backoff_count > save_backoff_limit or len(payout_df) < pagination_limit
+        ) and len(final_df) > 0:
+            assert payout_df.schema == payouts_schema
+            # save to parquet
+            save_df_to_parquet(filename, final_df)
+            final_df = pl.DataFrame()
+            save_backoff_count = 0
+
+        # avoids doing next fetch if we've reached the end
+        if len(payout_df) < pagination_limit:
+            break
+        pagination_offset += pagination_limit

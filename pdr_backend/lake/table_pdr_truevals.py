@@ -3,7 +3,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars import Boolean, Int64, Utf8
 
-
+from pdr_backend.lake.plutil import save_df_to_parquet
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.plutil import _object_list_to_df
@@ -22,8 +22,14 @@ truevals_schema = {
 
 @enforce_types
 def get_pdr_truevals_df(
-    network: str, st_ut: int, fin_ut: int, first: int, skip: int, config: Dict
-) -> pl.DataFrame:
+    network: str,
+    st_ut: int,
+    fin_ut: int,
+    save_backoff_limit: int,
+    pagination_limit: int,
+    config: Dict,
+    filename: str,
+):
     """
     @description
         Fetch raw truevals from predictoor subgraph
@@ -33,22 +39,46 @@ def get_pdr_truevals_df(
     network = get_sapphire_postfix(network)
 
     # fetch truevals
-    truevals = fetch_truevals(
-        ms_to_seconds(st_ut),
-        ms_to_seconds(fin_ut),
-        first,
-        skip,
-        config["contract_list"],
-        network,
-    )
+    save_backoff_count = 0
+    pagination_offset = 0
 
-    if len(truevals) == 0:
-        print("No truevals to fetch. Exit.")
-        return pl.DataFrame([], schema=truevals_schema)
+    final_df = pl.DataFrame()
+    while True:
+        # call the function
+        truevals = fetch_truevals(
+            ms_to_seconds(st_ut),
+            ms_to_seconds(fin_ut),
+            pagination_limit,
+            pagination_offset,
+            config["contract_list"],
+            network,
+        )
+        # convert truevals to df and transform timestamp into ms
+        trueval_df = _object_list_to_df(truevals, truevals_schema)
+        trueval_df = _transform_timestamp_to_ms(trueval_df)
 
-    # convert truevals to df, transform timestamp into ms, return in-order
-    trueval_df = _object_list_to_df(truevals, truevals_schema)
-    trueval_df = _transform_timestamp_to_ms(trueval_df)
-    trueval_df = trueval_df.sort("timestamp")
+        if len(final_df) == 0:
+            final_df = trueval_df
+        else:
+            final_df = pl.concat([final_df, trueval_df])
 
-    return trueval_df
+        save_backoff_count += len(trueval_df)
+
+        # save to file if requred number of data has been fetched
+        if (
+            save_backoff_count > save_backoff_limit
+            or len(trueval_df) < pagination_limit
+        ) and len(final_df) > 0:
+            assert trueval_df.schema == truevals_schema
+            trueval_df = trueval_df.filter(
+                pl.col("timestamp").is_between(st_ut, fin_ut)
+            ).sort("timestamp")
+            # save to parquet
+            save_df_to_parquet(filename, final_df)
+            final_df = pl.DataFrame()
+            save_backoff_count = 0
+
+        # avoids doing next fetch if we've reached the end
+        if len(trueval_df) < pagination_limit:
+            break
+        pagination_offset += pagination_limit
