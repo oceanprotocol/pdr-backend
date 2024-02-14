@@ -4,7 +4,7 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.classifiermodel.classifiermodel_data_factory import ClassifierModelDataFactory
+from pdr_backend.models.classifiermodel.classifiermodel_data_factory import ClassifierModelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
