@@ -22,6 +22,14 @@ predictoor_ss:
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 10 # no. epochs that model looks back, to predict next
     approach: LIN
+  classifiermodel_ss:
+    input_feeds:
+      - binance BTC/USDT c 1h
+    #      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 1h
+    #    - kraken BTC/USDT 1h
+    max_n_train: 5000 # no. epochs to train model on
+    autoregressive_n: 10 # no. epochs that model looks back, to predict next
+    # approach is LIN
 
 trader_ss:
   feed: binance BTC/USDT c 1h
