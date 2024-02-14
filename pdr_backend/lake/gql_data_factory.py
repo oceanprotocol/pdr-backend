@@ -140,11 +140,14 @@ class GQLDataFactory:
             do_fetch: Callable[[str, int, int, int, int, Dict], pl.DataFrame] = record[
                 "fetch_fn"
             ]
-            records_per_page = 1000
+
             # save to file when this amount of data is fetched
-            save_to_file_offset = 5000
-            offset = 0
-            fetched_since_last_save = 0
+            save_backoff_limit = 5000
+            save_backoff_count = 0
+
+            pagination_limit = 1000
+            pagination_offset = 0
+
             final_df = pl.DataFrame()
             while True:
                 # call the function
@@ -153,8 +156,8 @@ class GQLDataFactory:
                     self.ppss.web3_pp.network,
                     st_ut,
                     fin_ut,
-                    records_per_page,
-                    offset,
+                    pagination_limit,
+                    pagination_offset,
                     record["config"],
                 )
 
@@ -163,23 +166,23 @@ class GQLDataFactory:
                 else:
                     final_df = pl.concat([final_df, df])
 
-                fetched_since_last_save += len(df)
+                save_backoff_count += len(df)
 
                 # save to file if requred number of data has been fetched
                 if (
-                    fetched_since_last_save > save_to_file_offset
-                    or len(df) < records_per_page
+                    save_backoff_count > save_backoff_limit
+                    or len(df) < pagination_limit
                 ) and len(final_df) > 0:
                     assert df.schema == record["schema"]
                     # save to parquet
                     self._save_parquet(filename, final_df)
                     final_df = pl.DataFrame()
-                    fetched_since_last_save = 0
+                    save_backoff_count = 0
 
                 # avoids doing next fetch if we've reached the end
-                if len(df) < records_per_page:
+                if len(df) < pagination_limit:
                     break
-                offset += records_per_page
+                pagination_offset += pagination_limit
 
     def _calc_start_ut(self, filename: str) -> int:
         """
