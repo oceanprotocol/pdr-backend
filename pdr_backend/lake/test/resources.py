@@ -4,7 +4,7 @@ from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.models.regressionmodel.regressionmodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs

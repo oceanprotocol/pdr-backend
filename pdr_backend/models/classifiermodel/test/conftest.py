@@ -1,7 +1,7 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.models.classifiermodel.classifiermodel_factory import ClassifierModelFactory
+from pdr_backend.classifiermodel.classifiermodel_factory import ClassifierModelFactory
 from pdr_backend.ppss.classifiermodel_ss import ClassifierModelSS
 
 
