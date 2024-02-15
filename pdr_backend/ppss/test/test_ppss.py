@@ -134,7 +134,9 @@ def test_verify_feed_dependencies():
 
     # don't fail if aimodel needs more ohlcv feeds for same exchange/pair/time
     ppss2 = deepcopy(ppss)
-    ppss2.predictoor_ss.regressionmodel_ss.d["input_feeds"] = ["binance BTC/USDT ohlcv 5m"]
+    ppss2.predictoor_ss.regressionmodel_ss.d["input_feeds"] = [
+        "binance BTC/USDT ohlcv 5m"
+    ]
     ppss2.verify_feed_dependencies()
 
     # fail check: is predictoor_ss.predict_feed in lake feeds?

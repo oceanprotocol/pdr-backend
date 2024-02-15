@@ -163,3 +163,10 @@ class BasePredictoorAgent(ABC):
         timestamp: int,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         pass
+
+    @abstractmethod
+    def get_prediction_stakes(
+        self,
+        timestamp: int,  # pylint: disable=unused-argument
+    ) -> Tuple[bool, float]:
+        pass

@@ -2,7 +2,9 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
 from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
@@ -51,7 +53,9 @@ class PredictoorAgent3(BasePredictoorAgent):
         y_train, _ = y[st:fin], y[fin : fin + 1]
 
         # Compute the model from train data
-        aimodel_factory = RegressionModelFactory(self.ppss.predictoor_ss.regressionmodel_ss)
+        aimodel_factory = RegressionModelFactory(
+            self.ppss.predictoor_ss.regressionmodel_ss
+        )
         model = aimodel_factory.build(X_train, y_train)
 
         # Predict from test data

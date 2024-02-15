@@ -4,7 +4,9 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
@@ -41,7 +43,16 @@ def test_create_xy__0():
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
-            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by RegressionModelDataFactory
+            "timestamp": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+            ],  # not used by RegressionModelDataFactory
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
             "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
             "binanceus:ETH/USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
@@ -314,7 +325,9 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, regressionmodel_data_factory, _ = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, regressionmodel_data_factory, _ = _predictoor_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h 5m"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok

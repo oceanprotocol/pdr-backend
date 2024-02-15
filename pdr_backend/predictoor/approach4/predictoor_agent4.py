@@ -1,10 +1,14 @@
 from typing import Tuple
 
 from enforce_typing import enforce_types
-from pdr_backend.classifiermodel.classifiermodel_data_factory import ClassifierModelDataFactory
+from pdr_backend.classifiermodel.classifiermodel_data_factory import (
+    ClassifierModelDataFactory,
+)
 from pdr_backend.classifiermodel.classifiermodel_factory import ClassifierModelFactory
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
 from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
@@ -49,17 +53,17 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Split X/y into train & test data
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
-        y_train_price, y_test_price = y[st:fin], y[fin : fin + 1] # continuous values
+        y_train_price, y_test_price = y[st:fin], y[fin : fin + 1]  # continuous values
         curprice = y_test_price[-1]
-        y_train_class = y_train_price > curprice # binary values
+        y_train_class = y_train_price > curprice  # binary values
 
-        # Compute classifier model 
+        # Compute classifier model
         factory = ClassifierModelFactory(self.ppss.predictoor_ss.classifiermodel_ss)
         model = factory.build(X_train, y_train_class)
 
         # Predict from test data
         y_test_class = model.predict_proba(X_test)
-        prob_up = y_test_class[1][0] # or [0][0] ? 
+        prob_up = y_test_class[1][0]  # or [0][0] ?
         prob_down = 1.0 - prob_up
 
         # Stake amount
