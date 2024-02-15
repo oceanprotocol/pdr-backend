@@ -78,7 +78,7 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, classifiermodel_data_factory = _predictoor_ss_1feed(
+    ss, _, _, classifiermodel_data_factory = _predictoor_ss_1feed(
         tmpdir, "binanceus ETH/USDT h 5m"
     )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
@@ -314,7 +314,7 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, classifiermodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, _, classifiermodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok

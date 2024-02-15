@@ -78,7 +78,7 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, aimodel_data_factory = _predictoor_ss_1feed(
+    ss, _, regressionmodel_data_factory, _ = _predictoor_ss_1feed(
         tmpdir, "binanceus ETH/USDT h 5m"
     )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
@@ -117,7 +117,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -157,7 +157,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         }
     )
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -187,7 +187,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert "max_n_train" in ss.regressionmodel_ss.d
     ss.regressionmodel_ss.d["max_n_train"] = 5
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert np.array_equal(X, target_X)
@@ -217,8 +217,8 @@ def test_create_xy__2exchanges_2coins_2signals():
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    aimodel_data_factory = RegressionModelDataFactory(ss)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    regressionmodel_data_factory = RegressionModelDataFactory(ss)
+    X, y, x_df = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
@@ -298,23 +298,23 @@ def test_create_xy__check_timestamp_order(tmpdir):
 
 @enforce_types
 def test_create_xy__input_type(tmpdir):
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, regressionmodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(aimodel_data_factory, RegressionModelDataFactory)
+    assert isinstance(regressionmodel_data_factory, RegressionModelDataFactory)
 
     # create_xy() input should be pl
-    aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     # create_xy() inputs shouldn't be pd
     with pytest.raises(AssertionError):
-        aimodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
+        regressionmodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
 
 
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, regressionmodel_data_factory, _ = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
@@ -335,7 +335,7 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df = regressionmodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=False
     )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
@@ -345,13 +345,13 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df = regressionmodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=True
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
