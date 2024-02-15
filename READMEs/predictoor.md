@@ -7,25 +7,18 @@ SPDX-License-Identifier: Apache-2.0
 
 This README shows how to earn $ by running a predictoor bot on mainnet.
 
-
-
+**Main flow:**
 1. **[Install](#1-install-pdr-backend-repo)**
 1. **[Simulate modeling & trading](#2-simulate-modeling-and-trading)**
 1. **[Run bot on testnet](#3-run-predictoor-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#4-run-predictoor-bot-on-sapphire-mainnet)**
 1. **[Claim payout](#5-claim-payout)**
-1. **[Go Beyond](#6-go-beyond)**
-    1. [Optimize Model](#61-optimize-model)
-    1. [Run Many Bots at Once](#62-run-many-bots-at-once)
-          1. [Private Keys](#621-private-keys)
-          1. [Generate Deployment Templates](#622-generate-deployment-templates)
-          1. [Deploy](#623-deploy)
-          1. [Monitoring logs](#624-monitoring-logs)
-          1. [Destroy](#625-destroy)
-    1. [Run Local Network](#63-run-local-network)
-    1. [Other READMEs](#64-other-readmes)
 
-Then, you can [go beyond](#go-beyond): [optimize model](#optimize-model), [run >1 bots](#run-many-bots-at-once), and more.
+Once you're done the main flow, you can go beyond, with any of:
+- [Optimize model](#optimize-model)
+- [Right-size staking](#right-size-staking)
+- [Run local network](#run-local-network)
+- [Run many bots](#run-many-bots). Steps: [give keys](#many-bots-give-keys), [templates](#many-bots-generate-templates), [deploy agents](#many-bots-deploy-agents), [monitor agents](#many-bots-monitor-agents), [destroy agents](#many-bots-destroy-agents)
 
 
 ## 1. Install pdr-backend Repo
@@ -139,25 +132,38 @@ When running predictoors on mainnet, you have the potential to earn $.
 **[Here](payout.md)** are instructions to claim your earnings.
 
 
-# 6. Go Beyond
-
-You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
+Congrats! You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
 
 The next sections describe how to go beyond, by optimizing the model and more.
 
-## 6.1 Optimize Model
+# Optimize model
 
-Once you're familiar with the above, you can make your own model and optimize it for $. Here's how:
+The idea: make your own model, tuned for accuracy, which in turn will optimize it for $. Here's how:
 1. Fork `pdr-backend` repo.
 1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
+# Right-size staking
 
-## 6.2 Run Many Bots at Once
+The default predictoor approaches have a fixed-amount stake with a small default value. Yet the more you stake, the more you can earn, up to a point: if you stake too much then the losses from slashing exceed wins from rewards.
 
-`deployer` is a streamlined command-line utility designed for efficiently generating and managing agent deployments.
+So what's the right amount?
+
+The blog post ["Right-Size Staking in Ocean Predictoor"](https://blog.oceanprotocol.com/rewards-mechanisms-of-ocean-predictoor-6f76c942baf7) explores this in great detail, and gives practical guidance. You can implement some or all of the ideas.
+
+# Run local network
+
+To get extra-fast block iterations, you can run a local test network (with local bots). It does take a bit more up-front setup. Get started [here](barge.md).
+
+# Run many bots
+
+The instructions above are on running a single bot on a single prediction feed. Yet Predictoor has _many_ feeds. You could manually run & monitor one bot per feed. But this gets tedious beyond a few feeds. Here, we show how to run _many_ bots by containerizing each bot, and using Kubernetes to manage them via the `deployer` CLI utility.
+
+`deployer` is a streamlined CLI utility designed for efficiently generating and managing agent deployments.
 
 This section shows how to use `deployer` to deploy bots on testnet.
+
+## Many bots: config
 
 The config that will be deployed can be found in `ppss.yaml` under `deployment_configs` section. You can create your own config by copying the existing one and modifying it as you wish. For the sake of this example, the existing config will be used.
 
@@ -184,7 +190,7 @@ deployment_configs:
         s_until_epoch_end: 100
 ```
 
-### 6.2.1. Private Keys
+## Many bots: give keys
 Create a `.keys.json` file and add the following:
 ```
 {
@@ -195,7 +201,7 @@ Create a `.keys.json` file and add the following:
 Each agent requires a private key. If you have fewer private keys than number of agents, the tool will create new wallets and update the `.keys.json` file. Make sure the wallets have enough ROSE and OCEAN to pay for gas and stake.
 
 
-### 6.2.2. Generate Deployment Templates
+## Many bots: generate templates
 
 The `generate` command is used to create deployment template files based on a configuration file.
 
@@ -208,9 +214,9 @@ Where `ppss.yaml` is the config file, `testnet_predictoor_deployment` is the con
 
 Available deployment methods are `k8s`.
 
-### 6.2.3. Deploy
+## Many bots: deploy agents
 
-The `deploy` command is used to deploy the generated templates.
+The `deploy` command is used to deploy agents that follow the generated templates.
 
 Execute the following command to deploy the generated config:
 ```
@@ -226,7 +232,7 @@ Since k8s is used as the deployment method, the following additional parameters 
 - `--resource-group`: The cloud provider resource group. Only required Azure.
 - `--subscription-id`: The cloud provider subscription id. Only required for Azure.
 
-### 6.2.4 Monitoring logs
+## Many bots: monitor agents
 
 The `logs` command is used to retrieve logs from deployed agents.
 
@@ -237,7 +243,7 @@ pdr deployer logs testnet_predictoor_deployment
 
 Where `testnet_predictoor_deployment` is the config name.
 
-### 6.2.5 Destroy
+## Many bots: destroy agents
 
 The `destroy` command is used to destroy agents deployed based on a specified configuration.
 
@@ -248,13 +254,6 @@ pdr deployer destroy testnet_predictoor_deployment
 
 Where `testnet_predictoor_deployment` is the config name.
 
-## 6.3 Run Local Network
-
-To get extra-fast block iterations, you can run a local test network (with local bots). It does take a bit more up-front setup. Get started [here](barge.md).
-
-## 6.4 Other READMEs
-
-- [Root README](../README.md)
 
 ## Warning
 
