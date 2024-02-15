@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -6,6 +7,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
+
+logger = logging.getLogger("sim_ss")
 
 
 @enforce_types
@@ -18,7 +21,7 @@ class SimSS(StrMixin, CCXTExchangeMixin):
         # handle log_dir
         assert self.log_dir == os.path.abspath(self.log_dir)
         if not os.path.exists(self.log_dir):
-            print(f"Could not find log dir, creating one at: {self.log_dir}")
+            logger.warning("Could not find log dir, creating one at: %s", self.log_dir)
             os.makedirs(self.log_dir)
 
         if not (0 < int(self.test_n) < np.inf):  # pylint: disable=superfluous-parens

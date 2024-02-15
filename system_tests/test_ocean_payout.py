@@ -10,7 +10,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 
 @patch("pdr_backend.payout.payout.wait_until_subgraph_syncs")
-def test_ocean_payout_test(mock_wait_until_subgraph_syncs):
+def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
     _ = mock_wait_until_subgraph_syncs
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -47,19 +47,18 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs):
         # Mock sys.argv
         sys.argv = ["pdr", "claim_OCEAN", "ppss.yaml"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr claim_OCEAN: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("Starting payout")
-        mock_print.assert_any_call("Finding pending payouts")
-        mock_print.assert_any_call(f"Found {number_of_slots} slots")
-        mock_print.assert_any_call("Claiming payouts for 0x1")
-        mock_print.assert_any_call("Claiming payouts for 0x2")
-        mock_print.assert_any_call("Payout done")
+        assert "pdr claim_OCEAN: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "Starting payout" in caplog.text
+        assert "Finding pending payouts" in caplog.text
+        assert f"Found {number_of_slots} slots" in caplog.text
+        assert "Claiming payouts for 0x1" in caplog.text
+        assert "Claiming payouts for 0x2" in caplog.text
+        assert "Payout done" in caplog.text
 
         # Additional assertions
         mock_query_pending_payouts.assert_called_with(

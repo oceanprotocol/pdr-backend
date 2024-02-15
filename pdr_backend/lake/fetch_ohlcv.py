@@ -1,3 +1,4 @@
+import logging
 from typing import List, Union
 
 from enforce_typing import enforce_types
@@ -9,6 +10,8 @@ from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
 )
+
+logger = logging.getLogger("fetch_ohlcv")
 
 
 @enforce_types
@@ -47,7 +50,7 @@ def safe_fetch_ohlcv(
             limit=limit,
         )
     except Exception as e:
-        print(f"      **WARNING exchange: {e}")
+        logger.warning("exchange: %s", e)
         return None
 
 
@@ -99,9 +102,9 @@ def _warn_if_uts_have_gaps(uts: List[int], timeframe: Timeframe):
     mx_thr = timeframe.m * OHLCV_MULT_MAX
 
     if min(diffs_m) < mn_thr:
-        print(f"      **WARNING: short candle time: {min(diffs_m)} min")
+        logger.warning("**short candle time: %s min", min(diffs_m))
     if max(diffs_m) > mx_thr:
-        print(f"      **WARNING: long candle time: {max(diffs_m)} min")
+        logger.warning("long candle time: %s min", max(diffs_m))
 
 
 @enforce_types

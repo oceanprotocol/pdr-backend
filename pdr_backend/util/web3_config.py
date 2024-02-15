@@ -1,3 +1,4 @@
+import logging
 import time
 
 from typing import Optional
@@ -21,6 +22,7 @@ from pdr_backend.util.constants import (
 )
 
 _KEYS = KeyAPI(NativeECCBackend)
+logger = logging.getLogger("web3_config")
 
 
 @enforce_types
@@ -45,9 +47,9 @@ class Web3Config:
             block_data = self.w3.eth.get_block(block)
             return block_data
         except Exception as e:
-            print(f"An error occured while getting block, error: {e}")
+            logger.warning("An error occured while getting block, error: {%s}", e)
             if tries < WEB3_MAX_TRIES:
-                print("Trying again...")
+                logger.info("Trying again...")
                 # sleep times for the first 5 tries:
                 # 2.5, 10.0, 22.5, 40.0, 62.5
                 time.sleep(((tries + 1) / 2) ** (2) * 10)

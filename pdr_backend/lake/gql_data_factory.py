@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Callable, Dict
 
@@ -22,6 +23,9 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+
+
+logger = logging.getLogger("gql_data_factory")
 
 
 @enforce_types
@@ -88,20 +92,20 @@ class GQLDataFactory:
         @return
           predictions_df -- *polars* Dataframe. See class docstring
         """
-        print("Get predictions data across many feeds and timeframes.")
+        logger.info("Get predictions data across many feeds and timeframes.")
 
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
-        print(f"  Data start: {pretty_timestr(self.ppss.lake_ss.st_timestamp)}")
-        print(f"  Data fin: {pretty_timestr(fin_ut)}")
+        logger.info("Data start: %s", pretty_timestr(self.ppss.lake_ss.st_timestamp))
+        logger.info("Data fin: %s", pretty_timestr(fin_ut))
 
         self._update(fin_ut)
         gql_dfs = self._load_parquet(fin_ut)
 
-        print("Get historical data across many subgraphs. Done.")
+        logger.info("Get historical data across many subgraphs. Done.")
 
         # postconditions
         assert len(gql_dfs.values()) > 0
@@ -128,19 +132,19 @@ class GQLDataFactory:
 
         for k, record in self.record_config.items():
             filename = self._parquet_filename(k)
-            print(f"      filename={filename}")
+            logger.info("filename=%s", filename)
 
             st_ut = self._calc_start_ut(filename)
-            print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
+            logger.info("Aim to fetch data from start time: %s", pretty_timestr(st_ut))
             if st_ut > min(current_ut_ms(), fin_ut):
-                print("      Given start time, no data to gather. Exit.")
+                logger.warning("Given start time, no data to gather. Exit.")
                 continue
 
             # to satisfy mypy, get an explicit function pointer
             do_fetch: Callable[[str, int, int, Dict], pl.DataFrame] = record["fetch_fn"]
 
             # call the function
-            print(f"    Fetching {k}")
+            logger.info("Fetching %s", k)
             df = do_fetch(self.ppss.web3_pp.network, st_ut, fin_ut, record["config"])
 
             # postcondition
@@ -163,12 +167,12 @@ class GQLDataFactory:
           start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
         if not os.path.exists(filename):
-            print("      No file exists yet, so will fetch all data")
+            logger.info("No file exists yet, so will fetch all data")
             return self.ppss.lake_ss.st_timestamp
 
-        print("      File already exists")
+        logger.info("File already exists")
         if not has_data(filename):
-            print("      File has no data, so delete it")
+            logger.info("File has no data, so delete it")
             os.remove(filename)
             return self.ppss.lake_ss.st_timestamp
 
@@ -184,14 +188,14 @@ class GQLDataFactory:
           gql_dfs -- dict of [gql_filename] : df
             Where df has columns=GQL_COLS+"datetime", and index=timestamp
         """
-        print("  Load parquet.")
+        logger.info("Load parquet.")
         st_ut = self.ppss.lake_ss.st_timestamp
 
         dfs: Dict[str, pl.DataFrame] = {}  # [parquet_filename] : df
 
         for k, record in self.record_config.items():
             filename = self._parquet_filename(k)
-            print(f"      filename={filename}")
+            logger.info("filename=%s", filename)
 
             # load all data from file
             # check if file exists
@@ -249,7 +253,9 @@ class GQLDataFactory:
             df = df.filter(pl.struct("ID").is_unique())
             df.write_parquet(filename)
             n_new = df.shape[0] - cur_df.shape[0]
-            print(f"  Just appended {n_new} df rows to file {filename}")
+            logger.info("Just appended %s df rows to file %s", n_new, filename)
         else:  # write new file
             df.write_parquet(filename)
-            print(f"  Just saved df with {df.shape[0]} rows to new file {filename}")
+            logger.info(
+                "Just saved df with %s rows to new file %s", df.shape[0], filename
+            )

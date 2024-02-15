@@ -1,10 +1,13 @@
 import json
+import logging
 import os
 from typing import List
 from attr import dataclass
 from web3 import Web3
 from enforce_typing import enforce_types
 from pdr_backend.deployer.util.constants import KEY_FILE
+
+logger = logging.getLogger("deployer_wallet")
 
 
 @dataclass
@@ -19,7 +22,7 @@ class Wallet:
 def generate_wallet() -> Wallet:
     w3 = Web3()
     wallet = w3.eth.account.create()
-    print("Generated wallet with address: ", wallet.address)
+    logger.info("Generated wallet with address: %s", wallet.address)
     return Wallet(wallet._private_key.hex())
 
 
@@ -31,12 +34,12 @@ def generate_wallets(n: int) -> List[Wallet]:
 @enforce_types
 def read_keys_json(config: str) -> List[Wallet]:
     if not os.path.exists(KEY_FILE):
-        print(f"Key file {KEY_FILE} does not exist")
+        logger.error("Key file %s does not exist", KEY_FILE)
         return []
     with open(KEY_FILE, "r") as f:
         keys = json.load(f)
-    if not config in keys:
-        print(f"Config {config} does not exist in key file")
+    if config not in keys:
+        logger.error("Config %s does not exist in key file", config)
         return []
     wallets = [Wallet(key) for key in keys[config]]
     return wallets
@@ -48,7 +51,7 @@ def generate_new_keys(config: str, n: int) -> List[Wallet]:
     new_wallets = generate_wallets(n)
     wallets.extend(new_wallets)
     keys = {config: [str(wallet) for wallet in wallets]}
-    print(f"Generated {n} new wallet(s) for {config} config")
+    logger.info("Generated %d new wallet(s) for %s config", n, config)
     with open(KEY_FILE, "w") as f:
         json.dump(keys, f)
     return wallets
