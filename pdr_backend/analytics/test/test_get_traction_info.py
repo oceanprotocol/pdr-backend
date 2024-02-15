@@ -39,7 +39,7 @@ def test_get_traction_info_main_mainnet(
     )
 
     predictions_df = _gql_datafactory_daily_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, None, ppss)
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.df = predictions_df
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
     get_traction_info_main(ppss, st_timestr, fin_timestr)
@@ -82,7 +82,7 @@ def test_get_traction_info_empty_data_factory(
     )
 
     mock_predictions_df.return_value = {
-        "pdr_predictions": Table(table_name, pl.DataFrame(), None, ppss)
+        "pdr_predictions": Table(table_name, pl.DataFrame(), ppss)
     }
 
     with pytest.raises(AssertionError):

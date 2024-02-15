@@ -31,7 +31,7 @@ def test_get_predictoors_info_main_mainnet(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, None, ppss)
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.df = predictions_df
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
@@ -88,7 +88,7 @@ def test_get_predictoors_info_bad_date_range(
 
     predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
     }
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -121,9 +121,9 @@ def test_get_predictoors_info_bad_date_range(
 
 @enforce_types
 @patch(
-    "pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats",
+    "pdr_backend.analytics.predictoor_stats.get_predictoor_summary_stats",
 )
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_tables")
+@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory.get_gql_tables")
 def test_get_predictoors_info_bad_user_address(
     mock_get_gql_tables,
     mock_get_predictoor_summary_stats,
@@ -142,7 +142,7 @@ def test_get_predictoors_info_bad_user_address(
 
     predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
     }
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"

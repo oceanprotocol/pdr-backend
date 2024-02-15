@@ -55,14 +55,13 @@ def test_table_initialization():
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, get_table_df, ppss)
+    table = Table(table_name, table_df_schema, ppss)
     assert len(table.df) == 0
     assert table.df.columns == table.df.columns
     assert table.df.dtypes == table.df.dtypes
     assert table.table_name == table_name
     assert table.ppss.lake_ss.st_timestr == st_timestr
     assert table.ppss.lake_ss.fin_timestr == fin_timestr
-    assert callable(table.build)
 
 
 def test_load_table():
@@ -79,34 +78,10 @@ def test_load_table():
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, get_table_df, ppss)
+    table = Table(table_name, table_df_schema, ppss)
     table.load()
 
     assert len(table.df) == 0
-
-
-def test_update_table():
-    """
-    Test that table is updating correctly
-    """
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    config = {
-        "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-    }
-    table = Table(table_name, table_df_schema, get_table_df, ppss)
-
-    assert len(table.df) == 0
-    table.update(config)
-    assert len(table.df) == 1
 
 
 def test_save_table():
@@ -123,7 +98,7 @@ def test_save_table():
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, get_table_df, ppss)
+    table = Table(table_name, table_df_schema, ppss)
 
     captured_output = StringIO()
     sys.stdout = captured_output
@@ -134,10 +109,8 @@ def test_save_table():
 
     assert os.path.exists(file_path)
     printed_text = captured_output.getvalue().strip()
-    if os.path.exists(file_path):
-        assert "  Just appended" in printed_text
-    else:
-        assert "  Just saved df with" in printed_text
+
+    assert "  Just saved df with" in printed_text
 
 
 def test_all():
@@ -154,16 +127,13 @@ def test_all():
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, get_table_df, ppss)
+    table = Table(table_name, table_df_schema, ppss)
 
     captured_output = StringIO()
     sys.stdout = captured_output
 
     assert len(table.df) == 0
-    config = {
-        "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-    }
-    table.update(config)
+    table.df = pl.DataFrame([mocked_object], table_df_schema)
     table.load()
 
     assert len(table.df) == 1

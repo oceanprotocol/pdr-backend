@@ -14,8 +14,8 @@ from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 
+@patch("pdr_backend.analytics.get_traction_info.plot_slot_daily_statistics")
 @patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_tables")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
 def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -48,7 +48,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
-    predictions_table = Table("pdr_predictions", predictions_schema, None, ppss)
+    predictions_table = Table("pdr_predictions", predictions_schema, ppss)
     predictions_table.df = predictions_df
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 

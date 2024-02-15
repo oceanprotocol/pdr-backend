@@ -69,7 +69,7 @@ def test_get_predictoors_info_system(
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     get_get_predictoor_summary_stats.return_value = predictions_df
-    table = Table("pdr_predictions", predictions_schema, None, ppss)
+    table = Table("pdr_predictions", predictions_schema, ppss)
     table.df = predictions_df
     mock_get_gql_tables.return_value = {"pdr_predictions": table}
 

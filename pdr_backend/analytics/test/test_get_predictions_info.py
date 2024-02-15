@@ -32,7 +32,7 @@ def test_get_predictions_info_main_mainnet(
         fin_timestr=fin_timestr,
     )
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, None, ppss)
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.df = predictions_df
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
@@ -99,7 +99,7 @@ def test_get_predictions_info_bad_date_range(
 
     predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
     }
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -156,7 +156,7 @@ def test_get_predictions_info_bad_feed(
 
     predictions_df = _gql_datafactory_first_predictions_df
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, None, ppss)
+        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
     }
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
@@ -199,9 +199,7 @@ def test_get_predictions_info_empty(mock_get_gql_tables, tmpdir):
     )
 
     # mockt he gql data factory not having any records
-    mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, {}, None, ppss)
-    }
+    mock_get_gql_tables.return_value = {"pdr_predictions": Table(table_name, {}, ppss)}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 

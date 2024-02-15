@@ -5,6 +5,11 @@ from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 
+def mock_fetch_function(network, st_ut, fin_ut, config):
+    print(network, st_ut, fin_ut, config)
+    return {}
+
+
 def test_gql_data_factory():
     """
     Test GQLDataFactory initialization
@@ -25,13 +30,10 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update.do_fetch")
-def test_update(mock_table_build):
+def test_update():
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
-    mock_table_build.return_value = {}
-
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -42,7 +44,16 @@ def test_update(mock_table_build):
         fin_timestr=fin_timestr,
     )
 
+    fns = {
+        "pdr_predictions": mock_fetch_function,
+        "pdr_subscriptions": mock_fetch_function,
+        "pdr_truevals": mock_fetch_function,
+        "pdr_payouts": mock_fetch_function,
+    }
+
     gql_data_factory = GQLDataFactory(ppss)
+    for table_name in gql_data_factory.record_config["fetch_functions"]:
+        gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
 
     captured_output = StringIO()
     sys.stdout = captured_output
