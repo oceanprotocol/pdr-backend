@@ -2,7 +2,7 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
 from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
@@ -42,7 +42,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         """
         mergedohlcv_df = self.get_data_components()
 
-        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
+        model_data_factory = RegressionModelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Split X/y into train & test data

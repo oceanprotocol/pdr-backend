@@ -4,7 +4,7 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
@@ -41,7 +41,7 @@ def test_create_xy__0():
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
-            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by AimodelDataFactory
+            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8],  # not used by RegressionModelDataFactory
             # The underlying AR process is: close[t] = close[t-1] + open[t-1]
             "binanceus:ETH/USDT:open": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
             "binanceus:ETH/USDT:close": [2.0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7],
@@ -67,7 +67,7 @@ def test_create_xy__0():
         }
     )
 
-    factory = AimodelDataFactory(predictoor_ss)
+    factory = RegressionModelDataFactory(predictoor_ss)
     X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(predictoor_ss.regressionmodel_ss, X, y, x_df)
@@ -217,7 +217,7 @@ def test_create_xy__2exchanges_2coins_2signals():
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    aimodel_data_factory = AimodelDataFactory(ss)
+    aimodel_data_factory = RegressionModelDataFactory(ss)
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
@@ -301,7 +301,7 @@ def test_create_xy__input_type(tmpdir):
     mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(aimodel_data_factory, AimodelDataFactory)
+    assert isinstance(aimodel_data_factory, RegressionModelDataFactory)
 
     # create_xy() input should be pl
     aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)

@@ -14,7 +14,7 @@ logger = logging.getLogger("aimodel_data_factory")
 
 
 @enforce_types
-class AimodelDataFactory:
+class RegressionModelDataFactory:
     """
     Roles:
     - From mergedohlcv_df, create (X, y, x_df) for model building

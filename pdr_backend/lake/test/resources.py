@@ -4,7 +4,7 @@ from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.regressionmodel.regressionmodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
@@ -28,7 +28,7 @@ def _predictoor_ss_1feed(tmpdir, feed):
     predictoor_ss = _predictoor_ss(feed, [feed])
     lake_ss = _lake_ss(tmpdir, [feed])
     ohlcv_data_factory = OhlcvDataFactory(lake_ss)
-    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
+    aimodel_data_factory = RegressionModelDataFactory(predictoor_ss)
     return predictoor_ss, ohlcv_data_factory, aimodel_data_factory
 
 
