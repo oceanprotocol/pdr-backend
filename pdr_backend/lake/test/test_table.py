@@ -110,7 +110,7 @@ def test_save_table():
     assert os.path.exists(file_path)
     printed_text = captured_output.getvalue().strip()
 
-    assert "  Just saved df with" in printed_text
+    assert "Just saved df with" in printed_text
 
 
 def test_all():
