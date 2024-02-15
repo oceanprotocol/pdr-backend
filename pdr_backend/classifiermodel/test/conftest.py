@@ -7,7 +7,7 @@ from pdr_backend.ppss.classifiermodel_ss import ClassifierModelSS
 
 @enforce_types
 @pytest.fixture()
-def aimodel_factory():
+def classifiermodel_factory():
     classifiermodel_ss = ClassifierModelSS(
         {
             "approach": "LIN",
