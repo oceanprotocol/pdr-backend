@@ -135,8 +135,6 @@ class GQLDataFactory:
             if st_ut > min(current_ut_ms(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
-            print(self.record_config)
-            print(table.table_name)
             # to satisfy mypy, get an explicit function pointer
             do_fetch: Callable[[str, int, int, object], pl.DataFrame] = (
                 self.record_config["fetch_functions"][table.table_name]

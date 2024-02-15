@@ -13,7 +13,7 @@ def get_predictoors_info_main(
 ):
     gql_data_factory = GQLDataFactory(ppss)
     gql_tables = gql_data_factory.get_gql_tables()
-    print(gql_tables)
+
     predictions_df = gql_tables["pdr_predictions"].df
     assert (
         predictions_df is not None and len(predictions_df) > 0

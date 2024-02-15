@@ -46,7 +46,6 @@ class Table:
         parquet only supports appending via the pyarrow engine
         """
 
-        print(self.df)
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
         assert len(self.df) > 0
         if len(self.df) > 1:
