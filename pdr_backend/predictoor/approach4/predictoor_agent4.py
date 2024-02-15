@@ -5,11 +5,6 @@ from pdr_backend.classifiermodel.classifiermodel_data_factory import (
     ClassifierModelDataFactory,
 )
 from pdr_backend.classifiermodel.classifiermodel_factory import ClassifierModelFactory
-
-from pdr_backend.regressionmodel.regressionmodel_data_factory import (
-    RegressionModelDataFactory,
-)
-from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
