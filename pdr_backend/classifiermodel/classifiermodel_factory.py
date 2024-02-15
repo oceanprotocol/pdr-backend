@@ -17,5 +17,4 @@ class ClassifierModelFactory:
         return model
 
     def _model(self):
-        a = self.classifiermodel_ss.approach
         return linear_model.LinearRegression()
