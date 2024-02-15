@@ -1,21 +1,30 @@
+import json
+import logging
+import os
 import random
-from os import getenv
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
 
+import addresses
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
+from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_filename
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
 
+logger = logging.getLogger("web3_pp")
 
+
+# pylint: disable=too-many-public-methods
 class Web3PP(StrMixin):
     __STR_OBJDIR__ = ["network", "d"]
 
@@ -37,7 +46,7 @@ class Web3PP(StrMixin):
     def web3_config(self) -> Web3Config:
         if self._web3_config is None:
             rpc_url = self.rpc_url
-            private_key = getenv("PRIVATE_KEY")
+            private_key = os.getenv("PRIVATE_KEY")
             self._web3_config = Web3Config(rpc_url, private_key)
         return self._web3_config  # type: ignore[return-value]
 
@@ -164,6 +173,80 @@ class Web3PP(StrMixin):
             return 0
         raise ValueError(f"Unknown network {network}")
 
+    @enforce_types
+    def get_address(self, contract_name: str) -> str:
+        network = self.get_addresses()
+        if not network:
+            raise ValueError(f'Cannot find network "{self.network}" in addresses.json')
+
+        address = network.get(contract_name)
+        if not address:
+            error = (
+                f'Cannot find contract "{contract_name}" in address.json '
+                f'for network "{self.network}"'
+            )
+            raise ValueError(error)
+
+        return address
+
+    @enforce_types
+    def get_addresses(self) -> Union[dict, None]:
+        """
+        Returns addresses in web3_pp.address_file, in web3_pp.network
+        """
+        address_file = self.address_file
+
+        path = None
+        if address_file:
+            address_file = os.path.expanduser(address_file)
+            path = Path(address_file)
+        else:
+            path = Path(str(os.path.dirname(addresses.__file__)) + "/address.json")
+
+        if not path.exists():
+            raise TypeError(f"Cannot find address.json file at {path}")
+
+        with open(path) as f:
+            d = json.load(f)
+
+        d = _condition_sapphire_keys(d)
+
+        if "barge" in self.network:  # eg "barge-pytest"
+            return d["development"]
+
+        if self.network in d:  # eg "development", "oasis_sapphire"
+            return d[self.network]
+
+        return None
+
+    @property
+    def OCEAN_address(self) -> str:
+        return self.get_address("Ocean")
+
+    @property
+    def OCEAN_Token(self) -> Token:
+        return Token(self, self.OCEAN_address)
+
+    @property
+    def NativeToken(self) -> NativeToken:
+        return NativeToken(self)
+
+    def get_token_balance(self, address):
+        return self.web3_config.w3.eth.get_balance(address)
+
+    def get_contract_abi(self, contract_name: str):
+        """
+        Returns the ABI for the specified contract
+        """
+        path = get_contract_filename(contract_name, self.address_file)
+
+        if not path.exists():
+            raise TypeError("Contract name does not exist in artifacts.")
+
+        with open(path) as f:
+            data = json.load(f)
+            return data["abi"]
+
 
 # =========================================================================
 # utilities for testing
@@ -254,7 +337,7 @@ class _MockPredictoorContractWithTracking:
     ):  # pylint: disable=unused-argument
         assert stake_amt <= 3
         if prediction_ts in self._prediction_slots:
-            print(f"      (Replace prev pred at time slot {prediction_ts})")
+            logger.debug("(Replace prev pred at time slot {%s})", prediction_ts)
         self._prediction_slots.append(prediction_ts)
 
 

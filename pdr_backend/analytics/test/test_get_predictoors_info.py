@@ -121,7 +121,7 @@ def test_get_predictoors_info_bad_date_range(
 
 @enforce_types
 @patch(
-    "pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats",
+    "pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats",
 )
 @patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_tables")
 def test_get_predictoors_info_bad_user_address(

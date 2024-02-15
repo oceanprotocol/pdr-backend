@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 import polars as pl
@@ -13,6 +14,7 @@ from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
 subscriptions_table_name = "pdr_subscriptions"
+logger = logging.getLogger("lake_pdr_subscriptions")
 
 # RAW PREDICTOOR SUBSCRIPTIONS SCHEMA
 subscriptions_schema = {
@@ -45,7 +47,7 @@ def get_pdr_subscriptions_df(
     )
 
     if len(subscriptions) == 0:
-        print("      No subscriptions fetched. Exit.")
+        logger.warning("No subscriptions fetched. Exit.")
         return pl.DataFrame()
 
     # convert subscriptions to df and transform timestamp into ms

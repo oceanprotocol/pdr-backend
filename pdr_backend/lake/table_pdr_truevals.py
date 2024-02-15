@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
@@ -11,6 +12,7 @@ from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
 truevals_table_name = "pdr_truevals"
+logger = logging.getLogger("lake_pdr_truevals")
 
 # RAW TRUEVAL SCHEMA
 truevals_schema = {
@@ -40,7 +42,7 @@ def get_pdr_truevals_df(
     )
 
     if len(truevals) == 0:
-        print("No truevals to fetch. Exit.")
+        logger.warning("No truevals to fetch. Exit.")
         return pl.DataFrame()
 
     # convert truevals to df, transform timestamp into ms, return in-order

@@ -1,9 +1,12 @@
-from typing import Dict, Callable
+import logging
+from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.table import Table
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
-
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
+from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.lake.table_pdr_predictions import (
     get_pdr_predictions_df,
     predictions_schema,
@@ -24,9 +27,9 @@ from pdr_backend.lake.table_pdr_payouts import (
     payouts_schema,
     payouts_table_name,
 )
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.util.networkutil import get_sapphire_postfix
+
+
+logger = logging.getLogger("gql_data_factory")
 
 
 @enforce_types
@@ -88,7 +91,7 @@ class GQLDataFactory:
         @return
           predictions_df -- *polars* Dataframe. See class docstring
         """
-        print("Get predictions data across many feeds and timeframes.")
+        logger.info("Get predictions data across many feeds and timeframes.")
 
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
@@ -100,7 +103,7 @@ class GQLDataFactory:
         self._update()
         self._load_parquet()
 
-        print("Get historical data across many subgraphs. Done.")
+        logger.info("Get historical data across many subgraphs. Done.")
 
         # postconditions
         for _, table in self.record_config["tables"].items():

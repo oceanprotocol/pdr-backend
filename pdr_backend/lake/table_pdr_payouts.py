@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
@@ -10,6 +11,7 @@ from pdr_backend.util.timeutil import ms_to_seconds
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 payouts_table_name = "pdr_payouts"
+logger = logging.getLogger("lake_pdr_payouts")
 
 # RAW PAYOUT SCHEMA
 payouts_schema = {
@@ -45,7 +47,7 @@ def get_pdr_payouts_df(
     )
 
     if len(payouts) == 0:
-        print("No payouts to fetch. Exit.")
+        logger.warning("No payouts to fetch. Exit.")
         return pl.DataFrame()
 
     # convert payouts to df and transform timestamp into ms

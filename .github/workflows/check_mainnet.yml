@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          ref: ba241caa6554d6b0444a501ec0f884f43d59abf2
 
       - name: Set up Python
         uses: actions/setup-python@v2

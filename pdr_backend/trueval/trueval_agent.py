@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from collections import defaultdict
@@ -12,6 +13,9 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.trueval.get_trueval import get_trueval
+from pdr_backend.util.logutil import logging_has_stdout
+
+logger = logging.getLogger("trueval_agent")
 
 
 @enforce_types
@@ -50,8 +54,9 @@ class TruevalAgent:
         pending_slots = self.get_batch()
 
         if len(pending_slots) == 0:
-            print(
-                f"No pending slots, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
+            logger.info(
+                "No pending slots, sleeping for %d seconds...",
+                self.ppss.trueval_ss.sleep_time,
             )
             time.sleep(self.ppss.trueval_ss.sleep_time)
             return
@@ -64,14 +69,16 @@ class TruevalAgent:
         # get the trueval for each slot
         for slot in trueval_slots:
             self.process_trueval_slot(slot)
-            print(".", end="", flush=True)
-        print()  # new line
+            if logging_has_stdout():
+                print(".", end="", flush=True)
 
-        print("Submitting transaction...")
+        logger.debug("Submitting transaction...")
 
         tx_hash = self.batch_submit_truevals(trueval_slots)
-        print(
-            f"Tx sent: {tx_hash}, sleeping for {self.ppss.trueval_ss.sleep_time} seconds..."
+        logger.info(
+            "Tx sent: %s, sleeping for %d seconds...",
+            tx_hash,
+            self.ppss.trueval_ss.sleep_time,
         )
 
         time.sleep(self.ppss.trueval_ss.sleep_time)
@@ -83,9 +90,10 @@ class TruevalAgent:
             timestamp,
             allowed_feeds=self.ppss.trueval_ss.feeds,
         )
-        print(
-            f"Found {len(pending_slots)} pending slots"
-            f", processing {self.ppss.trueval_ss.batch_size}"
+        logger.info(
+            "Found %d pending slots, processing %d",
+            len(pending_slots),
+            self.ppss.trueval_ss.batch_size,
         )
         pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
         return pending_slots
@@ -128,23 +136,26 @@ class TruevalAgent:
         _, s_per_epoch = self.get_contract_info(slot.feed.address)
         init_ts, end_ts = self.get_init_and_ts(slot.slot_number, s_per_epoch)
 
-        print(
-            f"Get trueval slot: begin. For slot_number {slot.slot_number}"
-            f" of {slot.feed}"
+        logger.info(
+            "Get trueval slot: begin. For slot_number %d of %s",
+            slot.slot_number,
+            slot.feed,
         )
         try:
             # calls to get_trueval() func below, via Callable attribute on self
             (trueval, cancel_round) = get_trueval(slot.feed, init_ts, end_ts)
         except Exception as e:
             if "Too many requests" in str(e):
-                print("Get trueval slot: too many requests, wait for a minute")
+                logger.warning("Get trueval slot: too many requests, wait for a minute")
                 time.sleep(60)
                 return self.get_trueval_slot(slot)
 
             # pylint: disable=line-too-long
             raise Exception(f"An error occured: {e}") from e
 
-        print(f"Get trueval slot: done. trueval={trueval}, cancel_round={cancel_round}")
+        logger.info(
+            "Get trueval slot: done. trueval=%s, cancel_round=%s", trueval, cancel_round
+        )
         return (trueval, cancel_round)
 
     def batch_submit_truevals(self, slots: List[TruevalSlot]) -> str:

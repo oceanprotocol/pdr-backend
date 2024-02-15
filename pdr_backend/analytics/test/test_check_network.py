@@ -34,21 +34,19 @@ def test_check_dfbuyer(  # pylint: disable=unused-argument
     mock_current_ut_ms,
     mock_get_expected_consume_,
     mock_get_consume_so_far_per_contract_,
-    capsys,
+    caplog,
 ):
     dfbuyer_addr = "0x1"
     contract_query_result = {"data": {"predictContracts": [{"id": "0x1"}]}}
     subgraph_url = "test_dfbuyer"
     token_amt = 3
     check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, token_amt)
-    captured = capsys.readouterr()
 
     target_str = (
-        "Checking consume amounts (dfbuyer), "
-        "expecting 100 consume per contract\n    "
-        "PASS... got 120 consume for contract: 0x1, expected 100\n"
+        "Checking consume amounts (dfbuyer), expecting 100 consume per contract"
     )
-    assert target_str in captured.out
+    assert target_str in caplog.text
+    assert "got 120 consume for contract: 0x1, expected 100" in caplog.text
 
     cur_ut = MOCK_CUR_UT
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
@@ -86,7 +84,7 @@ def test_get_expected_consume():
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
 @patch(f"{PATH}.query_subgraph")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_main(  # pylint: disable=unused-argument
     mock_token,
     mock_query_subgraph,
@@ -118,7 +116,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
 @enforce_types
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_others(  # pylint: disable=unused-argument
     mock_token,
     mock_get_opf_addresses,
@@ -155,7 +153,7 @@ def test_check_network_others(  # pylint: disable=unused-argument
 @enforce_types
 @patch(f"{PATH}.check_dfbuyer")
 @patch(f"{PATH}.get_opf_addresses")
-@patch(f"{PATH}.Token")
+@patch("pdr_backend.ppss.web3_pp.Token")
 def test_check_network_without_mock(  # pylint: disable=unused-argument
     mock_token,
     mock_get_opf_addresses,

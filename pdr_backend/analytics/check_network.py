@@ -1,20 +1,20 @@
+import logging
 import math
 from typing import Union
 
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.timeframe import s_to_timeframe_str
-from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.timeutil import current_ut_s
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
+logger = logging.getLogger("check_network")
 
 
 @enforce_types
@@ -31,9 +31,14 @@ def print_stats(contract_dict: dict, field_name: str, threshold: float = 0.9):
 
     s_per_epoch = int(contract_dict["secondsPerEpoch"])
     timeframe_str = s_to_timeframe_str(s_per_epoch)
-    print(
-        f"{token_name} {timeframe_str}: "
-        f"{n_slots_with_field}/{n_slots} {field_name} - {status}"
+    logger.info(
+        "%s %s: %s/%s %s - %s",
+        token_name,
+        timeframe_str,
+        n_slots_with_field,
+        n_slots,
+        field_name,
+        status,
     )
 
 
@@ -58,16 +63,15 @@ def check_dfbuyer(
         contract_addresses,
     )
     expect_amt_consume = get_expected_consume(cur_ut, token_amt)
-    print(
-        "Checking consume amounts (dfbuyer)"
-        f", expecting {expect_amt_consume} consume per contract"
+    logger.info(
+        "Checking consume amounts (dfbuyer), expecting %s consume per contract",
+        expect_amt_consume,
     )
     for addr in contract_addresses:
         x = amt_consume_so_far[addr]
-        log_text = "PASS" if x >= expect_amt_consume else "FAIL"
-        print(
-            f"    {log_text}... got {x} consume for contract: {addr}"
-            f", expected {expect_amt_consume}"
+        lfunc = logger.info if x >= expect_amt_consume else logger.error
+        lfunc(
+            "got %s consume for contract: %s, expected %s", x, addr, expect_amt_consume
         )
 
 
@@ -89,8 +93,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 
 
 @enforce_types
-def check_network_main(ppss: PPSS, lookback_hours: int):
-    web3_pp = ppss.web3_pp
+def do_query_network(subgraph_url: str, lookback_hours: int):
     cur_ut = current_ut_s()
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
@@ -133,52 +136,62 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         cur_ut,
         start_ut,
     )
-    result = query_subgraph(web3_pp.subgraph_url, query, timeout=10.0)
+    return query_subgraph(subgraph_url, query, timeout=10.0)
+
+
+@enforce_types
+def check_network_main(ppss: PPSS, lookback_hours: int):
+    web3_pp = ppss.web3_pp
+    result = do_query_network(web3_pp.subgraph_url, lookback_hours)
 
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
-    if no_of_contracts >= 11:
-        print(f"Number of Predictoor contracts: {no_of_contracts} - OK")
-    else:
-        print(f"Number of Predictoor contracts: {no_of_contracts} - FAILED")
+    status = "OK" if no_of_contracts >= 11 else "FAILED"
+    lfunc = logger.info if status == "OK" else logger.error
 
-    print("-" * 60)
+    lfunc("Number of Predictoor contracts: %s", no_of_contracts)
 
     # check number of predictions
-    print("Predictions:")
+    logger.info("Predictions:")
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "predictions")
 
-    print()
-
     # Check number of truevals
-    print("True Values:")
+    logger.info("True Values:")
     for contract in result["data"]["predictContracts"]:
         print_stats(contract, "trueValues")
-    print("\nChecking account balances")
 
-    OCEAN_address = get_address(web3_pp, "Ocean")
-    OCEAN = Token(web3_pp, OCEAN_address)
+    logger.info("Checking account balances")
+
+    OCEAN = web3_pp.OCEAN_Token
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
         ocean_bal = from_wei(OCEAN.balanceOf(address))
-        native_bal = from_wei(web3_pp.web3_config.w3.eth.get_balance(address))
+        native_bal = from_wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
-            " WARNING LOW OCEAN BALANCE!"
-            if ocean_bal < 10 and name != "trueval"
-            else " OK "
+            " LOW OCEAN BALANCE!" if ocean_bal < 10 and name != "trueval" else ""
         )
-        native_warning = " WARNING LOW NATIVE BALANCE!" if native_bal < 10 else " OK "
+        native_warning = " LOW NATIVE BALANCE!" if native_bal < 10 else ""
 
-        print(
-            f"{name}: OCEAN: {ocean_bal:.2f}{ocean_warning}"
-            f", Native: {native_bal:.2f}{native_warning}"
+        lfunc = logger.warning if ocean_warning or native_warning else logger.info
+
+        lfunc(
+            "%s: OCEAN: %.2f%s, Native: %.2f%s",
+            name,
+            ocean_bal,
+            ocean_warning,
+            native_bal,
+            native_warning,
         )
 
     # ---------------- dfbuyer ----------------
 
     dfbuyer_addr = addresses["dfbuyer"].lower()
-    token_amt = 44460
+    # 37500 * 1.201 = rewards + fees = total consume
+    token_amt = 37500 * 1.201
+    # If token_amt is not a multiple of 60, adjust it to the next multiple of 60
+    if token_amt % 60 != 0:
+        token_amt = ((token_amt // 60) + 1) * 60
     check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)

@@ -7,7 +7,6 @@ from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish_asset import publish_asset
-from pdr_backend.util.contract import get_address
 
 CHAIN_ID = 8996
 S_PER_EPOCH = 300
@@ -53,7 +52,7 @@ def _ppss():
 
 @pytest.fixture(scope="session")
 def ocean_token() -> Token:
-    token_address = get_address(_web3_pp(), "Ocean")
+    token_address = _web3_pp().get_address("Ocean")
     return Token(_web3_pp(), token_address)
 
 
@@ -127,5 +126,5 @@ def predictoor_contract_empty():
 @pytest.fixture(scope="module")
 def predictoor_batcher():
     w3p = _web3_pp()
-    predictoor_batcher_addr = get_address(w3p, "PredictoorHelper")
+    predictoor_batcher_addr = w3p.get_address("PredictoorHelper")
     return PredictoorBatcher(w3p, predictoor_batcher_addr)

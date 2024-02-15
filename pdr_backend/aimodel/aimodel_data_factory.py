@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Tuple
 
@@ -8,6 +9,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
+
+logger = logging.getLogger("aimodel_data_factory")
 
 
 @enforce_types
@@ -86,12 +89,15 @@ class AimodelDataFactory:
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
-                print(
-                    f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
-                    " (= testshift + autoregressive_n = "
-                    f"{testshift} + {ss.autoregressive_n})\n"
+                logger.error(
+                    "Too little data. len(z)=%d, maxshift=%d (= testshift + autoregressive_n = "
+                    "%s + %s\n"
                     "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n"
+                    "or shrink autoregressive_n",
+                    len(z),
+                    maxshift,
+                    testshift,
+                    ss.autoregressive_n,
                 )
                 sys.exit(1)
             for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]

@@ -11,16 +11,9 @@ from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
 
-@pytest.fixture
-def mock_get_address():
-    with patch(f"{PATH}.get_address") as mock:
-        mock.return_value = ZERO_ADDRESS
-        yield mock
-
-
 @pytest.fixture()
 def mock_token():
-    with patch(f"{PATH}.Token") as mock_token_class:
+    with patch("pdr_backend.ppss.web3_pp.Token") as mock_token_class:
         mock_token_instance = MagicMock()
         mock_token_instance.allowance.return_value = MAX_UINT
         mock_token_class.return_value = mock_token_instance
@@ -54,9 +47,9 @@ def mock_PredictoorBatcher(mock_ppss):  # pylint: disable=redefined-outer-name
 
 @pytest.fixture
 def mock_dfbuyer_agent(  # pylint: disable=unused-argument, redefined-outer-name
-    mock_get_address,
     mock_token,
     mock_ppss,
     mock_PredictoorBatcher,
 ):
-    return DFBuyerAgent(mock_ppss)
+    with patch.object(mock_ppss.web3_pp, "get_address", return_value=ZERO_ADDRESS):
+        return DFBuyerAgent(mock_ppss)
