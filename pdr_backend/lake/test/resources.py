@@ -19,9 +19,9 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, regressionmodel_data_factory, _ = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, regressionmodel_data_factory, classifier_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    return mergedohlcv_df, regressionmodel_data_factory
+    return mergedohlcv_df, regressionmodel_data_factory, classifier_data_factory
 
 
 @enforce_types
