@@ -1,20 +1,20 @@
 from abc import ABC
+from typing import Optional
 
 from enforce_typing import enforce_types
 from sapphirepy import wrapper
 
+from pdr_backend.ppss.web3_pp import Web3PP
 
 @enforce_types
 class BaseContract(ABC):
-    def __init__(self, web3_pp, address: str, contract_name: str):
+    def __init__(self, web3_pp: Web3PP, address: str, contract_name: str, pk_name: Optional[str]):
         super().__init__()
-        # pylint: disable=import-outside-toplevel
-        from pdr_backend.ppss.web3_pp import Web3PP
-
-        if not isinstance(web3_pp, Web3PP):
-            raise ValueError(f"web3_pp is {web3_pp.__class__}, not Web3PP")
         self.web3_pp = web3_pp
-        self.config = web3_pp.web3_config  # for convenience
+        if pk_name:
+            self.config = web3_pp.web3_config_by_env(pk_name)
+        else:
+            self.config = web3_pp.web3_config
         self.contract_address = self.config.w3.to_checksum_address(address)
         self.contract_instance = self.config.w3.eth.contract(
             address=self.config.w3.to_checksum_address(address),
