@@ -11,6 +11,7 @@ class BaseContract(ABC):
         self, web3_pp, address: str, contract_name: str, pk_name: Optional[str] = None
     ):
         super().__init__()
+        # pylint: disable=import-outside-toplevel
         from pdr_backend.ppss.web3_pp import Web3PP
 
         assert isinstance(web3_pp, Web3PP), "web3_pp must be an instance of Web3PP"
