@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 import polars as pl
@@ -13,6 +14,8 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
+subscriptions_table_name = "pdr_subscriptions"
+logger = logging.getLogger("lake_pdr_subscriptions")
 
 # RAW PREDICTOOR SUBSCRIPTIONS SCHEMA
 subscriptions_schema = {

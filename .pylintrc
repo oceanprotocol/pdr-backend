@@ -37,6 +37,7 @@ ignore=
   Dockerfile,
   entrypoint.sh,
   pdr_backend.egg-info,
+  logging.yaml
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.

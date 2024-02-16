@@ -35,7 +35,7 @@ def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):
 
 
 def _test_trader(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, approach
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, approach, caplog
 ):
     mock_web3_pp = MagicMock(spec=Web3PP)
 
@@ -55,16 +55,15 @@ def _test_trader(
         # Mock sys.argv
         sys.argv = ["pdr", "trader", str(approach), "ppss.yaml", "development"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr trader: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call(f"APPROACH={approach}")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
+        assert "pdr trader: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert f"APPROACH={approach}" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "Feed: 5m binance BTC/USDT 0x1" in caplog.text
 
         # Additional assertions
         mock_web3_pp.query_feed_contracts.assert_called()
@@ -76,14 +75,18 @@ def _test_trader(
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
 @patch("pdr_backend.trader.base_trader_agent.time.sleep")
 def test_trader_approach_1(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, caplog
 ):
-    _test_trader(mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 1)
+    _test_trader(
+        mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 1, caplog
+    )
 
 
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
 @patch("pdr_backend.trader.base_trader_agent.time.sleep")
 def test_trader_approach_2(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds
+    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, caplog
 ):
-    _test_trader(mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 2)
+    _test_trader(
+        mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 2, caplog
+    )

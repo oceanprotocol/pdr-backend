@@ -1,9 +1,12 @@
 from typing import List
+import logging
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.trueval import Trueval
+
+logger = logging.getLogger("trueval")
 
 
 @enforce_types
@@ -79,15 +82,15 @@ def fetch_truevals(
     )
 
     try:
-        print("Querying subgraph...", query)
+        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
             timeout=20.0,
         )
     except Exception as e:
-        print(
-            f"Error fetching predictTrueVals, got #{len(truevals)} items. Exception: ",
+        logger.info(
+            "Error fetching predictTrueVals items. Exception: %s",
             e,
         )
         return []

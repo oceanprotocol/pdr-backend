@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from typing import List, Optional, Tuple, Union
 
 import ccxt
@@ -8,6 +9,8 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
+
+logger = logging.getLogger("trader_approach2")
 
 
 @enforce_types
@@ -82,7 +85,7 @@ class TraderAgent2(BaseTraderAgent):
                 if not should_close:
                     continue
 
-                print("     [Close Position] Requirements met")
+                logger.info("[Close Position] Requirements met")
                 order = self.exchange.create_market_sell_order(
                     self.ppss.trader_ss.exchange_str,
                     position.open_order.amount,
@@ -108,19 +111,21 @@ class TraderAgent2(BaseTraderAgent):
         ### Then, create new order if our criteria is met
         if not isinstance(prediction, Prediction):
             prediction = Prediction(prediction)
-        print(
-            f"      {feed.address} has a new prediction: {prediction.pred_nom} "
-            f"/ {prediction.pred_denom}."
+        logger.info(
+            "%s has a new prediction: %s / %s.",
+            feed.address,
+            prediction.pred_nom,
+            prediction.pred_denom,
         )
 
         if prediction.pred_denom == 0:
-            print("  There's no stake on this, one way or the other. Exiting.")
+            logger.warning("There's no stake on this, one way or the other. Exiting.")
             return
 
-        print(f"      prediction properties are: {prediction.properties}")
+        logger.info("prediction properties are: %s", prediction.properties)
 
         if prediction.direction == 1 and prediction.confidence > 0.5:
-            print("     [Open Position] Requirements met")
+            logger.info("[Open Position] Requirements met")
             order = self.exchange.create_market_buy_order(
                 symbol=self.ppss.trader_ss.exchange_str,
                 amount=self.ppss.trader_ss.position_size,
@@ -130,6 +135,7 @@ class TraderAgent2(BaseTraderAgent):
                 self.portfolio.open_position(feed.address, order)
                 self.update_cache()
         else:
-            print(
-                f"     [No Trade] prediction does not meet requirements: {prediction.properties}"
+            logger.info(
+                "[No Trade] prediction does not meet requirements: %s",
+                prediction.properties,
             )

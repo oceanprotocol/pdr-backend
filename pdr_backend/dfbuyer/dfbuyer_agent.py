@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import time
@@ -15,6 +16,7 @@ from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.mathutil import from_wei
 
 WEEK = 7 * 86400
+logger = logging.getLogger("dfbuyer_agent")
 
 
 @enforce_types
@@ -22,8 +24,7 @@ class DFBuyerAgent:
     def __init__(self, ppss: PPSS):
         # ppss
         self.ppss = ppss
-        print("\n" + "-" * 80)
-        print(self.ppss)
+        logger.info(self.ppss)
 
         # set self.feeds
         cand_feeds = ppss.web3_pp.query_feed_contracts()
@@ -48,18 +49,18 @@ class DFBuyerAgent:
         self.batch_size = ppss.dfbuyer_ss.batch_size
 
         # Check allowance and approve if necessary
-        print("Checking allowance...")
+        logger.info("Checking allowance...")
         OCEAN = ppss.web3_pp.OCEAN_Token
         allowance = OCEAN.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
-            print("Approving tokens for predictoor_batcher")
+            logger.info("Approving tokens for predictoor_batcher")
             tx = OCEAN.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
-            print(f"Done: {tx['transactionHash'].hex()}")
+            logger.info("Done: %s", tx["transactionHash"].hex())
 
     def run(self, testing: bool = False):
         if not self.feeds:
@@ -76,36 +77,37 @@ class DFBuyerAgent:
         if not self.feeds:
             return
 
-        print("Taking step for timestamp:", ts)
+        logger.info("Taking step for timestamp: %s", ts)
         wait_until_subgraph_syncs(
             self.ppss.web3_pp.web3_config, self.ppss.web3_pp.subgraph_url
         )
         missing_consumes_amt = self._get_missing_consumes(ts)
-        print("Missing consume amounts:", missing_consumes_amt)
+        logger.info("Missing consume amounts: %s", missing_consumes_amt)
 
         # get price for contracts with missing consume
         prices: Dict[str, float] = self._get_prices(list(missing_consumes_amt.keys()))
         missing_consumes_times = self._get_missing_consume_times(
             missing_consumes_amt, prices
         )
-        print("Missing consume times:", missing_consumes_times)
+        logger.info("Missing consume times: %s", missing_consumes_times)
 
         # batch txs
         one_or_more_failed = self._batch_txs(missing_consumes_times)
 
         if one_or_more_failed:
-            print("One or more consumes have failed...")
+            logger.info("One or more consumes have failed...")
             self.fail_counter += 1
 
             batch_size = self.ppss.dfbuyer_ss.batch_size
             if self.fail_counter > 3 and batch_size > 6:
                 self.batch_size = batch_size * 2 // 3
-                print(
-                    f"Seems like we keep failing, adjusting batch size to: {batch_size}"
+                logger.warning(
+                    "Seems like we keep failing, adjusting batch size to: %d",
+                    batch_size,
                 )
                 self.fail_counter = 0
 
-            print("Sleeping for a minute and trying again")
+            logger.info("Sleeping for a minute and trying again")
             time.sleep(60)
             return
 
@@ -120,9 +122,7 @@ class DFBuyerAgent:
         interval_start = int(ts / consume_interval_seconds) * consume_interval_seconds
         seconds_left = (interval_start + consume_interval_seconds) - ts + 60
 
-        print(
-            f"-- Sleeping for {seconds_left} seconds until next consume interval... --"
-        )
+        logger.info("Sleeping for %d seconds until next consume interval", seconds_left)
         time.sleep(seconds_left)
 
     def _get_missing_consume_times(
@@ -187,26 +187,27 @@ class DFBuyerAgent:
                 tx_hash = tx["transactionHash"].hex()
 
                 if tx["status"] != 1:
-                    print(f"     Tx reverted: {tx_hash}")
+                    logger.warning("Tx reverted: %s", tx_hash)
                     return False
 
-                print(f"     Tx sent: {tx_hash}")
+                logger.info("Tx sent: %s", tx_hash)
                 return True
             except Exception as e:
-                print(f"     Attempt {i+1} failed with error: {e}")
+                logger.warning("Attempt %d failed with error: %s", i + 1, e)
                 time.sleep(1)
 
                 if i == 4:
-                    print("     Failed to consume contracts after 5 attempts.")
+                    logger.error("Failed to consume contracts after 5 attempts.")
                     raise
 
         return False
 
     def _consume_batch(self, addresses_to_consume, times_to_consume) -> bool:
         one_or_more_failed = False
-        print("-" * 40)
-        print(
-            f"Consuming contracts {addresses_to_consume} for {times_to_consume} times."
+        logger.info(
+            "Consuming contracts %s for %s times.",
+            addresses_to_consume,
+            times_to_consume,
         )
 
         # Try to consume the batch
@@ -214,7 +215,7 @@ class DFBuyerAgent:
             return False  # If successful, return False (no failures)
 
         # If batch consumption fails, fall back to consuming one by one
-        print("     Transaction reverted, consuming one by one...")
+        logger.warning("Transaction reverted, consuming one by one...")
         for address, times in zip(addresses_to_consume, times_to_consume):
             if self._consume([address], [times]):
                 continue  # If successful, continue to the next address
@@ -223,26 +224,28 @@ class DFBuyerAgent:
             half_time = times // 2
 
             if half_time > 0:
-                print(f"          Consuming {address} for {half_time} times")
+                logger.info("Consuming %s for %s times", address, half_time)
                 if not self._consume([address], [half_time]):
-                    print("Transaction reverted again, please adjust batch size")
+                    logger.error("Transaction reverted again, please adjust batch size")
                     one_or_more_failed = True
 
                 remaining_times = times - half_time
                 if remaining_times > 0:
-                    print(f"          Consuming {address} for {remaining_times} times")
+                    logger.info("Consuming %s for %s times", address, remaining_times)
                     if not self._consume([address], [remaining_times]):
-                        print("Transaction reverted again, please adjust batch size")
+                        logger.error(
+                            "Transaction reverted again, please adjust batch size"
+                        )
                         one_or_more_failed = True
             else:
-                print(f"          Unable to consume {address} for {times} times")
+                logger.error("Unable to consume %s for %s times", address, times)
                 one_or_more_failed = True
 
         return one_or_more_failed
 
     def _batch_txs(self, consume_times: Dict[str, int]) -> bool:
         batches = self._prepare_batches(consume_times)
-        print(f"Processing {len(batches)} batches...")
+        logger.info("Processing %s batches", len(batches))
 
         failures = 0
 

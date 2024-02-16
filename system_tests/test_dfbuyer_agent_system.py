@@ -12,7 +12,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.wait_until_subgraph_syncs")
 @patch("pdr_backend.dfbuyer.dfbuyer_agent.time.sleep")
-def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
+def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep, caplog):
     _ = mock_wait_until_subgraph_syncs
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -75,23 +75,20 @@ def test_dfbuyer_agent(mock_wait_until_subgraph_syncs, mock_time_sleep):
         # Mock sys.argv
         sys.argv = ["pdr", "dfbuyer", "ppss.yaml", "development"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr dfbuyer: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("  Feed: 5m binance BTC/USDT 0x1")
-        mock_print.assert_any_call("Checking allowance...")
-        mock_print.assert_any_call("Taking step for timestamp:", 100)
-        mock_print.assert_any_call(
-            "Missing consume amounts:", {"0x1": 5165.714285714285}
-        )
-        mock_print.assert_any_call("Missing consume times:", {"0x1": 52})
-        mock_print.assert_any_call("Processing 3 batches...")
-        mock_print.assert_any_call("Consuming contracts ['0x1'] for [20] times.")
+        assert "pdr dfbuyer: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "Feed: 5m binance BTC/USDT 0x1" in caplog.text
+        assert "Checking allowance..." in caplog.text
+        assert "Taking step for timestamp: 100" in caplog.text
+        assert "Missing consume amounts: %s" % {"0x1": 5165.714285714285} in caplog.text
+        assert "Missing consume times: %s" % {"0x1": 52} in caplog.text
+        assert "Processing 3 batches" in caplog.text
+        assert "Consuming contracts ['0x1'] for [20] times." in caplog.text
 
         # Additional assertions
         mock_web3_pp.query_feed_contracts.assert_called()

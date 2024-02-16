@@ -1,13 +1,12 @@
+import logging
 import sys
 
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.check_network import check_network_main
-from pdr_backend.analytics.get_predictions_info import (
-    get_predictions_info_main,
-    get_predictoors_info_main,
-    get_traction_info_main,
-)
+from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
+from pdr_backend.analytics.get_predictoors_info import get_predictoors_info_main
+from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     get_arg_parser,
@@ -27,6 +26,9 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
+from pdr_backend.deployer.deployer import main as deployer_main
+
+logger = logging.getLogger("cli")
 
 
 @enforce_types
@@ -42,7 +44,7 @@ def _do_main():
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
     print_args(args)
-    print(nested_args)
+    logger.info(nested_args)
 
     func(args, nested_args)
 
@@ -275,3 +277,9 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_deployer(args, nested_args=None):
+    deployer_main(args)

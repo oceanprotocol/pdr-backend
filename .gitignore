@@ -168,8 +168,13 @@ dir/
 # predictoor-specific
 out*.txt
 my_ppss.yaml
+my_logging.yaml
 csvs/
 parquet_data/
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json
+
+# agent deployer
+.keys.json
+.deployments/

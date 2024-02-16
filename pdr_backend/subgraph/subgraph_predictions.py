@@ -1,5 +1,6 @@
 import json
 from enum import Enum
+import logging
 from typing import List, TypedDict
 
 from enforce_typing import enforce_types
@@ -8,6 +9,8 @@ from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
+
+logger = logging.getLogger("subgraph")
 
 
 class ContractIdAndSPE(TypedDict):
@@ -113,15 +116,16 @@ def fetch_filtered_predictions(
         }}"""
 
     try:
-        print("Querying subgraph...", query)
+        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
             timeout=20.0,
         )
     except Exception as e:
-        print(
-            f"Error fetching predictPredictions, got #{len(predictions)} items. Exception: ",
+        logger.warning(
+            "Error fetching predictPredictions, got #%d items. Exception: %s",
+            len(predictions),
             e,
         )
 

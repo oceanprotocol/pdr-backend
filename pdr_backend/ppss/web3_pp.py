@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 from pathlib import Path
@@ -19,6 +20,8 @@ from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
 from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_filename
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.web3_config import Web3Config
+
+logger = logging.getLogger("web3_pp")
 
 
 # pylint: disable=too-many-public-methods
@@ -334,7 +337,7 @@ class _MockPredictoorContractWithTracking:
     ):  # pylint: disable=unused-argument
         assert stake_amt <= 3
         if prediction_ts in self._prediction_slots:
-            print(f"      (Replace prev pred at time slot {prediction_ts})")
+            logger.debug("(Replace prev pred at time slot {%s})", prediction_ts)
         self._prediction_slots.append(prediction_ts)
 
 

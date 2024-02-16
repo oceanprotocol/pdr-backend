@@ -1,9 +1,12 @@
+import logging
 from typing import List
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.payout import Payout
+
+logger = logging.getLogger("subgraph")
 
 
 @enforce_types
@@ -121,21 +124,18 @@ def fetch_payouts(
     )
 
     try:
-        print("Querying subgraph...", query)
+        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
             timeout=20.0,
         )
     except Exception as e:
-        print(
-            f"Error fetching predictPayouts, got #{len(payouts)} items. Exception: ",
+        logger.warning(
+            "Error fetching predictPayouts, got #%d items. Exception: %s",
+            len(payouts),
             e,
         )
-        return payouts
-
-    if "data" not in result or not result["data"]:
-        return payouts
 
     data = result["data"].get("predictPayouts", [])
     if len(data) == 0:

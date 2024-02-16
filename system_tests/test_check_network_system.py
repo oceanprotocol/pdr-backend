@@ -10,7 +10,7 @@ from pdr_backend.util.web3_config import Web3Config
 
 @patch("pdr_backend.analytics.check_network.print_stats")
 @patch("pdr_backend.analytics.check_network.check_dfbuyer")
-def test_check_network(mock_print_stats, mock_check_dfbuyer):
+def test_check_network(mock_print_stats, mock_check_dfbuyer, caplog):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -46,26 +46,25 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer):
         # Mock sys.argv
         sys.argv = ["pdr", "check_network", "ppss.yaml", "development"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         addresses = get_opf_addresses("sapphire-mainnet")
         # Verifying outputs
-        mock_print.assert_any_call("pdr check_network: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("Number of Predictoor contracts: 3 - FAILED")
-        mock_print.assert_any_call("Predictions:")
-        mock_print.assert_any_call("True Values:")
-        mock_print.assert_any_call("\nChecking account balances")
+        assert "pdr check_network: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "Number of Predictoor contracts: 3" in caplog.text
+        assert "Predictions:" in caplog.text
+        assert "True Values:" in caplog.text
+        assert "Checking account balances" in caplog.text
 
         for key in addresses.values():
             if key.startswith("pred"):
-                mock_print.assert_any_call(
-                    # pylint: disable=line-too-long
-                    f"{key}: OCEAN: 5.00 WARNING LOW OCEAN BALANCE!, Native: 0.00 WARNING LOW NATIVE BALANCE!"
-                )
+                assert (
+                    f"{key}: OCEAN: 5.00 WARNING LOW OCEAN BALANCE!, "
+                    "Native: 0.00 WARNING LOW NATIVE BALANCE!"
+                ) in caplog.text
 
         # Additional assertions
         mock_print_stats.assert_called()

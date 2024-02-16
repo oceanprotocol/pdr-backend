@@ -31,7 +31,7 @@ def test_get_pdr_truevals_df(mock_fetch_truevals):
 
 
 @patch("pdr_backend.lake.table_pdr_truevals.fetch_truevals")
-def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, capfd):
+def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, caplog):
     mock_fetch_truevals.return_value = []
     trueval_def = get_pdr_truevals_df(
         "sapphire-testnet",
@@ -50,4 +50,4 @@ def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, capfd):
     assert isinstance(trueval_def, pl.DataFrame)
 
     # message with no truevals should be printed
-    assert "No truevals to fetch." in capfd.readouterr().out
+    assert "No truevals to fetch." in caplog.text

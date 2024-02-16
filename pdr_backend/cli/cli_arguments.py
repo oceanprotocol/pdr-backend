@@ -1,3 +1,5 @@
+import argparse
+import logging
 import sys
 from argparse import Namespace
 
@@ -6,6 +8,8 @@ from enforce_typing import enforce_types
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
+
+logger = logging.getLogger("cli")
 
 HELP_LONG = """Predictoor tool
   Transactions are signed with envvar 'PRIVATE_KEY`.
@@ -333,6 +337,113 @@ class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
         )
 
 
+@enforce_types
+class _ArgParser_DEPLOYER:
+    def __init__(self) -> None:
+        self.parser = argparse.ArgumentParser(
+            prog="pdr",
+            description="Generate and manage agent deployments",
+        )
+        self.parser.add_argument(
+            "command", choices=["deployer"], help="The deployer command"
+        )
+
+        self.subparsers = self.parser.add_subparsers(
+            dest="subcommand", help="sub-command help"
+        )
+
+        self._add_generate_parser()
+        self._add_deploy_parser()
+        self._add_destroy_parser()
+        self._add_logs_parser()
+        self._add_build_parser()
+        self._add_push_parser()
+        self._add_remote_registry()
+
+    def parse_args(self):
+        return self.parser.parse_args()
+
+    def parse_known_args(self):
+        return self.parser.parse_known_args()
+
+    def _add_generate_parser(self):
+        parser_generate = self.subparsers.add_parser("generate", help="generate help")
+        parser_generate.add_argument(
+            "config_path", help="Path to the configuration file"
+        )
+        parser_generate.add_argument("config_name", help="Name of the configuration")
+        parser_generate.add_argument(
+            "deployment_method",
+            help="Method of deployment",
+            choices=["k8s"],
+        )
+        parser_generate.add_argument(
+            "output_dir", help="Output directory for the generated files"
+        )
+
+    def _add_deploy_parser(self):
+        parser_deploy = self.subparsers.add_parser("deploy", help="deploy help")
+        self._add_remote_parsers(parser_deploy)
+
+    def _add_destroy_parser(self):
+        parser_destroy = self.subparsers.add_parser("destroy", help="destroy help")
+        self._add_remote_parsers(parser_destroy)
+
+    def _add_remote_registry(self):
+        parser_deploy = self.subparsers.add_parser(
+            "registry", help="deploy_registry help"
+        )
+        parser_deploy.add_argument(
+            "action", help="Action", choices=["deploy", "destroy", "auth", "url"]
+        )
+        parser_deploy.add_argument("registry_name", help="Registry name")
+        self._add_remote_parsers(parser_deploy, False)
+
+    def _add_logs_parser(self):
+        parser_logs = self.subparsers.add_parser("logs", help="logs help")
+        self._add_remote_parsers(parser_logs)
+
+    def _add_build_parser(self):
+        parser_build = self.subparsers.add_parser("build", help="build help")
+        parser_build.add_argument(
+            "image_name", help="Image name", default="pdr_backend"
+        )
+        parser_build.add_argument("image_tag", help="Image tag", default="deployer")
+
+    def _add_push_parser(self):
+        parser_push = self.subparsers.add_parser("push", help="push help")
+        parser_push.add_argument("registry_name", help="Registry name")
+        parser_push.add_argument("image_name", help="Image name", default="pdr_backend")
+        parser_push.add_argument("image_tag", help="Image tag", default="deployer")
+
+    def _add_remote_parsers(self, subparser, with_config=True):
+        if with_config:
+            subparser.add_argument("config_name", help="Name of the configuration")
+        subparser.add_argument(
+            "-p",
+            "--provider",
+            help="Cloud provider",
+            required=False,
+            choices=["aws", "azure", "gcp"],
+        )
+        subparser.add_argument(
+            "-r",
+            "--region",
+            required=False,
+            help="Deployment zone/region",
+        )
+        subparser.add_argument(
+            "--project_id",
+            help="Google Cloud project id",
+            required=False,
+        )
+        subparser.add_argument(
+            "--resource_group",
+            help="Azure resource group",
+            required=False,
+        )
+
+
 # ========================================================================
 # actual arg-parser implementations are just aliases to argparser base classes
 # In order of help text.
@@ -349,11 +460,11 @@ def print_args(arguments: Namespace):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
-    print(f"pdr {command}: Begin")
-    print("Arguments:")
+    logger.info("pdr %s: Begin", command)
+    logger.info("Arguments:")
 
     for arg_k, arg_v in arguments_dict.items():
-        print(f"{arg_k}={arg_v}")
+        logger.info("%s=%s", arg_k, arg_v)
 
 
 SimArgParser = _ArgParser_PPSS
@@ -395,6 +506,8 @@ AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
 
 FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 
+DeployerArgPaser = _ArgParser_DEPLOYER
+
 defined_parsers = {
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
@@ -428,6 +541,7 @@ defined_parsers = {
     "do_fund_accounts": FundAccountsArgParser(
         "Fund multiple wallets from a single address", "fund_accounts"
     ),
+    "do_deployer": DeployerArgPaser(),
 }
 
 
