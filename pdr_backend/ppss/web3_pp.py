@@ -129,7 +129,7 @@ class Web3PP(StrMixin):
         return feeds
 
     @enforce_types
-    def get_contracts(self, feed_addrs: List[str]) -> Dict[str, Any]:
+    def get_contracts(self, feed_addrs: List[str], pk_name: Optional[str] = None) -> Dict[str, Any]:
         """
         @description
           Get contracts for specified feeds
@@ -145,7 +145,7 @@ class Web3PP(StrMixin):
 
         contracts = {}
         for addr in feed_addrs:
-            contracts[addr] = PredictoorContract(self, addr)
+            contracts[addr] = PredictoorContract(self, addr, pk_name)
         return contracts
 
     @enforce_types
