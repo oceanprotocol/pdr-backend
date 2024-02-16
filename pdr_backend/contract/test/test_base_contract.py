@@ -28,7 +28,7 @@ def test_base_contract(web3_pp, web3_config):
 
 
 @enforce_types
-def test_base_contract_custom_pk(web3_pp, web3_config):
+def test_base_contract_custom_pk(web3_pp):
     OCEAN_address = web3_pp.OCEAN_address
 
     token = Token(web3_pp, OCEAN_address, "PRIVATE_KEY_2")
