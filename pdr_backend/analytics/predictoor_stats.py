@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Set, Tuple, TypedDict
 
@@ -6,6 +7,8 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.util.csvs import get_plots_dir
+
+logger = logging.getLogger("predictoor_stats")
 
 
 class PairTimeframeStat(TypedDict):
@@ -133,7 +136,7 @@ def plot_traction_daily_statistics(stats_df: pl.DataFrame, pq_dir: str) -> None:
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
-    print("Chart created:", chart_path)
+    logger.info("Chart created: %s", chart_path)
 
 
 @enforce_types
@@ -162,7 +165,7 @@ def plot_traction_cum_sum_statistics(stats_df: pl.DataFrame, pq_dir: str) -> Non
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
-    print("Chart created:", chart_path)
+    logger.info("Chart created: %s", chart_path)
 
 
 @enforce_types
@@ -283,7 +286,7 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
-    print("Chart created:", chart_path)
+    logger.info("Chart created: %s", chart_path)
 
     # draw daily predictoor payouts in $OCEAN
     chart_path = os.path.join(charts_dir, "daily_slot_average_predictoors.png")
@@ -301,4 +304,4 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     plt.tight_layout()
     plt.savefig(chart_path)
     plt.close()
-    print("Chart created:", chart_path)
+    logger.info("Chart created: %s", chart_path)

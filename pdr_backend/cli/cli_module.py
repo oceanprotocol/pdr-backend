@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from enforce_typing import enforce_types
@@ -22,12 +23,14 @@ from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
-from pdr_backend.util.contract import get_address
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
+from pdr_backend.deployer.deployer import main as deployer_main
+
+logger = logging.getLogger("cli")
 
 
 @enforce_types
@@ -43,7 +46,7 @@ def _do_main():
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
     print_args(args)
-    print(nested_args)
+    logger.info(nested_args)
 
     func(args, nested_args)
 
@@ -235,7 +238,7 @@ def do_trueval(args, nested_args=None, testing=False):
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    predictoor_batcher_addr = get_address(ppss.web3_pp, "PredictoorHelper")
+    predictoor_batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
     agent = TruevalAgent(ppss, predictoor_batcher_addr)
 
     agent.run(testing)
@@ -301,3 +304,9 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_deployer(args, nested_args=None):
+    deployer_main(args)

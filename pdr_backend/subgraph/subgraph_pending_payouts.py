@@ -1,8 +1,12 @@
+import logging
 from typing import Dict, List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.util.logutil import logging_has_stdout
+
+logger = logging.getLogger("subgraph")
 
 
 @enforce_types
@@ -35,11 +39,14 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
             offset,
         )
         offset += chunk_size
-        print(".", end="", flush=True)
+
+        if logging_has_stdout():
+            print(".", end="", flush=True)
+
         try:
             result = query_subgraph(subgraph_url, query)
             if "data" not in result or not result["data"]:
-                print("No data in result")
+                logger.warning("No data in result")
                 break
             predict_predictions = result["data"].get("predictPredictions", [])
             if not predict_predictions:
@@ -49,8 +56,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
                 timestamp = prediction["slot"]["slot"]
                 pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
-            print("An error occured", e)
+            logger.warning("An error occured: %s", e)
             break
 
-    print()  # print new line
     return pending_slots

@@ -1,8 +1,9 @@
 """
-plutil: polars dataframe & csv/parquet utilities. 
+plutil: polars dataframe & csv/parquet utilities.
 These utilities are specific to the time-series dataframe columns we're using.
 """
 
+import logging
 import os
 import shutil
 from io import StringIO
@@ -14,6 +15,8 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+
+logger = logging.getLogger("lake_plutil")
 
 
 @enforce_types
@@ -61,10 +64,10 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
         df = pl.concat([cur_df, df])
         df.write_parquet(filename)
         n_new = df.shape[0] - cur_df.shape[0]
-        print(f"      Just appended {n_new} df rows to file {filename}")
+        logger.info("Just appended %d df rows to file %s", n_new, filename)
     else:  # write new file
         df.write_parquet(filename)
-        print(f"      Just saved df with {df.shape[0]} rows to new file {filename}")
+        logger.info("Just saved df with %s rows to new file %s", df.shape[0], filename)
 
 
 @enforce_types

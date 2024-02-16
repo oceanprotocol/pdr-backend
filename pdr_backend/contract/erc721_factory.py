@@ -2,13 +2,12 @@ from enforce_typing import enforce_types
 from web3.logs import DISCARD
 
 from pdr_backend.contract.base_contract import BaseContract
-from pdr_backend.util.contract import get_address
 
 
 @enforce_types
 class Erc721Factory(BaseContract):
     def __init__(self, web3_pp):
-        address = get_address(web3_pp, "ERC721Factory")
+        address = web3_pp.get_address("ERC721Factory")
 
         if not address:
             raise ValueError("Cannot figure out Erc721Factory address")
