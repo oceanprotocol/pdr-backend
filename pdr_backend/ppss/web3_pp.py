@@ -46,7 +46,7 @@ class Web3PP(StrMixin):
     @property
     def web3_config(self) -> Web3Config:
         if self._web3_config is None:
-            self._web3_config = self.web3_config_pk(os.getenv("PRIVATE_KEY"))
+            self._web3_config = self.web3_config_by_env("PRIVATE_KEY")
         return self._web3_config  # type: ignore[return-value]
 
     def web3_config_by_env(self, env: str) -> Web3Config:
@@ -54,15 +54,17 @@ class Web3PP(StrMixin):
         Returns a Web3Config for the specified environment variable.
         Caches the result.
         """
-        private_key = os.getenv(env)
         if env not in self._web3_configs:
+            pk = os.getenv(env)
+            if not private_key:
+                raise ValueError(f"No envvar found for {env}")
             self._web3_configs[env] = self.web3_config_pk(private_key)
         return self._web3_configs[env]
 
     def web3_config_pk(self, private_key: str) -> Web3Config:
         rpc_url = self.rpc_url
-        self._web3_config = Web3Config(rpc_url, private_key)
-        return self._web3_config
+        _web3_config = Web3Config(rpc_url, private_key)
+        return _web3_config
 
     # --------------------------------
     # yaml properties
