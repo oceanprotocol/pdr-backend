@@ -51,6 +51,10 @@ class Web3PP(StrMixin):
     
     
     def web3_config_by_env(self, env: str) -> Web3Config:
+        """
+        Returns a Web3Config for the specified environment variable.
+        Caches the result.
+        """
         private_key = os.getenv(env)
         if env not in self._web3_configs:
             self._web3_configs[env] = self.web3_config_pk(private_key)
