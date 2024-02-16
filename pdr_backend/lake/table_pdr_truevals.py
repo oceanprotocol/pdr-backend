@@ -11,6 +11,7 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
+truevals_table_name = "pdr_truevals"
 logger = logging.getLogger("lake_pdr_truevals")
 
 # RAW TRUEVAL SCHEMA

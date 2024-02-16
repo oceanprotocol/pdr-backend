@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
-from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
+from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_tables_config
 from pdr_backend.util.timeutil import timestr_to_ut
 
 # ====================================================================
@@ -53,17 +53,13 @@ def _test_update_payout_gql(
 
     # Update subscriptions record only
     default_config = gql_data_factory.record_config
-    gql_data_factory.record_config = _filter_gql_config(
+    gql_data_factory.record_config["tables"] = _filter_gql_tables_config(
         gql_data_factory.record_config, pdr_payouts_record
     )
 
-    # setup: filename
-    # everything will be inside the gql folder
-    filename = gql_data_factory._parquet_filename(pdr_payouts_record)
-    assert ".parquet" in filename
-
+    payouts_table = gql_data_factory.get_gql_tables()["pdr_payouts"]
     fin_ut = timestr_to_ut(fin_timestr)
-    st_ut = gql_data_factory._calc_start_ut(filename)
+    st_ut = payouts_table._calc_start_ut(payouts_table.table_name)
 
     # calculate ms locally so we can filter raw subscriptions
     st_ut_sec = st_ut // 1000
@@ -72,7 +68,7 @@ def _test_update_payout_gql(
     mock_fetch_payouts.return_value = subgraph_payouts
 
     # work 1: update parquet
-    gql_data_factory._update(fin_ut)
+    gql_data_factory._update()
 
     # assert params
     mock_fetch_payouts.assert_called_with(
@@ -82,6 +78,11 @@ def _test_update_payout_gql(
         0,
         "mainnet",
     )
+
+    # setup: filename
+    # everything will be inside the gql folder
+    filename = payouts_table._parquet_filename()
+    assert ".parquet" in filename
 
     # read parquet and columns
     def _payouts_in_parquet(filename: str) -> List[int]:
@@ -126,14 +127,13 @@ def test_load_and_verify_payout_schema(
     )
 
     # Update subscriptions record only
-    gql_data_factory.record_config = _filter_gql_config(
+    gql_data_factory.record_config["tables"] = _filter_gql_tables_config(
         gql_data_factory.record_config, pdr_payouts_record
     )
 
-    fin_ut = timestr_to_ut(fin_timestr)
-    gql_dfs = gql_data_factory._load_parquet(fin_ut)
+    tables = gql_data_factory.get_gql_tables()
 
-    assert len(gql_dfs) == 1
-    assert len(gql_dfs[pdr_payouts_record]) == 6
-    assert round(gql_dfs[pdr_payouts_record]["payout"].sum(), 0) == 15.0
-    assert gql_dfs[pdr_payouts_record].schema == payouts_schema
+    assert len(tables.items()) == 1
+    assert len(tables[pdr_payouts_record].df) == 6
+    assert round(tables[pdr_payouts_record].df["payout"].sum(), 0) == 15.0
+    assert tables[pdr_payouts_record].df.schema == payouts_schema
