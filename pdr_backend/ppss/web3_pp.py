@@ -37,6 +37,7 @@ class Web3PP(StrMixin):
         self.d = d  # yaml_dict["web3_pp"]
 
         self._web3_config: Optional[Web3Config] = None
+        self._web3_configs: Dict[str, Web3Config] = {}
 
     # --------------------------------
     # JIT cached properties - only do the work if requested
@@ -45,10 +46,21 @@ class Web3PP(StrMixin):
     @property
     def web3_config(self) -> Web3Config:
         if self._web3_config is None:
-            rpc_url = self.rpc_url
-            private_key = os.getenv("PRIVATE_KEY")
-            self._web3_config = Web3Config(rpc_url, private_key)
+            self._web3_config = self.web3_config_pk(os.getenv("PRIVATE_KEY"))
         return self._web3_config  # type: ignore[return-value]
+    
+    
+    def web3_config_by_env(self, env: str) -> Web3Config:
+        private_key = os.getenv(env)
+        if env not in self._web3_configs:
+            self._web3_configs[env] = self.web3_config_pk(private_key)
+        return self._web3_configs[env]
+        
+    
+    def web3_config_pk(self, private_key: str) -> Web3Config:
+        rpc_url = self.rpc_url
+        self._web3_config = Web3Config(rpc_url, private_key)
+        return self._web3_config
 
     # --------------------------------
     # yaml properties
