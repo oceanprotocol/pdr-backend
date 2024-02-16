@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_schema
-from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
+from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_tables_config
 from pdr_backend.util.timeutil import timestr_to_ut
 
 # ====================================================================
@@ -81,17 +81,19 @@ def _test_update_gql(
 
     # Update subscriptions record only
     default_config = gql_data_factory.record_config
-    gql_data_factory.record_config = _filter_gql_config(
+    gql_data_factory.record_config["tables"] = _filter_gql_tables_config(
         gql_data_factory.record_config, pdr_subscriptions_record
     )
 
+    subscriptions_table = gql_data_factory.get_gql_tables()["pdr_subscriptions"]
+
     # setup: filename
     # everything will be inside the gql folder
-    filename = gql_data_factory._parquet_filename(pdr_subscriptions_record)
+    filename = subscriptions_table._parquet_filename()
     assert ".parquet" in filename
 
     fin_ut = timestr_to_ut(fin_timestr)
-    st_ut = gql_data_factory._calc_start_ut(filename)
+    st_ut = subscriptions_table._calc_start_ut(filename)
 
     # calculate ms locally so we can filter raw subscriptions
     st_ut_sec = st_ut // 1000
@@ -104,7 +106,7 @@ def _test_update_gql(
     mock_fetch_filtered_subscriptions.return_value = target_subs
 
     # work 1: update parquet
-    gql_data_factory._update(fin_ut)
+    gql_data_factory._update()
 
     # assert params
     mock_fetch_filtered_subscriptions.assert_called_with(
@@ -169,14 +171,15 @@ def test_load_and_verify_schema(
     )
 
     # Update subscriptions record only
-    gql_data_factory.record_config = _filter_gql_config(
+    gql_data_factory.record_config["tables"] = _filter_gql_tables_config(
         gql_data_factory.record_config, pdr_subscriptions_record
     )
 
-    fin_ut = timestr_to_ut(fin_timestr)
-    gql_dfs = gql_data_factory._load_parquet(fin_ut)
+    tables = gql_data_factory.get_gql_tables()
 
-    assert len(gql_dfs) == 1
-    assert len(gql_dfs[pdr_subscriptions_record]) == 8
-    assert round(gql_dfs[pdr_subscriptions_record]["last_price_value"].sum(), 2) == 24.0
-    assert gql_dfs[pdr_subscriptions_record].schema == subscriptions_schema
+    assert len(tables.items()) == 1
+    assert len(tables[pdr_subscriptions_record].df) == 8
+    assert (
+        round(tables[pdr_subscriptions_record].df["last_price_value"].sum(), 2) == 24.0
+    )
+    assert tables[pdr_subscriptions_record].df.schema == subscriptions_schema
