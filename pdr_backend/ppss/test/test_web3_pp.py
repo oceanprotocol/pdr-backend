@@ -37,12 +37,14 @@ _D = {
     "network2": _D2,
 }
 
+
 def test_web3_config_pk():
     pp = Web3PP(_D, "network1")
     pk = os.getenv("PRIVATE_KEY_2")
     config = pp.web3_config_pk(pk)
     assert config.private_key == pk
     assert isinstance(config, Web3Config)
+
 
 def test_web3_config_by_env():
     pp = Web3PP(_D, "network1")
@@ -53,6 +55,7 @@ def test_web3_config_by_env():
     # test cache
     cached = pp._web3_configs["PRIVATE_KEY_2"]
     assert id(cached) == id(config)
+
 
 @enforce_types
 def test_web3_pp__bad_network():

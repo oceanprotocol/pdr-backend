@@ -48,8 +48,7 @@ class Web3PP(StrMixin):
         if self._web3_config is None:
             self._web3_config = self.web3_config_pk(os.getenv("PRIVATE_KEY"))
         return self._web3_config  # type: ignore[return-value]
-    
-    
+
     def web3_config_by_env(self, env: str) -> Web3Config:
         """
         Returns a Web3Config for the specified environment variable.
@@ -59,8 +58,7 @@ class Web3PP(StrMixin):
         if env not in self._web3_configs:
             self._web3_configs[env] = self.web3_config_pk(private_key)
         return self._web3_configs[env]
-        
-    
+
     def web3_config_pk(self, private_key: str) -> Web3Config:
         rpc_url = self.rpc_url
         self._web3_config = Web3Config(rpc_url, private_key)

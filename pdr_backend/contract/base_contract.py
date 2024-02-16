@@ -7,9 +7,12 @@ from sapphirepy import wrapper
 
 @enforce_types
 class BaseContract(ABC):
-    def __init__(self, web3_pp, address: str, contract_name: str, pk_name: Optional[str] = None):
+    def __init__(
+        self, web3_pp, address: str, contract_name: str, pk_name: Optional[str] = None
+    ):
         super().__init__()
         from pdr_backend.ppss.web3_pp import Web3PP
+
         assert isinstance(web3_pp, Web3PP), "web3_pp must be an instance of Web3PP"
         self.web3_pp = web3_pp
         if pk_name:
