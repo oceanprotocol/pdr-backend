@@ -64,10 +64,10 @@ class Web3PP(StrMixin):
             pk = os.getenv(env)
             if not pk:
                 raise ValueError(f"No envvar found for {env}")
-            self._web3_configs[env] = self.web3_config_pk(pk)
+            self._web3_configs[env] = self.web3_config_from_pk(pk)
         return self._web3_configs[env]
 
-    def web3_config_pk(self, private_key: str) -> Web3Config:
+    def web3_config_from_pk(self, private_key: str) -> Web3Config:
         """
         @description
             Returns a Web3Config for the specified private key.
