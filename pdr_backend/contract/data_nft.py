@@ -1,6 +1,6 @@
 import hashlib
 import json
-from typing import Union
+from typing import Union, Optional
 
 from enforce_typing import enforce_types
 from web3 import Web3
@@ -11,7 +11,7 @@ from pdr_backend.contract.base_contract import BaseContract
 
 @enforce_types
 class DataNft(BaseContract):
-    def __init__(self, web3_pp, address: str, pk_name: str = None):
+    def __init__(self, web3_pp, address: str, pk_name: Optional[str] = None):
         super().__init__(web3_pp, address, "ERC721Template", pk_name)
 
     def set_data(self, field_label, field_value, wait_for_receipt=True):

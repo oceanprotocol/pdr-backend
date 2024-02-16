@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -9,7 +9,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 
 class PredictoorBatcher(BaseContract):
     @enforce_types
-    def __init__(self, web3_pp, address: str, pk_name: str = None):
+    def __init__(self, web3_pp, address: str, pk_name: Optional[str] = None):
         super().__init__(web3_pp, address, "PredictoorHelper", pk_name)
 
     @property

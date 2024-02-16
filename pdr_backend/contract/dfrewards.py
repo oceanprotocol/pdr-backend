@@ -1,3 +1,4 @@
+from typing import Optional
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.base_contract import BaseContract
@@ -6,7 +7,7 @@ from pdr_backend.util.mathutil import from_wei
 
 @enforce_types
 class DFRewards(BaseContract):
-    def __init__(self, web3_pp, address: str, pk_name: str = None):
+    def __init__(self, web3_pp, address: str, pk_name: Optional[str] = None):
         super().__init__(web3_pp, address, "DFRewards", pk_name)
 
     def claim_rewards(self, user_addr: str, token_addr: str, wait_for_receipt=True):

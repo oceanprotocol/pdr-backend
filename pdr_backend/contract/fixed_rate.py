@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 from enforce_typing import enforce_types
 
@@ -8,7 +8,7 @@ from pdr_backend.util.mathutil import to_wei
 
 @enforce_types
 class FixedRate(BaseContract):
-    def __init__(self, web3_pp, address: str, pk_name: str = None):
+    def __init__(self, web3_pp, address: str, pk_name: Optional[str] = None):
         super().__init__(web3_pp, address, "FixedRateExchange", pk_name)
 
     def get_dt_price(self, exchangeId) -> Tuple[int, int, int, int]:
