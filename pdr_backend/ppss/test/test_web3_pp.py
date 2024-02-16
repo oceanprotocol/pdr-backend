@@ -37,6 +37,13 @@ _D = {
     "network2": _D2,
 }
 
+def test_web3_config_pk():
+    pp = Web3PP(_D, "network1")
+    pk = os.getenv("PRIVATE_KEY_2")
+    config = pp.web3_config_pk(pk)
+    assert config.private_key == pk
+    assert isinstance(config, Web3Config)
+
 
 @enforce_types
 def test_web3_pp__bad_network():
