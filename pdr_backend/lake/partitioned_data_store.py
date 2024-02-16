@@ -1,12 +1,20 @@
-from typing import Literal
+from typing import Literal, Optional
 
-import hashlib
 import os
 import polars as pl
 import duckdb
 from enforce_typing import enforce_types
+from pdr_backend.lake.base_data_store import BaseDataStore
 
-class PartitionedDataStore:
+#Maybe a base class
+#PersistentDataStore (it will include only DuckDB)
+#PartitionedDataStore (it will handle everything related to partitioned data *.parquet files)
+
+class PartitionedDataStore(BaseDataStore):
+    """
+    A class to manage partitioned Parquet files using DuckDB.
+    """
+
     @enforce_types
     def __init__(self, base_directory=str):
         """
@@ -15,71 +23,17 @@ class PartitionedDataStore:
             base_directory - The base directory to store the partitioned Parquet files.
         """
 
-        self.base_directory = base_directory
-        self.duckdb_conn = duckdb.connect(
-            database=":memory:"
-        )  # Keep a persistent connection
+        super().__init__(base_directory)
+        
         self.partition_patterns = {
             "date": "/year=*/month=*/day=*/*.parquet",
             "address": "/address=*/*.parquet",
         }
 
     @enforce_types
-    def _generate_view_name(self, base_path=str) -> str:
-        """
-        Generate a unique view name for a given base path.
-        @arguments:
-            base_path - The base path to generate a view name for.
-        @returns:
-            str - A unique view name.
-        """
-
-        hash_object = hashlib.md5(base_path.encode())
-        return f"dataset_{hash_object.hexdigest()}"
-
-    @enforce_types
-    def create_and_fill_table(self, df: pl.DataFrame, dataset_identifier: str):
-        """
-        Create the dataset and insert data to the in-memory dataset.
-        @arguments:
-            df - The Polars DataFrame to append.
-            dataset_identifier - A unique identifier for the dataset.
-        """
-
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
-        # Register the DataFrame as an Arrow table temporarily
-        # arrow_table = df.to_arrow()
-        self.duckdb_conn.register(view_name, df)
-
-    @enforce_types
-    def insert_to_table(self, df: pl.DataFrame, dataset_identifier: str):
-        """
-        Insert data to an in-memory dataset.
-        @arguments:
-            df - The Polars DataFrame to append.
-            dataset_identifier - A unique identifier for the dataset.
-        """
-
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
-        # Check if the table exists
-        tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-        ).fetchall()
-
-        if view_name in [table[0] for table in tables]:
-            values_str = ", ".join(
-                [
-                    f"({', '.join([str(x) for x in row])})"
-                    for row in df.rows()
-                ]
-            )
-            self.duckdb_conn.execute(f"INSERT INTO {view_name} VALUES {values_str}")
-        else:
-            self.create_and_fill_table(df, dataset_identifier)
-
-    @enforce_types
     def create_view_and_query_data(self, dataset_identifier: str, query: str) -> pl.DataFrame:
         """
+        Avoid to use it if it is not necessary. It is better to use the query_data method.
         Execute a SQL query across partitioned Parquet files using DuckDB.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
@@ -111,7 +65,7 @@ class PartitionedDataStore:
         self,
         dataset_identifier: str,
         query: str,
-        partition_type: Literal["date", "address"]
+        partition_type: Optional[Literal["date", "address"]] = "date"
     ) -> pl.DataFrame:
         """
             Execute a SQL query directly on partitioned Parquet files using DuckDB.
@@ -136,6 +90,7 @@ class PartitionedDataStore:
         ).df()
 
         return pl.DataFrame(result_df)
+
 
     @enforce_types
     def _export_data_with_address_hive(self, dataset_identifier: str, address_column: str):
@@ -184,7 +139,7 @@ class PartitionedDataStore:
                 PARTITION BY (year, month, day), 
                 OVERWRITE=TRUE)"""
             )
-    
+
     @enforce_types
     def _export_to_target(self, dataset_identifier: str, output_path: str):
         """
@@ -201,9 +156,9 @@ class PartitionedDataStore:
     def export_to_parquet(
         self,
         dataset_identifier: str,
-        output_path: str = None,
+        output_path: Optional[str] = None,
         partition_type: Literal["date", "address"] = "date",
-        partition_column: str = None
+        partition_column: Optional[str] = None
     ):
         """
         Finalizes the data by writing the in-memory dataset to partitioned Parquet files.
