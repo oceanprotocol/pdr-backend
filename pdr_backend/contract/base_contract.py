@@ -18,7 +18,7 @@ class BaseContract(ABC):
             raise ValueError(f"web3_pp is {web3_pp.__class__}, not Web3PP")
         self.web3_pp = web3_pp
         if pk_name:
-            self.config = web3_pp.web3_config_by_env(pk_name)
+            self.config = web3_pp.web3_config_from_env(pk_name)
         else:
             self.config = web3_pp.web3_config
         self.contract_address = self.config.w3.to_checksum_address(address)

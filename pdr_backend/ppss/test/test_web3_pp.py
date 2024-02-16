@@ -48,7 +48,7 @@ def test_web3_config_pk():
 
 def test_web3_config_by_env():
     pp = Web3PP(_D, "network1")
-    config = pp.web3_config_by_env("PRIVATE_KEY_2")
+    config = pp.web3_config_from_env("PRIVATE_KEY_2")
     assert config.private_key == os.getenv("PRIVATE_KEY_2")
     assert isinstance(config, Web3Config)
 

@@ -51,10 +51,10 @@ class Web3PP(StrMixin):
             Caches the result.
         """
         if self._web3_config is None:
-            self._web3_config = self.web3_config_by_env("PRIVATE_KEY")
+            self._web3_config = self.web3_config_from_env("PRIVATE_KEY")
         return self._web3_config  # type: ignore[return-value]
 
-    def web3_config_by_env(self, env: str) -> Web3Config:
+    def web3_config_from_env(self, env: str) -> Web3Config:
         """
         @description
             Returns a Web3Config for the specified environment variable.
