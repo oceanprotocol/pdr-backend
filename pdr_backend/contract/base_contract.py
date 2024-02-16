@@ -14,7 +14,8 @@ class BaseContract(ABC):
         # pylint: disable=import-outside-toplevel
         from pdr_backend.ppss.web3_pp import Web3PP
 
-        assert isinstance(web3_pp, Web3PP), "web3_pp must be an instance of Web3PP"
+        if not isinstance(web3_pp, Web3PP):
+            raise ValueError(f"web3_pp is {web3_pp.__class__}, not Web3PP")
         self.web3_pp = web3_pp
         if pk_name:
             self.config = web3_pp.web3_config_by_env(pk_name)
