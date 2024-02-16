@@ -28,6 +28,13 @@ def test_base_contract(web3_pp, web3_config):
 
 
 @enforce_types
+def test_base_contract_custom_pk(web3_pp, web3_config):
+    OCEAN_address = web3_pp.OCEAN_address
+
+    token = Token(web3_pp, OCEAN_address, "PRIVATE_KEY_2")
+    assert token.config.account.key.hex() == os.getenv("PRIVATE_KEY_2")
+
+@enforce_types
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
     ocean_token,
