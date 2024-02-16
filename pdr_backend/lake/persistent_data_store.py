@@ -21,9 +21,9 @@ class PersistentDataStore(BaseDataStore):
         super().__init__(base_directory)
 
     @enforce_types
-    def create_and_fill_table(self, df: pl.DataFrame, dataset_identifier: str):
+    def _create_and_fill_table(self, df: pl.DataFrame, dataset_identifier: str):
         """
-        Create the dataset and insert data to the in-memory dataset.
+        Create the dataset and insert data to the persistent dataset.
         @arguments:
             df - The Polars DataFrame to append.
             dataset_identifier - A unique identifier for the dataset.
@@ -37,10 +37,17 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, dataset_identifier: str):
         """
-        Insert data to an in-memory dataset.
+        Insert data to an persistent dataset.
         @arguments:
             df - The Polars DataFrame to append.
             dataset_identifier - A unique identifier for the dataset.
+        @example:
+            df = pl.DataFrame({
+                "id": [1, 2, 3],
+                "name": ["John", "Jane", "Doe"],
+                "age": [25, 30, 35]
+            })
+            insert_to_table(df, "people")
         """
 
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
@@ -67,12 +74,14 @@ class PersistentDataStore(BaseDataStore):
         query: str,
         partition_type: None = None) -> pl.DataFrame:
         """
-        Execute a SQL query across the in-memory dataset using DuckDB.
+        Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
             query - The SQL query to execute.
         @returns:
             pl.DataFrame - The result of the query.
+        @example:
+            query_data("people", "SELECT * FROM {view_name}")
         """
 
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
@@ -83,9 +92,11 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def drop_table(self, dataset_identifier: str):
         """
-        Drop the in-memory dataset.
+        Drop the persistent dataset.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
+        @example:
+            drop_table("people")
         """
 
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
@@ -94,10 +105,12 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, dataset_identifier: str):
         """
-        Fill the in-memory dataset from CSV files.
+        Fill the persistent dataset from CSV files.
         @arguments:
             csv_folder_path - The path to the folder containing the CSV files.
             dataset_identifier - A unique identifier for the dataset.
+        @example:
+            fill_from_csv_destination("data/csv", "people")
         """
 
         csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
@@ -105,3 +118,27 @@ class PersistentDataStore(BaseDataStore):
         for csv_file in csv_files:
             df = pl.read_csv(csv_file)
             self.insert_to_table(df, dataset_identifier)
+
+    @enforce_types
+    def update_data(self, df: pl.DataFrame, dataset_identifier: str, identifier_column: str):
+        """
+        Update the persistent dataset with the provided DataFrame.
+        @arguments:
+            df - The Polars DataFrame to update.
+            dataset_identifier - A unique identifier for the dataset.
+            identifier_column - The column to use as the identifier for the update.
+        @example:
+            df = pl.DataFrame({
+                "id": [1, 2, 3],
+                "name": ["John", "Jane", "Doe"],
+                "age": [25, 30, 35]
+            })
+            update_data(df, "people", "id")
+        """
+
+        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        update_columns = ", ".join([f"{column} = {df[column]}" for column in df.columns])
+        self.duckdb_conn.execute(
+            f"UPDATE {view_name} SET {update_columns} WHERE {identifier_column} = {df[identifier_column]}"
+        )
+        

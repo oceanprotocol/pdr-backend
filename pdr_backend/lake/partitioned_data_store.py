@@ -41,6 +41,12 @@ class PartitionedDataStore(BaseDataStore):
 
         @returns:
             pl.DataFrame - The result of the query.
+
+        @example:
+            create_view_and_query_data(
+                "transactions", 
+                "SELECT * FROM {view_name} WHERE value > 1000"
+            )
         """
 
         dataset_path = os.path.join(self.base_directory, dataset_identifier)
@@ -76,6 +82,13 @@ class PartitionedDataStore(BaseDataStore):
 
                 @returns:
                     pl.DataFrame - The result of the query.
+
+                @example:
+                    query_data(
+                        "transactions",
+                        "SELECT * FROM {dataset_path} WHERE value > 1000",
+                        "date"
+                    )
         """
 
         dataset_path = os.path.join(self.base_directory, dataset_identifier)
@@ -95,7 +108,7 @@ class PartitionedDataStore(BaseDataStore):
     @enforce_types
     def _export_data_with_address_hive(self, dataset_identifier: str, address_column: str):
         """
-        Finalizes the data by writing the in-memory dataset to partitioned
+        Finalizes the data by writing the persistent dataset to partitioned
         Parquet files using the COPY command.
         The data is partitioned by the Ethereum address.
         @arguments:
@@ -119,7 +132,7 @@ class PartitionedDataStore(BaseDataStore):
     @enforce_types
     def _export_data_with_date_hive(self, dataset_identifier: str, date_column: str = "timestamp"):
         """
-        Finalizes the data by writing the in-memory dataset to 
+        Finalizes the data by writing the persistent dataset to 
         partitioned Parquet files using the COPY command.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
@@ -143,7 +156,7 @@ class PartitionedDataStore(BaseDataStore):
     @enforce_types
     def _export_to_target(self, dataset_identifier: str, output_path: str):
         """
-        Export the in-memory dataset to a single Parquet file.
+        Export the persistent dataset to a single Parquet file.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
             output_path - The path to the output Parquet file.
@@ -161,12 +174,14 @@ class PartitionedDataStore(BaseDataStore):
         partition_column: Optional[str] = None
     ):
         """
-        Finalizes the data by writing the in-memory dataset to partitioned Parquet files.
+        Finalizes the data by writing the persistent dataset to partitioned Parquet files.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
             output_path - The path to the output Parquet file.
             partition_type - The type of partitioning to use.
             partition_column - The name of the column to partition by.
+        @example:
+            export_to_parquet("transactions", "data/transactions.parquet", "date")
         """
 
         if partition_type == "date":
