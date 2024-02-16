@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -15,8 +15,8 @@ logger = logging.getLogger("predictoor_contract")
 
 @enforce_types
 class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address, "ERC20Template3")
+    def __init__(self, web3_pp, address: str, pk_name: Optional[str]):
+        super().__init__(web3_pp, address, "ERC20Template3", pk_name)
         stake_token = self.get_stake_token()
         self.token = Token(web3_pp, stake_token)
         self.last_allowance = 0

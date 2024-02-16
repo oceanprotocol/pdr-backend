@@ -6,8 +6,8 @@ from pdr_backend.util.mathutil import from_wei
 
 @enforce_types
 class DFRewards(BaseContract):
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address, "DFRewards")
+    def __init__(self, web3_pp, address: str, pk_name: str = None):
+        super().__init__(web3_pp, address, "DFRewards", pk_name)
 
     def claim_rewards(self, user_addr: str, token_addr: str, wait_for_receipt=True):
         call_params = self.web3_pp.tx_call_params()

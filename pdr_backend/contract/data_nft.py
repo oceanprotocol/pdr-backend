@@ -11,8 +11,8 @@ from pdr_backend.contract.base_contract import BaseContract
 
 @enforce_types
 class DataNft(BaseContract):
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address, "ERC721Template")
+    def __init__(self, web3_pp, address: str, pk_name: str = None):
+        super().__init__(web3_pp, address, "ERC721Template", pk_name)
 
     def set_data(self, field_label, field_value, wait_for_receipt=True):
         """Set key/value data via ERC725, with strings for key/value"""

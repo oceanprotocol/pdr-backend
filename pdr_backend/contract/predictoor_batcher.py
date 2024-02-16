@@ -9,8 +9,8 @@ from pdr_backend.ppss.web3_pp import Web3PP
 
 class PredictoorBatcher(BaseContract):
     @enforce_types
-    def __init__(self, web3_pp, address: str):
-        super().__init__(web3_pp, address, "PredictoorHelper")
+    def __init__(self, web3_pp, address: str, pk_name: str = None):
+        super().__init__(web3_pp, address, "PredictoorHelper", pk_name)
 
     @property
     def web3_config(self):
