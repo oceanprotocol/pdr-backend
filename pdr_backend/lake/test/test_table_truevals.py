@@ -5,7 +5,7 @@ from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df
 from pdr_backend.subgraph.trueval import mock_truevals
 
 # ====================================================================
-pdr_subscriptions_record = "pdr_subscriptions"
+pdr_truevals_record = "pdr_truevals"
 
 
 @patch("pdr_backend.lake.table_pdr_truevals.fetch_truevals")
@@ -21,6 +21,7 @@ def test_get_pdr_truevals_df(mock_fetch_truevals):
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         },
+        pdr_truevals_record,
     )
 
     # check if return type is a Polar Data Frame
@@ -43,6 +44,7 @@ def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, caplog):
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         },
+        pdr_truevals_record,
     )
 
     # empty Polar Data Frame is returned
