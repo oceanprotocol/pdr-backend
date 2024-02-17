@@ -136,9 +136,9 @@ class GQLDataFactory:
                 print("      Given start time, no data to gather. Exit.")
 
             # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, object], pl.DataFrame] = (
-                self.record_config["fetch_functions"][table.table_name]
-            )
+            do_fetch: Callable[
+                [str, int, int, object], pl.DataFrame
+            ] = self.record_config["fetch_functions"][table.table_name]
 
             # call the function
             print(f"    Fetching {table.table_name}")
