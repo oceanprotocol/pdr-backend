@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from enforce_typing import enforce_types
+import numpy as np
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
@@ -40,18 +41,17 @@ class PredictoorAgent3(BasePredictoorAgent):
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
         X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
-        # Split X/y into train & test data
-        st, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st:fin, :], X[fin : fin + 1]
-        y_train, _ = y[st:fin], y[fin : fin + 1]
-
-        # Compute the model from train data
+        # Compute the model
         aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-        model = aimodel_factory.build(X_train, y_train)
+        model = aimodel_factory.build(X, y)
 
-        # Predict from test data
+        # Predict next y
+        n_vars = X.shape[1]
+        X_test = np.empty((1, n_vars), dtype=float)
+        X_test[0,:] = y[-n_vars:]
+            
         predprice = model.predict(X_test)[0]
-        curprice = y_train[-1]
+        curprice = y[-1]
         predval = predprice > curprice
 
         # Stake amount
