@@ -5,8 +5,8 @@ lake_ss:
     - binance BTC/USDT 1h
 #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 1h
 #    - kraken BTC/USDT 1h
-  st_timestr: 2024-01-01_00:00 # starting date for data
-  fin_timestr: 2024-01-02_00:00 # ending date for data
+  st_timestr: 2023-06-01_00:00 # starting date for data
+  fin_timestr: now # ending date for data
 
 predictoor_ss:
   predict_feed: binance BTC/USDT c 1h
