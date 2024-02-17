@@ -48,8 +48,8 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Predict next y
         n_vars = X.shape[1]
         X_test = np.empty((1, n_vars), dtype=float)
-        X_test[0,:] = y[-n_vars:]
-            
+        X_test[0, :] = y[-n_vars:]
+
         predprice = model.predict(X_test)[0]
         curprice = y[-1]
         predval = predprice > curprice
