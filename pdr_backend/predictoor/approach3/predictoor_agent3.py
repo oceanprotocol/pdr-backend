@@ -16,13 +16,8 @@ class PredictoorAgent3(BasePredictoorAgent):
 
     @enforce_types
     def get_data_components(self):
-        # Compute aimodel_ss
-        lake_ss = self.ppss.lake_ss
-
-        # From lake_ss, build X/y
-        pq_data_factory = OhlcvDataFactory(lake_ss)
+        pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
-
         return mergedohlcv_df
 
     @enforce_types
