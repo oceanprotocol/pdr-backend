@@ -284,7 +284,7 @@ pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constan
 pytest pdr_backend/util/test_noganache/test_util_constants.py -s
 
 # run a single test that flexes network connection
-pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filename -s
+pytest pdr_backend/util/test_ganache/test_core_accounts.py::test_fund_accounts -s
 
 # run all regular tests; see details on pytest markers to select specific suites
 pytest
