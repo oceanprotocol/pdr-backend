@@ -15,6 +15,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 logger = logging.getLogger("lake_plutil")
 
@@ -128,14 +129,14 @@ def has_data(filename: str) -> bool:
 
 
 @enforce_types
-def newest_ut(filename: str) -> int:
+def newest_ut(filename: str) -> UnixTimeMilliseconds:
     """
     Return the timestamp for the youngest entry in the file.
     The latest date should be the tail (row = n), or last entry in the file/dataframe
     """
     df = _get_tail_df(filename, n=1)
     ut = int(df["timestamp"][0])
-    return ut
+    return UnixTimeMilliseconds(ut)
 
 
 @enforce_types
@@ -150,14 +151,14 @@ def _get_tail_df(filename: str, n: int = 5) -> pl.DataFrame:
 
 
 @enforce_types
-def oldest_ut(filename: str) -> int:
+def oldest_ut(filename: str) -> UnixTimeMilliseconds:
     """
     Return the timestamp for the oldest entry in the parquet file.
     The oldest date should be the head (row = 0), or the first entry in the file/dataframe
     """
     df = _get_head_df(filename, n=1)
     ut = int(df["timestamp"][0])
-    return ut
+    return UnixTimeMilliseconds(ut)
 
 
 @enforce_types

@@ -22,6 +22,8 @@ from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
 from pdr_backend.util.timeutil import current_ut_ms, ut_to_timestr
+from pdr_backend.util.time_types import UnixTimeMilliseconds
+
 
 MS_PER_5M_EPOCH = 300000
 
@@ -50,7 +52,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
         """Return a ut : unix time, in ms, in UTC time zone"""
-        return since + i * MS_PER_5M_EPOCH
+        return UnixTimeMilliseconds(since + i * MS_PER_5M_EPOCH)
 
     def _uts_in_range(st_ut: int, fin_ut: int, limit_N=100000) -> List[int]:
         return [
@@ -86,6 +88,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
     # work 1: new rawohlcv file
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
+
     with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
@@ -105,7 +108,9 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     assert uts == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 2: two more epochs at end --> it'll append existing file
-    ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
+    ss.d["fin_timestr"] = ut_to_timestr(
+        UnixTimeMilliseconds(ss.fin_timestamp + 2 * MS_PER_5M_EPOCH)
+    )
     with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
@@ -113,8 +118,12 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new file
-    ss.d["st_timestr"] = ut_to_timestr(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
-    ss.d["fin_timestr"] = ut_to_timestr(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
+    ss.d["st_timestr"] = ut_to_timestr(
+        UnixTimeMilliseconds(ss.st_timestamp - 2 * MS_PER_5M_EPOCH)
+    )
+    ss.d["fin_timestr"] = ut_to_timestr(
+        UnixTimeMilliseconds(ss.fin_timestamp + 4 * MS_PER_5M_EPOCH)
+    )
     with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)

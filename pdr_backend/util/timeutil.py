@@ -4,29 +4,29 @@ from datetime import timezone
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMilliseconds, UnixTimeSeconds
 
 
 @enforce_types
-def pretty_timestr(ut: int) -> str:
+def pretty_timestr(ut: UnixTimeMilliseconds) -> str:
     """Pretty-print version of ut timestamp: show as unix time and datetime"""
     return f"timestamp={ut}, dt={ut_to_timestr(ut)}"
 
 
 @enforce_types
-def current_ut_ms() -> int:
+def current_ut_ms() -> UnixTimeMilliseconds:
     """Return the current date/time as a unix time (int in # ms)"""
     dt = datetime.datetime.now(timezone.utc)
-    return dt_to_ut(dt)
+    return UnixTimeMilliseconds(dt_to_ut(dt))
 
 
-def current_ut_s() -> int:
+def current_ut_s() -> UnixTimeSeconds:
     """Returns the current UTC unix time in seconds"""
-    return int(time.time())
+    return UnixTimeSeconds(int(time.time()))
 
 
 @enforce_types
-def timestr_to_ut(timestr: str) -> int:
+def timestr_to_ut(timestr: str) -> UnixTimeMilliseconds:
     """
     Convert a datetime string to ut: unix time, in ms, in UTC time zone
     Needs a date; time for a given date is optional.
@@ -61,7 +61,7 @@ def timestr_to_ut(timestr: str) -> int:
 
 
 @enforce_types
-def ut_to_timestr(ut: int) -> str:
+def ut_to_timestr(ut: UnixTimeMilliseconds) -> str:
     """
     Convert unix time (in # ms) to datetime string.
     The datetime string will always include hh and mm.
@@ -85,13 +85,13 @@ def dt_to_ut(dt: datetime.datetime) -> UnixTimeMilliseconds:
 
 
 @enforce_types
-def ut_to_dt(ut: int) -> datetime.datetime:
+def ut_to_dt(ut: UnixTimeMilliseconds) -> datetime.datetime:
     """Convert unix time (in # ms) to datetime format"""
     # precondition
-    assert ut >= 0, ut
+    assert int(ut) >= 0, ut
 
     # main work
-    dt = datetime.datetime.utcfromtimestamp(ut / 1000)
+    dt = datetime.datetime.utcfromtimestamp(int(ut) / 1000)
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
 
     # postcondition
@@ -101,6 +101,7 @@ def ut_to_dt(ut: int) -> datetime.datetime:
     return dt
 
 
+# TODO: move to time types and remove usages. For all functions, check usages and internalize
 @enforce_types
 def ms_to_seconds(ms: int) -> int:
     """Convert milliseconds to seconds"""

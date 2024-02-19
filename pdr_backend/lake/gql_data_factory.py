@@ -23,6 +23,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
 logger = logging.getLogger("gql_data_factory")
@@ -154,7 +155,7 @@ class GQLDataFactory:
                 # save to parquet
                 self._save_parquet(filename, df)
 
-    def _calc_start_ut(self, filename: str) -> int:
+    def _calc_start_ut(self, filename: str) -> UnixTimeMilliseconds:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
@@ -168,16 +169,16 @@ class GQLDataFactory:
         """
         if not os.path.exists(filename):
             logger.info("No file exists yet, so will fetch all data")
-            return self.ppss.lake_ss.st_timestamp
+            return UnixTimeMilliseconds(self.ppss.lake_ss.st_timestamp)
 
         logger.info("File already exists")
         if not has_data(filename):
             logger.info("File has no data, so delete it")
             os.remove(filename)
-            return self.ppss.lake_ss.st_timestamp
+            return UnixTimeMilliseconds(self.ppss.lake_ss.st_timestamp)
 
         file_utN = newest_ut(filename)
-        return file_utN + 1000
+        return UnixTimeMilliseconds(file_utN + 1000)
 
     def _load_parquet(self, fin_ut: int) -> Dict[str, pl.DataFrame]:
         """
