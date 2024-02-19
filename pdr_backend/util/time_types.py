@@ -5,6 +5,9 @@ class UnixTimeSeconds(int):
 
         return super(UnixTimeSeconds, cls).__new__(cls, time_s)
 
+    def to_milliseconds(self) -> "UnixTimeMilliseconds":
+        return UnixTimeMilliseconds(int(self) * 1000)
+
 
 class UnixTimeMilliseconds(int):
     def __new__(cls, time_ms):
@@ -12,3 +15,6 @@ class UnixTimeMilliseconds(int):
             raise ValueError("Invalid Unix timestamp in miliseconds")
 
         return super(UnixTimeMilliseconds, cls).__new__(cls, time_ms)
+
+    def to_seconds(self) -> "UnixTimeSeconds":
+        return UnixTimeSeconds(int(self) // 1000)
