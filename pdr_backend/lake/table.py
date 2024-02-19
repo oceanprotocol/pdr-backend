@@ -54,7 +54,7 @@ class Table:
 
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
         assert len(self.df) > 0
-        if len(self.df) > 1:
+        if len(self.df) > 2:
             assert (
                 self.df.head(1)["timestamp"].to_list()[0]
                 <= self.df.tail(1)["timestamp"].to_list()[0]
@@ -136,9 +136,9 @@ class Table:
                 # save to parquet
                 self.df = final_df
                 self.save()
+                print(f"Saved {len(final_df)} records to file while fetching")
                 final_df = pl.DataFrame()
                 save_backoff_count = 0
-                print(f"Saved {len(final_df)} records to file while fetching")
 
             # avoids doing next fetch if we've reached the end
             if len(df) < pagination_limit:
