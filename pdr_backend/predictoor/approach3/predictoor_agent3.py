@@ -14,11 +14,12 @@ class PredictoorAgent3(BasePredictoorAgent):
     def __init__(self, ppss):
         super().__init__(ppss)
         self.get_data_components()
+        self.last_predprice = None # used for testing
 
     @enforce_types
     def get_data_components(self):
-        pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
-        mergedohlcv_df = pq_data_factory.get_mergedohlcv_df()
+        ohlcv_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
+        mergedohlcv_df = ohlcv_data_factory.get_mergedohlcv_df()
         return mergedohlcv_df
 
     @enforce_types
@@ -57,4 +58,5 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Stake amount
         stake = self.ppss.predictoor_ss.stake_amount
 
+        self.last_predprice = predprice # for testing
         return (bool(predval), stake)

@@ -20,7 +20,7 @@ INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
-def get_agent(tmpdir: str, monkeypatch, predictoor_agent_class):
+def get_agent_1feed(tmpdir: str, monkeypatch, predictoor_agent_class):
     """
     @description
       Initialize the agent, and return it along with related info
@@ -60,7 +60,7 @@ def run_agent_test(tmpdir: str, monkeypatch, predictoor_agent_class):
     @description
         Run the agent for a while, and then do some basic sanity checks.
     """
-    _, ppss, agent, _mock_pdr_contract = get_agent(
+    _, ppss, agent, _mock_pdr_contract = get_agent_1feed(
         tmpdir, monkeypatch, predictoor_agent_class
     )
     # now we're done the mocking, time for the real work!!
