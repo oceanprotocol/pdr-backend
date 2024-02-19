@@ -5,8 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # pdr-backend
 
-⚠️ As of v0.2, the CLI replaces previous `main.py` calls. Update your flows accordingly.
-
 ## Run bots (agents)
 
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $

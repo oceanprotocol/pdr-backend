@@ -91,7 +91,7 @@ class AimodelDataFactory:
             if N_train <= 0:
                 logger.error(
                     "Too little data. len(z)=%d, maxshift=%d (= testshift + autoregressive_n = "
-                    "%s + %s\n"
+                    "%s + %s)\n"
                     "To fix: broaden time, shrink testshift, "
                     "or shrink autoregressive_n",
                     len(z),
