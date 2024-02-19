@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_array_equal
 import pandas as pd
 import polars as pl
 import pytest
@@ -71,8 +72,8 @@ def test_create_xy__0():
     X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
 
@@ -120,8 +121,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
     # =========== now, have testshift = 1
@@ -160,8 +161,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
     # =========== now have a different max_n_train
@@ -190,8 +191,8 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
 
