@@ -105,9 +105,9 @@ def filter_by_addresses(result, addresses):
 
 @enforce_types
 def fetch_payouts(
-    addresses: List[str],
     start_ts: int,
     end_ts: int,
+    addresses: List[str],
     first: int,
     skip: int,
     network: str = "mainnet",

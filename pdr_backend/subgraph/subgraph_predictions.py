@@ -35,7 +35,6 @@ def fetch_filtered_predictions(
     first: int,
     skip: int,
     network: str,
-    filter_mode: FilterMode,
     payout_only: bool = True,
     trueval_only: bool = True,
 ) -> List[Prediction]:
@@ -63,6 +62,7 @@ def fetch_filtered_predictions(
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
     """
+    filter_mode = FilterMode.NONE
 
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")

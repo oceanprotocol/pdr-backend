@@ -62,9 +62,9 @@ def get_truevals_query(
 def fetch_truevals(
     start_ts: int,
     end_ts: int,
+    addresses: List[str],
     first: int,
     skip: int,
-    addresses: List[str],
     network: str = "mainnet",
 ) -> List[Trueval]:
     """

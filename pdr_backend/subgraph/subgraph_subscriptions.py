@@ -16,9 +16,9 @@ logger = logging.getLogger("subgraph")
 def fetch_filtered_subscriptions(
     start_ts: int,
     end_ts: int,
+    contracts: List[str],
     first: int,
     skip: int,
-    contracts: List[str],
     network: str,
 ) -> List[Subscription]:
     """

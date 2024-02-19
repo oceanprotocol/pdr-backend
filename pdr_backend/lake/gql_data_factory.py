@@ -8,25 +8,29 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.lake.table_pdr_predictions import (
-    get_pdr_predictions_df,
     predictions_schema,
     predictions_table_name,
 )
 from pdr_backend.lake.table_pdr_subscriptions import (
-    get_pdr_subscriptions_df,
     subscriptions_schema,
     subscriptions_table_name,
 )
 from pdr_backend.lake.table_pdr_truevals import (
-    get_pdr_truevals_df,
     truevals_schema,
     truevals_table_name,
 )
 from pdr_backend.lake.table_pdr_payouts import (
-    get_pdr_payouts_df,
     payouts_schema,
     payouts_table_name,
 )
+from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
+from pdr_backend.subgraph.subgraph_subscriptions import (
+    fetch_filtered_subscriptions,
+)
+from pdr_backend.subgraph.subgraph_predictions import (
+    fetch_filtered_predictions,
+)
+from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -72,10 +76,10 @@ class GQLDataFactory:
                 "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
             },
             "fetch_functions": {
-                "pdr_predictions": get_pdr_predictions_df,
-                "pdr_subscriptions": get_pdr_subscriptions_df,
-                "pdr_truevals": get_pdr_truevals_df,
-                "pdr_payouts": get_pdr_payouts_df,
+                "pdr_predictions": fetch_filtered_predictions,
+                "pdr_subscriptions": fetch_filtered_subscriptions,
+                "pdr_truevals": fetch_truevals,
+                "pdr_payouts": fetch_payouts,
             },
             "config": {
                 "contract_list": contract_list,
@@ -135,7 +139,7 @@ class GQLDataFactory:
 
             # to satisfy mypy, get an explicit function pointer
             do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
-                self.record_config["fetch_functions"][table.table_name]
+                table.get_pdr_df
             )
 
             # number of data at which we want to save to file
@@ -143,13 +147,14 @@ class GQLDataFactory:
             # number of data fetched from the subgraph at a time
             pagination_limit = 1000
 
-            print(f"    Fetching {table.table_name}")
+            print(f"Updating table {table.table_name}")
             do_fetch(
+                self.record_config["fetch_functions"][table.table_name],
                 self.ppss.web3_pp.network,
                 st_ut,
                 fin_ut,
                 save_backoff_limit,
                 pagination_limit,
                 self.record_config["config"],
-                filename,
             )
+            table.load()

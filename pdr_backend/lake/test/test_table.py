@@ -6,6 +6,20 @@ import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
 
+
+# pylint: disable=too-many-instance-attributes
+class MyClass:
+    def __init__(self, data):
+        self.ID = data["ID"]
+        self.pair = data["pair"]
+        self.timeframe = data["timeframe"]
+        self.prediction = data["prediction"]
+        self.payout = data["payout"]
+        self.timestamp = data["timestamp"]
+        self.slot = data["slot"]
+        self.user = data["user"]
+
+
 mocked_object = {
     "ID": "0x123",
     "pair": "ADA-USDT",
@@ -16,6 +30,13 @@ mocked_object = {
     "slot": 1701634400000,
     "user": "0x123",
 }
+
+
+def mock_fetch_function(
+    network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+):
+    print(network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config)
+    return [MyClass(mocked_object)]
 
 
 def get_table_df(network, st_ut, fin_ut, config):
@@ -131,9 +152,42 @@ def test_all():
 
     captured_output = StringIO()
     sys.stdout = captured_output
-
+    table.df = pl.DataFrame([], table_df_schema)
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
     table.load()
 
+    assert len(table.df) == 1
+
+
+def test_get_pdr_df():
+    """
+    Test multiple table actions in one go
+    """
+
+    st_timestr = "2023-12-03"
+    fin_timestr = "2023-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        ".",
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    table = Table(table_name, table_df_schema, ppss)
+
+    save_backoff_limit = 5000
+    pagination_limit = 1000
+    st_timest = 1701634400000
+    fin_timest = 1701634400000
+    table.get_pdr_df(
+        mock_fetch_function,
+        "sapphire-mainnet",
+        st_timest,
+        fin_timest,
+        save_backoff_limit,
+        pagination_limit,
+        {"contract_list": ["0x123"]},
+    )
     assert len(table.df) == 1
