@@ -1,9 +1,10 @@
-import time
 import datetime
+import time
 from datetime import timezone
-from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 from enforce_typing import enforce_types
+
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
 @enforce_types

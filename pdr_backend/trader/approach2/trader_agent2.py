@@ -56,7 +56,7 @@ class TraderAgent2(BaseTraderAgent):
             Check if order has lapsed in time relative to trader_ss.timeframe
         """
         now_ts = int(datetime.now().timestamp() * 1000)
-        tx_ts = int(order.timestamp)
+        tx_ts = int(order.timestamp) if order.timestamp else 0
         order_lapsed = now_ts - tx_ts > self.ppss.trader_ss.timeframe_ms
 
         return order_lapsed

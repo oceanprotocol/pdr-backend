@@ -324,7 +324,9 @@ class _MockPredictoorContractWithTracking:
 
     def get_current_epoch_ts(self) -> UnixTimeSeconds:
         """Returns a timestamp"""
-        return UnixTimeSeconds(self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch)
+        return UnixTimeSeconds(
+            self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch
+        )
 
     def get_secondsPerEpoch(self) -> int:
         return self.s_per_epoch

@@ -73,7 +73,7 @@ class BaseTraderAgent:
         self.feed_contract = sole_value(feed_contracts)
 
         # set attribs to track block
-        self.prev_block_timestamp: UnixTimeSeconds(0)
+        self.prev_block_timestamp: UnixTimeSeconds = UnixTimeSeconds(0)
         self.prev_block_number: int = 0
 
         self.prev_traded_epochs: List[int] = []
@@ -129,7 +129,9 @@ class BaseTraderAgent:
         self.prev_block_number = block_number
         self.prev_block_timestamp = UnixTimeSeconds(block["timestamp"])
         logger.debug("before: %s", time.time())
-        s_till_epoch_ends = await self._process_block(UnixTimeSeconds(block["timestamp"]))
+        s_till_epoch_ends = await self._process_block(
+            UnixTimeSeconds(block["timestamp"])
+        )
 
         logger.debug("after: %s", time.time())
         if s_till_epoch_ends == -1:
