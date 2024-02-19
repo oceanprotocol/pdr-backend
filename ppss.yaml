@@ -2,29 +2,29 @@
 lake_ss:
   parquet_dir: parquet_data
   feeds:
-    - binance BTC/USDT 1h
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 1h
-#    - kraken BTC/USDT 1h
+    - binance BTC/USDT 5m
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 5m
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
 
 predictoor_ss:
-  predict_feed: binance BTC/USDT c 1h
+  predict_feed: binance BTC/USDT c 5m
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN
   approach3:
   aimodel_ss:
     input_feeds:
-      - binance BTC/USDT c 1h
-#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 1h
-#    - kraken BTC/USDT 1h
+      - binance BTC/USDT c 5m
+#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 5m
+#    - kraken BTC/USDT 5m
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
 
 trader_ss:
-  feed: binance BTC/USDT c 1h
+  feed: binance BTC/USDT c 5m
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
