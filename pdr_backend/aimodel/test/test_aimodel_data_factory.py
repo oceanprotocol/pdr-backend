@@ -55,9 +55,9 @@ def test_create_xy__0():
             [0.1, 0.1, 4.2, 5.3],
             [0.1, 0.1, 5.3, 6.4],
             [0.1, 0.1, 6.4, 7.5],
-            [0.1, 0.1, 7.5, 8.6], # newest
+            [0.1, 0.1, 7.5, 8.6],  # newest
         ]
-    )  
+    )
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
     target_x_df = pd.DataFrame(
         {
@@ -96,9 +96,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             [7.0, 6.0, 5.0],
             [6.0, 5.0, 4.0],
             [5.0, 4.0, 3.0],
-            [4.0, 3.0, 2.0], # newest
+            [4.0, 3.0, 2.0],  # newest
         ]
-    )  
+    )
 
     target_y = np.array(
         [
@@ -121,8 +121,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([3.0, 2.0, 1.0])
 
-    X, y, x_df, xrecent = \
-        aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
@@ -164,8 +163,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([4.0, 3.0, 2.0])
 
-    X, y, x_df, xrecent = \
-        aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)

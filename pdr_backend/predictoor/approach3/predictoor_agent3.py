@@ -1,7 +1,6 @@
 from typing import Tuple
 
 from enforce_typing import enforce_types
-import numpy as np
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
@@ -39,8 +38,7 @@ class PredictoorAgent3(BasePredictoorAgent):
         mergedohlcv_df = self.get_data_components()
 
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, y, _, xrecent = \
-            model_data_factory.create_xy(mergedohlcv_df, testshift=0)
+        X, y, _, xrecent = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Compute the model
         aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)

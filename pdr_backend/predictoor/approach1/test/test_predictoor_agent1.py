@@ -13,12 +13,13 @@ from pdr_backend.predictoor.test.predictoor_agent_runner import run_agent_test
 # ===========================================================================
 # test main loop
 
+
 @enforce_types
 def test_predictoor_agent1_main(tmpdir, monkeypatch):
     """
     @description
       Main end-to-end test of running agent 1.
-    
+
       Runs the agent for a while, and then does some basic sanity checks.
     """
     run_agent_test(str(tmpdir), monkeypatch, PredictoorAgent1)
@@ -29,7 +30,7 @@ def test_predictoor_agent1_run():
     """
     @description
       Another end-to-end test of running agent 1.
-    
+
       Runs the agent for 1 iteration, then stops because envvar TEST == true.
     """
     mock_predictoor_agent1 = MagicMock(spec=PredictoorAgent1)
@@ -41,6 +42,7 @@ def test_predictoor_agent1_run():
 
 # ===========================================================================
 # test __init__()
+
 
 @enforce_types
 def test_agent_init_empty():

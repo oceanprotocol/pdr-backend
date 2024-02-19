@@ -37,7 +37,7 @@ class AimodelDataFactory:
         (and index = 0, 1, .. -- nothing special)
 
       xrecent -- [var_i]:value -- most recent X value. Bots use to predict
-    
+
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
@@ -81,26 +81,27 @@ class AimodelDataFactory:
 
         # main work
         x_df = pd.DataFrame()  # build this up
-        xrecent_df = pd.DataFrame() # ""
+        xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
             f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
         ]
 
         for hist_col in target_hist_cols:
-            assert hist_col in mergedohlcv_df.columns, \
-                f"missing data col: {hist_col}"
+            assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
                 logger.error(
-                    "Too little data."
-                    f" len(z)={len(z)}, maxshift={maxshift}"
-                    " (= testshift + autoregressive_n ="
-                    f" {testshift} + {ss.autoregressive_n})\n"
+                    "Too little data. len(z)=%d, maxshift=%d "
+                    "(= testshift + autoregressive_n = %s + %s)\n"
                     "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n"
+                    "or shrink autoregressive_n",
+                    len(z),
+                    maxshift,
+                    testshift,
+                    ss.autoregressive_n,
                 )
                 sys.exit(1)
             for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
@@ -112,7 +113,7 @@ class AimodelDataFactory:
                 xrecent_df[x_col] = _slice(z, -shift, -shift + 1)
 
         X = x_df.to_numpy()
-        xrecent = xrecent_df.to_numpy()[0,:]
+        xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
