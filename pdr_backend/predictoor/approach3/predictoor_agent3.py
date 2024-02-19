@@ -14,7 +14,6 @@ class PredictoorAgent3(BasePredictoorAgent):
     def __init__(self, ppss):
         super().__init__(ppss)
         self.get_data_components()
-        self.last_predprice = None # used for testing
 
     @enforce_types
     def get_data_components(self):
@@ -58,5 +57,4 @@ class PredictoorAgent3(BasePredictoorAgent):
         # Stake amount
         stake = self.ppss.predictoor_ss.stake_amount
 
-        self.last_predprice = predprice # for testing
         return (bool(predval), stake)

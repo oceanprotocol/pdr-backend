@@ -10,6 +10,9 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.test.predictoor_agent_runner import run_agent_test
 
 
+# ===========================================================================
+# test main loop
+
 @enforce_types
 def test_predictoor_agent1_main(tmpdir, monkeypatch):
     """
@@ -35,6 +38,9 @@ def test_predictoor_agent1_run():
 
     mock_predictoor_agent1.run()
 
+
+# ===========================================================================
+# test __init__()
 
 @enforce_types
 def test_agent_init_empty():
