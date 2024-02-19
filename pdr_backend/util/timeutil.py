@@ -1,6 +1,7 @@
 import time
 import datetime
 from datetime import timezone
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 from enforce_typing import enforce_types
 
@@ -77,9 +78,9 @@ def ut_to_timestr(ut: int) -> str:
 
 
 @enforce_types
-def dt_to_ut(dt: datetime.datetime) -> int:
+def dt_to_ut(dt: datetime.datetime) -> UnixTimeMilliseconds:
     """Convert datetime to unix time (int in # ms)"""
-    return int(dt.timestamp() * 1000)
+    return UnixTimeMilliseconds(int(dt.timestamp() * 1000))
 
 
 @enforce_types

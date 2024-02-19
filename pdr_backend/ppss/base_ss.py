@@ -150,6 +150,7 @@ class SingleFeedMixin:
     def timeframe(self) -> str:
         return str(self.feed.timeframe)
 
+    # TODO: I think these shouldn't be converted, since they are "periods" not "timestamps"
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""

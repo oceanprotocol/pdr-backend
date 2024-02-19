@@ -7,6 +7,7 @@ from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("subgraph")
 
@@ -14,7 +15,7 @@ logger = logging.getLogger("subgraph")
 # don't use @enforce_types here, it causes issues
 def get_pending_slots(
     subgraph_url: str,
-    timestamp: int,
+    timestamp: UnixTimeSeconds,
     owner_addresses: Optional[List[str]],
     allowed_feeds: Optional[ArgFeeds] = None,
 ):

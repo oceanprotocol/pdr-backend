@@ -12,10 +12,11 @@ from pdr_backend.ppss.web3_pp import (
     inplace_mock_query_feed_contracts,
     inplace_mock_w3_and_contract_with_tracking,
 )
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
 OWNER_ADDR = "0xowner"
-INIT_TIMESTAMP = 107
+INIT_TIMESTAMP = UnixTimeSeconds(107)
 INIT_BLOCK_NUMBER = 13
 
 

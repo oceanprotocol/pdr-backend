@@ -16,6 +16,7 @@ from pdr_backend.ppss.web3_pp import (
     mock_web3_pp,
 )
 from pdr_backend.subgraph.subgraph_feed import mock_feed
+from pdr_backend.util.time_types import UnixTimeSeconds
 from pdr_backend.util.web3_config import Web3Config
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
@@ -98,13 +99,13 @@ def test_web3_pp__get_pending_slots(monkeypatch):
 
     def _mock_get_pending_slots(*args, **kwargs):
         if len(args) >= 2:
-            timestamp = args[1]
+            timestamp = UnixTimeSeconds(args[1])
         else:
-            timestamp = kwargs["timestamp"]
+            timestamp = UnixTimeSeconds(kwargs["timestamp"])
         return [f"1_{timestamp}", f"2_{timestamp}"]
 
     with patch("pdr_backend.ppss.web3_pp.get_pending_slots", _mock_get_pending_slots):
-        slots = web3_pp.get_pending_slots(6789)
+        slots = web3_pp.get_pending_slots(UnixTimeSeconds(6789))
     assert slots == ["1_6789", "2_6789"]
 
 
