@@ -94,4 +94,3 @@ Lower-level utilities:
 - `contract` - classes to wrap blockchain contracts
 - `models` - simple widely-used data structures
 - `util` - function-based tools
-
