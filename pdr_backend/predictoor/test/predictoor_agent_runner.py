@@ -23,8 +23,13 @@ INIT_BLOCK_NUMBER = 13
 def get_agent(tmpdir: str, monkeypatch, predictoor_agent_class):
     """
     @description
-        Initialize the agent, and return it along with the feed and ppss
-        that it uses.
+      Initialize the agent, and return it along with related info
+
+    @return
+      feed -- SubgraphFeed, eg for binance BTC/USDT 5m
+      ppss -- PPSS
+      agent -- PredictoorAgent{1,3,..}
+      pdr_contract -- PredictoorContract for a feed, eg binance BTC/UDST 5m
     """
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     feed, ppss = mock_feed_ppss(
@@ -32,7 +37,7 @@ def get_agent(tmpdir: str, monkeypatch, predictoor_agent_class):
     )
     inplace_mock_query_feed_contracts(ppss.web3_pp, feed)
 
-    _mock_pdr_contract = inplace_mock_w3_and_contract_with_tracking(
+    pdr_contract = inplace_mock_w3_and_contract_with_tracking(
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
@@ -46,7 +51,7 @@ def get_agent(tmpdir: str, monkeypatch, predictoor_agent_class):
     # real work: initialize
     agent = predictoor_agent_class(ppss)
 
-    return (feed, ppss, agent, _mock_pdr_contract)
+    return (feed, ppss, agent, pdr_contract)
 
 
 @enforce_types
