@@ -1,10 +1,10 @@
-
 from hashlib import md5
 from abc import abstractmethod
 from typing import Optional, Literal
 
 import duckdb
 from enforce_typing import enforce_types
+
 
 class BaseDataStore:
     @enforce_types
@@ -38,6 +38,6 @@ class BaseDataStore:
         self,
         dataset_identifier: str,
         query: str,
-        partition_type: Optional[Literal["date", "address"]] = None
+        partition_type: Optional[Literal["date", "address"]] = None,
     ):
         pass

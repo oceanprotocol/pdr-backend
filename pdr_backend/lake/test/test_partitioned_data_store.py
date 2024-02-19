@@ -7,88 +7,185 @@ from pdr_backend.lake.partitioned_data_store import (
 
 # Initialize the PartitionedDataStore instance for testing
 def _get_test_manager(tmpdir):
-    return PartitionedDataStore(str(tmpdir))
+    partitioned_ds_instance = PartitionedDataStore(str(tmpdir))
 
-
-def create_and_fill_table(tmpdir):
-    test_manager = _get_test_manager(tmpdir)
-    example_df = pl.DataFrame(
-        {"timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"], "value": [10, 20, 30]}
+    # Fill the table with some data
+    example_df = pl.DataFrame(  # pylint: disable=unused-variable
+        {
+            "timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"],
+            "value": [10, 20, 30],
+            "address": ["0xasset1", "0xasset1", "0xasset2"],
+        }
     )
-    dataset_identifier = "test_append"
-    test_manager.insert_to_table(example_df, dataset_identifier)
 
-    # Check if the view is registered
-    view_name = test_manager._generate_view_name(str(tmpdir) + dataset_identifier)
-    tables = test_manager.duckdb_conn.execute(
+    dataset_identifier = "test_df"
+
+    view_name = partitioned_ds_instance._generate_view_name(
+        partitioned_ds_instance.base_directory + dataset_identifier
+    )
+
+    partitioned_ds_instance.duckdb_conn.execute(
+        f"CREATE TABLE {view_name} AS SELECT * FROM example_df"
+    )
+
+    return [partitioned_ds_instance, dataset_identifier]
+
+
+def _clean_up_test_manager(tmpdir, dataset_identifier):
+    # Clean up the test manager
+    dataset_path = os.path.join(str(tmpdir), dataset_identifier)
+
+    persistent_ds_instance = PartitionedDataStore(str(tmpdir))
+
+    view_name = persistent_ds_instance._generate_view_name(dataset_path)
+
+    # Select tables from duckdb
+    views = persistent_ds_instance.duckdb_conn.execute(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
     ).fetchall()
-    assert view_name in [table[0] for table in tables]
-    # Since insert_to_table doesn't immediately reflect in the filesystem, this test is limited
 
-def test_finalize_data_with_date_hive(tmpdir):
-    test_manager = _get_test_manager(tmpdir)
-    dataset_identifier = "test_finalize"
-    # 1643673600 is 2022-02-01 00:00:00 in Unix time
-    # 1640995200 is 2022-01-01 00:00:00 in Unix time
-    # 1640995200 is 2022-03-01 00:00:00 in Unix time
-    example_df = pl.DataFrame(
-        {"timestamp": [1640995200, 1643673600, 1640995200], "value": [10, 20, 30]}
-    )
-    test_manager.insert_to_table(example_df, dataset_identifier)
-    test_manager.export_to_parquet(
-        dataset_identifier,
-        partition_type="date",
-        partition_column="timestamp"
-    )
+    # Drop the view and table
+    if view_name in [table[0] for table in views]:
+        persistent_ds_instance.duckdb_conn.execute(f"DROP TABLE {view_name}")
 
-    # Check if the files were created
-    expected_path = os.path.join(
-        str(tmpdir), dataset_identifier, "year=2022", "month=1", "day=1", "data.parquet"
-    )
-    print("expected_path", expected_path)
-    assert os.path.exists(expected_path), "Parquet file was not created as expected."
 
-def test_finalize_data_with_address_hive(tmpdir):
-    test_manager = _get_test_manager(tmpdir)
-    dataset_identifier = "test_finalize_data_with_address_hive"
+def _check_folder_exists(tmpdir, dataset_identifier: str, folder: str):
+    dataset_path = os.path.join(str(tmpdir), dataset_identifier, folder)
+    folder_status = os.path.exists(dataset_path)
+    file_count = len(os.listdir(dataset_path))
+    return [folder_status, file_count, dataset_path]
 
-    example_df = pl.DataFrame(
-        {"address": ['0xasset1', '0xasset1', '0xasset2'], "value": [10, 20, 30]}
-    )
-    test_manager.insert_to_table(example_df, dataset_identifier)
+
+def test_export_data_with_address_hive(
+    tmpdir,
+):
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
     test_manager.export_to_parquet(
         dataset_identifier,
         partition_type="address",
-        partition_column="address"
+        partition_column="address",
     )
 
-    # Check if the files were created
-    expected_path = os.path.join(
-        str(tmpdir), dataset_identifier, "address=0xasset1", "data.parquet"
+    folder_status, file_count, dataset_path = _check_folder_exists(
+        tmpdir, dataset_identifier, "address=0xasset1"
     )
-    print("expected_path", expected_path)
-   
+    assert (
+        folder_status
+    ), f"Parquet Folder was not created as expected. folder: {dataset_path}"
+    assert (
+        file_count > 0
+    ), f"Parquet files was not created as expected. folder: {dataset_path}"
+
+    folder_status, file_count, dataset_path = _check_folder_exists(
+        tmpdir, dataset_identifier, "address=0xasset2"
+    )
+    assert (
+        folder_status
+    ), f"Parquet Folder was not created as expected. folder: {dataset_path}"
+    assert (
+        file_count > 0
+    ), f"Parquet files was not created as expected. folder: {dataset_path}"
+
+    _clean_up_test_manager(tmpdir, dataset_identifier)
+
+
+def test_export_data_with_date_hive(
+    tmpdir,
+):
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
+    print("dataset_identifier", dataset_identifier)
+    test_manager.export_to_parquet(
+        dataset_identifier,
+        partition_type="date",
+        partition_column="timestamp",
+    )
+
+    folder_status, file_count, dataset_path = _check_folder_exists(
+        tmpdir, dataset_identifier, "year=2022/month=1/day=1"
+    )
+    assert (
+        folder_status
+    ), f"Parquet Folder was not created as expected. folder: {dataset_path}"
+    assert (
+        file_count > 0
+    ), f"Parquet files was not created as expected. folder: {dataset_path}"
+
+    folder_status, file_count, dataset_path = _check_folder_exists(
+        tmpdir, dataset_identifier, "year=2022/month=2/day=1"
+    )
+    assert (
+        folder_status
+    ), f"Parquet Folder was not created as expected. folder: {dataset_path}"
+    assert (
+        file_count > 0
+    ), f"Parquet files was not created as expected. folder: {dataset_path}"
+
+    _clean_up_test_manager(tmpdir, dataset_identifier)
+
+
 def test_create_view_and_query_data(tmpdir):
-    test_manager = _get_test_manager(tmpdir)
-    dataset_identifier = "test_query"
-    # 1643673600 is 2022-02-01 00:00:00 in Unix time
-    # 1640995200 is 2022-01-01 00:00:00 in Unix time
-    # 1640995200 is 2022-03-01 00:00:00 in Unix time
-    example_df = pl.DataFrame(
-        {"timestamp": [1640995200, 1643673600, 1640995200], "value": [10, 20, 30]}
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
+
+    test_manager.export_to_parquet(
+        dataset_identifier,
+        partition_type="date",
+        partition_column="timestamp",
     )
-    test_manager.insert_to_table(example_df, dataset_identifier)
-    test_manager.finalize_data_with_date_hive(dataset_identifier)
 
     query_result = test_manager.create_view_and_query_data(
         dataset_identifier, "SELECT * FROM {view_name} WHERE value > 15"
     )
     assert len(query_result) == 2, "Query did not return the expected number of rows."
+    _clean_up_test_manager(tmpdir, dataset_identifier)
 
-    # Check if the view is registered
-    view_name = test_manager._generate_view_name(str(tmpdir) + dataset_identifier)
-    tables = test_manager.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
-    assert view_name in [table[0] for table in tables]
+
+def test_create_view_and_query_data_without_view_name(tmpdir):
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
+
+    test_manager.export_to_parquet(
+        dataset_identifier,
+        partition_type="date",
+        partition_column="timestamp",
+    )
+
+    try:
+        test_manager.create_view_and_query_data(
+            dataset_identifier, "SELECT * FROM {dataset_path} WHERE value > 15"
+        )
+    except ValueError as e:
+        assert str(e) == "query must contain a {view_name} placeholder"
+    _clean_up_test_manager(tmpdir, dataset_identifier)
+
+
+def test_query_data(tmpdir):
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
+
+    test_manager.export_to_parquet(
+        dataset_identifier,
+        partition_type="date",
+        partition_column="timestamp",
+    )
+
+    query_result = test_manager.query_data(
+        dataset_identifier, "SELECT * FROM {dataset_path} WHERE value > 15"
+    )
+    assert len(query_result) == 2, "Query did not return the expected number of rows."
+    _clean_up_test_manager(tmpdir, dataset_identifier)
+
+
+def test_query_data_without_dataset_path(tmpdir):
+    test_manager, dataset_identifier = _get_test_manager(tmpdir)
+
+    test_manager.export_to_parquet(
+        dataset_identifier,
+        partition_type="date",
+        partition_column="timestamp",
+    )
+
+    try:
+        test_manager.query_data(
+            dataset_identifier, "SELECT * FROM {view_name} WHERE value > 15"
+        )
+    except ValueError as e:
+        assert str(e) == "query must contain a {dataset_path} placeholder"
+    _clean_up_test_manager(tmpdir, dataset_identifier)

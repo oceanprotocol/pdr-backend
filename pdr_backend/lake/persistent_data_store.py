@@ -7,6 +7,7 @@ import polars as pl
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
+
 class PersistentDataStore(BaseDataStore):
     """
     A class to store and retrieve persistent data.
@@ -21,7 +22,9 @@ class PersistentDataStore(BaseDataStore):
         super().__init__(base_directory)
 
     @enforce_types
-    def _create_and_fill_table(self, df: pl.DataFrame, dataset_identifier: str):
+    def _create_and_fill_table(
+        self, df: pl.DataFrame, dataset_identifier: str
+    ):  # pylint: disable=unused-argument
         """
         Create the dataset and insert data to the persistent dataset.
         @arguments:
@@ -30,9 +33,10 @@ class PersistentDataStore(BaseDataStore):
         """
 
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
-        # Register the DataFrame as an Arrow table temporarily
-        # arrow_table = df.to_arrow()
-        self.duckdb_conn.register(view_name, df)
+
+        # self.duckdb_conn.register(view_name, df)
+        # Create the table
+        self.duckdb_conn.execute(f"CREATE TABLE {view_name} AS SELECT * FROM df")
 
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, dataset_identifier: str):
@@ -57,22 +61,14 @@ class PersistentDataStore(BaseDataStore):
         ).fetchall()
 
         if view_name in [table[0] for table in tables]:
-            values_str = ", ".join(
-                [
-                    f"({', '.join([str(x) for x in row])})"
-                    for row in df.rows()
-                ]
-            )
-            self.duckdb_conn.execute(f"INSERT INTO {view_name} VALUES {values_str}")
+            self.duckdb_conn.execute(f"INSERT INTO {view_name} SELECT * FROM df")
         else:
-            self.create_and_fill_table(df, dataset_identifier)
+            self._create_and_fill_table(df, dataset_identifier)
 
     @enforce_types
     def query_data(
-        self,
-        dataset_identifier: str,
-        query: str,
-        partition_type: None = None) -> pl.DataFrame:
+        self, dataset_identifier: str, query: str, partition_type: None = None
+    ) -> pl.DataFrame:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
@@ -90,17 +86,21 @@ class PersistentDataStore(BaseDataStore):
         return pl.DataFrame(result_df)
 
     @enforce_types
-    def drop_table(self, dataset_identifier: str):
+    def drop_table(self, dataset_identifier: str, ds_type: str = "table"):
         """
         Drop the persistent dataset.
         @arguments:
             dataset_identifier - A unique identifier for the dataset.
+            ds_type - The type of the dataset to drop. Either "table" or "view".
         @example:
             drop_table("people")
         """
 
+        if ds_type not in ["view", "table"]:
+            raise ValueError("ds_type must be either 'view' or 'table'")
+
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
-        self.duckdb_conn.execute(f"DROP TABLE {view_name}")
+        self.duckdb_conn.execute(f"DROP {ds_type} {view_name}")
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, dataset_identifier: str):
@@ -115,12 +115,15 @@ class PersistentDataStore(BaseDataStore):
 
         csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
 
+        print("csv_files", csv_files)
         for csv_file in csv_files:
             df = pl.read_csv(csv_file)
             self.insert_to_table(df, dataset_identifier)
 
     @enforce_types
-    def update_data(self, df: pl.DataFrame, dataset_identifier: str, identifier_column: str):
+    def update_data(
+        self, df: pl.DataFrame, dataset_identifier: str, identifier_column: str
+    ):
         """
         Update the persistent dataset with the provided DataFrame.
         @arguments:
@@ -137,8 +140,11 @@ class PersistentDataStore(BaseDataStore):
         """
 
         view_name = self._generate_view_name(self.base_directory + dataset_identifier)
-        update_columns = ", ".join([f"{column} = {df[column]}" for column in df.columns])
-        self.duckdb_conn.execute(
-            f"UPDATE {view_name} SET {update_columns} WHERE {identifier_column} = {df[identifier_column]}"
+        update_columns = ", ".join(
+            [f"{column} = {df[column]}" for column in df.columns]
         )
-        
+        self.duckdb_conn.execute(
+            f"""UPDATE {view_name} 
+            SET {update_columns} 
+            WHERE {identifier_column} = {df[identifier_column]}"""
+        )
