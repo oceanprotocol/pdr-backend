@@ -85,19 +85,17 @@ class AimodelDataFactory:
 
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
+            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
                 logger.error(
-                    "Too little data. len(z)=%d, maxshift=%d (= testshift + autoregressive_n = "
-                    "%s + %s)\n"
+                    "Too little data."
+                    f" len(z)={len(z)}, maxshift={maxshift}"
+                    " (= testshift + autoregressive_n ="
+                    f" {testshift} + {ss.autoregressive_n})\n"
                     "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n",
-                    len(z),
-                    maxshift,
-                    testshift,
-                    ss.autoregressive_n,
+                    "or shrink autoregressive_n"
                 )
                 sys.exit(1)
             for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
