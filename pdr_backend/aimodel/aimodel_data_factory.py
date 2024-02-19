@@ -17,13 +17,13 @@ logger = logging.getLogger("aimodel_data_factory")
 class AimodelDataFactory:
     """
     Roles:
-    - From mergedohlcv_df, create (X, y, x_df) for model building
+    - From mergedohlcv_df, create (X, y, x_df, xrecent) for model building
 
     Where
       rawohlcv files -> rawohlcv_dfs -> mergedohlcv_df, via ohlcv_data_factory
 
-      X -- 2d array of [sample_i, var_i] : value -- inputs for model
-      y -- 1d array of [sample_i] -- target outputs for model
+      X -- 2d array of [sample_i, var_i]:value -- inputs for model
+      y -- 1d array of [sample_i]:value -- target outputs for model
 
       x_df -- *pandas* DataFrame with cols like:
         "binanceus:ETH-USDT:open:t-3",
@@ -36,6 +36,8 @@ class AimodelDataFactory:
         (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
 
+      xrecent -- [var_i]:value -- most recent X value. Bots use to predict
+    
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
@@ -48,7 +50,7 @@ class AimodelDataFactory:
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
+    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
@@ -57,9 +59,10 @@ class AimodelDataFactory:
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
         @return
-          X -- 2d array of [sample_i, var_i] : value -- inputs for model
-          y -- 1d array of [sample_i] -- target outputs for model
+          X -- 2d array of [sample_i, var_i]:value -- inputs for model
+          y -- 1d array of [sample_i]:value -- target outputs for model
           x_df -- *pandas* DataFrame. See class docstring.
+          xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
         # preconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
@@ -78,6 +81,7 @@ class AimodelDataFactory:
 
         # main work
         x_df = pd.DataFrame()  # build this up
+        xrecent_df = pd.DataFrame() # ""
 
         target_hist_cols = [
             f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
@@ -105,8 +109,10 @@ class AimodelDataFactory:
                 assert (shift + N_train + 1) <= len(z)
                 # 1 point for test, the rest for train data
                 x_df[x_col] = _slice(z, -shift - N_train - 1, -shift)
+                xrecent_df[x_col] = _slice(z, -shift, -shift + 1)
 
         X = x_df.to_numpy()
+        xrecent = xrecent_df.to_numpy()[0,:]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
@@ -125,7 +131,7 @@ class AimodelDataFactory:
         assert "datetime" not in x_df.columns
 
         # return
-        return X, y, x_df
+        return X, y, x_df, xrecent
 
 
 @enforce_types
