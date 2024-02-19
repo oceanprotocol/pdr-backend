@@ -56,7 +56,7 @@ class AimodelDataFactory:
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
-        @return --
+        @return
           X -- 2d array of [sample_i, var_i] : value -- inputs for model
           y -- 1d array of [sample_i] -- target outputs for model
           x_df -- *pandas* DataFrame. See class docstring.
@@ -84,7 +84,8 @@ class AimodelDataFactory:
         ]
 
         for hist_col in target_hist_cols:
-            assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
+            assert hist_col in mergedohlcv_df.columns, \
+                f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
