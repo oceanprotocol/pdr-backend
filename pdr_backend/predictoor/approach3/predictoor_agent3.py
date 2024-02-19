@@ -39,17 +39,15 @@ class PredictoorAgent3(BasePredictoorAgent):
         mergedohlcv_df = self.get_data_components()
 
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
+        X, y, _, xrecent = \
+            model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Compute the model
         aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
         model = aimodel_factory.build(X, y)
 
         # Predict next y
-        n_vars = X.shape[1]
-        X_test = np.empty((1, n_vars), dtype=float)
-        X_test[0, :] = y[-n_vars:]
-
+        X_test = xrecent.reshape((1, len(xrecent)))
         predprice = model.predict(X_test)[0]
         curprice = y[-1]
         predval = predprice > curprice

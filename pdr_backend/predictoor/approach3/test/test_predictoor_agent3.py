@@ -161,7 +161,7 @@ def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
         
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n*2)
         # [17.0, 18.0, 19.0, 37.0, 38.0, 39.0]
-        expected_X = np.array(BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:])
+        expected_X = np.array([BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:]])
         expected_yval = sum(BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:])
         expected_y = np.array([expected_yval])
 
