@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_traction_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.lake.table_pdr_predictions import predictions_schema
 
 table_name = "pdr_predictions"
 
@@ -82,7 +83,7 @@ def test_get_traction_info_empty_data_factory(
     )
 
     mock_predictions_df.return_value = {
-        "pdr_predictions": Table(table_name, pl.DataFrame(), ppss)
+        "pdr_predictions": Table(table_name, predictions_schema, ppss)
     }
 
     with pytest.raises(AssertionError):
