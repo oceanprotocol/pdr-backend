@@ -5,13 +5,18 @@ from enforce_typing import enforce_types
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.trueval import Trueval
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("subgraph")
 
 
 @enforce_types
 def get_truevals_query(
-    asset_ids: List[str], start_ts: int, end_ts: int, first: int, skip: int
+    asset_ids: List[str],
+    start_ts: UnixTimeSeconds,
+    end_ts: UnixTimeSeconds,
+    first: int,
+    skip: int,
 ) -> str:
     """
     Constructs a GraphQL query string to fetch prediction slot data for
@@ -60,8 +65,8 @@ def get_truevals_query(
 
 @enforce_types
 def fetch_truevals(
-    start_ts: int,
-    end_ts: int,
+    start_ts: UnixTimeSeconds,
+    end_ts: UnixTimeSeconds,
     addresses: List[str],
     network: str = "mainnet",
 ) -> List[Trueval]:
@@ -109,10 +114,10 @@ def fetch_truevals(
 
         for record in data:
             truevalue = record["trueValue"]
-            timestamp = record["timestamp"]
+            timestamp = UnixTimeSeconds(record["timestamp"])
             ID = record["id"]
             token = record["slot"]["predictContract"]["token"]["name"]
-            slot = int(record["id"].split("-")[1])
+            slot = UnixTimeSeconds(int(record["id"].split("-")[1]))
 
             trueval = Trueval(
                 ID=ID,

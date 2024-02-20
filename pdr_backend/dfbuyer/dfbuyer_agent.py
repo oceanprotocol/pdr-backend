@@ -14,6 +14,7 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import MAX_UINT
 from pdr_backend.util.mathutil import from_wei
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 WEEK = 7 * 86400
 logger = logging.getLogger("dfbuyer_agent")
@@ -73,7 +74,7 @@ class DFBuyerAgent:
             if testing or os.getenv("TEST") == "true":
                 break
 
-    def take_step(self, ts: int):
+    def take_step(self, ts: UnixTimeSeconds):
         if not self.feeds:
             return
 
@@ -119,7 +120,9 @@ class DFBuyerAgent:
         ts = self.ppss.web3_pp.web3_config.get_current_timestamp()
         consume_interval_seconds = self.ppss.dfbuyer_ss.consume_interval_seconds
 
-        interval_start = int(ts / consume_interval_seconds) * consume_interval_seconds
+        interval_start = UnixTimeSeconds(
+            int(ts / consume_interval_seconds) * consume_interval_seconds
+        )
         seconds_left = (interval_start + consume_interval_seconds) - ts + 60
 
         logger.info("Sleeping for %d seconds until next consume interval", seconds_left)
@@ -133,7 +136,7 @@ class DFBuyerAgent:
             for address in missing_consumes
         }
 
-    def _get_missing_consumes(self, ts: int) -> Dict[str, float]:
+    def _get_missing_consumes(self, ts: UnixTimeSeconds) -> Dict[str, float]:
         actual_consumes = self._get_consume_so_far(ts)
         expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
 
@@ -243,7 +246,7 @@ class DFBuyerAgent:
 
         return one_or_more_failed
 
-    def _batch_txs(self, consume_times: Dict[str, int]) -> bool:
+    def _batch_txs(self, consume_times: Dict[str, UnixTimeSeconds]) -> bool:
         batches = self._prepare_batches(consume_times)
         logger.info("Processing %s batches", len(batches))
 
@@ -262,8 +265,8 @@ class DFBuyerAgent:
             for address in contract_addresses
         }
 
-    def _get_consume_so_far(self, ts: int) -> Dict[str, float]:
-        week_start = (math.floor(ts / WEEK)) * WEEK
+    def _get_consume_so_far(self, ts: UnixTimeSeconds) -> Dict[str, float]:
+        week_start = UnixTimeSeconds((math.floor(ts / WEEK)) * WEEK)
         consume_so_far = get_consume_so_far_per_contract(
             self.ppss.web3_pp.subgraph_url,
             self.ppss.web3_pp.web3_config.owner,
@@ -272,10 +275,10 @@ class DFBuyerAgent:
         )
         return consume_so_far
 
-    def _get_expected_amount_per_feed(self, ts: int):
+    def _get_expected_amount_per_feed(self, ts: UnixTimeSeconds):
         ss = self.ppss.dfbuyer_ss
         amount_per_feed_per_interval = ss.amount_per_interval / len(self.feeds)
-        week_start = (math.floor(ts / WEEK)) * WEEK
+        week_start = UnixTimeSeconds((math.floor(ts / WEEK)) * WEEK)
         time_passed = ts - week_start
 
         # find out how many intervals has passed

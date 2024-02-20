@@ -20,6 +20,7 @@ from pdr_backend.util.constants import (
     SAPPHIRE_MAINNET_CHAINID,
     SAPPHIRE_TESTNET_CHAINID,
 )
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 _KEYS = KeyAPI(NativeECCBackend)
 logger = logging.getLogger("web3_config")
@@ -102,6 +103,6 @@ class Web3Config:
         return int(block["gasLimit"] * 0.99)
 
     @enforce_types
-    def get_current_timestamp(self):
+    def get_current_timestamp(self) -> UnixTimeSeconds:
         """Returns latest block"""
-        return self.get_block("latest")["timestamp"]
+        return UnixTimeSeconds(self.get_block("latest")["timestamp"])

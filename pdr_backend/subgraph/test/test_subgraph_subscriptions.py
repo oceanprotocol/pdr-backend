@@ -8,6 +8,7 @@ from pdr_backend.subgraph.subgraph_subscriptions import (
     Subscription,
     fetch_filtered_subscriptions,
 )
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 SAMPLE_PREDICTION = Subscription(
     # pylint: disable=line-too-long
@@ -15,7 +16,7 @@ SAMPLE_PREDICTION = Subscription(
     pair="ADA/USDT",
     timeframe="5m",
     source="binance",
-    timestamp=1701129777,
+    timestamp=UnixTimeSeconds(1701129777),
     tx_id="0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677",
     last_price_value=float("2.4979184013322233") * 1.201,
     user="0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
@@ -83,8 +84,8 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
         MOCK_SUBSCRIPTIONS_RESPONSE_SECOND_CALL,
     ]
     subscriptions = fetch_filtered_subscriptions(
-        start_ts=1701129700,
-        end_ts=1701129800,
+        start_ts=UnixTimeSeconds(1701129700),
+        end_ts=UnixTimeSeconds(1701129800),
         contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
@@ -101,8 +102,8 @@ def test_fetch_filtered_subscriptions_no_data():
     # network not supported
     with pytest.raises(Exception):
         fetch_filtered_subscriptions(
-            start_ts=1701129700,
-            end_ts=1701129800,
+            start_ts=UnixTimeSeconds(1701129700),
+            end_ts=UnixTimeSeconds(1701129800),
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
         )
@@ -112,8 +113,8 @@ def test_fetch_filtered_subscriptions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {}}
         subscriptions = fetch_filtered_subscriptions(
-            start_ts=1701129700,
-            end_ts=1701129800,
+            start_ts=UnixTimeSeconds(1701129700),
+            end_ts=UnixTimeSeconds(1701129800),
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
@@ -124,8 +125,8 @@ def test_fetch_filtered_subscriptions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {"predictPredictions": []}}
         subscriptions = fetch_filtered_subscriptions(
-            start_ts=1701129700,
-            end_ts=1701129800,
+            start_ts=UnixTimeSeconds(1701129700),
+            end_ts=UnixTimeSeconds(1701129800),
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )

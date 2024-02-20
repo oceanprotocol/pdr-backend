@@ -9,6 +9,7 @@ from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("subgraph")
 
@@ -29,8 +30,8 @@ class FilterMode(Enum):
 # pylint: disable=too-many-statements
 @enforce_types
 def fetch_filtered_predictions(
-    start_ts: int,
-    end_ts: int,
+    start_ts: UnixTimeSeconds,
+    end_ts: UnixTimeSeconds,
     filters: List[str],
     network: str,
     filter_mode: FilterMode,
@@ -148,8 +149,8 @@ def fetch_filtered_predictions(
             pair = info["pair"]
             timeframe = info["timeframe"]
             source = info["source"]
-            timestamp = prediction_sg_dict["timestamp"]
-            slot = prediction_sg_dict["slot"]["slot"]
+            timestamp = UnixTimeSeconds(prediction_sg_dict["timestamp"])
+            slot = UnixTimeSeconds(prediction_sg_dict["slot"]["slot"])
             user = prediction_sg_dict["user"]["id"]
             address = prediction_sg_dict["id"].split("-")[0]
             trueval = None

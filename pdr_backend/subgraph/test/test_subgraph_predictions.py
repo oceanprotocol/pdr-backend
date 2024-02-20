@@ -11,6 +11,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
     get_all_contract_ids_by_owner,
 )
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 ADA_CONTRACT_ADDRESS = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
 
@@ -22,10 +23,10 @@ SAMPLE_PREDICTION = Prediction(
     prediction=True,
     stake=0.050051425480971974,
     trueval=False,
-    timestamp=1698527000,
+    timestamp=UnixTimeSeconds(1698527000),
     source="binance",
     payout=0.0,
-    slot=1698527100,
+    slot=UnixTimeSeconds(1698527100),
     address="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
     user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
 )
@@ -115,8 +116,8 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
         MOCK_PREDICTIONS_RESPONSE_SECOND_CALL,
     ]
     predictions = fetch_filtered_predictions(
-        start_ts=1622547000,
-        end_ts=1622548800,
+        start_ts=UnixTimeSeconds(1622547000),
+        end_ts=UnixTimeSeconds(1622548800),
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
         filter_mode=FilterMode.PREDICTOOR,
@@ -156,8 +157,8 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     mock_query_subgraph.side_effect = simulate_exception
 
     predictions = fetch_filtered_predictions(
-        start_ts=1622547000,
-        end_ts=1622548800,
+        start_ts=UnixTimeSeconds(1622547000),
+        end_ts=UnixTimeSeconds(1622548800),
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
         filter_mode=FilterMode.PREDICTOOR,
@@ -172,8 +173,8 @@ def test_fetch_filtered_predictions_no_data():
     # network not supported
     with pytest.raises(Exception):
         fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeSeconds(1622547000),
+            end_ts=UnixTimeSeconds(1622548800),
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
             filter_mode=FilterMode.PREDICTOOR,
@@ -184,8 +185,8 @@ def test_fetch_filtered_predictions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {}}
         predictions = fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeSeconds(1622547000),
+            end_ts=UnixTimeSeconds(1622548800),
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
             filter_mode=FilterMode.PREDICTOOR,
@@ -197,8 +198,8 @@ def test_fetch_filtered_predictions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {"predictPredictions": []}}
         predictions = fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeSeconds(1622547000),
+            end_ts=UnixTimeSeconds(1622548800),
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
             filter_mode=FilterMode.PREDICTOOR,

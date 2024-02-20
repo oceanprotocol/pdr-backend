@@ -1,6 +1,7 @@
 from typing import List, Union
 
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 
 @enforce_types
@@ -14,10 +15,10 @@ class Prediction:
         prediction: Union[bool, None],  # prediction = subgraph.predicted_value
         stake: Union[float, None],
         trueval: Union[bool, None],
-        timestamp: int,  # timestamp == prediction submitted timestamp
+        timestamp: UnixTimeSeconds,  # timestamp == prediction submitted timestamp
         source: str,
         payout: Union[float, None],
-        slot: int,  # slot/epoch timestamp
+        slot: UnixTimeSeconds,  # slot/epoch timestamp
         address: str,
         user: str,
     ) -> None:
@@ -63,11 +64,11 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         prediction=prediction,
         stake=stake,
         trueval=trueval,
-        timestamp=timestamp,
+        timestamp=UnixTimeSeconds(timestamp),
         source=source,
         payout=payout,
         address=address,
-        slot=slot,
+        slot=UnixTimeSeconds(slot),
         user=user,
     )
 

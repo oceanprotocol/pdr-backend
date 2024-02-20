@@ -9,6 +9,7 @@ from pdr_backend.contract.fixed_rate import FixedRate
 from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("predictoor_contract")
 
@@ -308,7 +309,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """Returns the timeout for submitting truevals, according to contract"""
         return self.contract_instance.functions.trueValSubmitTimeout().call()
 
-    def get_prediction(self, slot: int, address: str):
+    def get_prediction(self, slot: UnixTimeSeconds, address: str):
         """Returns the prediction made by this account, for
         the specified time slot and address."""
         auth_signature = self.config.get_auth_signature()

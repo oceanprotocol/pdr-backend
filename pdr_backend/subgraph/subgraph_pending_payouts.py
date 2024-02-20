@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.logutil import logging_has_stdout
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("subgraph")
 
@@ -13,7 +14,7 @@ logger = logging.getLogger("subgraph")
 def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
     chunk_size = 1000
     offset = 0
-    pending_slots: Dict[str, List[int]] = {}
+    pending_slots: Dict[str, List[UnixTimeSeconds]] = {}
     addr = addr.lower()
 
     while True:
@@ -53,7 +54,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
                 break
             for prediction in predict_predictions:
                 contract_address = prediction["slot"]["predictContract"]["id"]
-                timestamp = prediction["slot"]["slot"]
+                timestamp = UnixTimeSeconds(prediction["slot"]["slot"])
                 pending_slots.setdefault(contract_address, []).append(timestamp)
         except Exception as e:
             logger.warning("An error occured: %s", e)
