@@ -10,11 +10,29 @@ from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
 from pdr_backend.predictoor.test.predictoor_agent_runner import run_agent_test
 
 
-def test_predictoor_agent1(tmpdir, monkeypatch):
+# ===========================================================================
+# test main loop
+
+
+@enforce_types
+def test_predictoor_agent1_main(tmpdir, monkeypatch):
+    """
+    @description
+      Main end-to-end test of running agent 1.
+
+      Runs the agent for a while, and then does some basic sanity checks.
+    """
     run_agent_test(str(tmpdir), monkeypatch, PredictoorAgent1)
 
 
-def test_run():
+@enforce_types
+def test_predictoor_agent1_run():
+    """
+    @description
+      Another end-to-end test of running agent 1.
+
+      Runs the agent for 1 iteration, then stops because envvar TEST == true.
+    """
     mock_predictoor_agent1 = MagicMock(spec=PredictoorAgent1)
     take_step = mock_predictoor_agent1.take_step
     take_step.return_value = None
@@ -22,8 +40,16 @@ def test_run():
     mock_predictoor_agent1.run()
 
 
+# ===========================================================================
+# test __init__()
+
+
 @enforce_types
-def test_agent_constructor_empty():
+def test_agent_init_empty():
+    """
+    @description
+      Basic test: when there's no feeds, does it complain?
+    """
     # test with no feeds
     mock_ppss_empty = MagicMock(spec=PPSS)
     mock_ppss_empty.predictoor_ss = MagicMock(spec=PredictoorSS)
