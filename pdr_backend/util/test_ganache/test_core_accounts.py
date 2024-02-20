@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from eth_account import Account
 
 from pdr_backend.contract.token import Token
-from pdr_backend.ppss.web3_pp import mock_web3_pp
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.core_accounts import _fund_accounts, fund_accounts_with_OCEAN
 
 
@@ -14,13 +14,13 @@ def test_fund_accounts_with_OCEAN(monkeypatch):
     if os.getenv("NETWORK_OVERRIDE"):
         monkeypatch.delenv("NETWORK_OVERRIDE")
 
-    web3_pp = mock_web3_pp("development")
+    web3_pp = Mock(spec=Web3PP)
+    web3_pp.network = "development"
+    web3_pp.OCEAN_Token = Mock(spec=Token)
+    web3_pp.web3_config = Mock()
+    web3_pp.web3_config.owner = "0x123"
 
     path = "pdr_backend.util.core_accounts"
-
-    monkeypatch.setattr(f"{path}.get_address", Mock())
-    monkeypatch.setattr(f"{path}.Token", Mock())
-
     mock_f = Mock()
     monkeypatch.setattr(f"{path}._fund_accounts", mock_f)
 

@@ -14,7 +14,9 @@ from pdr_backend.util.web3_config import Web3Config
 @patch("pdr_backend.trueval.trueval_agent.wait_until_subgraph_syncs")
 @patch("pdr_backend.trueval.trueval_agent.time.sleep")
 @patch("pdr_backend.trueval.trueval_agent.TruevalAgent.process_trueval_slot")
-def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_process):
+def test_trueval_batch(
+    mock_wait_until_subgraph_syncs, mock_time_sleep, mock_process, caplog
+):
     _ = mock_wait_until_subgraph_syncs
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -35,6 +37,7 @@ def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_pro
         )
     }
     mock_web3_pp.get_pending_slots.return_value = [Slot(1, feeds["0x1"])]
+    mock_web3_pp.get_address.return_value = "0x1"
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.get_block.return_value = {"timestamp": 100}
@@ -47,8 +50,6 @@ def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_pro
     mock_predictoor_batcher = Mock(spec=PredictoorBatcher)
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
-        "pdr_backend.cli.cli_module.get_address", return_value="0x1"
-    ), patch(
         "pdr_backend.trueval.trueval_agent.PredictoorBatcher",
         return_value=mock_predictoor_batcher,
     ), patch(
@@ -60,19 +61,15 @@ def test_trueval_batch(mock_wait_until_subgraph_syncs, mock_time_sleep, mock_pro
         # Mock sys.argv
         sys.argv = ["pdr", "trueval", "ppss.yaml", "development"]
 
-        with patch("builtins.print") as mock_print:
-            cli_module._do_main()
+        cli_module._do_main()
 
         # Verifying outputs
-        mock_print.assert_any_call("pdr trueval: Begin")
-        mock_print.assert_any_call("Arguments:")
-        mock_print.assert_any_call("PPSS_FILE=ppss.yaml")
-        mock_print.assert_any_call("NETWORK=development")
-        mock_print.assert_any_call("Found 1 pending slots, processing 30")
-        mock_print.assert_any_call("Submitting transaction...")
-        mock_print.assert_any_call(
-            "Tx sent: 0xbatch_submit_tx, sleeping for 30 seconds..."
-        )
+        assert "pdr trueval: Begin" in caplog.text
+        assert "Arguments:" in caplog.text
+        assert "PPSS_FILE=ppss.yaml" in caplog.text
+        assert "NETWORK=development" in caplog.text
+        assert "Found 1 pending slots, processing 30" in caplog.text
+        assert "Tx sent: 0xbatch_submit_tx, sleeping for 30 seconds..." in caplog.text
 
         # Additional assertions
         mock_web3_pp.get_pending_slots.assert_called()

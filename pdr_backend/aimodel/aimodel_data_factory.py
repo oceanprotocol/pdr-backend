@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Tuple
 
@@ -9,18 +10,20 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
+logger = logging.getLogger("aimodel_data_factory")
+
 
 @enforce_types
 class AimodelDataFactory:
     """
     Roles:
-    - From mergedohlcv_df, create (X, y, x_df) for model building
+    - From mergedohlcv_df, create (X, y, x_df, xrecent) for model building
 
     Where
       rawohlcv files -> rawohlcv_dfs -> mergedohlcv_df, via ohlcv_data_factory
 
-      X -- 2d array of [sample_i, var_i] : value -- inputs for model
-      y -- 1d array of [sample_i] -- target outputs for model
+      X -- 2d array of [sample_i, var_i]:value -- inputs for model
+      y -- 1d array of [sample_i]:value -- target outputs for model
 
       x_df -- *pandas* DataFrame with cols like:
         "binanceus:ETH-USDT:open:t-3",
@@ -32,6 +35,8 @@ class AimodelDataFactory:
         ...
         (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
+
+      xrecent -- [var_i]:value -- most recent X value. Bots use to predict
 
     Finally:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
@@ -45,7 +50,7 @@ class AimodelDataFactory:
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
+    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
@@ -53,10 +58,11 @@ class AimodelDataFactory:
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
-        @return --
-          X -- 2d array of [sample_i, var_i] : value -- inputs for model
-          y -- 1d array of [sample_i] -- target outputs for model
+        @return
+          X -- 2d array of [sample_i, var_i]:value -- inputs for model
+          y -- 1d array of [sample_i]:value -- target outputs for model
           x_df -- *pandas* DataFrame. See class docstring.
+          xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
         # preconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
@@ -75,6 +81,7 @@ class AimodelDataFactory:
 
         # main work
         x_df = pd.DataFrame()  # build this up
+        xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
             f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
@@ -82,16 +89,19 @@ class AimodelDataFactory:
 
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-3), z(t-2), z(t-1)]
+            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             if N_train <= 0:
-                print(
-                    f"Too little data. len(z)={len(z)}, maxshift={maxshift}"
-                    " (= testshift + autoregressive_n = "
-                    f"{testshift} + {ss.autoregressive_n})\n"
+                logger.error(
+                    "Too little data. len(z)=%d, maxshift=%d "
+                    "(= testshift + autoregressive_n = %s + %s)\n"
                     "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n"
+                    "or shrink autoregressive_n",
+                    len(z),
+                    maxshift,
+                    testshift,
+                    ss.autoregressive_n,
                 )
                 sys.exit(1)
             for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
@@ -100,8 +110,10 @@ class AimodelDataFactory:
                 assert (shift + N_train + 1) <= len(z)
                 # 1 point for test, the rest for train data
                 x_df[x_col] = _slice(z, -shift - N_train - 1, -shift)
+                xrecent_df[x_col] = _slice(z, -shift, -shift + 1)
 
         X = x_df.to_numpy()
+        xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
@@ -120,7 +132,7 @@ class AimodelDataFactory:
         assert "datetime" not in x_df.columns
 
         # return
-        return X, y, x_df
+        return X, y, x_df, xrecent
 
 
 @enforce_types

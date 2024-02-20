@@ -5,8 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 # pdr-backend
 
-⚠️ As of v0.2, the CLI replaces previous `main.py` calls. Update your flows accordingly.
-
 ## Run bots (agents)
 
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
@@ -22,6 +20,13 @@ A "ppss" yaml file, like [`ppss.yaml`](ppss.yaml), holds parameters for all bots
 - `PRIVATE_KEY` is an exception; it's set as an envvar.
 
 When you run a bot from the CLI, you specify your PPSS YAML file.
+
+pdr has basic stdout logging, but supports customisations.
+To customise logging, copy and edit the existing `logging.yaml`:
+
+```console
+cp logging.yaml my_logging.yaml
+```
 
 ## CLI
 

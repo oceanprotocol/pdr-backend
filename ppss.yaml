@@ -2,29 +2,29 @@
 lake_ss:
   parquet_dir: parquet_data
   feeds:
-    - binance BTC/USDT 1h
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 1h
-#    - kraken BTC/USDT 1h
-  st_timestr: 2024-01-01_00:00 # starting date for data
-  fin_timestr: 2024-01-02_00:00 # ending date for data
+    - binance BTC/USDT 5m
+#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+#    - kraken BTC/USDT 5m
+  st_timestr: 2023-06-01_00:00 # starting date for data
+  fin_timestr: now # ending date for data
 
 predictoor_ss:
-  predict_feed: binance BTC/USDT c 1h
+  predict_feed: binance BTC/USDT c 5m
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN
   approach3:
   aimodel_ss:
     input_feeds:
-      - binance BTC/USDT c 1h
-#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 1h
-#    - kraken BTC/USDT 1h
+      - binance BTC/USDT c 5m
+#      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 5m
+#    - kraken BTC/USDT 5m
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
 
 trader_ss:
-  feed: binance BTC/USDT c 1h
+  feed: binance BTC/USDT c 5m
   sim_only:
     buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
@@ -88,6 +88,13 @@ dfbuyer_ss:
 payout_ss:
   batch_size: 250
 
+topup_ss:
+  addresses:
+     - opf_addresses
+#    - 0xabcd...
+#  min_bal: 20
+#  topup_bal: 30
+
 # ------------------------------------------------------------------
 # Network settings
 
@@ -126,3 +133,22 @@ web3_pp:
     subgraph_url: http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
     owner_addrs: "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260" # OPF deployer address. Taken from ocean.py setup-local.md FACTORY_DEPLOYER_PRIVATE_KEY
 
+deployment_configs:
+  testnet_predictoor_deployment:
+    cpu: '1'
+    memory: '512Mi'
+    source: "binance"
+    type: "predictoor"
+    approach: 3
+    network: "sapphire-testnet"
+    s_until_epoch_end: 20
+    pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
+    agents:
+      - pair: 'BTC/USDT'
+        stake_amt: 0.1
+        timeframe: 5m
+        approach: 1
+      - pair: 'ETH/USDT'
+        stake_amt: 1
+        timeframe: 1h
+        s_until_epoch_end: 100

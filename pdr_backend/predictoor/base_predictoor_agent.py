@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from abc import ABC, abstractmethod
@@ -7,7 +8,10 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
+from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
+
+logger = logging.getLogger("predictoor_agent")
 
 
 class BasePredictoorAgent(ABC):
@@ -22,8 +26,7 @@ class BasePredictoorAgent(ABC):
     def __init__(self, ppss: PPSS):
         # ppss
         self.ppss = ppss
-        print("\n" + "-" * 180)
-        print(self.ppss)
+        logger.info(self.ppss)
 
         # set self.feeds
         cand_feeds = ppss.web3_pp.query_feed_contracts()
@@ -46,9 +49,9 @@ class BasePredictoorAgent(ABC):
 
     @enforce_types
     def run(self):
-        print("Starting main loop.")
-        print(self.status_str())
-        print("Waiting...", end="")
+        logger.info("Starting main loop.")
+        logger.info(self.status_str())
+        logger.info("Waiting...")
         while True:
             self.take_step()
             if os.getenv("TEST") == "true":
@@ -58,7 +61,8 @@ class BasePredictoorAgent(ABC):
     def take_step(self):
         # at new block number yet?
         if self.cur_block_number <= self.prev_block_number:
-            print(".", end="", flush=True)
+            if logging_has_stdout():
+                print(".", end="", flush=True)
             time.sleep(1)
             return
 
@@ -72,21 +76,20 @@ class BasePredictoorAgent(ABC):
         if self.cur_epoch_s_left > self.epoch_s_thr:
             return
 
-        print()
-        print(self.status_str())
+        logger.info(self.status_str())
 
         # compute prediction; exit if no good
         submit_epoch, target_slot = self.cur_epoch, self.target_slot
-        print(f"Predict for time slot = {self.target_slot}...")
+        logger.info("Predict for time slot = %s...", self.target_slot)
 
         predval, stake = self.get_prediction(target_slot)
-        print(f"-> Predict result: predval={predval}, stake={stake}")
+        logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
         if predval is None or stake <= 0:
-            print("Done: can't use predval/stake")
+            logger.warning("Done: can't use predval/stake")
             return
 
         # submit prediction to chain
-        print("Submit predict tx to chain...")
+        logger.info("Submit predict tx to chain...")
         self.feed_contract.submit_prediction(
             predval,
             stake,
@@ -94,12 +97,14 @@ class BasePredictoorAgent(ABC):
             wait_for_receipt=True,
         )
         self.prev_submit_epochs.append(submit_epoch)
-        print("-> Submit predict tx result: success.")
-        print("" + "=" * 180)
+        logger.info("-> Submit predict tx result: success.")
+
+        if logging_has_stdout():
+            print("" + "=" * 180)
 
         # start printing for next round
-        print(self.status_str())
-        print("Waiting...", end="")
+        logger.info(self.status_str())
+        logger.info("Waiting...")
 
     @property
     def cur_epoch(self) -> int:

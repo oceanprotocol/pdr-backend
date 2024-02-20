@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple
 from unittest.mock import Mock
 
@@ -8,6 +9,8 @@ from pdr_backend.contract.fixed_rate import FixedRate
 from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
+
+logger = logging.getLogger("predictoor_contract")
 
 
 @enforce_types
@@ -45,12 +48,12 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         # get datatoken price
         exchange = FixedRate(self.web3_pp, exchange_addr)
         (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
-        print(f"  Price of feed: {from_wei(baseTokenAmt_wei)} OCEAN")
+        logger.info("Price of feed: %s OCEAN", from_wei(baseTokenAmt_wei))
 
         # approve
-        print("  Approve spend OCEAN: begin")
+        logger.info("Approve spend OCEAN: begin")
         self.token.approve(self.contract_instance.address, baseTokenAmt_wei)
-        print("  Approve spend OCEAN: done")
+        logger.info("Approve spend OCEAN: done")
 
         # buy 1 DT
         call_params = self.web3_pp.tx_call_params()
@@ -83,46 +86,49 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
         if gasLimit is None:
             try:
-                print("  Estimate gasLimit: begin")
+                logger.info("Estimate gasLimit: begin")
                 gasLimit = self.contract_instance.functions.buyFromFreAndOrder(
                     orderParams, freParams
                 ).estimate_gas(call_params)
             except Exception as e:
-                print(
-                    f"  Estimate gasLimit had error in estimate_gas(): {e}"
-                    "  Because of error, use get_max_gas() as workaround"
+                logger.warning(
+                    "Estimate gasLimit had error in estimate_gas(): %s. "
+                    "Because of error, use get_max_gas() as workaround",
+                    e,
                 )
                 gasLimit = self.config.get_max_gas()
         assert gasLimit is not None, "should have non-None gasLimit by now"
-        print(f"  Estimate gasLimit: done. gasLimit={gasLimit}")
+        logger.info("Estimate gasLimit: done. gasLimit={gasLimit}")
         call_params["gas"] = gasLimit + 1
 
         try:
-            print("  buyFromFreAndOrder: begin")
+            logger.info("buyFromFreAndOrder: begin")
             tx = self.contract_instance.functions.buyFromFreAndOrder(
                 orderParams, freParams
             ).transact(call_params)
             if not wait_for_receipt:
-                print("  buyFromFreAndOrder: WIP, didn't wait around")
+                logger.info("buyFromFreAndOrder: WIP, didn't wait around")
                 return tx
             tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
-            print("  buyFromFreAndOrder: waited around, it's done")
+            logger.info("buyFromFreAndOrder: waited around, it's done")
             return tx
         except Exception as e:
-            print(f"  buyFromFreAndOrder hit an error: {e}")
+            logger.info("buyFromFreAndOrder hit an error: %s", e)
             return None
 
     def buy_many(self, n_to_buy: int, gasLimit=None, wait_for_receipt=False):
         """Buys multiple subscriptions and returns tx hashes"""
         if n_to_buy < 1:
             return None
-        print(f"Purchase {n_to_buy}  subscriptions for this feed: begin")
+
+        logger.info("Purchase %d subscriptions for this feed: begin", n_to_buy)
         txs = []
+
         for i in range(n_to_buy):
-            print(f"Purchase access #{i+1}/{n_to_buy} for this feed")
+            logger.info("Purchase access #%s/%s for this feed", i + 1, n_to_buy)
             tx = self.buy_and_start_subscription(gasLimit, wait_for_receipt)
             txs.append(tx)
-        print(f"Purchase {n_to_buy}  subscriptions for this feed: done")
+        logger.info("Purchase %d subscriptions for this feed: done", n_to_buy)
         return txs
 
     def get_exchanges(self) -> List[Tuple[str, str]]:
@@ -209,7 +215,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
-            print(e)
+            logger.error(e)
             return None
 
     def payout(self, slot, wait_for_receipt=False):
@@ -225,7 +231,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
-            print(e)
+            logger.error(e)
             return None
 
     def soonest_timestamp_to_predict(self, timestamp: int) -> int:
@@ -269,7 +275,9 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 self.token.approve(self.contract_address, MAX_UINT)
                 self.last_allowance = MAX_UINT
             except Exception as e:
-                print("Error while approving the contract to spend tokens:", e)
+                logger.error(
+                    "Error while approving the contract to spend tokens: %s", e
+                )
                 return None
 
         call_params = self.web3_pp.tx_call_params()
@@ -279,21 +287,21 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                 res, txhash = self.send_encrypted_tx(
                     "submitPredval", [predicted_value, stake_amt_wei, prediction_ts]
                 )
-                print("Encrypted transaction status code:", res)
+                logger.info("Encrypted transaction status code: %s", res)
             else:
                 tx = self.contract_instance.functions.submitPredval(
                     predicted_value, stake_amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
             self.last_allowance -= stake_amt_wei
-            print(f"Submitted prediction, txhash: {txhash}")
+            logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
                 return txhash
 
             return self.config.w3.eth.wait_for_transaction_receipt(txhash)
         except Exception as e:
-            print(e)
+            logger.error(e)
             return None
 
     def get_trueValSubmitTimeout(self):
@@ -319,7 +327,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         tx = self.contract_instance.functions.submitTrueVal(
             timestamp, trueval, cancel_round
         ).transact(call_params)
-        print(f"Submit trueval: txhash={tx.hex()}")
+        logger.info("Submit trueval: txhash=%s", tx.hex())
 
         if wait_for_receipt:
             tx = self.config.w3.eth.wait_for_transaction_receipt(tx)
@@ -339,7 +347,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
             return self.config.w3.eth.wait_for_transaction_receipt(tx)
         except Exception as e:
-            print(e)
+            logger.error(e)
             return None
 
     def erc721_addr(self) -> str:

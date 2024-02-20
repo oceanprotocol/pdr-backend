@@ -115,7 +115,7 @@ def test_trader_agent2_should_close(  # pylint: disable=unused-argument
 @pytest.mark.asyncio
 @patch.object(TraderAgent2, "check_subscriptions_and_subscribe")
 async def test_trader_agent2_do_trade_edges(
-    check_subscriptions_and_subscribe_mock, capfd
+    check_subscriptions_and_subscribe_mock, caplog
 ):
     agent, feed = setup_trade(
         TraderAgent2,
@@ -123,5 +123,4 @@ async def test_trader_agent2_do_trade_edges(
     )
 
     await agent._do_trade(feed, (1.0, 0))
-    out, _ = capfd.readouterr()
-    assert "There's no stake on this" in out
+    assert "There's no stake on this" in caplog.text

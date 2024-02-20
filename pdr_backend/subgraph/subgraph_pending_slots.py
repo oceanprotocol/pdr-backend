@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import List, Optional
 
@@ -6,6 +7,8 @@ from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+
+logger = logging.getLogger("subgraph")
 
 
 # don't use @enforce_types here, it causes issues
@@ -68,7 +71,7 @@ def get_pending_slots(
         try:
             result = query_subgraph(subgraph_url, query)
             if not "data" in result:
-                print("No data in result")
+                logger.warning("No data in result")
                 break
             slot_list = result["data"]["predictSlots"]
             if slot_list == []:
@@ -114,7 +117,7 @@ def get_pending_slots(
                 slots.append(slot)
 
         except Exception as e:
-            print(e)
+            logger.warning(e)
             break
 
     return slots

@@ -3,13 +3,12 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.token import NativeToken, Token
-from pdr_backend.util.contract import get_address
+from pdr_backend.contract.token import Token
 
 
 @enforce_types
 def test_token(web3_pp, web3_config):
-    token_address = get_address(web3_pp, "Ocean")
+    token_address = web3_pp.OCEAN_address
     token = Token(web3_pp, token_address)
 
     accounts = web3_config.w3.eth.accounts
@@ -33,7 +32,7 @@ def test_token(web3_pp, web3_config):
 
 @enforce_types
 def test_native_token(web3_pp):
-    token = NativeToken(web3_pp)
+    token = web3_pp.NativeToken
     assert token.w3
 
     owner = web3_pp.web3_config.owner
