@@ -26,9 +26,9 @@ class PredictoorAgent4(BasePredictoorAgent):
 
         return mergedohlcv_df
 
-    def get_prediction_stakes(
+    def get_prediction(
         self, timestamp: int  # pylint: disable=unused-argument
-    ) -> Tuple[bool, float]:
+    ) -> Tuple[float, float]:
         """
         @description
           Give a stake for up prediction, and down prediction.
