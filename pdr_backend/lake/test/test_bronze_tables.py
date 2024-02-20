@@ -40,15 +40,15 @@ def test_bronze_tables_coraltion(
         "bronze_pdr_slots": pl.DataFrame(),
     }
 
-    # Create bronze slots table
-    gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_df(gql_dfs, ppss)
-    assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
-    assert len(gql_dfs["bronze_pdr_slots"]) == 6
-
     # Create bronze predictions table
     gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_df(gql_dfs, ppss)
     assert gql_dfs["bronze_pdr_predictions"].schema == bronze_pdr_predictions_schema
     assert len(gql_dfs["bronze_pdr_predictions"]) == 6
+
+    # Create bronze slots table
+    gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_df(gql_dfs, ppss)
+    assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
+    assert len(gql_dfs["bronze_pdr_slots"]) == 6
 
     # Get predictions data from predictions table for slots within slots table
     slots_with_predictions_df = gql_dfs["bronze_pdr_slots"].join(
