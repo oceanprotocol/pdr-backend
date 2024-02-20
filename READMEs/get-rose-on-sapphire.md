@@ -32,10 +32,10 @@ As a pre-requisite, ensure that you have an EVM account ready for use in Sapphir
 
 To transfer the ROSE to your (EVM) Sapphire account, using the Oasis wallet extension:
 1. Go to the "ParaTimes" section
-2. In the "Sapphire" section, click on "To ParaTime"
-3. Enter the amount to send and the Ethereum Account address to transfer to and send the tokens.
-4. Click "confirm" as needed
-5. To verify that the tx happened, check balances in your Oasis walelt, or use Oasis & Sapphire block explorers
+2. In the "Sapphire" box, click on "To ParaTime"
+3. In the "Amount" field, specify the # ROSE; in the "To" field, enter your EVM account address (0x...).
+4. Click "Next". Click to confirm.
+5. The wallet will show an animation. After a few sections, it will say "submitted". Then it will say "Successful" and share tx details. To further verify: click on "View transactions through explorer"
 
 The official Oasis guide has details: [How to Transfer ROSE into a ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime)
 
