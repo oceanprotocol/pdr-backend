@@ -1,7 +1,5 @@
 from enforce_typing import enforce_types
-from sklearn import linear_model, svm
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
+from sklearn import linear_model
 
 from pdr_backend.ppss.classifiermodel_ss import ClassifierModelSS
 
