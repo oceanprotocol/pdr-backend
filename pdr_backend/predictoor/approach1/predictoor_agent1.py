@@ -4,19 +4,20 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 
 @enforce_types
 class PredictoorAgent1(BasePredictoorAgent):
     def get_prediction(
-        self, timestamp: int  # pylint: disable=unused-argument
+        self, timestamp: UnixTimeSeconds  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
           Predict for a given timestamp.
 
         @arguments
-          timestamp -- int -- when to make prediction for (unix time)
+          timestamp -- UnixTimeSeonds -- when to make prediction for (unix time)
 
         @return
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'

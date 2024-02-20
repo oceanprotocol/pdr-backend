@@ -10,6 +10,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -43,8 +44,8 @@ class BasePredictoorAgent(ABC):
         self.feed_contract = sole_value(contracts)
 
         # set attribs to track block
-        self.prev_block_timestamp: int = 0
-        self.prev_block_number: int = 0
+        self.prev_block_timestamp: UnixTimeSeconds = UnixTimeSeconds(0)
+        self.prev_block_number: UnixTimeSeconds = UnixTimeSeconds(0)
         self.prev_submit_epochs: List[int] = []
 
     @enforce_types
@@ -69,8 +70,8 @@ class BasePredictoorAgent(ABC):
         # is new block ready yet?
         if not self.cur_block:
             return
-        self.prev_block_number = self.cur_block_number
-        self.prev_block_timestamp = self.cur_timestamp
+        self.prev_block_number = UnixTimeSeconds(self.cur_block_number)
+        self.prev_block_timestamp = UnixTimeSeconds(self.cur_timestamp)
 
         # within the time window to predict?
         if self.cur_epoch_s_left > self.epoch_s_thr:
@@ -121,8 +122,8 @@ class BasePredictoorAgent(ABC):
         return self.ppss.web3_pp.w3.eth.block_number
 
     @property
-    def cur_timestamp(self) -> int:
-        return self.cur_block["timestamp"]
+    def cur_timestamp(self) -> UnixTimeSeconds:
+        return UnixTimeSeconds(self.cur_block["timestamp"])
 
     @property
     def epoch_s_thr(self):
@@ -134,12 +135,12 @@ class BasePredictoorAgent(ABC):
         return self.feed.seconds_per_epoch
 
     @property
-    def next_slot(self) -> int:  # a timestamp
-        return (self.cur_epoch + 1) * self.s_per_epoch
+    def next_slot(self) -> UnixTimeSeconds:  # a timestamp
+        return UnixTimeSeconds((self.cur_epoch + 1) * self.s_per_epoch)
 
     @property
     def target_slot(self) -> int:  # a timestamp
-        return (self.cur_epoch + 2) * self.s_per_epoch
+        return UnixTimeSeconds((self.cur_epoch + 2) * self.s_per_epoch)
 
     @property
     def cur_epoch_s_left(self) -> int:
@@ -160,6 +161,6 @@ class BasePredictoorAgent(ABC):
     @abstractmethod
     def get_prediction(
         self,
-        timestamp: int,  # pylint: disable=unused-argument
+        timestamp: UnixTimeSeconds,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         pass

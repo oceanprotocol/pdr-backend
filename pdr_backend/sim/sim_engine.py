@@ -127,7 +127,7 @@ class SimEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
+        recent_ut = UnixTimeMilliseconds(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         ut = UnixTimeMilliseconds(
             recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms
         )
