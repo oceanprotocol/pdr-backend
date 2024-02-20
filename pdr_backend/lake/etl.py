@@ -114,6 +114,6 @@ class ETL:
                 self.ppss,
             )
             self.tables[bronze_pdr_slots_table_name] = table
-            
+
         table = get_bronze_pdr_slots_table(self.tables, self.ppss)
         table.save()

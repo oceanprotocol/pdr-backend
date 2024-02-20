@@ -42,7 +42,7 @@ def test_bronze_tables_coraltion(
 
     # Create bronze predictions table
     bronze_pdr_prediction_table = get_bronze_pdr_predictions_table(gql_dfs, ppss)
-    
+
     # Validate bronze_pdr_prediction_table is correct, and as expected
     assert gql_dfs["bronze_pdr_predictions"].schema == bronze_pdr_predictions_schema
     assert len(gql_dfs["bronze_pdr_predictions"]) == 6

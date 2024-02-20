@@ -66,9 +66,9 @@ def _process_slots(
         return tables
 
     if tables[bronze_pdr_slots_table_name].df_schema == bronze_pdr_slots_schema:
-        tables[bronze_pdr_slots_table_name].df = tables[bronze_pdr_slots_table_name].df.select(
-            slots_df.schema
-        )
+        tables[bronze_pdr_slots_table_name].df = tables[
+            bronze_pdr_slots_table_name
+        ].df.select(slots_df.schema)
 
     # append to existing dataframe
     new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, slots_df])
@@ -136,9 +136,7 @@ def _process_bronze_predictions(
 
 
 @enforce_types
-def get_bronze_pdr_slots_table(
-    gql_tables: Dict[str, Table], ppss: PPSS
-) -> Table:
+def get_bronze_pdr_slots_table(gql_tables: Dict[str, Table], ppss: PPSS) -> Table:
     """
     @description
         Updates/Creates clean slots from existing raw tables

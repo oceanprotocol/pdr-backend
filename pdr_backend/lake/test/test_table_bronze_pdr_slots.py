@@ -7,7 +7,9 @@ from pdr_backend.lake.table_bronze_pdr_slots import (
     _process_slots,
     bronze_pdr_slots_schema,
 )
-from pdr_backend.lake.table_bronze_pdr_predictions import get_bronze_pdr_predictions_table
+from pdr_backend.lake.table_bronze_pdr_predictions import (
+    get_bronze_pdr_predictions_table,
+)
 
 
 @enforce_types

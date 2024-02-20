@@ -79,7 +79,7 @@ class GQLDataFactory:
                 ),
                 "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
                 "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-                "pdr_slots": Table(slots_table_name, slots_schema, ppss)
+                "pdr_slots": Table(slots_table_name, slots_schema, ppss),
             },
             "fetch_functions": {
                 "pdr_predictions": fetch_filtered_predictions,
