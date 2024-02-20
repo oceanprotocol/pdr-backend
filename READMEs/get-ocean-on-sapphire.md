@@ -17,7 +17,7 @@ How to use:
 
 Notes:
 - If you see a "Insufficient liquidity" warning, then click the settings gear and toggle "Use secure router = on".
-- Be careful for slippage, always. (Though there _should_ be decent liquidity.)
+- Be careful for slippage, always. (Though there _should_ be decent liquidity. [Pool info](https://illuminex.xyz/pools/0x841dd137A2B380DA4568f6745aEAc20EDa910313))
 
 # Approach 2: Bridge OCEAN from Eth mainnet
 
