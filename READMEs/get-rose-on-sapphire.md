@@ -4,7 +4,7 @@ Steps:
 
 1. [Create a Wallet](#1-create-a-wallet)
 2. [Purchase ROSE](#2-purchase-rose)
-3. [Prepare Oasis Sapphire EVM account)[#3-prepare-oasis-sapphire-evm-account)
+3. [Prepare Oasis Sapphire EVM account](#3-prepare-oasis-sapphire-evm-account)
 4. [Transfer ROSE from Oasis Account to Sapphire](#4-transfer-rose-from-oasis-account-to-sapphire)
 
 ## 1. Create a Wallet
