@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.table_pdr_slots import slots_schema
-from pdr_backend.lake.test.resources import _gql_data_factory, _filter_gql_config
+from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.util.timeutil import timestr_to_ut
 
 # ====================================================================
@@ -55,9 +55,6 @@ def _test_update_slot_gql(
 
     # Update slots record only
     default_config = gql_data_factory.record_config
-    gql_data_factory.record_config = _filter_gql_config(
-        gql_data_factory.record_config, pdr_slots_record
-    )
 
     # setup: filename
     # everything will be inside the gql folder
@@ -127,11 +124,6 @@ def test_load_and_verify_slot_schema(
         "binanceus ETH/USDT h 5m",
         st_timestr,
         fin_timestr,
-    )
-
-    # Update slots record only
-    gql_data_factory.record_config = _filter_gql_config(
-        gql_data_factory.record_config, pdr_slots_record
     )
 
     fin_ut = timestr_to_ut(fin_timestr)
