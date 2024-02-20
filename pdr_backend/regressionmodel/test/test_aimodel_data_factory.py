@@ -132,7 +132,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([3.0, 2.0, 1.0])
 
-    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(
+        mergedohlcv_df, testshift=0
+    )
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
@@ -174,7 +176,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([4.0, 3.0, 2.0])
 
-    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(
+        mergedohlcv_df, testshift=1
+    )
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
