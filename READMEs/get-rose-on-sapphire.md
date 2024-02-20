@@ -2,18 +2,24 @@
 
 Steps:
 
-1. [Create a wallet](#1-create-a-wallet)
+1. [Install Oasis wallet](#1-install-oasis-wallet)
 2. [Purchase ROSE](#2-purchase-rose)
 3. [Prepare Sapphire EVM account](#3-prepare-sapphire-evm-account)
 4. [Transfer ROSE from Oasis Account to Sapphire](#4-transfer-rose-from-oasis-account-to-sapphire)
 
 Bonus: [Sapphire * Metamask](#5-bonus-sapphire-evm-account-in-metamask)
 
-## 1. Create a Wallet
+## 1. Install Oasis Wallet
 
-For optimal support and the ability to transfer ROSE between paratimes, we recommended to use Oasis Wallet extension for Chrome.
+First, some background:
+- **ParaTimes.** "ParaTimes" are subnets in the Oasis chain ecosystem, all reporting to the same "consensus layer". Sapphire, Cipher, and Emerald are Oasis ParaTimes. Each ParaTime has its own independent state. So, ROSE held at the consensus layer is not the same as in Sapphire. But you can swap between them via "deposits" and "withdrawals" in the Oasis wallet.
+- **Sapphire.** Each ParaTime has its own specialty. Sapphire's specialty is EVM-compatibility & confidentiality. So, it uses EVM accounts, versus Oasis-native accounts (starts with "0x" vs with "oasis").
+- **EVM accounts.** EVM = Ethereum Virtual Machine. EVM-compatible means that it runs Ethereum-style contracts. EVM accounts = Ethereum-style accounts, including an address that starts with "0x" and support for ERC20 tokens.
 
-To install, go to [Oasis Wallet extension documentation](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) and follow its instructions.
+The **Oasis wallet extension (for Chrome) is the best wallet to transfer ROSE among ParaTimes.** (Metamask is good for pure EVM work in Sapphire. We'll work with that later.)
+
+To install it, go to [Oasis Wallet extension docs](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store) and follow its instructions.
+
 
 ## 2. Purchase ROSE
 
@@ -26,13 +32,6 @@ Then, you'll be withdrawing ROSE to your web3 wallet.
 ⚠️ Sending to the wrong address or network will likely result in the loss of your tokens. To minimize risk: send a small test amount first, and double-check the receiving address and network.
 
 ## 3. Prepare Sapphire EVM account
-
-First, some background:
-- **ParaTimes.** "ParaTimes" are subnets in the Oasis chain ecosystem, all reporting to the same "consensus layer". Sapphire, Cipher, and Emerald are Oasis ParaTimes. Each ParaTime has its own independent state. So, ROSE held at the consensus layer is not the same as in Sapphire. But you can swap between them via "deposits" and "withdrawals" in the Oasis wallet.
-- **Sapphire.** Each ParaTime has its own specialty. Sapphire's specialty is EVM-compatibility & confidentiality. So, it uses EVM accounts, versus Oasis-native accounts (starts with "0x" vs with "oasis").
-- **EVM accounts.** EVM = Ethereum Virtual Machine. EVM-compatible means that it runs Ethereum-style contracts. EVM accounts = Ethereum-style accounts, including an address that starts with "0x" and support for ERC20 tokens.
-
-**Prepare EVM account**
 
 First, make sure you have an EVM account ready for use in Sapphire: you have an EVM address, and you know its private key. 
 
