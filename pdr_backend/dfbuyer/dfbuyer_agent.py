@@ -130,9 +130,11 @@ class DFBuyerAgent:
 
     def _get_missing_consume_times(
         self, missing_consumes: Dict[str, float], prices: Dict[str, float]
-    ) -> Dict[str, int]:
+    ) -> Dict[str, UnixTimeSeconds]:
         return {
-            address: math.ceil(missing_consumes[address] / prices[address])
+            address: UnixTimeSeconds(
+                math.ceil(missing_consumes[address] / prices[address])
+            )
             for address in missing_consumes
         }
 
@@ -148,13 +150,13 @@ class DFBuyerAgent:
 
     def _prepare_batches(
         self, consume_times: Dict[str, UnixTimeSeconds]
-    ) -> List[Tuple[List[str], List[int]]]:
+    ) -> List[Tuple[List[str], List[UnixTimeSeconds]]]:
         batch_size = self.ppss.dfbuyer_ss.batch_size
 
         max_no_of_addresses_in_batch = 3  # to avoid gas issues
-        batches: List[Tuple[List[str], List[int]]] = []
+        batches: List[Tuple[List[str], List[UnixTimeSeconds]]] = []
         addresses_to_consume: List[str] = []
-        times_to_consume: List[int] = []
+        times_to_consume: List[UnixTimeSeconds] = []
 
         for address, times in consume_times.items():
             while times > 0:

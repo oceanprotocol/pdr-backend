@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 
 class PredictoorBatcher(BaseContract):
@@ -24,7 +25,7 @@ class PredictoorBatcher(BaseContract):
     def consume_multiple(
         self,
         addresses: List[str],
-        times: List[int],
+        times: List[UnixTimeSeconds],
         token_addr: str,
         wait_for_receipt=True,
     ):
@@ -42,7 +43,7 @@ class PredictoorBatcher(BaseContract):
     def submit_truevals_contracts(
         self,
         contract_addrs: List[str],
-        epoch_starts: List[List[int]],
+        epoch_starts: List[List[UnixTimeSeconds]],
         trueVals: List[List[bool]],
         cancelRounds: List[List[bool]],
         wait_for_receipt=True,
@@ -61,7 +62,7 @@ class PredictoorBatcher(BaseContract):
     def submit_truevals(
         self,
         contract_addr: str,
-        epoch_starts: List[int],
+        epoch_starts: List[UnixTimeSeconds],
         trueVals: List[bool],
         cancelRounds: List[bool],
         wait_for_receipt=True,

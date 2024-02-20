@@ -176,15 +176,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         seconds_per_epoch = self.get_secondsPerEpoch()
         return int(current_epoch_ts / seconds_per_epoch)
 
-    def get_current_epoch_ts(self) -> int:
+    def get_current_epoch_ts(self) -> UnixTimeSeconds:
         """returns the current candle start timestamp"""
-        return self.contract_instance.functions.curEpoch().call()
+        return UnixTimeSeconds(self.contract_instance.functions.curEpoch().call())
 
     def get_secondsPerEpoch(self) -> int:
         """How many seconds are in each epoch? (According to contract)"""
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp: int) -> Tuple[float, float]:
+    def get_agg_predval(self, timestamp: UnixTimeSeconds) -> Tuple[float, float]:
         """
         @description
           Get aggregated prediction value.
@@ -203,7 +203,9 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         ).call(call_params)
         return from_wei(nom_wei), from_wei(denom_wei)
 
-    def payout_multiple(self, slots: List[int], wait_for_receipt: bool = True):
+    def payout_multiple(
+        self, slots: List[UnixTimeSeconds], wait_for_receipt: bool = True
+    ):
         """Claims the payout for given slots"""
         call_params = self.web3_pp.tx_call_params()
         try:
@@ -235,15 +237,17 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             logger.error(e)
             return None
 
-    def soonest_timestamp_to_predict(self, timestamp: int) -> int:
+    def soonest_timestamp_to_predict(self, timestamp: UnixTimeSeconds) -> int:
         """Returns the soonest epoch to predict (expressed as a timestamp)"""
-        return self.contract_instance.functions.soonestEpochToPredict(timestamp).call()
+        return UnixTimeSeconds(
+            self.contract_instance.functions.soonestEpochToPredict(timestamp).call()
+        )
 
     def submit_prediction(
         self,
         predicted_value: bool,
         stake_amt: float,
-        prediction_ts: int,
+        prediction_ts: UnixTimeSeconds,
         wait_for_receipt=True,
     ):
         """
