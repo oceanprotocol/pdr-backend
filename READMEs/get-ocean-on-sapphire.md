@@ -1,20 +1,27 @@
 # Get OCEAN on Sapphire Mainnet
 
-There are two approaches:
-1. Use a ROSE-OCEAN DEX on Sapphire
+OCEAN has address [`0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520`](https://explorer.oasis.io/mainnet/sapphire/token/0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520) on Sapphire.
+
+There are two approaches to acquire it:
+1. Use an OCEAN-ROSE DEX on Sapphire
 2. Bridge OCEAN from Eth mainnet
 
 (1) is much simpler. (2) isn't subject to slippage. We cover both below.
 
-# Approach 1: ROSE-OCEAN DEX on Sapphire
+# Approach 1: OCEAN-ROSE DEX on Sapphire
 
-**[Lizard Exchange](https://sapphire.lizard.exchange/swap)** has an OCEAN-ROSE pool.
+How to use:
+1. Go to **[Illuminex OCEAN-ROSE pool](https://illuminex.xyz/swap?inputCurrency=0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520&inputChainId=23294&outputCurrency=0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3&outputChainId=23294)**.
+2. Specify amount to send, and destination address
+3. Click "Swap"
 
-So, simply go to the DEX and swap ROSE for OCEAN. Be careful for slippage.
+Notes:
+- If you see a "Insufficient liquidity" warning, then click the settings gear and toggle "Use secure router = on".
+- Be careful for slippage, always. (Though there _should_ be decent liquidity.)
 
 # Approach 2: Bridge OCEAN from Eth mainnet
 
-**A2 has three steps:**
+**This approach has three steps:**
 
 1. [Get OCEAN on Eth Mainnet](#1-get-ocean-on-eth-mainnet)
 1. [Transfer OCEAN to Sapphire Mainnet via Celer](#2-transfer-ocean-to-sapphire-mainnet-via-celer)
