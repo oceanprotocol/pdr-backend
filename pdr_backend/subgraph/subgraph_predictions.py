@@ -32,8 +32,9 @@ def fetch_filtered_predictions(
     start_ts: int,
     end_ts: int,
     filters: List[str],
+    first: int,
+    skip: int,
     network: str,
-    filter_mode: FilterMode,
     payout_only: bool = True,
     trueval_only: bool = True,
 ) -> List[Prediction]:
@@ -61,12 +62,11 @@ def fetch_filtered_predictions(
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
     """
+    filter_mode = FilterMode.CONTRACT_TS
 
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
 
-    chunk_size = 1000
-    offset = 0
     predictions: List[Prediction] = []
 
     # Convert filters to lowercase
@@ -84,7 +84,7 @@ def fetch_filtered_predictions(
 
     query = f"""
         {{
-            predictPredictions(skip: {offset}, first: {chunk_size} {where_clause}) {{
+            predictPredictions(skip: {skip}, first: {first} {where_clause}) {{
                 id
                 timestamp
                 user {{
@@ -128,9 +128,6 @@ def fetch_filtered_predictions(
             len(predictions),
             e,
         )
-        return []
-
-    offset += chunk_size
 
     if "data" not in result or not result["data"]:
         return []
@@ -150,7 +147,7 @@ def fetch_filtered_predictions(
         timestamp = prediction_sg_dict["timestamp"]
         slot = prediction_sg_dict["slot"]["slot"]
         user = prediction_sg_dict["user"]["id"]
-        contract = prediction_sg_dict["id"].split("-")[0]
+        address = prediction_sg_dict["id"].split("-")[0]
         trueval = None
         payout = None
         predicted_value = None
@@ -170,8 +167,8 @@ def fetch_filtered_predictions(
 
         prediction = Prediction(
             ID=prediction_sg_dict["id"],
+            contract=address,
             pair=pair,
-            contract=contract,
             timeframe=timeframe,
             prediction=predicted_value,
             stake=stake,

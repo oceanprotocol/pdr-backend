@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict, Callable
 import polars as pl
@@ -9,6 +10,7 @@ from pdr_backend.util.timeutil import ms_to_seconds
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
+logger = logging.getLogger("lake")
 
 @enforce_types
 class Table:
@@ -25,7 +27,6 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         filename = self._parquet_filename()
-        print(f"Loading parquet for {self.table_name}")
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
@@ -33,12 +34,13 @@ class Table:
         # check if file exists
         # if file doesn't exist, return an empty dataframe with the expected schema
         if os.path.exists(filename):
+            logger.info("Loading parquet for %s", self.table_name)
             df = pl.read_parquet(filename)
             df = df.filter(
                 (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
             )
         else:
-            print("file doesn't exist")
+            logger.info("Create initial df for %s", self.table_name)
             df = pl.DataFrame(schema=self.df_schema)
 
         # save data frame in memory

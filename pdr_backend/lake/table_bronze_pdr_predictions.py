@@ -166,7 +166,7 @@ def get_bronze_pdr_predictions_table(gql_tables: Dict[str, Table], ppss: PPSS) -
 
     collision_ids: pl.Series = pl.Series([])
     # retrieve pred ids that are already in the lake
-    if len(gql_tables[bronze_pdr_predictions_table_name].df > 0):
+    if len(gql_tables[bronze_pdr_predictions_table_name].df) > 0:
         collision_ids = gql_tables[bronze_pdr_predictions_table_name].df.filter(
             (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
             & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
