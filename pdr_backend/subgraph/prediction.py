@@ -25,9 +25,9 @@ class Prediction:
         self.contract = contract
         self.pair = pair
         self.timeframe = timeframe
-        self.prediction = prediction # predvalue
+        self.prediction = prediction  # predvalue
         self.stake = stake
-        self.trueval = trueval # truevalue
+        self.trueval = trueval  # truevalue
         self.timestamp = timestamp
         self.source = source
         self.payout = payout

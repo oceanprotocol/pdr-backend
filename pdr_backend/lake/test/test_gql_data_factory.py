@@ -82,11 +82,15 @@ def test_load_parquet():
         fin_timestr=fin_timestr,
     )
 
-    gql_data_factory = GQLDataFactory(ppss)
+    with patch("pdr_backend.lake.table.logger.info") as mock_logger_info:
+        gql_data_factory = GQLDataFactory(ppss)
 
-    printed_text = captured_output.getvalue().strip()
-    count_loads = printed_text.count("Loading parquet")
-    assert count_loads == len(gql_data_factory.record_config["tables"].items())
+        # Count multiple parquet loads
+        count_loads = sum(
+            "Loading parquet" in call.args[0]
+            for call in mock_logger_info.call_args_list
+        )
+        assert count_loads == len(gql_data_factory.record_config["tables"].items())
 
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")

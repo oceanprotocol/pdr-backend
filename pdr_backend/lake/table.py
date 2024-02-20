@@ -10,7 +10,8 @@ from pdr_backend.util.timeutil import ms_to_seconds
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
-logger = logging.getLogger("lake")
+logger = logging.getLogger("table")
+
 
 @enforce_types
 class Table:
