@@ -5,6 +5,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import (
+    FilterMode,
     Prediction,
     fetch_contract_id_and_spe,
     fetch_filtered_predictions,
@@ -116,10 +117,9 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     predictions = fetch_filtered_predictions(
         start_ts=1622547000,
         end_ts=1622548800,
-        first=1000,
-        skip=0,
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
+        filter_mode=FilterMode.CONTRACT_TS,
     )
 
     assert len(predictions) == 1000
@@ -158,10 +158,9 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     predictions = fetch_filtered_predictions(
         start_ts=1622547000,
         end_ts=1622548800,
-        first=1000,
-        skip=0,
         filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
+        filter_mode=FilterMode.CONTRACT_TS,
     )
 
     assert len(predictions) == num_successful_fetches * 1000
@@ -175,10 +174,9 @@ def test_fetch_filtered_predictions_no_data():
         fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
-            first=1000,
-            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
+            filter_mode=FilterMode.CONTRACT_TS,
         )
 
     with patch(
@@ -188,10 +186,9 @@ def test_fetch_filtered_predictions_no_data():
         predictions = fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
-            first=1000,
-            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
+            filter_mode=FilterMode.CONTRACT_TS,
         )
     assert len(predictions) == 0
 
@@ -202,10 +199,9 @@ def test_fetch_filtered_predictions_no_data():
         predictions = fetch_filtered_predictions(
             start_ts=1622547000,
             end_ts=1622548800,
-            first=1000,
-            skip=0,
             filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
+            filter_mode=FilterMode.CONTRACT_TS,
         )
     assert len(predictions) == 0
 
