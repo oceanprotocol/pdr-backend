@@ -171,4 +171,3 @@ class BasePredictoorAgent(ABC):
             A tuple of (float, float) to stake on each side, 
                 with the first element being the stake for up and the second element being the stake for down.
         """
-        pass
