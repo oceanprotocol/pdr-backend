@@ -1,14 +1,13 @@
 from typing import Dict
-import os
 import time
-import polars as pl
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
-    get_bronze_pdr_predictions_df,
+    get_bronze_pdr_predictions_table,
 )
 
 
@@ -28,7 +27,7 @@ class ETL:
         self.ppss = ppss
 
         self.gql_data_factory = gql_data_factory
-        self.dfs: Dict[str, pl.DataFrame] = {}
+        self.tables: Dict[str, Table] = {}
 
     def do_etl(self):
         """
@@ -55,11 +54,11 @@ class ETL:
             Call data factory to fetch data and update lake
             The sync will try 3 times to fetch from data_factory, and update the local gql_dfs
         """
-        gql_dfs = self.gql_data_factory.get_gql_dfs()
+        gql_tables = self.gql_data_factory.get_gql_tables()
 
         # rather than override the whole dict, we update the dict
-        for key in gql_dfs:
-            self.dfs[key] = gql_dfs[key]
+        for key in gql_tables:
+            self.tables[key] = gql_tables[key]
 
     def do_bronze_step(self):
         """
@@ -84,23 +83,14 @@ class ETL:
         @description
             Update bronze_pdr_predictions table
         """
-        if bronze_pdr_predictions_table_name not in self.dfs:
+        if bronze_pdr_predictions_table_name not in self.tables:
             # Load existing bronze tables
-            filename = self.gql_data_factory._parquet_filename(
-                bronze_pdr_predictions_table_name
+            table = Table(
+                bronze_pdr_predictions_table_name,
+                bronze_pdr_predictions_schema,
+                self.ppss,
             )
-            if os.path.exists(filename):
-                df = pl.read_parquet(filename)
-            else:
-                df = pl.DataFrame(schema=bronze_pdr_predictions_schema)
+            self.tables[bronze_pdr_predictions_table_name] = table
 
-            self.dfs[bronze_pdr_predictions_table_name] = df
-
-        df = get_bronze_pdr_predictions_df(self.dfs, self.ppss)
-
-        filename = self.gql_data_factory._parquet_filename(
-            bronze_pdr_predictions_table_name
-        )
-        self.gql_data_factory._save_parquet(filename, df)
-
-        self.dfs[bronze_pdr_predictions_table_name] = df
+        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
+        table.save()

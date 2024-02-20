@@ -5,6 +5,13 @@ import polars as pl
 from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.table import Table
+from pdr_backend.lake.table_pdr_predictions import (
+    predictions_schema,
+    predictions_table_name,
+)
+from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
+from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
@@ -22,9 +29,9 @@ def get_filtered_timestamps_df(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_setup_etl(
-    mock_get_gql_dfs,
+    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
@@ -45,13 +52,6 @@ def test_setup_etl(
         _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
     )
 
-    gql_dfs = {
-        "pdr_predictions": preds,
-        "pdr_truevals": truevals,
-        "pdr_payouts": payouts,
-    }
-    mock_get_gql_dfs.return_value = gql_dfs
-
     # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
@@ -59,6 +59,18 @@ def test_setup_etl(
         st_timestr,
         fin_timestr,
     )
+
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+    }
+
+    gql_tables["pdr_predictions"].df = preds
+    gql_tables["pdr_truevals"].df = truevals
+    gql_tables["pdr_payouts"].df = payouts
+
+    mock_get_gql_tables.return_value = gql_tables
 
     assert ppss.lake_ss.st_timestamp == timestr_to_ut(st_timestr)
     assert ppss.lake_ss.fin_timestamp == timestr_to_ut(fin_timestr)
@@ -68,31 +80,33 @@ def test_setup_etl(
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
-    assert len(etl.dfs) == 0
+    assert len(etl.tables) == 0
 
     # Work 2: Complete ETL sync step - Assert 3 gql_dfs
     etl.do_sync_step()
 
     # Assert original gql has 6 predictions, but we only got 5 due to date
-    assert len(etl.dfs) == 3
-    assert len(etl.dfs["pdr_predictions"]) == 5
+    assert len(etl.tables) == 3
+    assert len(etl.tables["pdr_predictions"].df) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
-    assert len(etl.dfs["pdr_payouts"]) != len(_gql_datafactory_etl_payouts_df)
-    assert len(etl.dfs["pdr_predictions"]) != len(_gql_datafactory_etl_predictions_df)
-    assert len(etl.dfs["pdr_truevals"]) != len(_gql_datafactory_etl_truevals_df)
+    assert len(etl.tables["pdr_payouts"].df) != len(_gql_datafactory_etl_payouts_df)
+    assert len(etl.tables["pdr_predictions"].df) != len(
+        _gql_datafactory_etl_predictions_df
+    )
+    assert len(etl.tables["pdr_truevals"].df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all 3 dfs
-    assert len(etl.dfs["pdr_payouts"]) == 4
-    assert len(etl.dfs["pdr_predictions"]) == 5
-    assert len(etl.dfs["pdr_truevals"]) == 5
+    assert len(etl.tables["pdr_payouts"].df) == 4
+    assert len(etl.tables["pdr_predictions"].df) == 5
+    assert len(etl.tables["pdr_truevals"].df) == 5
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_dfs")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_etl_do_bronze_step(
-    mock_get_gql_dfs,
+    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
@@ -119,14 +133,17 @@ def test_etl_do_bronze_step(
         _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
     )
 
-    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
-    gql_dfs = {
-        "pdr_predictions": preds,
-        "pdr_truevals": truevals,
-        "pdr_payouts": payouts,
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    mock_get_gql_dfs.return_value = gql_dfs
+    gql_tables["pdr_predictions"].df = preds
+    gql_tables["pdr_truevals"].df = truevals
+    gql_tables["pdr_payouts"].df = payouts
+
+    mock_get_gql_tables.return_value = gql_tables
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
@@ -134,15 +151,15 @@ def test_etl_do_bronze_step(
     # Work 2: Do sync
     etl.do_sync_step()
 
-    assert len(etl.dfs["pdr_predictions"]) == 6
+    assert len(etl.tables["pdr_predictions"].df) == 6
 
     # Work 3: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    assert len(etl.dfs["bronze_pdr_predictions"]) == 6
+    assert len(etl.tables["bronze_pdr_predictions"].df) == 6
 
-    bronze_pdr_predictions_df = etl.dfs["bronze_pdr_predictions"]
+    bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (

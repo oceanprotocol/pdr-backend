@@ -3,10 +3,10 @@ from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
-
 from pdr_backend.lake.plutil import (
     pick_df_and_ids_on_period,
 )
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 
 
@@ -32,8 +32,8 @@ bronze_pdr_predictions_schema = {
 
 
 def _process_predictions(
-    collision_ids: pl.Series, dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
+    collision_ids: pl.Series, tables: Dict[str, Table], ppss: PPSS
+) -> Dict[str, Table]:
     """
     @description
         Perform post-fetch processing on the data.
@@ -41,16 +41,15 @@ def _process_predictions(
         2. Transform predictions to bronze
         3. Concat to existing table
     """
-
     # only add new predictions
-    predictions_df = dfs["pdr_predictions"].filter(
+    predictions_df = tables["pdr_predictions"].df.filter(
         (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
     )
 
     if len(predictions_df) == 0:
-        return dfs
+        return tables
 
     # transform from raw to bronze_prediction
     def get_slot_id(_id: str) -> str:
@@ -69,27 +68,25 @@ def _process_predictions(
 
     # append to existing dataframe
     new_bronze_df = pl.concat(
-        [dfs[bronze_pdr_predictions_table_name], bronze_predictions_df]
+        [tables[bronze_pdr_predictions_table_name].df, bronze_predictions_df]
     )
-    dfs[bronze_pdr_predictions_table_name] = new_bronze_df
-    return dfs
+    tables[bronze_pdr_predictions_table_name].df = new_bronze_df
+    return tables
 
 
-def _process_truevals(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
+def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     """
     Perform post-fetch processing on the data
     """
     # get truevals within the update
     truevals_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_truevals"],
+        target=tables["pdr_truevals"].df,
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
     # get ref to bronze_predictions
-    predictions_df = dfs[bronze_pdr_predictions_table_name]
+    predictions_df = tables[bronze_pdr_predictions_table_name].df
 
     # update only the ones within this time range
     predictions_df = (
@@ -111,13 +108,11 @@ def _process_truevals(
     )
 
     # update dfs
-    dfs[bronze_pdr_predictions_table_name] = predictions_df
-    return dfs
+    tables[bronze_pdr_predictions_table_name].df = predictions_df
+    return tables
 
 
-def _process_payouts(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
+def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     """
     @description
         Perform post-fetch processing on the data
@@ -126,13 +121,13 @@ def _process_payouts(
     """
     # get payouts within the update
     payouts_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_payouts"],
+        target=tables["pdr_payouts"].df,
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
     # get existing bronze_predictions we'll be updating
-    predictions_df = dfs[bronze_pdr_predictions_table_name]
+    predictions_df = tables[bronze_pdr_predictions_table_name].df
 
     # do work to join from pdr_payout onto bronze_pdr_predictions
     predictions_df = (
@@ -158,30 +153,29 @@ def _process_payouts(
     )
 
     # update dfs
-    dfs[bronze_pdr_predictions_table_name] = predictions_df
-    return dfs
+    tables[bronze_pdr_predictions_table_name].df = predictions_df
+    return tables
 
 
 @enforce_types
-def get_bronze_pdr_predictions_df(
-    gql_dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> pl.DataFrame:
+def get_bronze_pdr_predictions_table(gql_tables: Dict[str, Table], ppss: PPSS) -> Table:
     """
     @description
         Updates/Creates clean predictions from existing raw tables
     """
 
+    collision_ids: pl.Series = pl.Series([])
     # retrieve pred ids that are already in the lake
-    collision_ids = gql_dfs[bronze_pdr_predictions_table_name].filter(
-        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
-        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
-    )["ID"]
+    if len(gql_tables[bronze_pdr_predictions_table_name].df > 0):
+        collision_ids = gql_tables[bronze_pdr_predictions_table_name].df.filter(
+            (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
+            & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+        )["ID"]
 
     # do post sync processing
-    gql_dfs = _process_predictions(collision_ids, gql_dfs, ppss)
-    gql_dfs = _process_truevals(gql_dfs, ppss)
-    gql_dfs = _process_payouts(gql_dfs, ppss)
+    gql_tables = _process_predictions(collision_ids, gql_tables, ppss)
+    gql_tables = _process_truevals(gql_tables, ppss)
+    gql_tables = _process_payouts(gql_tables, ppss)
 
     # after all post processing, return bronze_predictions
-    df = gql_dfs[bronze_pdr_predictions_table_name]
-    return df
+    return gql_tables[bronze_pdr_predictions_table_name]
