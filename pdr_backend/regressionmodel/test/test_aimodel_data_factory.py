@@ -132,7 +132,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([3.0, 2.0, 1.0])
 
-    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
@@ -174,7 +174,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_xrecent = np.array([4.0, 3.0, 2.0])
 
-    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df, xrecent = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
@@ -205,7 +205,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert "max_n_train" in ss.regressionmodel_ss.d
     ss.regressionmodel_ss.d["max_n_train"] = 5
 
-    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, _ = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
@@ -235,8 +235,8 @@ def test_create_xy__2exchanges_2coins_2signals():
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
-    aimodel_data_factory = RegressionModelDataFactory(ss)
-    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    regressionmodel_data_factory = RegressionModelDataFactory(ss)
+    X, y, x_df, _ = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
@@ -355,7 +355,7 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = regressionmodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=False
     )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
@@ -365,13 +365,13 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = regressionmodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=True
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, _ = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
