@@ -145,7 +145,7 @@ class OhlcvDataFactory:
             # prep next iteration
             newest_ut_value = df.tail(1)["timestamp"][0]
 
-            logger.info("newest_ut_value: %s", newest_ut_value)
+            logger.debug("newest_ut_value: %s", newest_ut_value)
             st_ut = newest_ut_value + feed.timeframe.ms
 
         # output to file
