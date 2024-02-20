@@ -3,11 +3,11 @@ from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_slots import (
-    _process_predictions,
+    _process_bronze_predictions,
     _process_slots,
-    _process_truevals,
     bronze_pdr_slots_schema,
 )
+from pdr_backend.lake.table_bronze_pdr_predictions import get_bronze_pdr_predictions_df
 
 
 @enforce_types
@@ -15,6 +15,7 @@ def test_table_bronze_pdr_slots(
     _gql_datafactory_etl_slots_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_payouts_df,
     tmpdir,
 ):
     # please note date, including Nov 1st
@@ -32,8 +33,12 @@ def test_table_bronze_pdr_slots(
         "pdr_slots": _gql_datafactory_etl_slots_df,
         "pdr_predictions": _gql_datafactory_etl_predictions_df,
         "pdr_truevals": _gql_datafactory_etl_truevals_df,
+        "pdr_payouts": _gql_datafactory_etl_payouts_df,
+        "bronze_pdr_predictions": pl.DataFrame(),
         "bronze_pdr_slots": pl.DataFrame(),
     }
+
+    gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_df(gql_dfs, ppss)
 
     assert len(gql_dfs["bronze_pdr_slots"]) == 0
 
@@ -47,14 +52,8 @@ def test_table_bronze_pdr_slots(
     assert gql_dfs["bronze_pdr_slots"]["roundSumStakesUp"] is not None
     assert gql_dfs["bronze_pdr_slots"]["roundSumStakes"] is not None
 
-    # Work 2: Append from pdr_truevals table
-    gql_dfs = _process_truevals(gql_dfs, ppss)
-
-    assert len(gql_dfs["bronze_pdr_slots"]) == 6
-
-    # Work 3: Append from pdr_predictions table
-    gql_dfs = _process_predictions(gql_dfs, ppss)
-
+    # Work 2: Append from bronze_pdr_predictions table
+    gql_dfs = _process_bronze_predictions(gql_dfs, ppss)
     # We should still have 6 rows
     assert len(gql_dfs["bronze_pdr_slots"]) == 6
 

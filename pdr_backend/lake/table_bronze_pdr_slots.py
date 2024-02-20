@@ -75,53 +75,7 @@ def _process_slots(
     return dfs
 
 
-def _process_truevals(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
-    """
-    Perform post-fetch processing on the data
-    """
-    # get truevals within the update
-    truevals_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_truevals"],
-        start_timestamp=ppss.lake_ss.st_timestamp,
-        finish_timestamp=ppss.lake_ss.fin_timestamp,
-    )
-
-    # get ref to bronze_slots
-    slots_df = dfs[bronze_pdr_slots_table_name]
-
-    # add columns that are going to be populated
-    slots_df = slots_df.with_columns(last_event_timestamp=pl.lit(None))
-    slots_df = slots_df.with_columns(trueval=pl.lit(None))
-
-    initial_schema_keys = slots_df.schema.keys()
-
-    # update only the ones within this time range
-    slots_df = (
-        slots_df.join(truevals_df, left_on="ID", right_on="ID", how="left")
-        .with_columns(
-            [
-                pl.col("trueval").fill_null(pl.col("trueval")),
-                pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
-            ]
-        )
-        .drop(["trueval", "last_event_timestamp"])
-        .rename(
-            {
-                "trueval_right": "trueval",
-                "timestamp_right": "last_event_timestamp",
-            }
-        )
-        .select(initial_schema_keys)
-    )
-
-    # update dfs
-    dfs[bronze_pdr_slots_table_name] = slots_df
-    return dfs
-
-
-def _process_predictions(
+def _process_bronze_predictions(
     dfs: Dict[str, pl.DataFrame], ppss: PPSS
 ) -> Dict[str, pl.DataFrame]:
     """
@@ -131,8 +85,8 @@ def _process_predictions(
 
     """
     # get predictions within the update
-    predictions_df, _ = pick_df_and_ids_on_period(
-        target=dfs["pdr_predictions"],
+    bronze_predictions_df, _ = pick_df_and_ids_on_period(
+        target=dfs["bronze_pdr_predictions"],
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
@@ -144,25 +98,30 @@ def _process_predictions(
     slots_df = slots_df.with_columns(pair=pl.lit(None))
     slots_df = slots_df.with_columns(source=pl.lit(None))
     slots_df = slots_df.with_columns(timeframe=pl.lit(None))
+    slots_df = slots_df.with_columns(trueval=pl.lit(None))
+    slots_df = slots_df.with_columns(last_event_timestamp=pl.lit(None))
 
     initial_schema_keys = slots_df.schema.keys()
 
     # do work to join from pdr_payout onto bronze_pdr_predictions
     slots_df = (
-        slots_df.join(predictions_df, on=["contract"], how="left")
+        slots_df.join(bronze_predictions_df, on=["contract"], how="left")
         .with_columns(
             [
                 pl.col("pair").fill_null(pl.col("pair")),
                 pl.col("source").fill_null(pl.col("source")),
                 pl.col("timeframe").fill_null(pl.col("timeframe")),
+                pl.col("trueval").fill_null(pl.col("truevalue")),
+                pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
             ]
         )
-        .drop(["pair", "source", "timeframe"])
+        .drop(["pair", "source", "timeframe", "truevalue", "last_event_timestamp"])
         .rename(
             {
                 "pair_right": "pair",
                 "source_right": "source",
                 "timeframe_right": "timeframe",
+                "timestamp_right": "last_event_timestamp",
             }
         )
         .select(initial_schema_keys)
@@ -194,8 +153,7 @@ def get_bronze_pdr_slots_df(
 
     # do post sync processing
     gql_dfs = _process_slots(collision_ids, gql_dfs, ppss)
-    gql_dfs = _process_predictions(gql_dfs, ppss)
-    gql_dfs = _process_truevals(gql_dfs, ppss)
+    gql_dfs = _process_bronze_predictions(gql_dfs, ppss)
 
     # after all post processing, return bronze_slots
     df = gql_dfs[bronze_pdr_slots_table_name]
