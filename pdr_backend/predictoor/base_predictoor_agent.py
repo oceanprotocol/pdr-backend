@@ -168,6 +168,7 @@ class BasePredictoorAgent(ABC):
 
         @return
             A tuple of (bool, float) to stake on one side
-            A tuple of (float, float) to stake on each side, with the first element being the stake for up and the second element being the stake for down.
+            A tuple of (float, float) to stake on each side, 
+                with the first element being the stake for up and the second element being the stake for down.
         """
         pass
