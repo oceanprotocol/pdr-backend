@@ -83,7 +83,7 @@ def test_create_xy__0():
     factory = RegressionModelDataFactory(predictoor_ss)
     X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.regressionmodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -136,7 +136,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         mergedohlcv_df, testshift=0
     )
 
-    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -180,7 +180,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
         mergedohlcv_df, testshift=1
     )
 
-    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -211,7 +211,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     X, y, x_df, _ = regressionmodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
-    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(ss.regressionmodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
