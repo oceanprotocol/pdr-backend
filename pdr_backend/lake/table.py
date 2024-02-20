@@ -130,7 +130,7 @@ class Table:
 
             # save to file if requred number of data has been fetched
             if (
-                save_backoff_count > save_backoff_limit or len(df) < pagination_limit
+                save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet

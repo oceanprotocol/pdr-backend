@@ -62,7 +62,7 @@ def fetch_filtered_predictions(
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
     """
-    filter_mode = FilterMode.NONE
+    filter_mode = FilterMode.CONTRACT_TS
 
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")

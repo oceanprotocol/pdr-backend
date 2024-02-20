@@ -5,6 +5,8 @@ from polars import Boolean, Float64, Int64, Utf8
 import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
+from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
+from pdr_backend.lake.table_pdr_predictions import predictions_schema
 
 
 # pylint: disable=too-many-instance-attributes
@@ -56,10 +58,13 @@ table_df_schema = {
 }
 table_name = "pdr_test_df"
 file_path = f"./parquet_data/{table_name}.parquet"
+file_path2 = "./parquet_data/test_prediction_table_multiple.parquet"
 
 # delete test file if already exists
 if os.path.exists(file_path):
     os.remove(file_path)
+if os.path.exists(file_path2):
+    os.remove(file_path2)
 
 
 def test_table_initialization():
@@ -149,9 +154,6 @@ def test_all():
     )
 
     table = Table(table_name, table_df_schema, ppss)
-
-    captured_output = StringIO()
-    sys.stdout = captured_output
     table.df = pl.DataFrame([], table_df_schema)
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
@@ -191,3 +193,49 @@ def test_get_pdr_df():
         {"contract_list": ["0x123"]},
     )
     assert len(table.df) == 1
+
+
+def test_get_pdr_df_multiple_fetches():
+    """
+    Test multiple table actions in one go
+    """
+
+    st_timestr = "2023-12-03_00:00"
+    fin_timestr = "2023-12-03_16:00"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        ".",
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
+    captured_output = StringIO()
+    sys.stdout = captured_output
+
+    save_backoff_limit = 4
+    pagination_limit = 2
+    st_timest = 1704110400000
+    fin_timest = 1704115800000
+    table.get_pdr_df(
+        fetch_filtered_predictions,
+        "sapphire-mainnet",
+        st_timest,
+        fin_timest,
+        save_backoff_limit,
+        pagination_limit,
+        {"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
+    )
+
+    printed_text = captured_output.getvalue().strip()
+
+    # test fetches multiple times
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 3
+
+    # test saves multiple times
+    count_saves = printed_text.count("Saved")
+    assert count_saves == 2
+
+    assert len(table.df) == 5
