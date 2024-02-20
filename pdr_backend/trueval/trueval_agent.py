@@ -118,7 +118,7 @@ class TruevalAgent:
         return (predictoor_contract, seconds_per_epoch)
 
     def get_init_and_ts(
-        self, slot: UnixTimeSeconds, seconds_per_epoch: int
+        self, slot: int, seconds_per_epoch: int
     ) -> Tuple[UnixTimeSeconds, UnixTimeSeconds]:
         initial_ts = UnixTimeSeconds(slot - seconds_per_epoch)
         end_ts = UnixTimeSeconds(slot)

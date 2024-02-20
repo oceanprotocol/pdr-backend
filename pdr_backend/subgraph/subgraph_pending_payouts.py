@@ -11,7 +11,9 @@ logger = logging.getLogger("subgraph")
 
 
 @enforce_types
-def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[int]]:
+def query_pending_payouts(
+    subgraph_url: str, addr: str
+) -> Dict[str, List[UnixTimeSeconds]]:
     chunk_size = 1000
     offset = 0
     pending_slots: Dict[str, List[UnixTimeSeconds]] = {}

@@ -147,7 +147,7 @@ class DFBuyerAgent:
         }
 
     def _prepare_batches(
-        self, consume_times: Dict[str, int]
+        self, consume_times: Dict[str, UnixTimeSeconds]
     ) -> List[Tuple[List[str], List[int]]]:
         batch_size = self.ppss.dfbuyer_ss.batch_size
 
