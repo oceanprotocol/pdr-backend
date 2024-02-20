@@ -3,6 +3,7 @@ from unittest.mock import patch
 import polars as pl
 from pdr_backend.lake.table_pdr_truevals import get_pdr_truevals_df
 from pdr_backend.subgraph.trueval import mock_truevals
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 # ====================================================================
 pdr_subscriptions_record = "pdr_subscriptions"
@@ -13,8 +14,8 @@ def test_get_pdr_truevals_df(mock_fetch_truevals):
     mock_fetch_truevals.return_value = mock_truevals()
     trueval_def = get_pdr_truevals_df(
         "sapphire-testnet",
-        1696879672,
-        1696885995,
+        UnixTimeMilliseconds(1696879672),
+        UnixTimeMilliseconds(1696885995),
         {
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
@@ -33,8 +34,8 @@ def test_get_pdr_truevals_no_truevals_fetched_df(mock_fetch_truevals, caplog):
     mock_fetch_truevals.return_value = []
     trueval_def = get_pdr_truevals_df(
         "sapphire-testnet",
-        1696879672,
-        1696885995,
+        UnixTimeMilliseconds(1696879672),
+        UnixTimeMilliseconds(1696885995),
         {
             "name": "Sapphire",
             "contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],

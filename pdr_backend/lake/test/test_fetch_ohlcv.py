@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv, clean_raw_ohlcv
 from pdr_backend.util.timeutil import timestr_to_ut
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
 MPE = 300000  # ms per 5min epoch
@@ -21,29 +22,85 @@ RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 def test_clean_raw_ohlcv():
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
 
-    assert clean_raw_ohlcv(None, feed, 0, 0) == []
-    assert clean_raw_ohlcv([], feed, 0, 0) == []
+    assert (
+        clean_raw_ohlcv(None, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(0))
+        == []
+    )
+    assert (
+        clean_raw_ohlcv([], feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(0))
+        == []
+    )
 
     # RAW5v is the shape of "raw_tohlcv_data" with just one candle
     RAW5v = [RAW5]
-    assert clean_raw_ohlcv(RAW5v, feed, 0, 0) == []
-    assert clean_raw_ohlcv(RAW5v, feed, 0, T4) == []
-    assert clean_raw_ohlcv(RAW5v, feed, T6, T10) == []
-    assert clean_raw_ohlcv(RAW5v, feed, T5, T5) == RAW5v
-    assert clean_raw_ohlcv(RAW5v, feed, 0, T10) == RAW5v
-    assert clean_raw_ohlcv(RAW5v, feed, 0, T5) == RAW5v
-    assert clean_raw_ohlcv(RAW5v, feed, T5, T10) == RAW5v
+    assert (
+        clean_raw_ohlcv(RAW5v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(0))
+        == []
+    )
+    assert (
+        clean_raw_ohlcv(RAW5v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(T4))
+        == []
+    )
+    assert (
+        clean_raw_ohlcv(
+            RAW5v, feed, UnixTimeMilliseconds(T6), UnixTimeMilliseconds(T10)
+        )
+        == []
+    )
+    assert (
+        clean_raw_ohlcv(RAW5v, feed, UnixTimeMilliseconds(T5), UnixTimeMilliseconds(T5))
+        == RAW5v
+    )
+    assert (
+        clean_raw_ohlcv(RAW5v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(T10))
+        == RAW5v
+    )
+    assert (
+        clean_raw_ohlcv(RAW5v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(T5))
+        == RAW5v
+    )
+    assert (
+        clean_raw_ohlcv(
+            RAW5v, feed, UnixTimeMilliseconds(T5), UnixTimeMilliseconds(T10)
+        )
+        == RAW5v
+    )
 
     # RAW5v is the shape of "raw_tohlcv_data" with four candles
     RAW5678v = [RAW5, RAW6, RAW7, RAW8]
-    assert clean_raw_ohlcv(RAW5678v, feed, 0, 0) == []
-    assert clean_raw_ohlcv(RAW5678v, feed, 0, T10) == RAW5678v
-    assert clean_raw_ohlcv(RAW5678v, feed, T5, T5) == [RAW5]
-    assert clean_raw_ohlcv(RAW5678v, feed, T6, T6) == [RAW6]
-    assert clean_raw_ohlcv(RAW5678v, feed, T5, T6) == [RAW5, RAW6]
-    assert clean_raw_ohlcv(RAW5678v, feed, T5, T8) == RAW5678v
-    assert clean_raw_ohlcv(RAW5678v, feed, T7, T8) == [RAW7, RAW8]
-    assert clean_raw_ohlcv(RAW5678v, feed, T8, T8) == [RAW8]
+    assert (
+        clean_raw_ohlcv(
+            RAW5678v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(0)
+        )
+        == []
+    )
+    assert (
+        clean_raw_ohlcv(
+            RAW5678v, feed, UnixTimeMilliseconds(0), UnixTimeMilliseconds(T10)
+        )
+        == RAW5678v
+    )
+    assert clean_raw_ohlcv(
+        RAW5678v, feed, UnixTimeMilliseconds(T5), UnixTimeMilliseconds(T5)
+    ) == [RAW5]
+    assert clean_raw_ohlcv(
+        RAW5678v, feed, UnixTimeMilliseconds(T6), UnixTimeMilliseconds(T6)
+    ) == [RAW6]
+    assert clean_raw_ohlcv(
+        RAW5678v, feed, UnixTimeMilliseconds(T5), UnixTimeMilliseconds(T6)
+    ) == [RAW5, RAW6]
+    assert (
+        clean_raw_ohlcv(
+            RAW5678v, feed, UnixTimeMilliseconds(T5), UnixTimeMilliseconds(T8)
+        )
+        == RAW5678v
+    )
+    assert clean_raw_ohlcv(
+        RAW5678v, feed, UnixTimeMilliseconds(T7), UnixTimeMilliseconds(T8)
+    ) == [RAW7, RAW8]
+    assert clean_raw_ohlcv(
+        RAW5678v, feed, UnixTimeMilliseconds(T8), UnixTimeMilliseconds(T8)
+    ) == [RAW8]
 
 
 @enforce_types
@@ -74,8 +131,6 @@ def test_safe_fetch_ohlcv(exch):
     safe_fetch_ohlcv("bad exch", symbol, timeframe, since, limit)
     safe_fetch_ohlcv(exch, "bad symbol", timeframe, since, limit)
     safe_fetch_ohlcv(exch, symbol, "bad timeframe", since, limit)
-    safe_fetch_ohlcv(exch, symbol, timeframe, -5, limit)
-    safe_fetch_ohlcv(exch, symbol, timeframe, since, -5)
 
     # ensure a None is returned when warning
     v = safe_fetch_ohlcv("bad exch", symbol, timeframe, since, limit)

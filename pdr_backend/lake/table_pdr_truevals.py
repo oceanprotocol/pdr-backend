@@ -10,6 +10,7 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 truevals_table_name = "pdr_truevals"
 logger = logging.getLogger("lake_pdr_truevals")
@@ -26,7 +27,10 @@ truevals_schema = {
 
 @enforce_types
 def get_pdr_truevals_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
+    network: str,
+    st_ut: UnixTimeMilliseconds,
+    fin_ut: UnixTimeMilliseconds,
+    config: Dict,
 ) -> pl.DataFrame:
     """
     @description

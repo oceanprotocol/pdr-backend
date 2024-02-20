@@ -12,6 +12,8 @@ from pdr_backend.subgraph.subgraph_predictions import (
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
+from pdr_backend.util.time_types import UnixTimeMilliseconds
+
 
 predictions_table_name = "pdr_predictions"
 logger = logging.getLogger("lake_pdr_predictions")
@@ -66,7 +68,10 @@ def _transform_timestamp_to_ms(df: pl.DataFrame) -> pl.DataFrame:
 
 @enforce_types
 def get_pdr_predictions_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
+    network: str,
+    st_ut: UnixTimeMilliseconds,
+    fin_ut: UnixTimeMilliseconds,
+    config: Dict,
 ) -> pl.DataFrame:
     """
     @description
