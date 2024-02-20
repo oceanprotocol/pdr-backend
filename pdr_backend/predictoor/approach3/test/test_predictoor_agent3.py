@@ -117,7 +117,7 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
         "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components",
         mock_get_data_components2,
     ), patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.AimodelFactory.build",
+        "pdr_backend.predictoor.approach3.predictoor_agent3.RegressionModelFactory.build",
         mock_build,
     ):
 
@@ -157,7 +157,7 @@ def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
         "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components",
         mock_get_data_components2,
     ), patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.AimodelFactory.build",
+        "pdr_backend.predictoor.approach3.predictoor_agent3.RegressionModelFactory.build",
         mock_build,
     ):
 
