@@ -1,8 +1,6 @@
 import warnings
-from unittest.mock import Mock
 
 import numpy as np
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.classifiermodel.classifiermodel_factory import ClassifierModelFactory
