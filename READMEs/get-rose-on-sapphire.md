@@ -2,10 +2,12 @@
 
 Steps:
 
-1. [Create a Wallet](#1-create-a-wallet)
+1. [Create a wallet](#1-create-a-wallet)
 2. [Purchase ROSE](#2-purchase-rose)
-3. [Prepare Oasis Sapphire EVM account](#3-prepare-oasis-sapphire-evm-account)
+3. [Prepare Sapphire EVM account](#3-prepare-sapphire-evm-account)
 4. [Transfer ROSE from Oasis Account to Sapphire](#4-transfer-rose-from-oasis-account-to-sapphire)
+
+Bonus: [Sapphire * Metamask](#5-bonus-sapphire-evm-account-in-metamask)
 
 ## 1. Create a Wallet
 
@@ -23,7 +25,7 @@ Then, you'll be withdrawing ROSE to your web3 wallet.
 
 ⚠️ Sending to the wrong address or network will likely result in the loss of your tokens. To minimize risk: send a small test amount first, and double-check the receiving address and network.
 
-## 3. Prepare Oasis Sapphire EVM account
+## 3. Prepare Sapphire EVM account
 
 First, some background:
 - **ParaTimes.** "ParaTimes" are subnets in the Oasis chain ecosystem, all reporting to the same "consensus layer". Sapphire, Cipher, and Emerald are Oasis ParaTimes. Each ParaTime has its own independent state. So, ROSE held at the consensus layer is not the same as in Sapphire. But you can swap between them via "deposits" and "withdrawals" in the Oasis wallet.
@@ -63,10 +65,23 @@ To verify that the tx went through:
 
 The official Oasis guide has details: [How to Transfer ROSE into a ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime)
 
+## 5. Bonus: Sapphire EVM Account in Metamask
 
-## Conclusion
+Metamask supports Sapphire EVM. Here's how to use it.
 
-Congratulations! You have successfully transferred ROSE to Sapphire Mainnet. Do manage private keys with utmost care.
+To add Sapphire network: 
+1. Go to https://docs.oasis.io/dapp/sapphire/.
+2. In that page click "click here to register Sapphire Mainnet on Metamask".
+3. Confirm the prompts to switch to Sapphire network
+
+To add your Sapphire EVM account: 
+1. In Metamask, in top middle "account" subsection, click the dropdown
+2. Click "Add account or hardware wallet". Follow the prompt.
+
+To see your ROSE balance:
+1. In Metamask, click "Tokens"
+2. Observe the ROSE balance. 
+
 
 > [!WARNING]
 > Disclaimer: This guide does not provide financial advice. Always conduct thorough research or consult a professional before making investment decisions. Make sure to verify URLs and ensure all information aligns with the current operations and networks of the related platforms as cryptocurrency ecosystems frequently update and evolve. Always ensure to use official and secure websites when conducting transactions.
