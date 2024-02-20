@@ -7,6 +7,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.plutil import (
     pick_df_and_ids_on_period,
 )
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 
 
@@ -29,8 +30,8 @@ bronze_pdr_slots_schema = {
 
 
 def _process_slots(
-    collision_ids: pl.Series, dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
+    collision_ids: pl.Series, tables: Dict[str, Table], ppss: PPSS
+) -> Dict[str, Table]:
     """
     @description
         Perform post-fetch processing on the data.
@@ -40,7 +41,7 @@ def _process_slots(
     """
 
     # only add new slots
-    slots_df = dfs["pdr_slots"].filter(
+    slots_df = tables["pdr_slots"].df.filter(
         (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
@@ -62,22 +63,22 @@ def _process_slots(
     )
 
     if len(slots_df) == 0:
-        return dfs
+        return tables
 
-    if dfs[bronze_pdr_slots_table_name].schema == bronze_pdr_slots_schema:
-        dfs[bronze_pdr_slots_table_name] = dfs[bronze_pdr_slots_table_name].select(
+    if tables[bronze_pdr_slots_table_name].df_schema == bronze_pdr_slots_schema:
+        tables[bronze_pdr_slots_table_name].df = tables[bronze_pdr_slots_table_name].df.select(
             slots_df.schema
         )
 
     # append to existing dataframe
-    new_bronze_df = pl.concat([dfs[bronze_pdr_slots_table_name], slots_df])
-    dfs[bronze_pdr_slots_table_name] = new_bronze_df
-    return dfs
+    new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, slots_df])
+    tables[bronze_pdr_slots_table_name].df = new_bronze_df
+    return tables
 
 
 def _process_bronze_predictions(
-    dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> Dict[str, pl.DataFrame]:
+    tables: Dict[str, Table], ppss: PPSS
+) -> Dict[str, Table]:
     """
     @description
         Perform post-fetch processing on the data
@@ -86,13 +87,13 @@ def _process_bronze_predictions(
     """
     # get predictions within the update
     bronze_predictions_df, _ = pick_df_and_ids_on_period(
-        target=dfs["bronze_pdr_predictions"],
+        target=tables["bronze_pdr_predictions"].df,
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
 
     # get existing bronze_predictions we'll be updating
-    slots_df = dfs[bronze_pdr_slots_table_name]
+    slots_df = tables[bronze_pdr_slots_table_name].df
 
     # add columns that are going to be populated
     slots_df = slots_df.with_columns(pair=pl.lit(None))
@@ -130,14 +131,14 @@ def _process_bronze_predictions(
     slots_df = slots_df.unique(subset=["ID"])
 
     # update dfs
-    dfs[bronze_pdr_slots_table_name] = slots_df
-    return dfs
+    tables[bronze_pdr_slots_table_name].df = slots_df
+    return tables
 
 
 @enforce_types
-def get_bronze_pdr_slots_df(
-    gql_dfs: Dict[str, pl.DataFrame], ppss: PPSS
-) -> pl.DataFrame:
+def get_bronze_pdr_slots_table(
+    gql_tables: Dict[str, Table], ppss: PPSS
+) -> Table:
     """
     @description
         Updates/Creates clean slots from existing raw tables
@@ -145,17 +146,15 @@ def get_bronze_pdr_slots_df(
 
     collision_ids = pl.Series([])
     # retrieve pred ids that are already in the lake
-    if len(gql_dfs[bronze_pdr_slots_table_name]) > 0:
-        collision_ids = gql_dfs[bronze_pdr_slots_table_name].filter(
+    if len(gql_tables[bronze_pdr_slots_table_name].df) > 0:
+        collision_ids = gql_tables[bronze_pdr_slots_table_name].df.filter(
             (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
             & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         )["ID"]
 
     # do post sync processing
-    gql_dfs = _process_slots(collision_ids, gql_dfs, ppss)
-    gql_dfs = _process_bronze_predictions(gql_dfs, ppss)
+    gql_tables = _process_slots(collision_ids, gql_tables, ppss)
+    gql_tables = _process_bronze_predictions(gql_tables, ppss)
 
     # after all post processing, return bronze_slots
-    df = gql_dfs[bronze_pdr_slots_table_name]
-    df = df.sort("timestamp")
-    return df
+    return gql_tables[bronze_pdr_slots_table_name]

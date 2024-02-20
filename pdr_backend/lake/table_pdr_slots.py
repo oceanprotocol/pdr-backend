@@ -8,6 +8,8 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.timeutil import ms_to_seconds
 
+slots_table_name = "pdr_slots"
+
 # RAW SLOT SCHEMA
 slots_schema = {
     "ID": Utf8,
@@ -17,30 +19,3 @@ slots_schema = {
     "roundSumStakesUp": Float64,
     "roundSumStakes": Float64,
 }
-
-
-@enforce_types
-def get_pdr_slots_df(
-    network: str, st_ut: int, fin_ut: int, config: Dict
-) -> pl.DataFrame:
-    """
-    @description
-        Fetch raw slots from predictoor subgraph
-        Update function for graphql query, returns raw data
-        + Transforms ts into ms as required for data factory
-    """
-    network = get_sapphire_postfix(network)
-
-    # fetch slots
-    slots = fetch_slots(
-        config["contract_list"], ms_to_seconds(st_ut), ms_to_seconds(fin_ut), network
-    )
-
-    if len(slots) == 0:
-        print("No slots to fetch. Exit.")
-        return pl.DataFrame()
-
-    # convert slots to df, transform timestamp into ms, return in-order
-    slot_df = _object_list_to_df(slots, slots_schema)
-
-    return slot_df

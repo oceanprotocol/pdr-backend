@@ -3,11 +3,11 @@ from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_slots import (
-    get_bronze_pdr_slots_df,
+    get_bronze_pdr_slots_table,
     bronze_pdr_slots_schema,
 )
 from pdr_backend.lake.table_bronze_pdr_predictions import (
-    get_bronze_pdr_predictions_df,
+    get_bronze_pdr_predictions_table,
     bronze_pdr_predictions_schema,
 )
 
@@ -41,12 +41,14 @@ def test_bronze_tables_coraltion(
     }
 
     # Create bronze predictions table
-    gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_df(gql_dfs, ppss)
+    bronze_pdr_prediction_table = get_bronze_pdr_predictions_table(gql_dfs, ppss)
+    
+    # Validate bronze_pdr_prediction_table is correct, and as expected
     assert gql_dfs["bronze_pdr_predictions"].schema == bronze_pdr_predictions_schema
     assert len(gql_dfs["bronze_pdr_predictions"]) == 6
 
     # Create bronze slots table
-    gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_df(gql_dfs, ppss)
+    gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_dfs, ppss)
     assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
     assert len(gql_dfs["bronze_pdr_slots"]) == 6
 

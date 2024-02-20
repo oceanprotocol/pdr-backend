@@ -56,8 +56,6 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
     ) = prediction_tuple
 
     ID = f"{contract}-{slot}-{user}"
-    # truevalue_id = f"{contract}-{slot}"
-
     return Prediction(
         ID=ID,
         contract=contract,
@@ -222,7 +220,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152",
+        "0xe66421fd29fc2d27d0724f161f01b8cbdcd69690",
         "BTC/USDT",
         "1h",
         True,
@@ -261,7 +259,7 @@ _DAILY_PREDICTION_TUPS = [
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
     (
-        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+        "0xaa6515c138183303b89b98aea756b54f711710c5",
         "ETH/USDT",
         "1h",
         True,

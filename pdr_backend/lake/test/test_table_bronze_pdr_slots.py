@@ -7,7 +7,7 @@ from pdr_backend.lake.table_bronze_pdr_slots import (
     _process_slots,
     bronze_pdr_slots_schema,
 )
-from pdr_backend.lake.table_bronze_pdr_predictions import get_bronze_pdr_predictions_df
+from pdr_backend.lake.table_bronze_pdr_predictions import get_bronze_pdr_predictions_table
 
 
 @enforce_types
@@ -38,7 +38,7 @@ def test_table_bronze_pdr_slots(
         "bronze_pdr_slots": pl.DataFrame(),
     }
 
-    gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_df(gql_dfs, ppss)
+    gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(gql_dfs, ppss)
 
     assert len(gql_dfs["bronze_pdr_slots"]) == 0
 

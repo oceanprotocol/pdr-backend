@@ -144,7 +144,7 @@ def get_slots(
 
 @enforce_types
 def fetch_slots(
-    asset_ids: List[str],
+    contracts: List[str],
     start_ts_param: int,
     end_ts_param: int,
     network: str = "mainnet",
@@ -153,7 +153,7 @@ def fetch_slots(
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
 
     Args:
-        asset_ids: A list of asset identifiers for which slots will be fetched.
+        contracts: A list of asset identifiers for which slots will be fetched.
         start_ts_param: The Unix timestamp marking the beginning of the desired time range.
         end_ts_param: The Unix timestamp marking the end of the desired time range.
         network: The blockchain network to query ('mainnet' or 'testnet').
@@ -163,7 +163,7 @@ def fetch_slots(
         containing slot information.
     """
 
-    all_slots = get_slots(asset_ids, end_ts_param, start_ts_param, 0, [], network)
+    all_slots = get_slots(contracts, end_ts_param, start_ts_param, 0, [], network)
 
     slots_by_asset: Dict[str, List[PredictSlot]] = {}
     for slot in all_slots:

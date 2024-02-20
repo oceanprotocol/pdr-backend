@@ -83,13 +83,13 @@ def test_get_slots(mock_query_subgraph):
     "pdr_backend.subgraph.subgraph_slot.query_subgraph",
     return_value=MOCK_QUERY_RESPONSE,
 )
-def test_fetch_slots_for_all_assets(mock_query_subgraph):
-    # Test the fetch_slots_for_all_assets function
+def test_fetch_slots_for_all_contracts(mock_query_subgraph):
+    # Test logic for fetching slots for all contracts
     result = fetch_slots(
-        asset_ids=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
+        contracts=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
     )
 
-    print("test_fetch_slots_for_all_assets", result)
+    print("test_fetch_slots_for_all_contracts", result)
     # Verify that the result is structured correctly
     assert "0xAsset" in result
     assert all(isinstance(slot, PredictSlot) for slot in result["0xAsset"])
