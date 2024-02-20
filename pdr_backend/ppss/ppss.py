@@ -179,6 +179,12 @@ def mock_ppss(
                 "max_n_train": 7,
                 "autoregressive_n": 3,
             },
+            "classifiermodel_ss": {
+                "input_feeds": feeds,
+                "approach": "LIN",
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+            },
         }
     )
 
