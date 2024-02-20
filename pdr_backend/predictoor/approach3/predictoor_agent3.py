@@ -43,7 +43,9 @@ class PredictoorAgent3(BasePredictoorAgent):
         X, y, _, xrecent = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Compute the model
-        regression_model_factory = RegressionModelFactory(self.ppss.predictoor_ss.regressionmodel_ss)
+        regression_model_factory = RegressionModelFactory(
+            self.ppss.predictoor_ss.regressionmodel_ss
+        )
         model = regression_model_factory.build(X, y)
 
         # Predict next y
