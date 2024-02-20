@@ -24,18 +24,27 @@ Then, you'll be withdrawing ROSE to your web3 wallet.
 
 ## 3. Transfer ROSE from Oasis wallet to Sapphire
 
-"ParaTimes" are subnets in the Oasis chain ecosystem. Sapphire is a ParaTime. Saphire is EVM-compatible, which means that it uses EVM wallets. 
+"ParaTimes" are subnets in the Oasis chain ecosystem. Sapphire is a ParaTime. Sapphire is EVM-compatible, which means that it supports EVM accounts. In fact, each Sapphire account is a pair of (EVM account, Oasis-native accounts).
 
-(EVM = Ethereum Virtual Machine. EVM-compatible means that it runs Ethereum-style contracts. EVM accounts = Ethereum-style accounts, including an address that starts with "0x" and support for ERC20 tokens.)
+About "EVM" accounts: EVM = Ethereum Virtual Machine. EVM-compatible means that it runs Ethereum-style contracts. EVM accounts = Ethereum-style accounts, including an address that starts with "0x" and support for ERC20 tokens.
 
-As a pre-requisite, ensure that you have an EVM account ready for use in Sapphire. Eg in the Oasis wallet extension, do an "Import Ethereum Account". Specify Sapphire ParaTime as appropriate. 
+Whereas EVM wallets start with "0x", Oasis-native wallets start with "oasis". Therefore it's easy to distinguish them.
 
-To transfer the ROSE to your (EVM) Sapphire account, using the Oasis wallet extension:
+**Prepare EVM account**
+Let's make sure you have EVM account ready for use in Sapphire. That is, you have an EVM address, and you know its private key. 
+
+Optionally, you can import it into the Oasis wallet extension, such that you can check its balances before and after. To do so, in the extension:
+1. Click "Import" button
+2. Select "Ethereum-compatible Private Key"
+3. Enter account name (this can be arbitrary). Click ok
+4. Now you will see your new account listed with other accounts, in the "Ethereum-compatible Account" subsetion
+
+**Transfer the ROSE to your (EVM) Sapphire account, using the Oasis wallet extension:**
 1. Go to the "ParaTimes" section
 2. In the "Sapphire" box, click on "To ParaTime"
 3. In the "Amount" field, specify the # ROSE; in the "To" field, enter your EVM account address (0x...).
 4. Click "Next". Click to confirm.
-5. The wallet will show an animation. After a few sections, it will say "submitted". Then it will say "Successful" and share tx details. To further verify: click on "View transactions through explorer"
+5. The wallet will show an animation; then it will say "submitted"; then it will say "Successful" and share tx details. To further verify: click on "View transactions through explorer". Note that the "to" address is the Oasis-native address, not the EVM one; that's fine.
 
 The official Oasis guide has details: [How to Transfer ROSE into a ParaTime](https://docs.oasis.io/general/manage-tokens/how-to-transfer-rose-into-paratime)
 
