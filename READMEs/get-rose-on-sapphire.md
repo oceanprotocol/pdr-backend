@@ -1,10 +1,10 @@
 # Get ROSE on Sapphire Mainnet
 
-## 0. Steps
+Steps:
 
-- [1. Create a Wallet](#1-create-a-wallet)
-- [2. Purchase ROSE](#2-purchase-rose)
-- [3. Transfer ROSE from Emerald to Sapphire](#3-transfer-rose-from-emerald-to-sapphire)
+1. [Create a Wallet](#1-create-a-wallet)
+2. [Purchase ROSE](#2-purchase-rose)
+3. [Transfer ROSE from Oasis Wallet to Sapphire](#3-transfer-rose-from-oasis-wallet-to-sapphire)
 
 ## 1. Create a Wallet
 
@@ -21,7 +21,7 @@ Then, you'll be withdrawing ROSE to your web3 wallet.
 
 ⚠️ Sending to the wrong address or network will likely result in the loss of your tokens. To minimize risk: send a small test amount first, and double-check the receiving address and network.
 
-## 3. Transfer ROSE from Oasis wallet to Sapphire ParaTime
+## 3. Transfer ROSE from Oasis wallet to Sapphire
 
 To transfer ROSE from Oasis wallet to Sapphire ParaTime, first make sure you have an Ethereum Account to be used by the EVM-compatible Sapphire ParaTime. This will probably be the account you will use to send predictions with.
 

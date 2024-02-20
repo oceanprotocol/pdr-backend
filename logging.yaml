@@ -1,12 +1,8 @@
-##
-## Copyright 2023 Ocean Protocol Foundation
-## SPDX-License-Identifier: Apache-2.0
-##
 version: 1
 disable_existing_loggers: False
 formatters:
     simple:
-        format: "%(asctime)s - %(levelname)s - %(message)s"
+        format: "%(asctime)s %(levelname)s %(message)s"
 
 handlers:
     console:

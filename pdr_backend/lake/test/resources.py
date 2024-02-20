@@ -68,9 +68,9 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     return ppss, gql_data_factory
 
 
-def _filter_gql_config(record_config: Dict, record_filter: str) -> Dict:
+def _filter_gql_tables_config(record_config: Dict, record_filter: str) -> Dict:
     # Return a filtered version of record_config for testing
-    return {k: v for k, v in record_config.items() if k == record_filter}
+    return {k: v for k, v in record_config["tables"].items() if k == record_filter}
 
 
 @enforce_types

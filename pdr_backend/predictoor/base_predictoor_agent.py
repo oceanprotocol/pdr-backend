@@ -85,7 +85,7 @@ class BasePredictoorAgent(ABC):
         predval, stake = self.get_prediction(target_slot)
         logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
         if predval is None or stake <= 0:
-            logger.waening("Done: can't use predval/stake")
+            logger.warning("Done: can't use predval/stake")
             return
 
         # submit prediction to chain
