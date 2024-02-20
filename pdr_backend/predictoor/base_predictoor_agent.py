@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from enforce_typing import enforce_types
 
@@ -161,5 +161,13 @@ class BasePredictoorAgent(ABC):
     def get_prediction(
         self,
         timestamp: int,  # pylint: disable=unused-argument
-    ) -> Tuple[bool, float]:
+    ) -> Tuple[Union[bool, float], float]:
+        """
+        @description
+            Returns the prediction for the given timestamp.
+
+        @return
+            A tuple of (bool, float) to stake on one side
+            A tuple of (float, float) to stake on each side, with the first element being the stake for up and the second element being the stake for down.
+        """
         pass
