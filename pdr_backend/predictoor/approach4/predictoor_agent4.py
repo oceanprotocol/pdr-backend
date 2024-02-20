@@ -10,7 +10,7 @@ from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
 
 @enforce_types
-class PredictoorAgent3(BasePredictoorAgent):
+class PredictoorAgent4(BasePredictoorAgent):
     def __init__(self, ppss):
         super().__init__(ppss)
         self.get_data_components()
