@@ -110,7 +110,7 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, y, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
+        X, y, _, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]

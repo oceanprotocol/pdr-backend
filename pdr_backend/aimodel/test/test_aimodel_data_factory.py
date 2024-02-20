@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_array_equal
 import pandas as pd
 import polars as pl
 import pytest
@@ -54,10 +55,10 @@ def test_create_xy__0():
             [0.1, 0.1, 4.2, 5.3],
             [0.1, 0.1, 5.3, 6.4],
             [0.1, 0.1, 6.4, 7.5],
-            [0.1, 0.1, 7.5, 8.6],
+            [0.1, 0.1, 7.5, 8.6],  # newest
         ]
-    )  # newest
-    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
+    )
+    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
@@ -66,14 +67,16 @@ def test_create_xy__0():
             "binanceus:ETH/USDT:close:t-2": [4.2, 5.3, 6.4, 7.5, 8.6],
         }
     )
+    target_xrecent = np.array([0.1, 0.1, 8.6, 9.7])
 
     factory = AimodelDataFactory(predictoor_ss)
-    X, y, x_df = factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
+    assert_array_equal(xrecent, target_xrecent)
 
 
 @enforce_types
@@ -93,9 +96,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             [7.0, 6.0, 5.0],
             [6.0, 5.0, 4.0],
             [5.0, 4.0, 3.0],
-            [4.0, 3.0, 2.0],
+            [4.0, 3.0, 2.0],  # newest
         ]
-    )  # newest
+    )
 
     target_y = np.array(
         [
@@ -116,13 +119,15 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             "binanceus:ETH/USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
+    target_xrecent = np.array([3.0, 2.0, 1.0])
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
+    assert_array_equal(xrecent, target_xrecent)
 
     # =========== now, have testshift = 1
     target_X = np.array(
@@ -156,13 +161,15 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             "binanceus:ETH/USDT:high:t-2": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
         }
     )
+    target_xrecent = np.array([4.0, 3.0, 2.0])
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=1)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
+    assert_array_equal(xrecent, target_xrecent)
 
     # =========== now have a different max_n_train
     target_X = np.array(
@@ -187,11 +194,11 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     assert "max_n_train" in ss.aimodel_ss.d
     ss.aimodel_ss.d["max_n_train"] = 5
 
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
-    assert np.array_equal(X, target_X)
-    assert np.array_equal(y, target_y)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
 
 
@@ -218,7 +225,7 @@ def test_create_xy__2exchanges_2coins_2signals():
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
     aimodel_data_factory = AimodelDataFactory(ss)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
@@ -335,7 +342,7 @@ def test_create_xy__handle_nan(tmpdir):
     # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=False
     )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
@@ -345,13 +352,13 @@ def test_create_xy__handle_nan(tmpdir):
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0, do_fill_nans=True
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
+    X, y, x_df, _ = aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
