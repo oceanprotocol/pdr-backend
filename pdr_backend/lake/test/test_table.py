@@ -214,10 +214,10 @@ def test_get_pdr_df_multiple_fetches():
     captured_output = StringIO()
     sys.stdout = captured_output
 
-    save_backoff_limit = 4
-    pagination_limit = 2
+    save_backoff_limit = 40
+    pagination_limit = 20
     st_timest = 1704110400000
-    fin_timest = 1704115800000
+    fin_timest = 1704111600000
     table.get_pdr_df(
         fetch_function=fetch_filtered_predictions,
         network="sapphire-mainnet",
@@ -237,4 +237,4 @@ def test_get_pdr_df_multiple_fetches():
     count_saves = printed_text.count("Saved")
     assert count_saves == 2
 
-    assert len(table.df) == 5
+    assert len(table.df) == 50

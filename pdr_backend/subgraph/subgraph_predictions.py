@@ -35,8 +35,8 @@ def fetch_filtered_predictions(
     first: int,
     skip: int,
     network: str,
-    payout_only: bool = True,
-    trueval_only: bool = True,
+    payout_only: bool = False,
+    trueval_only: bool = False,
 ) -> List[Prediction]:
     """
     Fetches predictions from a subgraph within a specified time range
@@ -133,6 +133,7 @@ def fetch_filtered_predictions(
         return []
 
     data = result["data"].get("predictPredictions", [])
+    print(len(data))
     if len(data) == 0:
         return []
 
