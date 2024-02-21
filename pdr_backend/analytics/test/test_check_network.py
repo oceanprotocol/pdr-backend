@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
+from freezegun import freeze_time
 
 from pdr_backend.analytics.check_network import (
     _N_FEEDS,
@@ -11,7 +12,6 @@ from pdr_backend.analytics.check_network import (
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.mathutil import to_wei
-from freezegun import freeze_time
 
 PATH = "pdr_backend.analytics.check_network"
 MOCK_CUR_UT = 1702826080

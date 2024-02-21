@@ -74,7 +74,7 @@ class UnixTimeMilliseconds(int):
         return dt
 
     def to_timestr(self) -> str:
-        dt: datetime.datetime = self.to_dt()
+        dt: datetime = self.to_dt()
 
         return dt.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
 
