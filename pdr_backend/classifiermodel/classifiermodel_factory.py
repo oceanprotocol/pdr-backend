@@ -15,4 +15,4 @@ class ClassifierModelFactory:
         return model
 
     def _model(self):
-        return linear_model.LinearRegression()
+        return linear_model.LogisticRegression()
