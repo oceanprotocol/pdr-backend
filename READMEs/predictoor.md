@@ -72,9 +72,11 @@ What it does:
 
 The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs (autoregressive_n = 10), a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
-It logs to the console, by default. All `pdr` tools use Python standard [`logging`](https://docs.python.org/3/howto/logging.html) framework. You can configure logging by editing [`logging.yaml`](../logging.yaml); [here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a helpful tutorial.
-
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
+
+To see simulation CLI options, type `pdr sim -h`. 
+
+Simulation logs to the console, via Python [`logging`](https://docs.python.org/3/howto/logging.html) framework. Configure logging via [`logging.yaml`](../logging.yaml). [Tutorial](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5).
 
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
@@ -100,7 +102,14 @@ Your bot is running, congrats! Sit back and watch it in action. It will loop con
 
 At every 5m/1h epoch, it builds & submits >1 times, to maximize accuracy without missing submission deadlines. Specifically: 60 s before predictions are due, it builds a model then submits a prediction. It repeats this until the deadline.
 
-The CLI has a tool to track performance. Type `pdr get_predictoor_info -h` for details.
+It logs to the console, via Python [`logging`](https://docs.python.org/3/howto/logging.html) framework. Configure logging via [`logging.yaml`](../logging.yaml). [Tutorial.](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5).
+
+To see predictoor CLI options, type `pdr predictoor -h`.
+
+The CLI has support tools too. Learn about each via:
+- `pdr get_predictoor_info -h`
+- `pdr get_predictions_info -h`
+- and more yet; type `pdr -h` to see
 
 You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).
 
