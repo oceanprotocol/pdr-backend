@@ -80,16 +80,16 @@ class MockModel:
     """scikit-learn style model"""
 
     def __init__(self):
-        self.aimodel_ss = None  # fill this in later, after patch applied
+        self.classifiermodel_ss = None  # fill this in later, after patch applied
         self.last_X = None  # for tracking test results
         self.last_y = None  # ""
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        ar_n = self.aimodel_ss.autoregressive_n
-        n_feeds = self.aimodel_ss.n_feeds
+        ar_n = self.classifiermodel_ss.autoregressive_n
+        n_feeds = self.classifiermodel_ss.n_feeds
         (n_points, n_vars) = X.shape
         assert n_points == 1  # this mock can only handle 1 input point
-        assert n_vars == self.aimodel_ss.n == ar_n * n_feeds
+        assert n_vars == self.classifiermodel_ss.n == ar_n * n_feeds
         yval: float = np.sum(X)
         y: np.ndarray = np.array([yval])
         self.last_X, self.last_y = X, y  # cache for testing
@@ -123,14 +123,14 @@ def test_predictoor_agent4_get_prediction_1feed(tmpdir, monkeypatch):
 
         # initialize agent
         _, ppss, agent, _ = get_agent_1feed(str(tmpdir), monkeypatch, PredictoorAgent4)
-        aimodel_ss = ppss.predictoor_ss.aimodel_ss
-        assert aimodel_ss.n_feeds == 1
+        classifiermodel_ss = ppss.predictoor_ss.classifiermodel_ss
+        assert classifiermodel_ss.n_feeds == 1
 
         # do prediction
-        mock_model.aimodel_ss = aimodel_ss
+        mock_model.classifiermodel_ss = classifiermodel_ss
         agent.get_prediction(timestamp=5)  # arbitrary timestamp
 
-        ar_n = aimodel_ss.autoregressive_n
+        ar_n = classifiermodel_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 3) == (1, ar_n * 1)
@@ -166,14 +166,14 @@ def test_predictoor_agent4_get_prediction_2feeds(tmpdir, monkeypatch):
             str(tmpdir), monkeypatch, PredictoorAgent4
         )
         assert len(feeds) == 2
-        aimodel_ss = ppss.predictoor_ss.aimodel_ss
-        assert aimodel_ss.n_feeds == 2
+        classifiermodel_ss = ppss.predictoor_ss.classifiermodel_ss
+        assert classifiermodel_ss.n_feeds == 2
 
         # do prediction
-        mock_model.aimodel_ss = aimodel_ss
+        mock_model.classifiermodel_ss = classifiermodel_ss
         agent.get_prediction(timestamp=5)  # arbitrary timestamp
 
-        ar_n = aimodel_ss.autoregressive_n
+        ar_n = classifiermodel_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n * 2)
