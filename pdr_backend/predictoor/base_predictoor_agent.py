@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import time
@@ -42,6 +43,11 @@ class BasePredictoorAgent(ABC):
         contracts = ppss.web3_pp.get_contracts([feed.address])
         self.feed_contract = sole_value(contracts)
 
+        pk2 = os.getenv("PRIVATE_KEY2")
+        if pk2 is not None:
+            self.feed_contract_down = copy.deepcopy(self.feed_contract)
+            self.feed_contract_down.web3_pp.web3_config = Web3Config(self.feed_contract.web3_pp.rpc_url, pk2)
+
         # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
@@ -82,20 +88,59 @@ class BasePredictoorAgent(ABC):
         submit_epoch, target_slot = self.cur_epoch, self.target_slot
         logger.info("Predict for time slot = %s...", self.target_slot)
 
-        predval, stake = self.get_prediction(target_slot)
-        logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
-        if predval is None or stake <= 0:
-            logger.warning("Done: can't use predval/stake")
-            return
+        stake_or_predval, stake = self.get_prediction(target_slot)
+        
+        if isinstance(stake_or_predval, float):
+            if not self.feed_contract_down:
+                raise ValueError("Must set PRIVATE_KEY2 to use double sided staking.")
+            # stake on each side
+            stake_up = stake_or_predval
+            stake_down = stake
+            
+            tx1 = self.feed_contract.submit_prediction(
+                True,
+                stake_up,
+                target_slot,
+                wait_for_receipt=True,
+            )
+            tx2 = self.feed_contract_down.submit_prediction(
+                False,
+                stake_down,
+                target_slot,
+                wait_for_receipt=True,
+            )
 
-        # submit prediction to chain
-        logger.info("Submit predict tx to chain...")
-        self.feed_contract.submit_prediction(
-            predval,
-            stake,
-            target_slot,
-            wait_for_receipt=True,
-        )
+            if tx1 == None or tx2 == None or tx1["status"] != 1 or tx2["status"] != 1:
+                logger.warning("One or both txs failed, failsafing to zero stake...", tx1, tx2)
+                self.feed_contract.submit_prediction(
+                    True,
+                    1e-10,
+                    target_slot,
+                    wait_for_receipt=True,
+                )
+                self.feed_contract_down.submit_prediction(
+                    False,
+                    1e-10,
+                    target_slot,
+                    wait_for_receipt=True,
+                )     
+        elif isinstance(stake_or_predval, bool):
+            # predval and stake amt
+            predval = stake_or_predval
+            logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
+            if predval is None or stake <= 0:
+                logger.warning("Done: can't use predval/stake")
+                return
+
+            # submit prediction to chain
+            logger.info("Submit predict tx to chain...")
+            self.feed_contract.submit_prediction(
+                predval,
+                stake,
+                target_slot,
+                wait_for_receipt=True,
+            )
+
         self.prev_submit_epochs.append(submit_epoch)
         logger.info("-> Submit predict tx result: success.")
 
