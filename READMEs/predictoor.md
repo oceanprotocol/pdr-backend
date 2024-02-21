@@ -70,7 +70,9 @@ What it does:
    - Plot total profit versus time, and more.
    - (It logs this all to screen, and to `out*.txt`.)
 
-The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
+The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs (autoregressive_n = 10), a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
+
+It logs to the console, by default. All `pdr` tools use Python standard [`logging`](https://docs.python.org/3/howto/logging.html) framework. You can configure logging by editing [`logging.yaml`](../logging.yaml); [here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a helpful tutorial.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
 
