@@ -23,7 +23,6 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
 )
 from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.util.timeutil import pretty_timestr
 from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
@@ -78,8 +77,8 @@ class OhlcvDataFactory:
         # To solve, for a given call to this method, we make a constant fin_ut
         fin_ut = self.ss.fin_timestamp
 
-        logger.info("Data start: %s", pretty_timestr(self.ss.st_timestamp))
-        logger.info("Data fin: %s", pretty_timestr(fin_ut))
+        logger.info("Data start: %s", self.ss.st_timestamp.pretty_timestr())
+        logger.info("Data fin: %s", fin_ut.pretty_timestr())
 
         self._update_rawohlcv_files(fin_ut)
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
@@ -119,7 +118,7 @@ class OhlcvDataFactory:
 
         assert feed.timeframe
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
-        logger.info("Aim to fetch data from start time: %s", pretty_timestr(st_ut))
+        logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
         if st_ut > min(UnixTimeMilliseconds.now(), fin_ut):
             logger.info("Given start time, no data to gather. Exit.")
             return
@@ -128,7 +127,7 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
-            logger.info("Fetch up to %s pts from %s", limit, pretty_timestr(st_ut))
+            logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             exch = feed.ccxt_exchange()
             raw_tohlcv_data = safe_fetch_ohlcv(
                 exch,
@@ -186,8 +185,8 @@ class OhlcvDataFactory:
             return UnixTimeMilliseconds(self.ss.st_timestamp)
 
         file_ut0, file_utN = oldest_ut(filename), newest_ut(filename)
-        logger.info("File starts at: %s", pretty_timestr(file_ut0))
-        logger.info("File finishes at: %s", pretty_timestr(file_utN))
+        logger.info("File starts at: %s", file_ut0.pretty_timestr())
+        logger.info("File finishes at: %s", file_utN.pretty_timestr())
 
         if self.ss.st_timestamp >= file_ut0:
             logger.info("User-specified start >= file start, so append file")

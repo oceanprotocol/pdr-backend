@@ -4,7 +4,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv, clean_raw_ohlcv
-from pdr_backend.util.timeutil import timestr_to_ut
 from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
@@ -106,7 +105,7 @@ def test_clean_raw_ohlcv():
 @enforce_types
 @pytest.mark.parametrize("exch", [ccxt.binanceus(), ccxt.kraken()])
 def test_safe_fetch_ohlcv(exch):
-    since = timestr_to_ut("2023-06-18")
+    since = UnixTimeMilliseconds.from_timestr("2023-06-18")
     symbol, timeframe, limit = "ETH/USDT", "5m", 1000
 
     # happy path

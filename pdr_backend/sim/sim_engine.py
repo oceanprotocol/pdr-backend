@@ -14,7 +14,6 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.timeutil import pretty_timestr
 from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
@@ -176,7 +175,7 @@ class SimEngine:
             ", tot_profit $%9.2f",
             test_i + 1,
             self.ppss.sim_ss.test_n,
-            pretty_timestr(ut)[9:][:-9],
+            ut.pretty_timestr()[9:][:-9],
             pred_dir,
             true_dir,
             correct_s,
