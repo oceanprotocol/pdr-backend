@@ -61,7 +61,6 @@ def f(X: np.ndarray) -> np.ndarray:
     y = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]
     return y
 
-
 @enforce_types
 def test_classifiermodel_accuracy_from_create_xy(classifiermodel_factory):
     # This is from a test function in test_model_data_factory.py
@@ -69,16 +68,17 @@ def test_classifiermodel_accuracy_from_create_xy(classifiermodel_factory):
     # The underlying AR process is: close[t] = close[t-1] + open[t-1]
     X_train = np.array(
         [
-            [0.1, 0.1, 3.1, 4.2],  # oldest
+            [0.2, 0.2, 3.1, 4.2],  # oldest
             [0.1, 0.1, 4.2, 5.3],
-            [0.1, 0.1, 5.3, 6.4],
+            [0.2, 0.2, 5.3, 6.4],
             [0.1, 0.1, 6.4, 7.5],
-            [0.1, 0.1, 7.5, 8.6],
+            [0.2, 0.2, 7.5, 8.6],
         ]
     )  # newest
-    y_train = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
-
+    y_train = np.array([1, 0, 1, 0, 1])  # oldest  # newest
+    X_train = classifiermodel_factory.scale_train_data(X_train)
     classifiermodel = classifiermodel_factory.build(X_train, y_train)
 
     y_train_hat = classifiermodel.predict(X_train)
-    assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
+    print(y_train_hat, y_train)
+    assert sum(abs(y_train - y_train_hat)) == 0 # exactly same
