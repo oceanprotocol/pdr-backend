@@ -86,6 +86,8 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     subscriptions = fetch_filtered_subscriptions(
         start_ts=UnixTimeSeconds(1701129700),
         end_ts=UnixTimeSeconds(1701129800),
+        first=1000,
+        skip=0,
         contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
@@ -104,6 +106,8 @@ def test_fetch_filtered_subscriptions_no_data():
         fetch_filtered_subscriptions(
             start_ts=UnixTimeSeconds(1701129700),
             end_ts=UnixTimeSeconds(1701129800),
+            first=1000,
+            skip=0,
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
         )
@@ -115,6 +119,8 @@ def test_fetch_filtered_subscriptions_no_data():
         subscriptions = fetch_filtered_subscriptions(
             start_ts=UnixTimeSeconds(1701129700),
             end_ts=UnixTimeSeconds(1701129800),
+            first=1000,
+            skip=0,
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
@@ -127,6 +133,8 @@ def test_fetch_filtered_subscriptions_no_data():
         subscriptions = fetch_filtered_subscriptions(
             start_ts=UnixTimeSeconds(1701129700),
             end_ts=UnixTimeSeconds(1701129800),
+            first=1000,
+            skip=0,
             contracts=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )

@@ -18,6 +18,8 @@ def fetch_filtered_subscriptions(
     start_ts: UnixTimeSeconds,
     end_ts: UnixTimeSeconds,
     contracts: List[str],
+    first: int,
+    skip: int,
     network: str,
 ) -> List[Subscription]:
     """
@@ -45,8 +47,6 @@ def fetch_filtered_subscriptions(
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
 
-    chunk_size = 1000
-    offset = 0
     subscriptions: List[Subscription] = []
 
     # Convert contracts to lowercase
@@ -59,79 +59,71 @@ def fetch_filtered_subscriptions(
         where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
 
     # pylint: disable=line-too-long
-    while True:
-        query = f"""
-            {{
-                predictSubscriptions(skip: {offset}, first: {chunk_size} {where_clause}) {{
+    query = f"""
+        {{
+            predictSubscriptions(skip: {skip}, first: {first} {where_clause}) {{
+                id
+                txId
+                timestamp
+                user {{
                     id
-                    txId
-                    timestamp
-                    user {{
+                }}
+                predictContract {{
+                    id
+                    token {{
                         id
-                    }}
-                    predictContract {{
-                        id
-                        token {{
-                            id
-                            name
-                            lastPriceValue
-                            nft{{
-                                nftData {{
-                                key
-                                value
-                                }}
+                        name
+                        lastPriceValue
+                        nft{{
+                            nftData {{
+                            key
+                            value
                             }}
                         }}
                     }}
                 }}
-            }}"""
+            }}
+        }}"""
 
-        logger.info("Querying subgraph... %s", query)
-        result = query_subgraph(
-            get_subgraph_url(network),
-            query,
-            timeout=20.0,
+    logger.info("Querying subgraph... %s", query)
+    result = query_subgraph(
+        get_subgraph_url(network),
+        query,
+        timeout=20.0,
+    )
+
+    if "data" not in result or not result["data"]:
+        return []
+
+    data = result["data"].get("predictSubscriptions", [])
+    if len(data) == 0:
+        return []
+
+    for subscription_sg_dict in data:
+        info725 = subscription_sg_dict["predictContract"]["token"]["nft"]["nftData"]
+        info = info725_to_info(info725)
+        pair = info["pair"]
+        timeframe = info["timeframe"]
+        source = info["source"]
+        timestamp = UnixTimeSeconds(int(subscription_sg_dict["timestamp"]))
+        tx_id = subscription_sg_dict["txId"]
+        last_price_value = (
+            float(subscription_sg_dict["predictContract"]["token"]["lastPriceValue"])
+            * 1.201
         )
 
-        offset += chunk_size
+        user = subscription_sg_dict["user"]["id"]
 
-        if "data" not in result or not result["data"]:
-            break
-
-        data = result["data"].get("predictSubscriptions", [])
-        if len(data) == 0:
-            break
-
-        for subscription_sg_dict in data:
-            info725 = subscription_sg_dict["predictContract"]["token"]["nft"]["nftData"]
-            info = info725_to_info(info725)
-            pair = info["pair"]
-            timeframe = info["timeframe"]
-            source = info["source"]
-            timestamp = UnixTimeSeconds(subscription_sg_dict["timestamp"])
-            tx_id = subscription_sg_dict["txId"]
-            last_price_value = (
-                float(
-                    subscription_sg_dict["predictContract"]["token"]["lastPriceValue"]
-                )
-                * 1.201
-            )
-            user = subscription_sg_dict["user"]["id"]
-
-            subscription = Subscription(
-                ID=subscription_sg_dict["id"],
-                pair=pair,
-                timeframe=timeframe,
-                source=source,
-                timestamp=timestamp,
-                tx_id=tx_id,
-                last_price_value=last_price_value,
-                user=user,
-            )
-            subscriptions.append(subscription)
-
-        # avoids doing next fetch if we've reached the end
-        if len(data) < chunk_size:
-            break
+        subscription = Subscription(
+            ID=subscription_sg_dict["id"],
+            pair=pair,
+            timeframe=timeframe,
+            source=source,
+            timestamp=timestamp,
+            tx_id=tx_id,
+            last_price_value=last_price_value,
+            user=user,
+        )
+        subscriptions.append(subscription)
 
     return subscriptions

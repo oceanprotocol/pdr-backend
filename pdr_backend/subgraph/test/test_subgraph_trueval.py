@@ -51,6 +51,8 @@ def test_fetch_filtered_truevals(mock_query_subgraph):
     truevals = fetch_truevals(
         start_ts=UnixTimeSeconds(1698526000),
         end_ts=UnixTimeSeconds(1698528000),
+        first=1000,
+        skip=0,
         addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )

@@ -1,5 +1,5 @@
-import logging
 from typing import List
+import logging
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
@@ -7,7 +7,7 @@ from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeSeconds
 
-logger = logging.getLogger("subgraph")
+logger = logging.getLogger("trueval")
 
 
 @enforce_types
@@ -68,69 +68,60 @@ def fetch_truevals(
     start_ts: UnixTimeSeconds,
     end_ts: UnixTimeSeconds,
     addresses: List[str],
+    first: int,
+    skip: int,
     network: str = "mainnet",
 ) -> List[Trueval]:
     """
     @description
         Implements same pattern as fetch_filtered_predictions
     """
-
-    chunk_size = 1000
-    offset = 0
     truevals: List[Trueval] = []
 
-    while True:
-        query = get_truevals_query(
-            addresses,
-            start_ts,
-            end_ts,
-            chunk_size,
-            offset,
+    query = get_truevals_query(
+        addresses,
+        start_ts,
+        end_ts,
+        first,
+        skip,
+    )
+
+    try:
+        logger.info("Querying subgraph... %s", query)
+        result = query_subgraph(
+            get_subgraph_url(network),
+            query,
+            timeout=20.0,
+        )
+    except Exception as e:
+        logger.info(
+            "Error fetching predictTrueVals items. Exception: %s",
+            e,
+        )
+        return []
+
+    if "data" not in result or not result["data"]:
+        return []
+
+    data = result["data"].get("predictTrueVals", [])
+    if len(data) == 0:
+        return []
+
+    for record in data:
+        truevalue = record["trueValue"]
+        timestamp = UnixTimeSeconds(int(record["timestamp"]))
+        ID = record["id"]
+        token = record["slot"]["predictContract"]["token"]["name"]
+        slot = UnixTimeSeconds(int(record["id"].split("-")[1]))
+
+        trueval = Trueval(
+            ID=ID,
+            token=token,
+            timestamp=timestamp,
+            trueval=truevalue,
+            slot=slot,
         )
 
-        try:
-            logger.info("Querying subgraph... %s", query)
-            result = query_subgraph(
-                get_subgraph_url(network),
-                query,
-                timeout=20.0,
-            )
-        except Exception as e:
-            logger.warning(
-                "Error fetching predictTrueVals, got #%d items. Exception: %s",
-                len(truevals),
-                e,
-            )
-            break
-
-        offset += chunk_size
-
-        if "data" not in result or not result["data"]:
-            break
-
-        data = result["data"].get("predictTrueVals", [])
-        if len(data) == 0:
-            break
-
-        for record in data:
-            truevalue = record["trueValue"]
-            timestamp = UnixTimeSeconds(record["timestamp"])
-            ID = record["id"]
-            token = record["slot"]["predictContract"]["token"]["name"]
-            slot = UnixTimeSeconds(int(record["id"].split("-")[1]))
-
-            trueval = Trueval(
-                ID=ID,
-                token=token,
-                timestamp=timestamp,
-                trueval=truevalue,
-                slot=slot,
-            )
-
-            truevals.append(trueval)
-
-        # avoids doing next fetch if we've reached the end
-        if len(data) < chunk_size:
-            break
+        truevals.append(trueval)
 
     return truevals

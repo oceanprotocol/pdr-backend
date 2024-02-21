@@ -1,8 +1,8 @@
 import sys
 
 from unittest.mock import Mock, patch, MagicMock
+from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import (
-    _object_list_to_df,
     predictions_schema,
 )
 from pdr_backend.lake.table import Table

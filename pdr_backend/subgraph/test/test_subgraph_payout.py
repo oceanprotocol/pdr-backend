@@ -67,6 +67,7 @@ def test_fetch_payouts(mock_query_subgraph):
         addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         start_ts=UnixTimeSeconds(1622547000),
         end_ts=UnixTimeSeconds(1622548800),
+        first=1000,
         skip=1,
         network="mainnet",
     )
