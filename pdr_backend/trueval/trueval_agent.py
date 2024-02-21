@@ -85,7 +85,7 @@ class TruevalAgent:
         time.sleep(self.ppss.trueval_ss.sleep_time)
 
     def get_batch(self) -> List[Slot]:
-        timestamp = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+        timestamp = self.ppss.web3_pp.web3_config.get_current_timestamp()
 
         pending_slots = self.ppss.web3_pp.get_pending_slots(
             timestamp,
