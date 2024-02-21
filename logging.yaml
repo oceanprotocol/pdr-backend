@@ -11,6 +11,8 @@ handlers:
         formatter: simple
         stream: ext://sys.stdout
 
+#a run will auto-create logs/out_<time>.txt; we don't need 'file' handlers
+
 loggers:
     pdr:
         level: INFO
