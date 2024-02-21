@@ -241,3 +241,63 @@ def test_etl_do_bronze_step(
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
+
+    # assert bronze_pdr_slots_df is created
+    assert len(etl.tables["bronze_pdr_slots"].df) == 6
+
+    bronze_pdr_slots_df = etl.tables["bronze_pdr_slots"].df
+
+    # Assert that "contract" data was created, and matches the same data from pdr_predictions
+    assert (
+        bronze_pdr_slots_df["contract"][0]
+        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
+    )
+    assert (
+        bronze_pdr_slots_df["contract"][1]
+        == _gql_datafactory_etl_predictions_df["contract"][1]
+    )
+    assert (
+        bronze_pdr_slots_df["contract"][2]
+        == _gql_datafactory_etl_predictions_df["contract"][2]
+    )
+
+    # Assert timestamp == slots timestamp
+    assert (
+        bronze_pdr_slots_df["timestamp"][1]
+        == _gql_datafactory_etl_slots_df["timestamp"][1]
+    )
+    assert (
+        bronze_pdr_slots_df["timestamp"][2]
+        == _gql_datafactory_etl_slots_df["timestamp"][2]
+    )
+
+    # Assert last_event_timestamp == prediction.timestamp
+    assert (
+        bronze_pdr_slots_df["last_event_timestamp"][1]
+        == _gql_datafactory_etl_predictions_df["timestamp"][1]
+    )
+    assert (
+        bronze_pdr_slots_df["last_event_timestamp"][2]
+        == _gql_datafactory_etl_predictions_df["timestamp"][2]
+    )
+
+    # Assert predictions.truevalue == gql truevals_df
+    assert bronze_pdr_slots_df["trueval"][1] is True
+    assert bronze_pdr_slots_df["trueval"][2] is False
+
+    assert (
+        bronze_pdr_slots_df["trueval"][1]
+        == _gql_datafactory_etl_truevals_df["trueval"][1]
+    )
+    assert (
+        bronze_pdr_slots_df["trueval"][2]
+        == _gql_datafactory_etl_truevals_df["trueval"][2]
+    )
+
+    # Assert stake in the bronze_table came from slots
+    assert round(bronze_pdr_slots_df["roundSumStakes"][1], 3) == round(
+        _gql_datafactory_etl_slots_df["roundSumStakes"][1], 3
+    )
+    assert round(bronze_pdr_slots_df["roundSumStakes"][2], 3) == round(
+        _gql_datafactory_etl_slots_df["roundSumStakes"][2], 3
+    )

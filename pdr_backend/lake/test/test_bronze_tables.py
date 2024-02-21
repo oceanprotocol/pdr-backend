@@ -1,15 +1,23 @@
 from enforce_typing import enforce_types
-
-import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_slots import (
     get_bronze_pdr_slots_table,
+    bronze_pdr_slots_table_name,
     bronze_pdr_slots_schema,
 )
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     get_bronze_pdr_predictions_table,
+    bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
 )
+from pdr_backend.lake.table_pdr_predictions import (
+    predictions_schema,
+    predictions_table_name,
+)
+from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
+from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table import Table
 
 
 @enforce_types
@@ -31,30 +39,43 @@ def test_bronze_tables_coraltion(
         fin_timestr,
     )
 
-    gql_dfs = {
-        "pdr_slots": _gql_datafactory_etl_slots_df,
-        "pdr_predictions": _gql_datafactory_etl_predictions_df,
-        "pdr_truevals": _gql_datafactory_etl_truevals_df,
-        "pdr_payouts": _gql_datafactory_etl_payouts_df,
-        "bronze_pdr_predictions": pl.DataFrame(),
-        "bronze_pdr_slots": pl.DataFrame(),
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "bronze_pdr_predictions": Table(
+            bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
+        ),
+        "bronze_pdr_slots": Table(
+            bronze_pdr_slots_table_name, bronze_pdr_slots_schema, ppss
+        ),
     }
 
+    gql_tables["pdr_predictions"].df = _gql_datafactory_etl_predictions_df
+    gql_tables["pdr_truevals"].df = _gql_datafactory_etl_truevals_df
+    gql_tables["pdr_payouts"].df = _gql_datafactory_etl_payouts_df
+    gql_tables["pdr_slots"].df = _gql_datafactory_etl_slots_df
+
     # Create bronze predictions table
-    bronze_pdr_prediction_table = get_bronze_pdr_predictions_table(gql_dfs, ppss)
+    gql_tables["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(
+        gql_tables, ppss
+    )
 
     # Validate bronze_pdr_prediction_table is correct, and as expected
-    assert gql_dfs["bronze_pdr_predictions"].schema == bronze_pdr_predictions_schema
-    assert len(gql_dfs["bronze_pdr_predictions"]) == 6
+    assert (
+        gql_tables["bronze_pdr_predictions"].df.schema == bronze_pdr_predictions_schema
+    )
+    assert len(gql_tables["bronze_pdr_predictions"].df) == 6
 
     # Create bronze slots table
-    gql_dfs["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_dfs, ppss)
-    assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
-    assert len(gql_dfs["bronze_pdr_slots"]) == 6
+    gql_tables["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_tables, ppss)
+    assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
+    assert len(gql_tables["bronze_pdr_slots"].df) == 6
 
     # Get predictions data from predictions table for slots within slots table
-    slots_with_predictions_df = gql_dfs["bronze_pdr_slots"].join(
-        gql_dfs["bronze_pdr_predictions"].select(
+    slots_with_predictions_df = gql_tables["bronze_pdr_slots"].df.join(
+        gql_tables["bronze_pdr_predictions"].df.select(
             ["slot", "user", "payout", "predvalue"]
         ),
         on=["slot"],

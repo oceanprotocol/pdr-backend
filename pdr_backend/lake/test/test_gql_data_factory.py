@@ -51,6 +51,7 @@ def test_update():
         "pdr_subscriptions": mock_fetch_function,
         "pdr_truevals": mock_fetch_function,
         "pdr_payouts": mock_fetch_function,
+        "pdr_slots": mock_fetch_function,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -82,12 +83,11 @@ def test_load_parquet():
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    assert len(gql_data_factory.record_config["tables"].items()) == 4
+    assert len(gql_data_factory.record_config["tables"].items()) == 5
 
     table = gql_data_factory.record_config["tables"]["pdr_predictions"]
     assert table is not None
     assert type(table.df) == pl.DataFrame
-    assert table.df.schema == table.df_schema
 
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")

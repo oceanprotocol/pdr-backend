@@ -1,15 +1,26 @@
 from enforce_typing import enforce_types
-
-import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_slots import (
     _process_bronze_predictions,
     _process_slots,
     bronze_pdr_slots_schema,
+    bronze_pdr_slots_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     get_bronze_pdr_predictions_table,
 )
+from pdr_backend.lake.table_bronze_pdr_predictions import (
+    bronze_pdr_predictions_table_name,
+    bronze_pdr_predictions_schema,
+)
+from pdr_backend.lake.table_pdr_predictions import (
+    predictions_schema,
+    predictions_table_name,
+)
+from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
+from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table import Table
 
 
 @enforce_types
@@ -31,33 +42,44 @@ def test_table_bronze_pdr_slots(
         fin_timestr,
     )
 
-    gql_dfs = {
-        "pdr_slots": _gql_datafactory_etl_slots_df,
-        "pdr_predictions": _gql_datafactory_etl_predictions_df,
-        "pdr_truevals": _gql_datafactory_etl_truevals_df,
-        "pdr_payouts": _gql_datafactory_etl_payouts_df,
-        "bronze_pdr_predictions": pl.DataFrame(),
-        "bronze_pdr_slots": pl.DataFrame(),
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "bronze_pdr_predictions": Table(
+            bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
+        ),
+        "bronze_pdr_slots": Table(
+            bronze_pdr_slots_table_name, bronze_pdr_slots_schema, ppss
+        ),
     }
 
-    gql_dfs["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(gql_dfs, ppss)
+    gql_tables["pdr_predictions"].df = _gql_datafactory_etl_predictions_df
+    gql_tables["pdr_truevals"].df = _gql_datafactory_etl_truevals_df
+    gql_tables["pdr_payouts"].df = _gql_datafactory_etl_payouts_df
+    gql_tables["pdr_slots"].df = _gql_datafactory_etl_slots_df
 
-    assert len(gql_dfs["bronze_pdr_slots"]) == 0
+    gql_tables["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(
+        gql_tables, ppss
+    )
+
+    assert len(gql_tables["bronze_pdr_slots"].df) == 0
 
     # Work 1: Append new slots onto bronze_table
     # In our mock, all predictions have None trueval, predictions, etc...
     # This shows that all of this data will come from other tables
-    gql_dfs = _process_slots([], gql_dfs, ppss)
-    assert len(gql_dfs["bronze_pdr_slots"]) == 6
-    assert gql_dfs["bronze_pdr_slots"]["slot"] is not None
-    assert gql_dfs["bronze_pdr_slots"]["timestamp"] is not None
-    assert gql_dfs["bronze_pdr_slots"]["roundSumStakesUp"] is not None
-    assert gql_dfs["bronze_pdr_slots"]["roundSumStakes"] is not None
+    gql_tables = _process_slots([], gql_tables, ppss)
+    assert len(gql_tables["bronze_pdr_slots"].df) == 6
+    assert gql_tables["bronze_pdr_slots"].df["slot"] is not None
+    assert gql_tables["bronze_pdr_slots"].df["timestamp"] is not None
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"] is not None
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"] is not None
 
     # Work 2: Append from bronze_pdr_predictions table
-    gql_dfs = _process_bronze_predictions(gql_dfs, ppss)
+    gql_tables = _process_bronze_predictions(gql_tables, ppss)
     # We should still have 6 rows
-    assert len(gql_dfs["bronze_pdr_slots"]) == 6
+    assert len(gql_tables["bronze_pdr_slots"].df) == 6
 
     # Check final data frame has all the required columns
-    assert gql_dfs["bronze_pdr_slots"].schema == bronze_pdr_slots_schema
+    assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema

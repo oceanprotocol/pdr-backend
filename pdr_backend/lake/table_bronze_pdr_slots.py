@@ -47,16 +47,6 @@ def _process_slots(
         & (pl.col("ID").is_in(collision_ids).not_())
     )
 
-    # select only the columns that we need
-    columns_to_select = [
-        "ID",
-        "slot",
-        "timestamp",
-        "roundSumStakesUp",
-        "roundSumStakes",
-    ]
-    slots_df = slots_df.select(columns_to_select)
-
     # create contract column from the ID column
     slots_df = slots_df.with_columns(
         contract=pl.col("ID").map_elements(lambda s: s.split("-")[0])
@@ -65,10 +55,21 @@ def _process_slots(
     if len(slots_df) == 0:
         return tables
 
-    if tables[bronze_pdr_slots_table_name].df_schema == bronze_pdr_slots_schema:
-        tables[bronze_pdr_slots_table_name].df = tables[
-            bronze_pdr_slots_table_name
-        ].df.select(slots_df.schema)
+    # Identify missing columns
+    missing_columns = [
+        col
+        for col in tables[bronze_pdr_slots_table_name].df.columns
+        if col not in slots_df.columns
+    ]
+
+    # Add missing columns to df2 using column-wise assignment
+    for col in missing_columns:
+        slots_df = slots_df.with_columns(
+            pl.Series(name=f"{col}", values=[None] * len(slots_df))
+        )
+
+    # Reorder the DataFrame columns based on the schema
+    slots_df = slots_df.select(bronze_pdr_slots_schema)
 
     # append to existing dataframe
     new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, slots_df])
@@ -94,13 +95,6 @@ def _process_bronze_predictions(
 
     # get existing bronze_predictions we'll be updating
     slots_df = tables[bronze_pdr_slots_table_name].df
-
-    # add columns that are going to be populated
-    slots_df = slots_df.with_columns(pair=pl.lit(None))
-    slots_df = slots_df.with_columns(source=pl.lit(None))
-    slots_df = slots_df.with_columns(timeframe=pl.lit(None))
-    slots_df = slots_df.with_columns(trueval=pl.lit(None))
-    slots_df = slots_df.with_columns(last_event_timestamp=pl.lit(None))
 
     initial_schema_keys = slots_df.schema.keys()
 
@@ -131,7 +125,7 @@ def _process_bronze_predictions(
     slots_df = slots_df.unique(subset=["ID"])
 
     # update dfs
-    tables[bronze_pdr_slots_table_name].df = slots_df
+    tables[bronze_pdr_slots_table_name].df = slots_df.sort("timestamp")
     return tables
 
 
