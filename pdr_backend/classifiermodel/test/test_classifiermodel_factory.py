@@ -38,10 +38,10 @@ def test_classifiermodel_accuracy_from_xy(classifiermodel_factory):
     classifiermodel = classifiermodel_factory.build(X_train, y_train)
 
     y_train_hat = classifiermodel.predict(X_train)
-    assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
+    assert sum(abs(y_train - y_train_hat)) == 0
 
     y_test_hat = classifiermodel.predict(X_test)
-    assert sum(abs(y_test - y_test_hat)) < 1e-10
+    assert sum(abs(y_test - y_test_hat)) == 0
 
 
 @enforce_types
