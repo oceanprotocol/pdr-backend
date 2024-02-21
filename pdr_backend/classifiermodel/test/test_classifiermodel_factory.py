@@ -61,6 +61,7 @@ def f(X: np.ndarray) -> np.ndarray:
     y = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]
     return y
 
+
 @enforce_types
 def test_classifiermodel_accuracy_from_create_xy(classifiermodel_factory):
     # This is from a test function in test_model_data_factory.py
@@ -81,4 +82,4 @@ def test_classifiermodel_accuracy_from_create_xy(classifiermodel_factory):
 
     y_train_hat = classifiermodel.predict(X_train)
     print(y_train_hat, y_train)
-    assert sum(abs(y_train - y_train_hat)) == 0 # exactly same
+    assert sum(abs(y_train - y_train_hat)) == 0  # exactly same

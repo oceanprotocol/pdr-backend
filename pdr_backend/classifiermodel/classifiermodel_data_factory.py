@@ -74,7 +74,9 @@ class ClassifierModelDataFactory:
         # main work
         x_df = pd.DataFrame()  # build this up
 
-        target_hist_cols = [f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds]
+        target_hist_cols = [
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
+        ]
 
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
@@ -103,7 +105,12 @@ class ClassifierModelDataFactory:
         ref_ss = self.ss
         hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
         z = mergedohlcv_df[hist_col].to_list()
-        y = np.array([1 if z[i+1] > z[i] else 0 for i in range(-testshift - N_train - 1, -testshift - 1)])
+        y = np.array(
+            [
+                1 if z[i + 1] > z[i] else 0
+                for i in range(-testshift - N_train - 1, -testshift - 1)
+            ]
+        )
 
         # postconditions
         assert X.shape[0] == y.shape[0]
@@ -115,6 +122,7 @@ class ClassifierModelDataFactory:
 
         # return
         return X, y, x_df
+
 
 @enforce_types
 def _slice(x: list, st: int, fin: int) -> list:
