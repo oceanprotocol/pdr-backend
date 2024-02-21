@@ -28,6 +28,7 @@ loggers:
     trader_agent:
         level: INFO
 
+# for a full list of loggers:
 # grep -r getLogger pdr_backend/* |grep -v Binary| sed -e 's/.*getLogger(\"//' | sed -e 's/\".*//' | uniq | tr -t
 
 root:
