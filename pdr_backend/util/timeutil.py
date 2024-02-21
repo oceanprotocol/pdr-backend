@@ -102,7 +102,8 @@ def ut_to_dt(ut: UnixTimeMilliseconds) -> datetime.datetime:
 
 
 # TODO: move to time types and remove usages. For all functions, check usages and internalize
-# also check where we have // 1000 throughout the code
+# also check where we have // 1000 or *1000 throughout the code
+# check ut, and ts variables
 @enforce_types
 def ms_to_seconds(ms: int) -> int:
     """Convert milliseconds to seconds"""

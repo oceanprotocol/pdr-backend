@@ -7,7 +7,6 @@ from enforce_typing import enforce_types
 from pdr_backend.util.timeutil import (
     current_ut_ms,
     dt_to_ut,
-    ms_to_seconds,
     pretty_timestr,
     timestr_to_ut,
     ut_to_dt,
@@ -108,9 +107,3 @@ def test_dt_to_ut_and_back():
 
     with pytest.raises(TypeError):
         ut_to_dt(-1)
-
-
-@enforce_types
-def test_ms_to_seconds():
-    seconds = ms_to_seconds(1648576500000)
-    assert seconds == 1648576500
