@@ -11,6 +11,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
+from pdr_backend.util.web3_config import Web3Config
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -110,7 +111,7 @@ class BasePredictoorAgent(ABC):
                 wait_for_receipt=True,
             )
 
-            if tx1 == None or tx2 == None or tx1["status"] != 1 or tx2["status"] != 1:
+            if tx1 is None or tx2 is None or tx1["status"] != 1 or tx2["status"] != 1:
                 logger.warning("One or both txs failed, failsafing to zero stake...", tx1, tx2)
                 self.feed_contract.submit_prediction(
                     True,
