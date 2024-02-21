@@ -94,6 +94,23 @@ class MockModel:
         y: np.ndarray = np.array([yval])
         self.last_X, self.last_y = X, y  # cache for testing
         return y
+    
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        if self.classifiermodel_ss is None:
+            raise RuntimeError("The model does not exist.")
+
+        ar_n = self.classifiermodel_ss.autoregressive_n
+        n_feeds = self.classifiermodel_ss.n_feeds
+        (n_points, n_vars) = X.shape
+        assert n_points == 1  # this mock can only handle 1 input point
+        assert n_vars == self.classifiermodel_ss.n == ar_n * n_feeds
+
+        proba = np.zeros((1, 2))
+        proba[0, 0] = [1 - abs(np.sum(X)) / sum(abs(X[:, i])) for i in range(n_vars)]
+        proba[0, 1] = [abs(np.sum(X)) / sum(abs(X[:, i])) for i in range(n_vars)]
+
+        self.last_X, self.last_y = X, None  # cache for testing; no actual target values here
+        return proba
 
 
 @enforce_types
