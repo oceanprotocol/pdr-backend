@@ -28,6 +28,7 @@ def get_filtered_timestamps_df(
         & (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
     )
 
+
 # pylint: disable=too-many-statements
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
