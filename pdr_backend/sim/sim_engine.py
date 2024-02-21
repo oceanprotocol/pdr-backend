@@ -9,8 +9,10 @@ import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
+from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
@@ -39,7 +41,7 @@ class SimEngine:
         assert (
             str(predict_feed.exchange),
             str(predict_feed.pair),
-        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+        ) in ppss.predictoor_ss.regressionmodel_ss.exchange_pair_tups
 
         # pp & ss values
         self.ppss = ppss
@@ -109,14 +111,16 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         testshift = self.ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
+        model_data_factory = RegressionModelDataFactory(self.ppss.predictoor_ss)
         X, y, _, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         y_train, y_test = y[st:fin], y[fin : fin + 1]
 
-        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
+        aimodel_factory = RegressionModelFactory(
+            self.ppss.predictoor_ss.regressionmodel_ss
+        )
         model = aimodel_factory.build(X_train, y_train)
 
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]

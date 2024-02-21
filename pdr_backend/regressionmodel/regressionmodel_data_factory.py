@@ -14,7 +14,7 @@ logger = logging.getLogger("aimodel_data_factory")
 
 
 @enforce_types
-class AimodelDataFactory:
+class RegressionModelDataFactory:
     """
     Roles:
     - From mergedohlcv_df, create (X, y, x_df, xrecent) for model building
@@ -77,7 +77,7 @@ class AimodelDataFactory:
         # condition inputs
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
-        ss = self.ss.aimodel_ss
+        ss = self.ss.regressionmodel_ss
 
         # main work
         x_df = pd.DataFrame()  # build this up

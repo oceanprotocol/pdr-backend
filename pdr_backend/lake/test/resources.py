@@ -4,7 +4,12 @@ from typing import Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
+from pdr_backend.classifiermodel.classifiermodel_data_factory import (
+    ClassifierModelDataFactory,
+)
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
@@ -18,9 +23,11 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    _, _, regressionmodel_data_factory, classifier_data_factory = _predictoor_ss_1feed(
+        tmpdir, "binanceus ETH/USDT h 5m"
+    )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-    return mergedohlcv_df, aimodel_data_factory
+    return mergedohlcv_df, regressionmodel_data_factory, classifier_data_factory
 
 
 @enforce_types
@@ -28,8 +35,14 @@ def _predictoor_ss_1feed(tmpdir, feed):
     predictoor_ss = _predictoor_ss(feed, [feed])
     lake_ss = _lake_ss(tmpdir, [feed])
     ohlcv_data_factory = OhlcvDataFactory(lake_ss)
-    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
-    return predictoor_ss, ohlcv_data_factory, aimodel_data_factory
+    regressionmodel_data_factory = RegressionModelDataFactory(predictoor_ss)
+    classifier_data_factory = ClassifierModelDataFactory(predictoor_ss)
+    return (
+        predictoor_ss,
+        ohlcv_data_factory,
+        regressionmodel_data_factory,
+        classifier_data_factory,
+    )
 
 
 @enforce_types
@@ -67,7 +80,13 @@ def _predictoor_ss(feed, feeds):
             "predict_feed": feed,
             "timeframe": "5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
+            "regressionmodel_ss": {
+                "input_feeds": feeds,
+                "approach": "LIN",
+                "max_n_train": 7,
+                "autoregressive_n": 3,
+            },
+            "classifiermodel_ss": {
                 "input_feeds": feeds,
                 "approach": "LIN",
                 "max_n_train": 7,

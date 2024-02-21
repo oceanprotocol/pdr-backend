@@ -19,7 +19,7 @@ def test_sim_engine(tmpdir):
         {
             "predict_feed": "binanceus BTC/USDT c 5m",
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
+            "regressionmodel_ss": {
                 "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
                 "max_n_train": 100,
                 "autoregressive_n": 2,

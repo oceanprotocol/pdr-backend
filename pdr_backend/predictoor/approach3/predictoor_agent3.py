@@ -2,8 +2,10 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
+from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
 
@@ -37,12 +39,14 @@ class PredictoorAgent3(BasePredictoorAgent):
         """
         mergedohlcv_df = self.get_data_components()
 
-        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
+        model_data_factory = RegressionModelDataFactory(self.ppss.predictoor_ss)
         X, y, _, xrecent = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
 
         # Compute the model
-        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-        model = aimodel_factory.build(X, y)
+        regression_model_factory = RegressionModelFactory(
+            self.ppss.predictoor_ss.regressionmodel_ss
+        )
+        model = regression_model_factory.build(X, y)
 
         # Predict next y
         X_test = xrecent.reshape((1, len(xrecent)))

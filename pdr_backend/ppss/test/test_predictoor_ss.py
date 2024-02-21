@@ -11,7 +11,7 @@ def test_predictoor_ss():
             "s_until_epoch_end": 60,
             "stake_amount": 1,
         },
-        "aimodel_ss": {
+        "regressionmodel_ss": {
             "input_feeds": ["binance BTC/USDT c"],
             "approach": "LIN",
             "max_n_train": 7,

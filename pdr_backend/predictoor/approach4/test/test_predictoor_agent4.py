@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import polars as pl
 
-from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
+from pdr_backend.predictoor.approach4.predictoor_agent4 import PredictoorAgent4
 from pdr_backend.predictoor.test.predictoor_agent_runner import (
     run_agent_test,
     get_agent_1feed,
@@ -18,14 +18,14 @@ from pdr_backend.predictoor.test.predictoor_agent_runner import (
 
 
 @enforce_types
-def test_predictoor_agent3_main(tmpdir, monkeypatch):
+def test_predictoor_agent4_main(tmpdir, monkeypatch):
     """
     @description
       Main end-to-end test of running agent 3.
 
       Runs the agent for a while, and then does some basic sanity checks.
     """
-    run_agent_test(str(tmpdir), monkeypatch, PredictoorAgent3)
+    run_agent_test(str(tmpdir), monkeypatch, PredictoorAgent4)
 
 
 # ===========================================================================
@@ -34,15 +34,15 @@ def test_predictoor_agent3_main(tmpdir, monkeypatch):
 
 @enforce_types
 @patch(
-    "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components"
+    "pdr_backend.predictoor.approach4.predictoor_agent4.PredictoorAgent4.get_data_components"
 )
-def test_predictoor_agent3_init(mock_get_data_components, tmpdir, monkeypatch):
+def test_predictoor_agent4_init(mock_get_data_components, tmpdir, monkeypatch):
     """
     @description
       Basic tests: is get_data_components() called? Is feed.name sane?
     """
     # initialize agent
-    feed, _, _, _ = get_agent_1feed(str(tmpdir), monkeypatch, PredictoorAgent3)
+    feed, _, _, _ = get_agent_1feed(str(tmpdir), monkeypatch, PredictoorAgent4)
 
     # assert get_data_components() is called once during init
     mock_get_data_components.assert_called_once()
@@ -80,24 +80,41 @@ class MockModel:
     """scikit-learn style model"""
 
     def __init__(self):
-        self.regressionmodel_ss = None  # fill this in later, after patch applied
+        self.classifiermodel_ss = None  # fill this in later, after patch applied
         self.last_X = None  # for tracking test results
         self.last_y = None  # ""
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        ar_n = self.regressionmodel_ss.autoregressive_n
-        n_feeds = self.regressionmodel_ss.n_feeds
+        ar_n = self.classifiermodel_ss.autoregressive_n
+        n_feeds = self.classifiermodel_ss.n_feeds
         (n_points, n_vars) = X.shape
         assert n_points == 1  # this mock can only handle 1 input point
-        assert n_vars == self.regressionmodel_ss.n == ar_n * n_feeds
+        assert n_vars == self.classifiermodel_ss.n == ar_n * n_feeds
         yval: float = np.sum(X)
         y: np.ndarray = np.array([yval])
         self.last_X, self.last_y = X, y  # cache for testing
         return y
+    
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        if self.classifiermodel_ss is None:
+            raise RuntimeError("The model does not exist.")
+
+        ar_n = self.classifiermodel_ss.autoregressive_n
+        n_feeds = self.classifiermodel_ss.n_feeds
+        (n_points, n_vars) = X.shape
+        assert n_points == 1  # this mock can only handle 1 input point
+        assert n_vars == self.classifiermodel_ss.n == ar_n * n_feeds
+
+        proba = np.zeros((1, 2))
+        proba[0, 0] = [1 - abs(np.sum(X)) / sum(abs(X[:, i])) for i in range(n_vars)]
+        proba[0, 1] = [abs(np.sum(X)) / sum(abs(X[:, i])) for i in range(n_vars)]
+
+        self.last_X, self.last_y = X, None  # cache for testing; no actual target values here
+        return proba
 
 
 @enforce_types
-def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
+def test_predictoor_agent4_get_prediction_1feed(tmpdir, monkeypatch):
     """
     @description
       Test get_prediction(), when X has only 1 input feed
@@ -114,23 +131,23 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
         return mock_model
 
     with patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components",
+        "pdr_backend.predictoor.approach4.predictoor_agent4.PredictoorAgent4.get_data_components",
         mock_get_data_components2,
     ), patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.RegressionModelFactory.build",
+        "pdr_backend.predictoor.approach4.predictoor_agent4.ClassifierModelFactory.build",
         mock_build,
     ):
 
         # initialize agent
-        _, ppss, agent, _ = get_agent_1feed(str(tmpdir), monkeypatch, PredictoorAgent3)
-        regressionmodel_ss = ppss.predictoor_ss.regressionmodel_ss
-        assert regressionmodel_ss.n_feeds == 1
+        _, ppss, agent, _ = get_agent_1feed(str(tmpdir), monkeypatch, PredictoorAgent4)
+        classifiermodel_ss = ppss.predictoor_ss.classifiermodel_ss
+        assert classifiermodel_ss.n_feeds == 1
 
         # do prediction
-        mock_model.regressionmodel_ss = regressionmodel_ss
+        mock_model.classifiermodel_ss = classifiermodel_ss
         agent.get_prediction(timestamp=5)  # arbitrary timestamp
 
-        ar_n = regressionmodel_ss.autoregressive_n
+        ar_n = classifiermodel_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 3) == (1, ar_n * 1)
@@ -143,7 +160,7 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
 
 
 @enforce_types
-def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
+def test_predictoor_agent4_get_prediction_2feeds(tmpdir, monkeypatch):
     """
     @description
       Test get_prediction(), when X has >1 input feed
@@ -154,26 +171,26 @@ def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
         return mock_model
 
     with patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components",
+        "pdr_backend.predictoor.approach4.predictoor_agent4.PredictoorAgent4.get_data_components",
         mock_get_data_components2,
     ), patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.RegressionModelFactory.build",
+        "pdr_backend.predictoor.approach4.predictoor_agent4.ClassifierModelFactory.build",
         mock_build,
     ):
 
         # initialize agent
         feeds, ppss, agent = get_agent_2feeds(
-            str(tmpdir), monkeypatch, PredictoorAgent3
+            str(tmpdir), monkeypatch, PredictoorAgent4
         )
         assert len(feeds) == 2
-        regressionmodel_ss = ppss.predictoor_ss.regressionmodel_ss
-        assert regressionmodel_ss.n_feeds == 2
+        classifiermodel_ss = ppss.predictoor_ss.classifiermodel_ss
+        assert classifiermodel_ss.n_feeds == 2
 
         # do prediction
-        mock_model.regressionmodel_ss = regressionmodel_ss
+        mock_model.classifiermodel_ss = classifiermodel_ss
         agent.get_prediction(timestamp=5)  # arbitrary timestamp
 
-        ar_n = regressionmodel_ss.autoregressive_n
+        ar_n = classifiermodel_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n * 2)
