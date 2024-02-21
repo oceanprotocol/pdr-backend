@@ -57,8 +57,7 @@ def _data() -> tuple:
 
 @enforce_types
 def f(X: np.ndarray) -> np.ndarray:
-    # y = 3 * x0 + 2 * x1
-    y = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]
+    y = (X[:, 1] > X[:, 0]).astype(int)
     return y
 
 
