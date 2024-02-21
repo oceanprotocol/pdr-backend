@@ -42,6 +42,13 @@ class BasePredictoorAgent(ABC):
         contracts = ppss.web3_pp.get_contracts([feed.address])
         self.feed_contract = sole_value(contracts)
 
+        pk2 = os.getenv("PRIVATE_KEY2")
+        self.feed_contract2 = None
+        if pk2 is not None:
+            self.feed_contract2 = copy.deepcopy(self.feed_contract)
+            self.feed_contract2.web3_pp.web3_config = \
+                Web3Config(self.feed_contract.web3_pp.rpc_url, pk2)
+
         # set attribs to track block
         self.prev_block_timestamp: int = 0
         self.prev_block_number: int = 0
@@ -82,22 +89,90 @@ class BasePredictoorAgent(ABC):
         submit_epoch, target_slot = self.cur_epoch, self.target_slot
         logger.info("Predict for time slot = %s...", self.target_slot)
 
-        predval, stake = self.get_prediction(target_slot)
-        logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
-        if predval is None or stake <= 0:
-            logger.warning("Done: can't use predval/stake")
+        success = self.get_prediction_and_submit(target_slot)
+        if not success:
             return
 
-        # submit prediction to chain
-        logger.info("Submit predict tx to chain...")
-        self.feed_contract.submit_prediction(
-            predval,
-            stake,
-            target_slot,
-            wait_for_receipt=True,
-        )
+    def get_prediction_and_submit(self, target_slot) -> bool:
+        """
+        @return
+          success -- bool
+        """
+        has1 = hasattr(self, 'get_one_sided_prediction')
+        has2 = hasattr(self, 'get_two_sided_prediction')
+        assert (has1 or has2) and not (has1 and has2), "1 or 2 sided, not both"
+
+        if has1:
+            # one-sided: get prediction
+            predval, stake = self.get_one_sided_prediction(target_slot)
+            logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
+            if predval is None or stake <= 0:
+                logger.warning("Done: can't use predval/stake")
+                return False
+
+            # one-sided: submit 1 tx
+            logger.info("Submit one-sided predict tx to chain...")
+            tx = self.feed_contract.submit_prediction(
+                predval,
+                stake,
+                target_slot,
+                wait_for_receipt=True,
+            )
+
+            # handle errors
+            if _tx_failed(tx):
+                logger.warning("Tx failed.")
+                return False
+            
+            logger.info("Submit one-sided predict tx result: success.")
+            
+                    
+        if has2:
+            # two-sided: get prediction
+            stake_up, stake_down = self.get_two_sided_prediction()
+            logger.info("-> Predict result: stake_up=%s, stake_down=%s",
+                        stake_up, stake_down)
+            if stake_up is None or stake_down is None:
+                logger.warning("Done: can't use stake_up/stake_down")
+                return False
+
+            # two-sided: submit 2 txs
+            logger.info("Submit two-sided predict tx 1/2 to chain...")
+            tx1 = self.feed_contract.submit_prediction(
+                True,
+                stake_up,
+                target_slot,
+                wait_for_receipt=True,
+            )
+
+            logger.info("Submit two-sided predict tx 2/2 to chain...")
+            tx2 = self.feed_contract2.submit_prediction(
+                False,
+                stake_down,
+                target_slot,
+                wait_for_receipt=True,
+            )
+
+            # handle errors            
+            if _tx_failed(tx1) or _tx_failed(tx2):
+                logger.warning(
+                    "One or both txs failed, failsafing to zero stake...", tx1, tx2)
+                self.feed_contract.submit_prediction(
+                    True,
+                    1e-10,
+                    target_slot,
+                    wait_for_receipt=True,
+                )
+                self.feed_contract2.submit_prediction(
+                    False,
+                    1e-10,
+                    target_slot,
+                    wait_for_receipt=True,
+                )
+            logger.info("-> Submit two-sided predict txs result: success.")
+
+        # wrapup 
         self.prev_submit_epochs.append(submit_epoch)
-        logger.info("-> Submit predict tx result: success.")
 
         if logging_has_stdout():
             print("" + "=" * 180)
@@ -163,3 +238,6 @@ class BasePredictoorAgent(ABC):
         timestamp: int,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         pass
+
+def _tx_failed(tx):
+    return tx is None or tx["status"] != 1

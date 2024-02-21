@@ -59,13 +59,17 @@ What it does:
 1. Run through many 5min epochs. At each epoch:
    - Build a model
    - Predict up/down
-   - Trade.
-   - Plot total profit versus time, and more.
-   - (It logs this all to screen, and to `out*.txt`.)
+   - Trade
+   - Plot total profit versus time, and more
+   - Log to console, and to `logs/out_<time>.txt`
 
 The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
+
+To see simulation CLI options: `pdr sim -h`. 
+
+Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
 ## Run Trader Bot on Sapphire Testnet
 
@@ -88,6 +92,10 @@ pdr trader 2 my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action.
+
+It logs to console, and to `logs/out_<time>.txt`. Like simulation, it uses Python logging framework, configurable in `logging.yaml`.
+
+To see trader CLI options: `pdr trader -h`
 
 You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/trader/trader_agent.py), or [querying Predictoor subgraph](subgraph.md).
 

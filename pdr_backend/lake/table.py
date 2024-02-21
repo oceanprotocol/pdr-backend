@@ -1,8 +1,13 @@
 import os
+from typing import Dict, Callable
 import polars as pl
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
+from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.util.timeutil import ms_to_seconds
+from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 
 @enforce_types
@@ -12,6 +17,7 @@ class Table:
         self.table_name = table_name
         self.df_schema = df_schema
         self.df = pl.DataFrame()
+        self.load()
 
     @enforce_types
     def load(self):
@@ -19,7 +25,7 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         filename = self._parquet_filename()
-        print(f"      filename={filename}")
+        print(f"Loading parquet for {self.table_name}")
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
@@ -28,12 +34,12 @@ class Table:
         # if file doesn't exist, return an empty dataframe with the expected schema
         if os.path.exists(filename):
             df = pl.read_parquet(filename)
-            print(df)
+            df = df.filter(
+                (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
+            )
         else:
             print("file doesn't exist")
             df = pl.DataFrame(schema=self.df_schema)
-
-        df = df.filter((pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut))
 
         # save data frame in memory
         self.df = df
@@ -48,7 +54,7 @@ class Table:
 
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
         assert len(self.df) > 0
-        if len(self.df) > 1:
+        if len(self.df) > 2:
             assert (
                 self.df.head(1)["timestamp"].to_list()[0]
                 <= self.df.tail(1)["timestamp"].to_list()[0]
@@ -70,6 +76,74 @@ class Table:
             print(
                 f"  Just saved df with {self.df.shape[0]} rows to new file {filename}"
             )
+
+    @enforce_types
+    def get_pdr_df(
+        self,
+        fetch_function: Callable,
+        network: str,
+        st_ut: int,
+        fin_ut: int,
+        save_backoff_limit: int,
+        pagination_limit: int,
+        config: Dict,
+    ):
+        """
+        @description
+            Fetch raw data from predictoor subgraph
+            Update function for graphql query, returns raw data
+            + Transforms ts into ms as required for data factory
+        """
+        network = get_sapphire_postfix(network)
+
+        # save to file when this amount of data is fetched
+        save_backoff_count = 0
+        pagination_offset = 0
+
+        final_df = pl.DataFrame()
+
+        while True:
+            # call the function
+            data = fetch_function(
+                ms_to_seconds(st_ut),
+                ms_to_seconds(fin_ut),
+                config["contract_list"],
+                pagination_limit,
+                pagination_offset,
+                network,
+            )
+
+            print(f"Fetched {len(data)} from subgraph")
+            # convert predictions to df and transform timestamp into ms
+            df = _object_list_to_df(data, self.df_schema)
+            df = _transform_timestamp_to_ms(df)
+            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
+                "timestamp"
+            )
+
+            if len(final_df) == 0:
+                final_df = df
+            else:
+                final_df = pl.concat([final_df, df])
+
+            save_backoff_count += len(df)
+
+            # save to file if requred number of data has been fetched
+            if (
+                save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
+            ) and len(final_df) > 0:
+                assert df.schema == self.df_schema
+                # save to parquet
+                self.df = final_df
+                self.save()
+                print(f"Saved {len(final_df)} records to file while fetching")
+                final_df = pl.DataFrame()
+                save_backoff_count = 0
+
+            # avoids doing next fetch if we've reached the end
+            if len(df) < pagination_limit:
+                break
+            pagination_offset += pagination_limit
 
     @enforce_types
     def _parquet_filename(self) -> str:
