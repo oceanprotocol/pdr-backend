@@ -55,7 +55,7 @@ class ClassifierModelDataFactory:
 
         @return --
           X -- 2d array of [sample_i, var_i] : value -- inputs for model
-          y -- 1d array of [sample_i] -- target outputs for model
+          y -- 1d array of [sample_i] -- target outputs for model where 1 if price went up and 0 otherwise
           x_df -- *pandas* DataFrame. See class docstring.
         """
         # preconditions
@@ -63,8 +63,6 @@ class ClassifierModelDataFactory:
         assert "timestamp" in mergedohlcv_df.columns
         assert "datetime" not in mergedohlcv_df.columns
 
-        # every column should be ordered with oldest first, youngest last.
-        # let's verify! The timestamps should be in ascending order
         uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
 
@@ -76,9 +74,7 @@ class ClassifierModelDataFactory:
         # main work
         x_df = pd.DataFrame()  # build this up
 
-        target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
-        ]
+        target_hist_cols = [f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds]
 
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
@@ -103,25 +99,22 @@ class ClassifierModelDataFactory:
 
         X = x_df.to_numpy()
 
-        # y is set from yval_{exch_str, signal_str, pair_str}
-        # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
+        # calculate y based on price movement: 1 if price increased, 0 otherwise
         ref_ss = self.ss
         hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
         z = mergedohlcv_df[hist_col].to_list()
-        y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
+        y = np.array([1 if z[i+1] > z[i] else 0 for i in range(-testshift - N_train - 1, -testshift - 1)])
 
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == ss.n
         assert isinstance(x_df, pd.DataFrame)
-
         assert "timestamp" not in x_df.columns
         assert "datetime" not in x_df.columns
 
         # return
         return X, y, x_df
-
 
 @enforce_types
 def _slice(x: list, st: int, fin: int) -> list:
