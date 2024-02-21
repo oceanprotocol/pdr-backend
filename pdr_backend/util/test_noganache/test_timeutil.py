@@ -5,8 +5,6 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.util.timeutil import (
-    current_ut_ms,
-    dt_to_ut,
     pretty_timestr,
     timestr_to_ut,
     ut_to_dt,
@@ -26,7 +24,7 @@ def test_pretty_timestr():
 
 @enforce_types
 def test_current_ut_ms():
-    ut = current_ut_ms()
+    ut = UnixTimeMilliseconds.now()
     assert isinstance(ut, UnixTimeMilliseconds)
     assert ut > 1648576500000
 
@@ -99,7 +97,7 @@ def test_dt_to_ut_and_back():
     dt = datetime.datetime.strptime("2022-03-29_17:55", "%Y-%m-%d_%H:%M")
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
 
-    ut = dt_to_ut(dt)
+    ut = UnixTimeMilliseconds.from_dt(dt)
     assert ut == UnixTimeMilliseconds(1648576500000)
 
     dt2 = ut_to_dt(ut)

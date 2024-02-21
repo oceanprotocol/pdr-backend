@@ -1,28 +1,15 @@
 import datetime
-import time
 from datetime import timezone
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.time_types import UnixTimeMilliseconds, UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
 @enforce_types
 def pretty_timestr(ut: UnixTimeMilliseconds) -> str:
     """Pretty-print version of ut timestamp: show as unix time and datetime"""
     return f"timestamp={ut}, dt={ut_to_timestr(ut)}"
-
-
-@enforce_types
-def current_ut_ms() -> UnixTimeMilliseconds:
-    """Return the current date/time as a unix time (int in # ms)"""
-    dt = datetime.datetime.now(timezone.utc)
-    return UnixTimeMilliseconds(dt_to_ut(dt))
-
-
-def current_ut_s() -> UnixTimeSeconds:
-    """Returns the current UTC unix time in seconds"""
-    return UnixTimeSeconds(int(time.time()))
 
 
 @enforce_types
@@ -41,7 +28,7 @@ def timestr_to_ut(timestr: str) -> UnixTimeMilliseconds:
     Does not use local time, rather always uses UTC
     """
     if timestr.lower() == "now":
-        return current_ut_ms()
+        return UnixTimeMilliseconds.now()
 
     ncolon = timestr.count(":")
     if ncolon == 0:
@@ -57,7 +44,7 @@ def timestr_to_ut(timestr: str) -> UnixTimeMilliseconds:
         raise ValueError(timestr)
 
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
-    return dt_to_ut(dt)
+    return UnixTimeMilliseconds.from_dt(dt)
 
 
 @enforce_types
@@ -76,12 +63,6 @@ def ut_to_timestr(ut: UnixTimeMilliseconds) -> str:
     """
     dt: datetime.datetime = ut_to_dt(ut)
     return dt.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
-
-
-@enforce_types
-def dt_to_ut(dt: datetime.datetime) -> UnixTimeMilliseconds:
-    """Convert datetime to unix time (int in # ms)"""
-    return UnixTimeMilliseconds(int(dt.timestamp() * 1000))
 
 
 @enforce_types

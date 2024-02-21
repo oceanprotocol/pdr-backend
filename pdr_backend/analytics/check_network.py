@@ -11,7 +11,7 @@ from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.mathutil import from_wei
-from pdr_backend.util.timeutil import current_ut_s
+from pdr_backend.util.time_types import UnixTimeSeconds
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 logger = logging.getLogger("check_network")
@@ -49,7 +49,7 @@ def check_dfbuyer(
     subgraph_url: str,
     token_amt: int,
 ):
-    cur_ut = current_ut_s()
+    cur_ut = UnixTimeSeconds.now()
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
@@ -94,7 +94,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
 
 @enforce_types
 def do_query_network(subgraph_url: str, lookback_hours: int):
-    cur_ut = current_ut_s()
+    cur_ut = UnixTimeSeconds.now()
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
             {

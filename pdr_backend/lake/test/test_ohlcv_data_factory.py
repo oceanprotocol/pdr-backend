@@ -21,7 +21,7 @@ from pdr_backend.lake.plutil import (
 from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
-from pdr_backend.util.timeutil import current_ut_ms, ut_to_timestr
+from pdr_backend.util.timeutil import ut_to_timestr
 from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
@@ -62,7 +62,9 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     # setup: exchange
     class FakeExchange:
         def __init__(self):
-            self.cur_ut: int = current_ut_ms()  # fixed value, for easier testing
+            self.cur_ut: int = int(
+                UnixTimeMilliseconds.now()
+            )  # fixed value, for easier testing
 
         # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:

@@ -12,6 +12,7 @@ from pdr_backend.trader.test.trader_agent_runner import (
     do_run,
     setup_trade,
 )
+from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
 @enforce_types
@@ -105,7 +106,7 @@ def test_trader_agent2_should_close(  # pylint: disable=unused-argument
     assert result
 
     # test 2 - ensure more order recent, now it should not close
-    mock_order.timestamp = datetime.now().timestamp() * 1000
+    mock_order.timestamp = UnixTimeMilliseconds.now()
 
     result = agent.should_close(mock_order)
     assert not result

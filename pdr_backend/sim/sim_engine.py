@@ -14,7 +14,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+from pdr_backend.util.timeutil import pretty_timestr
 from pdr_backend.util.time_types import UnixTimeMilliseconds
 
 
@@ -79,7 +79,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{current_ut_ms()}.txt"
+        filebase = f"out_{UnixTimeMilliseconds.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
         fh = logging.FileHandler(self.logfile)
