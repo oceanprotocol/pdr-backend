@@ -11,12 +11,30 @@ handlers:
         formatter: simple
         stream: ext://sys.stdout
 
+    file:
+        class: logging.FileHandler
+        level: INFO
+        formatter: simple
+        filename: output.log
+        mode: w
+
 loggers:
     pdr:
         level: INFO
         handlers: [console]
         propagate: no
 
+    sim_engine:
+        level: INFO
+
+    predictoor_agent:
+        level: INFO
+
+    trader_agent:
+        level: INFO
+
+# grep -r getLogger pdr_backend/* |grep -v Binary| sed -e 's/.*getLogger(\"//' | sed -e 's/\".*//' | uniq | tr -t
+
 root:
     level: INFO
-    handlers: [console]
+    handlers: [console, file]
