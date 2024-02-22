@@ -51,7 +51,6 @@ class SimEngine:
         self.ys_testhat: List[float] = []
         self.corrects: List[bool] = []
         self.trader_profit_usds: List[float] = []
-        self.tot_trader_profit_usds: List[float] = []
 
         self.logfile = ""
 
@@ -142,7 +141,7 @@ class SimEngine:
         trueprice = y_test[0]
         self.ys_test.append(trueprice)
 
-        # simulate sell. Update tot_trader_profit_usd
+        # simulate sell. Update trader_profit_usd
         tokcoin_amt_sell = self.holdings[self.tokcoin]
         if tokcoin_amt_sell > 0:
             self._sell(trueprice, tokcoin_amt_sell)
