@@ -163,25 +163,14 @@ class SimEngine:
         correct_s = "Y" if correct else "N"
         self.corrects.append(correct)
         acc = float(sum(self.corrects)) / len(self.corrects) * 100
-        logger.info(
-            "Iter #%d/%d: ut%s."
-            ". Preddir|true|correct = %s|%s|%s"
-            ". Total correct %d/%d"
-            " (%.1f%%)"
-            ", trader_profit $%7.2f"
-            ", tot_trader_profit $%9.2f",
-            test_i + 1,
-            self.ppss.sim_ss.test_n,
-            pretty_timestr(ut)[9:][:-9],
-            pred_dir,
-            true_dir,
-            correct_s,
-            sum(self.corrects),
-            len(self.corrects),
-            acc,
-            trader_profit_usd,
-            self.tot_trader_profit_usd,
-        )
+        s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}: "
+        s += f"ut{pretty_timestr(ut)[9:][:-7]}"
+        s += f". Dir'n pred|true|correct? = {pred_dir}|{true_dir}|{correct_s}"
+        s += f". Total correct {sum(self.corrects)}/{len(self.corrects)}"
+        s += f" ({acc:.1f}%%)"
+        s += f", trader_profit ${trader_profit_usd:7.2f}"
+        s += f", tot_trader_profit ${self.tot_trader_profit_usd:9.2f}"
+        logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
         """
