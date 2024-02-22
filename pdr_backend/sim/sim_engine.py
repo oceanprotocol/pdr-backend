@@ -19,13 +19,19 @@ from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 11
 
-
-@enforce_types
-class PlotState:
-    def __init__(self):
-        self.fig, (self.ax0, self.ax1, self.ax2) = plt.subplots(3)
-        plt.ion()
-        plt.show()
+class SimEngineState:
+    def __init__(self, do_plot:bool, init_holdings: dict):
+        self.holdings: dict = init_holdings
+        self.nmses_train: List[float] = []
+        self.ys_test: List[float] = []
+        self.ys_testhat: List[float] = []
+        self.corrects: List[bool] = []
+        self.trader_profits_USD: List[float] = []
+        self.predictoor_profits_OCEAN: List[float] = []
+        
+        self.plot_state = None
+        if do_plot:
+            self.plot_state = PlotState()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -41,23 +47,12 @@ class SimEngine:
             str(predict_feed.pair),
         ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
 
-        # pp & ss values
         self.ppss = ppss
-
-        # state
-        self.holdings = copy.copy(self.ppss.trader_ss.init_holdings)
-        self.nmses_train: List[float] = []
-        self.ys_test: List[float] = []
-        self.ys_testhat: List[float] = []
-        self.corrects: List[bool] = []
-        self.trader_profits_USD: List[float] = []
-        self.predictoor_profits_OCEAN: List[float] = []
-
+        self.st = SimEngineState(
+            self.ppss.sim_ss.do_plot,
+            copy.copy(self.ppss.trader_ss.init_holdings),
+        )
         self.logfile = ""
-
-        self.plot_state = None
-        if self.ppss.sim_ss.do_plot:
-            self.plot_state = PlotState()
 
         self.exchange = self.ppss.predictoor_ss.feed.ccxt_exchange(
             mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
@@ -83,9 +78,9 @@ class SimEngine:
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
 
-        self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
-        self.trader_profits_USD = [] # profit per epoch
-        self.predictoor_profits_OCEAN = [] # profit per epoch
+        self.st.nmses_train, self.st.ys_test, self.st.ys_testhat, self.st.corrects = [], [], [], []
+        self.st.trader_profits_USD = [] # profit per epoch
+        self.st.predictoor_profits_OCEAN = [] # profit per epoch
 
     @enforce_types
     def run(self):
@@ -101,8 +96,8 @@ class SimEngine:
 
         logger.info("Done all iters.")
 
-        nmse_train = np.average(self.nmses_train)
-        nmse_test = nmse(self.ys_testhat, self.ys_test)
+        nmse_train = np.average(self.st.nmses_train)
+        nmse_test = nmse(self.st.ys_testhat, self.st.ys_test)
         logger.info("Final nmse_train=%.5f, nmse_test=%.5f", nmse_train, nmse_test)
 
     @enforce_types
@@ -122,7 +117,7 @@ class SimEngine:
         y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
 
         nmse_train = nmse(y_train, y_trainhat, min(y), max(y))
-        self.nmses_train.append(nmse_train)
+        self.st.nmses_train.append(nmse_train)
 
         # current time
         recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
@@ -133,32 +128,32 @@ class SimEngine:
 
         # predict price
         predprice = model.predict(X_test)[0]
-        self.ys_testhat.append(predprice)
+        self.st.ys_testhat.append(predprice)
 
         # simulate buy. Buy 'amt_usd' worth of TOK if we think price going up
-        usdcoin_holdings_before = self.holdings[self.usdcoin]
+        usdcoin_holdings_before = self.st.holdings[self.usdcoin]
         if self._do_buy(predprice, curprice):
             self._buy(curprice, ppss.trader_ss.buy_amt_usd)
 
         # observe true price
         trueprice = y_test[0]
-        self.ys_test.append(trueprice)
+        self.st.ys_test.append(trueprice)
 
         # simulate sell. Update trader_profits_USD
-        tokcoin_amt_sell = self.holdings[self.tokcoin]
+        tokcoin_amt_sell = self.st.holdings[self.tokcoin]
         if tokcoin_amt_sell > 0:
             self._sell(trueprice, tokcoin_amt_sell)
-        usdcoin_holdings_after = self.holdings[self.usdcoin]
+        usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        self.trader_profits_USD.append(trader_profit_USD)
+        self.st.trader_profits_USD.append(trader_profit_USD)
         
         # err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
         true_dir = "UP" if trueprice > curprice else "DN"
         correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
-        self.corrects.append(correct)
+        self.st.corrects.append(correct)
 
         # Update predictoor_profits_OCEAN
         if correct:
@@ -167,9 +162,9 @@ class SimEngine:
             predictoor_profit_OCEAN = percent_to_me * pdr_ss.revenue
         else:
             predictoor_profit_OCEAN = -pdr_ss.stake_amount
-        self.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
+        self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
         
-        n_correct, n_trials = sum(self.corrects), len(self.corrects)
+        n_correct, n_trials = sum(self.st.corrects), len(self.st.corrects)
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
         
@@ -182,10 +177,10 @@ class SimEngine:
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
 
         s += f". predictoor_profit [epoch {predictoor_profit_OCEAN:6.2f} OCEAN"
-        s += f", total {sum(self.predictoor_profits_OCEAN):7.2f} OCEAN]"
+        s += f", total {sum(self.st.predictoor_profits_OCEAN):7.2f} OCEAN]"
         
         s += f". trader_profit [epoch ${trader_profit_USD:7.2f}"
-        s += f", total ${sum(self.trader_profits_USD):8.2f}]"
+        s += f", total ${sum(self.st.trader_profits_USD):8.2f}]"
         logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
@@ -209,13 +204,13 @@ class SimEngine:
           usdcoin_amt_spend -- amount to spend, in usdcoin; spend less if have less
         """
         # simulate buy
-        usdcoin_amt_sent = min(usdcoin_amt_spend, self.holdings[self.usdcoin])
-        self.holdings[self.usdcoin] -= usdcoin_amt_sent
+        usdcoin_amt_sent = min(usdcoin_amt_spend, self.st.holdings[self.usdcoin])
+        self.st.holdings[self.usdcoin] -= usdcoin_amt_sent
 
         p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = p * usdcoin_amt_sent
         tokcoin_amt_recd = (1 - p) * usdcoin_amt_sent / price
-        self.holdings[self.tokcoin] += tokcoin_amt_recd
+        self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
             self.ppss.predictoor_ss.pair_str, tokcoin_amt_recd
@@ -241,12 +236,12 @@ class SimEngine:
           tokcoin_amt_sell -- how much of coin to sell, in tokcoin
         """
         tokcoin_amt_sent = tokcoin_amt_sell
-        self.holdings[self.tokcoin] -= tokcoin_amt_sent
+        self.st.holdings[self.tokcoin] -= tokcoin_amt_sent
 
         p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = p * tokcoin_amt_sent * price
         usdcoin_amt_recd = (1 - p) * tokcoin_amt_sent * price
-        self.holdings[self.usdcoin] += usdcoin_amt_recd
+        self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
             self.ppss.predictoor_ss.pair_str, tokcoin_amt_sent
@@ -262,8 +257,7 @@ class SimEngine:
             self.usdcoin,
         )
 
-    @enforce_types
-    def _plot(self, i, N):
+    def _plot(self, i:int, N:int):
         if not self.ppss.sim_ss.do_plot:
             return
 
@@ -274,59 +268,74 @@ class SimEngine:
         if not do_update:
             return
 
-        ps = self.plot_state
-        fig, ax0, ax1, ax2 = ps.fig, ps.ax0, ps.ax1, ps.ax2
-        
-        N = len(self.predictoor_profits_OCEAN)
-        x = list(range(0, N))
+        _plot(self.st)
 
-        # plot 0: % correct vs time
-        y0_est, y0_l, y0_u = [], [], []  # est, 95% confidence intervals
-        for i_ in range(N):
-            n_correct = sum(self.corrects[: i_ + 1])
-            n_trials = len(self.corrects[: i_ + 1])
-            l, u = proportion_confint(count=n_correct, nobs=n_trials)
-            y0_est.append(n_correct / n_trials * 100)
-            y0_l.append(l * 100)
-            y0_u.append(u * 100)
-        
-        ax0.cla()
-        ax0.plot(x, y0_est, "b")
-        ax0.fill_between(x, y0_l, y0_u, color="b", alpha=0.15)
-        now_s = f"{y0_est[-1]:.2f}% [{y0_l[-1]:.2f}%, {y0_u[-1]:.2f}%]"
-        ax0.set_title(
-            f"% correct vs time. Current: {now_s}",
-            fontsize=FONTSIZE,
-            fontweight="bold",
-        )
-        ax0.set_xlabel("time", fontsize=FONTSIZE)
-        ax0.set_ylabel("% correct", fontsize=FONTSIZE)
 
-        # plot 1: predictoor profit vs time
-        y1 = np.cumsum(self.predictoor_profits_OCEAN)
-        ax1.plot(x, y1, "g-")
-        ax1.set_title(
-            f"Predictoor profit vs time. Current: ${y1[-1]:.2f}",
-            fontsize=FONTSIZE,
-            fontweight="bold",
-        )
-        ax1.set_xlabel("time", fontsize=FONTSIZE)
-        ax1.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
+@enforce_types
+class PlotState:
+    def __init__(self):
+        self.fig, self.axs = plt.subplots(3)
+        plt.ion()
+        plt.show()
 
-        # plot 2: trader profit vs time
-        y2 = np.cumsum(self.trader_profits_USD)
-        ax2.plot(x, y2, "g-")
-        ax2.set_title(
-            f"Trader profit vs time. Current: ${y2[-1]:.2f}",
-            fontsize=FONTSIZE,
-            fontweight="bold",
-        )
-        ax2.set_xlabel("time", fontsize=FONTSIZE)
-        ax2.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
+    def attribs(self):
+        return self.fig, (self.ax0, self.ax1, self.ax2)
 
-        # final pieces
-        HEIGHT = 9  # magic number
-        WIDTH = int(HEIGHT * 2)  # magic number
-        fig.set_size_inches(WIDTH, HEIGHT)
-        fig.tight_layout(pad=0.3)  # add space between plots
-        plt.pause(0.001)
+
+@enforce_types
+def _plot(st: SimEngineState):
+    fig, (ax0, ax1, ax2) = st.plot_state.fig, st.plot_state.axs
+
+    N = len(st.predictoor_profits_OCEAN)
+    x = list(range(0, N))
+
+    # plot 0: % correct vs time
+    y0_est, y0_l, y0_u = [], [], []  # est, 95% confidence intervals
+    for i_ in range(N):
+        n_correct = sum(st.corrects[: i_ + 1])
+        n_trials = len(st.corrects[: i_ + 1])
+        l, u = proportion_confint(count=n_correct, nobs=n_trials)
+        y0_est.append(n_correct / n_trials * 100)
+        y0_l.append(l * 100)
+        y0_u.append(u * 100)
+
+    ax0.cla()
+    ax0.plot(x, y0_est, "b")
+    ax0.fill_between(x, y0_l, y0_u, color="b", alpha=0.15)
+    now_s = f"{y0_est[-1]:.2f}% [{y0_l[-1]:.2f}%, {y0_u[-1]:.2f}%]"
+    ax0.set_title(
+        f"% correct vs time. Current: {now_s}",
+        fontsize=FONTSIZE,
+        fontweight="bold",
+    )
+    ax0.set_xlabel("time", fontsize=FONTSIZE)
+    ax0.set_ylabel("% correct", fontsize=FONTSIZE)
+
+    # plot 1: predictoor profit vs time
+    y1 = np.cumsum(st.predictoor_profits_OCEAN)
+    ax1.plot(x, y1, "g-")
+    ax1.set_title(
+        f"Predictoor profit vs time. Current: ${y1[-1]:.2f}",
+        fontsize=FONTSIZE,
+        fontweight="bold",
+    )
+    ax1.set_xlabel("time", fontsize=FONTSIZE)
+    ax1.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
+
+    # plot 2: trader profit vs time
+    y2 = np.cumsum(st.trader_profits_USD)
+    ax2.plot(x, y2, "g-")
+    ax2.set_title(
+        f"Trader profit vs time. Current: ${y2[-1]:.2f}",
+        fontsize=FONTSIZE,
+        fontweight="bold",
+    )
+    ax2.set_xlabel("time", fontsize=FONTSIZE)
+    ax2.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
+
+    # final pieces
+    HEIGHT = 9  # magic number
+    WIDTH = int(HEIGHT * 2)  # magic number
+    fig.set_size_inches(WIDTH, HEIGHT)
+    fig.tight_layout(pad=0.3)  # add space between plots
+    plt.pause(0.001)
