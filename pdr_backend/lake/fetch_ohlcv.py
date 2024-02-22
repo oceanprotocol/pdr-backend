@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -67,7 +67,8 @@ def safe_fetch_ohlcv_dydx(
     resolution: str,
     st_ut: UnixTimeMs,
     fin_ut: UnixTimeMs,
-) -> Union[List[tuple], None]:
+    limit: int,
+) -> pl.DataFrame:
     """
     @description
       calls fetch_dydx_data() but if there's an error it
@@ -90,6 +91,7 @@ def safe_fetch_ohlcv_dydx(
                     resolution=resolution,
                     st_ut=st_ut,
                     fin_ut=fin_ut,
+                    limit=limit,
                 )
     except Exception as e:
         logger.warning("exchange: %s", e)
@@ -155,7 +157,7 @@ def _filter_within_timerange(
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]
 
-def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs):
+def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int = None):
     """
     @description
       makes a loop of get requests for dydx v4 exchange candle data,
@@ -202,7 +204,7 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
         # Initialize parameters for API request
         end_time = UnixTimeMs.to_timestr(end_time)
-        params = {'resolution': resolution, 'limit': '100', 'toISO': end_time}
+        params = {'resolution': resolution, 'limit': limit, 'toISO': end_time}
 
         # Fetch the data
         headers = {'Accept': 'application/json'}
@@ -215,8 +217,11 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
         # Process and add the fetched data to all_data
         if 'candles' in data:
-            df = transform_dydx_data(data['candles'])
-            all_data = pl.concat([all_data, df])
+            #df = transform_dydx_data(data['candles'])
+            #all_data = pl.concat([all_data, df])
+
+            transformed_data = transform_dydx_data_to_tuples(data['candles'])
+            all_data.extend(transformed_data)
 
             # Update end_time for the next iteration
             #end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=pytz.UTC)
@@ -235,7 +240,7 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
     return df
 
-def transform_dydx_data(candles) -> pl.DataFrame:
+def transform_dydx_data_to_df(candles) -> pl.DataFrame:
     """
       Transforms dYdX data to a Polars DataFrame with schema from TOHLCV_SCHEMA_PL
     """
@@ -263,3 +268,23 @@ def transform_dydx_data(candles) -> pl.DataFrame:
 
 
     return df
+
+def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
+    """
+    Transforms dYdX data to a list of tuples
+    """
+    transformed_data = []
+
+    for candle in candles:
+        timestamp = UnixTimeMs.from_timestr(candle['startedAt'])
+        row = (
+            timestamp,
+            float(candle['open']),
+            float(candle['high']),
+            float(candle['low']),
+            float(candle['close']),
+            float(candle['baseTokenVolume'])
+        )
+        transformed_data.append(row)
+
+    return transformed_data
