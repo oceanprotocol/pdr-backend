@@ -17,13 +17,13 @@ from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 logger = logging.getLogger("sim_engine")
-FONTSIZE = 12
+FONTSIZE = 11
 
 
 @enforce_types
 class PlotState:
     def __init__(self):
-        self.fig, (self.ax0, self.ax1) = plt.subplots(2)
+        self.fig, (self.ax0, self.ax1, self.ax2) = plt.subplots(3)
         plt.ion()
         plt.show()
 
@@ -274,43 +274,59 @@ class SimEngine:
         if not do_update:
             return
 
-        fig, ax0, ax1 = self.plot_state.fig, self.plot_state.ax0, self.plot_state.ax1
-
-        y0 = np.cumsum(self.trader_profits_USD)
-        N = len(y0)
+        ps = self.plot_state
+        fig, ax0, ax1, ax2 = ps.fig, ps.ax0, ps.ax1, ps.ax2
+        
+        N = len(self.predictoor_profits_OCEAN)
         x = list(range(0, N))
-        ax0.plot(x, y0, "g-")
-        ax0.set_title(
-            f"Trading profit vs time. Current: ${y0[-1]:.2f}",
-            fontsize=FONTSIZE,
-            fontweight="bold",
-        )
-        ax0.set_xlabel("time", fontsize=FONTSIZE)
-        ax0.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
-        y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
+        # plot 0: % correct vs time
+        y0_est, y0_l, y0_u = [], [], []  # est, 95% confidence intervals
         for i_ in range(N):
             n_correct = sum(self.corrects[: i_ + 1])
             n_trials = len(self.corrects[: i_ + 1])
             l, u = proportion_confint(count=n_correct, nobs=n_trials)
-            y1_est.append(n_correct / n_trials * 100)
-            y1_l.append(l * 100)
-            y1_u.append(u * 100)
-
-        ax1.cla()
-        ax1.plot(x, y1_est, "b")
-        ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
-        now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
-        ax1.set_title(
+            y0_est.append(n_correct / n_trials * 100)
+            y0_l.append(l * 100)
+            y0_u.append(u * 100)
+        
+        ax0.cla()
+        ax0.plot(x, y0_est, "b")
+        ax0.fill_between(x, y0_l, y0_u, color="b", alpha=0.15)
+        now_s = f"{y0_est[-1]:.2f}% [{y0_l[-1]:.2f}%, {y0_u[-1]:.2f}%]"
+        ax0.set_title(
             f"% correct vs time. Current: {now_s}",
             fontsize=FONTSIZE,
             fontweight="bold",
         )
-        ax1.set_xlabel("time", fontsize=FONTSIZE)
-        ax1.set_ylabel("% correct", fontsize=FONTSIZE)
+        ax0.set_xlabel("time", fontsize=FONTSIZE)
+        ax0.set_ylabel("% correct", fontsize=FONTSIZE)
 
-        HEIGHT = 8  # magic number
-        WIDTH = HEIGHT * 2  # magic number
+        # plot 1: predictoor profit vs time
+        y1 = np.cumsum(self.predictoor_profits_OCEAN)
+        ax1.plot(x, y1, "g-")
+        ax1.set_title(
+            f"Predictoor profit vs time. Current: ${y1[-1]:.2f}",
+            fontsize=FONTSIZE,
+            fontweight="bold",
+        )
+        ax1.set_xlabel("time", fontsize=FONTSIZE)
+        ax1.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
+
+        # plot 2: trader profit vs time
+        y2 = np.cumsum(self.trader_profits_USD)
+        ax2.plot(x, y2, "g-")
+        ax2.set_title(
+            f"Trader profit vs time. Current: ${y2[-1]:.2f}",
+            fontsize=FONTSIZE,
+            fontweight="bold",
+        )
+        ax2.set_xlabel("time", fontsize=FONTSIZE)
+        ax2.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
+
+        # final pieces
+        HEIGHT = 9  # magic number
+        WIDTH = int(HEIGHT * 2)  # magic number
         fig.set_size_inches(WIDTH, HEIGHT)
-        fig.tight_layout(pad=1.0)  # add space between plots
+        fig.tight_layout(pad=0.3)  # add space between plots
         plt.pause(0.001)
