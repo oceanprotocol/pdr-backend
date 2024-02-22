@@ -15,7 +15,7 @@ class MyClass:
         self.ID = data["ID"]
         self.pair = data["pair"]
         self.timeframe = data["timeframe"]
-        self.prediction = data["prediction"]
+        self.predvalue = data["predvalue"]
         self.payout = data["payout"]
         self.timestamp = data["timestamp"]
         self.slot = data["slot"]
@@ -26,7 +26,7 @@ mocked_object = {
     "ID": "0x123",
     "pair": "ADA-USDT",
     "timeframe": "5m",
-    "prediction": True,
+    "predvalue": True,
     "payout": 28.2,
     "timestamp": 1701634400000,
     "slot": 1701634400000,
@@ -50,7 +50,7 @@ table_df_schema = {
     "ID": Utf8,
     "pair": Utf8,
     "timeframe": Utf8,
-    "prediction": Boolean,
+    "predvalue": Boolean,
     "payout": Float64,
     "timestamp": Int64,
     "slot": Int64,

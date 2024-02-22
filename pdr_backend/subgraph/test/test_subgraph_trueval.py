@@ -58,5 +58,5 @@ def test_fetch_filtered_truevals(mock_query_subgraph):
     assert truevals[0].token == "ADA/USDT"
     assert truevals[0].timestamp == 1698527000
     assert truevals[0].slot == 1698527100
-    assert truevals[0].trueval is True
+    assert truevals[0].truevalue is True
     assert mock_query_subgraph.call_count == 1

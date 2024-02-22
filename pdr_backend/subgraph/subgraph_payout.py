@@ -152,7 +152,7 @@ def fetch_payouts(
                     "name"
                 ],
                 "slot": int(payout["id"].split("-")[1]),
-                "predictedValue": bool(payout["predictedValue"]),
+                "predvalue": bool(payout["predictedValue"]),
                 "revenue": float(payout["prediction"]["slot"]["revenue"]),
                 "roundSumStakesUp": float(
                     payout["prediction"]["slot"]["roundSumStakesUp"]

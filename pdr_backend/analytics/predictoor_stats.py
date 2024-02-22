@@ -42,8 +42,8 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
-        pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+        pl.col("predvalue").count().alias("num_predictions"),
+        (pl.col("predvalue").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     return df
@@ -61,8 +61,8 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
-        pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+        pl.col("predvalue").count().alias("num_predictions"),
+        (pl.col("predvalue").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     return df

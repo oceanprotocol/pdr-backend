@@ -10,7 +10,7 @@ payouts_schema = {
     "slot": Int64,
     "timestamp": Int64,
     "payout": Float64,
-    "predictedValue": Boolean,
+    "predvalue": Boolean,
     "revenue": Float64,
     "roundSumStakesUp": Float64,
     "roundSumStakes": Float64,

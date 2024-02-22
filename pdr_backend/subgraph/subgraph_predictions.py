@@ -148,7 +148,7 @@ def fetch_filtered_predictions(
         slot = prediction_sg_dict["slot"]["slot"]
         user = prediction_sg_dict["user"]["id"]
         address = prediction_sg_dict["id"].split("-")[0]
-        trueval = None
+        truevalue = None
         payout = None
         predicted_value = None
         stake = None
@@ -158,7 +158,7 @@ def fetch_filtered_predictions(
 
         if not prediction_sg_dict["payout"] is None:
             stake = float(prediction_sg_dict["stake"])
-            trueval = prediction_sg_dict["payout"]["trueValue"]
+            truevalue = prediction_sg_dict["payout"]["trueValue"]
             predicted_value = prediction_sg_dict["payout"]["predictedValue"]
             payout = float(prediction_sg_dict["payout"]["payout"])
 
@@ -169,9 +169,9 @@ def fetch_filtered_predictions(
             ID=prediction_sg_dict["id"],
             pair=pair,
             timeframe=timeframe,
-            prediction=predicted_value,
+            predvalue=predicted_value,
             stake=stake,
-            trueval=trueval,
+            truevalue=truevalue,
             timestamp=timestamp,
             source=source,
             payout=payout,
