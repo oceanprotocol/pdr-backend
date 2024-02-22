@@ -9,6 +9,11 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_table,
 )
+from pdr_backend.lake.table_silver_pdr_predictions import (
+    silver_pdr_predictions_table_name,
+    silver_pdr_predictions_schema,
+    get_silver_pdr_predictions_table,
+)
 
 
 class ETL:
@@ -41,6 +46,7 @@ class ETL:
         try:
             self.do_sync_step()
             self.do_bronze_step()
+            self.do_silver_step()
 
             end_ts = time.time_ns() / 1e9
             print(f"do_etl - Completed in {end_ts - st_ts} sec.")
@@ -78,6 +84,24 @@ class ETL:
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
+    def do_silver_step(self):
+        """
+        @description
+            We have updated our bronze tables
+            Now, let's build the silver tables
+            key tables: [silver_pdr_predictions]
+        """
+        print("do_silver_step - Build silver tables.")
+
+        # Update silver tables
+        # let's keep track of time passed so we can log how long it takes for this step to complete
+        st_ts = time.time_ns() / 1e9
+
+        self.update_silver_pdr_predictions()
+
+        end_ts = time.time_ns() / 1e9
+        print(f"do_silver_step - Completed in {end_ts - st_ts} sec.")
+
     def update_bronze_pdr_predictions(self):
         """
         @description
@@ -93,4 +117,21 @@ class ETL:
             self.tables[bronze_pdr_predictions_table_name] = table
 
         table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
+        table.save()
+
+    def update_silver_pdr_predictions(self):
+        """
+        @description
+            Update silver_pdr_predictions table
+        """
+        if silver_pdr_predictions_table_name not in self.tables:
+            # Load existing silver table
+            table = Table(
+                silver_pdr_predictions_table_name,
+                silver_pdr_predictions_schema,
+                self.ppss,
+            )
+            self.tables[silver_pdr_predictions_table_name] = table
+
+        table = get_silver_pdr_predictions_table(self.tables, self.ppss)
         table.save()
