@@ -291,8 +291,7 @@ def _plot(st: SimEngineState):
 
     # plot 0: predictoor profit vs time
     y0 = np.cumsum(st.predictoor_profits_OCEAN)
-    if ax0.lines:
-        ax0.lines[-1].remove() # delete prev horizontal line
+    _del_lines(ax0)
     ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
     ax0.plot(x, y0, color="green")
     ax0.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
@@ -304,7 +303,6 @@ def _plot(st: SimEngineState):
     )
     ax0.set_xlabel("time", fontsize=FONTSIZE)
 
-    
     # plot 1: % correct vs time
     y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
     for i_ in range(N):
@@ -315,6 +313,7 @@ def _plot(st: SimEngineState):
         y1_l.append(l * 100)
         y1_u.append(u * 100)
 
+    _del_lines(ax1)
     ax1.cla()
     ax1.plot(x, y1_est, "b")
     ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
@@ -330,8 +329,7 @@ def _plot(st: SimEngineState):
     
     # plot 2: trader profit vs time
     y2 = np.cumsum(st.trader_profits_USD)
-    if ax2.lines:
-        ax2.lines[-1].remove() # delete prev horizontal line
+    _del_lines(ax2)
     ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax2.plot(x, y2, color="blue")
     ax2.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
@@ -356,3 +354,6 @@ def _plot(st: SimEngineState):
 
     #import pdb; pdb.set_trace()
 
+def _del_lines(ax):
+    while ax.lines:
+        ax.lines[-1].remove()
