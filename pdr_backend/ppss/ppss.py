@@ -173,6 +173,7 @@ def mock_ppss(
         {
             "predict_feed": onefeed,
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "is_two_sided": False,
             "regressionmodel_ss": {
                 "input_feeds": feeds,
                 "approach": "LIN",
