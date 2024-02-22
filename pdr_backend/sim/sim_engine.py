@@ -303,7 +303,7 @@ def _plot(st: SimEngineState):
     ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
     ax0.set_xlabel("time", fontsize=FONTSIZE)
     ax0.yaxis.tick_right()
-    ax0.margins(0.005, 0.02)
+    ax0.margins(0.005, 0.05)
 
     # plot 1: % correct vs time
     y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
@@ -328,7 +328,7 @@ def _plot(st: SimEngineState):
     ax1.set_xlabel("time", fontsize=FONTSIZE)
     ax1.set_ylabel("% correct", fontsize=FONTSIZE)
     ax1.yaxis.tick_right()
-    ax1.margins(0.005, 0.005)
+    ax1.margins(0.01, 0.01)
     
     # plot 2: trader profit vs time
     y2 = np.cumsum(st.trader_profits_USD)
@@ -343,16 +343,23 @@ def _plot(st: SimEngineState):
     ax2.set_xlabel("time", fontsize=FONTSIZE)
     ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax2.yaxis.tick_right()
-    ax2.margins(0.005, 0.02)
+    ax2.margins(0.005, 0.05)
     
     # plot 3: histogram of profits
     if ps.bars is not None:
         for b in ps.bars:
             b.remove()
+    n_bins = max(2, min(50, N // 5))
     _, _, ps.bars = ax3.hist(
         st.trader_profits_USD, bins=20, linewidth=0, color="blue"
     )
-    ax3.set_title('Histogram of trader profit')
+    ax3.set_title(
+        'Histogram of trader profit',
+        fontsize=FONTSIZE,
+        fontweight="bold",
+    )
+    ax3.yaxis.tick_right()
+    ax3.margins(0.01, 0.01)
     
     # final pieces
     HEIGHT = 7.5  # magic number
