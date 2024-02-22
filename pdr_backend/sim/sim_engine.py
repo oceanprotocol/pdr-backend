@@ -278,6 +278,7 @@ class PlotState:
         self.fig, self.axs = plt.subplots(
             2, 2, gridspec_kw={'width_ratios': [3,1]}
         )
+        self.bars = None
         plt.ion()
         plt.show()
 
@@ -316,8 +317,8 @@ def _plot(st: SimEngineState):
 
     _del_lines(ax1)
     ax1.cla()
-    ax1.plot(x, y1_est, "b")
-    ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
+    ax1.plot(x, y1_est, "green")
+    ax1.fill_between(x, y1_l, y1_u, color="green", alpha=0.15)
     now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
     ax1.set_title(
         f"% correct vs time. Current: {now_s}",
@@ -343,10 +344,15 @@ def _plot(st: SimEngineState):
     ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax2.yaxis.tick_right()
     ax2.margins(0.005, 0.02)
-
     
-    # plot 3: nothing right now
-    
+    # plot 3: histogram of profits
+    if ps.bars is not None:
+        for b in ps.bars:
+            b.remove()
+    _, _, ps.bars = ax3.hist(
+        st.trader_profits_USD, bins=20, linewidth=0, color="blue"
+    )
+    ax3.set_title('Histogram of trader profit')
     
     # final pieces
     HEIGHT = 7.5  # magic number
@@ -355,8 +361,6 @@ def _plot(st: SimEngineState):
     fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
     plt.pause(0.001)
 
-    #import pdb; pdb.set_trace()
-
 def _del_lines(ax):
-    while ax.lines:
-        ax.lines[-1].remove()
+    for l in ax.lines:
+        l.remove()
