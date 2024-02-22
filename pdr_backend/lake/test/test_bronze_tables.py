@@ -21,7 +21,7 @@ from pdr_backend.lake.table import Table
 
 
 @enforce_types
-def test_bronze_tables_coraltion(
+def test_bronze_tables_creation(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
