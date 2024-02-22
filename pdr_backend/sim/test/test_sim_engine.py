@@ -18,12 +18,20 @@ def test_sim_engine(tmpdir):
     ppss.predictoor_ss = PredictoorSS(
         {
             "predict_feed": "binanceus BTC/USDT c 5m",
-            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "stake_amount": 1,
+            "bot_only": {
+                "s_until_epoch_end": 60,
+            },
+            "sim_only": {
+                "others_stake": 3,
+                "others_accuracy": 0.51,
+                "revenue": 0.93,
+            },
             "aimodel_ss": {
                 "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
-                "max_n_train": 100,
-                "autoregressive_n": 2,
                 "approach": "LIN",
+                "max_n_train": 100,
+                "autoregressive_n": 3,
             },
         }
     )
