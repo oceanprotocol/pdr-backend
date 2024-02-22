@@ -104,4 +104,3 @@ class PredictoorAgent3(BasePredictoorAgent):
         stake_down = prob_down * stake
 
         return (stake_up, stake_down)
-  

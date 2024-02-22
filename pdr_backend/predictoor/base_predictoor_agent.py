@@ -50,8 +50,9 @@ class BasePredictoorAgent(ABC):
         if pk2 is not None:
             self.get_two_sided_prediction = True
             self.feed_contract2 = copy.deepcopy(self.feed_contract)
-            self.feed_contract2.web3_pp.web3_config = \
-                Web3Config(self.feed_contract.web3_pp.rpc_url, pk2)
+            self.feed_contract2.web3_pp.web3_config = Web3Config(
+                self.feed_contract.web3_pp.rpc_url, pk2
+            )
 
         # set attribs to track block
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)
@@ -96,8 +97,8 @@ class BasePredictoorAgent(ABC):
         success = self.get_prediction_and_submit(target_slot)
         if not success:
             return
-        
-        # wrapup 
+
+        # wrapup
         self.prev_submit_epochs.append(submit_epoch)
         logger.info("-> Submit predict tx result: success.")
 
@@ -107,7 +108,6 @@ class BasePredictoorAgent(ABC):
         # start printing for next round
         logger.info(self.status_str())
         logger.info("Waiting...")
-
 
     def get_prediction_and_submit(self, target_slot) -> bool:
         """
@@ -135,13 +135,14 @@ class BasePredictoorAgent(ABC):
             if _tx_failed(tx):
                 logger.warning("Tx failed.")
                 return False
-            
+
             logger.info("Submit one-sided predict tx result: success.")
         else:
             # two-sided: get prediction
             stake_up, stake_down = self.get_two_sided_prediction(target_slot)
-            logger.info("-> Predict result: stake_up=%s, stake_down=%s",
-                        stake_up, stake_down)
+            logger.info(
+                "-> Predict result: stake_up=%s, stake_down=%s", stake_up, stake_down
+            )
             if stake_up is None or stake_down is None:
                 logger.warning("Done: can't use stake_up/stake_down")
                 return False
@@ -163,10 +164,11 @@ class BasePredictoorAgent(ABC):
                 wait_for_receipt=True,
             )
 
-            # handle errors            
+            # handle errors
             if _tx_failed(tx1) or _tx_failed(tx2):
                 logger.warning(
-                    "One or both txs failed, failsafing to zero stake...", tx1, tx2)
+                    "One or both txs failed, failsafing to zero stake...", tx1, tx2
+                )
                 self.feed_contract.submit_prediction(
                     True,
                     1e-10,
@@ -251,6 +253,7 @@ class BasePredictoorAgent(ABC):
         timestamp: UnixTimeS,  # pylint: disable=unused-argument
     ) -> Tuple[float, float]:
         pass
+
 
 def _tx_failed(tx):
     return tx is None or tx["status"] != 1

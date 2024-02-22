@@ -22,7 +22,7 @@ class BaseContract(ABC):
         self.contract_name = contract_name
 
     @property
-    def config(self): # alias for convenience
+    def config(self):  # alias for convenience
         return self.web3_pp.web3_config
 
     @property

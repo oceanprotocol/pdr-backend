@@ -110,12 +110,12 @@ class ClassifierModelDataFactory:
         end_idx = max(0, len(z) - testshift - 1)
         end_idx = min(end_idx, len(z) - 1)
 
-        y = np.array(
-            [1 if z[i + 1] > z[i] else 0 for i in range(start_idx, end_idx)]
-        )
+        y = np.array([1 if z[i + 1] > z[i] else 0 for i in range(start_idx, end_idx)])
 
         # postconditions
-        assert X.shape[0] == y.shape[0], f"X.shape[0] == y.shape[0] Failed, shapes: {X.shape[0]} != {y.shape[0]}"
+        assert (
+            X.shape[0] == y.shape[0]
+        ), f"X.shape[0] == y.shape[0] Failed, shapes: {X.shape[0]} != {y.shape[0]}"
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == ss.n
         assert isinstance(x_df, pd.DataFrame)

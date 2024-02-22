@@ -131,7 +131,6 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
         mock_model.regressionmodel_ss = regressionmodel_ss
         agent.get_one_sided_prediction(timestamp=UnixTimeS(5))  # arbitrary timestamp
 
-
         ar_n = regressionmodel_ss.autoregressive_n
         assert ar_n == 3
 
@@ -174,7 +173,6 @@ def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
         # do prediction
         mock_model.regressionmodel_ss = regressionmodel_ss
         agent.get_one_sided_prediction(timestamp=UnixTimeS(5))  # arbitrary timestamp
-
 
         ar_n = regressionmodel_ss.autoregressive_n
         assert ar_n == 3
