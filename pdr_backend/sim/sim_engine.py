@@ -275,73 +275,77 @@ class SimEngine:
 @enforce_types
 class PlotState:
     def __init__(self):
-        self.fig, (ax0, ax1a) = plt.subplots(2)
-        ax1b = ax1a.twinx() # ax1b shares same x-axis as ax1a
-        self.axs = [ax0, ax1a, ax1b]
+        self.fig, self.axs = plt.subplots(
+            2, 2, gridspec_kw={'width_ratios': [3,1]}
+        )
         plt.ion()
         plt.show()
 
 @enforce_types
 def _plot(st: SimEngineState):
     ps = st.plot_state
-    fig, (ax0, ax1a, ax1b) = ps.fig, ps.axs
+    fig, ((ax0, ax1), (ax2, ax3)) = ps.fig, ps.axs
 
     N = len(st.predictoor_profits_OCEAN)
     x = list(range(0, N))
 
-    # plot 0: % correct vs time
-    y0_est, y0_l, y0_u = [], [], []  # est, 95% confidence intervals
+    # plot 0: predictoor profit vs time
+    y0 = np.cumsum(st.predictoor_profits_OCEAN)
+    ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
+    ax0.plot(x, y0, color="green")
+    ax0.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
+
+    ax0.set_title(
+        f"Predictoor profit vs time. Current: {y0[-1]:.2f} OCEAN",
+        fontsize=FONTSIZE,
+        fontweight="bold",
+    )
+    ax0.set_xlabel("time", fontsize=FONTSIZE)
+
+    
+    # plot 1: % correct vs time
+    y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
     for i_ in range(N):
         n_correct = sum(st.corrects[: i_ + 1])
         n_trials = len(st.corrects[: i_ + 1])
         l, u = proportion_confint(count=n_correct, nobs=n_trials)
-        y0_est.append(n_correct / n_trials * 100)
-        y0_l.append(l * 100)
-        y0_u.append(u * 100)
+        y1_est.append(n_correct / n_trials * 100)
+        y1_l.append(l * 100)
+        y1_u.append(u * 100)
 
-    ax0.cla()
-    ax0.plot(x, y0_est, "b")
-    ax0.fill_between(x, y0_l, y0_u, color="b", alpha=0.15)
-    now_s = f"{y0_est[-1]:.2f}% [{y0_l[-1]:.2f}%, {y0_u[-1]:.2f}%]"
-    ax0.set_title(
+    ax1.cla()
+    ax1.plot(x, y1_est, "b")
+    ax1.fill_between(x, y1_l, y1_u, color="b", alpha=0.15)
+    now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
+    ax1.set_title(
         f"% correct vs time. Current: {now_s}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    #ax0.set_xlabel("time", fontsize=FONTSIZE)
-    ax0.set_ylabel("% correct", fontsize=FONTSIZE)
+    ax1.set_xlabel("time", fontsize=FONTSIZE)
+    ax1.set_ylabel("% correct", fontsize=FONTSIZE)
 
-    # plot 1a/b: predictoor/trader profit vs time
-    if ax1a.lines: 
-        ax1a.lines[-1].remove() # delete previous horizontal line
-    color = "tab:green"
-    y1a = np.cumsum(st.predictoor_profits_OCEAN)
-    ax1a.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE, color=color)
-    ax1a.plot(x, y1a, color=color)
-    ax1a.tick_params(axis='y', labelcolor=color)
-    ax1a.plot([0, N], [0.0, 0.0], color=color, linestyle="dashed", linewidth=1)
+    
+    # plot 2: trader profit vs time
+    y2 = np.cumsum(st.trader_profits_USD)
+    ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
+    ax2.plot(x, y2, color="blue")
+    ax2.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
 
-    if ax1b.lines: 
-        ax1b.lines[-1].remove() # delete previous horizontal line
-    color = "tab:red"
-    y1b = np.cumsum(st.trader_profits_USD)
-    ax1b.set_ylabel("trader profit (USD)", fontsize=FONTSIZE, color=color)
-    ax1b.plot(x, y1b, color=color)
-    ax1b.tick_params(axis='y', labelcolor=color)
-    ax1b.plot([0, N], [0.0, 0.0], color=color, linestyle="dashed", linewidth=1)
-
-    ax1a.set_title(
-        "Profit vs time. Current:"
-        f" predictoor={y1a[-1]:.2f} OCEAN" 
-        f", trader=${y1b[-1]:.2f}",
+    ax2.set_title(
+        f"Trader Profit vs time. Current: ${y2[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax1a.set_xlabel("time", fontsize=FONTSIZE)
+    ax2.set_xlabel("time", fontsize=FONTSIZE)
+
+    
+    # plot 3: nothing right now
+    
     
     # final pieces
     HEIGHT = 7.5  # magic number
-    WIDTH = int(HEIGHT * 2)  # magic number
+    WIDTH = int(HEIGHT * 3)  # magic number
     fig.set_size_inches(WIDTH, HEIGHT)
     fig.tight_layout()
     plt.pause(0.001)

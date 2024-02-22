@@ -50,7 +50,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
-  test_n : 500 # number of epochs to simulate
+  test_n : 1000 # number of epochs to simulate
   exchange_only:
     timeout: 30000
     options:
