@@ -4,12 +4,18 @@ from typing import List, Union
 from enforce_typing import enforce_types
 import numpy as np
 
+import requests
+import polars as pl
+from datetime import timedelta
+
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.lake.constants import (
+    TOHLCV_SCHEMA_PL,
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
 )
+
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
@@ -54,6 +60,40 @@ def safe_fetch_ohlcv_ccxt(
         logger.warning("exchange: %s", e)
         return None
 
+@enforce_types
+def safe_fetch_ohlcv_dydx(
+    exch,
+    symbol: str,
+    resolution: str,
+    st_ut: UnixTimeMs,
+    fin_ut: UnixTimeMs,
+) -> Union[List[tuple], None]:
+    """
+    @description
+      calls fetch_dydx_data() but if there's an error it
+      emits a warning and returns None, vs crashing everything
+
+    @arguments
+      exch -- eg dydx
+      symbol -- eg "BTC-USDT"
+      timeframe -- eg "1HOUR", "5MINS"
+      since -- timestamp of first candle. In unix time (in ms)
+      limit -- max is 100 candles to retrieve,
+
+    @return
+      df -- with schema=TOHLCV_SCHEMA_PL
+    """
+
+    try:
+        return fetch_dydx_data(
+                    symbol=symbol,
+                    resolution=resolution,
+                    st_ut=st_ut,
+                    fin_ut=fin_ut,
+                )
+    except Exception as e:
+        logger.warning("exchange: %s", e)
+        return None
 
 @enforce_types
 def clean_raw_ohlcv(
@@ -114,3 +154,112 @@ def _filter_within_timerange(
 ) -> list:
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]
+
+def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs):
+    """
+    @description
+      makes a loop of get requests for dydx v4 exchange candle data,
+        by first converting input params to the correct dydx api syntax ticker: "BTC-USD", resolution: "5MINS", toISO: "2023-10-17T21:00:00.000+00:00",
+        then calls the transform_dydx_data() function dydx's,
+
+    @arguments
+      exch -- dydx
+      symbol -- eg "BTC-USD" or "BTC/USDT"
+      timeframe -- eg "5m" or "5MINS"
+      since -- timestamp of first candle. In unix time (in ms)
+      limit -- max # candles to retrieve up to 100
+
+    @return
+      df -- a Polars dataframe with schema = TOHLCV_SCHEMA_PL,
+      and sorted by timestamp
+    """
+    # Initialize the empty df
+    all_data = pl.DataFrame([], schema=TOHLCV_SCHEMA_PL)
+
+    # Int minutes will be used for updating the loop end_time
+    resolution_to_minutes = {
+        "1MIN": 1,
+        "5MINS": 5,
+        "15MINS": 15,
+        "30MINS": 30,
+        "1HOUR": 60,
+        "1DAY": 1440,
+    }
+    minutes = resolution_to_minutes[resolution]
+
+    # Convert toISO time format to UTC
+    start_time = UnixTimeMs.to_dt(st_ut)
+    if fin_ut is None:
+        end_time = UnixTimeMs.now()
+    else:
+        end_time = UnixTimeMs.to_dt(fin_ut)
+
+    count = 0
+
+    # Fetch the data in a loop
+    while end_time > start_time:
+        print(f"Fetching data up to {end_time}")  # Logging
+
+        # Initialize parameters for API request
+        end_time = UnixTimeMs.to_timestr(end_time)
+        params = {'resolution': resolution, 'limit': '100', 'toISO': end_time}
+
+        # Fetch the data
+        headers = {'Accept': 'application/json'}
+        response = requests.get(
+            f'https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{symbol}',
+            params=params,
+            headers=headers
+        )
+        data = response.json()
+
+        # Process and add the fetched data to all_data
+        if 'candles' in data:
+            df = transform_dydx_data(data['candles'])
+            all_data = pl.concat([all_data, df])
+
+            # Update end_time for the next iteration
+            #end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=pytz.UTC)
+            end_time = UnixTimeMs.to_dt(end_time)
+            end_time = end_time - timedelta(minutes=minutes)
+
+            print("Loop iteration #", count)
+            count = count + 1
+
+        else:
+            print("No more data returned from dYdX.")
+            break  # Exit loop if no data is returned
+
+    df = all_data.sort("timestamp")
+    print("The final dydx df looks like ", df)
+
+    return df
+
+def transform_dydx_data(candles) -> pl.DataFrame:
+    """
+      Transforms dYdX data to a Polars DataFrame with schema from TOHLCV_SCHEMA_PL
+    """
+    # Prepare data transformation
+
+    transformed_data = []
+
+    for candle in candles:
+
+        # Parse dydx 'startedAt' column data to Unix timestamp in milliseconds
+        timestamp = UnixTimeMs.from_timestr(candle['startedAt'])
+
+        # Add transformed row
+        transformed_data.append({
+            "timestamp": timestamp,
+            "open": float(candle['open']),
+            "high": float(candle['high']),
+            "low": float(candle['low']),
+            "close": float(candle['close']),
+            "volume": float(candle['baseTokenVolume'])
+        })
+
+    # Create DataFrame from transformed data
+    df = pl.DataFrame(transformed_data, schema=TOHLCV_SCHEMA_PL)
+
+
+    return df
