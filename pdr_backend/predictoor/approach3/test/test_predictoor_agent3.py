@@ -11,6 +11,7 @@ from pdr_backend.predictoor.test.predictoor_agent_runner import (
     get_agent_1feed,
     get_agent_2feeds,
 )
+from pdr_backend.util.time_types import UnixTimeS
 
 
 # ===========================================================================
@@ -128,7 +129,8 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
 
         # do prediction
         mock_model.regressionmodel_ss = regressionmodel_ss
-        agent.get_prediction(timestamp=5)  # arbitrary timestamp
+        agent.get_prediction(timestamp=UnixTimeS(5))  # arbitrary timestamp
+
 
         ar_n = regressionmodel_ss.autoregressive_n
         assert ar_n == 3
@@ -171,7 +173,8 @@ def test_predictoor_agent3_get_prediction_2feeds(tmpdir, monkeypatch):
 
         # do prediction
         mock_model.regressionmodel_ss = regressionmodel_ss
-        agent.get_prediction(timestamp=5)  # arbitrary timestamp
+        agent.get_prediction(timestamp=UnixTimeS(5))  # arbitrary timestamp
+
 
         ar_n = regressionmodel_ss.autoregressive_n
         assert ar_n == 3

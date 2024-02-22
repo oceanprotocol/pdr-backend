@@ -12,32 +12,24 @@ fail-under=10.0
 # paths.
 ignore=
   *~,
-  ppss.yaml,
-  build,
-  venv/,
   build/,
+  logs/,
+  venv,
   */__pycache__,
   */*/__pycache__,
   .pytest_cache,
-  sol0.8.12,
   CVS,
-  venv,
-  *.sol,
-  mypy.ini, pytest.ini, tokenspice.ini,
+  logging.yaml,
+  my_ppss.yaml,
+  mypy.ini,
+  ppss.yaml,
+  pytest.ini,
   README.md,
-  README-dist-ops.md,
-  README-control-ops.md,
-  README-crons-ops.md,
-  logging.conf,
   requirements.txt,
-  compile.sh,
-  brownie-install.sh,
   LICENSE,
-  docker-compose.yml,
   Dockerfile,
   entrypoint.sh,
-  pdr_backend.egg-info,
-  logging.yaml
+  pdr_backend.egg-info
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.

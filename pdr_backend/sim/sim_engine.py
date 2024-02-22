@@ -16,7 +16,8 @@ from pdr_backend.regressionmodel.regressionmodel_factory import RegressionModelF
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+from pdr_backend.util.time_types import UnixTimeMs
+
 
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 12
@@ -79,7 +80,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{current_ut_ms()}.txt"
+        filebase = f"out_{UnixTimeMs.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
         fh = logging.FileHandler(self.logfile)
@@ -129,8 +130,8 @@ class SimEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
-        ut = recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms
+        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
+        ut = UnixTimeMs(recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms)
 
         # current price
         curprice = y_train[-1]
@@ -176,7 +177,7 @@ class SimEngine:
             ", tot_profit $%9.2f",
             test_i + 1,
             self.ppss.sim_ss.test_n,
-            pretty_timestr(ut)[9:][:-9],
+            ut.pretty_timestr()[9:][:-9],
             pred_dir,
             true_dir,
             correct_s,

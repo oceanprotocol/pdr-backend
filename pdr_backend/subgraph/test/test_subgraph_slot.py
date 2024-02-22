@@ -9,13 +9,18 @@ from pdr_backend.subgraph.subgraph_slot import (
     get_predict_slots_query,
     get_slots,
 )
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
 def test_get_predict_slots_query():
     # Test the get_predict_slots_query function with expected inputs and outputs
     query = get_predict_slots_query(
-        asset_ids=["0xAsset"], initial_slot=1000, last_slot=2000, first=10, skip=0
+        asset_ids=["0xAsset"],
+        initial_slot=UnixTimeS(1000),
+        last_slot=UnixTimeS(2000),
+        first=10,
+        skip=0,
     )
     assert "predictSlots" in query
     assert "0xAsset" in query
@@ -59,8 +64,8 @@ def test_get_slots(mock_query_subgraph):
 
     result_slots = get_slots(
         addresses=["0xAsset"],
-        end_ts_param=2000,
-        start_ts_param=1000,
+        end_ts_param=UnixTimeS(2000),
+        start_ts_param=UnixTimeS(1000),
         skip=0,
         slots=[],
         network="mainnet",
@@ -86,7 +91,10 @@ def test_get_slots(mock_query_subgraph):
 def test_fetch_slots_for_all_assets(mock_query_subgraph):
     # Test the fetch_slots_for_all_assets function
     result = fetch_slots_for_all_assets(
-        asset_ids=["0xAsset"], start_ts_param=1000, end_ts_param=2000, network="mainnet"
+        asset_ids=["0xAsset"],
+        start_ts_param=UnixTimeS(1000),
+        end_ts_param=UnixTimeS(2000),
+        network="mainnet",
     )
 
     print("test_fetch_slots_for_all_assets", result)
