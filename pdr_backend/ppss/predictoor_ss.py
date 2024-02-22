@@ -16,9 +16,9 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
 
     # --------------------------------
     # yaml properties
-    
+
     # (predict_feed defined in base)
-    
+
     @property
     def stake_amount(self) -> int:
         """
@@ -54,7 +54,7 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
           In OCEAN per epoch, per feed. Simulation only.
         """
         return self.d["sim_only"]["revenue"]
-    
+
     @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
