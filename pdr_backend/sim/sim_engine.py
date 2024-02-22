@@ -280,7 +280,7 @@ class SimEngine:
         if not do_update:
             return
 
-        self.plot_state.do_plot(self.st)
+        self.plot_state.do_plot(self.st)  # type: ignore[union-attr]
 
 
 @enforce_types
@@ -307,7 +307,7 @@ class PlotState:
         next_hx = [next_x[0], next_x[-1]]  # horizontal x
 
         # plot 0: predictoor profit vs time
-        self.y0 = np.cumsum(st.predictoor_profits_OCEAN)
+        self.y0 = list(np.cumsum(st.predictoor_profits_OCEAN))
         next_y0 = _slice(self.y0, N_done, N)
         ax0.plot(next_x, next_y0, color="green")
         ax0.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
@@ -343,7 +343,7 @@ class PlotState:
             ax1.margins(0.01, 0.01)
 
         # plot 2: trader profit vs time
-        self.y2 = np.cumsum(st.trader_profits_USD)
+        self.y2 = list(np.cumsum(st.trader_profits_USD))
         next_y2 = _slice(self.y2, N_done, N)
         ax2.plot(next_x, next_y2, color="blue")
         ax2.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
