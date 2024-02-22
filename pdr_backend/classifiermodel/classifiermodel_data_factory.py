@@ -7,7 +7,9 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.regressionmodel.regressionmodel_data_factory import RegressionModelDataFactory
+from pdr_backend.regressionmodel.regressionmodel_data_factory import (
+    RegressionModelDataFactory,
+)
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
@@ -63,7 +65,7 @@ class ClassifierModelDataFactory:
         X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift, do_fill_nans)
 
         # convert y to 1 if price went up and 0 otherwise compared to y+1
-        y = np.array([1 if y[i] < y[i+1] else 0 for i in range(len(y)-1)])
+        y = np.array([1 if y[i] < y[i + 1] else 0 for i in range(len(y) - 1)])
 
         # delete first row of X and x_df
         X = X[1:]
@@ -71,4 +73,3 @@ class ClassifierModelDataFactory:
         xrecent = xrecent[1:]
 
         return X, y, x_df, xrecent
-

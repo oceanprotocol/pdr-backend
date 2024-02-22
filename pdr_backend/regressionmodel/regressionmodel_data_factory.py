@@ -41,7 +41,7 @@ class RegressionModelDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, ss: PredictoorSS, model_ss = None):
+    def __init__(self, ss: PredictoorSS, model_ss=None):
         self.ss = ss
         if model_ss is not None:
             self.model_ss = model_ss
