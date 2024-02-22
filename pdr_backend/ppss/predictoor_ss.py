@@ -16,15 +16,24 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
 
     # --------------------------------
     # yaml properties
+    
+    # (predict_feed defined in base)
+    
+    @property
+    def stake_amount(self) -> int:
+        return self.d["stake_amount"]
+
+    @property
+    def weekly_revenue_amount(self) -> int:
+        return self.d["sim_only"]["weekly_revenue_amount"]
+
+    @property
+    def others_stake_amount(self) -> int:
+        return self.d["sim_only"]["others_stake_amount"]
+    
     @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
-
-    @property
-    def stake_amount(self) -> int:
-        return self.d["bot_only"]["stake_amount"]
-
-    # feed defined in base
 
     # --------------------------------
     # derivative properties
