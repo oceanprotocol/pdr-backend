@@ -292,16 +292,17 @@ def _plot(st: SimEngineState):
     # plot 0: predictoor profit vs time
     y0 = np.cumsum(st.predictoor_profits_OCEAN)
     _del_lines(ax0)
-    ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
     ax0.plot(x, y0, color="green")
     ax0.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
-
     ax0.set_title(
         f"Predictoor profit vs time. Current: {y0[-1]:.2f} OCEAN",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
+    ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
     ax0.set_xlabel("time", fontsize=FONTSIZE)
+    ax0.yaxis.tick_right()
+    ax0.margins(0.005, 0.02)
 
     # plot 1: % correct vs time
     y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
@@ -325,21 +326,23 @@ def _plot(st: SimEngineState):
     )
     ax1.set_xlabel("time", fontsize=FONTSIZE)
     ax1.set_ylabel("% correct", fontsize=FONTSIZE)
-
+    ax1.yaxis.tick_right()
+    ax0.margins(0.005, 0.005)
     
     # plot 2: trader profit vs time
     y2 = np.cumsum(st.trader_profits_USD)
     _del_lines(ax2)
-    ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax2.plot(x, y2, color="blue")
     ax2.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
-
     ax2.set_title(
         f"Trader Profit vs time. Current: ${y2[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
     ax2.set_xlabel("time", fontsize=FONTSIZE)
+    ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
+    ax2.yaxis.tick_right()
+    ax0.margins(0.005, 0.02)
 
     
     # plot 3: nothing right now
@@ -349,7 +352,7 @@ def _plot(st: SimEngineState):
     HEIGHT = 7.5  # magic number
     WIDTH = int(HEIGHT * 3)  # magic number
     fig.set_size_inches(WIDTH, HEIGHT)
-    fig.tight_layout()
+    fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
     plt.pause(0.001)
 
     #import pdb; pdb.set_trace()
