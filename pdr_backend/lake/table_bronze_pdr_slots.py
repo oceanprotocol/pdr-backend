@@ -47,32 +47,28 @@ def _process_slots(
         & (pl.col("ID").is_in(collision_ids).not_())
     )
 
-    # create contract column from the ID column
-    slots_df = slots_df.with_columns(
-        contract=pl.col("ID").map_elements(lambda s: s.split("-")[0])
-    )
-
     if len(slots_df) == 0:
         return tables
 
-    # Identify missing columns
-    missing_columns = [
-        col
-        for col in tables[bronze_pdr_slots_table_name].df.columns
-        if col not in slots_df.columns
-    ]
+    # get contract column
+    def get_contract_id(_id: str) -> str:
+        contract_id = _id.split("-")[0]
+        return f"{contract_id}"
 
-    # Add missing columns to df2 using column-wise assignment
-    for col in missing_columns:
-        slots_df = slots_df.with_columns(
-            pl.Series(name=f"{col}", values=[None] * len(slots_df))
-        )
-
-    # Reorder the DataFrame columns based on the schema
-    slots_df = slots_df.select(bronze_pdr_slots_schema)
+    # create bronze slots table in a strongly-defined manner
+    bronze_slots_df = slots_df.with_columns([
+        pl.col("ID").map_elements(get_contract_id, return_dtype=Utf8).alias("contract"),
+        pl.lit(None).alias("pair"),
+        pl.lit(None).alias("timeframe"),
+        pl.lit(None).alias("source"),
+        pl.lit(None).alias("roundSumStakesUp"),
+        pl.lit(None).alias("roundSumStakes"),
+        pl.lit(None).alias("trueval"),
+        pl.col("timestamp").alias("last_event_timestamp"),
+    ]).select(bronze_pdr_slots_schema)
 
     # append to existing dataframe
-    new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, slots_df])
+    new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, bronze_slots_df])
     tables[bronze_pdr_slots_table_name].df = new_bronze_df
     return tables
 
