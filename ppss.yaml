@@ -13,6 +13,7 @@ predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     stake_amount: 1 # stake this amount with each prediction. In OCEAN
+  is_two_sided: False
   approach3:
   regressionmodel_ss:
     input_feeds:
