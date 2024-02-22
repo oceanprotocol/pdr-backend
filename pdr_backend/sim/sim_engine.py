@@ -159,12 +159,15 @@ class SimEngine:
         # Update predictoor_profits_OCEAN
         if correct:
             others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
-            percent_to_me = pdr_ss.stake_amount / others_stake_correct
+            tot_stake_correct = (others_stake_correct + pdr_ss.stake_amount)
+            percent_to_me = pdr_ss.stake_amount / tot_stake_correct
             predictoor_profit_OCEAN = percent_to_me * pdr_ss.revenue
         else:
+            percent_to_me = 0
             predictoor_profit_OCEAN = -pdr_ss.stake_amount
         self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
-        
+
+        # Log
         n_correct, n_trials = sum(self.st.corrects), len(self.st.corrects)
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
@@ -172,16 +175,20 @@ class SimEngine:
         s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
         s += f"ut{pretty_timestr(ut)[9:][:-7]}"
         
-        s += f". Dir'n pred|true|correct? = {pred_dir}|{true_dir}|{correct_s}"
+        s += f". pred={pred_dir},true={true_dir},correct={correct_s}"
+
+        s += f". %_rev_to_me={percent_to_me*100.0:7.4f}%"
+        s += f", pdr_profit={predictoor_profit_OCEAN:8.5f} OCEAN"
+        
         s += f". Total correct {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
 
-        s += f". predictoor_profit [epoch {predictoor_profit_OCEAN:6.2f} OCEAN"
+        s += f". pdr_profit [epoch {predictoor_profit_OCEAN:5.2f} OCEAN"
         s += f", total {sum(self.st.predictoor_profits_OCEAN):7.2f} OCEAN]"
         
-        s += f". trader_profit [epoch ${trader_profit_USD:7.2f}"
-        s += f", total ${sum(self.st.trader_profits_USD):8.2f}]"
+        s += f". tdr_profit [epoch ${trader_profit_USD:7.2f}"
+        s += f", total ${sum(self.st.trader_profits_USD):7.2f}]"
         logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
