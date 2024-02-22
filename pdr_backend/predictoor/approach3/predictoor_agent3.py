@@ -66,7 +66,7 @@ class PredictoorAgent3(BasePredictoorAgent):
 
     @enforce_types
     def get_two_sided_prediction(self, timestamp: UnixTimeS) -> Tuple[float, float]:
-     """
+        """
         @description
           Give a stake for up prediction, and down prediction.
 
