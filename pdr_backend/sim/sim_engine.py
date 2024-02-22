@@ -283,7 +283,8 @@ class PlotState:
 
 @enforce_types
 def _plot(st: SimEngineState):
-    fig, (ax0, ax1a, ax1b) = st.plot_state.fig, st.plot_state.axs
+    ps = st.plot_state
+    fig, (ax0, ax1a, ax1b) = ps.fig, ps.axs
 
     N = len(st.predictoor_profits_OCEAN)
     x = list(range(0, N))
@@ -311,19 +312,23 @@ def _plot(st: SimEngineState):
     ax0.set_ylabel("% correct", fontsize=FONTSIZE)
 
     # plot 1a/b: predictoor/trader profit vs time
+    if ax1a.lines: 
+        ax1a.lines[-1].remove() # delete previous horizontal line
     color = "tab:green"
     y1a = np.cumsum(st.predictoor_profits_OCEAN)
     ax1a.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE, color=color)
     ax1a.plot(x, y1a, color=color)
     ax1a.tick_params(axis='y', labelcolor=color)
+    ax1a.plot([0, N], [0.0, 0.0], color=color, linestyle="dashed", linewidth=1)
 
+    if ax1b.lines: 
+        ax1b.lines[-1].remove() # delete previous horizontal line
     color = "tab:red"
     y1b = np.cumsum(st.trader_profits_USD)
     ax1b.set_ylabel("trader profit (USD)", fontsize=FONTSIZE, color=color)
     ax1b.plot(x, y1b, color=color)
     ax1b.tick_params(axis='y', labelcolor=color)
-
-    ax1a.plot([0, N], [0.0, 0.0], color="0.3", linestyle="dashed", linewidth=1)
+    ax1b.plot([0, N], [0.0, 0.0], color=color, linestyle="dashed", linewidth=1)
 
     ax1a.set_title(
         "Profit vs time. Current:"
@@ -340,4 +345,6 @@ def _plot(st: SimEngineState):
     fig.set_size_inches(WIDTH, HEIGHT)
     fig.tight_layout()
     plt.pause(0.001)
+
+    #import pdb; pdb.set_trace()
 
