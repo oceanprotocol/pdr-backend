@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from enforce_typing import enforce_types
-
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -42,8 +41,12 @@ class RegressionModelDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    def __init__(self, ss: PredictoorSS):
+    def __init__(self, ss: PredictoorSS, model_ss = None):
         self.ss = ss
+        if model_ss is not None:
+            self.model_ss = model_ss
+        else:
+            self.model_ss = ss.regressionmodel_ss
 
     def create_xy(
         self,
@@ -77,7 +80,7 @@ class RegressionModelDataFactory:
         # condition inputs
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
-        ss = self.ss.regressionmodel_ss
+        ss = self.model_ss
 
         # main work
         x_df = pd.DataFrame()  # build this up
