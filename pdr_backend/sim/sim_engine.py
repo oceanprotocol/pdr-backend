@@ -46,13 +46,13 @@ class SimEngine:
 
         # state
         self.holdings = copy.copy(self.ppss.trader_ss.init_holdings)
-        self.tot_profit_usd = 0.0
+        self.tot_trader_profit_usd = 0.0
         self.nmses_train: List[float] = []
         self.ys_test: List[float] = []
         self.ys_testhat: List[float] = []
         self.corrects: List[bool] = []
-        self.profit_usds: List[float] = []
-        self.tot_profit_usds: List[float] = []
+        self.trader_profit_usds: List[float] = []
+        self.tot_trader_profit_usds: List[float] = []
 
         self.logfile = ""
 
@@ -84,9 +84,9 @@ class SimEngine:
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
 
-        self.tot_profit_usd = 0.0
+        self.tot_trader_profit_usd = 0.0
         self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
-        self.profit_usds, self.tot_profit_usds = [], []
+        self.trader_profit_usds, self.tot_trader_profit_usds = [], []
 
     @enforce_types
     def run(self):
@@ -144,17 +144,17 @@ class SimEngine:
         trueprice = y_test[0]
         self.ys_test.append(trueprice)
 
-        # simulate sell. Update tot_profit_usd
+        # simulate sell. Update tot_trader_profit_usd
         tokcoin_amt_sell = self.holdings[self.tokcoin]
         if tokcoin_amt_sell > 0:
             self._sell(trueprice, tokcoin_amt_sell)
         usdcoin_holdings_after = self.holdings[self.usdcoin]
 
-        profit_usd = usdcoin_holdings_after - usdcoin_holdings_before
+        trader_profit_usd = usdcoin_holdings_after - usdcoin_holdings_before
 
-        self.tot_profit_usd += profit_usd
-        self.profit_usds.append(profit_usd)
-        self.tot_profit_usds.append(self.tot_profit_usd)
+        self.tot_trader_profit_usd += trader_profit_usd
+        self.trader_profit_usds.append(trader_profit_usd)
+        self.tot_trader_profit_usds.append(self.tot_trader_profit_usd)
 
         # err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
@@ -168,8 +168,8 @@ class SimEngine:
             ". Preddir|true|correct = %s|%s|%s"
             ". Total correct %d/%d"
             " (%.1f%%)"
-            ", profit $%7.2f}"
-            ", tot_profit $%9.2f",
+            ", trader_profit $%7.2f"
+            ", tot_trader_profit $%9.2f",
             test_i + 1,
             self.ppss.sim_ss.test_n,
             pretty_timestr(ut)[9:][:-9],
@@ -179,8 +179,8 @@ class SimEngine:
             sum(self.corrects),
             len(self.corrects),
             acc,
-            profit_usd,
-            self.tot_profit_usd,
+            trader_profit_usd,
+            self.tot_trader_profit_usd,
         )
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
@@ -271,7 +271,7 @@ class SimEngine:
 
         fig, ax0, ax1 = self.plot_state.fig, self.plot_state.ax0, self.plot_state.ax1
 
-        y0 = self.tot_profit_usds
+        y0 = self.tot_trader_profit_usds
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
