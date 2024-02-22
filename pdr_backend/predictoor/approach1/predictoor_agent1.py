@@ -9,7 +9,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 @enforce_types
 class PredictoorAgent1(BasePredictoorAgent):
-    def get_prediction(
+    def get_one_sided_prediction(
         self, timestamp: UnixTimeS  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
@@ -34,3 +34,8 @@ class PredictoorAgent1(BasePredictoorAgent):
         stake = random.randint(1, 30) / 10000
 
         return (predval, stake)
+
+    def get_two_sided_prediction(
+        self, timestamp: UnixTimeS  # pylint: disable=unused-argument
+    ) -> Tuple[float, float]:
+        raise NotImplementedError("Two-sided prediction not implemented")
