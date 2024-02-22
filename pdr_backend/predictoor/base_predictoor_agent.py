@@ -48,7 +48,6 @@ class BasePredictoorAgent(ABC):
         pk2 = os.getenv("PRIVATE_KEY2")
         self.feed_contract2 = None
         if pk2 is not None:
-            self.get_two_sided_prediction = True
             self.feed_contract2 = copy.deepcopy(self.feed_contract)
             self.feed_contract2.web3_pp.web3_config = Web3Config(
                 self.feed_contract.web3_pp.rpc_url, pk2
