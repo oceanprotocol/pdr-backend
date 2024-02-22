@@ -275,17 +275,15 @@ class SimEngine:
 @enforce_types
 class PlotState:
     def __init__(self):
-        self.fig, self.axs = plt.subplots(3)
+        self.fig, (ax0, ax1a) = plt.subplots(2)
+        ax1b = ax1a.twinx() # ax1b shares same x-axis as ax1a
+        self.axs = [ax0, ax1a, ax1b]
         plt.ion()
         plt.show()
 
-    def attribs(self):
-        return self.fig, (self.ax0, self.ax1, self.ax2)
-
-
 @enforce_types
 def _plot(st: SimEngineState):
-    fig, (ax0, ax1, ax2) = st.plot_state.fig, st.plot_state.axs
+    fig, (ax0, ax1a, ax1b) = st.plot_state.fig, st.plot_state.axs
 
     N = len(st.predictoor_profits_OCEAN)
     x = list(range(0, N))
@@ -312,32 +310,32 @@ def _plot(st: SimEngineState):
     #ax0.set_xlabel("time", fontsize=FONTSIZE)
     ax0.set_ylabel("% correct", fontsize=FONTSIZE)
 
-    # plot 1: predictoor profit vs time
-    y1 = np.cumsum(st.predictoor_profits_OCEAN)
-    ax1.plot(x, y1, "g-")
-    ax1.set_title(
-        f"Predictoor profit vs time. Current: ${y1[-1]:.2f}",
+    # plot 1a/b: predictoor/trader profit vs time
+    color = "tab:green"
+    y1a = np.cumsum(st.predictoor_profits_OCEAN)
+    ax1a.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE, color=color)
+    ax1a.plot(x, y1a, color=color)
+    ax1a.tick_params(axis='y', labelcolor=color)
+
+    color = "tab:red"
+    y1b = np.cumsum(st.trader_profits_USD)
+    ax1b.set_ylabel("trader profit (USD)", fontsize=FONTSIZE, color=color)
+    ax1b.plot(x, y1b, color=color)
+    ax1b.tick_params(axis='y', labelcolor=color)
+
+    ax1a.set_title(
+        "Profit vs time. Current:"
+        f"predictoor={y1a[-1]:.2f} OCEAN" 
+        f"trader=${y1b[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    #ax1.set_xlabel("time", fontsize=FONTSIZE)
-    ax1.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
-
-    # plot 2: trader profit vs time
-    y2 = np.cumsum(st.trader_profits_USD)
-    ax2.plot(x, y2, "g-")
-    ax2.set_title(
-        f"Trader profit vs time. Current: ${y2[-1]:.2f}",
-        fontsize=FONTSIZE,
-        fontweight="bold",
-    )
-    ax2.set_xlabel("time", fontsize=FONTSIZE)
-    ax2.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
-
+    ax1a.set_xlabel("time", fontsize=FONTSIZE)
+    
     # final pieces
     HEIGHT = 7.5  # magic number
     WIDTH = int(HEIGHT * 2)  # magic number
     fig.set_size_inches(WIDTH, HEIGHT)
-    fig.tight_layout(pad=0.0)  # add space between plots
+    fig.tight_layout()
     plt.pause(0.001)
 
