@@ -64,7 +64,9 @@ def test_safe_fetch_ohlcv(exch):
 
     # catch bad (but almost good) symbol
     with pytest.raises(ValueError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, "ETH-USDT", timeframe, since, limit)
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(
+            exch, "ETH-USDT", timeframe, since, limit
+        )
 
     # it will catch type errors, except for exch. Test an example of this.
     with pytest.raises(TypeError):
