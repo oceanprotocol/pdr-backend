@@ -7,6 +7,7 @@ from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 # pylint: disable=too-many-instance-attributes
@@ -181,8 +182,8 @@ def test_get_pdr_df():
 
     save_backoff_limit = 5000
     pagination_limit = 1000
-    st_timest = 1701634400000
-    fin_timest = 1701634400000
+    st_timest = UnixTimeMs(1701634400000)
+    fin_timest = UnixTimeMs(1701634400000)
     table.get_pdr_df(
         mock_fetch_function,
         "sapphire-mainnet",
@@ -216,8 +217,8 @@ def test_get_pdr_df_multiple_fetches():
 
     save_backoff_limit = 4
     pagination_limit = 2
-    st_timest = 1704110400000
-    fin_timest = 1704115800000
+    st_timest = UnixTimeMs(1704110400000)
+    fin_timest = UnixTimeMs(1704115800000)
     table.get_pdr_df(
         fetch_function=fetch_filtered_predictions,
         network="sapphire-mainnet",

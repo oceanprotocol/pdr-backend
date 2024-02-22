@@ -11,7 +11,7 @@ from pdr_backend.lake.constants import (
     TOHLCV_SCHEMA_PL,
     TOHLCV_COLS,
 )
-from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv
+from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -23,7 +23,8 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
 )
 from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+from pdr_backend.util.time_types import UnixTimeMs
+
 
 logger = logging.getLogger("ohlcv_data_factory")
 
@@ -76,8 +77,8 @@ class OhlcvDataFactory:
         # To solve, for a given call to this method, we make a constant fin_ut
         fin_ut = self.ss.fin_timestamp
 
-        logger.info("Data start: %s", pretty_timestr(self.ss.st_timestamp))
-        logger.info("Data fin: %s", pretty_timestr(fin_ut))
+        logger.info("Data start: %s", self.ss.st_timestamp.pretty_timestr())
+        logger.info("Data fin: %s", fin_ut.pretty_timestr())
 
         self._update_rawohlcv_files(fin_ut)
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
@@ -89,14 +90,14 @@ class OhlcvDataFactory:
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
 
-    def _update_rawohlcv_files(self, fin_ut: int):
+    def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
         logger.info("Update all rawohlcv files: begin")
         for feed in self.ss.feeds:
             self._update_rawohlcv_files_at_feed(feed, fin_ut)
 
         logger.info("Update all rawohlcv files: done")
 
-    def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: int):
+    def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: UnixTimeMs):
         """
         @arguments
           feed -- ArgFeed
@@ -115,8 +116,8 @@ class OhlcvDataFactory:
 
         assert feed.timeframe
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
-        logger.info("Aim to fetch data from start time: %s", pretty_timestr(st_ut))
-        if st_ut > min(current_ut_ms(), fin_ut):
+        logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
+        if st_ut > min(UnixTimeMs.now(), fin_ut):
             logger.info("Given start time, no data to gather. Exit.")
             return
 
@@ -124,9 +125,9 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
-            logger.info("Fetch up to %s pts from %s", limit, pretty_timestr(st_ut))
+            logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             exch = feed.ccxt_exchange()
-            raw_tohlcv_data = safe_fetch_ohlcv(
+            raw_tohlcv_data = safe_fetch_ohlcv_ccxt(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
                 timeframe=str(feed.timeframe),
@@ -146,7 +147,7 @@ class OhlcvDataFactory:
             newest_ut_value = df.tail(1)["timestamp"][0]
 
             logger.debug("newest_ut_value: %s", newest_ut_value)
-            st_ut = newest_ut_value + feed.timeframe.ms
+            st_ut = UnixTimeMs(newest_ut_value + feed.timeframe.ms)
 
         # output to file
         save_rawohlcv_file(filename, df)
@@ -156,7 +157,9 @@ class OhlcvDataFactory:
             "Update rawohlcv file at exchange=%s, pair=%s: done", exch_str, pair_str
         )
 
-    def _calc_start_ut_maybe_delete(self, timeframe: Timeframe, filename: str) -> int:
+    def _calc_start_ut_maybe_delete(
+        self, timeframe: Timeframe, filename: str
+    ) -> UnixTimeMs:
         """
         @description
         Calculate start timestamp, reconciling whether file exists and where
@@ -171,25 +174,25 @@ class OhlcvDataFactory:
         """
         if not os.path.exists(filename):
             logger.info("No file exists yet, so will fetch all data")
-            return self.ss.st_timestamp
+            return UnixTimeMs(self.ss.st_timestamp)
 
         logger.info("File already exists")
         if not has_data(filename):
             logger.info("File has no data, so delete it")
             os.remove(filename)
-            return self.ss.st_timestamp
+            return UnixTimeMs(self.ss.st_timestamp)
 
         file_ut0, file_utN = oldest_ut(filename), newest_ut(filename)
-        logger.info("File starts at: %s", pretty_timestr(file_ut0))
-        logger.info("File finishes at: %s", pretty_timestr(file_utN))
+        logger.info("File starts at: %s", file_ut0.pretty_timestr())
+        logger.info("File finishes at: %s", file_utN.pretty_timestr())
 
         if self.ss.st_timestamp >= file_ut0:
             logger.info("User-specified start >= file start, so append file")
-            return file_utN + timeframe.ms
+            return UnixTimeMs(file_utN + timeframe.ms)
 
         logger.info("User-specified start < file start, so delete file")
         os.remove(filename)
-        return self.ss.st_timestamp
+        return UnixTimeMs(self.ss.st_timestamp)
 
     def _load_rawohlcv_files(self, fin_ut: int) -> Dict[str, Dict[str, pl.DataFrame]]:
         """

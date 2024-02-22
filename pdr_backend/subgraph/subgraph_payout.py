@@ -5,13 +5,18 @@ from enforce_typing import enforce_types
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.payout import Payout
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
 
 @enforce_types
 def get_payout_query(
-    asset_ids: List[str], start_ts: int, end_ts: int, first: int, skip: int
+    asset_ids: List[str],
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
+    first: int,
+    skip: int,
 ) -> str:
     """
     Constructs a GraphQL query string to fetch prediction slot data for
@@ -105,8 +110,8 @@ def filter_by_addresses(result, addresses):
 
 @enforce_types
 def fetch_payouts(
-    start_ts: int,
-    end_ts: int,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     addresses: List[str],
     first: int,
     skip: int,
@@ -146,12 +151,12 @@ def fetch_payouts(
             **{
                 "payout": float(payout["payout"]),
                 "user": payout["prediction"]["user"]["id"],
-                "timestamp": payout["timestamp"],
+                "timestamp": UnixTimeS(int(payout["timestamp"])),
                 "ID": payout["id"],
                 "token": payout["prediction"]["slot"]["predictContract"]["token"][
                     "name"
                 ],
-                "slot": int(payout["id"].split("-")[1]),
+                "slot": UnixTimeS(int(payout["id"].split("-")[1])),
                 "predictedValue": bool(payout["predictedValue"]),
                 "revenue": float(payout["prediction"]["slot"]["revenue"]),
                 "roundSumStakesUp": float(
