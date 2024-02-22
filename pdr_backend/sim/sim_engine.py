@@ -164,10 +164,10 @@ class SimEngine:
         if correct:
             others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
             percent_to_me = pdr_ss.stake_amount / others_stake_correct
-            pdr_profit = percent_to_me * pdr_ss.revenue
+            predictoor_profit_OCEAN = percent_to_me * pdr_ss.revenue
         else:
-            pdr_profit = -pdr_ss.stake_amount
-        self.predictoor_profits_OCEAN.append(pdr_profit)
+            predictoor_profit_OCEAN = -pdr_ss.stake_amount
+        self.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
         
         n_correct, n_trials = sum(self.corrects), len(self.corrects)
         acc_est = float(n_correct) / n_trials
@@ -175,12 +175,17 @@ class SimEngine:
         
         s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
         s += f"ut{pretty_timestr(ut)[9:][:-7]}"
+        
         s += f". Dir'n pred|true|correct? = {pred_dir}|{true_dir}|{correct_s}"
         s += f". Total correct {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
-        s += f". trader_profit_epoch ${trader_profit_USD:7.2f}"
-        s += f", trader_profit_total ${sum(self.trader_profits_USD):9.2f}"
+
+        s += f". predictoor_profit [epoch {predictoor_profit_OCEAN:6.2f} OCEAN"
+        s += f", total {sum(self.predictoor_profits_OCEAN):7.2f} OCEAN]"
+        
+        s += f". trader_profit [epoch ${trader_profit_USD:7.2f}"
+        s += f", total ${sum(self.trader_profits_USD):8.2f}]"
         logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:

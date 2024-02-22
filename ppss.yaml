@@ -48,9 +48,9 @@ trader_ss:
       defaultType: spot
 
 sim_ss: # sim only
-  do_plot: True
+  do_plot: False
   log_dir: logs
-  test_n : 200 # number of epochs to simulate
+  test_n : 2000 # number of epochs to simulate
   exchange_only:
     timeout: 30000
     options:
