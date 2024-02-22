@@ -57,7 +57,7 @@ class ETL:
         """
         @description
             Call data factory to fetch data and update lake
-            The sync will try 3 times to fetch from data_factory, and update the local gql_dfs
+            The sync will try 3 times to fetch from data_factory, and update the local gql_tables
         """
         gql_tables = self.gql_data_factory.get_gql_tables()
 
