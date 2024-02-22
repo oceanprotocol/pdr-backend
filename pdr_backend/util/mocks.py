@@ -7,21 +7,21 @@ class MockOrder(dict):
 
 
 class MockExchange(ccxt.Exchange):
-    def create_market_buy_order(self, pair_str, amount):
+    def create_market_buy_order(self, symbol, amount, params={}):
         return MockOrder(
             {
                 "order_type": "buy",
                 "amount": str(amount),
-                "pair_str": pair_str,
+                "pair_str": amount,
             }
         )
 
-    def create_market_sell_order(self, pair_str, position_size):
+    def create_market_sell_order(self, symbol, amount, params={}):
         return MockOrder(
             {
                 "order_type": "sell",
-                "position_size": str(position_size),
-                "pair_str": pair_str,
+                "position_size": str(amount),
+                "pair_str": symbol,
             }
         )
 
