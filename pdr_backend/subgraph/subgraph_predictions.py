@@ -163,7 +163,7 @@ def fetch_filtered_predictions(
             predicted_value = prediction_sg_dict["payout"]["predictedValue"]
             payout = float(prediction_sg_dict["payout"]["payout"])
 
-        if trueval_only is True and trueval is None:
+        if trueval_only is True and truevalue is None:
             continue
 
         prediction = Prediction(

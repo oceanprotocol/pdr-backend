@@ -34,7 +34,7 @@ class PredictoorStat(TypedDict):
 def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
     df = predictions_df.filter(
-        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+        ~((pl.col("truevalue").is_null()) | (pl.col("payout").is_null()))
     )
 
     # Group by pair
@@ -53,7 +53,7 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
 def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
     # 1 - filter from lake only the rows that you're looking for
     df = predictions_df.filter(
-        ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
+        ~((pl.col("truevalue").is_null()) | (pl.col("payout").is_null()))
     )
 
     # Group by pair
