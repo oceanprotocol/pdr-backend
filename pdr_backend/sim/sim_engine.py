@@ -302,7 +302,7 @@ def _plot(st: SimEngineState):
     )
     ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
     ax0.set_xlabel("time", fontsize=FONTSIZE)
-    ax0.yaxis.tick_right()
+    _label_on_right(ax0)
     ax0.margins(0.005, 0.05)
 
     # plot 1: % correct vs time
@@ -319,6 +319,8 @@ def _plot(st: SimEngineState):
     ax1.cla()
     ax1.plot(x, y1_est, "green")
     ax1.fill_between(x, y1_l, y1_u, color="green", alpha=0.15)
+    ax1.plot([0, N], [50, 50], color="0.2", linestyle="dashed", linewidth=1)
+    ax1.set_ylim(bottom=40, top=60)
     now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
     ax1.set_title(
         f"% correct vs time. Current: {now_s}",
@@ -327,7 +329,7 @@ def _plot(st: SimEngineState):
     )
     ax1.set_xlabel("time", fontsize=FONTSIZE)
     ax1.set_ylabel("% correct", fontsize=FONTSIZE)
-    ax1.yaxis.tick_right()
+    _label_on_right(ax1)
     ax1.margins(0.01, 0.01)
     
     # plot 2: trader profit vs time
@@ -342,7 +344,7 @@ def _plot(st: SimEngineState):
     )
     ax2.set_xlabel("time", fontsize=FONTSIZE)
     ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-    ax2.yaxis.tick_right()
+    _label_on_right(ax2)
     ax2.margins(0.005, 0.05)
     
     # plot 3: 1d scatter of profits
@@ -350,6 +352,7 @@ def _plot(st: SimEngineState):
     while len(ps.jitter) < N:
         ps.jitter.append(np.random.uniform())
     ax3.scatter(ps.jitter, st.trader_profits_USD, color="blue", s=3)
+    ax3.plot([0-1, 1+1], [0, 0], color="0.2", linestyle="dashed", linewidth=1)
     avg = np.average(st.trader_profits_USD)
     ax3.set_title(
         f"Trader profit distribution. avg=${avg:.2f}",
@@ -357,9 +360,9 @@ def _plot(st: SimEngineState):
         fontweight="bold",
     )
     ax3.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-    ax3.yaxis.tick_right()
+    _label_on_right(ax3)
     plt.tick_params(bottom = False, labelbottom=False)
-    ax3.margins(0.8, 0.05)
+    ax3.margins(0.05, 0.05)
     
     
     # final pieces
@@ -369,6 +372,10 @@ def _plot(st: SimEngineState):
     fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
     plt.pause(0.001)
 
+def _label_on_right(ax):    
+    ax.yaxis.tick_right()
+    ax.yaxis.set_label_position("right")
+    
 def _del_lines(ax):
     for l in ax.lines:
         l.remove()
