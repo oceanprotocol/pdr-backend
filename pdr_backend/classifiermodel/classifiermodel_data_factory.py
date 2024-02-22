@@ -46,7 +46,7 @@ class ClassifierModelDataFactory:
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
+    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
@@ -60,7 +60,7 @@ class ClassifierModelDataFactory:
           x_df -- *pandas* DataFrame. See class docstring.
         """
         factory = RegressionModelDataFactory(self.ss, self.ss.classifiermodel_ss)
-        X, y, x_df, _ = factory.create_xy(mergedohlcv_df, testshift, do_fill_nans)
+        X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift, do_fill_nans)
 
         # convert y to 1 if price went up and 0 otherwise compared to y+1
         y = np.array([1 if y[i] < y[i+1] else 0 for i in range(len(y)-1)])
@@ -68,6 +68,7 @@ class ClassifierModelDataFactory:
         # delete first row of X and x_df
         X = X[1:]
         x_df = x_df.iloc[1:]
+        xrecent = xrecent[1:]
 
-        return X, y, x_df
+        return X, y, x_df, xrecent
 
