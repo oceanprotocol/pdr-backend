@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import time
@@ -11,6 +12,7 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.web3_config import Web3Config
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -46,6 +48,7 @@ class BasePredictoorAgent(ABC):
         pk2 = os.getenv("PRIVATE_KEY2")
         self.feed_contract2 = None
         if pk2 is not None:
+            self.get_two_sided_prediction = True
             self.feed_contract2 = copy.deepcopy(self.feed_contract)
             self.feed_contract2.web3_pp.web3_config = \
                 Web3Config(self.feed_contract.web3_pp.rpc_url, pk2)
@@ -93,17 +96,25 @@ class BasePredictoorAgent(ABC):
         success = self.get_prediction_and_submit(target_slot)
         if not success:
             return
+        
+        # wrapup 
+        self.prev_submit_epochs.append(submit_epoch)
+        logger.info("-> Submit predict tx result: success.")
+
+        if logging_has_stdout():
+            print("" + "=" * 180)
+
+        # start printing for next round
+        logger.info(self.status_str())
+        logger.info("Waiting...")
+
 
     def get_prediction_and_submit(self, target_slot) -> bool:
         """
         @return
           success -- bool
         """
-        has1 = hasattr(self, 'get_one_sided_prediction')
-        has2 = hasattr(self, 'get_two_sided_prediction')
-        assert (has1 or has2) and not (has1 and has2), "1 or 2 sided, not both"
-
-        if has1:
+        if self.is_two_sided is not True:
             # one-sided: get prediction
             predval, stake = self.get_one_sided_prediction(target_slot)
             logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
@@ -126,11 +137,9 @@ class BasePredictoorAgent(ABC):
                 return False
             
             logger.info("Submit one-sided predict tx result: success.")
-            
-                    
-        if has2:
+        else:
             # two-sided: get prediction
-            stake_up, stake_down = self.get_two_sided_prediction()
+            stake_up, stake_down = self.get_two_sided_prediction(target_slot)
             logger.info("-> Predict result: stake_up=%s, stake_down=%s",
                         stake_up, stake_down)
             if stake_up is None or stake_down is None:
@@ -172,15 +181,7 @@ class BasePredictoorAgent(ABC):
                 )
             logger.info("-> Submit two-sided predict txs result: success.")
 
-        # wrapup 
-        self.prev_submit_epochs.append(submit_epoch)
-
-        if logging_has_stdout():
-            print("" + "=" * 180)
-
-        # start printing for next round
-        logger.info(self.status_str())
-        logger.info("Waiting...")
+        return True
 
     @property
     def cur_epoch(self) -> int:
@@ -204,6 +205,10 @@ class BasePredictoorAgent(ABC):
     def epoch_s_thr(self):
         """Start predicting if there's > this time left"""
         return self.ppss.predictoor_ss.s_until_epoch_end
+
+    @property
+    def is_two_sided(self) -> bool:
+        return self.ppss.predictoor_ss.is_two_sided
 
     @property
     def s_per_epoch(self) -> int:
@@ -234,10 +239,17 @@ class BasePredictoorAgent(ABC):
         return s
 
     @abstractmethod
-    def get_prediction(
+    def get_one_sided_prediction(
         self,
         timestamp: UnixTimeS,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
+        pass
+
+    @abstractmethod
+    def get_two_sided_prediction(
+        self,
+        timestamp: UnixTimeS,  # pylint: disable=unused-argument
+    ) -> Tuple[float, float]:
         pass
 
 def _tx_failed(tx):
