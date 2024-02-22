@@ -68,7 +68,7 @@ def test_create_xy__0():
             [0.1, 0.1, 7.5, 8.6],
         ]
     )  # newest
-    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
+    target_y = np.array([1, 1, 1, 1, 1])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
@@ -110,14 +110,14 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     target_y = np.array(
         [
-            8.0,  # oldest
-            7.0,
-            6.0,
-            5.0,
-            4.0,
-            3.0,
-            2.0,
-            1.0,  # newest
+            0,  # oldest
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,  # newest
         ]
     )
     target_x_df = pd.DataFrame(
@@ -150,14 +150,14 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )  # newest
     target_y = np.array(
         [
-            9.0,  # oldest
-            8.0,
-            7.0,
-            6.0,
-            5.0,
-            4.0,
-            3.0,
-            2.0,  # newest
+            0,  # oldest
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,  # newest
         ]
     )
     target_x_df = pd.DataFrame(
@@ -186,7 +186,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             [4.0, 3.0, 2.0],
         ]
     )  # newest
-    target_y = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0])  # oldest  # newest
+    target_y = np.array([0, 0, 0, 0, 0, 0])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
@@ -268,9 +268,9 @@ def test_create_xy__2exchanges_2coins_2signals():
         "binanceus:ETH/USDT:high:t-2",
     ]
     Xa = X[:, 3:6]
-    assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 1
-    assert Xa[-2, :].tolist() == [5, 4, 3] and y[-2] == 2
-    assert Xa[0, :].tolist() == [11, 10, 9] and y[0] == 8
+    assert Xa[-1, :].tolist() == [4, 3, 2] and y[-1] == 0
+    assert Xa[-2, :].tolist() == [5, 4, 3] and y[-2] == 0
+    assert Xa[0, :].tolist() == [11, 10, 9] and y[0] == 0
 
     assert x_df.iloc[-1].tolist()[3:6] == [4, 3, 2]
     assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
