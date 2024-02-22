@@ -3,6 +3,7 @@ import logging
 import os
 from typing import List
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -17,7 +18,7 @@ from pdr_backend.util.mathutil import nmse
 from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 
 logger = logging.getLogger("sim_engine")
-FONTSIZE = 11
+FONTSIZE = 9
 
 class SimEngineState:
     def __init__(self, do_plot:bool, init_holdings: dict):
@@ -308,7 +309,7 @@ def _plot(st: SimEngineState):
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax0.set_xlabel("time", fontsize=FONTSIZE)
+    #ax0.set_xlabel("time", fontsize=FONTSIZE)
     ax0.set_ylabel("% correct", fontsize=FONTSIZE)
 
     # plot 1: predictoor profit vs time
@@ -319,7 +320,7 @@ def _plot(st: SimEngineState):
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax1.set_xlabel("time", fontsize=FONTSIZE)
+    #ax1.set_xlabel("time", fontsize=FONTSIZE)
     ax1.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
 
     # plot 2: trader profit vs time
@@ -334,8 +335,9 @@ def _plot(st: SimEngineState):
     ax2.set_ylabel("trading profit (USD)", fontsize=FONTSIZE)
 
     # final pieces
-    HEIGHT = 9  # magic number
+    HEIGHT = 7.5  # magic number
     WIDTH = int(HEIGHT * 2)  # magic number
     fig.set_size_inches(WIDTH, HEIGHT)
-    fig.tight_layout(pad=0.3)  # add space between plots
+    fig.tight_layout(pad=0.0)  # add space between plots
     plt.pause(0.001)
+
