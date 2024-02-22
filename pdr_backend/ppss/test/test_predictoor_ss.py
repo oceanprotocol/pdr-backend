@@ -1,4 +1,5 @@
 from enforce_typing import enforce_types
+import pytest
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 
@@ -9,8 +10,9 @@ def test_predictoor_ss():
         "predict_feed": "binance BTC/USDT c 5m",
         "stake_amount": 1,
         "sim_only": {
-            "weekly_revenue_amount": 1875,
-            "others_stake_amount": 2313,
+            "others_stake": 2313,
+            "others_accuracy": 0.50001,
+            "revenue": 0.93007,
         },
         "bot_only": {
             "s_until_epoch_end": 60,
@@ -26,8 +28,9 @@ def test_predictoor_ss():
 
     # yaml properties
     assert ss.stake_amount == 1
-    assert ss.weekly_revenue_amount == 1875
-    assert ss.others_stake_amount == 2313
+    assert ss.others_stake == 2313
+    assert ss.others_accuracy == pytest.approx(0.50001, abs=0.000001)
+    assert ss.revenue == pytest.approx(0.93007, abs=0.000001)
     assert ss.s_until_epoch_end == 60
 
     # str
