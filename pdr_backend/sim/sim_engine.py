@@ -156,7 +156,6 @@ class SimEngine:
         correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
         self.corrects.append(correct)
-        acc = float(sum(self.corrects)) / len(self.corrects) * 100
         n_correct, n_trials = sum(self.corrects), len(self.corrects)
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
