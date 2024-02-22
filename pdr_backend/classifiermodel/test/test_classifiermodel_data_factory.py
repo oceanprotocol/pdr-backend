@@ -92,7 +92,7 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, classifiermodel_data_factory, _ = _predictoor_ss_1feed(
+    ss, _, _, classifiermodel_data_factory = _predictoor_ss_1feed(
         tmpdir, "binanceus ETH/USDT h 5m"
     )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
@@ -319,7 +319,7 @@ def test_create_xy__check_timestamp_order(tmpdir):
 
 @enforce_types
 def test_create_xy__input_type(tmpdir):
-    mergedohlcv_df, classifiermodel_data_factory, _ = _mergedohlcv_df_ETHUSDT(tmpdir)
+    mergedohlcv_df, _, classifiermodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(classifiermodel_data_factory, ClassifierModelDataFactory)
@@ -335,7 +335,7 @@ def test_create_xy__input_type(tmpdir):
 @enforce_types
 def test_create_xy__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, classifiermodel_data_factory, _ = _predictoor_ss_1feed(
+    _, _, _, classifiermodel_data_factory = _predictoor_ss_1feed(
         tmpdir, "binanceus ETH/USDT h 5m"
     )
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
