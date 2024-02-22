@@ -13,7 +13,7 @@ def get_consume_so_far(
 ):
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    consume_so_far = 0
+    consume_so_far = float(0)
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
