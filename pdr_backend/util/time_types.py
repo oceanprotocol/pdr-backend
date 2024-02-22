@@ -1,47 +1,47 @@
 from datetime import datetime, timezone
 
 
-class UnixTimeSeconds(int):
+class UnixTimeS(int):
     def __new__(cls, time_s):
         if time_s < 0 or time_s > 9999999999:
             raise ValueError("Invalid Unix timestamp in seconds")
 
-        return super(UnixTimeSeconds, cls).__new__(cls, time_s)
+        return super(UnixTimeS, cls).__new__(cls, time_s)
 
-    def to_milliseconds(self) -> "UnixTimeMilliseconds":
-        return UnixTimeMilliseconds(int(self) * 1000)
-
-    @staticmethod
-    def now() -> "UnixTimeSeconds":
-        return UnixTimeSeconds(int(datetime.now().timestamp()))
+    def to_milliseconds(self) -> "UnixTimeMs":
+        return UnixTimeMs(int(self) * 1000)
 
     @staticmethod
-    def from_dt(from_dt: datetime) -> "UnixTimeSeconds":
-        return UnixTimeSeconds(int(from_dt.timestamp()))
+    def now() -> "UnixTimeS":
+        return UnixTimeS(int(datetime.now().timestamp()))
+
+    @staticmethod
+    def from_dt(from_dt: datetime) -> "UnixTimeS":
+        return UnixTimeS(int(from_dt.timestamp()))
 
 
-class UnixTimeMilliseconds(int):
+class UnixTimeMs(int):
     def __new__(cls, time_ms):
         if time_ms < 0 or time_ms > 9999999999999:
             raise ValueError("Invalid Unix timestamp in miliseconds")
 
-        return super(UnixTimeMilliseconds, cls).__new__(cls, time_ms)
+        return super(UnixTimeMs, cls).__new__(cls, time_ms)
 
-    def to_seconds(self) -> "UnixTimeSeconds":
-        return UnixTimeSeconds(int(self) // 1000)
-
-    @staticmethod
-    def now() -> "UnixTimeMilliseconds":
-        return UnixTimeMilliseconds(datetime.now().timestamp() * 1000)
+    def to_seconds(self) -> "UnixTimeS":
+        return UnixTimeS(int(self) // 1000)
 
     @staticmethod
-    def from_dt(from_dt: datetime) -> "UnixTimeMilliseconds":
-        return UnixTimeMilliseconds(int(from_dt.timestamp() * 1000))
+    def now() -> "UnixTimeMs":
+        return UnixTimeMs(datetime.now().timestamp() * 1000)
 
     @staticmethod
-    def from_timestr(timestr: str) -> "UnixTimeMilliseconds":
+    def from_dt(from_dt: datetime) -> "UnixTimeMs":
+        return UnixTimeMs(int(from_dt.timestamp() * 1000))
+
+    @staticmethod
+    def from_timestr(timestr: str) -> "UnixTimeMs":
         if timestr.lower() == "now":
-            return UnixTimeMilliseconds.now()
+            return UnixTimeMs.now()
 
         ncolon = timestr.count(":")
         if ncolon == 0:
@@ -57,7 +57,7 @@ class UnixTimeMilliseconds(int):
             raise ValueError(timestr)
 
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
-        return UnixTimeMilliseconds.from_dt(dt)
+        return UnixTimeMs.from_dt(dt)
 
     def to_dt(self) -> datetime:
         # precondition

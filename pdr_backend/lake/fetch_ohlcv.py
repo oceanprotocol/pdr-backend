@@ -10,7 +10,7 @@ from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
 )
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
 
@@ -20,7 +20,7 @@ def safe_fetch_ohlcv(
     exch,
     symbol: str,
     timeframe: str,
-    since: UnixTimeMilliseconds,
+    since: UnixTimeMs,
     limit: int,
 ) -> Union[List[tuple], None]:
     """
@@ -59,8 +59,8 @@ def safe_fetch_ohlcv(
 def clean_raw_ohlcv(
     raw_tohlcv_data: Union[list, None],
     feed: ArgFeed,
-    st_ut: UnixTimeMilliseconds,
-    fin_ut: UnixTimeMilliseconds,
+    st_ut: UnixTimeMs,
+    fin_ut: UnixTimeMs,
 ) -> list:
     """
     @description
@@ -91,7 +91,7 @@ def _ohlcv_to_uts(tohlcv_data: list) -> list:
 
 
 @enforce_types
-def _warn_if_uts_have_gaps(uts: List[UnixTimeMilliseconds], timeframe: Timeframe):
+def _warn_if_uts_have_gaps(uts: List[UnixTimeMs], timeframe: Timeframe):
     if len(uts) <= 1:
         return
 
@@ -110,7 +110,7 @@ def _warn_if_uts_have_gaps(uts: List[UnixTimeMilliseconds], timeframe: Timeframe
 
 @enforce_types
 def _filter_within_timerange(
-    tohlcv_data: list, st_ut: UnixTimeMilliseconds, fin_ut: UnixTimeMilliseconds
+    tohlcv_data: list, st_ut: UnixTimeMs, fin_ut: UnixTimeMs
 ) -> list:
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]

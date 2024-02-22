@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.payout import Payout
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
@@ -13,8 +13,8 @@ logger = logging.getLogger("subgraph")
 @enforce_types
 def get_payout_query(
     asset_ids: List[str],
-    start_ts: UnixTimeSeconds,
-    end_ts: UnixTimeSeconds,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     first: int,
     skip: int,
 ) -> str:
@@ -110,8 +110,8 @@ def filter_by_addresses(result, addresses):
 
 @enforce_types
 def fetch_payouts(
-    start_ts: UnixTimeSeconds,
-    end_ts: UnixTimeSeconds,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     addresses: List[str],
     first: int,
     skip: int,
@@ -151,12 +151,12 @@ def fetch_payouts(
             **{
                 "payout": float(payout["payout"]),
                 "user": payout["prediction"]["user"]["id"],
-                "timestamp": UnixTimeSeconds(int(payout["timestamp"])),
+                "timestamp": UnixTimeS(int(payout["timestamp"])),
                 "ID": payout["id"],
                 "token": payout["prediction"]["slot"]["predictContract"]["token"][
                     "name"
                 ],
-                "slot": UnixTimeSeconds(int(payout["id"].split("-")[1])),
+                "slot": UnixTimeS(int(payout["id"].split("-")[1])),
                 "predictedValue": bool(payout["predictedValue"]),
                 "revenue": float(payout["prediction"]["slot"]["revenue"]),
                 "roundSumStakesUp": float(

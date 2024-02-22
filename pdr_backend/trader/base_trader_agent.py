@@ -9,7 +9,7 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
 
@@ -73,7 +73,7 @@ class BaseTraderAgent:
         self.feed_contract = sole_value(feed_contracts)
 
         # set attribs to track block
-        self.prev_block_timestamp: UnixTimeSeconds = UnixTimeSeconds(0)
+        self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)
         self.prev_block_number: int = 0
 
         self.prev_traded_epochs: List[int] = []
@@ -127,11 +127,9 @@ class BaseTraderAgent:
             return
 
         self.prev_block_number = block_number
-        self.prev_block_timestamp = UnixTimeSeconds(block["timestamp"])
+        self.prev_block_timestamp = UnixTimeS(block["timestamp"])
         logger.debug("before: %s", time.time())
-        s_till_epoch_ends = await self._process_block(
-            UnixTimeSeconds(block["timestamp"])
-        )
+        s_till_epoch_ends = await self._process_block(UnixTimeS(block["timestamp"]))
 
         logger.debug("after: %s", time.time())
         if s_till_epoch_ends == -1:
@@ -144,7 +142,7 @@ class BaseTraderAgent:
 
         time.sleep(sleep_time)
 
-    async def _process_block(self, timestamp: UnixTimeSeconds, tries: int = 0) -> int:
+    async def _process_block(self, timestamp: UnixTimeS, tries: int = 0) -> int:
         """
         @param:
             timestamp - timestamp/epoch to process

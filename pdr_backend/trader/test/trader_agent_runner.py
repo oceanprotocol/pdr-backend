@@ -7,9 +7,9 @@ from pdr_backend.ppss.web3_pp import (
     inplace_mock_feedgetters,
     inplace_mock_w3_and_contract_with_tracking,
 )
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
-INIT_TIMESTAMP = UnixTimeSeconds(107)
+INIT_TIMESTAMP = UnixTimeS(107)
 INIT_BLOCK_NUMBER = 13
 
 

@@ -21,7 +21,7 @@ from pdr_backend.lake.plutil import (
 from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 MS_PER_5M_EPOCH = 300000
@@ -51,7 +51,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     # setup: uts helpers
     def _calc_ut(since: int, i: int) -> int:
         """Return a ut : unix time, in ms, in UTC time zone"""
-        return UnixTimeMilliseconds(since + i * MS_PER_5M_EPOCH)
+        return UnixTimeMs(since + i * MS_PER_5M_EPOCH)
 
     def _uts_in_range(st_ut: int, fin_ut: int, limit_N=100000) -> List[int]:
         return [
@@ -61,9 +61,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     # setup: exchange
     class FakeExchange:
         def __init__(self):
-            self.cur_ut: int = int(
-                UnixTimeMilliseconds.now()
-            )  # fixed value, for easier testing
+            self.cur_ut: int = int(UnixTimeMs.now())  # fixed value, for easier testing
 
         # pylint: disable=unused-argument
         def fetch_ohlcv(self, since, limit, *args, **kwargs) -> list:
@@ -109,7 +107,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     assert uts == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 2: two more epochs at end --> it'll append existing file
-    ss.d["fin_timestr"] = UnixTimeMilliseconds(
+    ss.d["fin_timestr"] = UnixTimeMs(
         ss.fin_timestamp + 2 * MS_PER_5M_EPOCH
     ).to_timestr()
 
@@ -120,10 +118,8 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new file
-    ss.d["st_timestr"] = UnixTimeMilliseconds(
-        ss.st_timestamp - 2 * MS_PER_5M_EPOCH
-    ).to_timestr()
-    ss.d["fin_timestr"] = UnixTimeMilliseconds(
+    ss.d["st_timestr"] = UnixTimeMs(ss.st_timestamp - 2 * MS_PER_5M_EPOCH).to_timestr()
+    ss.d["fin_timestr"] = UnixTimeMs(
         ss.fin_timestamp + 4 * MS_PER_5M_EPOCH
     ).to_timestr()
 

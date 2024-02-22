@@ -4,14 +4,14 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
 def get_trueval(
     feed: SubgraphFeed,
-    init_timestamp_s: UnixTimeSeconds,
-    end_timestamp_s: UnixTimeSeconds,
+    init_timestamp_s: UnixTimeS,
+    end_timestamp_s: UnixTimeS,
 ) -> Tuple[bool, bool]:
     """
     @description
@@ -33,8 +33,8 @@ def get_trueval(
 
     # since we will get close price
     # we need to go back 1 candle
-    init_timestamp_s = UnixTimeSeconds(init_timestamp_s - feed.seconds_per_epoch)
-    end_timestamp_s = UnixTimeSeconds(end_timestamp_s - feed.seconds_per_epoch)
+    init_timestamp_s = UnixTimeS(init_timestamp_s - feed.seconds_per_epoch)
+    end_timestamp_s = UnixTimeS(end_timestamp_s - feed.seconds_per_epoch)
 
     # convert seconds to ms
     init_timestamp = init_timestamp_s.to_milliseconds()

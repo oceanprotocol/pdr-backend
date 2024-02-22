@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.subgraph.trueval import Trueval
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("trueval")
 
@@ -13,8 +13,8 @@ logger = logging.getLogger("trueval")
 @enforce_types
 def get_truevals_query(
     asset_ids: List[str],
-    start_ts: UnixTimeSeconds,
-    end_ts: UnixTimeSeconds,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     first: int,
     skip: int,
 ) -> str:
@@ -65,8 +65,8 @@ def get_truevals_query(
 
 @enforce_types
 def fetch_truevals(
-    start_ts: UnixTimeSeconds,
-    end_ts: UnixTimeSeconds,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     addresses: List[str],
     first: int,
     skip: int,
@@ -109,10 +109,10 @@ def fetch_truevals(
 
     for record in data:
         truevalue = record["trueValue"]
-        timestamp = UnixTimeSeconds(int(record["timestamp"]))
+        timestamp = UnixTimeS(int(record["timestamp"]))
         ID = record["id"]
         token = record["slot"]["predictContract"]["token"]["name"]
-        slot = UnixTimeSeconds(int(record["id"].split("-")[1]))
+        slot = UnixTimeS(int(record["id"].split("-")[1]))
 
         trueval = Trueval(
             ID=ID,

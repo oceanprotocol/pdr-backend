@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
@@ -82,8 +82,8 @@ class Table:
         self,
         fetch_function: Callable,
         network: str,
-        st_ut: UnixTimeMilliseconds,
-        fin_ut: UnixTimeMilliseconds,
+        st_ut: UnixTimeMs,
+        fin_ut: UnixTimeMs,
         save_backoff_limit: int,
         pagination_limit: int,
         config: Dict,
@@ -162,7 +162,7 @@ class Table:
         return filename
 
     @enforce_types
-    def _calc_start_ut(self, filename: str) -> UnixTimeMilliseconds:
+    def _calc_start_ut(self, filename: str) -> UnixTimeMs:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
@@ -185,4 +185,4 @@ class Table:
             return self.ppss.lake_ss.st_timestamp
 
         file_utN = newest_ut(filename)
-        return UnixTimeMilliseconds(file_utN + 1000)
+        return UnixTimeMs(file_utN + 1000)

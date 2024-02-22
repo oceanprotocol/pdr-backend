@@ -4,13 +4,13 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
 class PredictoorAgent1(BasePredictoorAgent):
     def get_prediction(
-        self, timestamp: UnixTimeSeconds  # pylint: disable=unused-argument
+        self, timestamp: UnixTimeS  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description

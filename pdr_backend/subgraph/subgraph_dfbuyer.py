@@ -1,13 +1,13 @@
 import logging
 from pdr_backend.subgraph.core_subgraph import query_subgraph
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
 
 def get_consume_so_far(
     predictoor_contracts,
-    week_start_timestamp: UnixTimeSeconds,
+    week_start_timestamp: UnixTimeS,
     consumer_address,
     subgraph_url,
 ):

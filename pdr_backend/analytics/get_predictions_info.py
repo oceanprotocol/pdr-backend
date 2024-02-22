@@ -7,7 +7,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.analytics.predictoor_stats import (
     get_feed_summary_stats,
 )
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("get_predictions_info")
 
@@ -28,14 +28,8 @@ class PredFilter:
         predictions_df = self.predictions_df
 
         predictions_df = predictions_df.filter(
-            (
-                predictions_df["timestamp"]
-                >= UnixTimeMilliseconds.from_timestr(start_timestr)
-            )
-            & (
-                predictions_df["timestamp"]
-                <= UnixTimeMilliseconds.from_timestr(end_timestr)
-            )
+            (predictions_df["timestamp"] >= UnixTimeMs.from_timestr(start_timestr))
+            & (predictions_df["timestamp"] <= UnixTimeMs.from_timestr(end_timestr))
         )
 
         self.predictions_df = predictions_df
@@ -87,14 +81,8 @@ def get_predictions_info_main(
 
     # filter by start and end dates
     predictions_df = predictions_df.filter(
-        (
-            predictions_df["timestamp"]
-            >= UnixTimeMilliseconds.from_timestr(start_timestr)
-        )
-        & (
-            predictions_df["timestamp"]
-            <= UnixTimeMilliseconds.from_timestr(end_timestr)
-        )
+        (predictions_df["timestamp"] >= UnixTimeMs.from_timestr(start_timestr))
+        & (predictions_df["timestamp"] <= UnixTimeMs.from_timestr(end_timestr))
     )
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."

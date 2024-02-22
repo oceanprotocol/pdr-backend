@@ -6,7 +6,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import MultiFeedMixin
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake_ss")
 
@@ -30,8 +30,8 @@ class LakeSS(MultiFeedMixin):
         # test inputs
         assert (
             0
-            <= UnixTimeMilliseconds.from_timestr(self.st_timestr)
-            <= UnixTimeMilliseconds.from_timestr(self.fin_timestr)
+            <= UnixTimeMs.from_timestr(self.st_timestr)
+            <= UnixTimeMs.from_timestr(self.fin_timestr)
             <= np.inf
         )
 
@@ -58,22 +58,22 @@ class LakeSS(MultiFeedMixin):
     # --------------------------------
     # derivative properties
     @property
-    def st_timestamp(self) -> UnixTimeMilliseconds:
+    def st_timestamp(self) -> UnixTimeMs:
         """
         Return start timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.st_timestr.
         """
-        return UnixTimeMilliseconds.from_timestr(self.st_timestr)
+        return UnixTimeMs.from_timestr(self.st_timestr)
 
     @property
-    def fin_timestamp(self) -> UnixTimeMilliseconds:
+    def fin_timestamp(self) -> UnixTimeMs:
         """
         Return fin timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.fin_timestr.
 
         ** This value will change dynamically if fin_timestr is "now".
         """
-        return UnixTimeMilliseconds.from_timestr(self.fin_timestr)
+        return UnixTimeMs.from_timestr(self.fin_timestr)
 
     @enforce_types
     def __str__(self) -> str:

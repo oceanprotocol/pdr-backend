@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @dataclass
@@ -20,8 +20,8 @@ class PredictSlot:
 @enforce_types
 def get_predict_slots_query(
     asset_ids: List[str],
-    initial_slot: UnixTimeSeconds,
-    last_slot: UnixTimeSeconds,
+    initial_slot: UnixTimeS,
+    last_slot: UnixTimeS,
     first: int,
     skip: int,
 ) -> str:
@@ -74,8 +74,8 @@ def get_predict_slots_query(
 @enforce_types
 def get_slots(
     addresses: List[str],
-    end_ts_param: UnixTimeSeconds,
-    start_ts_param: UnixTimeSeconds,
+    end_ts_param: UnixTimeS,
+    start_ts_param: UnixTimeS,
     skip: int,
     slots: List[PredictSlot],
     network: str = "mainnet",
@@ -147,8 +147,8 @@ def get_slots(
 @enforce_types
 def fetch_slots_for_all_assets(
     asset_ids: List[str],
-    start_ts_param: UnixTimeSeconds,
-    end_ts_param: UnixTimeSeconds,
+    start_ts_param: UnixTimeS,
+    end_ts_param: UnixTimeS,
     network: str = "mainnet",
 ) -> Dict[str, List[PredictSlot]]:
     """

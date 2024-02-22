@@ -8,15 +8,15 @@ from pdr_backend.subgraph.subscription import Subscription
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
 
 @enforce_types
 def fetch_filtered_subscriptions(
-    start_ts: UnixTimeSeconds,
-    end_ts: UnixTimeSeconds,
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
     contracts: List[str],
     first: int,
     skip: int,
@@ -105,7 +105,7 @@ def fetch_filtered_subscriptions(
         pair = info["pair"]
         timeframe = info["timeframe"]
         source = info["source"]
-        timestamp = UnixTimeSeconds(int(subscription_sg_dict["timestamp"]))
+        timestamp = UnixTimeS(int(subscription_sg_dict["timestamp"]))
         tx_id = subscription_sg_dict["txId"]
         last_price_value = (
             float(subscription_sg_dict["predictContract"]["token"]["lastPriceValue"])

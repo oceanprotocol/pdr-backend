@@ -30,7 +30,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -134,7 +134,7 @@ class GQLDataFactory:
             st_ut = table._calc_start_ut(filename)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
-            if st_ut > min(UnixTimeMilliseconds.now(), fin_ut):
+            if st_ut > min(UnixTimeMs.now(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
             # to satisfy mypy, get an explicit function pointer

@@ -1,7 +1,7 @@
 from typing import List
 
 from enforce_typing import enforce_types
-from pdr_backend.util.time_types import UnixTimeSeconds
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -11,8 +11,8 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         ID: str,
         token: str,
         user: str,
-        slot: UnixTimeSeconds,
-        timestamp: UnixTimeSeconds,
+        slot: UnixTimeS,
+        timestamp: UnixTimeS,
         payout: float,
         predictedValue: bool,
         revenue: float,
@@ -52,9 +52,9 @@ def mock_payout(payout_tuple: tuple) -> Payout:
     return Payout(
         ID=ID,
         user=user,
-        timestamp=UnixTimeSeconds(timestamp),
+        timestamp=UnixTimeS(timestamp),
         token=token,
-        slot=UnixTimeSeconds(slot),
+        slot=UnixTimeS(slot),
         payout=payout,
         predictedValue=predictedValue,
         revenue=revenue,

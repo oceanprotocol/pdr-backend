@@ -14,7 +14,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.time_types import UnixTimeMilliseconds
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 logger = logging.getLogger("sim_engine")
@@ -78,7 +78,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{UnixTimeMilliseconds.now()}.txt"
+        filebase = f"out_{UnixTimeMs.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
         fh = logging.FileHandler(self.logfile)
@@ -126,10 +126,8 @@ class SimEngine:
         self.nmses_train.append(nmse_train)
 
         # current time
-        recent_ut = UnixTimeMilliseconds(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMilliseconds(
-            recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms
-        )
+        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
+        ut = UnixTimeMs(recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms)
 
         # current price
         curprice = y_train[-1]
