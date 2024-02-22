@@ -46,7 +46,6 @@ class SimEngine:
 
         # state
         self.holdings = copy.copy(self.ppss.trader_ss.init_holdings)
-        self.tot_trader_profit_usd = 0.0
         self.nmses_train: List[float] = []
         self.ys_test: List[float] = []
         self.ys_testhat: List[float] = []
@@ -84,7 +83,6 @@ class SimEngine:
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
 
-        self.tot_trader_profit_usd = 0.0
         self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
         self.trader_profit_usds, self.tot_trader_profit_usds = [], []
 
@@ -151,11 +149,9 @@ class SimEngine:
         usdcoin_holdings_after = self.holdings[self.usdcoin]
 
         trader_profit_usd = usdcoin_holdings_after - usdcoin_holdings_before
-
-        self.tot_trader_profit_usd += trader_profit_usd
         self.trader_profit_usds.append(trader_profit_usd)
-        self.tot_trader_profit_usds.append(self.tot_trader_profit_usd)
-
+        self.tot_trader_profit_usds.append(sum(self.trader_profit_usds))
+        
         # err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
         true_dir = "UP" if trueprice > curprice else "DN"
@@ -173,7 +169,7 @@ class SimEngine:
         s += f". Total correct {n_correct:4d}/{n_trials:4d} = {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
         s += f". trader_profit_epoch ${trader_profit_usd:7.2f}"
-        s += f", trader_profit_total ${self.tot_trader_profit_usd:9.2f}"
+        s += f", trader_profit_total ${self.tot_trader_profit_usds[-1]:9.2f}"
         logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
