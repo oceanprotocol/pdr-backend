@@ -11,6 +11,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.time_types import UnixTimeS
 
 PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
@@ -47,7 +48,7 @@ def test_dfbuyer_agent_constructor_empty():
 
 @enforce_types
 def test_dfbuyer_agent_get_expected_amount_per_feed(mock_dfbuyer_agent):
-    ts = 1695211135
+    ts = UnixTimeS(1695211135)
     amount_per_feed_per_interval = (
         mock_dfbuyer_agent.ppss.dfbuyer_ss.amount_per_interval
         / len(mock_dfbuyer_agent.feeds)
@@ -64,7 +65,7 @@ def test_dfbuyer_agent_get_expected_amount_per_feed(mock_dfbuyer_agent):
 
 
 def test_dfbuyer_agent_get_expected_amount_per_feed_hardcoded(mock_dfbuyer_agent):
-    ts = 16958592000
+    ts = UnixTimeS(1695859200)
     end = ts + WEEK - 86400  # last day
     just_before_new_week = ts + WEEK - 1  # 1 second before next week
 

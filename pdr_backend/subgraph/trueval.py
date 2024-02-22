@@ -1,6 +1,7 @@
 from typing import Union, List
 
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -9,10 +10,10 @@ class Trueval:
     def __init__(
         self,
         ID: str,
-        timestamp: int,
+        timestamp: UnixTimeS,
         token: str,
         trueval: Union[bool, None],
-        slot: int,  # slot/epoch timestamp
+        slot: UnixTimeS,  # slot/epoch timestamp
     ) -> None:
         self.ID = ID
         self.trueval = trueval
@@ -31,9 +32,9 @@ def mock_trueval(trueval_tuple: tuple) -> Trueval:
     return Trueval(
         ID=ID,
         token=token,
-        slot=slot,
+        slot=UnixTimeS(slot),
         trueval=trueval,
-        timestamp=timestamp,
+        timestamp=UnixTimeS(timestamp),
     )
 
 
