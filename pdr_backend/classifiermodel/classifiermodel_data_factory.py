@@ -106,7 +106,7 @@ class ClassifierModelDataFactory:
         hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
         z = mergedohlcv_df[hist_col].to_list()
 
-        start_idx = max(0, len(z) - testshift - N_train - 1)
+        start_idx = max(0, len(z) - testshift - N_train - 2)
         end_idx = max(0, len(z) - testshift - 1)
         end_idx = min(end_idx, len(z) - 1)
 
