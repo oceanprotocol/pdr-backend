@@ -8,6 +8,7 @@ from pdr_backend.subgraph.subgraph_payout import (
     get_payout_query,
     fetch_payouts,
 )
+from pdr_backend.util.time_types import UnixTimeS
 
 # pylint: disable=line-too-long
 MOCK_PAYOUT_QUERY_RESPONSE = {
@@ -42,7 +43,11 @@ MOCK_PAYOUT_QUERY_SECOND_RESPONSE: Dict[str, dict] = {"data": {"predictPayouts":
 
 def test_get_payout_query():
     payout_query = get_payout_query(
-        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"], 1622547000, 1622548800, 1, 1
+        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        UnixTimeS(1622547000),
+        UnixTimeS(1622548800),
+        1,
+        1,
     )
 
     assert "1622547000" in payout_query
@@ -60,8 +65,8 @@ def test_fetch_payouts(mock_query_subgraph):
 
     payouts = fetch_payouts(
         addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-        start_ts=1622547000,
-        end_ts=1622548800,
+        start_ts=UnixTimeS(1622547000),
+        end_ts=UnixTimeS(1622548800),
         first=1000,
         skip=1,
         network="mainnet",

@@ -10,7 +10,7 @@ from pdr_backend.trader.approach2.portfolio import (
 
 
 def test_order_classes():
-    order_dict = {"id": 1, "info": {"origQty": 2}, "timestamp": 3}
+    order_dict = {"id": 1, "info": {"origQty": 2}, "timestamp": 3000}
 
     order = Order(order_dict)
     assert order.id is None
@@ -20,7 +20,7 @@ def test_order_classes():
     mexc_order = MexcOrder(order_dict)
     assert mexc_order.id == 1
     assert mexc_order.amount == 2
-    assert mexc_order.timestamp == 3
+    assert mexc_order.timestamp == 3000
 
     assert isinstance(create_order(order_dict, "mexc"), MexcOrder)
     assert isinstance(create_order(order_dict, "other"), Order)

@@ -2,6 +2,7 @@ from enum import Enum
 import logging
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("portfolio")
 
@@ -32,9 +33,8 @@ class Order:
     def amount(self):
         return None
 
-    # in ms
     @property
-    def timestamp(self):
+    def timestamp(self) -> Optional[UnixTimeMs]:
         return None
 
 
@@ -50,10 +50,9 @@ class MexcOrder(Order):
     def amount(self):
         return self.order["info"]["origQty"]
 
-    # in ms
     @property
-    def timestamp(self):
-        return self.order["timestamp"]
+    def timestamp(self) -> UnixTimeMs:
+        return UnixTimeMs(self.order["timestamp"])
 
 
 @enforce_types

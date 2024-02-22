@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
+from freezegun import freeze_time
 
 from pdr_backend.analytics.check_network import (
     _N_FEEDS,
@@ -13,7 +14,6 @@ from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.mathutil import to_wei
 
 PATH = "pdr_backend.analytics.check_network"
-
 MOCK_CUR_UT = 1702826080
 
 
@@ -26,12 +26,8 @@ MOCK_CUR_UT = 1702826080
     f"{PATH}.get_expected_consume",
     side_effect=Mock(return_value=100),
 )
-@patch(
-    f"{PATH}.current_ut_s",
-    side_effect=Mock(return_value=MOCK_CUR_UT),
-)
+@freeze_time("2023-12-17 15:14:40")  # corresponds to MOCK_CUR_UT
 def test_check_dfbuyer(  # pylint: disable=unused-argument
-    mock_current_ut_ms,
     mock_get_expected_consume_,
     mock_get_consume_so_far_per_contract_,
     caplog,

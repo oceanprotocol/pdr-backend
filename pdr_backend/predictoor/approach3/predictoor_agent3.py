@@ -6,6 +6,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.predictoor.base_predictoor_agent import BasePredictoorAgent
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -22,14 +23,14 @@ class PredictoorAgent3(BasePredictoorAgent):
 
     @enforce_types
     def get_prediction(
-        self, timestamp: int  # pylint: disable=unused-argument
+        self, timestamp: UnixTimeS  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         """
         @description
           Predict for a given timestamp.
 
         @arguments
-          timestamp -- int -- when to make prediction for (unix time)
+          timestamp -- UnixTimeS -- when to make prediction for (unix time)
 
         @return
           predval -- bool -- if True, it's predicting 'up'. If False, 'down'

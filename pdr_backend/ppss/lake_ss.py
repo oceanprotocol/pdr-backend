@@ -6,7 +6,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import MultiFeedMixin
-from pdr_backend.util.timeutil import pretty_timestr, timestr_to_ut
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake_ss")
 
@@ -30,8 +30,8 @@ class LakeSS(MultiFeedMixin):
         # test inputs
         assert (
             0
-            <= timestr_to_ut(self.st_timestr)
-            <= timestr_to_ut(self.fin_timestr)
+            <= UnixTimeMs.from_timestr(self.st_timestr)
+            <= UnixTimeMs.from_timestr(self.fin_timestr)
             <= np.inf
         )
 
@@ -58,22 +58,22 @@ class LakeSS(MultiFeedMixin):
     # --------------------------------
     # derivative properties
     @property
-    def st_timestamp(self) -> int:
+    def st_timestamp(self) -> UnixTimeMs:
         """
         Return start timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.st_timestr.
         """
-        return timestr_to_ut(self.st_timestr)
+        return UnixTimeMs.from_timestr(self.st_timestr)
 
     @property
-    def fin_timestamp(self) -> int:
+    def fin_timestamp(self) -> UnixTimeMs:
         """
         Return fin timestamp, in ut: unix time, in ms, in UTC time zone
         Calculated from self.fin_timestr.
 
         ** This value will change dynamically if fin_timestr is "now".
         """
-        return timestr_to_ut(self.fin_timestr)
+        return UnixTimeMs.from_timestr(self.fin_timestr)
 
     @enforce_types
     def __str__(self) -> str:
@@ -81,9 +81,9 @@ class LakeSS(MultiFeedMixin):
         s += f"feeds_strs={self.feeds_strs}"
         s += f" -> n_inputfeeds={self.n_feeds}\n"
         s += f"st_timestr={self.st_timestr}"
-        s += f" -> st_timestamp={pretty_timestr(self.st_timestamp)}\n"
+        s += f" -> st_timestamp={self.st_timestamp.pretty_timestr()}\n"
         s += f"fin_timestr={self.fin_timestr}"
-        s += f" -> fin_timestamp={pretty_timestr(self.fin_timestamp)}\n"
+        s += f" -> fin_timestamp={self.fin_timestamp.pretty_timestr()}\n"
         s += f" -> n_exchs={self.n_exchs}\n"
         s += f"parquet_dir={self.parquet_dir}\n"
         s += "-" * 10 + "\n"

@@ -1,15 +1,19 @@
 import logging
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
 
 def get_consume_so_far(
-    predictoor_contracts, week_start_timestamp, consumer_address, subgraph_url
+    predictoor_contracts,
+    week_start_timestamp: UnixTimeS,
+    consumer_address,
+    subgraph_url,
 ):
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
-    consume_so_far = 0
+    consume_so_far = float(0)
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
