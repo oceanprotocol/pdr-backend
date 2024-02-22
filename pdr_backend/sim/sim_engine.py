@@ -278,10 +278,10 @@ class PlotState:
         self.fig, self.axs = plt.subplots(
             2, 2, gridspec_kw={'width_ratios': [3,1]}
         )
-        self.bars = None
+        self.jitter = []
         plt.ion()
         plt.show()
-
+        
 @enforce_types
 def _plot(st: SimEngineState):
     ps = st.plot_state
@@ -336,7 +336,7 @@ def _plot(st: SimEngineState):
     ax2.plot(x, y2, color="blue")
     ax2.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
     ax2.set_title(
-        f"Trader Profit vs time. Current: ${y2[-1]:.2f}",
+        f"Trader profit vs time. Current: ${y2[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
@@ -345,21 +345,22 @@ def _plot(st: SimEngineState):
     ax2.yaxis.tick_right()
     ax2.margins(0.005, 0.05)
     
-    # plot 3: histogram of profits
-    if ps.bars is not None:
-        for b in ps.bars:
-            b.remove()
-    n_bins = max(2, min(50, N // 5))
-    _, _, ps.bars = ax3.hist(
-        st.trader_profits_USD, bins=20, linewidth=0, color="blue"
-    )
+    # plot 3: 1d scatter of profits
+    _del_lines(ax3)
+    while len(ps.jitter) < N:
+        ps.jitter.append(np.random.uniform())
+    ax3.scatter(ps.jitter, st.trader_profits_USD, color="blue", s=3)
+    avg = np.average(st.trader_profits_USD)
     ax3.set_title(
-        'Histogram of trader profit',
+        f"Trader profit distribution. avg=${avg:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
+    ax3.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax3.yaxis.tick_right()
-    ax3.margins(0.01, 0.01)
+    plt.tick_params(bottom = False, labelbottom=False)
+    ax3.margins(0.8, 0.05)
+    
     
     # final pieces
     HEIGHT = 7.5  # magic number
