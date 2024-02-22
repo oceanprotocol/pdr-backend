@@ -15,7 +15,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.mathutil import nmse
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 9
@@ -72,7 +72,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{current_ut_ms()}.txt"
+        filebase = f"out_{UnixTimeMs.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
         fh = logging.FileHandler(self.logfile)
@@ -121,8 +121,8 @@ class SimEngine:
         self.st.nmses_train.append(nmse_train)
 
         # current time
-        recent_ut = int(mergedohlcv_df["timestamp"].to_list()[-1])
-        ut = recent_ut - testshift * pdr_ss.timeframe_ms
+        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
+        ut = UnixTimeMs(recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms)
 
         # current price
         curprice = y_train[-1]
@@ -173,7 +173,7 @@ class SimEngine:
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
         
         s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
-        s += f"ut{pretty_timestr(ut)[9:][:-7]}"
+        s += f"{ut.pretty_timestr()[9:][:-9]}"
         
         s += f". pred={pred_dir},true={true_dir},correct={correct_s}"
 
@@ -359,7 +359,7 @@ def _plot(st: SimEngineState):
         ps.jitter.append(np.random.uniform())
     next_jitter = _slice(ps.jitter, N_done, N)
     next_profits = _slice(st.trader_profits_USD, N_done, N)
-    ax3.scatter(next_jitter, next_profits, color="blue", s=3)
+    ax3.scatter(next_jitter, next_profits, color="blue", s=1)
     avg = np.average(st.trader_profits_USD)
     _set_title(ax3, f"Trader profit distribution. avg=${avg:.2f}")
     if not ps.plotted_before:

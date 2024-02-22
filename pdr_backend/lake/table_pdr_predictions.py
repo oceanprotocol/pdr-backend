@@ -1,6 +1,7 @@
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
+
 predictions_table_name = "pdr_predictions"
 
 # RAW PREDICTOOR PREDICTIONS SCHEMA

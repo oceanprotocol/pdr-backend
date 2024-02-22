@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 from typing import List, Optional, Tuple, Union
 
@@ -9,6 +8,8 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
+from pdr_backend.util.time_types import UnixTimeMs
+
 
 logger = logging.getLogger("trader_approach2")
 
@@ -55,8 +56,8 @@ class TraderAgent2(BaseTraderAgent):
         @description
             Check if order has lapsed in time relative to trader_ss.timeframe
         """
-        now_ts = int(datetime.now().timestamp() * 1000)
-        tx_ts = int(order.timestamp)
+        now_ts = UnixTimeMs.now()
+        tx_ts = order.timestamp if order.timestamp else 0
         order_lapsed = now_ts - tx_ts > self.ppss.trader_ss.timeframe_ms
 
         return order_lapsed
