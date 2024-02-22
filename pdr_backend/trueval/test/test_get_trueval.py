@@ -16,7 +16,7 @@ def test_get_trueval_success(monkeypatch):
             return [[0, 0, 0, 0, 100], [300000, 0, 0, 0, 200]]
         raise ValueError(f"Invalid timestamp: since={since}")
 
-    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv", mock_fetch_ohlcv)
+    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv_ccxt", mock_fetch_ohlcv)
 
     feed = mock_feed("5m", "kraken", "ETH/USDT")
 
@@ -31,7 +31,7 @@ def test_get_trueval_fail(monkeypatch):
     def mock_fetch_ohlcv_fail(*args, **kwargs):  # pylint: disable=unused-argument
         return [[0, 0, 0, 0, 0], [300000, 0, 0, 0, 200]]
 
-    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv", mock_fetch_ohlcv_fail)
+    monkeypatch.setattr(f"{_PATH}.safe_fetch_ohlcv_ccxt", mock_fetch_ohlcv_fail)
 
     feed = mock_feed("5m", "kraken", "eth-usdt")
 
