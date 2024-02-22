@@ -62,14 +62,13 @@ def test_create_xy__0():
 
     target_X = np.array(
         [
-            [0.1, 0.1, 3.1, 4.2],  # oldest
             [0.1, 0.1, 4.2, 5.3],
             [0.1, 0.1, 5.3, 6.4],
             [0.1, 0.1, 6.4, 7.5],
             [0.1, 0.1, 7.5, 8.6],  # newest
         ]
     )
-    target_y = np.array([1, 1, 1, 1, 1])  # oldest to newest
+    target_y = np.array([1, 1, 1, 1])  # oldest to newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
@@ -100,7 +99,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     # =========== have testshift = 0
     target_X = np.array(
         [
-            [11.0, 10.0, 9.0],  # oldest
             [10.0, 9.0, 8.0],
             [9.0, 8.0, 7.0],
             [8.0, 7.0, 6.0],
@@ -113,7 +111,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
     target_y = np.array(
         [
-            0,  # oldest
             0,
             0,
             0,
@@ -145,7 +142,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     # =========== now, have testshift = 1
     target_X = np.array(
         [
-            [12.0, 11.0, 10.0],  # oldest
             [11.0, 10.0, 9.0],
             [10.0, 9.0, 8.0],
             [9.0, 8.0, 7.0],
@@ -157,7 +153,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )  # newest
     target_y = np.array(
         [
-            0,  # oldest
             0,
             0,
             0,
@@ -189,7 +184,6 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     # =========== now have a different max_n_train
     target_X = np.array(
         [
-            [9.0, 8.0, 7.0],  # oldest
             [8.0, 7.0, 6.0],
             [7.0, 6.0, 5.0],
             [6.0, 5.0, 4.0],
@@ -197,7 +191,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
             [4.0, 3.0, 2.0],
         ]
     )  # newest
-    target_y = np.array([0, 0, 0, 0, 0, 0])  # oldest  # newest
+    target_y = np.array([0, 0, 0, 0, 0])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
