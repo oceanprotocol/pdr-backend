@@ -323,10 +323,12 @@ def _plot(st: SimEngineState):
     ax1b.plot(x, y1b, color=color)
     ax1b.tick_params(axis='y', labelcolor=color)
 
+    ax1a.plot([0, N], [0.0, 0.0], color="0.3", linestyle="dashed", linewidth=1)
+
     ax1a.set_title(
         "Profit vs time. Current:"
-        f"predictoor={y1a[-1]:.2f} OCEAN" 
-        f"trader=${y1b[-1]:.2f}",
+        f" predictoor={y1a[-1]:.2f} OCEAN" 
+        f", trader=${y1b[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
