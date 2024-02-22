@@ -1,25 +1,23 @@
-# import pytest
+import pytest
 # from enforce_typing import enforce_types
 
-# from pdr_backend.cli.arg_feed import ArgFeed
-# from pdr_backend.lake.fetch_ohlcv import fetch_dydx_data, transform_dydx_data
-# # from pdr_backend.util.time_types import ***
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_dydx, fetch_dydx_data, transform_dydx_data_to_df, transform_dydx_data_to_tuples
+from pdr_backend.util.time_types import UnixTimeMs
+
 from pdr_backend.util.constants import (
     CAND_USDCOINS,
     CAND_TIMEFRAMES,
 )
 
-# # TODO ALL THIS NEEDS TO BE REDONE TO WORK WITH THE LATEST time_types util file
+def test_fetch_dydx_data():
 
-# # def test_fetch_dydx_data():
+    start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
+    symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 100
 
-#     # start_date = timestr_to_ut("2024-02-21_00:00")
-#     # end_date = timestr_to_ut("2024-02-21_00:15")
-#     # symbol, resolution, st_ut, fin_ut = "BTC-USD", "5MINS", start_date, end_date
-
-#     # # happy path
-#     # df = fetch_dydx_data(symbol, resolution, st_ut, fin_ut)
-#     # assert not df.is_empty()
+    # happy path
+    result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+    assert result is not None
 
 #     # # Catches TypeErrors for incorrect dates
 #     # with pytest.raises(TypeError):

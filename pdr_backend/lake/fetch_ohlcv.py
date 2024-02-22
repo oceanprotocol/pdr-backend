@@ -6,7 +6,8 @@ import numpy as np
 
 import requests
 import polars as pl
-from datetime import timedelta
+import pytz
+from datetime import datetime, timedelta
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
@@ -62,13 +63,12 @@ def safe_fetch_ohlcv_ccxt(
 
 @enforce_types
 def safe_fetch_ohlcv_dydx(
-    exch,
     symbol: str,
     resolution: str,
     st_ut: UnixTimeMs,
     fin_ut: UnixTimeMs,
     limit: int,
-) -> pl.DataFrame:
+) -> Union[List[tuple], None]:
     """
     @description
       calls fetch_dydx_data() but if there's an error it
@@ -157,7 +157,7 @@ def _filter_within_timerange(
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]
 
-def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int = None):
+def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int = None) -> Union[List[tuple], None]:
     """
     @description
       makes a loop of get requests for dydx v4 exchange candle data,
@@ -176,7 +176,8 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
       and sorted by timestamp
     """
     # Initialize the empty df
-    all_data = pl.DataFrame([], schema=TOHLCV_SCHEMA_PL)
+    #all_data = pl.DataFrame([], schema=TOHLCV_SCHEMA_PL)
+    all_data = []
 
     # Int minutes will be used for updating the loop end_time
     resolution_to_minutes = {
@@ -189,12 +190,8 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
     }
     minutes = resolution_to_minutes[resolution]
 
-    # Convert toISO time format to UTC
     start_time = UnixTimeMs.to_dt(st_ut)
-    if fin_ut is None:
-        end_time = UnixTimeMs.now()
-    else:
-        end_time = UnixTimeMs.to_dt(fin_ut)
+    end_time = UnixTimeMs.to_dt(fin_ut)
 
     count = 0
 
@@ -203,7 +200,7 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
         print(f"Fetching data up to {end_time}")  # Logging
 
         # Initialize parameters for API request
-        end_time = UnixTimeMs.to_timestr(end_time)
+        end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S')
         params = {'resolution': resolution, 'limit': limit, 'toISO': end_time}
 
         # Fetch the data
@@ -224,8 +221,7 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
             all_data.extend(transformed_data)
 
             # Update end_time for the next iteration
-            #end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=pytz.UTC)
-            end_time = UnixTimeMs.to_dt(end_time)
+            end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=pytz.UTC)
             end_time = end_time - timedelta(minutes=minutes)
 
             print("Loop iteration #", count)
@@ -235,10 +231,11 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
             print("No more data returned from dYdX.")
             break  # Exit loop if no data is returned
 
-    df = all_data.sort("timestamp")
-    print("The final dydx df looks like ", df)
+    #df = all_data.sort("timestamp")
+    #print("The final dydx df looks like ", df)
+    print("unsorted all_data from dydx is ", all_data)
 
-    return df
+    return all_data
 
 def transform_dydx_data_to_df(candles) -> pl.DataFrame:
     """
@@ -276,7 +273,8 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
     transformed_data = []
 
     for candle in candles:
-        timestamp = UnixTimeMs.from_timestr(candle['startedAt'])
+        timestamp_str = candle['startedAt']  # Of the format "2023-01-01T12:00:00.000Z"
+        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)      
         row = (
             timestamp,
             float(candle['open']),
