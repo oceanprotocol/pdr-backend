@@ -84,7 +84,7 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.nmses_train, self.ys_test, self.ys_testhat, self.corrects = [], [], [], []
-        self.trader_profit_usds, self.tot_trader_profit_usds = [], []
+        self.trader_profit_usds = [] # profit per epoch
 
     @enforce_types
     def run(self):
@@ -150,7 +150,6 @@ class SimEngine:
 
         trader_profit_usd = usdcoin_holdings_after - usdcoin_holdings_before
         self.trader_profit_usds.append(trader_profit_usd)
-        self.tot_trader_profit_usds.append(sum(self.trader_profit_usds))
         
         # err = abs(predprice - trueprice)
         pred_dir = "UP" if predprice > curprice else "DN"
@@ -169,7 +168,7 @@ class SimEngine:
         s += f". Total correct {n_correct:4d}/{n_trials:4d} = {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
         s += f". trader_profit_epoch ${trader_profit_usd:7.2f}"
-        s += f", trader_profit_total ${self.tot_trader_profit_usds[-1]:9.2f}"
+        s += f", trader_profit_total ${sum(self.trader_profit_usds):9.2f}"
         logger.info(s)
 
     def _do_buy(self, predprice: float, curprice: float) -> bool:
@@ -260,7 +259,7 @@ class SimEngine:
 
         fig, ax0, ax1 = self.plot_state.fig, self.plot_state.ax0, self.plot_state.ax1
 
-        y0 = self.tot_trader_profit_usds
+        y0 = np.cumsum(self.trader_profit_usds)
         N = len(y0)
         x = list(range(0, N))
         ax0.plot(x, y0, "g-")
