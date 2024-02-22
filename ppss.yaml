@@ -10,7 +10,7 @@ lake_ss:
 
 predictoor_ss:
   predict_feed: binance BTC/USDT c 5m
-  stake_amount: 2000 # How much your bot stakes. In OCEAN per epoch, per feed
+  stake_amount: 1 # How much your bot stakes. In OCEAN per epoch, per feed
   
   sim_only:
     others_stake: 2313 # How much all others' bots stake. In OCEAN per epoch, per feed. Calcs: stake volume = 10e6 $/day/20_feeds = 34700 $/epoch/20_feeds (bc 288 5m epochs/day) = 1735 $/epoch/feed = 2313 OCEAN/epoch/feed (at 1 OCEAN=$0.75)
@@ -25,14 +25,14 @@ predictoor_ss:
       - binance BTC/USDT c 5m
 #      - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT ohlcv 5m
 #    - kraken BTC/USDT 5m
-    max_n_train: 500 # no. epochs to train model on
-    autoregressive_n : 3 # no. epochs that model looks back, to predict next
+    max_n_train: 5000 # no. epochs to train model on
+    autoregressive_n : 10 # no. epochs that model looks back, to predict next
     approach: LIN
 
 trader_ss:
   feed: binance BTC/USDT c 5m
   sim_only:
-    buy_amt: 10000 USD # buy this amount in each epoch
+    buy_amt: 10 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     init_holdings:
       - 100000 USDT
@@ -50,7 +50,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
-  test_n : 1000 # number of epochs to simulate
+  test_n : 200 # number of epochs to simulate
   exchange_only:
     timeout: 30000
     options:
