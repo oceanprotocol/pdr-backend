@@ -100,5 +100,14 @@ def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
             "True Value",
             "Predicted Value",
         ],
-        ["ID", "timestamp", "slot", "stake", "user", "payout", "truevalue", "predvalue"],
+        [
+            "ID",
+            "timestamp",
+            "slot",
+            "stake",
+            "user",
+            "payout",
+            "truevalue",
+            "predvalue",
+        ],
     )
