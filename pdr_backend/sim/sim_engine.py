@@ -278,7 +278,11 @@ class PlotState:
         self.fig, self.axs = plt.subplots(
             2, 2, gridspec_kw={'width_ratios': [3,1]}
         )
+        self.x = []
+        self.y0 = []
+        self.y1_est, self.y1_l, self.y1_u = [], [], []
         self.jitter = []
+        self.plotted_before = False
         plt.ion()
         plt.show()
         
@@ -288,82 +292,92 @@ def _plot(st: SimEngineState):
     fig, ((ax0, ax1), (ax2, ax3)) = ps.fig, ps.axs
 
     N = len(st.predictoor_profits_OCEAN)
-    x = list(range(0, N))
+    N_done = len(ps.x)
+
+    # set x
+    ps.x = list(range(0, N))
+    next_x = _slice(ps.x, N_done, N)
+    next_hx = [next_x[0], next_x[-1]] # horizontal x
 
     # plot 0: predictoor profit vs time
-    y0 = np.cumsum(st.predictoor_profits_OCEAN)
-    _del_lines(ax0)
-    ax0.plot(x, y0, color="green")
-    ax0.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
+    ps.y0 = np.cumsum(st.predictoor_profits_OCEAN)
+    next_y0 = _slice(ps.y0, N_done, N)
+    
+    ax0.plot(next_x, next_y0, color="green")
+    ax0.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
     ax0.set_title(
-        f"Predictoor profit vs time. Current: {y0[-1]:.2f} OCEAN",
+        f"Predictoor profit vs time. Current: {ps.y0[-1]:.2f} OCEAN",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
-    ax0.set_xlabel("time", fontsize=FONTSIZE)
-    _label_on_right(ax0)
-    ax0.margins(0.005, 0.05)
+    if not ps.plotted_before:
+        ax0.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
+        ax0.set_xlabel("time", fontsize=FONTSIZE)
+        _label_on_right(ax0)
+        ax0.margins(0.005, 0.05)
 
     # plot 1: % correct vs time
-    y1_est, y1_l, y1_u = [], [], []  # est, 95% confidence intervals
-    for i_ in range(N):
+    for i_ in range(N_done, N):
         n_correct = sum(st.corrects[: i_ + 1])
         n_trials = len(st.corrects[: i_ + 1])
         l, u = proportion_confint(count=n_correct, nobs=n_trials)
-        y1_est.append(n_correct / n_trials * 100)
-        y1_l.append(l * 100)
-        y1_u.append(u * 100)
+        ps.y1_est.append(n_correct / n_trials * 100)
+        ps.y1_l.append(l * 100)
+        ps.y1_u.append(u * 100)
+    next_y1_est = _slice(ps.y1_est, N_done, N)
+    next_y1_l = _slice(ps.y1_l, N_done, N)
+    next_y1_u = _slice(ps.y1_u, N_done, N)
 
-    _del_lines(ax1)
-    ax1.cla()
-    ax1.plot(x, y1_est, "green")
-    ax1.fill_between(x, y1_l, y1_u, color="green", alpha=0.15)
-    ax1.plot([0, N], [50, 50], color="0.2", linestyle="dashed", linewidth=1)
+    ax1.plot(next_x, next_y1_est, "green")
+    ax1.fill_between(next_x, next_y1_l, next_y1_u, color="green", alpha=0.15)
+    ax1.plot(next_hx, [50, 50], color="0.2", linestyle="dashed", linewidth=1)
     ax1.set_ylim(bottom=40, top=60)
-    now_s = f"{y1_est[-1]:.2f}% [{y1_l[-1]:.2f}%, {y1_u[-1]:.2f}%]"
+    now_s = f"{ps.y1_est[-1]:.2f}% [{ps.y1_l[-1]:.2f}%, {ps.y1_u[-1]:.2f}%]"
     ax1.set_title(
         f"% correct vs time. Current: {now_s}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax1.set_xlabel("time", fontsize=FONTSIZE)
-    ax1.set_ylabel("% correct", fontsize=FONTSIZE)
-    _label_on_right(ax1)
-    ax1.margins(0.01, 0.01)
+    if not ps.plotted_before:
+        ax1.set_xlabel("time", fontsize=FONTSIZE)
+        ax1.set_ylabel("% correct", fontsize=FONTSIZE)
+        _label_on_right(ax1)
+        ax1.margins(0.01, 0.01)
     
     # plot 2: trader profit vs time
-    y2 = np.cumsum(st.trader_profits_USD)
-    _del_lines(ax2)
-    ax2.plot(x, y2, color="blue")
-    ax2.plot([0, N], [0.0, 0.0], color="0.2", linestyle="dashed", linewidth=1)
+    ps.y2 = np.cumsum(st.trader_profits_USD)
+    next_y2 = _slice(ps.y2, N_done, N)
+    ax2.plot(next_x, next_y2, color="blue")
+    ax2.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
     ax2.set_title(
-        f"Trader profit vs time. Current: ${y2[-1]:.2f}",
+        f"Trader profit vs time. Current: ${ps.y2[-1]:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax2.set_xlabel("time", fontsize=FONTSIZE)
-    ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-    _label_on_right(ax2)
-    ax2.margins(0.005, 0.05)
+    if not ps.plotted_before:
+        ax2.set_xlabel("time", fontsize=FONTSIZE)
+        ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
+        _label_on_right(ax2)
+        ax2.margins(0.005, 0.05)
     
     # plot 3: 1d scatter of profits
-    _del_lines(ax3)
     while len(ps.jitter) < N:
         ps.jitter.append(np.random.uniform())
-    ax3.scatter(ps.jitter, st.trader_profits_USD, color="blue", s=3)
-    ax3.plot([0-1, 1+1], [0, 0], color="0.2", linestyle="dashed", linewidth=1)
+    next_jitter = _slice(ps.jitter, N_done, N)
+    next_profits = _slice(st.trader_profits_USD, N_done, N)
+    ax3.scatter(next_jitter, next_profits, color="blue", s=3)
     avg = np.average(st.trader_profits_USD)
     ax3.set_title(
         f"Trader profit distribution. avg=${avg:.2f}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
-    ax3.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-    _label_on_right(ax3)
-    plt.tick_params(bottom = False, labelbottom=False)
-    ax3.margins(0.05, 0.05)
-    
+    if not ps.plotted_before:
+        ax3.plot([0-1, 1+1], [0, 0], color="0.2", linestyle="dashed", linewidth=1)
+        ax3.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
+        _label_on_right(ax3)
+        plt.tick_params(bottom = False, labelbottom=False)
+        ax3.margins(0.05, 0.05)
     
     # final pieces
     HEIGHT = 7.5  # magic number
@@ -371,6 +385,11 @@ def _plot(st: SimEngineState):
     fig.set_size_inches(WIDTH, HEIGHT)
     fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
     plt.pause(0.001)
+    ps.plotted_before = True
+
+    
+def _slice(a:list, N_done:int, N:int) -> list:
+    return [a[i] for i in range(max(0, N_done-1), N)]                   
 
 def _label_on_right(ax):    
     ax.yaxis.tick_right()
