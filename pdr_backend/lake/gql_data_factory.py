@@ -44,8 +44,8 @@ logger = logging.getLogger("gql_data_factory")
 class GQLDataFactory:
     """
     Roles:
-    - From each GQL API, fill >=1 gql_dfs -> parquet files data lake
-    - From gql_dfs, calculate other dfs and stats
+    - From each GQL API, fill >=1 gql_tables -> parquet files data lake
+    - From gql_tables, calculate other dfs and stats
     - All timestamps, after fetching, are transformed into milliseconds wherever appropriate
 
     Finally:

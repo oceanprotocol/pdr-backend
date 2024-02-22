@@ -109,6 +109,6 @@ def test_get_gql_tables(mock_update):
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    gql_dfs = gql_data_factory.get_gql_tables()
+    gql_tables = gql_data_factory.get_gql_tables()
 
-    assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())
+    assert len(gql_tables.items()) == len(gql_data_factory.record_config["tables"].items())

@@ -77,14 +77,14 @@ def test_setup_etl(
     assert ppss.lake_ss.st_timestamp == timestr_to_ut(st_timestr)
     assert ppss.lake_ss.fin_timestamp == timestr_to_ut(fin_timestr)
 
-    # Work 1: Initialize ETL - Assert 0 gql_dfs
+    # Work 1: Initialize ETL - Assert 0 etl_tables
     etl = ETL(ppss, gql_data_factory)
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
     assert len(etl.tables) == 0
 
-    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
+    # Work 2: Complete ETL sync step - Assert 3 etl_tables
     etl.do_sync_step()
 
     # Assert original gql has 6 predictions, but we only got 5 due to date
@@ -139,7 +139,7 @@ def test_etl_do_bronze_step(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
 
-    # Work 2: Complete ETL sync step - Assert 4 gql_dfs
+    # Work 2: Complete ETL sync step - Assert 4 gql_tables
     gql_tables = {
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
