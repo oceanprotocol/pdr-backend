@@ -327,7 +327,7 @@ def _plot(st: SimEngineState):
     ax1.set_xlabel("time", fontsize=FONTSIZE)
     ax1.set_ylabel("% correct", fontsize=FONTSIZE)
     ax1.yaxis.tick_right()
-    ax0.margins(0.005, 0.005)
+    ax1.margins(0.005, 0.005)
     
     # plot 2: trader profit vs time
     y2 = np.cumsum(st.trader_profits_USD)
@@ -342,7 +342,7 @@ def _plot(st: SimEngineState):
     ax2.set_xlabel("time", fontsize=FONTSIZE)
     ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
     ax2.yaxis.tick_right()
-    ax0.margins(0.005, 0.02)
+    ax2.margins(0.005, 0.02)
 
     
     # plot 3: nothing right now
