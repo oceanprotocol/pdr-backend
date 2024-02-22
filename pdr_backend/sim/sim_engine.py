@@ -156,6 +156,7 @@ class SimEngine:
         correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
         self.corrects.append(correct)
+        
         n_correct, n_trials = sum(self.corrects), len(self.corrects)
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
@@ -163,7 +164,8 @@ class SimEngine:
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}: "
         s += f"ut{pretty_timestr(ut)[9:][:-7]}"
         s += f". Dir'n pred|true|correct? = {pred_dir}|{true_dir}|{correct_s}"
-        s += f". Total correct {n_correct:4d}/{n_trials:4d} = {acc_est*100:.2f}%"
+        s += f". Total correct {n_correct:4d}/{n_trials:4d} "
+        s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
         s += f". trader_profit_epoch ${trader_profit_usd:7.2f}"
         s += f", trader_profit_total ${sum(self.trader_profit_usds):9.2f}"
