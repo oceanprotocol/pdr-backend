@@ -29,6 +29,10 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     @property
     def stake_amount(self) -> int:
         return self.d["bot_only"]["stake_amount"]
+    
+    @property
+    def is_two_sided(self) -> bool:
+        return self.d["is_two_sided"]
 
     # feed defined in base
 
