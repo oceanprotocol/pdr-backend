@@ -16,7 +16,7 @@ logger = logging.getLogger("fetch_ohlcv")
 
 
 @enforce_types
-def safe_fetch_ohlcv(
+def safe_fetch_ohlcv_ccxt(
     exch,
     symbol: str,
     timeframe: str,

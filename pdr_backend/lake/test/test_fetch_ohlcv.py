@@ -3,7 +3,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv, clean_raw_ohlcv
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_ccxt, clean_raw_ohlcv
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -59,30 +59,30 @@ def test_safe_fetch_ohlcv(exch):
     symbol, timeframe, limit = "ETH/USDT", "5m", 1000
 
     # happy path
-    raw_tohlc_data = safe_fetch_ohlcv(exch, symbol, timeframe, since, limit)
+    raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, limit)
     assert_raw_tohlc_data_ok(raw_tohlc_data)
 
     # catch bad (but almost good) symbol
     with pytest.raises(ValueError):
-        raw_tohlc_data = safe_fetch_ohlcv(exch, "ETH-USDT", timeframe, since, limit)
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, "ETH-USDT", timeframe, since, limit)
 
     # it will catch type errors, except for exch. Test an example of this.
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv(exch, 11, timeframe, since, limit)
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, 11, timeframe, since, limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv(exch, symbol, 11, since, limit)
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, 11, since, limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv(exch, symbol, timeframe, "f", limit)
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, "f", limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv(exch, symbol, timeframe, since, "f")
+        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, "f")
 
     # should not crash, just give warning
-    safe_fetch_ohlcv("bad exch", symbol, timeframe, since, limit)
-    safe_fetch_ohlcv(exch, "bad symbol", timeframe, since, limit)
-    safe_fetch_ohlcv(exch, symbol, "bad timeframe", since, limit)
+    safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
+    safe_fetch_ohlcv_ccxt(exch, "bad symbol", timeframe, since, limit)
+    safe_fetch_ohlcv_ccxt(exch, symbol, "bad timeframe", since, limit)
 
     # ensure a None is returned when warning
-    v = safe_fetch_ohlcv("bad exch", symbol, timeframe, since, limit)
+    v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
     assert v is None
 
 
