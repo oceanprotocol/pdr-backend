@@ -69,7 +69,7 @@ def _predictoor_ss(feed, feeds):
             "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
             "aimodel_ss": {
                 "input_feeds": feeds,
-                "approach": "LIN",
+                "approach": "LinearLogistic",
                 "max_n_train": 7,
                 "autoregressive_n": 3,
             },

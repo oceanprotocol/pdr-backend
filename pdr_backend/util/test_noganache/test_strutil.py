@@ -33,10 +33,10 @@ def testStrMixin1():
     s3 = f.longstr()
     assert s3 == s
 
-    f.__class__.__STR_GIVES_NEWLINE__ = True
+    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = True
     s4 = f.longstr()
     assert "\n" in s4
-    f.__class__.__STR_GIVES_NEWLINE__ = False
+    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = False
 
 
 def testStrMixin2():

@@ -2,9 +2,11 @@ import warnings
 from unittest.mock import Mock
 
 import numpy as np
+from numpy.testing import assert_array_equal
 import pytest
 from enforce_typing import enforce_types
 
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
@@ -22,39 +24,34 @@ def test_aimodel_factory_basic():
         )
         factory = AimodelFactory(aimodel_ss)
         assert isinstance(factory.aimodel_ss, AimodelSS)
+        (X_train, ybool_train, X_test, ybool_test) = _data()
 
-        (X_train, y_train, X_test, y_test) = _data()
-
+        # build
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # ignore ConvergenceWarning, more
-            model = factory.build(X_train, y_train)
+            model = factory.build(X_train, ybool_train)
 
-        y_test_hat = model.predict(X_test)
-        assert y_test_hat.shape == y_test.shape
+        # predict
+        ybool_train_hat = model.predict(X_train)
+        ybool_test_hat = model.predict(X_test)
 
-
-@enforce_types
-def test_aimodel_accuracy_from_xy(aimodel_factory):
-    (X_train, y_train, X_test, y_test) = _data()
-
-    aimodel = aimodel_factory.build(X_train, y_train)
-
-    y_train_hat = aimodel.predict(X_train)
-    assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
-
-    y_test_hat = aimodel.predict(X_test)
-    assert sum(abs(y_test - y_test_hat)) < 1e-10
+        # expect zero error, since training data is trivially simple
+        assert_array_equal(ybool_train, ybool_train_hat)
+        assert_array_equal(ybool_test, ybool_test_hat)
 
 
 @enforce_types
 def _data() -> tuple:
     X_train = np.array([[1, 1], [1, 2], [2, 2], [2, 3]])
-    y_train = f(X_train)
+    ycont_train = f(X_train)
+    y_thr = np.average(ycont_train)
+    ybool_train = AimodelDataFactory.ycont_to_ybool(ycont_train, y_thr)
 
     X_test = np.array([[3, 5]])
-    y_test = f(X_test)
+    ycont_test = f(X_test)
+    ybool_test = AimodelDataFactory.ycont_to_ybool(ycont_test, y_thr)
 
-    return (X_train, y_train, X_test, y_test)
+    return (X_train, ybool_train, X_test, ybool_test)
 
 
 @enforce_types
@@ -78,12 +75,16 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
             [0.1, 0.1, 7.5, 8.6],
         ]
     )  # newest
-    y_train = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
+    ycont_train = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
+    
+    y_thr = 7.0
+    ybool_train = AimodelDataFactory.ycont_to_ybool(ycont_train, y_thr)
 
-    aimodel = aimodel_factory.build(X_train, y_train)
+    aimodel = aimodel_factory.build(X_train, ybool_train)
 
-    y_train_hat = aimodel.predict(X_train)
-    assert sum(abs(y_train - y_train_hat)) < 1e-10  # near-perfect since linear
+    ybool_train_hat = aimodel.predict(X_train)
+
+    assert_array_equal(ybool_train, ybool_train_hat) # expect zero error
 
 
 @enforce_types
@@ -92,8 +93,8 @@ def test_aimodel_factory_bad_approach():
     aimodel_ss.approach = "BAD"
     factory = AimodelFactory(aimodel_ss)
 
-    X_train, y_train, _, _ = _data()
+    X_train, ybool_train, _, _ = _data()
 
     # forcefully change the model
     with pytest.raises(ValueError):
-        factory.build(X_train, y_train)
+        factory.build(X_train, ybool_train)

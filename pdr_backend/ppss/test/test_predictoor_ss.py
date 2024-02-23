@@ -19,7 +19,7 @@ def test_predictoor_ss():
         },
         "aimodel_ss": {
             "input_feeds": ["binance BTC/USDT c"],
-            "approach": "LIN",
+            "approach": "LinearLogistic",
             "max_n_train": 7,
             "autoregressive_n": 3,
         },

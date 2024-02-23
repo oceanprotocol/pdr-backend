@@ -45,6 +45,22 @@ class AimodelDataFactory:
     def __init__(self, ss: PredictoorSS):
         self.ss = ss
 
+    @staticmethod
+    def ycont_to_ybool(ycont: np.ndarray, y_thr: float) -> np.ndarray:
+        """
+        @description
+          Convert regression y (ycont) to classifier y (ybool).
+                
+        @arguments
+          ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
+          y_thr -- classify to True if ycont >= this threshold
+                
+        @return
+          ybool -- 1d array of [sample_i]:bool_value -- classifier model outputs
+        """
+        ybool = np.array([ycont_val >= y_thr for ycont_val in ycont])
+        return ybool
+
     def create_xy(
         self,
         mergedohlcv_df: pl.DataFrame,
@@ -52,6 +68,10 @@ class AimodelDataFactory:
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
+        @description
+          Create X, y data for a regression setting
+          For y in a classification setting, call ycont_to_ybool() after.
+        
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
@@ -59,8 +79,8 @@ class AimodelDataFactory:
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
         @return
-          X -- 2d array of [sample_i, var_i]:value -- inputs for model
-          y -- 1d array of [sample_i]:value -- target outputs for model
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
+          ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
@@ -132,7 +152,8 @@ class AimodelDataFactory:
         assert "datetime" not in x_df.columns
 
         # return
-        return X, y, x_df, xrecent
+        ycont = y
+        return X, ycont, x_df, xrecent
 
 
 @enforce_types

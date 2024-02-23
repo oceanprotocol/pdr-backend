@@ -183,7 +183,7 @@ def mock_ppss(
             },
             "aimodel_ss": {
                 "input_feeds": feeds,
-                "approach": "LIN",
+                "approach": "LinearLogistic",
                 "max_n_train": 7,
                 "autoregressive_n": 3,
             },

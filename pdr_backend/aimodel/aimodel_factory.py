@@ -1,7 +1,6 @@
 from enforce_typing import enforce_types
-from sklearn import linear_model, svm
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 
@@ -18,16 +17,9 @@ class AimodelFactory:
 
     def _model(self):
         a = self.aimodel_ss.approach
-        if a == "LIN":
-            return linear_model.LinearRegression()
-        if a == "GPR":
-            kernel = 1.0 * RBF(length_scale=1e1, length_scale_bounds=(1e-2, 1e3))
-            return GaussianProcessRegressor(kernel=kernel, alpha=0.0)
-        if a == "SVR":
-            return svm.SVR()
-        if a == "NuSVR":
-            return svm.NuSVR()
-        if a == "LinearSVR":
-            return svm.LinearSVR()
+        if a == "LinearLogistic":
+            return LogisticRegression()
+        if a == "LinearSVC":
+            return SVC(kernel="linear", C=0.025, random_state=42)
 
         raise ValueError(a)

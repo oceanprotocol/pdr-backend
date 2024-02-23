@@ -29,7 +29,7 @@ def test_sim_engine(tmpdir):
             },
             "aimodel_ss": {
                 "input_feeds": ["binanceus BTC/USDT ETH/USDT oc"],
-                "approach": "LIN",
+                "approach": "LinearLogistic",
                 "max_n_train": 100,
                 "autoregressive_n": 3,
             },
