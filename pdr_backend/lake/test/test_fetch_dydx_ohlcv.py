@@ -17,7 +17,7 @@ def mock_nan_dydx_response():
     return {
         "candles": [
             {
-                "startedAt": "2024-02-20_23:50",
+                "startedAt": "2024-02-21T00:00:00.000Z",
                 "open": "",
                 "high": None,
                 "low": "NaN",
@@ -89,7 +89,7 @@ def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
         result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
 
         # Verify the result is as expected, adjusting the assertion as necessary
-        assert result is not None
+        assert result is not None and len(result) == 1
         assert all(isinstance(entry, tuple) for entry in result)
 
     # TODO test bad token
