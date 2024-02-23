@@ -1,7 +1,7 @@
 import copy
 import logging
 import os
-from typing import List
+from typing import Dict, List, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.mathutil import nmse
+from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -22,15 +22,17 @@ FONTSIZE = 9
 
 
 class SimEngineState:
-    def __init__(self, init_holdings: dict):
+    def __init__(self, init_holdings: Dict[str,Union[int,float]]):
         self.holdings: dict = init_holdings
-        self.nmses_train: List[float] = []
-        self.ys_test: List[float] = []
-        self.ys_testhat: List[float] = []
+        self.init_loop_attributes()
+        
+    def init_loop_attributes(self):
+        self.accs_train: List[float] = []
+        self.ybools_test: List[float] = []
+        self.ybools_testhat: List[float] = []
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[float] = []
         self.predictoor_profits_OCEAN: List[float] = []
-
 
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
@@ -81,14 +83,7 @@ class SimEngine:
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
 
-        self.st.nmses_train, self.st.ys_test, self.st.ys_testhat, self.st.corrects = (
-            [],
-            [],
-            [],
-            [],
-        )
-        self.st.trader_profits_USD = []  # profit per epoch
-        self.st.predictoor_profits_OCEAN = []  # profit per epoch
+        self.st.init_loop_attributes()
 
     @enforce_types
     def run(self):
@@ -104,48 +99,60 @@ class SimEngine:
 
         logger.info("Done all iters.")
 
-        nmse_train = np.average(self.st.nmses_train)
-        nmse_test = nmse(self.st.ys_testhat, self.st.ys_test)
-        logger.info("Final nmse_train=%.5f, nmse_test=%.5f", nmse_train, nmse_test)
+        acc_train = np.average(self.st.accs_train)
+        acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
+        logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
 
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
+        
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(pdr_ss)
-        X, y, _, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
-
+        X, ycont, _, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
+        
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
-        y_train, y_test = y[st:fin], y[fin : fin + 1]
+        ycont_train, ycont_test = ycont[st:fin], ycont[fin : fin + 1]
+
+        curprice: float = ycont_train[-1]
+        trueprice: float = ycont_test[-1]
+        
+        y_thr: float = curprice
+        ybool = model_data_factory.ycont_to_ybool(ycont, y_thr)
+        ybool_train, ybool_test = ybool[st:fin], ybool[fin : fin + 1]
 
         aimodel_factory = AimodelFactory(pdr_ss.aimodel_ss)
-        model = aimodel_factory.build(X_train, y_train)
+        model = aimodel_factory.build(X_train, ybool_train)
 
-        y_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
-
-        nmse_train = nmse(y_train, y_trainhat, min(y), max(y))
-        self.st.nmses_train.append(nmse_train)
+        ybool_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
+        acc_train = classif_acc(ybool_train, ybool_trainhat)
+        self.st.accs_train.append(acc_train)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * self.ppss.predictoor_ss.timeframe_ms)
+        ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
 
-        # current price
-        curprice = y_train[-1]
+        # predict price direction
+        prob_up: float = model.predict_proba(X_test)[0][0] # in [0.0, 1.0]
+        pred_up: bool = model.predict(X_test)[0] # True or False
+        self.st.ybools_testhat.append(pred_up)
 
-        # predict price
-        predprice = model.predict(X_test)[0]
-        self.st.ys_testhat.append(predprice)
-
+        # simulate two-sided staking
+        stake_up = prob_up * pdr_ss.stake_amount
+        stake_down = (1.0 - prob_up) * pdr_ss.stake_amount
+        
         # simulate buy. Buy 'amt_usd' worth of TOK if we think price going up
         usdcoin_holdings_before = self.st.holdings[self.usdcoin]
-        if self._do_buy(predprice, curprice):
-            self._buy(curprice, ppss.trader_ss.buy_amt_usd)
+        if pred_up:
+            conf_up = (prob_up - 0.5) * 2.0 # in range [0.0, 1.0] not [0.5, 1.0]
+            buy_amt = conf_up * ppss.trader_ss.buy_amt_usd # amt depends on conf
+            import pdb; pdb.set_trace()
+            self._buy(curprice, buy_amt)
 
         # observe true price
-        trueprice = y_test[0]
-        self.st.ys_test.append(trueprice)
+        true_up = (trueprice > curprice)
+        self.st.ybools_test.append(true_up)
 
         # simulate sell. Update trader_profits_USD
         tokcoin_amt_sell = self.st.holdings[self.tokcoin]
@@ -153,28 +160,33 @@ class SimEngine:
             self._sell(trueprice, tokcoin_amt_sell)
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
-        trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        self.st.trader_profits_USD.append(trader_profit_USD)
-
-        # err = abs(predprice - trueprice)
-        pred_dir = "UP" if predprice > curprice else "DN"
-        true_dir = "UP" if trueprice > curprice else "DN"
+        # track prediction
+        pred_dir = "UP" if pred_up else "DN"
+        true_dir = "UP" if true_up else "DN"
         correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
         self.st.corrects.append(correct)
-
-        # Update predictoor_profits_OCEAN
-        if correct:
-            others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
-            tot_stake_correct = others_stake_correct + pdr_ss.stake_amount
-            percent_to_me = pdr_ss.stake_amount / tot_stake_correct
-            predictoor_profit_OCEAN = percent_to_me * pdr_ss.revenue
-        else:
-            percent_to_me = 0
-            predictoor_profit_OCEAN = -pdr_ss.stake_amount
+        
+        # track predictoor profit
+        others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
+        if true_up:
+            tot_stake_correct = others_stake_correct + stake_up
+            percent_to_me = stake_up / tot_stake_correct
+            stake_up_profit = percent_to_me * pdr_ss.revenue
+            stake_down_profit = -stake_down
+        elif true_down:
+            tot_stake_correct = others_stake_correct + stake_down
+            percent_to_me = stake_down / tot_stake_correct
+            stake_up_profit = -stake_up
+            stake_down_profit = percent_to_me * pdr_ss.revenue
+        predictoor_profit_OCEAN = stake_up_profit + stake_down_profit
         self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
 
-        # Log
+        # track trading profit
+        trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
+        self.st.trader_profits_USD.append(trader_profit_USD)
+
+        # log
         n_correct, n_trials = sum(self.st.corrects), len(self.st.corrects)
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
@@ -182,30 +194,22 @@ class SimEngine:
         s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
         s += f"ut={ut.pretty_timestr()[9:][:-10]}"
 
-        s += f". pred={pred_dir}, true={true_dir}, correct={correct_s}"
-        s += f", %_rev_to_pdr={percent_to_me*100.0:7.4f}%"
-        s += f" -> {predictoor_profit_OCEAN:8.5f} OCEAN profit"
+        s += f" prob_up={prob_up:.2f}"
+        s += " predictoor profit = "
+        s += f"{stake_up_profit:8.5f} up"
+        s += f" + {stake_down_profit:8.5f} down"
+        s += f" = {predictoor_profit_OCEAN:8.5f} OCEAN"
         s += f" (cumulative {sum(self.st.predictoor_profits_OCEAN):7.2f} OCEAN)"
 
         s += f". Correct: {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
 
-        s += f". trading made ${trader_profit_USD:9.4f}"
+        s += f". trader profit = ${trader_profit_USD:9.4f}"
         s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
         logger.info(s)
 
-    def _do_buy(self, predprice: float, curprice: float) -> bool:
-        """
-        @arguments
-          predprice -- predicted price (5 min from now)
-          curprice -- current price (now)
-
-        @return
-          bool -- buy y/n?
-        """
-        return predprice > curprice
-
+    @enforce_types
     def _buy(self, price: float, usdcoin_amt_spend: float):
         """
         @description
@@ -238,6 +242,7 @@ class SimEngine:
             self.usdcoin,
         )
 
+    @enforce_types
     def _sell(self, price: float, tokcoin_amt_sell: float):
         """
         @description
@@ -269,6 +274,7 @@ class SimEngine:
             self.usdcoin,
         )
 
+    @enforce_types
     def _plot(self, i: int, N: int):
         if not self.ppss.sim_ss.do_plot:
             return
