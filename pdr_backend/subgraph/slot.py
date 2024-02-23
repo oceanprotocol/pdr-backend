@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from enforce_typing import enforce_types
 
@@ -11,7 +11,7 @@ class Slot:
         ID: str,
         timestamp: int,
         slot: int,
-        trueval: bool,
+        trueval: Union[bool, None],
         roundSumStakesUp: float,
         roundSumStakes: float,
     ) -> None:

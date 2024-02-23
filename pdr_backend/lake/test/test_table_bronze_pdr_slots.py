@@ -70,7 +70,7 @@ def test_table_bronze_pdr_slots(
     # In our mock, all predictions have None trueval, predictions, etc...
     # This shows that all of this data will come from other tables
     gql_tables = _process_slots([], gql_tables, ppss)
-    assert len(gql_tables["bronze_pdr_slots"].df) == 6
+    assert len(gql_tables["bronze_pdr_slots"].df) == 8
     assert gql_tables["bronze_pdr_slots"].df["slot"] is not None
     assert gql_tables["bronze_pdr_slots"].df["timestamp"] is not None
     assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"] is not None
@@ -79,7 +79,9 @@ def test_table_bronze_pdr_slots(
     # Work 2: Append from bronze_pdr_predictions table
     gql_tables = _process_bronze_predictions(gql_tables, ppss)
     # We should still have 6 rows
-    assert len(gql_tables["bronze_pdr_slots"].df) == 6
+    assert len(gql_tables["bronze_pdr_slots"].df) == 8
+
+    assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
 
     # Check final data frame has all the required columns
     assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema

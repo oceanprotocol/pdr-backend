@@ -39,13 +39,15 @@ def _process_slots(
         2. Transform slots to bronze
         3. Concat to existing table
     """
-
+    print(tables["pdr_slots"].df)
     # only add new slots
     slots_df = tables["pdr_slots"].df.filter(
         (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
     )
+    
+    print(slots_df)
 
     if len(slots_df) == 0:
         return tables
@@ -71,6 +73,8 @@ def _process_slots(
         ]
     ).select(bronze_pdr_slots_schema)
 
+    print(bronze_slots_df)
+
     # append to existing dataframe
     new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, bronze_slots_df])
     tables[bronze_pdr_slots_table_name].df = new_bronze_df
@@ -92,7 +96,7 @@ def _process_bronze_predictions(
         start_timestamp=ppss.lake_ss.st_timestamp,
         finish_timestamp=ppss.lake_ss.fin_timestamp,
     )
-
+    print(tables[bronze_pdr_slots_table_name].df)
     # get existing bronze_predictions we'll be updating
     slots_df = tables[bronze_pdr_slots_table_name].df
 
