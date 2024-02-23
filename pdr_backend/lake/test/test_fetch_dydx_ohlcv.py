@@ -17,7 +17,15 @@ def mock_nan_dydx_response():
     return {
         "candles": [
             {
-                "startedAt": "2024-02-20T23:50:00.000Z",
+                "startedAt": "2024-02-20_23:50",
+                "open": "",
+                "high": None,
+                "low": "NaN",
+                "close": "",
+                "baseTokenVolume": "None"
+            },
+            {
+                "startedAt": "NaN",
                 "open": "",
                 "high": None,
                 "low": "NaN",
@@ -76,7 +84,7 @@ def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
 
         start_date = UnixTimeMs.from_timestr("2024-02-20_23:50")
         end_date = UnixTimeMs.from_timestr("2024-02-20_23:55")
-        symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 1
+        symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 2
 
         result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
 

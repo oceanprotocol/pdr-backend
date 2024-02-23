@@ -243,8 +243,12 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
     transformed_data = []
 
     for candle in candles:
-        timestamp_str = candle['startedAt']  # Of the format "2023-01-01T12:00:00.000Z"
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+        timestamp_str = candle.get('startedAt')  # Of the format "2024-02-20T23:50:00.000Z"
+        # Handle NaN dates
+        try:
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+        except ValueError:
+            continue
 
         # Using a helper function to gracefully handle NaNs
         open_price = parse_float(candle['open'])
