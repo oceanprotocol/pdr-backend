@@ -125,7 +125,7 @@ class SimEngine:
         aimodel_factory = AimodelFactory(pdr_ss.aimodel_ss)
         model = aimodel_factory.build(X_train, ybool_train)
 
-        ybool_trainhat = model.predict(X_train)  # eg yhat=zhat[y-5]
+        ybool_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
         acc_train = classif_acc(ybool_train, ybool_trainhat)
         self.st.accs_train.append(acc_train)
 
@@ -134,8 +134,8 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
 
         # predict price direction
-        prob_up: float = model.predict_proba(X_test)[0][0] # in [0.0, 1.0]
-        pred_up: bool = model.predict(X_test)[0] # True or False
+        prob_up: float = model.predict_ptrue(X_test)[0] # in [0.0, 1.0]
+        pred_up: bool = model.predict_true(X_test)[0] # True or False
         self.st.ybools_testhat.append(pred_up)
 
         # simulate two-sided staking
@@ -147,7 +147,6 @@ class SimEngine:
         if pred_up:
             conf_up = (prob_up - 0.5) * 2.0 # in range [0.0, 1.0] not [0.5, 1.0]
             buy_amt = conf_up * ppss.trader_ss.buy_amt_usd # amt depends on conf
-            import pdb; pdb.set_trace()
             self._buy(curprice, buy_amt)
 
         # observe true price
@@ -174,7 +173,7 @@ class SimEngine:
             percent_to_me = stake_up / tot_stake_correct
             stake_up_profit = percent_to_me * pdr_ss.revenue
             stake_down_profit = -stake_down
-        elif true_down:
+        else: 
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
             stake_up_profit = -stake_up
