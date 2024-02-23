@@ -125,7 +125,15 @@ def test_bad_dydx_limit():
     assert 'errors' in result
     assert result is not None
 
-    # TODO test bad token
+def test_bad_dydx_resolution():
+    # test resolution must be "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", or "1DAY"
+    start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
+    symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "123minutes", start_date, end_date, 1000
+
+    result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+
+    assert result is None
+
     # TODO test bad start date or end date
-    # TODO test bad limit
 

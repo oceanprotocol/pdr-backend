@@ -82,7 +82,7 @@ def safe_fetch_ohlcv_dydx(
       limit -- max is 100 candles to retrieve,
 
     @return
-    raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
+    all_data -- [a TOHLCV tuple, for each timestamp].
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
@@ -168,17 +168,18 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
     @arguments
       exch -- dydx
-      symbol -- eg "BTC-USD" or "BTC/USDT"
-      timeframe -- eg "5m" or "5MINS"
-      since -- timestamp of first candle. In unix time (in ms)
+      symbol -- eg "BTC-USD"
+      timeframe -- eg "5MINS"
+      st_ut -- timestamp of first candle. In unix time (in ms)
+      fin_ut -- timestamp of last candle. In unix time (in ms)
       limit -- max # candles to retrieve up to 100
 
     @return
-      df -- a Polars dataframe with schema = TOHLCV_SCHEMA_PL,
-      and sorted by timestamp
+        all_data -- [a TOHLCV tuple, for each timestamp].
+        where row 0 is oldest
+        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    # Initialize the empty df
-    #all_data = pl.DataFrame([], schema=TOHLCV_SCHEMA_PL)
+    # Initialize the empty list
     all_data = []
 
     # Int minutes will be used for updating the loop end_time
@@ -190,6 +191,10 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
         "1HOUR": 60,
         "1DAY": 1440,
     }
+    if resolution not in resolution_to_minutes:
+         # Handle bad dydx resolution
+         logger.fatal('Resolution for dydx must be one of the following: "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "1DAY"')
+         return
     minutes = resolution_to_minutes[resolution]
 
     start_time = UnixTimeMs.to_dt(st_ut)
@@ -197,9 +202,14 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
     count = 0
 
+    # Handle bad dates
+    if end_time <= start_time:
+        logger.fatal('Start time must be earlier than end time.')
+        return
+
+    logger.info(f"Get dydx data from {start_time} to {end_time}")
     # Fetch the data in a loop
     while end_time > start_time:
-        print(f"Fetching data up to {end_time}")  # Logging
 
         # Initialize parameters for API request
         end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S')
@@ -229,9 +239,9 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
         # Exit loop if no candles are returned
         else:
-            print('Aborting dydx loop. Dydx response is ', data)
-            all_data.extend(data)
-            break
+            logger.warning("No candles found.")
+            logger.warning("Aborting dydx loop.")
+            return data
 
     all_data = sorted(all_data, key=lambda x: x[0])
 
@@ -245,14 +255,13 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
 
     for candle in candles:
         timestamp_str = candle.get('startedAt')  # Of the format "2024-02-20T23:50:00.000Z"
-        print('dydx timestamp returned for bad token is',timestamp_str)
         # Handle NaN dates
         try:
             timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
         except ValueError:
             continue
 
-        # Using a helper function to gracefully handle NaNs
+        # Handle NaN floats
         open_price = parse_float(candle['open'])
         high_price = parse_float(candle['high'])
         low_price = parse_float(candle['low'])
@@ -267,12 +276,11 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
                volume)
 
         transformed_data.append(row)
-        print('dydx transformed data is :',transformed_data)
 
     return transformed_data
 
 def parse_float(value):
-    # Attempts to return a float, but if there's an NaN or missing value it
+    # Attempts to return a float, but if there's an NaN, it
     # catches the error and returns 0.0, vs crashing everything
     try:
         return float(value)
