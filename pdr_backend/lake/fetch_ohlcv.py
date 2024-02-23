@@ -82,7 +82,9 @@ def safe_fetch_ohlcv_dydx(
       limit -- max is 100 candles to retrieve,
 
     @return
-      df -- with schema=TOHLCV_SCHEMA_PL
+    raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
+        where row 0 is oldest
+        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
 
     try:
@@ -214,8 +216,6 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
         # Process and add the fetched data to all_data
         if 'candles' in data:
-            #df = transform_dydx_data(data['candles'])
-            #all_data = pl.concat([all_data, df])
 
             transformed_data = transform_dydx_data_to_tuples(data['candles'])
             all_data.extend(transformed_data)
@@ -231,40 +231,10 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
             print("No more data returned from dYdX.")
             break  # Exit loop if no data is returned
 
-    #df = all_data.sort("timestamp")
-    #print("The final dydx df looks like ", df)
-    print("unsorted all_data from dydx is ", all_data)
+    all_data = sorted(all_data, key=lambda x: x[0])
+    print("all_data tuple list from dydx is ", all_data)
 
     return all_data
-
-def transform_dydx_data_to_df(candles) -> pl.DataFrame:
-    """
-      Transforms dYdX data to a Polars DataFrame with schema from TOHLCV_SCHEMA_PL
-    """
-    # Prepare data transformation
-
-    transformed_data = []
-
-    for candle in candles:
-
-        # Parse dydx 'startedAt' column data to Unix timestamp in milliseconds
-        timestamp = UnixTimeMs.from_timestr(candle['startedAt'])
-
-        # Add transformed row
-        transformed_data.append({
-            "timestamp": timestamp,
-            "open": float(candle['open']),
-            "high": float(candle['high']),
-            "low": float(candle['low']),
-            "close": float(candle['close']),
-            "volume": float(candle['baseTokenVolume'])
-        })
-
-    # Create DataFrame from transformed data
-    df = pl.DataFrame(transformed_data, schema=TOHLCV_SCHEMA_PL)
-
-
-    return df
 
 def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
     """
@@ -274,15 +244,30 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
 
     for candle in candles:
         timestamp_str = candle['startedAt']  # Of the format "2023-01-01T12:00:00.000Z"
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)      
-        row = (
-            timestamp,
-            float(candle['open']),
-            float(candle['high']),
-            float(candle['low']),
-            float(candle['close']),
-            float(candle['baseTokenVolume'])
-        )
+        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+
+        # Using a helper function to gracefully handle NaNs
+        open_price = parse_float(candle['open'])
+        high_price = parse_float(candle['high'])
+        low_price = parse_float(candle['low'])
+        close_price = parse_float(candle['close'])
+        volume = parse_float(candle['baseTokenVolume'])
+
+        row = (timestamp,
+               open_price,
+               high_price,
+               low_price,
+               close_price,
+               volume)
+
         transformed_data.append(row)
 
     return transformed_data
+
+def parse_float(value):
+    # Attempts to return a float, but if there's an NaN or missing value it
+    # catches the error and returns 0.0, vs crashing everything
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.0

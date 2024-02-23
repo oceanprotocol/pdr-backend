@@ -1,7 +1,9 @@
 import pytest
-# from enforce_typing import enforce_types
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_dydx, fetch_dydx_data, transform_dydx_data_to_df, transform_dydx_data_to_tuples
+import requests_mock
+
+from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_dydx, fetch_dydx_data, transform_dydx_data_to_tuples
 from pdr_backend.util.time_types import UnixTimeMs
 
 from pdr_backend.util.constants import (
@@ -9,7 +11,56 @@ from pdr_backend.util.constants import (
     CAND_TIMEFRAMES,
 )
 
-def test_fetch_dydx_data():
+@pytest.fixture
+def mock_nan_dydx_response():
+    # Mocks NaN or missing value api responses -- convention is not clear from api docs
+    return {
+        "candles": [
+            {
+                "startedAt": "2024-02-20T23:50:00.000Z",
+                "open": "",
+                "high": None,
+                "low": "NaN",
+                "close": "",
+                "baseTokenVolume": "None"
+            }
+        ]
+    }
+
+@pytest.fixture
+def mock_dydx_response():
+    # Mocks expected api response
+    return {
+        "candles": [
+            {
+                "startedAt": "2024-02-20T23:50:00.000Z",
+                "open": "52308.0",
+                "high": "52394.0",
+                "low": "52229.0",
+                "close": "52394.0",
+                "baseTokenVolume": "0.015"
+            },
+                        {
+                "startedAt": "2024-02-20T23:55:00.000Z",
+                "open": "52324.0",
+                "high": "52390.0",
+                "low": "52223.0",
+                "close": "52327.0",
+                "baseTokenVolume": "0.015"
+            },
+            {
+                "startedAt": "2024-02-21T00:00:00.000Z",
+                "open": "52431.0",
+                "high": "52431.0",
+                "low": "52207.0",
+                "close": "52348.0",
+                "baseTokenVolume": "0.013"
+            },
+        ]
+    }
+
+@enforce_types
+def test_safe_fetch_ohlcv_dydx():
 
     start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
@@ -19,39 +70,22 @@ def test_fetch_dydx_data():
     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
     assert result is not None
 
-#     # # Catches TypeErrors for incorrect dates
-#     # with pytest.raises(TypeError):
-#     #     fetch_dydx_data(symbol, resolution, "abc", fin_ut)
-#     # with pytest.raises(TypeError):
-#     #     fetch_dydx_data(symbol, resolution, st_ut, "abc")
+def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
+    with requests_mock.Mocker() as m:
+        m.get("https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/BTC-USD", json=mock_nan_dydx_response)
 
-#     # with pytest.raises(TypeError):
-#     #     fetch_dydx_data("RANDOMTOKEN-USD", resolution, st_ut, fin_ut)
-#     # with pytest.raises(TypeError):
-#     #     fetch_dydx_data(symbol, "123mins", st_ut, fin_ut)
+        start_date = UnixTimeMs.from_timestr("2024-02-20_23:50")
+        end_date = UnixTimeMs.from_timestr("2024-02-20_23:55")
+        symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 1
 
-#     # Convert symbol
-#     normalized_symbol = symbol.replace("-", "/")
-#     base, quote = normalized_symbol.split("/")
-#     if quote in CAND_USDCOINS:
-#         symbol = base + "-USD"
-#     else:
-#         print("Please input a token paired with a stablecoin or USD for dydx.")
+        result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
 
-# # def validate_resolution(timeframe: str) -> None:
-# #     """
-# #     Validates the input timeframe string.
+        # Verify the result is as expected, adjusting the assertion as necessary
+        assert result is not None
+        assert all(isinstance(entry, tuple) for entry in result)
 
-# #     :param timeframe: The timeframe string to validate.
-# #     :raises AssertionError: If the timeframe is not one of the allowed values.
-# #     """
-# #     allowed_values = {"1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "4HOURS", "1DAY"}
-# #     assert timeframe in allowed_values, f"Invalid resolution: {timeframe}. Allowed values are: {allowed_values}"
-
-# # # Example Usage
-# # try:
-# #     validate_resolution("1MIN")    # Valid input
-# #     validate_resolution("10MINS")  # Invalid input, will raise AssertionError
-# # except AssertionError as e:
-# #     print(e)
+    # TODO test bad token
+    # TODO test bad resolution
+    # TODO test bad start date or end date
+    # TODO test bad limit
 
