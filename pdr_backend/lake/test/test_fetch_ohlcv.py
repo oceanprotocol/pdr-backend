@@ -150,6 +150,6 @@ def test_fix_schema_interpreter_float_as_integer():
     uts = _cast_uts_to_int(uts)
     assert type(uts[0]) == int
 
-    tohlcv_data = _filter_within_timerange(RAW_TOHLCV, UnixTimeMs(T1), UnixTimeMs(T1))
+    tohlcv_data = _filter_within_timerange([RAW_TOHLCV], UnixTimeMs(T1), UnixTimeMs(T1))
     tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
     assert isinstance(tohlcv_df, pl.DataFrame)
