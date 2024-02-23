@@ -172,7 +172,15 @@ def mock_ppss(
     ppss.predictoor_ss = PredictoorSS(
         {
             "predict_feed": onefeed,
-            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
+            "stake_amount": 1,
+            "bot_only": {
+                "s_until_epoch_end": 60,
+            },
+            "sim_only": {
+                "others_stake": 3,
+                "others_accuracy": 0.51,
+                "revenue": 0.93,
+            },
             "is_two_sided": False,
             "regressionmodel_ss": {
                 "input_feeds": feeds,
