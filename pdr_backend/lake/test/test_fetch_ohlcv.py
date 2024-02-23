@@ -2,9 +2,18 @@ import ccxt
 import pytest
 from enforce_typing import enforce_types
 
+import polars as pl
+
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_ccxt, clean_raw_ohlcv
+from pdr_backend.lake.fetch_ohlcv import (
+    _cast_uts_to_int,
+    _filter_within_timerange,
+    _ohlcv_to_uts,
+    clean_raw_ohlcv,
+    safe_fetch_ohlcv_ccxt, 
+)
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
 
 
 MPE = 300000  # ms per 5min epoch
@@ -97,3 +106,50 @@ def assert_raw_tohlc_data_ok(raw_tohlc_data):
         assert isinstance(item[0], int)
         for val in item[1:]:
             assert isinstance(val, float)
+
+
+def test_schema_interpreter_float_as_integer():
+    tohlcv_data = [
+        [1624003200000, 1624003500000, 1624003800000, 1624004100000, 1624004400000],
+        [1.0, 2.0, 3.0, 4.0, 5.0],
+        [1.0, 2.0, 3.0, 4.0, 5.0],
+        [1.0, 2.0, 3.0, 4.0, 5.0],
+        [1.0, 2.0, 3.0, 4.0, 5.0],
+        [1.0, 2.0, 3.0, 4.0, 5.0],
+    ]
+    
+    # First DataFrame creation (should pass)
+    tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+    assert isinstance(tohlcv_df, pl.DataFrame)
+
+    # Try to create DataFrame with floating-point decimal timestamp instead of integer
+    try:
+        tohlcv_data = [
+            [1624003200000.00, 1624003500000, 1624003800000, 1624004100000, 1624004400000],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+            [1.0, 2.0, 3.0, 4.0, 5.0],
+        ]
+        tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+    except TypeError as e:
+        # Timestamp written as a float "1624003200000.00" raises error
+        assert str(e) == "'float' object cannot be interpreted as an integer"
+
+
+def test_fix_schema_interpreter_float_as_integer():
+    # Use clean_raw_ohlcv to affix timestamp as int
+    # Then turn into dataframe
+    T1 = 1624003200000
+    RAW_TOHLCV = [float(T1), 0.5, 12, 0.12, 1.1, 7.0]
+
+    uts = _ohlcv_to_uts([RAW_TOHLCV])
+    assert type(uts[0]) == float
+
+    uts = _cast_uts_to_int(uts)
+    assert type(uts[0]) == int
+
+    tohlcv_data = _filter_within_timerange(RAW_TOHLCV, UnixTimeMs(T1), UnixTimeMs(T1))
+    tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+    assert isinstance(tohlcv_df, pl.DataFrame)
