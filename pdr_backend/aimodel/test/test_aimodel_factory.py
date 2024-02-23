@@ -10,34 +10,49 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 
+@enforce_types
+def test_aimodel_factory_LinearLogistic():
+    _test_aimodel_factory(approach="LinearLogistic")
+    
+@enforce_types
+def test_aimodel_factory_LinearSVC():
+    _test_aimodel_factory(approach="LinearSVC")
 
 @enforce_types
-def test_aimodel_factory_basic():
-    for approach in APPROACHES:
-        aimodel_ss = AimodelSS(
-            {
-                "approach": approach,
-                "max_n_train": 7,
-                "autoregressive_n": 3,
-                "input_feeds": ["binance BTC/USDT c"],
-            }
-        )
-        factory = AimodelFactory(aimodel_ss)
-        assert isinstance(factory.aimodel_ss, AimodelSS)
-        (X_train, ybool_train, X_test, ybool_test) = _data()
+def _test_aimodel_factory(approach):
+    aimodel_ss = AimodelSS(
+        {
+            "approach": approach,
+            "max_n_train": 7,
+            "autoregressive_n": 3,
+            "input_feeds": ["binance BTC/USDT c"],
+        }
+    )
+    factory = AimodelFactory(aimodel_ss)
+    assert isinstance(factory.aimodel_ss, AimodelSS)
+    (X_train, ybool_train, X_test, ybool_test) = _data()
 
-        # build
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")  # ignore ConvergenceWarning, more
-            model = factory.build(X_train, ybool_train)
+    # build
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # ignore ConvergenceWarning, more
+        model = factory.build(X_train, ybool_train)
 
-        # predict
-        ybool_train_hat = model.predict(X_train)
-        ybool_test_hat = model.predict(X_test)
+    # test predict_true()
+    ybool_train_hat = model.predict_true(X_train)
+    ybool_test_hat = model.predict_true(X_test)
+    assert ybool_train_hat.dtype == bool
+    assert ybool_test_hat.dtype == bool
+    assert_array_equal(ybool_train, ybool_train_hat)
+    assert_array_equal(ybool_test, ybool_test_hat)
 
-        # expect zero error, since training data is trivially simple
-        assert_array_equal(ybool_train, ybool_train_hat)
-        assert_array_equal(ybool_test, ybool_test_hat)
+    # test predict_ptrue()
+    yptrue_train_hat = model.predict_ptrue(X_train)
+    yptrue_test_hat = model.predict_ptrue(X_test)
+    assert yptrue_train_hat.dtype == float
+    assert yptrue_test_hat.dtype == float
+    assert 0 < min(yptrue_train_hat) < max(yptrue_train_hat) < 1.0
+    assert_array_equal(yptrue_train_hat > 0.5, ybool_train_hat)
+    assert_array_equal(yptrue_test_hat > 0.5, ybool_test_hat)
 
 
 @enforce_types
@@ -80,11 +95,13 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
     y_thr = 7.0
     ybool_train = AimodelDataFactory.ycont_to_ybool(ycont_train, y_thr)
 
-    aimodel = aimodel_factory.build(X_train, ybool_train)
+    model = aimodel_factory.build(X_train, ybool_train)
 
-    ybool_train_hat = aimodel.predict(X_train)
-
+    ybool_train_hat = model.predict_true(X_train)
     assert_array_equal(ybool_train, ybool_train_hat) # expect zero error
+
+    yptrue_train_hat = model.predict_ptrue(X_train)
+    assert_array_equal(yptrue_train_hat > 0.5, ybool_train_hat)
 
 
 @enforce_types

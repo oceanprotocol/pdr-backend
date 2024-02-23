@@ -1,13 +1,15 @@
 from enforce_typing import enforce_types
+import numpy as np
 
 @enforce_types
 class Aimodel:
     """
-    Acts like an sklearn model (skm),
+    Acts like an sklearn model,
     Plus has a less error-prone interface to get probabilities.
     """
-    def __init__(self, skm):
-        self._skm = skm
+    def __init__(self, class_i, skm):
+        self._class_i = class_i # class for predict_proba() for True values
+        self._skm = skm # sklearn model
 
     def fit(self, *args, **kwargs):
         """
@@ -23,7 +25,7 @@ class Aimodel:
         """
         return self._skm.fit(*args, **kwargs)
 
-    def predict(self, *args, **kwargs):
+    def predict_true(self, X):
         """
         @description
           Classify each input sample, with lower fidelity: just True vs False
@@ -34,7 +36,11 @@ class Aimodel:
         @return
           ybool -- 1d array of [sample_i]:bool_value -- classifier model outputs
         """
-        return self._skm.predict(*args, **kwargs)
+        # We explicitly don't call skm.predict() here, because it's
+        #   inconsistent with predict_proba() for svc and maybe others.
+        # Rather, draw on the probability output to guarantee consistency.
+        yptrue = self.predict_ptrue(X)
+        return yptrue > 0.5
 
     def predict_ptrue(self, X: np.ndarray) -> np.ndarray:
         """
@@ -48,7 +54,7 @@ class Aimodel:
           yptrue - 1d array of [sample_i]: prob_of_being_true -- model outputs
         """
         T = self._skm.predict_proba(X) # [sample_i][class_i]
-        N = X.shape[1]
-        yptrue = np.array([T[i,0] for i in range(N)])
+        N = T.shape[0]
+        yptrue = np.array([T[i,self._class_i] for i in range(N)])
         return yptrue
         

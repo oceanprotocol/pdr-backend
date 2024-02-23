@@ -83,7 +83,7 @@ def test_create_xy__0():
     factory = AimodelDataFactory(predictoor_ss)
 
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
-    X, y, x_df, xrecent = factory.create_xy_regression(
+    X, y, x_df, xrecent = factory.create_xy(
         mergedohlcv_df, testshift=0
     )
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
