@@ -126,6 +126,14 @@ def fill_nans(
 
 
 @enforce_types
+def classif_acc(ybool_hat, ybool) -> float:
+    ybool_hat, ybool = np.array(ybool_hat), np.array(ybool)
+    n_correct = sum(ybool_hat == ybool)
+    acc = n_correct / len(ybool)
+    return acc
+
+
+@enforce_types
 def nmse(yhat, y, ymin=None, ymax=None) -> float:
     """
     @description
