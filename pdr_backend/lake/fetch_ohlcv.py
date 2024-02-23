@@ -191,23 +191,27 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
         "1HOUR": 60,
         "1DAY": 1440,
     }
+    # Handle bad dydx resolution
     if resolution not in resolution_to_minutes:
-         # Handle bad dydx resolution
          logger.fatal('Resolution for dydx must be one of the following: "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "1DAY"')
          return
-    minutes = resolution_to_minutes[resolution]
+    else:
+        minutes = resolution_to_minutes[resolution]
 
     start_time = UnixTimeMs.to_dt(st_ut)
     end_time = UnixTimeMs.to_dt(fin_ut)
-
-    count = 0
 
     # Handle bad dates
     if end_time <= start_time:
         logger.fatal('Start time must be earlier than end time.')
         return
+    elif start_time > datetime.now(pytz.utc):
+        logger.fatal('Start time must be earlier than now.')
+        return
+    elif end_time > datetime.now(pytz.utc):
+        logger.warning('End time is later than now. Dydx will only fetch up until now.')
 
-    logger.info(f"Get dydx data from {start_time} to {end_time}")
+    count = 0
     # Fetch the data in a loop
     while end_time > start_time:
 

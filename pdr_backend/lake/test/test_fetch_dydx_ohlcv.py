@@ -135,5 +135,23 @@ def test_bad_dydx_resolution():
 
     assert result is None
 
-    # TODO test bad start date or end date
+def test_bad_dydx_start_date():
+    # test start date must be earlier than end date
+    start_date = UnixTimeMs.from_timestr("2024-02-22_00:00")
+    end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
+    symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 1000
+
+    result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+
+    assert result is None
+
+def test_dydx_start_date_before_now():
+    # test start date must be earlier than now
+    start_date = UnixTimeMs.from_timestr("2222-02-22_00:00")
+    end_date = UnixTimeMs.from_timestr("2222-02-22_00:15")
+    symbol, resolution, st_ut, fin_ut, limit = "BTC-USD", "5MINS", start_date, end_date, 1000
+
+    result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+
+    assert result is None
 
