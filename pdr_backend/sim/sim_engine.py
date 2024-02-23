@@ -3,7 +3,6 @@ import logging
 import os
 from typing import List
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -21,6 +20,7 @@ logger = logging.getLogger("sim_engine")
 FONTSIZE = 9
 
 
+# pylint: disable=too-many-instance-attributes
 class SimEngineState:
     def __init__(self, init_holdings: dict):
         self.holdings: dict = init_holdings
@@ -30,6 +30,8 @@ class SimEngineState:
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[float] = []
         self.predictoor_profits_OCEAN: List[float] = []
+
+        self.y2: List[float] = []
 
 
 # pylint: disable=too-many-instance-attributes
@@ -110,6 +112,7 @@ class SimEngine:
 
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
+        # pylint: disable=too-many-statements
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(pdr_ss)
@@ -292,9 +295,11 @@ class PlotState:
         self.y1_est, self.y1_l, self.y1_u = [], [], []
         self.jitter = []
         self.plotted_before = False
+        self.y2 = []
         plt.ion()
         plt.show()
 
+    # pylint: disable=too-many-statements
     def do_plot(self, st: SimEngineState):
         fig, ((ax0, ax1), (ax2, ax3)) = self.fig, self.axs
 
@@ -331,7 +336,7 @@ class PlotState:
         next_y1_u = _slice(self.y1_u, N_done, N)
 
         ax1.plot(next_x, next_y1_est, "green")
-        pc = ax1.fill_between(next_x, next_y1_l, next_y1_u, color="0.9")
+        _ = ax1.fill_between(next_x, next_y1_l, next_y1_u, color="0.9")
         ax1.plot(next_hx, [50, 50], color="0.2", linestyle="dashed", linewidth=1)
         ax1.set_ylim(bottom=40, top=60)
         now_s = f"{self.y1_est[-1]:.2f}% [{self.y1_l[-1]:.2f}%, {self.y1_u[-1]:.2f}%]"
