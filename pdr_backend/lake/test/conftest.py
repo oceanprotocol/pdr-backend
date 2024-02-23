@@ -11,9 +11,10 @@ from pdr_backend.subgraph.prediction import (
 from pdr_backend.subgraph.subscription import mock_subscriptions
 from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
 from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
-from pdr_backend.subgraph.slot import mock_slots, mock_slot
+from pdr_backend.subgraph.slot import Slot, mock_slots, mock_slot
 
 from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.table_pdr_slots import slots_schema
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
@@ -271,8 +272,8 @@ _ETL_SLOT_TUPS = [
         1699038000,
         1699038000,  # Nov 03 2023 19:00:00 GMT
         False,
-        10.0,
-        20.5,
+        None,
+        None,
     ),
     (
         "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-1699124400",
@@ -287,8 +288,8 @@ _ETL_SLOT_TUPS = [
         1699214300,
         1699214300,  # Nov 05 2023 19:00:00 GMT
         False,
-        10.5,
-        15.0,
+        None,
+        None,
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800",
@@ -319,7 +320,7 @@ def mock_etl_truevals() -> List[Trueval]:
 
 
 @enforce_types
-def mock_etl_slots() -> List[Trueval]:
+def mock_etl_slots() -> List[Slot]:
     return [mock_slot(slot_tuple) for slot_tuple in _ETL_SLOT_TUPS]
 
 
@@ -358,10 +359,8 @@ def _gql_datafactory_etl_truevals_df():
 
 @pytest.fixture()
 def _gql_datafactory_etl_slots_df():
-    _payouts = mock_etl_slots()
-    payouts_df = _object_list_to_df(_payouts, payouts_schema)
-    payouts_df = payouts_df.with_columns(
-        [pl.col("timestamp").mul(1000).alias("timestamp")]
-    )
+    _slots = mock_etl_slots()
+    slots_df = _object_list_to_df(_slots, slots_schema)
+    slots_df = slots_df.with_columns([pl.col("timestamp").mul(1000).alias("timestamp")])
 
-    return payouts_df
+    return slots_df

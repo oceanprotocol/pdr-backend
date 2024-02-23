@@ -56,16 +56,20 @@ def _process_slots(
         return f"{contract_id}"
 
     # create bronze slots table in a strongly-defined manner
-    bronze_slots_df = slots_df.with_columns([
-        pl.col("ID").map_elements(get_contract_id, return_dtype=Utf8).alias("contract"),
-        pl.lit(None).alias("pair"),
-        pl.lit(None).alias("timeframe"),
-        pl.lit(None).alias("source"),
-        pl.lit(None).alias("roundSumStakesUp"),
-        pl.lit(None).alias("roundSumStakes"),
-        pl.lit(None).alias("trueval"),
-        pl.col("timestamp").alias("last_event_timestamp"),
-    ]).select(bronze_pdr_slots_schema)
+    bronze_slots_df = slots_df.with_columns(
+        [
+            pl.col("ID")
+            .map_elements(get_contract_id, return_dtype=Utf8)
+            .alias("contract"),
+            pl.lit(None).alias("pair"),
+            pl.lit(None).alias("timeframe"),
+            pl.lit(None).alias("source"),
+            pl.lit(None).alias("roundSumStakesUp"),
+            pl.lit(None).alias("roundSumStakes"),
+            pl.lit(None).alias("trueval"),
+            pl.col("timestamp").alias("last_event_timestamp"),
+        ]
+    ).select(bronze_pdr_slots_schema)
 
     # append to existing dataframe
     new_bronze_df = pl.concat([tables[bronze_pdr_slots_table_name].df, bronze_slots_df])

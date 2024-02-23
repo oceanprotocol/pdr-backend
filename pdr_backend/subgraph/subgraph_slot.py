@@ -73,6 +73,7 @@ def get_slots(
     addresses: List[str],
     end_ts_param: int,
     start_ts_param: int,
+    first: int,
     skip: int,
     slots: List[PredictSlot],
     network: str = "mainnet",
@@ -94,13 +95,11 @@ def get_slots(
 
     slots = slots or []
 
-    records_per_page = 1000
-
     query = get_predict_slots_query(
         addresses,
         end_ts_param,
         start_ts_param,
-        records_per_page,
+        first,
         skip,
     )
 
@@ -119,9 +118,15 @@ def get_slots(
         PredictSlot(
             **{
                 "ID": slot["id"],
-                "timestamp": slot["slot"] * 1000,
+                "timestamp": slot["slot"],
                 "slot": slot["slot"],
-                "trueval": slot["trueValues"][0]["trueValue"],
+                "trueval": (
+                    slot["trueValues"][0]["trueValue"]
+                    if "trueValues" in slot
+                    and slot["trueValues"] is not None
+                    and len(slot["trueValues"]) > 0
+                    else None
+                ),
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
             }
@@ -130,23 +135,16 @@ def get_slots(
     ]
 
     slots.extend(new_slots)
-    if len(new_slots) == records_per_page:
-        return get_slots(
-            addresses,
-            end_ts_param,
-            start_ts_param,
-            skip + records_per_page,
-            slots,
-            network,
-        )
     return slots
 
 
 @enforce_types
 def fetch_slots(
-    contracts: List[str],
     start_ts_param: int,
     end_ts_param: int,
+    contracts: List[str],
+    first: int,
+    skip: int,
     network: str = "mainnet",
 ) -> Dict[str, List[PredictSlot]]:
     """
@@ -163,15 +161,7 @@ def fetch_slots(
         containing slot information.
     """
 
-    all_slots = get_slots(contracts, end_ts_param, start_ts_param, 0, [], network)
-
-    slots_by_asset: Dict[str, List[PredictSlot]] = {}
-    for slot in all_slots:
-        slot_id = slot.ID
-        asset_id = slot_id.split("-")[0]
-        if asset_id not in slots_by_asset:
-            slots_by_asset[asset_id] = []
-
-        slots_by_asset[asset_id].append(slot)
-
-    return slots_by_asset
+    all_slots = get_slots(
+        contracts, end_ts_param, start_ts_param, first, skip, [], network
+    )
+    return all_slots
