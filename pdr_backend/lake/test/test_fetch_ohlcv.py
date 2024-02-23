@@ -10,7 +10,7 @@ from pdr_backend.lake.fetch_ohlcv import (
     _filter_within_timerange,
     _ohlcv_to_uts,
     clean_raw_ohlcv,
-    safe_fetch_ohlcv_ccxt, 
+    safe_fetch_ohlcv_ccxt,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
@@ -117,7 +117,7 @@ def test_schema_interpreter_float_as_integer():
         [1.0, 2.0, 3.0, 4.0, 5.0],
         [1.0, 2.0, 3.0, 4.0, 5.0],
     ]
-    
+
     # First DataFrame creation (should pass)
     tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
     assert isinstance(tohlcv_df, pl.DataFrame)
@@ -125,7 +125,13 @@ def test_schema_interpreter_float_as_integer():
     # Try to create DataFrame with floating-point decimal timestamp instead of integer
     try:
         tohlcv_data = [
-            [1624003200000.00, 1624003500000, 1624003800000, 1624004100000, 1624004400000],
+            [
+                1624003200000.00,
+                1624003500000,
+                1624003800000,
+                1624004100000,
+                1624004400000,
+            ],
             [1.0, 2.0, 3.0, 4.0, 5.0],
             [1.0, 2.0, 3.0, 4.0, 5.0],
             [1.0, 2.0, 3.0, 4.0, 5.0],
