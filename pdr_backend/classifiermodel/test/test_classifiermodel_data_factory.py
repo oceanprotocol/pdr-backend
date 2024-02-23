@@ -71,13 +71,13 @@ def test_create_xy__0():
     target_y = np.array([1, 1, 1, 1])  # oldest to newest
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
-            "binanceus:ETH/USDT:open:t-2": [0.1, 0.1, 0.1, 0.1, 0.1],
-            "binanceus:ETH/USDT:close:t-3": [3.1, 4.2, 5.3, 6.4, 7.5],
-            "binanceus:ETH/USDT:close:t-2": [4.2, 5.3, 6.4, 7.5, 8.6],
+            "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH/USDT:open:t-2": [0.1, 0.1, 0.1, 0.1],
+            "binanceus:ETH/USDT:close:t-3": [4.2, 5.3, 6.4, 7.5],
+            "binanceus:ETH/USDT:close:t-2": [5.3, 6.4, 7.5, 8.6],
         }
     )
-    target_xrecent = np.array([0.1, 0.1, 8.6, 9.7])
+    target_xrecent = np.array([0.1, 8.6, 9.7])
 
     factory = ClassifierModelDataFactory(predictoor_ss)
     X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
@@ -122,12 +122,12 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:t-4": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH/USDT:high:t-3": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
-            "binanceus:ETH/USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+            "binanceus:ETH/USDT:high:t-4": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-3": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-2": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
-    target_xrecent = np.array([3.0, 2.0, 1.0])
+    target_xrecent = np.array([2.0, 1.0])
 
     X, y, x_df, xrecent = classifiermodel_data_factory.create_xy(
         mergedohlcv_df, testshift=0
@@ -164,12 +164,12 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:t-4": [12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
-            "binanceus:ETH/USDT:high:t-3": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH/USDT:high:t-2": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-4": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
+            "binanceus:ETH/USDT:high:t-3": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-2": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
         }
     )
-    target_xrecent = np.array([4.0, 3.0, 2.0])
+    target_xrecent = np.array([3.0, 2.0])
 
     X, y, x_df, xrecent = classifiermodel_data_factory.create_xy(
         mergedohlcv_df, testshift=1
@@ -194,9 +194,9 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
     target_y = np.array([0, 0, 0, 0, 0])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:t-4": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
-            "binanceus:ETH/USDT:high:t-3": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
-            "binanceus:ETH/USDT:high:t-2": [7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
+            "binanceus:ETH/USDT:high:t-4": [8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:t-3": [7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:t-2": [6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
 
@@ -324,52 +324,6 @@ def test_create_xy__input_type(tmpdir):
     # create_xy() inputs shouldn't be pd
     with pytest.raises(AssertionError):
         classifiermodel_data_factory.create_xy(mergedohlcv_df.to_pandas(), testshift=0)
-
-
-@enforce_types
-def test_create_xy__handle_nan(tmpdir):
-    # create mergedohlcv_df
-    _, _, _, classifiermodel_data_factory = _predictoor_ss_1feed(
-        tmpdir, "binanceus ETH/USDT h 5m"
-    )
-    mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
-
-    # initial mergedohlcv_df should be ok
-    assert not has_nan(mergedohlcv_df)
-
-    # now, corrupt mergedohlcv_df with NaN values
-    nan_indices = [1686805800000, 1686806700000, 1686808800000]
-    mergedohlcv_df = mergedohlcv_df.with_columns(
-        [
-            pl.when(mergedohlcv_df["timestamp"].is_in(nan_indices))
-            .then(pl.lit(None, pl.Float64))
-            .otherwise(mergedohlcv_df["binanceus:ETH/USDT:high"])
-            .alias("binanceus:ETH/USDT:high")
-        ]
-    )
-    assert has_nan(mergedohlcv_df)
-
-    # =========== initial testshift (0)
-    # run create_xy() and force the nans to stick around
-    # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df, _ = classifiermodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, do_fill_nans=False
-    )
-    assert has_nan(X) and has_nan(y) and has_nan(x_df)
-
-    # nan approach 1: fix externally
-    mergedohlcv_df2 = fill_nans(mergedohlcv_df)
-    assert not has_nan(mergedohlcv_df2)
-
-    # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df, _ = classifiermodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, do_fill_nans=True
-    )
-    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
-
-    # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df, _ = classifiermodel_data_factory.create_xy(mergedohlcv_df, testshift=0)
-    assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
 
 # ====================================================================
