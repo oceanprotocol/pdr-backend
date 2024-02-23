@@ -227,12 +227,13 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
             print("Loop iteration #", count)
             count = count + 1
 
+        # Exit loop if no candles are returned
         else:
-            print("No more data returned from dYdX.")
-            break  # Exit loop if no data is returned
+            print('Aborting dydx loop. Dydx response is ', data)
+            all_data.extend(data)
+            break
 
     all_data = sorted(all_data, key=lambda x: x[0])
-    print("all_data tuple list from dydx is ", all_data)
 
     return all_data
 
@@ -244,6 +245,7 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
 
     for candle in candles:
         timestamp_str = candle.get('startedAt')  # Of the format "2024-02-20T23:50:00.000Z"
+        print('dydx timestamp returned for bad token is',timestamp_str)
         # Handle NaN dates
         try:
             timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
@@ -265,6 +267,7 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
                volume)
 
         transformed_data.append(row)
+        print('dydx transformed data is :',transformed_data)
 
     return transformed_data
 

@@ -77,6 +77,7 @@ def test_safe_fetch_ohlcv_dydx():
     # happy path
     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
     assert result is not None
+    assert len(result) == 300
 
 def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
     with requests_mock.Mocker() as m:
@@ -88,12 +89,20 @@ def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
 
         result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
 
-        # Verify the result is as expected, adjusting the assertion as necessary
         assert result is not None and len(result) == 1
         assert all(isinstance(entry, tuple) for entry in result)
 
+def test_bad_dydx_token():
+    start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
+    symbol, resolution, st_ut, fin_ut, limit = "RANDOMTOKEN-USD", "5MINS", start_date, end_date, 100
+
+    result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+
+    assert 'errors' in result
+    assert result is not None
+
     # TODO test bad token
-    # TODO test bad resolution
     # TODO test bad start date or end date
     # TODO test bad limit
 
