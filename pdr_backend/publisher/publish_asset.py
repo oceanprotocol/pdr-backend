@@ -3,6 +3,7 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.contract.data_nft import DataNft
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -16,10 +17,7 @@ MAX_UINT256 = 2**256 - 1
 def publish_asset(
     s_per_epoch: int,
     s_per_subscription: int,
-    base: str,
-    quote: str,
-    source: str,
-    timeframe: str,
+    feed: ArgFeed,
     trueval_submitter_addr: str,
     feeCollector_addr: str,
     rate: Union[int, float],
@@ -28,7 +26,7 @@ def publish_asset(
 ):
     """Publish one specific asset to chain."""
     web3_config = web3_pp.web3_config
-    pair = base + "/" + quote
+    pair = str(feed.pair)
     trueval_timeout = 60 * 60 * 24 * 3
     owner = web3_config.owner
     ocean_address = web3_pp.OCEAN_address
@@ -40,6 +38,16 @@ def publish_asset(
 
     rate_wei = to_wei(rate)
     cut_wei = to_wei(cut)
+
+    base = feed.pair.base_str
+    quote = feed.pair.quote_str
+    source = str(feed.exchange)
+    timeframe = str(feed.timeframe)
+
+    assert base
+    assert quote
+    assert source
+    assert timeframe
 
     nft_name: str = base + "-" + quote + "-" + source + "-" + timeframe
     nft_symbol: str = pair
@@ -69,6 +77,7 @@ def publish_asset(
     logs_nft, logs_erc = factory.createNftWithErc20WithFixedRate(
         nft_data, erc_data, fre_data
     )
+
     data_nft_address: str = logs_nft["newTokenAddress"]
     logger.info("Deployed NFT: %s", data_nft_address)
 
