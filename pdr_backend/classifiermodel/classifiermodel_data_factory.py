@@ -70,6 +70,7 @@ class ClassifierModelDataFactory:
         # delete first row of X and x_df
         X = X[1:]
         x_df = x_df.iloc[1:]
+        x_df = x_df.reset_index(drop=True)
         xrecent = xrecent[1:]
 
         return X, y, x_df, xrecent
