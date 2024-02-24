@@ -126,10 +126,10 @@ def fill_nans(
 
 
 @enforce_types
-def classif_acc(ybool_hat, ybool) -> float:
-    ybool_hat, ybool = np.array(ybool_hat), np.array(ybool)
-    n_correct = sum(ybool_hat == ybool)
-    acc = n_correct / len(ybool)
+def classif_acc(ytrue_hat, ytrue) -> float:
+    ytrue_hat, ytrue = np.array(ytrue_hat), np.array(ytrue)
+    n_correct = sum(ytrue_hat == ytrue)
+    acc = n_correct / len(ytrue)
     return acc
 
 
