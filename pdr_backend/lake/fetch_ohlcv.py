@@ -217,26 +217,16 @@ def fetch_dydx_data(
     elif end_time > datetime.now(pytz.utc):
         logger.warning("End time is later than now. Dydx will only fetch up until now.")
 
-    count = 0
     # Fetch the data in a loop
     while end_time > start_time:
 
         # Initialize parameters for API request
         end_time_iso = end_time.strftime("%Y-%m-%dT%H:%M:%S") # Of the format 2024-02-21T00:00:00.000Z
-        print("end time iso is ", end_time_iso)
-
-        #params = {"resolution": resolution, "limit": limit, "toISO": end_time_iso}
-        # params = [
-        #     ('resolution', resolution),
-        #     ('limit', limit),
-        #     ('toISO', end_time_iso)
-        # ]
 
         # Fetch the data
         headers = {"Accept": "application/json"}
         response = requests.get(
             f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={resolution}&toISO={end_time_iso}&limit={limit}",
-            #params=params,
             headers=headers,
         )
         data = response.json()
@@ -250,9 +240,6 @@ def fetch_dydx_data(
             # Update end_time for the next iteration
             end_time = end_time - timedelta(minutes=minutes)
 
-            print("Loop iteration #", count)
-            count = count + 1
-
         # Exit loop if no candles are returned
         else:
             logger.warning("No candles found.")
@@ -260,7 +247,7 @@ def fetch_dydx_data(
             return data
 
     all_data = sorted(all_data, key=lambda x: x[0])
-
+    print("dydx data is ", all_data)
     return all_data
 
 

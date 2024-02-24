@@ -128,40 +128,6 @@ def mock_nan_dydx_response():
         ]
     }
 
-
-#@pytest.fixture
-def mock_dydx_response():
-    # Mocks expected api response
-    return {
-        "candles": [
-            {
-                "startedAt": "2024-02-20T23:50:00.000Z",
-                "open": "52308.0",
-                "high": "52394.0",
-                "low": "52229.0",
-                "close": "52394.0",
-                "baseTokenVolume": "0.015",
-            },
-            {
-                "startedAt": "2024-02-20T23:55:00.000Z",
-                "open": "52324.0",
-                "high": "52390.0",
-                "low": "52223.0",
-                "close": "52327.0",
-                "baseTokenVolume": "0.015",
-            },
-            {
-                "startedAt": "2024-02-21T00:00:00.000Z",
-                "open": "52431.0",
-                "high": "52431.0",
-                "low": "52207.0",
-                "close": "52348.0",
-                "baseTokenVolume": "0.013",
-            },
-        ]
-    }
-
-
 @enforce_types
 def test_safe_fetch_ohlcv_dydx():
     # test happy path
