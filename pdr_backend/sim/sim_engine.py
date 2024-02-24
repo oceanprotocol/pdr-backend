@@ -90,11 +90,10 @@ class SimEngine:
         logger.info("Start run")
 
         # main loop!
-        pq_data_factory = OhlcvDataFactory(self.ppss.lake_ss)
-        mergedohlcv_df: pl.DataFrame = pq_data_factory.get_mergedohlcv_df()
+        f = OhlcvDataFactory(self.ppss.lake_ss)
+        mergedohlcv_df = f.get_mergedohlcv_df()
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
-            self._plot(test_i, self.ppss.sim_ss.test_n)
 
         logger.info("Done all iters.")
 
@@ -207,6 +206,9 @@ class SimEngine:
         s += f". trader profit = ${trader_profit_USD:9.4f}"
         s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
         logger.info(s)
+
+        # plot
+        self._plot(test_i, self.ppss.sim_ss.test_n)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_spend: float):
@@ -370,18 +372,19 @@ class PlotState:
             ax10.margins(0.005, 0.05)
 
         # reusable profits scatterplot
-        def _scatter_profits(ax, actor_name: str, denomination, st_profits):
+        def _scatter_profits(ax, actor_name: str, denomin, st_profits):
             while len(self.jitter) < N:
                 self.jitter.append(np.random.uniform())
             next_jitter = _slice(self.jitter, N_done, N)
             next_profits = _slice(st_profits, N_done, N)
             ax.scatter(next_jitter, next_profits, c="b", s=1)
             avg = np.average(st_profits)
-            _set_title(ax, f"{actor_name} profit distribution. avg=${avg:.2f}")
+            s = f"{actor_name} profit distribution. avg={avg:.2f} {denomin}"
+            _set_title(ax, s)
             if not self.plotted_before:
                 buf = 1.0
                 ax.plot([0-buf, 1+buf], [0, 0], c="0.2", ls="--", lw=1)
-                _set_ylabel(ax, f"{actor_name} profit ({denomination})")
+                _set_ylabel(ax, f"{actor_name} profit ({denomin})")
                 _label_on_right(ax)
                 plt.tick_params(bottom=False, labelbottom=False)
                 ax.margins(0.05, 0.05)
