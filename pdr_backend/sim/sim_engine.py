@@ -4,6 +4,7 @@ import os
 from typing import Dict, List, Union
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
@@ -298,9 +299,17 @@ class SimEngine:
 @enforce_types
 class PlotState:
     def __init__(self):
-        self.fig, self.axs = plt.subplots(
-            2, 3, gridspec_kw={"width_ratios": [3, 1, 1]},
-        )
+        fig = plt.figure()
+        self.fig = fig
+        
+        gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
+        self.ax00 = fig.add_subplot(gs[0,0])
+        self.ax01 = fig.add_subplot(gs[0,1:3])
+        self.ax03 = fig.add_subplot(gs[:,3])
+        self.ax10 = fig.add_subplot(gs[1,0])
+        self.ax11 = fig.add_subplot(gs[1,1])
+        self.ax12 = fig.add_subplot(gs[1,2])
+        
         self.x = []
         self.y01_est, self.y01_l, self.y01_u = [], [], []
         self.jitter = []
@@ -310,8 +319,10 @@ class PlotState:
         
     # pylint: disable=too-many-statements
     def make_plot(self, st: SimEngineState, model, X_train, ybool_train):
-        fig, ((ax00, ax01, ax02), (ax10, ax11, ax12)) = self.fig, self.axs
-
+        fig = self.fig
+        ax00, ax01, ax03 = self.ax00, self.ax01, self.ax03
+        ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
+        
         N = len(st.predictoor_profits_OCEAN)
         N_done = len(self.x) # what # points have been plotted previously
 
@@ -359,9 +370,9 @@ class PlotState:
             ax01.margins(0.01, 0.01)
             
         # plot row 0, col 2: model contour
-        plot_model(model, X_train, ybool_train, ("x0", "x1"), (fig, ax02))
+        plot_model(model, X_train, ybool_train, ("x0", "x1"), (fig, ax03))
         if not self.plotted_before:
-            ax02.margins(0.01, 0.01)
+            ax03.margins(0.01, 0.01)
 
         # plot row 1, col 0: trader profit vs time
         y10 = list(np.cumsum(st.trader_profits_USD))
@@ -403,13 +414,13 @@ class PlotState:
 
         # final pieces
         HEIGHT = 7.5  # magic number
-        WIDTH = int(HEIGHT * 3)  # magic number
+        WIDTH = int(HEIGHT * 3.2)  # magic number
         fig.set_size_inches(WIDTH, HEIGHT)
         fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
         plt.pause(0.001)
         self.plotted_before = True
 
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
 def _set_ylabel(ax, s: str):
     ax.set_ylabel(s, fontsize=FONTSIZE)
