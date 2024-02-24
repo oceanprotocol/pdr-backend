@@ -57,9 +57,10 @@ def plot_model(
         X: np.ndarray,
         ytrue: np.ndarray,
         labels: Tuple[str, str],
-        fancy_title: bool,
         fig_ax = None,
         xranges = None,
+        fancy_title: bool = False,
+        legend_loc: str = "lower right",
 ):
     """
     @description
@@ -74,6 +75,8 @@ def plot_model(
       labels -- (x0 axis label, x1 axis label)
       fig_ax -- None or (fig, ax) to easily embed into existing plot
       xranges -- None or (x0_min, x0_max, x1_min, x1_max) -- plot boundaries
+      fancy_title -- should title have model accuracy info?
+      legend_loc -- eg "upper left"
     """
     assert X.shape[1] == 2, "only relevant for 2-d input"
     N = X.shape[1]
@@ -126,6 +129,6 @@ def plot_model(
     WIDTH = HEIGHT
     fig.set_size_inches(WIDTH, HEIGHT)
 
-    ax.legend(loc="upper right")
+    ax.legend(loc=legend_loc)
     plt.show()
 

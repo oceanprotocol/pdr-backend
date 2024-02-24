@@ -359,11 +359,7 @@ class PlotState:
             ax01.margins(0.01, 0.01)
             
         # plot row 0, col 2: model contour
-        labels = ("x0", "x1")
-        fancy_ttl = False
-        fig_ax = (fig, ax02)
-        xrng = None
-        plot_model(model, X_train, ybool_train, labels, fancy_ttl, fig_ax, xrng)
+        plot_model(model, X_train, ybool_train, ("x0", "x1"), (fig, ax02))
         if not self.plotted_before:
             ax02.margins(0.01, 0.01)
 
@@ -412,6 +408,8 @@ class PlotState:
         fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
         plt.pause(0.001)
         self.plotted_before = True
+
+        import pdb; pdb.set_trace()
 
 def _set_ylabel(ax, s: str):
     ax.set_ylabel(s, fontsize=FONTSIZE)

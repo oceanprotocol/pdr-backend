@@ -11,7 +11,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 from pdr_backend.util.mathutil import classif_acc
 
-PLOT = False # only turn on for manual testing
+PLOT = True # only turn on for manual testing
 
 @enforce_types
 def test_aimodel_factory_LinearLogistic():
@@ -54,9 +54,16 @@ def _test_aimodel_factory(approach):
     if PLOT:
         labels = ("x0", "x1")
         fancy_title = True
+        leg_loc = "upper right"
         fig_ax = None
         xranges = (mn, mx, mn, mx)
-        plot_model(model, X, ytrue, labels, fancy_title, fig_ax, xranges)
+        plot_model(
+            model, X, ytrue, labels,
+            fig_ax = None,
+            xranges = (mn, mx, mn, mx),
+            fancy_title = True,
+            legend_loc = "upper right",
+        )
 
     # test predict_true() & predict_ptrue()
     ytrue_hat = model.predict_true(X)
