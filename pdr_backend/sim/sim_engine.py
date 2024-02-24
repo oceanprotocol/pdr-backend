@@ -10,7 +10,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel import plot_model
+from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -110,7 +110,10 @@ class SimEngine:
         
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(pdr_ss)
-        X, ycont, _, _ = model_data_factory.create_xy(mergedohlcv_df, testshift)
+        X, ycont, x_df, _ = model_data_factory.create_xy(
+            mergedohlcv_df, testshift,
+        )
+        colnames = [col for col in x_df.columns]
         
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
@@ -212,7 +215,7 @@ class SimEngine:
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             self.plot_state.make_plot(
-                self.st, model, X_train, ybool_train
+                self.st, model, X_train, ybool_train, colnames,
             )  # type: ignore[union-attr]
 
     @enforce_types
@@ -318,7 +321,7 @@ class PlotState:
         plt.show()
         
     # pylint: disable=too-many-statements
-    def make_plot(self, st: SimEngineState, model, X_train, ybool_train):
+    def make_plot(self, st, model, X_train, ybool_train, colnames):
         fig = self.fig
         ax00, ax01, ax03 = self.ax00, self.ax01, self.ax03
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
@@ -370,7 +373,8 @@ class PlotState:
             ax01.margins(0.01, 0.01)
             
         # plot row 0, col 2: model contour
-        plot_model(model, X_train, ybool_train, ("x0", "x1"), (fig, ax03))
+        labels = tuple([_shift_one_earlier(colname) for colname in colnames])
+        plot_model(model, X_train, ybool_train, labels, (fig, ax03))
         if not self.plotted_before:
             ax03.margins(0.01, 0.01)
 
@@ -420,7 +424,12 @@ class PlotState:
         plt.pause(0.001)
         self.plotted_before = True
 
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
+
+def _shift_one_earlier(s: str):
+    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
+    val = int(s[-1])
+    return s[:-1] + str(val-1)
 
 def _set_ylabel(ax, s: str):
     ax.set_ylabel(s, fontsize=FONTSIZE)

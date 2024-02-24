@@ -5,7 +5,7 @@ from numpy.testing import assert_array_equal
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.aimodel import plot_model
+from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
