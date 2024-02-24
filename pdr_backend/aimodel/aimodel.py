@@ -91,7 +91,7 @@ def plot_model(
     ytrue_hat = model.predict_true(X)
     correct = (ytrue_hat == ytrue)
     wrong = np.invert(correct)
-    ax.scatter(X[:,0][wrong], X[:,1][wrong], s=40, c="yellow", label="wrong")
+    ax.scatter(X[:,0][wrong], X[:,1][wrong], s=40, c="y", label="wrong")
 
     yfalse = np.invert(ytrue)
     ax.scatter(X[:,0][ytrue], X[:,1][ytrue], s=5, c="c", label="true")

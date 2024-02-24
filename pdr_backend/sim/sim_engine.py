@@ -314,8 +314,8 @@ class PlotState:
         # plot row 0, col 0: predictoor profit vs time
         y00 = list(np.cumsum(st.predictoor_profits_OCEAN))
         next_y00 = _slice(y00, N_done, N)
-        ax00.plot(next_x, next_y00, color="green")
-        ax00.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
+        ax00.plot(next_x, next_y00, c="g")
+        ax00.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
         _set_title(ax00, f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN")
         if not self.plotted_before:
             ax00.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
@@ -346,7 +346,7 @@ class PlotState:
 
         ax02.plot(next_x, next_y02_est, "green")
         ax02.fill_between(next_x, next_y02_l, next_y02_u, color="0.9")
-        ax02.plot(next_hx, [50, 50], color="0.2", linestyle="dashed", linewidth=1)
+        ax02.plot(next_hx, [50, 50], c="0.2", ls="--", lw=1)
         ax02.set_ylim(bottom=40, top=60)
         now_s = f"{self.y02_est[-1]:.2f}% " 
         now_s += f"[{self.y02_l[-1]:.2f}%, {self.y02_u[-1]:.2f}%]"
@@ -360,8 +360,8 @@ class PlotState:
         # plot row 1, col 0: trader profit vs time
         y10 = list(np.cumsum(st.trader_profits_USD))
         next_y10 = _slice(y10, N_done, N)
-        ax10.plot(next_x, next_y10, color="blue")
-        ax10.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
+        ax10.plot(next_x, next_y10, c="b")
+        ax10.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
         _set_title(ax10, f"Trader profit vs time. Current: ${y10[-1]:.2f}")
         if not self.plotted_before:
             ax10.set_xlabel("time", fontsize=FONTSIZE)
@@ -370,21 +370,18 @@ class PlotState:
             ax10.margins(0.005, 0.05)
 
         # reusable profits scatterplot
-        def _scatter_profits(ax, actor_name: str, denomin, st_profits):
+        def _scatter_profits(ax, actor_name: str, denomination, st_profits):
             while len(self.jitter) < N:
                 self.jitter.append(np.random.uniform())
             next_jitter = _slice(self.jitter, N_done, N)
             next_profits = _slice(st_profits, N_done, N)
-            ax.scatter(next_jitter, next_profits, color="blue", s=1)
+            ax.scatter(next_jitter, next_profits, c="b", s=1)
             avg = np.average(st_profits)
             _set_title(ax, f"{actor_name} profit distribution. avg=${avg:.2f}")
             if not self.plotted_before:
-                ax.plot(
-                    [0 - 1, 1 + 1], [0, 0], color="0.2", linestyle="dashed", linewidth=1
-                )
-                ax.set_ylabel(
-                    f"{actor_name} profit ({denomin})", fontsize=FONTSIZE,
-                )
+                buf = 1.0
+                ax.plot([0-buf, 1+buf], [0, 0], c="0.2", ls="--", lw=1)
+                _set_ylabel(ax, f"{actor_name} profit ({denomination})")
                 _label_on_right(ax)
                 plt.tick_params(bottom=False, labelbottom=False)
                 ax.margins(0.05, 0.05)
@@ -405,6 +402,8 @@ class PlotState:
         plt.pause(0.001)
         self.plotted_before = True
 
+def _set_ylabel(ax, s: str):
+    ax.set_ylabel(s, fontsize=FONTSIZE)
 
 def _set_title(ax, s: str):
     ax.set_title(s, fontsize=FONTSIZE, fontweight="bold")
