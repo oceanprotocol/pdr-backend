@@ -325,7 +325,7 @@ class PlotState:
             
         # plot row 0, col 1: model contour
         # (build me)
-        _set_title(ax01, "Countours")
+        _set_title(ax01, "Contours")
         if not self.plotted_before:
             ax01.set_xlabel("x0")
             ax01.set_ylabel("x1")
@@ -368,32 +368,34 @@ class PlotState:
             ax10.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
             _label_on_right(ax10)
             ax10.margins(0.005, 0.05)
+
+        # reusable profits scatterplot
+        def _scatter_profits(ax, actor_name: str, denomin, st_profits):
+            while len(self.jitter) < N:
+                self.jitter.append(np.random.uniform())
+            next_jitter = _slice(self.jitter, N_done, N)
+            next_profits = _slice(st_profits, N_done, N)
+            ax.scatter(next_jitter, next_profits, color="blue", s=1)
+            avg = np.average(st_profits)
+            _set_title(ax, f"{actor_name} profit distribution. avg=${avg:.2f}")
+            if not self.plotted_before:
+                ax.plot(
+                    [0 - 1, 1 + 1], [0, 0], color="0.2", linestyle="dashed", linewidth=1
+                )
+                ax.set_ylabel(
+                    f"{actor_name} profit ({denomin})", fontsize=FONTSIZE,
+                )
+                _label_on_right(ax)
+                plt.tick_params(bottom=False, labelbottom=False)
+                ax.margins(0.05, 0.05)
             
         # plot row 1, col 1: 1d scatter of predictoor profits
-        # (build me)
-        _set_title(ax11, "Countours")
-        if not self.plotted_before:
-            ax11.set_xlabel("x0")
-            ax11.set_ylabel("x1")
-            _label_on_right(ax11)
-            ax11.margins(0.01, 0.01)
+        _scatter_profits(
+            ax11, "predictoor", "OCEAN", st.predictoor_profits_OCEAN,
+        )
 
         # plot row 1, col 2: 1d scatter of trader profits
-        while len(self.jitter) < N:
-            self.jitter.append(np.random.uniform())
-        next_jitter = _slice(self.jitter, N_done, N)
-        next_profits = _slice(st.trader_profits_USD, N_done, N)
-        ax12.scatter(next_jitter, next_profits, color="blue", s=1)
-        avg = np.average(st.trader_profits_USD)
-        _set_title(ax12, f"Trader profit distribution. avg=${avg:.2f}")
-        if not self.plotted_before:
-            ax12.plot(
-                [0 - 1, 1 + 1], [0, 0], color="0.2", linestyle="dashed", linewidth=1
-            )
-            ax12.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-            _label_on_right(ax12)
-            plt.tick_params(bottom=False, labelbottom=False)
-            ax12.margins(0.05, 0.05)
+        _scatter_profits(ax12, "trader", "USD", st.trader_profits_USD)
 
         # final pieces
         HEIGHT = 7.5  # magic number
