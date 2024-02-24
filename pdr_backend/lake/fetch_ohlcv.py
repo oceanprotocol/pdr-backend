@@ -6,8 +6,7 @@ import numpy as np
 
 import requests
 import polars as pl
-import pytz
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
@@ -211,10 +210,10 @@ def fetch_dydx_data(
     if end_time <= start_time:
         logger.fatal("Start time must be earlier than end time.")
         return None
-    elif start_time > datetime.now(pytz.utc):
+    elif start_time > datetime.now(timezone.utc):
         logger.fatal("Start time must be earlier than now.")
         return None
-    elif end_time > datetime.now(pytz.utc):
+    elif end_time > datetime.now(timezone.utc):
         logger.warning("End time is later than now. Dydx will only fetch up until now.")
 
     # Fetch the data in a loop
@@ -267,7 +266,7 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
         try:
             timestamp = datetime.strptime(
                 timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=pytz.UTC)
+            ).replace(tzinfo=timezone.utc)
         except ValueError:
             continue
 
