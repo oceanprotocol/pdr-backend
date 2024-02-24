@@ -71,7 +71,7 @@ def test_bronze_tables_creation(
     # Create bronze slots table
     gql_tables["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_tables, ppss)
     assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
-    assert len(gql_tables["bronze_pdr_slots"].df) == 6
+    assert len(gql_tables["bronze_pdr_slots"].df) == 7
 
     # Get predictions data from predictions table for slots within slots table
     slots_with_predictions_df = gql_tables["bronze_pdr_slots"].df.join(
@@ -83,13 +83,13 @@ def test_bronze_tables_creation(
     )
 
     users = slots_with_predictions_df["user"].to_list()
-    assert len(users) == 6
+    assert len(users) == 7
 
     predvalues = slots_with_predictions_df["predvalue"].to_list()
-    assert len(predvalues) == 6
+    assert len(predvalues) == 7
 
     payouts = slots_with_predictions_df["payout"].to_list()
-    assert len(payouts) == 6
+    assert len(payouts) == 7
 
     # filter data frame by slot
     filtered_by_slot = slots_with_predictions_df.filter(

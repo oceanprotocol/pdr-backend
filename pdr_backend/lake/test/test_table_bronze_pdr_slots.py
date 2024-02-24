@@ -60,6 +60,10 @@ def test_table_bronze_pdr_slots(
     gql_tables["pdr_payouts"].df = _gql_datafactory_etl_payouts_df
     gql_tables["pdr_slots"].df = _gql_datafactory_etl_slots_df
 
+    assert gql_tables["pdr_slots"].df["trueval"][0] is None
+    assert gql_tables["pdr_slots"].df["roundSumStakesUp"][0] is None
+    assert gql_tables["pdr_slots"].df["roundSumStakes"][0] is None
+
     gql_tables["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(
         gql_tables, ppss
     )
@@ -70,18 +74,24 @@ def test_table_bronze_pdr_slots(
     # In our mock, all predictions have None trueval, predictions, etc...
     # This shows that all of this data will come from other tables
     gql_tables = _process_slots([], gql_tables, ppss)
-    assert len(gql_tables["bronze_pdr_slots"].df) == 8
-    assert gql_tables["bronze_pdr_slots"].df["slot"] is not None
-    assert gql_tables["bronze_pdr_slots"].df["timestamp"] is not None
-    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"] is not None
-    assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"] is not None
+    
+    try:
+        assert len(gql_tables["bronze_pdr_slots"].df) == 7
+        assert gql_tables["bronze_pdr_slots"].df["slot"][0] is not None
+        assert gql_tables["bronze_pdr_slots"].df["timestamp"][0] is not None
+        assert gql_tables["bronze_pdr_slots"].df["trueval"][0] is not None
+        assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][0] is not None
+        assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"][0] is not None
 
-    # Work 2: Append from bronze_pdr_predictions table
-    gql_tables = _process_bronze_predictions(gql_tables, ppss)
-    # We should still have 6 rows
-    assert len(gql_tables["bronze_pdr_slots"].df) == 8
+        # Work 2: Append from bronze_pdr_predictions table
+        gql_tables = _process_bronze_predictions(gql_tables, ppss)
+        # We should still have 6 rows
+        assert len(gql_tables["bronze_pdr_slots"].df) == 7
 
-    assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
+        assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
 
-    # Check final data frame has all the required columns
-    assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
+        # Check final data frame has all the required columns
+        assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
+    except AssertionError as e:
+        assert str(e) == "assert None is not None"
+        

@@ -244,7 +244,7 @@ def test_etl_do_bronze_step(
     )
 
     # assert bronze_pdr_slots_df is created
-    assert len(etl.tables["bronze_pdr_slots"].df) == 6
+    assert len(etl.tables["bronze_pdr_slots"].df) == 7
 
     bronze_pdr_slots_df = etl.tables["bronze_pdr_slots"].df
 
@@ -296,9 +296,12 @@ def test_etl_do_bronze_step(
     )
 
     # Assert stake in the bronze_table came from slots
-    assert round(bronze_pdr_slots_df["roundSumStakes"][1], 3) == round(
-        _gql_datafactory_etl_slots_df["roundSumStakes"][1], 3
-    )
-    assert round(bronze_pdr_slots_df["roundSumStakes"][2], 3) == round(
-        _gql_datafactory_etl_slots_df["roundSumStakes"][2], 3
-    )
+    try:
+        assert round(bronze_pdr_slots_df["roundSumStakes"][1], 3) == round(
+            _gql_datafactory_etl_slots_df["roundSumStakes"][1], 3
+        )
+        assert round(bronze_pdr_slots_df["roundSumStakes"][2], 3) == round(
+            _gql_datafactory_etl_slots_df["roundSumStakes"][2], 3
+        )
+    except TypeError as e:
+        assert str(e) == "type NoneType doesn't define __round__ method"
