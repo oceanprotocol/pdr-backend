@@ -49,8 +49,7 @@ def generate_prediction_data_structure(
 def _save_prediction_csv(
     all_predictions: List[Prediction],
     csv_output_dir: str,
-    headers: List,
-    attribute_names: List,
+    headers_attrs: dict,
 ):
     if not os.path.isdir(csv_output_dir):
         os.makedirs(csv_output_dir)
@@ -63,13 +62,13 @@ def _save_prediction_csv(
         with open(filename, "w", newline="") as file:
             writer = csv.writer(file)
 
-            writer.writerow(headers)
+            writer.writerow(headers_attrs.keys())
 
             for prediction in predictions:
                 writer.writerow(
                     [
                         getattr(prediction, attribute_name)
-                        for attribute_name in attribute_names
+                        for attribute_name in headers_attrs.values()
                     ]
                 )
 
@@ -80,8 +79,13 @@ def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
     _save_prediction_csv(
         all_predictions,
         csv_output_dir,
-        ["Predicted Value", "True Value", "Timestamp", "Stake", "Payout"],
-        ["prediction", "trueval", "timestamp", "stake", "payout"],
+        {
+            "Predicted Value": "prediction",
+            "True Value": "trueval",
+            "Timestamp": "timestamp",
+            "Stake": "stake",
+            "Payout": "payout",
+        },
     )
 
 
@@ -90,15 +94,14 @@ def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
     _save_prediction_csv(
         all_predictions,
         csv_output_dir,
-        [
-            "PredictionID",
-            "Timestamp",
-            "Slot",
-            "Stake",
-            "Wallet",
-            "Payout",
-            "True Value",
-            "Predicted Value",
-        ],
-        ["ID", "timestamp", "slot", "stake", "user", "payout", "trueval", "prediction"],
+        {
+            "PredictionID": "ID",
+            "Timestamp": "timestamp",
+            "Slot": "slot",
+            "Stake": "stake",
+            "Wallet": "user",
+            "Payout": "payout",
+            "True Value": "trueval",
+            "Predicted Value": "prediction",
+        },
     )

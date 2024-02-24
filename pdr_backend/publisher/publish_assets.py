@@ -34,10 +34,7 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
             # timeframe is already asserted in PublisherSS
             s_per_epoch=feed.timeframe.s,  # type: ignore[union-attr]
             s_per_subscription=_S_PER_SUBSCRIPTION,
-            base=feed.pair.base_str,
-            quote=feed.pair.quote_str,
-            source=str(feed.exchange),
-            timeframe=str(feed.timeframe),
+            feed=feed,
             trueval_submitter_addr=trueval_submitter_addr,
             feeCollector_addr=fee_collector_addr,
             rate=_RATE,

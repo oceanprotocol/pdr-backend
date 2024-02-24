@@ -10,10 +10,16 @@ lake_ss:
 
 predictoor_ss:
   predict_feed: binance BTC/USDT c 5m
+  stake_amount: 1 # How much your bot stakes. In OCEAN per epoch, per feed
+  
+  sim_only:
+    others_stake: 5 # How much all others' bots stake. In OCEAN per epoch, per feed. Calcs: stake volume = 10e6 $/day/20_feeds = 34700 $/epoch/20_feeds (bc 288 5m epochs/day) = 1735 $/epoch/feed = 2313 OCEAN/epoch/feed (at 1 OCEAN=$0.75)
+    others_accuracy: 0.50001 # What percent of others' bots stake is correct. Value in range 0.0-1.0. 0.50001 means mostly 50-50 stake and some small fry predicting a bit accurately
+    revenue: 0.93006 # Sales revenue going towards predictoors. In OCEAN per epoch, per feed. Calcs: 37500 OCEAN/week/20_feeds (Predictoor DF rewards) = 18.6012 OCEAN/epoch/20_feeds (bc 2016 5m epochs/week) = 0.93006 OCEAN/epoch/feed
+
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
-    stake_amount: 1 # stake this amount with each prediction. In OCEAN
-  approach3:
+    
   aimodel_ss:
     input_feeds:
       - binance BTC/USDT c 5m
