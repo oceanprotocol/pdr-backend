@@ -9,6 +9,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
+from pdr_backend.aimodel.aimodel import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -208,7 +209,10 @@ class SimEngine:
         logger.info(s)
 
         # plot
-        self._plot(test_i, self.ppss.sim_ss.test_n)
+        if self.do_plot(test_i, self.ppss.sim_ss.test_n):
+            self.plot_state.make_plot(
+                self.st, model, X_train, ybool_train
+            )  # type: ignore[union-attr]
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_spend: float):
@@ -276,37 +280,40 @@ class SimEngine:
         )
 
     @enforce_types
-    def _plot(self, i: int, N: int):
+    def do_plot(self, i: int, N: int):
+        "Plot on this iteration Y/N?"
         if not self.ppss.sim_ss.do_plot:
-            return
+            return False
 
         # don't plot first 5 iters -> not interesting
         # then plot the next 5 -> "stuff's happening!"
         # then plot every 5th iter, to balance "stuff's happening" w/ speed
         do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
         if not do_update:
-            return
+            return False
 
-        self.plot_state.do_plot(self.st)  # type: ignore[union-attr]
+        return True
 
 
 @enforce_types
 class PlotState:
     def __init__(self):
-        self.fig, self.axs = plt.subplots(2, 3, gridspec_kw={"width_ratios": [3, 1, 1]})
+        self.fig, self.axs = plt.subplots(
+            2, 3, gridspec_kw={"width_ratios": [3, 1, 1]},
+        )
         self.x = []
-        self.y02_est, self.y02_l, self.y02_u = [], [], []
+        self.y01_est, self.y01_l, self.y01_u = [], [], []
         self.jitter = []
         self.plotted_before = False
         plt.ion()
         plt.show()
         
     # pylint: disable=too-many-statements
-    def do_plot(self, st: SimEngineState):
+    def make_plot(self, st: SimEngineState, model, X_train, ybool_train):
         fig, ((ax00, ax01, ax02), (ax10, ax11, ax12)) = self.fig, self.axs
 
         N = len(st.predictoor_profits_OCEAN)
-        N_done = len(self.x)
+        N_done = len(self.x) # what # points have been plotted previously
 
         # set x
         self.x = list(range(0, N))
@@ -318,45 +325,46 @@ class PlotState:
         next_y00 = _slice(y00, N_done, N)
         ax00.plot(next_x, next_y00, c="g")
         ax00.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
-        _set_title(ax00, f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN")
+        s = f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN"
+        _set_title(ax00, s)
         if not self.plotted_before:
             ax00.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
             ax00.set_xlabel("time", fontsize=FONTSIZE)
             _label_on_right(ax00)
             ax00.margins(0.005, 0.05)
-            
-        # plot row 0, col 1: model contour
-        # (build me)
-        _set_title(ax01, "Contours")
-        if not self.plotted_before:
-            ax01.set_xlabel("x0")
-            ax01.set_ylabel("x1")
-            _label_on_right(ax01)
-            ax01.margins(0.01, 0.01)
 
-        # plot row 0, col 2: % correct vs time
+        # plot row 0, col 1: % correct vs time
         for i in range(N_done, N):
             n_correct = sum(st.corrects[: i + 1])
             n_trials = len(st.corrects[: i + 1])
             l, u = proportion_confint(count=n_correct, nobs=n_trials)
-            self.y02_est.append(n_correct / n_trials * 100)
-            self.y02_l.append(l * 100)
-            self.y02_u.append(u * 100)
-        next_y02_est = _slice(self.y02_est, N_done, N)
-        next_y02_l = _slice(self.y02_l, N_done, N)
-        next_y02_u = _slice(self.y02_u, N_done, N)
+            self.y01_est.append(n_correct / n_trials * 100)
+            self.y01_l.append(l * 100)
+            self.y01_u.append(u * 100)
+        next_y01_est = _slice(self.y01_est, N_done, N)
+        next_y01_l = _slice(self.y01_l, N_done, N)
+        next_y01_u = _slice(self.y01_u, N_done, N)
 
-        ax02.plot(next_x, next_y02_est, "green")
-        ax02.fill_between(next_x, next_y02_l, next_y02_u, color="0.9")
-        ax02.plot(next_hx, [50, 50], c="0.2", ls="--", lw=1)
-        ax02.set_ylim(bottom=40, top=60)
-        now_s = f"{self.y02_est[-1]:.2f}% " 
-        now_s += f"[{self.y02_l[-1]:.2f}%, {self.y02_u[-1]:.2f}%]"
-        _set_title(ax02, f"% correct vs time. Current: {now_s}")
+        ax01.plot(next_x, next_y01_est, "green")
+        ax01.fill_between(next_x, next_y01_l, next_y01_u, color="0.9")
+        ax01.plot(next_hx, [50, 50], c="0.2", ls="--", lw=1)
+        ax01.set_ylim(bottom=40, top=60)
+        now_s = f"{self.y01_est[-1]:.2f}% " 
+        now_s += f"[{self.y01_l[-1]:.2f}%, {self.y01_u[-1]:.2f}%]"
+        _set_title(ax01, f"% correct vs time. Current: {now_s}")
         if not self.plotted_before:
-            ax02.set_xlabel("time", fontsize=FONTSIZE)
-            ax02.set_ylabel("% correct", fontsize=FONTSIZE)
-            _label_on_right(ax02)
+            ax01.set_xlabel("time", fontsize=FONTSIZE)
+            ax01.set_ylabel("% correct", fontsize=FONTSIZE)
+            _label_on_right(ax01)
+            ax01.margins(0.01, 0.01)
+            
+        # plot row 0, col 2: model contour
+        labels = ("x0", "x1")
+        fancy_ttl = False
+        fig_ax = (fig, ax02)
+        xrng = None
+        plot_model(model, X_train, ybool_train, labels, fancy_ttl, fig_ax, xrng)
+        if not self.plotted_before:
             ax02.margins(0.01, 0.01)
 
         # plot row 1, col 0: trader profit vs time

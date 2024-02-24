@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -52,14 +54,12 @@ class Aimodel:
 @enforce_types
 def plot_model(
         model: Aimodel,
-        x0_min: float,
-        x0_max: float,
-        x1_min: float,
-        x1_max: float,
-        x0_label: str,
-        x1_label: str,
         X: np.ndarray,
         ytrue: np.ndarray,
+        labels: Tuple[str, str],
+        fancy_title: bool,
+        fig_ax = None,
+        xranges = None,
 ):
     """
     @description
@@ -69,16 +69,28 @@ def plot_model(
 
     @arguments
       model
-      x0_min -- min value for x0 (dimension 0) in plot
-      x0_max -- max ""
-      x1_min -- min value for x1 (dimension 1) in plot
-      x1_max -- max ""
       X -- [sample_i][dim_i]:floatval -- training model inputs (or other)
       ytrue -- [sample_i]:boolval -- training model outputs (or other)
+      labels -- (x0 axis label, x1 axis label)
+      fig_ax -- None or (fig, ax) to easily embed into existing plot
+      xranges -- None or (x0_min, x0_max, x1_min, x1_max) -- plot boundaries
     """
     assert X.shape[1] == 2, "only relevant for 2-d input"
-    
-    fig, ax = plt.subplots()
+    N = X.shape[1]
+
+    x0_label, x1_labels = labels
+
+    if xranges is None:
+        x0_min, x0_max = min(X[:,0]), max(X[:,0])
+        x1_min, x1_max = min(X[:,1]), max(X[:,1])
+    else:
+        x0_min, x0_max, x1_min, x1_max = xranges
+        
+    if fig_ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig, ax = fig_ax
+        ax.cla() # clear axis
 
     feature_x = np.linspace(x0_min, x0_max, 200)
     feature_y = np.linspace(x1_min, x1_max, 200)
@@ -91,18 +103,21 @@ def plot_model(
     ytrue_hat = model.predict_true(X)
     correct = (ytrue_hat == ytrue)
     wrong = np.invert(correct)
-    ax.scatter(X[:,0][wrong], X[:,1][wrong], s=40, c="y", label="wrong")
+    ax.scatter(X[:,0][wrong], X[:,1][wrong], s=40, c="yellow", label="wrong")
 
     yfalse = np.invert(ytrue)
     ax.scatter(X[:,0][ytrue], X[:,1][ytrue], s=5, c="c", label="true")
     ax.scatter(X[:,0][yfalse], X[:,1][yfalse], s=5, c="r", label="false")
 
     n, n_correct, n_wrong = len(correct), sum(correct), sum(wrong)
-    ax.set_title(
-        "Contours = model response. "
-        f" {n_correct}/{n} = {n_correct/n*100:.2f}% correct"
-        f", ie {n_wrong}/{n} = {n_wrong/n*100:.2f}% wrong"
-    )
+    if fancy_title:
+        ax.set_title(
+            "Contours = model response. "
+            f" {n_correct}/{n} = {n_correct/n*100:.2f}% correct"
+            f", ie {n_wrong}/{n} = {n_wrong/n*100:.2f}% wrong"
+        )
+    else:
+        ax.set_title("Contours = model response")
     
     ax.set_xlabel("x0")
     ax.set_ylabel("x1")

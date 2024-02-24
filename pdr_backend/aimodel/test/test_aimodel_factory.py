@@ -52,7 +52,11 @@ def _test_aimodel_factory(approach):
 
     # plot
     if PLOT:
-        plot_model(model, mn, mx, mn, mx, X, ytrue, "x0", "x1")
+        labels = ("x0", "x1")
+        fancy_title = True
+        fig_ax = None
+        xranges = (mn, mx, mn, mx)
+        plot_model(model, X, ytrue, labels, fancy_title, fig_ax, xranges)
 
     # test predict_true() & predict_ptrue()
     ytrue_hat = model.predict_true(X)
