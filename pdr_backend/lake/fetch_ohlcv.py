@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
 from pdr_backend.lake.constants import (
-    TOHLCV_SCHEMA_PL,
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
 )
@@ -61,6 +60,7 @@ def safe_fetch_ohlcv_ccxt(
         logger.warning("exchange: %s", e)
         return None
 
+
 @enforce_types
 def safe_fetch_ohlcv_dydx(
     symbol: str,
@@ -89,15 +89,16 @@ def safe_fetch_ohlcv_dydx(
 
     try:
         return fetch_dydx_data(
-                    symbol=symbol,
-                    resolution=resolution,
-                    st_ut=st_ut,
-                    fin_ut=fin_ut,
-                    limit=limit,
-                )
+            symbol=symbol,
+            resolution=resolution,
+            st_ut=st_ut,
+            fin_ut=fin_ut,
+            limit=limit,
+        )
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
+
 
 @enforce_types
 def clean_raw_ohlcv(
@@ -159,7 +160,10 @@ def _filter_within_timerange(
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]
 
-def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int = None) -> Union[List[tuple], None]:
+
+def fetch_dydx_data(
+    symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int
+) -> Union[List[tuple], None]:
     """
     @description
       makes a loop of get requests for dydx v4 exchange candle data,
@@ -193,8 +197,10 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
     }
     # Handle bad dydx resolution
     if resolution not in resolution_to_minutes:
-         logger.fatal('Resolution for dydx must be one of the following: "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "1DAY"')
-         return
+        logger.fatal(
+            'Resolution for dydx must be one of the following: "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "1DAY"'
+        )
+        return None
     else:
         minutes = resolution_to_minutes[resolution]
 
@@ -203,39 +209,45 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
     # Handle bad dates
     if end_time <= start_time:
-        logger.fatal('Start time must be earlier than end time.')
-        return
+        logger.fatal("Start time must be earlier than end time.")
+        return None
     elif start_time > datetime.now(pytz.utc):
-        logger.fatal('Start time must be earlier than now.')
-        return
+        logger.fatal("Start time must be earlier than now.")
+        return None
     elif end_time > datetime.now(pytz.utc):
-        logger.warning('End time is later than now. Dydx will only fetch up until now.')
+        logger.warning("End time is later than now. Dydx will only fetch up until now.")
 
     count = 0
     # Fetch the data in a loop
     while end_time > start_time:
 
         # Initialize parameters for API request
-        end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S')
-        params = {'resolution': resolution, 'limit': limit, 'toISO': end_time}
+        end_time_iso = end_time.strftime("%Y-%m-%dT%H:%M:%S") # Of the format 2024-02-21T00:00:00.000Z
+        print("end time iso is ", end_time_iso)
+
+        #params = {"resolution": resolution, "limit": limit, "toISO": end_time_iso}
+        # params = [
+        #     ('resolution', resolution),
+        #     ('limit', limit),
+        #     ('toISO', end_time_iso)
+        # ]
 
         # Fetch the data
-        headers = {'Accept': 'application/json'}
+        headers = {"Accept": "application/json"}
         response = requests.get(
-            f'https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{symbol}',
-            params=params,
-            headers=headers
+            f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={resolution}&toISO={end_time_iso}&limit={limit}",
+            #params=params,
+            headers=headers,
         )
         data = response.json()
 
         # Process and add the fetched data to all_data
-        if 'candles' in data:
+        if "candles" in data:
 
-            transformed_data = transform_dydx_data_to_tuples(data['candles'])
+            transformed_data = transform_dydx_data_to_tuples(data["candles"])
             all_data.extend(transformed_data)
 
             # Update end_time for the next iteration
-            end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=pytz.UTC)
             end_time = end_time - timedelta(minutes=minutes)
 
             print("Loop iteration #", count)
@@ -251,6 +263,7 @@ def fetch_dydx_data(symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: Uni
 
     return all_data
 
+
 def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
     """
     Transforms dYdX data to a list of tuples
@@ -258,30 +271,30 @@ def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
     transformed_data = []
 
     for candle in candles:
-        timestamp_str = candle.get('startedAt')  # Of the format "2024-02-20T23:50:00.000Z"
+        timestamp_str = candle.get(
+            "startedAt"
+        )  # Of the format "2024-02-20T23:50:00.000Z"
         # Handle NaN dates
         try:
-            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+            timestamp = datetime.strptime(
+                timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=pytz.UTC)
         except ValueError:
             continue
 
         # Handle NaN floats
-        open_price = parse_float(candle['open'])
-        high_price = parse_float(candle['high'])
-        low_price = parse_float(candle['low'])
-        close_price = parse_float(candle['close'])
-        volume = parse_float(candle['baseTokenVolume'])
+        open_price = parse_float(candle["open"])
+        high_price = parse_float(candle["high"])
+        low_price = parse_float(candle["low"])
+        close_price = parse_float(candle["close"])
+        volume = parse_float(candle["baseTokenVolume"])
 
-        row = (timestamp,
-               open_price,
-               high_price,
-               low_price,
-               close_price,
-               volume)
+        row = (timestamp, open_price, high_price, low_price, close_price, volume)
 
         transformed_data.append(row)
 
     return transformed_data
+
 
 def parse_float(value):
     # Attempts to return a float, but if there's an NaN, it
