@@ -187,17 +187,18 @@ class SimEngine:
 
         # track predictoor profit
         others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
+        others_stake_wrong = (1 - pdr_ss.others_accuracy) * pdr_ss.others_stake
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct
-            stake_up_profit = percent_to_me * pdr_ss.revenue
-            stake_down_profit = -stake_down
+            acct_up_profit = percent_to_me * (pdr_ss.revenue + others_stake_wrong)
+            acct_down_profit = -stake_down
         else:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
-            stake_up_profit = -stake_up
-            stake_down_profit = percent_to_me * pdr_ss.revenue
-        predictoor_profit_OCEAN = stake_up_profit + stake_down_profit
+            acct_up_profit = -stake_up
+            acct_down_profit = percent_to_me * (pdr_ss.revenue + others_stake_wrong)
+        predictoor_profit_OCEAN = acct_up_profit + acct_down_profit
         self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
 
         # track trading profit
@@ -214,8 +215,8 @@ class SimEngine:
 
         s += f" prob_up={prob_up:.2f}"
         s += " predictoor profit = "
-        s += f"{stake_up_profit:8.5f} up"
-        s += f" + {stake_down_profit:8.5f} down"
+        s += f"{acct_up_profit:8.5f} up"
+        s += f" + {acct_down_profit:8.5f} down"
         s += f" = {predictoor_profit_OCEAN:8.5f} OCEAN"
         s += f" (cumulative {sum(self.st.predictoor_profits_OCEAN):7.2f} OCEAN)"
 
