@@ -3,7 +3,6 @@ import logging
 import os
 from typing import Dict, List, Union
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -20,7 +19,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 9
 
-
+# pylint: disable=too-many-instance-attributes
 class SimEngineState:
     def __init__(self, init_holdings: Dict[str,Union[int,float]]):
         self.holdings: dict = init_holdings
@@ -103,6 +102,7 @@ class SimEngine:
         acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
         logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
 
+    # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
@@ -299,7 +299,8 @@ class PlotState:
         self.plotted_before = False
         plt.ion()
         plt.show()
-
+        
+    # pylint: disable=too-many-statements
     def do_plot(self, st: SimEngineState):
         fig, ((ax0, ax1), (ax2, ax3)) = self.fig, self.axs
 
@@ -336,7 +337,7 @@ class PlotState:
         next_y1_u = _slice(self.y1_u, N_done, N)
 
         ax1.plot(next_x, next_y1_est, "green")
-        pc = ax1.fill_between(next_x, next_y1_l, next_y1_u, color="0.9")
+        ax1.fill_between(next_x, next_y1_l, next_y1_u, color="0.9")
         ax1.plot(next_hx, [50, 50], color="0.2", linestyle="dashed", linewidth=1)
         ax1.set_ylim(bottom=40, top=60)
         now_s = f"{self.y1_est[-1]:.2f}% [{self.y1_l[-1]:.2f}%, {self.y1_u[-1]:.2f}%]"
@@ -348,11 +349,11 @@ class PlotState:
             ax1.margins(0.01, 0.01)
 
         # plot 2: trader profit vs time
-        self.y2 = list(np.cumsum(st.trader_profits_USD))
-        next_y2 = _slice(self.y2, N_done, N)
+        y2 = list(np.cumsum(st.trader_profits_USD))
+        next_y2 = _slice(y2, N_done, N)
         ax2.plot(next_x, next_y2, color="blue")
         ax2.plot(next_hx, [0, 0], color="0.2", linestyle="dashed", linewidth=1)
-        _set_title(ax2, f"Trader profit vs time. Current: ${self.y2[-1]:.2f}")
+        _set_title(ax2, f"Trader profit vs time. Current: ${y2[-1]:.2f}")
         if not self.plotted_before:
             ax2.set_xlabel("time", fontsize=FONTSIZE)
             ax2.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)

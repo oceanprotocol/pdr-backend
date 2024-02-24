@@ -6,26 +6,17 @@ from web3 import Web3
 
 @enforce_types
 def key_to_key725(key: str):
-    key725 = Web3.keccak(key.encode("utf-8")).hex()
-    return key725
+    return Web3.keccak(key.encode("utf-8")).hex()
 
 
 @enforce_types
 def value_to_value725(value: Union[str, None]):
-    if value is None:
-        value725 = None
-    else:
-        value725 = Web3.to_hex(text=value)
-    return value725
+    return None if value is None else Web3.to_hex(text=value)
 
 
 @enforce_types
 def value725_to_value(value725) -> Union[str, None]:
-    if value725 is None:
-        value = None
-    else:
-        value = Web3.to_text(hexstr=value725)
-    return value
+    return None if value725 is None else Web3.to_text(hexstr=value725)
 
 
 @enforce_types
@@ -59,10 +50,7 @@ def info_to_info725(info: Dict[str, Union[str, None]]) -> list:
 
     info725 = []
     for key in keys:
-        if key in info_keys:
-            value = info[key]
-        else:
-            value = None
+        value = None if key not in info_keys else info[key]
         key725 = key_to_key725(key)
         value725 = value_to_value725(value)
         info725.append({"key": key725, "value": value725})
