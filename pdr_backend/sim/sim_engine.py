@@ -142,25 +142,35 @@ class SimEngine:
         pred_up: bool = model.predict_true(X_test)[0] # True or False
         self.st.ybools_testhat.append(pred_up)
 
-        # simulate two-sided staking
+        # predictoor: (simulate) submit predictions
         stake_up = prob_up * pdr_ss.stake_amount
         stake_down = (1.0 - prob_up) * pdr_ss.stake_amount
         
-        # simulate buy. Buy 'amt_usd' worth of TOK if we think price going up
+        # trader: enter the trading position
         usdcoin_holdings_before = self.st.holdings[self.usdcoin]
-        if pred_up:
-            conf_up = (prob_up - 0.5) * 2.0 # in range [0.0, 1.0] not [0.5, 1.0]
-            buy_amt = conf_up * ppss.trader_ss.buy_amt_usd # amt depends on conf
-            self._buy(curprice, buy_amt)
+        if pred_up: # buy; exit later by selling
+            conf_up = (prob_up - 0.5) * 2.0 # to range [0,1]
+            buy_amt_usd = conf_up * ppss.trader_ss.buy_amt_usd
+            usdcoin_amt_sent = buy_amt_usd
+            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_sent)
+        else: # sell; exit later by buying
+            prob_down = 1.0 - prob_up
+            conf_down = (prob_down - 0.5) * 2.0 # to range [0,1]
+            sell_amt_usd = conf_down * ppss.trader_ss.buy_amt_usd
+            p = self.ppss.trader_ss.fee_percent
+            tokcoin_amt_sent = sell_amt_usd / curprice / (1 - p)
+            usdcoin_amt_recd = self._sell(curprice, tokcoin_amt_sent)
 
         # observe true price
         true_up = (trueprice > curprice)
         self.st.ybools_test.append(true_up)
 
-        # simulate sell. Update trader_profits_USD
-        tokcoin_amt_sell = self.st.holdings[self.tokcoin]
-        if tokcoin_amt_sell > 0:
-            self._sell(trueprice, tokcoin_amt_sell)
+        # trader: exit the trading position
+        if pred_up: # we'd bought; so now sell
+            self._sell(trueprice, tokcoin_amt_sell=tokcoin_amt_recd)
+        else: # we'd sold, so now buy back
+            self._buy(trueprice, usdcoin_amt_spend=usdcoin_amt_recd)
+            
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         # track prediction
@@ -219,7 +229,7 @@ class SimEngine:
             )  # type: ignore[union-attr]
 
     @enforce_types
-    def _buy(self, price: float, usdcoin_amt_spend: float):
+    def _buy(self, price: float, usdcoin_amt_spend: float) -> float:
         """
         @description
           Buy tokcoin with usdcoin
@@ -227,6 +237,8 @@ class SimEngine:
         @arguments
           price -- amt of usdcoin per token
           usdcoin_amt_spend -- amount to spend, in usdcoin; spend less if have less
+        @return
+          tokcoin_amt_recd --
         """
         # simulate buy
         usdcoin_amt_sent = min(usdcoin_amt_spend, self.st.holdings[self.usdcoin])
@@ -251,8 +263,10 @@ class SimEngine:
             self.usdcoin,
         )
 
+        return tokcoin_amt_recd
+
     @enforce_types
-    def _sell(self, price: float, tokcoin_amt_sell: float):
+    def _sell(self, price: float, tokcoin_amt_sell: float) -> float:
         """
         @description
           Sell tokcoin for usdcoin
@@ -260,6 +274,9 @@ class SimEngine:
         @arguments
           price -- amt of usdcoin per token
           tokcoin_amt_sell -- how much of coin to sell, in tokcoin
+
+        @return
+          usdcoin_amt_recd -- usdcoin amt received
         """
         tokcoin_amt_sent = tokcoin_amt_sell
         self.st.holdings[self.tokcoin] -= tokcoin_amt_sent
@@ -282,6 +299,8 @@ class SimEngine:
             usdcoin_amt_fee,
             self.usdcoin,
         )
+
+        return usdcoin_amt_recd
 
     @enforce_types
     def do_plot(self, i: int, N: int):
@@ -398,7 +417,7 @@ class PlotState:
             next_profits = _slice(st_profits, N_done, N)
             ax.scatter(next_jitter, next_profits, c="b", s=1)
             avg = np.average(st_profits)
-            s = f"{actor_name} profit distribution. avg={avg:.2f} {denomin}"
+            s = f"{actor_name} profit distr'n. avg={avg:.2f} {denomin}"
             _set_title(ax, s)
             if not self.plotted_before:
                 buf = 1.0
@@ -410,7 +429,7 @@ class PlotState:
             
         # plot row 1, col 1: 1d scatter of predictoor profits
         _scatter_profits(
-            ax11, "predictoor", "OCEAN", st.predictoor_profits_OCEAN,
+            ax11, "pdr", "OCEAN", st.predictoor_profits_OCEAN,
         )
 
         # plot row 1, col 2: 1d scatter of trader profits
@@ -424,7 +443,7 @@ class PlotState:
         plt.pause(0.001)
         self.plotted_before = True
 
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
 
 def _shift_one_earlier(s: str):
     """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
