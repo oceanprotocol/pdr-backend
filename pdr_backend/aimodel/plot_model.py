@@ -8,16 +8,17 @@ import numpy as np
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.util.mathutil import classif_acc
 
+
 @enforce_types
 def plot_model(
-        model: Aimodel,
-        X: np.ndarray,
-        ytrue: np.ndarray,
-        labels: Tuple[str, str],
-        fig_ax = None,
-        xranges = None,
-        fancy_title: bool = False,
-        legend_loc: str = "lower right",
+    model: Aimodel,
+    X: np.ndarray,
+    ytrue: np.ndarray,
+    labels: Tuple[str, str],
+    fig_ax=None,
+    xranges=None,
+    fancy_title: bool = False,
+    legend_loc: str = "lower right",
 ):
     """
     @description
@@ -41,16 +42,16 @@ def plot_model(
     x0_label, x1_labels = labels
 
     if xranges is None:
-        x0_min, x0_max = min(X[:,0]), max(X[:,0])
-        x1_min, x1_max = min(X[:,1]), max(X[:,1])
+        x0_min, x0_max = min(X[:, 0]), max(X[:, 0])
+        x1_min, x1_max = min(X[:, 1]), max(X[:, 1])
     else:
         x0_min, x0_max, x1_min, x1_max = xranges
-        
+
     if fig_ax is None:
         fig, ax = plt.subplots()
     else:
         fig, ax = fig_ax
-        ax.cla() # clear axis
+        ax.cla()  # clear axis
 
     feature_x = np.linspace(x0_min, x0_max, 200)
     feature_y = np.linspace(x1_min, x1_max, 200)
@@ -58,16 +59,16 @@ def plot_model(
     mesh_df0, mesh_df1 = dim0.ravel(), dim1.ravel()
     mesh_df = np.array([mesh_df0, mesh_df1]).T
     Z = model.predict_ptrue(mesh_df).reshape(dim1.shape)
-    ax.contourf(dim0, dim1, Z, levels=25, cmap=cm.RdBu)
-    
+    ax.contourf(dim0, dim1, Z, levels=25, cmap=cm.RdBu)  # type: ignore[attr-defined]
+
     ytrue_hat = model.predict_true(X)
-    correct = (ytrue_hat == ytrue)
+    correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
-    ax.scatter(X[:,0][wrong], X[:,1][wrong], s=40, c="yellow", label="wrong")
+    ax.scatter(X[:, 0][wrong], X[:, 1][wrong], s=40, c="yellow", label="wrong")
 
     yfalse = np.invert(ytrue)
-    ax.scatter(X[:,0][ytrue], X[:,1][ytrue], s=5, c="c", label="true")
-    ax.scatter(X[:,0][yfalse], X[:,1][yfalse], s=5, c="r", label="false")
+    ax.scatter(X[:, 0][ytrue], X[:, 1][ytrue], s=5, c="c", label="true")
+    ax.scatter(X[:, 0][yfalse], X[:, 1][yfalse], s=5, c="r", label="false")
 
     n, n_correct, n_wrong = len(correct), sum(correct), sum(wrong)
     if fancy_title:
@@ -78,7 +79,7 @@ def plot_model(
         )
     else:
         ax.set_title("Contours = model response")
-    
+
     ax.set_xlabel(labels[0])
     ax.set_ylabel(labels[1])
 
@@ -88,4 +89,3 @@ def plot_model(
 
     ax.legend(loc=legend_loc)
     plt.show()
-

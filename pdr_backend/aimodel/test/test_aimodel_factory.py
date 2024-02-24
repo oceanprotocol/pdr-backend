@@ -11,15 +11,18 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 from pdr_backend.util.mathutil import classif_acc
 
-PLOT = False # only turn on for manual testing
+PLOT = False  # only turn on for manual testing
+
 
 @enforce_types
 def test_aimodel_factory_LinearLogistic():
     _test_aimodel_factory(approach="LinearLogistic")
-    
+
+
 @enforce_types
 def test_aimodel_factory_LinearSVC():
     _test_aimodel_factory(approach="LinearSVC")
+
 
 @enforce_types
 def _test_aimodel_factory(approach):
@@ -38,11 +41,11 @@ def _test_aimodel_factory(approach):
 
     # data
     y_thr = 2.0
-    
+
     N = 1000
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 2))
-    ycont = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1] # ycont = 3 + 1*x0 + 2*x1
+    ycont = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]  # ycont = 3 + 1*x0 + 2*x1
     ytrue = ycont > y_thr
 
     # build model
@@ -58,11 +61,14 @@ def _test_aimodel_factory(approach):
         fig_ax = None
         xranges = (mn, mx, mn, mx)
         plot_model(
-            model, X, ytrue, labels,
-            fig_ax = None,
-            xranges = (mn, mx, mn, mx),
-            fancy_title = True,
-            legend_loc = "upper right",
+            model,
+            X,
+            ytrue,
+            labels,
+            fig_ax=None,
+            xranges=(mn, mx, mn, mx),
+            fancy_title=True,
+            legend_loc="upper right",
         )
 
     # test predict_true() & predict_ptrue()
@@ -72,13 +78,12 @@ def _test_aimodel_factory(approach):
     assert ytrue_hat.shape == yptrue_hat.shape == (N,)
     assert ytrue_hat.dtype == bool
     assert yptrue_hat.dtype == float
-    
+
     assert classif_acc(ytrue_hat, ytrue) > 0.8
     assert 0 < min(yptrue_hat) < max(yptrue_hat) < 1.0
     assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
 
     assert not PLOT
-
 
 
 @enforce_types
@@ -96,15 +101,14 @@ def test_aimodel_accuracy_from_create_xy(aimodel_factory):
         ]
     )  # newest
     ycont_trn = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
-    
+
     y_thr = 7.0
     ytrue_trn = AimodelDataFactory.ycont_to_ytrue(ycont_trn, y_thr)
 
     model = aimodel_factory.build(X_trn, ytrue_trn)
 
     ytrue_trn_hat = model.predict_true(X_trn)
-    assert_array_equal(ytrue_trn, ytrue_trn_hat) # expect zero error
+    assert_array_equal(ytrue_trn, ytrue_trn_hat)  # expect zero error
 
     yptrue_trn_hat = model.predict_ptrue(X_trn)
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
-

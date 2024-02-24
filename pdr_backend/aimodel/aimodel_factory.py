@@ -7,6 +7,7 @@ from sklearn.svm import SVC
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 
+
 @enforce_types
 class AimodelFactory:
     def __init__(self, aimodel_ss: AimodelSS):
@@ -16,7 +17,7 @@ class AimodelFactory:
         """
         @description
           Train the model
-        
+
         @arguments
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
           ybool -- 1d array of [sample_i]:bool_value -- classifier model outputs
@@ -31,7 +32,7 @@ class AimodelFactory:
             skm = SVC(kernel="linear", probability=True, C=0.025)
         else:
             raise ValueError(a)
-        
+
         scaler = StandardScaler()
         scaler.fit(X)
 
@@ -40,4 +41,3 @@ class AimodelFactory:
 
         model = Aimodel(skm, scaler)
         return model
-

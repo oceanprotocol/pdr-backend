@@ -25,7 +25,7 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 
 @enforce_types
 def test_ycont_to_ytrue(tmpdir):
-    __, _, factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")    
+    __, _, factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
     ycont = np.array([8.3, 6.4, 7.5, 8.6, 5.0])
     y_thr = 7.0
     target_ybool = np.array([True, False, True, True, False])
@@ -33,8 +33,8 @@ def test_ycont_to_ytrue(tmpdir):
     ybool = factory.ycont_to_ytrue(ycont, y_thr)
     assert_array_equal(ybool, target_ybool)
 
- 
-@enforce_types   
+
+@enforce_types
 def test_create_xy__0():
     predictoor_ss = PredictoorSS(
         {
@@ -83,15 +83,13 @@ def test_create_xy__0():
     factory = AimodelDataFactory(predictoor_ss)
 
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
-    X, y, x_df, xrecent = factory.create_xy(
-        mergedohlcv_df, testshift=0
-    )
+    X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
     assert_array_equal(xrecent, target_xrecent)
-    
+
 
 @enforce_types
 def test_create_xy_reg__1exchange_1coin_1signal(tmpdir):

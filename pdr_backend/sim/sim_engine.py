@@ -21,12 +21,13 @@ from pdr_backend.util.time_types import UnixTimeMs
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 9
 
+
 # pylint: disable=too-many-instance-attributes
 class SimEngineState:
-    def __init__(self, init_holdings: Dict[str,Union[int,float]]):
+    def __init__(self, init_holdings: Dict[str, Union[int, float]]):
         self.holdings: dict = init_holdings
         self.init_loop_attributes()
-        
+
     def init_loop_attributes(self):
         self.accs_train: List[float] = []
         self.ybools_test: List[float] = []
@@ -34,6 +35,7 @@ class SimEngineState:
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[float] = []
         self.predictoor_profits_OCEAN: List[float] = []
+
 
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
@@ -56,8 +58,8 @@ class SimEngine:
 
         self.plot_state = None
         if self.ppss.sim_ss.do_plot:
-            n = self.ppss.predictoor_ss.aimodel_ss.n # num input vars
-            include_contour = (n == 2)
+            n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
+            include_contour = n == 2
             self.plot_state = PlotState(include_contour)
 
         self.logfile = ""
@@ -109,21 +111,22 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
-        
+
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         model_data_factory = AimodelDataFactory(pdr_ss)
         X, ycont, x_df, _ = model_data_factory.create_xy(
-            mergedohlcv_df, testshift,
+            mergedohlcv_df,
+            testshift,
         )
         colnames = [col for col in x_df.columns]
-        
+
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         ycont_train, ycont_test = ycont[st:fin], ycont[fin : fin + 1]
 
         curprice: float = ycont_train[-1]
         trueprice: float = ycont_test[-1]
-        
+
         y_thr: float = curprice
         ybool = model_data_factory.ycont_to_ytrue(ycont, y_thr)
         ybool_train, ybool_test = ybool[st:fin], ybool[fin : fin + 1]
@@ -140,39 +143,39 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
 
         # predict price direction
-        prob_up: float = model.predict_ptrue(X_test)[0] # in [0.0, 1.0]
-        pred_up: bool = model.predict_true(X_test)[0] # True or False
+        prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        pred_up: bool = model.predict_true(X_test)[0]  # True or False
         self.st.ybools_testhat.append(pred_up)
 
         # predictoor: (simulate) submit predictions
         stake_up = prob_up * pdr_ss.stake_amount
         stake_down = (1.0 - prob_up) * pdr_ss.stake_amount
-        
+
         # trader: enter the trading position
         usdcoin_holdings_before = self.st.holdings[self.usdcoin]
-        if pred_up: # buy; exit later by selling
-            conf_up = (prob_up - 0.5) * 2.0 # to range [0,1]
+        if pred_up:  # buy; exit later by selling
+            conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
             buy_amt_usd = conf_up * ppss.trader_ss.buy_amt_usd
             usdcoin_amt_sent = buy_amt_usd
             tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_sent)
-        else: # sell; exit later by buying
+        else:  # sell; exit later by buying
             prob_down = 1.0 - prob_up
-            conf_down = (prob_down - 0.5) * 2.0 # to range [0,1]
+            conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
             sell_amt_usd = conf_down * ppss.trader_ss.buy_amt_usd
             p = self.ppss.trader_ss.fee_percent
             tokcoin_amt_sent = sell_amt_usd / curprice / (1 - p)
             usdcoin_amt_recd = self._sell(curprice, tokcoin_amt_sent)
 
         # observe true price
-        true_up = (trueprice > curprice)
+        true_up = trueprice > curprice
         self.st.ybools_test.append(true_up)
 
         # trader: exit the trading position
-        if pred_up: # we'd bought; so now sell
+        if pred_up:  # we'd bought; so now sell
             self._sell(trueprice, tokcoin_amt_sell=tokcoin_amt_recd)
-        else: # we'd sold, so now buy back
+        else:  # we'd sold, so now buy back
             self._buy(trueprice, usdcoin_amt_spend=usdcoin_amt_recd)
-            
+
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         # track prediction
@@ -181,7 +184,7 @@ class SimEngine:
         correct = pred_dir == true_dir
         correct_s = "Y" if correct else "N"
         self.st.corrects.append(correct)
-        
+
         # track predictoor profit
         others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
         if true_up:
@@ -189,7 +192,7 @@ class SimEngine:
             percent_to_me = stake_up / tot_stake_correct
             stake_up_profit = percent_to_me * pdr_ss.revenue
             stake_down_profit = -stake_down
-        else: 
+        else:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
             stake_up_profit = -stake_up
@@ -226,9 +229,13 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
-            self.plot_state.make_plot(
-                self.st, model, X_train, ybool_train, colnames,
-            )  # type: ignore[union-attr]
+            self.plot_state.make_plot(  # type: ignore[union-attr]
+                self.st,
+                model,
+                X_train,
+                ybool_train,
+                colnames,
+            )
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_spend: float) -> float:
@@ -322,9 +329,9 @@ class SimEngine:
 
 @enforce_types
 class PlotState:
-    def __init__(self, include_contour:bool):
+    def __init__(self, include_contour: bool):
         self.include_contour = include_contour
-        
+
         fig = plt.figure()
         self.fig = fig
 
@@ -332,30 +339,32 @@ class PlotState:
             gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
         else:
             gs = gridspec.GridSpec(2, 3, width_ratios=[5, 1, 1])
-            
-        self.ax00 = fig.add_subplot(gs[0,0])
-        self.ax01 = fig.add_subplot(gs[0,1:3])
-        self.ax10 = fig.add_subplot(gs[1,0])
-        self.ax11 = fig.add_subplot(gs[1,1])
-        self.ax12 = fig.add_subplot(gs[1,2])
+
+        self.ax00 = fig.add_subplot(gs[0, 0])
+        self.ax01 = fig.add_subplot(gs[0, 1:3])
+        self.ax10 = fig.add_subplot(gs[1, 0])
+        self.ax11 = fig.add_subplot(gs[1, 1])
+        self.ax12 = fig.add_subplot(gs[1, 2])
         if include_contour:
-            self.ax03 = fig.add_subplot(gs[:,3])
-        
-        self.x = []
-        self.y01_est, self.y01_l, self.y01_u = [], [], []
-        self.jitter = []
-        self.plotted_before = False
+            self.ax03 = fig.add_subplot(gs[:, 3])
+
+        self.x: List[float] = []
+        self.y01_est: List[float] = []
+        self.y01_l: List[float] = []
+        self.y01_u: List[float] = []
+        self.jitter: List[float] = []
+        self.plotted_before: bool = False
         plt.ion()
         plt.show()
-        
+
     # pylint: disable=too-many-statements
     def make_plot(self, st, model, X_train, ybool_train, colnames):
         fig = self.fig
         ax00, ax01 = self.ax00, self.ax01
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
-        
+
         N = len(st.predictoor_profits_OCEAN)
-        N_done = len(self.x) # what # points have been plotted previously
+        N_done = len(self.x)  # what # points have been plotted previously
 
         # set x
         self.x = list(range(0, N))
@@ -391,7 +400,7 @@ class PlotState:
         ax01.fill_between(next_x, next_y01_l, next_y01_u, color="0.9")
         ax01.plot(next_hx, [50, 50], c="0.2", ls="--", lw=1)
         ax01.set_ylim(bottom=40, top=60)
-        now_s = f"{self.y01_est[-1]:.2f}% " 
+        now_s = f"{self.y01_est[-1]:.2f}% "
         now_s += f"[{self.y01_l[-1]:.2f}%, {self.y01_u[-1]:.2f}%]"
         _set_title(ax01, f"% correct vs time. Current: {now_s}")
         if not self.plotted_before:
@@ -399,7 +408,7 @@ class PlotState:
             ax01.set_ylabel("% correct", fontsize=FONTSIZE)
             _label_on_right(ax01)
             ax01.margins(0.01, 0.01)
-            
+
         # plot row 0, col 2: model contour
         if self.include_contour:
             ax03 = self.ax03
@@ -432,15 +441,18 @@ class PlotState:
             _set_title(ax, s)
             if not self.plotted_before:
                 buf = 1.0
-                ax.plot([0-buf, 1+buf], [0, 0], c="0.2", ls="--", lw=1)
+                ax.plot([0 - buf, 1 + buf], [0, 0], c="0.2", ls="--", lw=1)
                 _set_ylabel(ax, f"{actor_name} profit ({denomin})")
                 _label_on_right(ax)
                 plt.tick_params(bottom=False, labelbottom=False)
                 ax.margins(0.05, 0.05)
-            
+
         # plot row 1, col 1: 1d scatter of predictoor profits
         _scatter_profits(
-            ax11, "pdr", "OCEAN", st.predictoor_profits_OCEAN,
+            ax11,
+            "pdr",
+            "OCEAN",
+            st.predictoor_profits_OCEAN,
         )
 
         # plot row 1, col 2: 1d scatter of trader profits
@@ -454,15 +466,18 @@ class PlotState:
         plt.pause(0.001)
         self.plotted_before = True
 
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
+
 
 def _shift_one_earlier(s: str):
     """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
     val = int(s[-1])
-    return s[:-1] + str(val-1)
+    return s[:-1] + str(val - 1)
+
 
 def _set_ylabel(ax, s: str):
     ax.set_ylabel(s, fontsize=FONTSIZE)
+
 
 def _set_title(ax, s: str):
     ax.set_title(s, fontsize=FONTSIZE, fontweight="bold")

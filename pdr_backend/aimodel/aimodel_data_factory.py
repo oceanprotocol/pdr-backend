@@ -50,11 +50,11 @@ class AimodelDataFactory:
         """
         @description
           Convert regression y (ycont) to classifier y (ybool).
-                
+
         @arguments
           ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
           y_thr -- classify to True if ycont >= this threshold
-                
+
         @return
           ybool -- 1d array of [sample_i]:bool_value -- classifier model outputs
         """
@@ -71,7 +71,7 @@ class AimodelDataFactory:
         @description
           Create X, y data for a regression setting
           For y in a classification setting, call ycont_to_ytrue() after.
-        
+
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
