@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
-import numpy as np
 from sklearn.linear_model import LogisticRegression
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from pdr_backend.aimodel.aimodel import Aimodel
@@ -23,17 +24,20 @@ class AimodelFactory:
         @return
           model -- Aimodel
         """
-        class_i, skm = self._model() #sklearn model
-        model = Aimodel(class_i, skm)
-        model.fit(X, ybool)
-        return model
-
-    def _model(self):
         a = self.aimodel_ss.approach
         if a == "LinearLogistic":
-            return 1, LogisticRegression()
-        if a == "LinearSVC":
-            return 0, SVC(kernel="linear", probability=True, C=0.025)
+            skm = LogisticRegression()
+        elif a == "LinearSVC":
+            skm = SVC(kernel="linear", probability=True, C=0.025)
+        else:
+            raise ValueError(a)
+        
+        scaler = StandardScaler()
+        scaler.fit(X)
 
-        raise ValueError(a)
+        X = scaler.transform(X)
+        skm.fit(X, ybool)
+
+        model = Aimodel(skm, scaler)
+        return model
 
