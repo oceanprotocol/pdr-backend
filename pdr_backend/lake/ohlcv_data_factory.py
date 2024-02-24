@@ -11,7 +11,7 @@ from pdr_backend.lake.constants import (
     TOHLCV_SCHEMA_PL,
     TOHLCV_COLS,
 )
-from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt, safe_fetch_ohlcv_dydx
+from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -120,20 +120,7 @@ class OhlcvDataFactory:
         if st_ut > min(UnixTimeMs.now(), fin_ut):
             logger.info("Given start time, no data to gather. Exit.")
             return
-# DELETE LATER
-        # test happy path
-        start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
-        end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-        symbol, resolution, st_ut, fin_ut, limit = (
-            "BTC-USD",
-            "5MINS",
-            start_date,
-            end_date,
-            100,
-        )
 
-        print(safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit))
-        #####
         # empty ohlcv df
         df = initialize_rawohlcv_df()
         while True:
