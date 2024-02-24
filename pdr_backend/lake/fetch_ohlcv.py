@@ -221,7 +221,9 @@ def fetch_dydx_data(
     while end_time > start_time:
 
         # Initialize parameters for API request
-        end_time_iso = end_time.strftime("%Y-%m-%dT%H:%M:%S") # Of the format 2024-02-21T00:00:00.000Z
+        end_time_iso = end_time.strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )  # Of the format 2024-02-21T00:00:00.000Z
 
         # Fetch the data
         headers = {"Accept": "application/json"}

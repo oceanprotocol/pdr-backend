@@ -128,6 +128,7 @@ def mock_nan_dydx_response():
         ]
     }
 
+
 @enforce_types
 def test_safe_fetch_ohlcv_dydx():
     # test happy path
