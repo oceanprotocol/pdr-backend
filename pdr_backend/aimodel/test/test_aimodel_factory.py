@@ -11,7 +11,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 from pdr_backend.util.mathutil import classif_acc
 
-PLOT = True # only turn on for manual testing
+PLOT = False # only turn on for manual testing
 
 @enforce_types
 def test_aimodel_factory_LinearLogistic():

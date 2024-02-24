@@ -24,13 +24,13 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types
-def test_ycont_to_ybool(tmpdir):
+def test_ycont_to_ytrue(tmpdir):
     __, _, factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")    
     ycont = np.array([8.3, 6.4, 7.5, 8.6, 5.0])
     y_thr = 7.0
     target_ybool = np.array([True, False, True, True, False])
 
-    ybool = factory.ycont_to_ybool(ycont, y_thr)
+    ybool = factory.ycont_to_ytrue(ycont, y_thr)
     assert_array_equal(ybool, target_ybool)
 
  

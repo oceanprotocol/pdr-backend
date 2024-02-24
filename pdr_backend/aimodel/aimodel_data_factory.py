@@ -46,7 +46,7 @@ class AimodelDataFactory:
         self.ss = ss
 
     @staticmethod
-    def ycont_to_ybool(ycont: np.ndarray, y_thr: float) -> np.ndarray:
+    def ycont_to_ytrue(ycont: np.ndarray, y_thr: float) -> np.ndarray:
         """
         @description
           Convert regression y (ycont) to classifier y (ybool).
@@ -70,7 +70,7 @@ class AimodelDataFactory:
         """
         @description
           Create X, y data for a regression setting
-          For y in a classification setting, call ycont_to_ybool() after.
+          For y in a classification setting, call ycont_to_ytrue() after.
         
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring

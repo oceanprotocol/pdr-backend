@@ -56,7 +56,9 @@ class SimEngine:
 
         self.plot_state = None
         if self.ppss.sim_ss.do_plot:
-            self.plot_state = PlotState()
+            n = self.ppss.predictoor_ss.aimodel_ss.n # num input vars
+            include_contour = (n == 2)
+            self.plot_state = PlotState(include_contour)
 
         self.logfile = ""
 
@@ -123,7 +125,7 @@ class SimEngine:
         trueprice: float = ycont_test[-1]
         
         y_thr: float = curprice
-        ybool = model_data_factory.ycont_to_ybool(ycont, y_thr)
+        ybool = model_data_factory.ycont_to_ytrue(ycont, y_thr)
         ybool_train, ybool_test = ybool[st:fin], ybool[fin : fin + 1]
 
         aimodel_factory = AimodelFactory(pdr_ss.aimodel_ss)
@@ -320,17 +322,24 @@ class SimEngine:
 
 @enforce_types
 class PlotState:
-    def __init__(self):
+    def __init__(self, include_contour:bool):
+        self.include_contour = include_contour
+        
         fig = plt.figure()
         self.fig = fig
-        
-        gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
+
+        if include_contour:
+            gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
+        else:
+            gs = gridspec.GridSpec(2, 3, width_ratios=[5, 1, 1])
+            
         self.ax00 = fig.add_subplot(gs[0,0])
         self.ax01 = fig.add_subplot(gs[0,1:3])
-        self.ax03 = fig.add_subplot(gs[:,3])
         self.ax10 = fig.add_subplot(gs[1,0])
         self.ax11 = fig.add_subplot(gs[1,1])
         self.ax12 = fig.add_subplot(gs[1,2])
+        if include_contour:
+            self.ax03 = fig.add_subplot(gs[:,3])
         
         self.x = []
         self.y01_est, self.y01_l, self.y01_u = [], [], []
@@ -342,7 +351,7 @@ class PlotState:
     # pylint: disable=too-many-statements
     def make_plot(self, st, model, X_train, ybool_train, colnames):
         fig = self.fig
-        ax00, ax01, ax03 = self.ax00, self.ax01, self.ax03
+        ax00, ax01 = self.ax00, self.ax01
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
         
         N = len(st.predictoor_profits_OCEAN)
@@ -392,10 +401,12 @@ class PlotState:
             ax01.margins(0.01, 0.01)
             
         # plot row 0, col 2: model contour
-        labels = tuple([_shift_one_earlier(colname) for colname in colnames])
-        plot_model(model, X_train, ybool_train, labels, (fig, ax03))
-        if not self.plotted_before:
-            ax03.margins(0.01, 0.01)
+        if self.include_contour:
+            ax03 = self.ax03
+            labels = tuple([_shift_one_earlier(colname) for colname in colnames])
+            plot_model(model, X_train, ybool_train, labels, (fig, ax03))
+            if not self.plotted_before:
+                ax03.margins(0.01, 0.01)
 
         # plot row 1, col 0: trader profit vs time
         y10 = list(np.cumsum(st.trader_profits_USD))
