@@ -10,6 +10,7 @@ lake_ss:
 
 predictoor_ss:
   predict_feed: binance BTC/USDT c 5m
+  approach: 3 # model-based = 3
   stake_amount: 1 # How much your bot stakes. In OCEAN per epoch, per feed
   
   sim_only:

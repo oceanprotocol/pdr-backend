@@ -268,18 +268,10 @@ def test_do_get_traction_info(monkeypatch):
 
 @enforce_types
 def test_do_predictoor(monkeypatch):
-    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent1", MockAgent)
+    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent", MockAgent)
 
     do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
-
-    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent3", MockAgent)
-
-    do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH3).parse_args())
-    assert MockAgent.was_run
-
-    with pytest.raises(ValueError):
-        do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH_BAD).parse_args())
 
 
 @enforce_types

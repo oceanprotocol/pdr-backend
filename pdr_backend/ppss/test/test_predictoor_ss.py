@@ -8,6 +8,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS
 def test_predictoor_ss():
     d = {
         "predict_feed": "binance BTC/USDT c 5m",
+        "approach": 1,
         "stake_amount": 1,
         "sim_only": {
             "others_stake": 2313,
@@ -27,6 +28,7 @@ def test_predictoor_ss():
     ss = PredictoorSS(d)
 
     # yaml properties
+    assert ss.approach == 1
     assert ss.stake_amount == 1
     assert ss.others_stake == 2313
     assert ss.others_accuracy == pytest.approx(0.50001, abs=0.000001)
@@ -35,3 +37,7 @@ def test_predictoor_ss():
 
     # str
     assert "PredictoorSS" in str(ss)
+
+    # setters
+    ss.set_approach(3)
+    assert ss.approach == 3

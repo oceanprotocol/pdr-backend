@@ -20,10 +20,20 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     # (predict_feed defined in base)
 
     @property
+    def approach(self) -> int:
+        """
+        @description
+          Approaches:
+          1: Allocate up-vs-down stake equally (50-50). Baseline.
+          3: Allocate up-vs-down stake on model prediction confidence.
+        """
+        return self.d["approach"]
+
+    @property
     def stake_amount(self) -> int:
         """
         @description
-          How much your bot stakes. In OCEAN per epoch, per feed
+          Total bot stake amount, per epoch, per feed. In OCEAN.
         """
         return self.d["stake_amount"]
 
@@ -31,8 +41,8 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     def others_stake(self) -> int:
         """
         @description
-          How much all others' bots stake.
-          In OCEAN per epoch, per feed. Simulation only.
+          How much all others' bots stake. Per epoch, per feed. In OCEAN.
+          Simulation only.
         """
         return self.d["sim_only"]["others_stake"]
 
@@ -40,8 +50,7 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     def others_accuracy(self) -> float:
         """
         @description
-          What % of others' bots stake is correct?
-          Returns a value in range [0.0, 1.0]
+          What % of others' bots stake is correct? Return val in range [0.0,1.0]
           Simulation only.
         """
         return self.d["sim_only"]["others_accuracy"]
@@ -50,14 +59,17 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     def revenue(self) -> float:
         """
         @description
-          Sales revenue going towards predictoors.
-          In OCEAN per epoch, per feed. Simulation only.
+          Sales revenue going towards predictoors. Per epoch, per feed. OCEAN.
+          Simulation only.
         """
         return self.d["sim_only"]["revenue"]
 
     @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
-
+    
     # --------------------------------
-    # derivative properties
+    # setters (add as needed)
+    @enforce_types
+    def set_approach(self, approach: int):
+        self.d["approach"] = approach
