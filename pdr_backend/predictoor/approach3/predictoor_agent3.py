@@ -24,7 +24,7 @@ class PredictoorAgent3(BasePredictoorAgent):
     @enforce_types
     def get_prediction(
         self, timestamp: UnixTimeS  # pylint: disable=unused-argument
-    ) -> Tuple[bool, float]:
+    ) -> Tuple[float, float]:
         """
         @description
           Predict for a given timestamp.
@@ -33,25 +33,34 @@ class PredictoorAgent3(BasePredictoorAgent):
           timestamp -- UnixTimeS -- when to make prediction for (unix time)
 
         @return
-          predval -- bool -- if True, it's predicting 'up'. If False, 'down'
-          stake -- int -- amount to stake, in units of Eth
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        
+        @notes
+          It uses a classifier to compute confidence in up vs down.
+          Here, it allocates stake pro-rata to confidence
+          You need to customize this to implement your own strategy.
         """
         mergedohlcv_df = self.get_data_components()
 
-        model_data_factory = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, y, _, xrecent = model_data_factory.create_xy(mergedohlcv_df, testshift=0)
+        data_f = AimodelDataFactory(self.ppss.predictoor_ss)
+        X, ycont, _, xrecent = data_f.create_xy(mergedohlcv_df, testshift=0)
 
-        # Compute the model
-        aimodel_factory = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-        model = aimodel_factory.build(X, y)
+        curprice = ycont[-1]
+        y_thr = curprice
+        ybool = data_f.ycont_to_ytrue(ycont, y_thr)
 
-        # Predict next y
+        # build model
+        model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
+        model = model_f.build(X, ybool)
+
+        # predict
         X_test = xrecent.reshape((1, len(xrecent)))
-        predprice = model.predict(X_test)[0]
-        curprice = y[-1]
-        predval = predprice > curprice
+        prob_up = model.predict_ptrue(X_test)[0]
 
-        # Stake amount
-        stake = self.ppss.predictoor_ss.stake_amount
+        # stake amounts
+        stake_amt = self.ppss.predictoor_ss.stake_amount
+        stake_up = prob_up * stake_amt
+        stake_down = (1.0 - prob_up) * stake_amt
 
-        return (bool(predval), stake)
+        return (stake_up, stake_down)

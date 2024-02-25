@@ -113,8 +113,8 @@ class SimEngine:
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        model_data_factory = AimodelDataFactory(pdr_ss)
-        X, ycont, x_df, _ = model_data_factory.create_xy(
+        data_f = AimodelDataFactory(pdr_ss)
+        X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
         )
@@ -124,15 +124,15 @@ class SimEngine:
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
         ycont_train, ycont_test = ycont[st:fin], ycont[fin : fin + 1]
 
-        curprice: float = ycont_train[-1]
-        trueprice: float = ycont_test[-1]
+        curprice = ycont_train[-1]
+        trueprice = ycont_test[-1]
 
-        y_thr: float = curprice
-        ybool = model_data_factory.ycont_to_ytrue(ycont, y_thr)
+        y_thr = curprice
+        ybool = data_f.ycont_to_ytrue(ycont, y_thr)
         ybool_train, ybool_test = ybool[st:fin], ybool[fin : fin + 1]
 
-        aimodel_factory = AimodelFactory(pdr_ss.aimodel_ss)
-        model = aimodel_factory.build(X_train, ybool_train)
+        model_f = AimodelFactory(pdr_ss.aimodel_ss)
+        model = model_f.build(X_train, ybool_train)
 
         ybool_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
         acc_train = classif_acc(ybool_train, ybool_trainhat)

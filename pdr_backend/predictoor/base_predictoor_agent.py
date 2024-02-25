@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
+import copy
 import logging
 import os
 import time
-from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 from enforce_typing import enforce_types
@@ -11,6 +12,7 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.web3_config import Web3Config
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -42,6 +44,13 @@ class BasePredictoorAgent(ABC):
 
         contracts = ppss.web3_pp.get_contracts([feed.address])
         self.feed_contract = sole_value(contracts)
+
+        pk2 = os.getenv("PRIVATE_KEY2")
+        assert pk2 is not None, "Need PRIVATE_KEY2 envvar"
+        rpc_url = self.feed_contract.web3_pp.rpc_url
+        web3_config2 = Web3Config(rpc_url, pk2)
+        self.feed_contract2 = copy.deepcopy(self.feed_contract)
+        self.feed_contract2.web3_pp.set_web3_config(web3_config2)
 
         # set attribs to track block
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)
@@ -83,29 +92,70 @@ class BasePredictoorAgent(ABC):
         submit_epoch, target_slot = self.cur_epoch, self.target_slot
         logger.info("Predict for time slot = %s...", self.target_slot)
 
-        predval, stake = self.get_prediction(target_slot)
-        logger.info("-> Predict result: predval=%s, stake=%s", predval, stake)
-        if predval is None or stake <= 0:
+        stake_up, stake_down = self.get_prediction(target_slot)
+        s = f"-> Predict result: stake_up={stake_up}, stake_down={stake_down}"
+        logger.info(s)
+        if stake_up == 0 and stake_down == 0:
             logger.warning("Done: can't use predval/stake")
             return
 
         # submit prediction to chain
-        logger.info("Submit predict tx to chain...")
-        self.feed_contract.submit_prediction(
-            predval,
-            stake,
+        self.submit_prediction_txs(stake_up, stake_down, target_slot)
+        self.prev_submit_epochs.append(submit_epoch)
+
+        # start printing for next round
+        if logging_has_stdout():
+            print("" + "=" * 180)
+        logger.info(self.status_str())
+        logger.info("Waiting...")
+
+        
+    @enforce_types
+    def submit_prediction_txs(
+            self,
+            stake_up: float, # in units of Eth
+            stake_down: float, # ""
+            target_slot : int, # a timestamp
+    ):
+        logger.info("Submit 'up' prediction tx to chain...")
+        tx1 = self.feed_contract.submit_prediction(
+            True,
+            stake_up,
             target_slot,
             wait_for_receipt=True,
         )
-        self.prev_submit_epochs.append(submit_epoch)
-        logger.info("-> Submit predict tx result: success.")
+        
+        logger.info("Submit 'down' prediction tx to chain...")
+        tx2 = self.feed_contract2.submit_prediction(
+            False,
+            stake_down,
+            target_slot,
+            wait_for_receipt=True,
+        )
 
-        if logging_has_stdout():
-            print("" + "=" * 180)
+        # handle errors
+        if _tx_failed(tx1) or _tx_failed(tx2):
+            s = "One or both txs failed. So, resubmit both with zero stake."
+            s += f"\ntx1={tx1}\ntx2={tx2}"
+            logger.warning(s)
 
-        # start printing for next round
-        logger.info(self.status_str())
-        logger.info("Waiting...")
+            logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
+            self.feed_contract.submit_prediction(
+                True,
+                1e-10,
+                target_slot,
+                wait_for_receipt=True,
+            )
+            
+            logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
+            self.feed_contract2.submit_prediction(
+                False,
+                1e-10,
+                target_slot,
+                wait_for_receipt=True,
+            )
+
+        return True
 
     @property
     def cur_epoch(self) -> int:
@@ -164,3 +214,7 @@ class BasePredictoorAgent(ABC):
         timestamp: UnixTimeS,  # pylint: disable=unused-argument
     ) -> Tuple[bool, float]:
         pass
+
+@enforce_types
+def _tx_failed(tx) -> bool:
+    return tx is None or tx["status"] != 1

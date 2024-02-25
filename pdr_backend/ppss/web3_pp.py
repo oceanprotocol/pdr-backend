@@ -312,7 +312,9 @@ class _MockEthWithTracking:
 
 @enforce_types
 class _MockPredictoorContractWithTracking:
-    def __init__(self, w3, s_per_epoch: int, contract_address: str):
+    def __init__(self, web3_pp, w3, s_per_epoch: int, contract_address: str):
+        import pdb; pdb.set_trace()
+        self.web3_pp = web3_pp
         self._w3 = w3
         self.s_per_epoch = s_per_epoch
         self.contract_address: str = contract_address
@@ -359,6 +361,7 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = _MockEthWithTracking(init_timestamp, init_block_number)
     _mock_pdr_contract = _MockPredictoorContractWithTracking(
+        web3_pp,
         mock_w3,
         timeframe_s,
         feed_address,

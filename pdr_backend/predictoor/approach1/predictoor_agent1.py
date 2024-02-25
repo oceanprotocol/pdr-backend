@@ -1,4 +1,3 @@
-import random
 from typing import Tuple
 
 from enforce_typing import enforce_types
@@ -11,26 +10,23 @@ from pdr_backend.util.time_types import UnixTimeS
 class PredictoorAgent1(BasePredictoorAgent):
     def get_prediction(
         self, timestamp: UnixTimeS  # pylint: disable=unused-argument
-    ) -> Tuple[bool, float]:
+    ) -> Tuple[float, float]:
         """
         @description
           Predict for a given timestamp.
 
         @arguments
-          timestamp -- UnixTimeSeonds -- when to make prediction for (unix time)
+          timestamp -- UnixTimeS -- when to make prediction for (unix time)
 
         @return
-          predval -- bool -- if True, it's predicting 'up'. If False, 'down'
-          stake -- int -- amount to stake, in units of Eth
-
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        
         @notes
-          Below is the default implementation, giving random predictions.
-          You need to customize it to implement your own strategy.
+          Here, it allocates equal stake to up vs down (50-50).
+          You need to customize this to implement your own strategy.
         """
-        # Pick random prediction & random stake. You need to customize this.
-        predval = bool(random.getrandbits(1))
-
-        # Stake amount is in ETH
-        stake = random.randint(1, 30) / 10000
-
-        return (predval, stake)
+        stake_amt = self.ppss.predictoor_ss.stake_amount
+        stake_up, stake_down = 0.50 * stake_amt, 0.50 * stake_amt
+        return (stake_up, stake_down)
+    

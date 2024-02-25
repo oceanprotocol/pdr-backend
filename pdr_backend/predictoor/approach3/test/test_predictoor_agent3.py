@@ -85,7 +85,7 @@ class MockModel:
         self.last_X = None  # for tracking test results
         self.last_y = None  # ""
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict_ptrue(self, X: np.ndarray) -> np.ndarray:
         ar_n = self.aimodel_ss.autoregressive_n
         n_feeds = self.aimodel_ss.n_feeds
         (n_points, n_vars) = X.shape
@@ -104,6 +104,9 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
       Test get_prediction(), when X has only 1 input feed
 
       Approach:
+
+      (FIXME: need to update with classifier predictions)
+    
       - mergedohlcv_df has simple pre-set values: CLOSE_VALS
       - predprice = model.predict(X) is a simple sum of X-values
       - then, test that sum(CLOSE_VALS[-ar_n:]) == predprice
@@ -114,11 +117,12 @@ def test_predictoor_agent3_get_prediction_1feed(tmpdir, monkeypatch):
     def mock_build(*args, **kwargs):  # pylint: disable=unused-argument
         return mock_model
 
+    d = "pdr_backend.predictoor.approach3.predictoor_agent3"
     with patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.PredictoorAgent3.get_data_components",
+        f"{d}.PredictoorAgent3.get_data_components",
         mock_get_data_components2,
     ), patch(
-        "pdr_backend.predictoor.approach3.predictoor_agent3.AimodelFactory.build",
+        f"{d}.AimodelFactory.build",
         mock_build,
     ):
 
