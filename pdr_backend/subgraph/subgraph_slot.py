@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @dataclass
@@ -19,7 +20,11 @@ class PredictSlot:
 
 @enforce_types
 def get_predict_slots_query(
-    asset_ids: List[str], initial_slot: int, last_slot: int, first: int, skip: int
+    asset_ids: List[str],
+    initial_slot: UnixTimeS,
+    last_slot: UnixTimeS,
+    first: int,
+    skip: int,
 ) -> str:
     """
     Constructs a GraphQL query string to fetch prediction slot data for
@@ -71,8 +76,8 @@ def get_predict_slots_query(
 @enforce_types
 def get_slots(
     addresses: List[str],
-    end_ts_param: int,
-    start_ts_param: int,
+    end_ts_param: UnixTimeS,
+    start_ts_param: UnixTimeS,
     first: int,
     skip: int,
     slots: List[PredictSlot],
@@ -140,8 +145,8 @@ def get_slots(
 
 @enforce_types
 def fetch_slots(
-    start_ts_param: int,
-    end_ts_param: int,
+    start_ts_param: UnixTimeS,
+    end_ts_param: UnixTimeS,
     contracts: List[str],
     first: int,
     skip: int,

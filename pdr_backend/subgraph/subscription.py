@@ -1,6 +1,7 @@
 from typing import List
 
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -12,7 +13,7 @@ class Subscription:
         pair: str,
         timeframe: str,
         source: str,
-        timestamp: int,  # timestamp == subscription purchased timestamp
+        timestamp: UnixTimeS,  # timestamp == subscription purchased timestamp
         tx_id: str,
         last_price_value: float,
         user: str,
@@ -50,7 +51,7 @@ def mock_subscription(subscription_tuple: tuple) -> Subscription:
         pair=pair_str,
         timeframe=timeframe_str,
         source=source,
-        timestamp=timestamp,
+        timestamp=UnixTimeS(timestamp),
         tx_id=tx_id,
         last_price_value=float(last_price_value) * 1.201,
         user=user,

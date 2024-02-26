@@ -5,6 +5,7 @@ from pytest import approx
 
 from pdr_backend.subgraph.info725 import key_to_key725, value_to_value725
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
+from pdr_backend.util.time_types import UnixTimeS
 
 SAMPLE_CONTRACT_DATA = [
     {
@@ -71,7 +72,7 @@ def test_get_consume_so_far_per_contract():
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
-            since_timestamp=2000,
+            since_timestamp=UnixTimeS(2000),
             contract_addresses=["contract1"],
         )
 
@@ -92,7 +93,7 @@ def test_get_consume_so_far_per_contract_empty_data():
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
-            since_timestamp=2000,
+            since_timestamp=UnixTimeS(2000),
             contract_addresses=["contract1"],
         )
 
@@ -107,7 +108,7 @@ def test_get_consume_so_far_per_contract_empty_data():
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
-            since_timestamp=2000,
+            since_timestamp=UnixTimeS(2000),
             contract_addresses=["contract1"],
         )
 
@@ -122,7 +123,7 @@ def test_get_consume_so_far_per_contract_empty_data():
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
-            since_timestamp=2000,
+            since_timestamp=UnixTimeS(2000),
             contract_addresses=["contract1"],
         )
 

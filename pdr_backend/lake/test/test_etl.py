@@ -2,7 +2,7 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 import polars as pl
-from pdr_backend.util.timeutil import timestr_to_ut
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.table import Table
@@ -24,8 +24,8 @@ def get_filtered_timestamps_df(
     df: pl.DataFrame, st_timestr: str, fin_timestr: str
 ) -> pl.DataFrame:
     return df.filter(
-        (pl.col("timestamp") >= timestr_to_ut(st_timestr))
-        & (pl.col("timestamp") <= timestr_to_ut(fin_timestr))
+        (pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
 
 
@@ -74,8 +74,8 @@ def test_setup_etl(
 
     mock_get_gql_tables.return_value = gql_tables
 
-    assert ppss.lake_ss.st_timestamp == timestr_to_ut(st_timestr)
-    assert ppss.lake_ss.fin_timestamp == timestr_to_ut(fin_timestr)
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
     # Work 1: Initialize ETL - Assert 0 etl_tables
     etl = ETL(ppss, gql_data_factory)

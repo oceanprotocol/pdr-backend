@@ -14,6 +14,7 @@ from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.trueval.get_trueval import get_trueval
 from pdr_backend.util.logutil import logging_has_stdout
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("trueval_agent")
 
@@ -84,7 +85,7 @@ class TruevalAgent:
         time.sleep(self.ppss.trueval_ss.sleep_time)
 
     def get_batch(self) -> List[Slot]:
-        timestamp = self.ppss.web3_pp.web3_config.get_block("latest")["timestamp"]
+        timestamp = self.ppss.web3_pp.web3_config.get_current_timestamp()
 
         pending_slots = self.ppss.web3_pp.get_pending_slots(
             timestamp,
@@ -116,9 +117,11 @@ class TruevalAgent:
             )
         return (predictoor_contract, seconds_per_epoch)
 
-    def get_init_and_ts(self, slot: int, seconds_per_epoch: int) -> Tuple[int, int]:
-        initial_ts = slot - seconds_per_epoch
-        end_ts = slot
+    def get_init_and_ts(
+        self, slot: int, seconds_per_epoch: int
+    ) -> Tuple[UnixTimeS, UnixTimeS]:
+        initial_ts = UnixTimeS(slot - seconds_per_epoch)
+        end_ts = UnixTimeS(slot)
         return initial_ts, end_ts
 
     def get_trueval_slot(self, slot: Slot):
