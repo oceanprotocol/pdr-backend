@@ -92,7 +92,13 @@ def test_mock_ppss_default_network_development():
     ],
 )
 def test_mock_ppss_onefeed1(feed_str):
-    """Thorough test that the 1-feed arg is used everywhere"""
+    """
+    @description
+      Thorough test that the 1-feed arg is used everywhere
+    
+    @arguments
+      feed_str -- eg "binance BTC/USDT c 5m"
+    """
 
     ppss = mock_ppss([feed_str], "sapphire-mainnet")
 

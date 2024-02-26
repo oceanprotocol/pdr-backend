@@ -9,7 +9,7 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.payout_ss import PayoutSS
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.topup_ss import TopupSS
@@ -169,26 +169,10 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "predictoor_ss")
-    ppss.predictoor_ss = PredictoorSS(
-        {
-            "predict_feed": onefeed,
-            "stake_amount": 1,
-            "bot_only": {
-                "s_until_epoch_end": 60,
-            },
-            "sim_only": {
-                "others_stake": 3,
-                "others_accuracy": 0.51,
-                "revenue": 0.93,
-            },
-            "aimodel_ss": {
-                "input_feeds": feeds,
-                "approach": "LinearLogistic",
-                "max_n_train": 7,
-                "autoregressive_n": 3,
-            },
-        }
-    )
+    d = predictoor_ss_test_dict()
+    d["predict_feed"] = onefeed
+    d["aimodel_ss"]["input_feeds"] = feeds
+    ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(

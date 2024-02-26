@@ -19,15 +19,15 @@ from pdr_backend.predictoor.test.mockutil import (
 
         
 # ===========================================================================
-# test approach 1 & 3 - main loop
+# test approach 1 & 2 - main loop
 
 @enforce_types
 def test_predictoor_agent_main1(tmpdir, monkeypatch):
     _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
 
 @enforce_types
-def test_predictoor_agent_main3(tmpdir, monkeypatch):
-    _test_predictoor_agent_main(3, str(tmpdir), monkeypatch)
+def test_predictoor_agent_main2(tmpdir, monkeypatch):
+    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch)
 
 
 @enforce_types
@@ -37,7 +37,7 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
         Run the agent for a while, and then do some basic sanity checks.
         Uses get_agent_1feed, *not* 2feeds.
     """
-    assert approach in [1,3]
+    assert approach in [1,2]
 
     _, ppss, _mock_pdr_contract = mock_ppss_1feed(
         approach, tmpdir, monkeypatch
@@ -146,10 +146,10 @@ class MockModel:
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes3_1feed(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
     """
     @description
-      Test calc_stakes3() on 1 feed.
+      Test calc_stakes2() on 1 feed.
     
       Approach to test:
       - mergedohlcv_df has simple pre-set values: CLOSE_VALS
@@ -168,14 +168,14 @@ def test_predictoor_agent_calc_stakes3_1feed(tmpdir, monkeypatch):
          patch(f"{d}.AimodelFactory.build", mock_build):
 
         # initialize agent
-        _, ppss, _ = mock_ppss_1feed(3, str(tmpdir), monkeypatch)
+        _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch)
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
         assert aimodel_ss.n_feeds == 1
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes3()
+        agent.calc_stakes2()
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3
@@ -190,10 +190,10 @@ def test_predictoor_agent_calc_stakes3_1feed(tmpdir, monkeypatch):
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes3_2feeds(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
     """
     @description
-      Test calc_stakes3(), when X has >1 input feed
+      Test calc_stakes2(), when X has >1 input feed
     """
     mock_model = MockModel()
 
@@ -205,8 +205,8 @@ def test_predictoor_agent_calc_stakes3_2feeds(tmpdir, monkeypatch):
          patch(f"{d}.AimodelFactory.build", mock_build):
 
         # initialize agent
-        feeds, ppss = mock_ppss_2feeds(3, str(tmpdir), monkeypatch)
-        assert ppss.predictoor_ss.approach == 3
+        feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+        assert ppss.predictoor_ss.approach == 2
         
         assert len(feeds) == 2
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
@@ -215,7 +215,7 @@ def test_predictoor_agent_calc_stakes3_2feeds(tmpdir, monkeypatch):
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes3()
+        agent.calc_stakes2()
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3

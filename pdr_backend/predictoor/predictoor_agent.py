@@ -221,11 +221,11 @@ class PredictoorAgent:
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
-        appproach = self.ppss.predictoor_ss.approach
+        approach = self.ppss.predictoor_ss.approach
         if approach == 1:
             return self.calc_stakes1()
-        if approach == 3:
-            return self.calc_stakes3()
+        if approach == 2:
+            return self.calc_stakes2()
         raise ValueError(approach)
 
     @enforce_types
@@ -245,17 +245,17 @@ class PredictoorAgent:
         return (stake_up, stake_down)
     
     @enforce_types
-    def calc_stakes3(self) -> Tuple[float, float]:
+    def calc_stakes2(self) -> Tuple[float, float]:
         """
         @description
-          Calculate up-vs-down stake according to approach 3.
+          Calculate up-vs-down stake according to approach 2.
           How: use classifier model's confidence
         
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
-        assert self.ppss.predictoor_ss.approach == 3
+        assert self.ppss.predictoor_ss.approach == 2
         
         mergedohlcv_df = self.get_ohlcv_data()
 
@@ -284,7 +284,7 @@ class PredictoorAgent:
     @enforce_types
     def use_ohlcv_data(self) -> bool:
         """Do we use ohlcv data?"""
-        return (self.ppss.predictoor_ss.approach == 3)
+        return (self.ppss.predictoor_ss.approach == 2)
 
     @enforce_types
     def get_ohlcv_data(self):

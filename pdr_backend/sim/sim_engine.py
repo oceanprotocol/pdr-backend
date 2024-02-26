@@ -468,8 +468,6 @@ class PlotState:
         plt.pause(0.001)
         self.plotted_before = True
 
-        # import pdb; pdb.set_trace()
-
 
 def _shift_one_earlier(s: str):
     """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
