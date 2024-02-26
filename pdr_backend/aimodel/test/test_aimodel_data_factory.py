@@ -232,7 +232,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
 
     d = predictoor_ss_test_dict()
     assert "predict_feed" in d
-    assert "input_feeds" in d["aimodel"]
+    assert "input_feeds" in d["aimodel_ss"]
     d["predict_feed"] = "binanceus ETH/USDT h 5m"
     d["aimodel_ss"]["input_feeds"] = [
         "binanceus BTC/USDT,ETH/USDT hl",

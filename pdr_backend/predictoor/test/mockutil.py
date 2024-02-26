@@ -14,6 +14,7 @@ from pdr_backend.subgraph.subgraph_feed import mock_feed, SubgraphFeed
 from pdr_backend.util.time_types import UnixTimeS
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
+PRIV_KEY2 = os.getenv("PRIVATE_KEY2")
 OWNER_ADDR = "0xowner"
 INIT_TIMESTAMP = UnixTimeS(107)
 INIT_BLOCK_NUMBER = 13
@@ -33,6 +34,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
     """
     # mock ppss, feed
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
+    monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
     feed, ppss = mock_feed_ppss(
         "5m", "binanceus", "BTC/USDT", network="development", tmpdir=tmpdir
     )
@@ -66,6 +68,7 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
       ppss -- PPSS
     """
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
+    monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
 
     # mock ppss, feeds
     exchange, timescale, quote = "binanceus", "5m", "USDT"
