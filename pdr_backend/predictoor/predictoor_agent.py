@@ -45,8 +45,9 @@ class PredictoorAgent:
         self.feed: SubgraphFeed = feed
 
         # set self.feed_contract, self.feed_contract2
-        self.feed_contract: PredictoorContract = \
-            ppss.web3_pp.get_single_contract(feed.address)
+        self.feed_contract: PredictoorContract = ppss.web3_pp.get_single_contract(
+            feed.address
+        )
 
         pk2: Optional[str] = os.getenv("PRIVATE_KEY2")
         assert pk2 is not None, "Need PRIVATE_KEY2 envvar"
@@ -146,7 +147,7 @@ class PredictoorAgent:
         return UnixTimeS((self.cur_epoch + 1) * self.s_per_epoch)
 
     @property
-    def target_slot(self) -> int:  # a timestamp
+    def target_slot(self) -> UnixTimeS:  # a timestamp
         return UnixTimeS((self.cur_epoch + 2) * self.s_per_epoch)
 
     @property
@@ -170,7 +171,7 @@ class PredictoorAgent:
         self,
         stake_up: float,  # in units of Eth
         stake_down: float,  # ""
-        target_slot: int,  # a timestamp
+        target_slot: UnixTimeS,  # a timestamp
     ):
         logger.info("Submit 'up' prediction tx to chain...")
         tx1 = self.feed_contract.submit_prediction(
