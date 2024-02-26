@@ -15,8 +15,8 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
 
 
-@patch("pdr_backend.analytics.get_predictoors_info.get_predictoor_summary_stats")
-@patch("pdr_backend.analytics.get_predictoors_info.GQLDataFactory.get_gql_tables")
+@patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_predictoors_info_system(
     mock_get_gql_tables, get_get_predictoor_summary_stats, caplog
 ):

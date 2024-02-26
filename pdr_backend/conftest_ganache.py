@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.token import Token
@@ -63,10 +64,7 @@ def predictoor_contract():
     _, _, _, _, logs = publish_asset(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
-        base="ETH",
-        quote="USDT",
-        source="kraken",
-        timeframe="5m",
+        feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
         rate=3,
@@ -84,10 +82,7 @@ def predictoor_contract2():
     _, _, _, _, logs = publish_asset(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
-        base="ETH",
-        quote="USDT",
-        source="kraken",
-        timeframe="5m",
+        feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
         rate=3,
@@ -105,10 +100,7 @@ def predictoor_contract_empty():
     _, _, _, _, logs = publish_asset(
         s_per_epoch=S_PER_EPOCH,
         s_per_subscription=S_PER_EPOCH * 24,
-        base="ETH",
-        quote="USDT",
-        source="kraken",
-        timeframe="5m",
+        feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
         rate=3,
