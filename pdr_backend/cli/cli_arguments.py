@@ -21,6 +21,7 @@ Main tools:
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr lake PPSS_FILE NETWORK
+  pdr analytics PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
 
@@ -41,6 +42,9 @@ Tools for core team:
   pdr publisher PPSS_FILE NETWORK
   pdr topup PPSS_FILE NETWORK
   pytest, black, mypy, pylint, ..
+
+To pass args down to ppss, use dot notation.
+Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
 """
 
 
@@ -513,6 +517,7 @@ defined_parsers = {
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
+    "do_analytics": LakeArgParser("Run the analytics tool", "analytics"),
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(
