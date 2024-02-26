@@ -17,6 +17,17 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
 
+all_data = []
+
+# Int minutes will be used for updating the loop end_time
+resolution_to_minutes = {
+        "1MIN": 1,
+        "5MINS": 5,
+        "15MINS": 15,
+        "30MINS": 30,
+        "1HOUR": 60,
+        "1DAY": 1440,
+    }
 
 @enforce_types
 def safe_fetch_ohlcv_ccxt(
@@ -180,18 +191,6 @@ def fetch_dydx_data(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    # Initialize the empty list
-    all_data = []
-
-    # Int minutes will be used for updating the loop end_time
-    resolution_to_minutes = {
-        "1MIN": 1,
-        "5MINS": 5,
-        "15MINS": 15,
-        "30MINS": 30,
-        "1HOUR": 60,
-        "1DAY": 1440,
-    }
     # Handle bad dydx resolution
     if resolution not in resolution_to_minutes:
         logger.fatal(
