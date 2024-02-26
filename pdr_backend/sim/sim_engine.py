@@ -147,9 +147,12 @@ class SimEngine:
         pred_up: bool = model.predict_true(X_test)[0]  # True or False
         self.st.ybools_testhat.append(pred_up)
 
-        # predictoor: (simulate) submit predictions
+        # predictoor: (simulate) submit predictions with stake
+        acct_up_profit = acct_down_profit = 0.0
         stake_up = prob_up * pdr_ss.stake_amount
         stake_down = (1.0 - prob_up) * pdr_ss.stake_amount
+        acct_up_profit -= stake_up
+        acct_down_profit -= stake_down
 
         # trader: enter the trading position
         usdcoin_holdings_before = self.st.holdings[self.usdcoin]
@@ -175,7 +178,6 @@ class SimEngine:
             self._sell(trueprice, tokcoin_amt_sell=tokcoin_amt_recd)
         else:  # we'd sold, so now buy back
             self._buy(trueprice, usdcoin_amt_spend=usdcoin_amt_recd)
-
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         # track prediction
@@ -186,18 +188,17 @@ class SimEngine:
         self.st.corrects.append(correct)
 
         # track predictoor profit
+        tot_stake = pdr_ss.others_stake + pdr_ss.stake_amount
         others_stake_correct = pdr_ss.others_accuracy * pdr_ss.others_stake
         others_stake_wrong = (1 - pdr_ss.others_accuracy) * pdr_ss.others_stake
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct
-            acct_up_profit = percent_to_me * (pdr_ss.revenue + others_stake_wrong)
-            acct_down_profit = -stake_down
+            acct_up_profit += percent_to_me * (pdr_ss.revenue + tot_stake)
         else:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
-            acct_up_profit = -stake_up
-            acct_down_profit = percent_to_me * (pdr_ss.revenue + others_stake_wrong)
+            acct_down_profit += percent_to_me * (pdr_ss.revenue + tot_stake)
         predictoor_profit_OCEAN = acct_up_profit + acct_down_profit
         self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
 
