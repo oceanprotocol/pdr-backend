@@ -11,6 +11,7 @@ from pdr_backend.util.strutil import StrMixin
 #  2: Allocate up-vs-down stake on model prediction confidence.
 CAND_APPROACHES = [1, 2]
 
+
 class PredictoorSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEED_KEY = "predict_feed"
@@ -21,7 +22,7 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
         if self.approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
-            raise ValueError(s)        
+            raise ValueError(s)
 
     # --------------------------------
     # yaml properties
@@ -70,18 +71,20 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
-    
+
     # --------------------------------
     # setters (add as needed)
     @enforce_types
     def set_approach(self, approach: int):
         if approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
-            raise ValueError(s)      
+            raise ValueError(s)
         self.d["approach"] = approach
+
 
 # =========================================================================
 # utilities for testing
+
 
 @enforce_types
 def predictoor_ss_test_dict(predict_feed: Optional[str] = None) -> dict:

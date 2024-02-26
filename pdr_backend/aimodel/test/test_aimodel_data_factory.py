@@ -239,7 +239,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
         "kraken BTC/USDT,ETH/USDT hl",
     ]
     ss = PredictoorSS(d)
-    
+
     assert ss.aimodel_ss.autoregressive_n == 3
     assert ss.aimodel_ss.n == (4 + 4) * 3
 

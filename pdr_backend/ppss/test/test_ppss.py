@@ -95,7 +95,7 @@ def test_mock_ppss_onefeed1(feed_str):
     """
     @description
       Thorough test that the 1-feed arg is used everywhere
-    
+
     @arguments
       feed_str -- eg "binance BTC/USDT c 5m"
     """

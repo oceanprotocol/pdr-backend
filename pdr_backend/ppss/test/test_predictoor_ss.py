@@ -11,7 +11,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 def test_predictoor_ss():
     # build PredictoorSS
     d = predictoor_ss_test_dict()
-    
+
     assert "predict_feed" in d
     d["predict_feed"] = "binance BTC/USDT c 5m"
 
@@ -28,7 +28,7 @@ def test_predictoor_ss():
         ArgFeed("binance", "close", "BTC/USDT", "5m"),
         ArgFeed("kraken", "open", "ETH/USDT", "1h"),
     ]
-    
+
     assert ss.approach == 1
     assert ss.stake_amount == 1
     assert ss.others_stake == 2313
@@ -43,7 +43,7 @@ def test_predictoor_ss():
     ss.set_approach(2)
     assert ss.approach == 2
 
-    
+
 @enforce_types
 def test_predictoor_ss_test_dict():
     # test - reasoonable defaults when nothing passed in
@@ -53,7 +53,7 @@ def test_predictoor_ss_test_dict():
     assert "BTC" in f or "ETH" in f
     assert "5m" in f or "1h" in f
     assert d["aimodel_ss"]["input_feeds"] == [f]
-    
+
     # test 5m
     d = predictoor_ss_test_dict("binance ETH/USDT c 5m")
     assert d["predict_feed"] == "binance ETH/USDT c 5m"
@@ -63,6 +63,7 @@ def test_predictoor_ss_test_dict():
     d = predictoor_ss_test_dict("binance ETH/USDT c 1h")
     assert d["predict_feed"] == "binance ETH/USDT c 1h"
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
+
 
 @enforce_types
 def test_predictoor_ss_bad_approach():

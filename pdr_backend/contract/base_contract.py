@@ -20,7 +20,7 @@ class BaseContract(ABC):
             abi=web3_pp.get_contract_abi(contract_name),
         )
         self.contract_name = contract_name
-        
+
     @property
     def config(self):
         return self.web3_pp.web3_config

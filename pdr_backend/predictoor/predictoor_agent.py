@@ -34,11 +34,10 @@ class PredictoorAgent:
         logger.info(self.ppss)
 
         # set self.feed
-        cand_feeds: Dict[str,SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
+        cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed: SubgraphFeed = \
-            ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
+        feed: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
         if not feed:
             raise ValueError("No feeds found.")
 
@@ -46,8 +45,7 @@ class PredictoorAgent:
         self.feed: SubgraphFeed = feed
 
         # set self.feed_contract, self.feed_contract2
-        contracts: List[PredictoorContract] = \
-            ppss.web3_pp.get_contracts([feed.address])
+        contracts: List[PredictoorContract] = ppss.web3_pp.get_contracts([feed.address])
         self.feed_contract: PredictoorContract = sole_value(contracts)
 
         pk2: Optional[str] = os.getenv("PRIVATE_KEY2")
@@ -169,10 +167,10 @@ class PredictoorAgent:
 
     @enforce_types
     def submit_prediction_txs(
-            self,
-            stake_up: float, # in units of Eth
-            stake_down: float, # ""
-            target_slot : int, # a timestamp
+        self,
+        stake_up: float,  # in units of Eth
+        stake_down: float,  # ""
+        target_slot: int,  # a timestamp
     ):
         logger.info("Submit 'up' prediction tx to chain...")
         tx1 = self.feed_contract.submit_prediction(
@@ -181,7 +179,7 @@ class PredictoorAgent:
             target_slot,
             wait_for_receipt=True,
         )
-        
+
         logger.info("Submit 'down' prediction tx to chain...")
         tx2 = self.feed_contract2.submit_prediction(
             False,
@@ -203,7 +201,7 @@ class PredictoorAgent:
                 target_slot,
                 wait_for_receipt=True,
             )
-            
+
             logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
             self.feed_contract2.submit_prediction(
                 False,
@@ -213,7 +211,7 @@ class PredictoorAgent:
             )
 
         return True
-    
+
     @enforce_types
     def calc_stakes(self) -> Tuple[float, float]:
         """
@@ -234,7 +232,7 @@ class PredictoorAgent:
         @description
           Calculate up-vs-down stake according to approach 1.
           How: allocate equally (50-50)
-        
+
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
@@ -243,20 +241,20 @@ class PredictoorAgent:
         tot_amt = self.ppss.predictoor_ss.stake_amount
         stake_up, stake_down = 0.50 * tot_amt, 0.50 * tot_amt
         return (stake_up, stake_down)
-    
+
     @enforce_types
     def calc_stakes2(self) -> Tuple[float, float]:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
           How: use classifier model's confidence
-        
+
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
-        
+
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
@@ -284,7 +282,7 @@ class PredictoorAgent:
     @enforce_types
     def use_ohlcv_data(self) -> bool:
         """Do we use ohlcv data?"""
-        return (self.ppss.predictoor_ss.approach == 2)
+        return self.ppss.predictoor_ss.approach == 2
 
     @enforce_types
     def get_ohlcv_data(self):
@@ -294,7 +292,8 @@ class PredictoorAgent:
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
         return mergedohlcv_df
-    
+
+
 @enforce_types
 def _tx_failed(tx) -> bool:
     return tx is None or tx["status"] != 1

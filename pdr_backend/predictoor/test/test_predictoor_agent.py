@@ -17,13 +17,15 @@ from pdr_backend.predictoor.test.mockutil import (
     mock_ppss_2feeds,
 )
 
-        
+
 # ===========================================================================
 # test approach 1 & 2 - main loop
+
 
 @enforce_types
 def test_predictoor_agent_main1(tmpdir, monkeypatch):
     _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
+
 
 @enforce_types
 def test_predictoor_agent_main2(tmpdir, monkeypatch):
@@ -37,11 +39,9 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
         Run the agent for a while, and then do some basic sanity checks.
         Uses get_agent_1feed, *not* 2feeds.
     """
-    assert approach in [1,2]
+    assert approach in [1, 2]
 
-    _, ppss, _mock_pdr_contract = mock_ppss_1feed(
-        approach, tmpdir, monkeypatch
-    )
+    _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
     assert ppss.predictoor_ss.approach == approach
     # now we're done the mocking, time for the real work!!
 
@@ -74,10 +74,10 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
         _mock_pdr_contract._prediction_slots
     )
 
-    
 
 # ===========================================================================
 # test constructor
+
 
 @enforce_types
 def test_predictoor_agent_init_empty():
@@ -94,7 +94,7 @@ def test_predictoor_agent_init_empty():
 
     with pytest.raises(ValueError, match="No feeds found"):
         PredictoorAgent(mock_ppss_empty)
-        
+
 
 # ===========================================================================
 # test approach 3 - get_prediction()
@@ -135,12 +135,12 @@ class MockModel:
         (n_points, n_vars) = X.shape
         assert n_points == 1  # this mock can only handle 1 input point
         assert n_vars == self.aimodel_ss.n == ar_n * n_feeds
-        
+
         CLOSE_VALS = X
         prob_up = np.sum(CLOSE_VALS) / 1e6
         assert 0.0 <= prob_up <= 1.0
         yptrue = np.array([prob_up])
-        
+
         self.last_X, self.last_yptrue = X, yptrue  # cache for testing
         return yptrue
 
@@ -150,7 +150,7 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
     """
     @description
       Test calc_stakes2() on 1 feed.
-    
+
       Approach to test:
       - mergedohlcv_df has simple pre-set values: CLOSE_VALS
       - prob_up = model.predict_ptrue(X) is a simple sum of X-values
@@ -164,8 +164,9 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
         return mock_model
 
     d = "pdr_backend.predictoor.predictoor_agent"
-    with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), \
-         patch(f"{d}.AimodelFactory.build", mock_build):
+    with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), patch(
+        f"{d}.AimodelFactory.build", mock_build
+    ):
 
         # initialize agent
         _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch)
@@ -201,13 +202,14 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
         return mock_model
 
     d = "pdr_backend.predictoor.predictoor_agent"
-    with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), \
-         patch(f"{d}.AimodelFactory.build", mock_build):
+    with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), patch(
+        f"{d}.AimodelFactory.build", mock_build
+    ):
 
         # initialize agent
         feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
         assert ppss.predictoor_ss.approach == 2
-        
+
         assert len(feeds) == 2
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
         assert aimodel_ss.n_feeds == 2
@@ -221,12 +223,11 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n * 2)
-        
+
         # [17.0, 18.0, 19.0, 37.0, 38.0, 39.0]
         expected_X = np.array([BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:]])
-        
-        expected_prob_up = \
-            sum(BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:]) / 1e6
+
+        expected_prob_up = sum(BTC_CLOSE_VALS[-ar_n:] + ETH_CLOSE_VALS[-ar_n:]) / 1e6
         expected_yptrue = np.array([expected_prob_up])
 
         assert_array_equal(expected_X, mock_model.last_X)

@@ -69,8 +69,9 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
     # mock ppss, feeds
     exchange, timescale, quote = "binanceus", "5m", "USDT"
     coins = ["BTC", "ETH"]
-    feeds: List[SubgraphFeed] = \
-        [mock_feed(timescale, exchange, f"{c}/{quote}") for c in coins]
+    feeds: List[SubgraphFeed] = [
+        mock_feed(timescale, exchange, f"{c}/{quote}") for c in coins
+    ]
     ppss = mock_ppss(
         [f"{exchange} {c}/{quote} c {timescale}" for c in coins],
         network="development",
@@ -78,10 +79,10 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
     )
     ppss.predictoor_ss.set_approach(approach)
 
-    # mock ppss.web3_pp.query_feed_contracts()        
-    ppss.web3_pp.query_feed_contracts = Mock()        
+    # mock ppss.web3_pp.query_feed_contracts()
+    ppss.web3_pp.query_feed_contracts = Mock()
     ppss.web3_pp.query_feed_contracts.return_value = {
-        feed.address : feed for feed in feeds
+        feed.address: feed for feed in feeds
     }
 
     # mock w3
