@@ -59,7 +59,7 @@ def test_get_stake_token(predictoor_contract, web3_pp):
 @enforce_types
 def test_get_price(predictoor_contract):
     price = predictoor_contract.get_price()
-    assert price / 1e18 == approx(3.603)
+    assert price.amt_wei / 1e18 == approx(3.603)
 
 
 @enforce_types
@@ -93,7 +93,7 @@ def test_get_seconds_per_epoch(predictoor_contract):
 def test_get_aggpredval(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     aggpredval = predictoor_contract.get_agg_predval(current_epoch)
-    assert aggpredval == (0, 0)
+    assert aggpredval == (Eth(0), Eth(0))
 
 
 @enforce_types
@@ -154,7 +154,7 @@ def test_submit_prediction_trueval_payout(
     receipt = predictoor_contract.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
     OCEAN_final = OCEAN.balanceOf(owner_addr).to_eth()
-    assert OCEAN_before == approx(OCEAN_final, 2.0)  # + sub revenue
+    assert OCEAN_before.amt_eth == approx(OCEAN_final.amt_eth, 2.0)  # + sub revenue
 
 
 @enforce_types

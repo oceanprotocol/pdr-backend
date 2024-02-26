@@ -23,10 +23,16 @@ class Eth:
     def __float__(self) -> float:
         return self.amt_eth
 
-    def __lt__(self, other: Union[int, float]) -> bool:
+    def __lt__(self, other) -> bool:
+        if isinstance(other, Eth):
+            return self.amt_eth < other.amt_eth
+
         return self.amt_eth < other
 
-    def __gt__(self, other: Union[int, float]) -> bool:
+    def __gt__(self, other) -> bool:
+        if isinstance(other, Eth):
+            return self.amt_eth > other.amt_eth
+
         return self.amt_eth > other
 
     def __sub__(self, other) -> "Eth":
@@ -37,9 +43,9 @@ class Eth:
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Eth):
-            return float(self.amt_eth) == float(other.amt_eth)
+            return self.amt_eth == other.amt_eth
 
-        raise ValueError(f"Invalid comparison {other}")
+        return self.amt_eth == other
 
 
 @enforce_types
@@ -64,17 +70,32 @@ class Wei:
     def __repr__(self) -> str:
         return self.__str__()
 
-    def __lt__(self, other: Union[int, float]) -> bool:
+    def __lt__(self, other) -> bool:
+        if isinstance(other, Wei):
+            return self.amt_wei < other.amt_wei
+
         return self.amt_wei < other
+
+    def __le__(self, other) -> bool:
+        if isinstance(other, Wei):
+            return self.amt_wei <= other.amt_wei
+
+        return self.amt_wei <= other
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Wei):
-            return float(self.amt_wei) == float(other.amt_wei)
+            return self.amt_wei == other.amt_wei
 
-        raise ValueError(f"Invalid comparison {other}")
+        return self.amt_wei == other
 
     def __add__(self, other) -> "Wei":
         if isinstance(other, Wei):
             return Wei(self.amt_wei + other.amt_wei)
+
+        return Wei(self.amt_wei + other)
+
+    def __sub__(self, other) -> "Wei":
+        if isinstance(other, Wei):
+            return Wei(self.amt_wei - other.amt_wei)
 
         return Wei(self.amt_wei - other)

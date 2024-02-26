@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 from pytest import approx
 
 from pdr_backend.contract.fixed_rate import FixedRate
-from pdr_backend.util.currency_types import Wei
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @enforce_types
@@ -25,12 +25,12 @@ def test_FixedRate(predictoor_contract, web3_pp):
         consumeMktFeeAmt_wei,
     ) = tup
 
-    assert baseTokenAmt_wei == approx(3.603)
+    assert baseTokenAmt_wei.to_eth() == approx(3.603)
 
-    assert oceanFeeAmt_wei == approx(0.003)
-    assert publishMktFeeAmt_wei == approx(0.6)
-    assert consumeMktFeeAmt_wei == 0
+    assert oceanFeeAmt_wei.to_eth() == approx(0.003)
+    assert publishMktFeeAmt_wei.to_eth() == approx(0.6)
+    assert consumeMktFeeAmt_wei.to_eth() == 0
 
     # test calcBaseInGivenOutDT()
-    tup2 = exchange.calcBaseInGivenOutDT(exchangeId, Wei(1), 0)
+    tup2 = exchange.calcBaseInGivenOutDT(exchangeId, Eth(1).to_wei(), Wei(0))
     assert tup == tup2

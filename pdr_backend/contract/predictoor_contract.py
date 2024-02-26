@@ -81,7 +81,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         freParams = (  # FreParams
             self.config.w3.to_checksum_address(exchange_addr),  # exchangeContract
             self.config.w3.to_bytes(exchangeId),  # exchangeId
-            baseTokenAmt_wei,  # maxBaseTokenAmount
+            baseTokenAmt_wei.amt_wei,  # maxBaseTokenAmount
             0,  # swapMarketFee
             ZERO_ADDRESS,  # marketFeeAddress
         )
@@ -185,7 +185,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """How many seconds are in each epoch? (According to contract)"""
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp: UnixTimeS) -> Tuple[float, float]:
+    def get_agg_predval(self, timestamp: UnixTimeS) -> Tuple[Eth, Eth]:
         """
         @description
           Get aggregated prediction value.
@@ -206,7 +206,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         nom_wei = Wei(nom_wei)
         denom_wei = Wei(denom_wei)
 
-        return nom_wei.to_eth, denom_wei.to_eth
+        return nom_wei.to_eth(), denom_wei.to_eth()
 
     def payout_multiple(self, slots: List[UnixTimeS], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
