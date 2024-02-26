@@ -2,18 +2,17 @@ from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.constants import CAND_SIGNALS, CHAR_TO_SIGNAL
+from pdr_backend.util.constants import CHAR_TO_SIGNAL
 
 
 class ArgSignal:
     @enforce_types
-    # old signal_to_char, sort of
     def __init__(self, signal_str: str):
         """
         @arguments
           signal_str -- e.g. "close"
         """
-        if signal_str not in CAND_SIGNALS:
+        if signal_str not in CHAR_TO_SIGNAL.values():
             raise ValueError(signal_str)
 
         self.signal_str = signal_str
@@ -25,7 +24,6 @@ class ArgSignal:
         return self.signal_str
 
     @staticmethod
-    # old char_to_signal
     def from_char(char: str) -> "ArgSignal":
         """eg given "o", return "open" """
         if char not in CHAR_TO_SIGNAL:
@@ -45,10 +43,12 @@ class ArgSignals(List[ArgSignal]):
         @arguments
           signals -- e.g. ["open", "high"]
         """
+        if not signals:
+            raise ValueError(signals)
+
         super().__init__([ArgSignal(signal_str) for signal_str in signals])
 
     @staticmethod
-    # old _unpack_signals_str
     def from_str(signals_str: str) -> "ArgSignals":
         signal_str_list = [CHAR_TO_SIGNAL[c] for c in signals_str]
         return ArgSignals(signal_str_list)
@@ -67,23 +67,14 @@ class ArgSignals(List[ArgSignal]):
         Example: Given {"high", "close", "open"}
         Return "ohc"
         """
-        # preconditions
-        """
-        if not signal_strs:
-            raise ValueError()
-        """
-        # main work
         chars = ""
         signal_strs = [str(signal) for signal in self]
 
-        for cand_signal in CAND_SIGNALS:
+        for cand_signal in CHAR_TO_SIGNAL.values():
             if cand_signal in signal_strs:
                 c = ArgSignal(cand_signal).to_char()
                 chars += c
 
-        # postconditions
-        if chars == "":
-            raise ValueError(signal_strs)
         return chars
 
 
