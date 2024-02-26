@@ -1,4 +1,3 @@
-import copy
 import logging
 import os
 
@@ -88,9 +87,3 @@ class LakeSS(MultiFeedMixin):
         s += f"parquet_dir={self.parquet_dir}\n"
         s += "-" * 10 + "\n"
         return s
-
-    @enforce_types
-    def copy(self):
-        d2 = copy.deepcopy(self.d)
-
-        return LakeSS(d2)

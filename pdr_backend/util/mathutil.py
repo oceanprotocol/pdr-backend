@@ -1,5 +1,3 @@
-import random
-import re
 from math import floor, log10
 from typing import Union
 
@@ -7,41 +5,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from enforce_typing import enforce_types
-
-from pdr_backend.util.strutil import StrMixin
-
-
-@enforce_types
-def isNumber(x) -> bool:
-    return isinstance(x, (int, float))
-
-
-@enforce_types
-def intInStr(s: str) -> int:
-    int_s = re.sub("[^0-9]", "", s)
-    return int(int_s)
-
-
-@enforce_types
-class Range(StrMixin):
-    def __init__(self, min_: float, max_: Union[float, None] = None):
-        assert (max_ is None) or (max_ >= min_)
-        self.min_: float = min_
-        self.max_: Union[float, None] = max_
-
-    def drawRandomPoint(self) -> float:
-        if self.max_ is None:
-            return self.min_
-        return randunif(self.min_, self.max_)
-
-
-@enforce_types
-def randunif(mn: float, mx: float) -> float:
-    """Return a uniformly-distributed random number in range [mn, mx]"""
-    assert mx >= mn
-    if mn == mx:
-        return mn
-    return mn + random.random() * (mx - mn)
 
 
 @enforce_types
@@ -194,10 +157,3 @@ def string_to_bytes32(data) -> bytes:
     else:
         myBytes32 = data.ljust(32, "0")
     return bytes(myBytes32, "utf-8")
-
-
-@enforce_types
-def sole_value(d: dict):
-    if len(d) != 1:
-        raise ValueError(len(d))
-    return list(d.values())[0]

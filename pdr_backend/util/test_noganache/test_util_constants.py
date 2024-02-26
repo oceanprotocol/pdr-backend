@@ -2,7 +2,6 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.constants import (
-    CAND_SIGNALS,
     CAND_TIMEFRAMES,
     CAND_USDCOINS,
     CHAR_TO_SIGNAL,
@@ -37,7 +36,6 @@ def test_util_constants():
 
     assert "USDT" in CAND_USDCOINS
     assert "5m" in CAND_TIMEFRAMES
-    assert "close" in CAND_SIGNALS
-    assert len(CAND_SIGNALS) == 5
+    assert "close" in CHAR_TO_SIGNAL.values()
+    assert len(CHAR_TO_SIGNAL) == 5
     assert CHAR_TO_SIGNAL["c"] == "close"
-    assert set(CHAR_TO_SIGNAL.values()) == set(CAND_SIGNALS)
