@@ -12,7 +12,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
         "http://localhost:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
     )
     mock_web3_pp.query_feed_contracts.return_value = mock_feeds
-    mock_web3_pp.get_contracts.return_value = {"0x1": mock_predictoor_contract}
+    mock_web3_pp.get_single_contract.return_value = mock_predictoor_contract
     mock_web3_pp.w3.eth.block_number = 100
     mock_predictoor_ss = Mock()
     mock_predictoor_ss.get_feed_from_candidates.return_value = mock_feeds["0x1"]
