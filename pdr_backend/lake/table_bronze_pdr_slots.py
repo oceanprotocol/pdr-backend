@@ -46,7 +46,7 @@ def _process_slots(
         & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
         & (pl.col("ID").is_in(collision_ids).not_())
     )
-    
+
     print(slots_df)
 
     if len(slots_df) == 0:

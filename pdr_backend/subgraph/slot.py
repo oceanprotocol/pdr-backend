@@ -13,7 +13,7 @@ class Slot:
         slot: int,
         trueval: Union[bool, None],
         roundSumStakesUp: Union[float, None],
-        roundSumStakes: Union[float, None]
+        roundSumStakes: Union[float, None],
     ) -> None:
         self.ID = ID
         self.timestamp = timestamp

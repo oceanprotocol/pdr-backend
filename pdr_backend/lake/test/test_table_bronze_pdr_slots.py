@@ -74,7 +74,7 @@ def test_table_bronze_pdr_slots(
     # In our mock, all predictions have None trueval, predictions, etc...
     # This shows that all of this data will come from other tables
     gql_tables = _process_slots([], gql_tables, ppss)
-    
+
     try:
         assert len(gql_tables["bronze_pdr_slots"].df) == 7
         assert gql_tables["bronze_pdr_slots"].df["slot"][0] is not None
@@ -94,4 +94,3 @@ def test_table_bronze_pdr_slots(
         assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
     except AssertionError as e:
         assert str(e) == "assert None is not None"
-        
