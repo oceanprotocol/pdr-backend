@@ -6,34 +6,32 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
-from pdr_backend.cli.arg_timeframe import ArgTimeframe, ArgTimeframes, verify_timeframes_str
-from pdr_backend.util.mocks import MockExchange
-from pdr_backend.util.signalstr import (
-    signal_to_char,
-    signals_to_chars,
-    unpack_signalchar_str,
-    verify_signal_str,
-    verify_signalchar_str,
+from pdr_backend.cli.arg_signal import ArgSignal, ArgSignals, verify_signalchar_str
+from pdr_backend.cli.arg_timeframe import (
+    ArgTimeframe,
+    ArgTimeframes,
+    verify_timeframes_str,
 )
+from pdr_backend.util.mocks import MockExchange
 
 
 class ArgFeed:
     def __init__(
         self,
         exchange,
-        signal: Union[str, None] = None,
+        signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
     ):
         if signal is not None:
-            verify_signal_str(signal)
+            self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
 
         if pair is None:
             raise ValueError("pair cannot be None")
 
         self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
-        self.signal = signal
+        self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
 
         if timeframe is None:
             self.timeframe = None
@@ -46,7 +44,7 @@ class ArgFeed:
         feed_str = f"{self.exchange} {self.pair}"
 
         if self.signal is not None:
-            char = signal_to_char(self.signal)
+            char = self.signal.to_char()
             feed_str += f" {char}"
 
         if self.timeframe is not None:
@@ -57,7 +55,7 @@ class ArgFeed:
     def __eq__(self, other):
         return (
             self.exchange == other.exchange
-            and self.signal == other.signal
+            and str(self.signal) == str(other.signal)
             and str(self.pair) == str(other.pair)
             and str(self.timeframe) == str(other.timeframe)
         )
@@ -138,7 +136,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
         if verify_signalchar_str(signal_char_str, True):
             # last part is a valid timeframe and we have a valid signal before it
-            signal_str_list = unpack_signalchar_str(signal_char_str)
+            signal_str_list = ArgSignals.from_str(signal_char_str)
             offset_end = -2
         else:
             # last part is a valid timeframe, but there is no signal before it
@@ -151,7 +149,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
         if verify_signalchar_str(signal_char_str, True):
             # last part is a valid signal
-            signal_str_list = unpack_signalchar_str(signal_char_str)
+            signal_str_list = ArgSignals.from_str(signal_char_str)
             offset_end = -1
         else:
             # last part is not a valid timeframe, nor a signal
@@ -220,7 +218,7 @@ def _pack_feeds_str(feeds: List[ArgFeed]) -> List[str]:
         s = exch
         s += " " + " ".join(sorted(fr_pairs))
         if fr_signalset != frozenset({"None"}):
-            s += " " + signals_to_chars(list(fr_signalset))
+            s += " " + ArgSignals(list(fr_signalset)).to_chars()
         if timeframe != "None":
             s += " " + timeframe
         strs.append(s)

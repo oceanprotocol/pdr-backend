@@ -1,7 +1,11 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_timeframe import ArgTimeframe, ArgTimeframes, s_to_timeframe_str
+from pdr_backend.cli.arg_timeframe import (
+    ArgTimeframe,
+    ArgTimeframes,
+    s_to_timeframe_str,
+)
 
 
 @enforce_types
