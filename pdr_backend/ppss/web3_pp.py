@@ -134,6 +134,14 @@ class Web3PP(StrMixin):
         return contracts
 
     @enforce_types
+    def get_single_contract(self, feed_addr: str) -> Any:
+        contracts = self.get_contracts([feed_addr])
+        if len(contracts) != 1:
+            raise ValueError(f"Expected 1 contract, got {len(contracts)}")
+
+        return contracts[feed_addr]
+
+    @enforce_types
     def get_pending_slots(
         self,
         timestamp: UnixTimeS,

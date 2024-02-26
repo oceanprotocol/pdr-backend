@@ -8,7 +8,6 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.cache import Cache
 from pdr_backend.util.logutil import logging_has_stdout
-from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS
 
 BasePrediction = namedtuple("BasePrediction", "pred_nom pred_denom")
@@ -69,8 +68,7 @@ class BaseTraderAgent:
         print_feeds({feed.address: feed}, "filtered feeds")
 
         self.feed = feed
-        feed_contracts = ppss.web3_pp.get_contracts([feed.address])
-        self.feed_contract = sole_value(feed_contracts)
+        self.feed_contract = ppss.web3_pp.get_single_contract(feed.address)
 
         # set attribs to track block
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)

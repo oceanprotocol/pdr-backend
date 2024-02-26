@@ -9,7 +9,7 @@ from pdr_backend.cli.arg_feed import (
     _pack_feeds_str,
 )
 from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 
 
 class ArgFeeds(List[ArgFeed]):
@@ -50,7 +50,7 @@ class ArgFeeds(List[ArgFeed]):
         self,
         source: Union[str, ArgExchange],
         pair: Union[str, ArgPair],
-        timeframe: Union[str, Timeframe],
+        timeframe: Union[str, ArgTimeframe],
     ) -> bool:
         for feed in self:
             if (

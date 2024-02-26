@@ -51,9 +51,3 @@ class AimodelSS(MultiFeedMixin, StrMixin):
     def n(self) -> int:
         """Number of input dimensions == # columns in X"""
         return self.n_feeds * self.autoregressive_n
-
-    @enforce_types
-    def copy(self):
-        d2 = copy.deepcopy(self.d)
-
-        return AimodelSS(d2)

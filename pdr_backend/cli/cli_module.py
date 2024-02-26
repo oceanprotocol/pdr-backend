@@ -27,6 +27,8 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.etl import ETL
 from pdr_backend.deployer.deployer import main as deployer_main
 
 logger = logging.getLogger("cli")
@@ -105,6 +107,31 @@ def do_lake(args, nested_args=None):
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
+
+
+@enforce_types
+def do_analytics(args, nested_args=None):
+    """
+    @description
+        This runs all dependencies to build analytics
+        All raw, clean, and aggregate data will be generated
+        1. All subgraph data will be fetched
+        2. All analytic data will be built
+        3. Lake contains all required data
+        4. Dashboards read from lake
+
+        Please use nested_args to control lake_ss
+        ie: st_timestr, fin_timestr, parquet_dir
+    """
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    etl.do_etl()
 
 
 # do_help() is implemented in cli_arguments and imported, so nothing needed here

@@ -13,7 +13,6 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
-from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
 
@@ -46,8 +45,8 @@ class PredictoorAgent:
         self.feed: SubgraphFeed = feed
 
         # set self.feed_contract, self.feed_contract2
-        contracts: List[PredictoorContract] = ppss.web3_pp.get_contracts([feed.address])
-        self.feed_contract: PredictoorContract = sole_value(contracts)
+        self.feed_contract: PredictoorContract = \
+            ppss.web3_pp.get_single_contract(feed.address)
 
         pk2: Optional[str] = os.getenv("PRIVATE_KEY2")
         assert pk2 is not None, "Need PRIVATE_KEY2 envvar"

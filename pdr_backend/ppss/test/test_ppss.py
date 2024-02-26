@@ -30,7 +30,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
 
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     #  - so just do one test for each of this class's pp/ss attribute
-    assert ppss.trader_ss.timeframe in ["5m", "1h"]
+    assert ppss.trader_ss.timeframe_str in ["5m", "1h"]
     assert isinstance(ppss.lake_ss.st_timestr, str)
     assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
     assert ppss.predictoor_ss.aimodel_ss.approach == "LinearLogistic"
@@ -62,7 +62,7 @@ def test_mock_feed_ppss():
     assert feed.source == "binance"
     assert feed.pair == "BTC/USDT"
 
-    assert ppss.predictoor_ss.timeframe == "5m"
+    assert ppss.predictoor_ss.timeframe_str == "5m"
     assert str(ppss.predictoor_ss.feed) == "binance BTC/USDT c 5m"
     assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"

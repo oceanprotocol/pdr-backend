@@ -23,6 +23,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
     mock_predictions = [
         Prediction(
             "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            feed_addr,
             "BTC",
             "5m",
             True,
@@ -32,7 +33,6 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
             "binance",
             10.0,
             UnixTimeS(10),
-            feed_addr,
             user_addr,
         )
     ]

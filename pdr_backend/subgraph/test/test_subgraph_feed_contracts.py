@@ -2,7 +2,7 @@ import pytest
 import requests
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.subgraph.info725 import info_to_info725
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
@@ -26,7 +26,7 @@ def mock_contract(info: dict, symbol: str) -> dict:
                 "nftData": info725,
             },
         },
-        "secondsPerEpoch": Timeframe(info["timeframe"]).s,
+        "secondsPerEpoch": ArgTimeframe(info["timeframe"]).s,
         "secondsPerSubscription": 700,
         "truevalSubmitTimeout": 5,
     }

@@ -7,6 +7,7 @@ predictions_table_name = "pdr_predictions"
 # RAW PREDICTOOR PREDICTIONS SCHEMA
 predictions_schema = {
     "ID": Utf8,
+    "contract": Utf8,
     "pair": Utf8,
     "timeframe": Utf8,
     "prediction": Boolean,

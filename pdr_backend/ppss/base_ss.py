@@ -147,7 +147,7 @@ class SingleFeedMixin:
         return ArgPair(self.pair_str).quote_str or ""
 
     @property
-    def timeframe(self) -> str:
+    def timeframe_str(self) -> str:
         return str(self.feed.timeframe)
 
     @property
@@ -170,7 +170,7 @@ class SingleFeedMixin:
         self, cand_feeds: Dict[str, SubgraphFeed]
     ) -> Union[None, SubgraphFeed]:
         allowed_tup = (
-            self.timeframe,
+            self.timeframe_str,
             self.feed.exchange,
             self.feed.pair,
         )
