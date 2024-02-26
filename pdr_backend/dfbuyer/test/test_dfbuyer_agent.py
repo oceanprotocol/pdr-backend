@@ -12,6 +12,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.currency_types import Wei
 
 PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
@@ -105,7 +106,7 @@ def test_dfbuyer_agent_get_consume_so_far(mock_get_consume_so_far, mock_dfbuyer_
 def test_dfbuyer_agent_get_prices(mock_contract, mock_dfbuyer_agent):
     mock_contract_instance = MagicMock()
     mock_contract.return_value = mock_contract_instance
-    mock_contract_instance.get_price.return_value = 10000
+    mock_contract_instance.get_price.return_value = Wei(10000)
     result = mock_dfbuyer_agent._get_prices(["0x1", "0x2"])
     assert result["0x1"] == 10000 / 1e18
     assert result["0x2"] == 10000 / 1e18

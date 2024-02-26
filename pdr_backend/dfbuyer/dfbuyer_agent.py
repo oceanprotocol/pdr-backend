@@ -13,7 +13,6 @@ from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.time_types import UnixTimeS
 
 WEEK = 7 * 86400
@@ -259,9 +258,7 @@ class DFBuyerAgent:
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
         return {
-            address: from_wei(
-                PredictoorContract(self.ppss.web3_pp, address).get_price()
-            )
+            address: PredictoorContract(self.ppss.web3_pp, address).get_price().to_eth()
             for address in contract_addresses
         }
 

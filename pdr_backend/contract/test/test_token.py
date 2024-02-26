@@ -19,7 +19,7 @@ def test_token(web3_pp, web3_config):
     token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
 
     allowance_start = token.allowance(owner_addr, alice)
-    token.approve(alice, allowance_start + 100, True)
+    token.approve(alice, allowance_start.amt_wei + 100, True)
     time.sleep(1)
     allowance_end = token.allowance(owner_addr, alice)
     assert allowance_end - allowance_start == 100

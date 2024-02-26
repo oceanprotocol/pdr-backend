@@ -6,16 +6,16 @@ from enforce_typing import enforce_types
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.mathutil import to_wei
 from pdr_backend.util.topup import topup_main
+from pdr_backend.util.currency_types import Eth
 
 
 @pytest.fixture(name="mock_token_")
 def mock_token():
     token = MagicMock(spec=Token)
     token.balanceOf.side_effect = [
-        to_wei(500),
-        to_wei(500),
+        Eth(500).to_wei(),
+        Eth(500).to_wei(),
         0,
         0,
         0,
@@ -29,8 +29,8 @@ def mock_token():
 def mock_native_token():
     native_token = MagicMock(spec=NativeToken)
     native_token.balanceOf.side_effect = [
-        to_wei(500),
-        to_wei(500),
+        Eth(500).to_wei(),
+        Eth(500).to_wei(),
         0,
         0,
         0,

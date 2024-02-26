@@ -2,6 +2,7 @@ from enforce_typing import enforce_types
 from web3.types import TxParams, Wei
 
 from pdr_backend.contract.base_contract import BaseContract
+from pdr_backend.util.currency_types import Wei
 
 
 @enforce_types
@@ -9,11 +10,11 @@ class Token(BaseContract):
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
 
-    def allowance(self, account, spender):
-        return self.contract_instance.functions.allowance(account, spender).call()
+    def allowance(self, account, spender) -> Wei:
+        return Wei(self.contract_instance.functions.allowance(account, spender).call())
 
-    def balanceOf(self, account):
-        return self.contract_instance.functions.balanceOf(account).call()
+    def balanceOf(self, account) -> Wei:
+        return Wei(self.contract_instance.functions.balanceOf(account).call())
 
     def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
         gas_price = self.web3_pp.tx_gas_price()
@@ -27,10 +28,10 @@ class Token(BaseContract):
 
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
-    def approve(self, spender, amount, wait_for_receipt=True):
+    def approve(self, spender, amount: Wei, wait_for_receipt=True):
         call_params = self.web3_pp.tx_call_params()
         # print(f"Approving {amount} for {spender} on contract {self.contract_address}")
-        tx = self.contract_instance.functions.approve(spender, amount).transact(
+        tx = self.contract_instance.functions.approve(spender, amount.amt_wei).transact(
             call_params
         )
 
@@ -54,8 +55,8 @@ class NativeToken:
         return "ROSE"
 
     @enforce_types
-    def balanceOf(self, account):
-        return self.w3.eth.get_balance(account)
+    def balanceOf(self, account) -> Wei:
+        return Wei(self.w3.eth.get_balance(account))
 
     @enforce_types
     def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):

@@ -21,6 +21,7 @@ from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_fil
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("web3_pp")
 
@@ -340,7 +341,7 @@ class _MockPredictoorContractWithTracking:
     def submit_prediction(
         self,
         predicted_value: bool,
-        stake_amt: float,
+        stake_amt: Eth,
         prediction_ts: UnixTimeS,
         wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument

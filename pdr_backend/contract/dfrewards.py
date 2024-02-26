@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.base_contract import BaseContract
-from pdr_backend.util.mathutil import from_wei
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @enforce_types
@@ -20,7 +20,7 @@ class DFRewards(BaseContract):
 
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
-    def get_claimable_rewards(self, user_addr: str, token_addr: str) -> float:
+    def get_claimable_rewards(self, user_addr: str, token_addr: str) -> Eth:
         """
         @return
           claimable -- # claimable rewards (in units of ETH, not wei)
@@ -28,5 +28,6 @@ class DFRewards(BaseContract):
         claimable_wei = self.contract_instance.functions.claimable(
             user_addr, token_addr
         ).call()
-        claimable = from_wei(claimable_wei)
+        claimable = Wei(claimable_wei).to_eth()
+
         return claimable
