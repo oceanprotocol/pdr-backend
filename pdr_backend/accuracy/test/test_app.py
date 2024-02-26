@@ -93,5 +93,5 @@ def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Verify
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
     mock_fetch_slots.assert_called_once_with(
-        ["0xAsset"], UnixTimeS(91000), UnixTimeS(92000), "mainnet"
+        UnixTimeS(91000), UnixTimeS(92000), ["0xAsset"], 1000, 0, "mainnet"
     )

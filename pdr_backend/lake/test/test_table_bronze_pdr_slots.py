@@ -3,6 +3,8 @@ from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_slots import (
     _process_bronze_predictions,
     _process_slots,
+    _process_truevals,
+    get_bronze_pdr_slots_table,
     bronze_pdr_slots_schema,
     bronze_pdr_slots_table_name,
 )
@@ -21,6 +23,7 @@ from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
 from pdr_backend.lake.table import Table
+import polars as pl
 
 
 @enforce_types
@@ -73,24 +76,62 @@ def test_table_bronze_pdr_slots(
     # Work 1: Append new slots onto bronze_table
     # In our mock, all predictions have None trueval, predictions, etc...
     # This shows that all of this data will come from other tables
-    gql_tables = _process_slots([], gql_tables, ppss)
+    gql_tables = _process_slots(gql_tables, ppss)
 
-    try:
-        assert len(gql_tables["bronze_pdr_slots"].df) == 7
-        assert gql_tables["bronze_pdr_slots"].df["slot"][0] is not None
-        assert gql_tables["bronze_pdr_slots"].df["timestamp"][0] is not None
-        assert gql_tables["bronze_pdr_slots"].df["trueval"][0] is not None
-        assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][0] is not None
-        assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"][0] is not None
+    assert len(gql_tables["bronze_pdr_slots"].df) == 7
+    assert gql_tables["bronze_pdr_slots"].df["slot"][0] is not None
+    assert gql_tables["bronze_pdr_slots"].df["timestamp"][0] is not None
 
-        # Work 2: Append from bronze_pdr_predictions table
-        gql_tables = _process_bronze_predictions(gql_tables, ppss)
-        # We should still have 6 rows
-        assert len(gql_tables["bronze_pdr_slots"].df) == 7
+    assert gql_tables["bronze_pdr_slots"].df["trueval"].null_count() == len(
+        gql_tables["bronze_pdr_slots"].df
+    )
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"].null_count() == len(
+        gql_tables["bronze_pdr_slots"].df
+    )
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"].null_count() == len(
+        gql_tables["bronze_pdr_slots"].df
+    )
 
-        assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
 
-        # Check final data frame has all the required columns
-        assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
-    except AssertionError as e:
-        assert str(e) == "assert None is not None"
+    # Work 2: Append from pdr_truevals table
+    gql_tables = _process_truevals(gql_tables, ppss)
+    assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
+
+    # We should have 2 slots with no trueval submitted
+    assert sum(1 for item in gql_tables["bronze_pdr_slots"].df["trueval"].to_list() if item is None) == 1
+
+    # Work 3: Append from bronze_pdr_predictions table
+    gql_tables = _process_bronze_predictions(gql_tables, ppss)
+    # We should still have 7 rows, last prediction is filtered out
+    assert len(gql_tables["bronze_pdr_slots"].df) == 7
+
+    # Check final data frame has all the required columns
+    assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
+
+    #Add new trueval event
+    new_row = pl.DataFrame(
+        {
+            "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699315200",
+            "token":"ETH/USDT",
+            "timestamp": 1699315201,
+            "trueval":False,
+            "slot":1699315200,
+        }
+    )
+    gql_tables["pdr_truevals"].df = gql_tables["pdr_truevals"].df.vstack(new_row)
+    print(gql_tables["pdr_truevals"].df)
+
+    '''
+    gql_tables["bronze_pdr_predictions"] = get_bronze_pdr_predictions_table(
+        gql_tables, ppss
+    )
+    '''
+
+    gql_tables["bronze_pdr_slots"] = get_bronze_pdr_slots_table(
+        gql_tables, ppss
+    )
+
+    print(gql_tables["bronze_pdr_slots"].df)
+
+    # We should have 1 slot with no trueval submitted
+    assert sum(1 for item in gql_tables["bronze_pdr_slots"].df["trueval"].to_list() if item is None) == 0

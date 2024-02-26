@@ -174,7 +174,7 @@ def calculate_statistics_for_all_assets(
     """
 
     slots_by_asset = fetch_slots(
-        start_ts_param, end_ts_param, asset_ids, first=1000, skip=0, network=network
+        start_ts_param, end_ts_param, asset_ids, 1000, 0, network
     )
 
     overall_stats = {}
