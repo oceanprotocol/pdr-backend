@@ -13,8 +13,8 @@ from pdr_backend.ppss.web3_pp import (
 from pdr_backend.subgraph.subgraph_feed import mock_feed, SubgraphFeed
 from pdr_backend.util.time_types import UnixTimeS
 
-PRIV_KEY = os.getenv("PRIVATE_KEY")
-PRIV_KEY2 = os.getenv("PRIVATE_KEY2")
+PRIV_KEY = str(os.getenv("PRIVATE_KEY"))
+PRIV_KEY2 = PRIV_KEY[:-4] + "0000"
 OWNER_ADDR = "0xowner"
 INIT_TIMESTAMP = UnixTimeS(107)
 INIT_BLOCK_NUMBER = 13
