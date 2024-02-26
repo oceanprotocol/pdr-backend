@@ -1,7 +1,8 @@
+from enforce_typing import enforce_types
+
 import ccxt
 import pytest
 import requests_mock
-from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import (

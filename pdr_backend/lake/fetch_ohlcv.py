@@ -1,12 +1,11 @@
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import List, Union, Tuple
 
-from enforce_typing import enforce_types
 import numpy as np
-
-import requests
 import polars as pl
-from datetime import datetime, timedelta, timezone
+import requests
+from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.timeframe import Timeframe
@@ -14,7 +13,6 @@ from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
 )
-
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
