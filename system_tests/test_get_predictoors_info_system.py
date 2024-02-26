@@ -42,6 +42,7 @@ def test_get_predictoors_info_system(
     mock_predictions = [
         Prediction(
             "{feed_addr}-31232-{user_addr}",
+            feed_addr,
             "BTC",
             "5m",
             True,
@@ -51,7 +52,6 @@ def test_get_predictoors_info_system(
             "binance",
             10.0,
             UnixTimeS(10),
-            feed_addr,
             user_addr,
         )
     ]
