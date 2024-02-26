@@ -72,6 +72,8 @@ class PredictoorAgent:
         logger.info("Waiting...")
         while True:
             self.take_step()
+            if os.getenv("TEST") == "true":
+                break
 
     @enforce_types
     def take_step(self):
