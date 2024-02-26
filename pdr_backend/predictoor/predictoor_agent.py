@@ -221,11 +221,11 @@ class PredictoorAgent:
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
-        match self.ppss.predictoor_ss.approach:
-            case 1:
-                return self.calc_stakes1()
-            case 3:
-                return self.calc_stakes3()
+        appproach = self.ppss.predictoor_ss.approach
+        if approach == 1:
+            return self.calc_stakes1()
+        if approach == 3:
+            return self.calc_stakes3()
         raise ValueError(approach)
 
     @enforce_types
