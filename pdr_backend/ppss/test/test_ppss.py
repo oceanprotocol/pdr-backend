@@ -33,7 +33,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert ppss.trader_ss.timeframe_str in ["5m", "1h"]
     assert isinstance(ppss.lake_ss.st_timestr, str)
     assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
-    assert ppss.predictoor_ss.aimodel_ss.approach == "LIN"
+    assert ppss.predictoor_ss.aimodel_ss.approach == "LinearLogistic"
     assert ppss.payout_ss.batch_size >= 0
     assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
     assert isinstance(ppss.sim_ss.do_plot, bool)
@@ -92,7 +92,13 @@ def test_mock_ppss_default_network_development():
     ],
 )
 def test_mock_ppss_onefeed1(feed_str):
-    """Thorough test that the 1-feed arg is used everywhere"""
+    """
+    @description
+      Thorough test that the 1-feed arg is used everywhere
+
+    @arguments
+      feed_str -- eg "binance BTC/USDT c 5m"
+    """
 
     ppss = mock_ppss([feed_str], "sapphire-mainnet")
 

@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.strutil import StrMixin
 
-APPROACHES = ["LIN", "GPR", "SVR", "NuSVR", "LinearSVR"]
+APPROACHES = ["LinearLogistic", "LinearSVC"]
 
 
 @enforce_types
@@ -31,7 +31,7 @@ class AimodelSS(MultiFeedMixin, StrMixin):
 
     @property
     def approach(self) -> str:
-        return self.d["approach"]  # eg "LIN"
+        return self.d["approach"]  # eg "LinearLogistic"
 
     @property
     def max_n_train(self) -> int:
