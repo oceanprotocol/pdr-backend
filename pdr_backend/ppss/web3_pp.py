@@ -134,7 +134,7 @@ class Web3PP(StrMixin):
         return contracts
 
     @enforce_types
-    def get_single_contract(self, feed_addr: str) -> "PredictoorContract":
+    def get_single_contract(self, feed_addr: str) -> Any:
         contracts = self.get_contracts([feed_addr])
         if len(contracts) != 1:
             raise ValueError(f"Expected 1 contract, got {len(contracts)}")
