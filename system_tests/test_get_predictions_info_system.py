@@ -26,6 +26,7 @@ def test_get_predictions_info_system(
     mock_predictions = [
         Prediction(
             f"{_feed}-31232-{_user}",
+            _feed,
             "BTC",
             "5m",
             True,
@@ -35,7 +36,6 @@ def test_get_predictions_info_system(
             "binance",
             10.0,
             UnixTimeS(10),
-            _feed,
             _user,
         )
     ]

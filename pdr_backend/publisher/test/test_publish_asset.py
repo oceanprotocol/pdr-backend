@@ -3,29 +3,30 @@ from pytest import approx
 
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.publisher.publish_asset import publish_asset
+from pdr_backend.cli.arg_feed import ArgFeed
 
 
 @enforce_types
 def test_publish_asset(web3_pp, web3_config):
-    base = "ETH"
-    quote = "USDT"
-    source = "kraken"
-    timeframe = "5m"
+    feed = ArgFeed("kraken", None, "ETH/USDT", "5m")
     seconds_per_epoch = 300
     seconds_per_subscription = 60 * 60 * 24
     nft_data, _, _, _, logs_erc = publish_asset(
         s_per_epoch=seconds_per_epoch,
         s_per_subscription=seconds_per_subscription,
-        base=base,
-        quote=quote,
-        source=source,
-        timeframe=timeframe,
+        feed=feed,
         trueval_submitter_addr=web3_config.owner,
         feeCollector_addr=web3_config.owner,
         rate=3,
         cut=0.2,
         web3_pp=web3_pp,
     )
+
+    base = feed.pair.base_str
+    quote = feed.pair.quote_str
+    source = str(feed.exchange)
+    timeframe = str(feed.timeframe)
+
     nft_name = base + "-" + quote + "-" + source + "-" + timeframe
     nft_symbol = base + "/" + quote
     assert nft_data == (nft_name, nft_symbol, 1, "", True, web3_config.owner)

@@ -9,7 +9,6 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.util.logutil import logging_has_stdout
-from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("predictoor_agent")
@@ -40,8 +39,7 @@ class BasePredictoorAgent(ABC):
         print_feeds({feed.address: feed}, "filtered feed")
         self.feed = feed
 
-        contracts = ppss.web3_pp.get_contracts([feed.address])
-        self.feed_contract = sole_value(contracts)
+        self.feed_contract = ppss.web3_pp.get_single_contract(feed.address)
 
         # set attribs to track block
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)

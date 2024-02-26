@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
@@ -99,7 +99,7 @@ def _ohlcv_to_uts(tohlcv_data: list) -> list:
 
 
 @enforce_types
-def _warn_if_uts_have_gaps(uts: List[UnixTimeMs], timeframe: Timeframe):
+def _warn_if_uts_have_gaps(uts: List[UnixTimeMs], timeframe: ArgTimeframe):
     if len(uts) <= 1:
         return
 

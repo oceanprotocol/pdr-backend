@@ -15,14 +15,15 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
 
 
-@patch("pdr_backend.analytics.get_traction_info.plot_slot_daily_statistics")
-@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_tables")
+@patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
         Prediction(
             "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            feed_addr,
             "BTC",
             "5m",
             True,
@@ -32,7 +33,6 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
             "binance",
             10.0,
             UnixTimeS(10),
-            feed_addr,
             user_addr,
         )
     ]

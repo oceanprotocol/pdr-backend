@@ -1,12 +1,16 @@
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.timeframe import Timeframe, Timeframes, s_to_timeframe_str
+from pdr_backend.cli.arg_timeframe import (
+    ArgTimeframe,
+    ArgTimeframes,
+    s_to_timeframe_str,
+)
 
 
 @enforce_types
 def test_timeframe_class_1m():
-    t = Timeframe("1m")
+    t = ArgTimeframe("1m")
     assert t.timeframe_str == "1m"
     assert t.m == 1
     assert t.s == 1 * 60
@@ -15,7 +19,7 @@ def test_timeframe_class_1m():
 
 @enforce_types
 def test_timeframe_class_5m():
-    t = Timeframe("5m")
+    t = ArgTimeframe("5m")
     assert t.timeframe_str == "5m"
     assert t.m == 5
     assert t.s == 5 * 60
@@ -24,7 +28,7 @@ def test_timeframe_class_5m():
 
 @enforce_types
 def test_timeframe_class_1h():
-    t = Timeframe("1h")
+    t = ArgTimeframe("1h")
     assert t.timeframe_str == "1h"
     assert t.m == 60
     assert t.s == 60 * 60
@@ -34,9 +38,9 @@ def test_timeframe_class_1h():
 @enforce_types
 def test_timeframe_class_bad():
     with pytest.raises(ValueError):
-        Timeframe("foo")
+        ArgTimeframe("foo")
 
-    t = Timeframe("1h")
+    t = ArgTimeframe("1h")
     # forcefully change the model
     t.timeframe_str = "BAD"
 
@@ -46,11 +50,11 @@ def test_timeframe_class_bad():
 
 @enforce_types
 def test_timeframe_class_eq():
-    t = Timeframe("1m")
-    assert t == Timeframe("1m")
+    t = ArgTimeframe("1m")
+    assert t == ArgTimeframe("1m")
     assert t == "1m"
 
-    assert t != Timeframe("5m")
+    assert t != ArgTimeframe("5m")
     assert t != "5m"
 
     assert t != 5
@@ -58,35 +62,35 @@ def test_timeframe_class_eq():
 
 @enforce_types
 def test_pack_timeframe_str_list():
-    assert str(Timeframes([])) == ""
-    assert str(Timeframes(["1h"])) == "1h"
-    assert str(Timeframes(["1h", "5m"])) == "1h,5m"
+    assert str(ArgTimeframes([])) == ""
+    assert str(ArgTimeframes(["1h"])) == "1h"
+    assert str(ArgTimeframes(["1h", "5m"])) == "1h,5m"
 
-    assert str(Timeframes.from_str("1h,5m")) == "1h,5m"
-
-    with pytest.raises(TypeError):
-        Timeframes.from_str(None)
+    assert str(ArgTimeframes.from_str("1h,5m")) == "1h,5m"
 
     with pytest.raises(TypeError):
-        Timeframes("")
+        ArgTimeframes.from_str(None)
 
     with pytest.raises(TypeError):
-        Timeframes(None)
+        ArgTimeframes("")
+
+    with pytest.raises(TypeError):
+        ArgTimeframes(None)
 
     with pytest.raises(ValueError):
-        Timeframes(["adfs"])
+        ArgTimeframes(["adfs"])
 
     with pytest.raises(ValueError):
-        Timeframes(["1h fgds"])
+        ArgTimeframes(["1h fgds"])
 
 
 @enforce_types
 def test_verify_timeframe_str():
-    Timeframe("1h")
-    Timeframe("1m")
+    ArgTimeframe("1h")
+    ArgTimeframe("1m")
 
     with pytest.raises(ValueError):
-        Timeframe("foo")
+        ArgTimeframe("foo")
 
 
 @enforce_types

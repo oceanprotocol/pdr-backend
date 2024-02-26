@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from io import StringIO
 import sys
+import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
@@ -69,9 +70,6 @@ def test_load_parquet():
     """
     Test GQLDataFactory loads the data for all the tables
     """
-    captured_output = StringIO()
-    sys.stdout = captured_output
-
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -84,9 +82,12 @@ def test_load_parquet():
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    printed_text = captured_output.getvalue().strip()
-    count_loads = printed_text.count("Loading parquet")
-    assert count_loads == len(gql_data_factory.record_config["tables"].items())
+    assert len(gql_data_factory.record_config["tables"].items()) == 4
+
+    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+    assert table is not None
+    assert type(table.df) == pl.DataFrame
+    assert table.df.schema == table.df_schema
 
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
