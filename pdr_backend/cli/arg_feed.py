@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_pair import ArgPair, ArgPairs
-from pdr_backend.cli.timeframe import Timeframe, Timeframes, verify_timeframes_str
+from pdr_backend.cli.arg_timeframe import ArgTimeframe, ArgTimeframes, verify_timeframes_str
 from pdr_backend.util.mocks import MockExchange
 from pdr_backend.util.signalstr import (
     signal_to_char,
@@ -23,7 +23,7 @@ class ArgFeed:
         exchange,
         signal: Union[str, None] = None,
         pair: Union[ArgPair, str, None] = None,
-        timeframe: Optional[Union[Timeframe, str]] = None,
+        timeframe: Optional[Union[ArgTimeframe, str]] = None,
     ):
         if signal is not None:
             verify_signal_str(signal)
@@ -39,7 +39,7 @@ class ArgFeed:
             self.timeframe = None
         else:
             self.timeframe = (
-                Timeframe(timeframe) if isinstance(timeframe, str) else timeframe
+                ArgTimeframe(timeframe) if isinstance(timeframe, str) else timeframe
             )
 
     def __str__(self):
@@ -131,7 +131,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     offset_end = None
 
     if verify_timeframes_str(timeframe_str):
-        timeframe_str_list = Timeframes.from_str(timeframe_str)
+        timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
 
         # last part is a valid timeframe, and we might have a signal before it
         signal_char_str = feeds_str_split[-2]

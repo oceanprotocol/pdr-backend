@@ -6,7 +6,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     TOHLCV_SCHEMA_PL,
     TOHLCV_COLS,
@@ -158,7 +158,7 @@ class OhlcvDataFactory:
         )
 
     def _calc_start_ut_maybe_delete(
-        self, timeframe: Timeframe, filename: str
+        self, timeframe: ArgTimeframe, filename: str
     ) -> UnixTimeMs:
         """
         @description
