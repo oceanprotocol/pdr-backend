@@ -184,7 +184,7 @@ def test_wei():
     assert Wei(int(0.1234 * 1e18)).to_eth() == Eth(0.1234)
 
     assert Eth(1234).to_wei() == Wei(1234 * 1e18) and type(Eth(1234).to_wei()) == Wei
-    assert Eth(12.34).to_wei == Wei(12.34 * 1e18)
+    assert Eth(12.34).to_wei() == Wei(12.34 * 1e18)
     assert Eth(0.1234).to_wei() == Wei(0.1234 * 1e18)
 
     assert Wei(int(12.34 * 1e18)).str_with_wei() == "12.34 (12340000000000000000 wei)"

@@ -7,7 +7,7 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @pytest.fixture(name="mock_token_")
@@ -16,10 +16,10 @@ def mock_token():
     token.balanceOf.side_effect = [
         Eth(500).to_wei(),
         Eth(500).to_wei(),
-        0,
-        0,
-        0,
-        0,
+        Wei(0),
+        Wei(0),
+        Wei(0),
+        Wei(0),
     ]  # Mock balance in wei
     token.transfer.return_value = None
     return token
@@ -31,10 +31,10 @@ def mock_native_token():
     native_token.balanceOf.side_effect = [
         Eth(500).to_wei(),
         Eth(500).to_wei(),
-        0,
-        0,
-        0,
-        0,
+        Wei(0),
+        Wei(0),
+        Wei(0),
+        Wei(0),
     ]  # Mock balance in wei
     native_token.transfer.return_value = None
     return native_token
@@ -63,8 +63,8 @@ def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tm
 
     topup_ss = MagicMock()
     topup_ss.all_topup_addresses = mock_get_opf_addresses_
-    topup_ss.get_min_bal.side_effect = [20, 30, 20, 30]
-    topup_ss.get_topup_bal.side_effect = [20, 30, 20, 30]
+    topup_ss.get_min_bal.side_effect = [Eth(20), Eth(30), Eth(20), Eth(30)]
+    topup_ss.get_topup_bal.side_effect = [Eth(20), Eth(30), Eth(20), Eth(30)]
     ppss.topup_ss = topup_ss
 
     PATH = "pdr_backend.util.topup"

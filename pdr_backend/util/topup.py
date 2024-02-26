@@ -74,7 +74,7 @@ def do_transfer(token, address, owner, owner_bal, min_bal, topup_bal):
     transfered_amount = 0
 
     if min_bal > 0 and bal < min_bal:
-        logger.info("Transferring %s %s to %s...", topup_bal, symbol, address)
+        logger.info("Transferring %s %s to %s...", topup_bal.amt_eth, symbol, address)
         if owner_bal > topup_bal:
             token.transfer(
                 address,

@@ -175,7 +175,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
             if ocean_bal < Eth(10).to_wei() and name != "trueval"
             else ""
         )
-        native_warning = " LOW NATIVE BALANCE!" if native_bal < Eth(10).to_wei else ""
+        native_warning = " LOW NATIVE BALANCE!" if native_bal < Eth(10).to_wei() else ""
 
         lfunc = logger.warning if ocean_warning or native_warning else logger.info
 
@@ -184,7 +184,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
             name,
             ocean_bal.to_eth(),
             ocean_warning,
-            native_bal,
+            native_bal.to_eth(),
             native_warning,
         )
 

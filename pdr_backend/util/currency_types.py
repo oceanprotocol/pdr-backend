@@ -62,7 +62,7 @@ class Wei:
         return Eth(float(self.amt_wei / 1e18))
 
     def str_with_wei(self) -> str:
-        return f"{self.to_eth()} ({self.amt_wei} wei)"
+        return f"{self.to_eth().amt_eth} ({self.amt_wei} wei)"
 
     def __str__(self) -> str:
         return f"{self.amt_wei} wei"
@@ -75,6 +75,12 @@ class Wei:
             return self.amt_wei < other.amt_wei
 
         return self.amt_wei < other
+
+    def __gt__(self, other) -> bool:
+        if isinstance(other, Wei):
+            return self.amt_wei > other.amt_wei
+
+        return self.amt_wei > other
 
     def __le__(self, other) -> bool:
         if isinstance(other, Wei):
