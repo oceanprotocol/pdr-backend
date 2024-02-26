@@ -2,15 +2,16 @@ import copy
 import logging
 import os
 import time
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_feed import print_feeds
+from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.mathutil import sole_value
 from pdr_backend.util.time_types import UnixTimeS

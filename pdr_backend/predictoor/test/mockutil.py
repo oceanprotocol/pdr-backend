@@ -1,4 +1,5 @@
 import os
+from typing import List
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -9,7 +10,7 @@ from pdr_backend.ppss.web3_pp import (
     inplace_mock_query_feed_contracts,
     inplace_mock_w3_and_contract_with_tracking,
 )
-from pdr_backend.subgraph.subgraph_feed import mock_feed
+from pdr_backend.subgraph.subgraph_feed import mock_feed, SubgraphFeed
 from pdr_backend.util.time_types import UnixTimeS
 
 PRIV_KEY = os.getenv("PRIVATE_KEY")
