@@ -55,6 +55,7 @@ def safe_fetch_ohlcv_ccxt(
         logger.warning("exchange: %s", e)
         return None
 
+
 @enforce_types
 def safe_fetch_ohlcv_dydx(
     exch,
@@ -82,16 +83,17 @@ def safe_fetch_ohlcv_dydx(
     """
 
     try:
-         if exch == "dydx":
-            since=UnixTimeMs.to_iso_timestr(since)
+        if exch == "dydx":
+            sinceIso = since.to_iso_timestr()
             headers = {"Accept": "application/json"}
             response = requests.get(
-                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={timeframe}&fromISO={since}&limit={limit}",
+                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
                 headers=headers,
             )
             data = response.json()
-            print(data)
             return data
+        else:
+            return None
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None

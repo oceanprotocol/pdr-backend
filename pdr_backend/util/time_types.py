@@ -81,7 +81,7 @@ class UnixTimeMs(int):
     def to_iso_timestr(self) -> str:
         dt: datetime = self.to_dt()
 
-        return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z" # tack on timezone
+        return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"  # tack on timezone
 
     def pretty_timestr(self) -> str:
         return f"timestamp={self}, dt={self.to_timestr()}"

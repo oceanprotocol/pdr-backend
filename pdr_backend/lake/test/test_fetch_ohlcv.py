@@ -1,10 +1,14 @@
 import ccxt
-from datetime import datetime, timedelta, timezone #DELETE
+from datetime import datetime, timedelta, timezone  # DELETE
 import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_ccxt, safe_fetch_ohlcv_dydx, clean_raw_ohlcv
+from pdr_backend.lake.fetch_ohlcv import (
+    safe_fetch_ohlcv_ccxt,
+    safe_fetch_ohlcv_dydx,
+    clean_raw_ohlcv,
+)
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -90,9 +94,15 @@ def test_safe_fetch_ohlcv(exch):
 
     # happy path dydx
     fifteen_min_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
-    symbol, timeframe, since, limit = ("BTC-USD", "5MINS", UnixTimeMs.from_dt(fifteen_min_ago), 100)
+    symbol, timeframe, since, limit = (
+        "BTC-USD",
+        "5MINS",
+        UnixTimeMs.from_dt(fifteen_min_ago),
+        100,
+    )
     result = safe_fetch_ohlcv_dydx("dydx", symbol, timeframe, since, limit)
     assert_safe_fetch_ohlcv_dydx_ok(result)
+
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):
@@ -104,9 +114,10 @@ def assert_raw_tohlc_data_ok(raw_tohlc_data):
         for val in item[1:]:
             assert isinstance(val, float)
 
+
 @enforce_types
 def assert_safe_fetch_ohlcv_dydx_ok(result):
     # Result should return one list called 'candles' that contains 3 lists of 100 candles data
     assert result is not None
     assert len(result) == 1
-    assert len(result['candles']) == 3
+    assert len(result["candles"]) == 3
