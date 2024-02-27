@@ -6,6 +6,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.base_ss import SingleFeedMixin
 from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.currency_types import Eth
 
 
 class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
@@ -21,6 +22,7 @@ class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
     # --------------------------------
     # yaml properties: sim only
     @property
+    # TODO: ?????
     def buy_amt_str(self) -> Union[int, float]:
         """How much to buy. Eg 10."""
         return self.d["sim_only"]["buy_amt"]
@@ -79,15 +81,15 @@ class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
     @property
     def buy_amt_usd(self):
         amt_s, _ = self.buy_amt_str.split()
-        return float(amt_s)
+        return Eth(float(amt_s))
 
     @property
-    def init_holdings(self) -> Dict[str, float]:
+    def init_holdings(self) -> Dict[str, Eth]:
         d = {}
         for s in self.init_holdings_strs:
             amt_s, coin = s.split()
             amt = float(amt_s)
-            d[coin] = amt
+            d[coin] = Eth(amt)
         return d
 
     @enforce_types

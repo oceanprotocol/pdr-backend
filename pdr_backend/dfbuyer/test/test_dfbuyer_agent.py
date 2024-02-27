@@ -198,7 +198,11 @@ def test_dfbuyer_agent_take_step(
     mock_dfbuyer_agent,
 ):
     ts = 0
-    mock_get_missing_consumes.return_value = {"0x1": Eth(10.5), "0x2": Eth(20.3), "0x3": Eth(30.7)}
+    mock_get_missing_consumes.return_value = {
+        "0x1": Eth(10.5),
+        "0x2": Eth(20.3),
+        "0x3": Eth(30.7),
+    }
     mock_get_prices.return_value = {"0x1": Eth(2.5), "0x2": Eth(3.3), "0x3": Eth(4.7)}
     mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
     mock_get_block.return_value = {"timestamp": 120}

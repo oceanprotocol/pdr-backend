@@ -59,6 +59,18 @@ class Eth:
 
         return Eth(self.amt_eth / other)
 
+    def __mul__(self, other) -> "Eth":
+        if isinstance(other, Eth):
+            return Eth(self.amt_eth * other.amt_eth)
+
+        return Eth(self.amt_eth * other)
+
+    def __add__(self, other) -> "Eth":
+        if isinstance(other, Eth):
+            return Eth(self.amt_eth + other.amt_eth)
+
+        return Eth(self.amt_eth + other)
+
 
 @enforce_types
 class Wei:

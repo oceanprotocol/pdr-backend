@@ -15,6 +15,8 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.currency_types import Eth
+
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -171,8 +173,8 @@ class PredictoorAgent:
     @enforce_types
     def submit_prediction_txs(
         self,
-        stake_up: float,  # in units of Eth
-        stake_down: float,  # ""
+        stake_up: Eth,
+        stake_down: Eth,
         target_slot: UnixTimeS,  # a timestamp
     ):
         logger.info("Submit 'up' prediction tx to chain...")
@@ -200,7 +202,7 @@ class PredictoorAgent:
             logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
             self.feed_contract.submit_prediction(
                 True,
-                1e-10,
+                Eth(1e-10),
                 target_slot,
                 wait_for_receipt=True,
             )
@@ -208,7 +210,7 @@ class PredictoorAgent:
             logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
             self.feed_contract2.submit_prediction(
                 False,
-                1e-10,
+                Eth(1e-10),
                 target_slot,
                 wait_for_receipt=True,
             )
@@ -216,7 +218,7 @@ class PredictoorAgent:
         return True
 
     @enforce_types
-    def calc_stakes(self) -> Tuple[float, float]:
+    def calc_stakes(self) -> Tuple[Eth, Eth]:
         """
         @return
           stake_up -- amt to stake up, in units of Eth
@@ -230,7 +232,7 @@ class PredictoorAgent:
         raise ValueError(approach)
 
     @enforce_types
-    def calc_stakes1(self) -> Tuple[float, float]:
+    def calc_stakes1(self) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 1.
@@ -242,11 +244,11 @@ class PredictoorAgent:
         """
         assert self.ppss.predictoor_ss.approach == 1
         tot_amt = self.ppss.predictoor_ss.stake_amount
-        stake_up, stake_down = 0.50 * tot_amt, 0.50 * tot_amt
+        stake_up, stake_down = tot_amt * 0.50 * tot_amt, tot_amt * 0.50
         return (stake_up, stake_down)
 
     @enforce_types
-    def calc_stakes2(self) -> Tuple[float, float]:
+    def calc_stakes2(self) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
@@ -277,8 +279,8 @@ class PredictoorAgent:
 
         # calc stake amounts
         tot_amt = self.ppss.predictoor_ss.stake_amount
-        stake_up = prob_up * tot_amt
-        stake_down = (1.0 - prob_up) * tot_amt
+        stake_up = tot_amt * prob_up
+        stake_down = tot_amt * (1.0 - prob_up)
 
         return (stake_up, stake_down)
 
