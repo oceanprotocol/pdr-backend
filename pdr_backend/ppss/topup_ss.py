@@ -21,12 +21,14 @@ class TopupSS(StrMixin):
         return self.d["addresses"]
 
     @property
-    def min_bal(self) -> Optional[int]:
-        return self.d.get("min_bal", None)
+    def min_bal(self) -> Optional[Eth]:
+        intt = self.d.get("min_bal", None)
+        return Eth(intt) if intt is not None else None
 
     @property
-    def topup_bal(self) -> Optional[int]:
-        return self.d.get("topup_bal", None)
+    def topup_bal(self) -> Optional[Eth]:
+        intt = self.d.get("topup_bal", None)
+        return Eth(intt) if intt is not None else None
 
     def all_topup_addresses(self, network) -> Dict[str, str]:
         addresses: Dict[str, str] = {}

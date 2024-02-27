@@ -101,7 +101,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     if wROSE_bal == 0:
         logger.warning("wROSE balance is 0")
     else:
-        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.amt_eth)
+        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.to_eth().amt_eth)
         wROSE.withdraw(wROSE_bal)
 
     logger.info("ROSE reward claim done")

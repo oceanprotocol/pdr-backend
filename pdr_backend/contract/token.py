@@ -1,5 +1,5 @@
 from enforce_typing import enforce_types
-from web3.types import TxParams, Wei
+from web3.types import TxParams, Wei as Web3Wei
 
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.currency_types import Wei
@@ -16,12 +16,12 @@ class Token(BaseContract):
     def balanceOf(self, account) -> Wei:
         return Wei(self.contract_instance.functions.balanceOf(account).call())
 
-    def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
+    def transfer(self, to: str, amount: Wei, sender, wait_for_receipt=True):
         gas_price = self.web3_pp.tx_gas_price()
         call_params = {"from": sender, "gasPrice": gas_price}
-        tx = self.contract_instance.functions.transfer(to, int(amount)).transact(
-            call_params
-        )
+        tx = self.contract_instance.functions.transfer(
+            to, int(amount.amt_wei)
+        ).transact(call_params)
 
         if not wait_for_receipt:
             return tx
@@ -59,12 +59,12 @@ class NativeToken:
         return Wei(self.w3.eth.get_balance(account))
 
     @enforce_types
-    def transfer(self, to: str, amount: int, sender, wait_for_receipt=True):
+    def transfer(self, to: str, amount: Wei, sender, wait_for_receipt=True):
         gas_price = self.web3_pp.tx_gas_price()
         call_params: TxParams = {
             "from": sender,
             "gas": 25000,
-            "value": Wei(amount),
+            "value": Web3Wei(int(amount.amt_wei)),
             "gasPrice": gas_price,
             "to": to,
         }

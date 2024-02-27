@@ -88,7 +88,7 @@ def test_do_rose_payout(tmpdir):
 
     mock_wrose = Mock(spec=WrappedToken)
     mock_wrose.balanceOf = Mock()
-    mock_wrose.balanceOf.return_value = Eth(100)
+    mock_wrose.balanceOf.return_value = Eth(100).to_wei()
     mock_wrose.withdraw = Mock()
 
     with patch("pdr_backend.payout.payout.time"), patch(
@@ -99,7 +99,7 @@ def test_do_rose_payout(tmpdir):
             web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
         mock_wrose.balanceOf.assert_called()
-        mock_wrose.withdraw.assert_called_with(100)
+        mock_wrose.withdraw.assert_called_with(Eth(100).to_wei())
 
 
 @enforce_types
