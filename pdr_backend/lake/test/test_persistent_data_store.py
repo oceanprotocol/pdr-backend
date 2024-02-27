@@ -34,7 +34,7 @@ def _clean_up_test_manager(tmpdir, dataset_identifier):
 
 
 def _check_view_exists(tmpdir, test_manager, dataset_identifier):
-    view_name = test_manager._generate_view_name(str(tmpdir) + dataset_identifier)
+    view_name = test_manager._generate_view_name(dataset_identifier)
     tables = test_manager.duckdb_conn.execute(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
     ).fetchall()

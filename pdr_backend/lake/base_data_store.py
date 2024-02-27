@@ -30,7 +30,8 @@ class BaseDataStore:
             str - A unique view name.
         """
 
-        hash_object = md5(base_path.encode())
+        path = f"{self.base_directory}/{base_path}"
+        hash_object = md5(path.encode())
         return f"dataset_{hash_object.hexdigest()}"
 
     @abstractmethod

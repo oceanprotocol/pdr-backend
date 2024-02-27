@@ -32,7 +32,7 @@ class PersistentDataStore(BaseDataStore):
             dataset_identifier - A unique identifier for the dataset.
         """
 
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        view_name = self._generate_view_name(dataset_identifier)
 
         # self.duckdb_conn.register(view_name, df)
         # Create the table
@@ -54,7 +54,7 @@ class PersistentDataStore(BaseDataStore):
             insert_to_table(df, "people")
         """
 
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        view_name = self._generate_view_name(dataset_identifier)
         # Check if the table exists
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
@@ -80,7 +80,7 @@ class PersistentDataStore(BaseDataStore):
             query_data("people", "SELECT * FROM {view_name}")
         """
 
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        view_name = self._generate_view_name(dataset_identifier)
         result_df = self.duckdb_conn.execute(query.format(view_name=view_name)).df()
 
         return pl.DataFrame(result_df)
@@ -99,7 +99,7 @@ class PersistentDataStore(BaseDataStore):
         if ds_type not in ["view", "table"]:
             raise ValueError("ds_type must be either 'view' or 'table'")
 
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        view_name = self._generate_view_name(dataset_identifier)
         self.duckdb_conn.execute(f"DROP {ds_type} {view_name}")
 
     @enforce_types
@@ -139,7 +139,7 @@ class PersistentDataStore(BaseDataStore):
             update_data(df, "people", "id")
         """
 
-        view_name = self._generate_view_name(self.base_directory + dataset_identifier)
+        view_name = self._generate_view_name(dataset_identifier)
         update_columns = ", ".join(
             [f"{column} = {df[column]}" for column in df.columns]
         )
