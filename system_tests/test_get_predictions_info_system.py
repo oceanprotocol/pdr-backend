@@ -12,6 +12,7 @@ from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
@@ -25,16 +26,16 @@ def test_get_predictions_info_system(
     mock_predictions = [
         Prediction(
             f"{_feed}-31232-{_user}",
+            _feed,
             "BTC",
             "5m",
             True,
             100.0,
             False,
-            1701532572,
+            UnixTimeS(1701532572),
             "binance",
             10.0,
-            10,
-            _feed,
+            UnixTimeS(10),
             _user,
         )
     ]

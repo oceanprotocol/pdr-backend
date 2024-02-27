@@ -1,6 +1,7 @@
 from typing import List
 
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -10,8 +11,8 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         ID: str,
         token: str,
         user: str,
-        slot: int,
-        timestamp: int,
+        slot: UnixTimeS,
+        timestamp: UnixTimeS,
         payout: float,
         predictedValue: bool,
         revenue: float,
@@ -51,9 +52,9 @@ def mock_payout(payout_tuple: tuple) -> Payout:
     return Payout(
         ID=ID,
         user=user,
-        timestamp=timestamp,
+        timestamp=UnixTimeS(timestamp),
         token=token,
-        slot=slot,
+        slot=UnixTimeS(slot),
         payout=payout,
         predictedValue=predictedValue,
         revenue=revenue,
@@ -72,16 +73,16 @@ _PAYOUT_TUPS = [
     (
         # pylint: disable=line-too-long
         "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1704152700-0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",
-        "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",
-        1704153558,
-        "ADA/USDT",
-        1704152700,
-        0.0,
-        True,
-        0.919372744934776618,
-        7.635901006590730052,
-        17.728238320965607921,
-        0.41,
+        "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f",  # user
+        1704153558,  # timestamp
+        "ADA/USDT",  # token
+        1704152700,  # slot
+        0.0,  # payout
+        True,  # predictedValue
+        0.919372744934776618,  # revenue
+        7.635901006590730052,  # roundSumStakesUp
+        17.728238320965607921,  # roundSumStakes
+        0.41,  # stake
     ),
     (
         # pylint: disable=line-too-long

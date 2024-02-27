@@ -8,13 +8,14 @@ import os
 import shutil
 from io import StringIO
 from tempfile import mkdtemp
-from typing import List, Dict
+from typing import List, Dict, Iterable, Union, Tuple
 
 import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake_plutil")
 
@@ -128,14 +129,14 @@ def has_data(filename: str) -> bool:
 
 
 @enforce_types
-def newest_ut(filename: str) -> int:
+def newest_ut(filename: str) -> UnixTimeMs:
     """
     Return the timestamp for the youngest entry in the file.
     The latest date should be the tail (row = n), or last entry in the file/dataframe
     """
     df = _get_tail_df(filename, n=1)
     ut = int(df["timestamp"][0])
-    return ut
+    return UnixTimeMs(ut)
 
 
 @enforce_types
@@ -150,14 +151,14 @@ def _get_tail_df(filename: str, n: int = 5) -> pl.DataFrame:
 
 
 @enforce_types
-def oldest_ut(filename: str) -> int:
+def oldest_ut(filename: str) -> UnixTimeMs:
     """
     Return the timestamp for the oldest entry in the parquet file.
     The oldest date should be the head (row = 0), or the first entry in the file/dataframe
     """
     df = _get_head_df(filename, n=1)
     ut = int(df["timestamp"][0])
-    return ut
+    return UnixTimeMs(ut)
 
 
 @enforce_types
@@ -195,3 +196,72 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     assert obj_df.schema == schema
 
     return obj_df
+
+
+@enforce_types
+def left_join_with(
+    target: pl.DataFrame,
+    other: pl.DataFrame,
+    left_on: str = "ID",
+    right_on: str = "ID",
+    w_columns: Iterable[Union[pl.Expr, str]] = [],
+    select_columns: Iterable[Union[pl.Expr, str]] = [],
+) -> pl.DataFrame:
+    """
+    @description
+        Left join two dataframes, and select the columns from the right dataframe
+        to be added to the left dataframe.
+    @arguments
+        target -- dataframe to be joined with
+        other -- dataframe to join with
+        with_columns -- columns to create
+        select_columns -- columns to select from the right dataframe
+    @returns
+        joined dataframe
+    """
+    return (
+        target.join(other, left_on=left_on, right_on=right_on, how="left")
+        .with_columns(w_columns)
+        .select(select_columns)
+    )
+
+
+@enforce_types
+def pick_df_and_ids_on_period(
+    target: pl.DataFrame,
+    start_timestamp: int,
+    finish_timestamp: int,
+) -> Tuple[pl.DataFrame, List[str]]:
+    """
+    @description
+        Filter dataframe with timestamp and return the ID list.
+    @arguments
+        target -- dataframe to be filtered
+        start_timestamp -- start timestamp
+        finish_timestamp -- finish timestamp
+    @returns
+        Filtered dataframe and ID list
+    """
+    target = target.filter(
+        (pl.col("timestamp") >= start_timestamp)
+        & (pl.col("timestamp") <= finish_timestamp)
+    )
+    return (target, target["ID"].to_list())
+
+
+@enforce_types
+def filter_and_drop_columns(
+    df: pl.DataFrame, target_column: str, ids: List[str], columns_to_drop: List[str]
+) -> pl.DataFrame:
+    """
+    @description
+        Filter dataframe based on ID and drop specified columns.
+    @arguments
+        df -- dataframe to be filtered and modified
+        target_column -- column to filter on
+        ids -- list of IDs to filter
+        columns_to_drop -- list of columns to drop
+    @returns
+        Modified dataframe
+    """
+    return df.filter(pl.col(target_column).is_in(ids)).drop(columns_to_drop)

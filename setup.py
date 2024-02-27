@@ -17,6 +17,7 @@ install_requirements = [
     "eth-account",
     "eth-keys",
     "flask",
+    "freezegun",
     "matplotlib",
     "mypy",
     "numpy",

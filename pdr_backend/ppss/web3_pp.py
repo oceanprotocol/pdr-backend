@@ -19,6 +19,7 @@ from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.subgraph.subgraph_pending_slots import get_pending_slots
 from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_filename
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
 
 logger = logging.getLogger("web3_pp")
@@ -133,9 +134,17 @@ class Web3PP(StrMixin):
         return contracts
 
     @enforce_types
+    def get_single_contract(self, feed_addr: str) -> Any:
+        contracts = self.get_contracts([feed_addr])
+        if len(contracts) != 1:
+            raise ValueError(f"Expected 1 contract, got {len(contracts)}")
+
+        return contracts[feed_addr]
+
+    @enforce_types
     def get_pending_slots(
         self,
-        timestamp: int,
+        timestamp: UnixTimeS,
         allowed_feeds: Optional[ArgFeeds] = None,
     ) -> List[Slot]:
         """
@@ -297,7 +306,7 @@ def inplace_mock_get_contracts(
 
 @enforce_types
 class _MockEthWithTracking:
-    def __init__(self, init_timestamp: int, init_block_number: int):
+    def __init__(self, init_timestamp: UnixTimeS, init_block_number: int):
         self.timestamp: int = init_timestamp
         self.block_number: int = init_block_number
         self._timestamps_seen: List[int] = [init_timestamp]
@@ -311,7 +320,8 @@ class _MockEthWithTracking:
 
 @enforce_types
 class _MockPredictoorContractWithTracking:
-    def __init__(self, w3, s_per_epoch: int, contract_address: str):
+    def __init__(self, web3_pp, w3, s_per_epoch: int, contract_address: str):
+        self.web3_pp = web3_pp
         self._w3 = w3
         self.s_per_epoch = s_per_epoch
         self.contract_address: str = contract_address
@@ -321,9 +331,9 @@ class _MockPredictoorContractWithTracking:
         """Returns an epoch number"""
         return self.get_current_epoch_ts() // self.s_per_epoch
 
-    def get_current_epoch_ts(self) -> int:
+    def get_current_epoch_ts(self) -> UnixTimeS:
         """Returns a timestamp"""
-        return self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch
+        return UnixTimeS(self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch)
 
     def get_secondsPerEpoch(self) -> int:
         return self.s_per_epoch
@@ -332,7 +342,7 @@ class _MockPredictoorContractWithTracking:
         self,
         predicted_value: bool,
         stake_amt: float,
-        prediction_ts: int,
+        prediction_ts: UnixTimeS,
         wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument
         assert stake_amt <= 3
@@ -344,7 +354,7 @@ class _MockPredictoorContractWithTracking:
 @enforce_types
 def inplace_mock_w3_and_contract_with_tracking(
     web3_pp: Web3PP,
-    init_timestamp: int,
+    init_timestamp: UnixTimeS,
     init_block_number: int,
     timeframe_s: int,
     feed_address: str,
@@ -358,6 +368,7 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = _MockEthWithTracking(init_timestamp, init_block_number)
     _mock_pdr_contract = _MockPredictoorContractWithTracking(
+        web3_pp,
         mock_w3,
         timeframe_s,
         feed_address,

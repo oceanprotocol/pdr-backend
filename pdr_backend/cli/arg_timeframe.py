@@ -6,7 +6,7 @@ from pdr_backend.util.constants import CAND_TIMEFRAMES
 
 
 # don't use @enforce_types, causes problems
-class Timeframe:
+class ArgTimeframe:
     def __init__(self, timeframe_str: str):
         """
         @arguments
@@ -44,15 +44,15 @@ class Timeframe:
         return self.timeframe_str
 
 
-class Timeframes(List[Timeframe]):
-    def __init__(self, timeframes: Union[List[str], List[Timeframe]]):
+class ArgTimeframes(List[ArgTimeframe]):
+    def __init__(self, timeframes: Union[List[str], List[ArgTimeframe]]):
         if not isinstance(timeframes, list):
             raise TypeError("timeframes must be a list")
 
         frames = []
         for timeframe in timeframes:
             if isinstance(timeframe, str):
-                frame = Timeframe(timeframe)
+                frame = ArgTimeframe(timeframe)
 
             frames.append(frame)
 
@@ -67,7 +67,7 @@ class Timeframes(List[Timeframe]):
         if not isinstance(timeframes_str, str):
             raise TypeError("timeframes_strs must be a string")
 
-        return Timeframes(timeframes_str.split(","))
+        return ArgTimeframes(timeframes_str.split(","))
 
     def __str__(self):
         if not self:
@@ -95,7 +95,7 @@ def verify_timeframes_str(signal_str: str):
       signal_str -- e.g. "close"
     """
     try:
-        Timeframes.from_str(signal_str)
+        ArgTimeframes.from_str(signal_str)
         return True
     except ValueError:
         return False

@@ -10,22 +10,23 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
     get_all_contract_ids_by_owner,
 )
+from pdr_backend.util.time_types import UnixTimeS
 
 ADA_CONTRACT_ADDRESS = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
 
 SAMPLE_PREDICTION = Prediction(
     # pylint: disable=line-too-long
     ID="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    contract="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
     pair="ADA/USDT",
     timeframe="5m",
     prediction=True,
     stake=0.050051425480971974,
     trueval=False,
-    timestamp=1698527000,
+    timestamp=UnixTimeS(1698527000),
     source="binance",
     payout=0.0,
-    slot=1698527100,
-    address="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+    slot=UnixTimeS(1698527100),
     user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
 )
 
@@ -114,11 +115,11 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
         MOCK_PREDICTIONS_RESPONSE_SECOND_CALL,
     ]
     predictions = fetch_filtered_predictions(
-        start_ts=1622547000,
-        end_ts=1622548800,
+        start_ts=UnixTimeS(1622547000),
+        end_ts=UnixTimeS(1622548800),
         first=1000,
         skip=0,
-        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
 
@@ -126,7 +127,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     assert isinstance(predictions[0], Prediction)
     assert predictions[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert predictions[0].pair == "ADA/USDT"
-    assert predictions[0].address[0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
+    assert predictions[0].contract == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     assert predictions[0].trueval is False
     assert predictions[0].prediction is True
     assert mock_query_subgraph.call_count == 1
@@ -156,11 +157,11 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
     mock_query_subgraph.side_effect = simulate_exception
 
     predictions = fetch_filtered_predictions(
-        start_ts=1622547000,
-        end_ts=1622548800,
+        start_ts=UnixTimeS(1622547000),
+        end_ts=UnixTimeS(1622548800),
         first=1000,
         skip=0,
-        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
 
@@ -173,11 +174,11 @@ def test_fetch_filtered_predictions_no_data():
     # network not supported
     with pytest.raises(Exception):
         fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeS(1622547000),
+            end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
         )
 
@@ -186,11 +187,11 @@ def test_fetch_filtered_predictions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {}}
         predictions = fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeS(1622547000),
+            end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
     assert len(predictions) == 0
@@ -200,11 +201,11 @@ def test_fetch_filtered_predictions_no_data():
     ) as mock_query_subgraph:
         mock_query_subgraph.return_value = {"data": {"predictPredictions": []}}
         predictions = fetch_filtered_predictions(
-            start_ts=1622547000,
-            end_ts=1622548800,
+            start_ts=UnixTimeS(1622547000),
+            end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
     assert len(predictions) == 0

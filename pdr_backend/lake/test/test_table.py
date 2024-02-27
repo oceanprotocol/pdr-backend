@@ -7,6 +7,7 @@ from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 # pylint: disable=too-many-instance-attributes
@@ -181,8 +182,8 @@ def test_get_pdr_df():
 
     save_backoff_limit = 5000
     pagination_limit = 1000
-    st_timest = 1701634400000
-    fin_timest = 1701634400000
+    st_timest = UnixTimeMs(1701634400000)
+    fin_timest = UnixTimeMs(1701634400000)
     table.get_pdr_df(
         mock_fetch_function,
         "sapphire-mainnet",
@@ -214,20 +215,19 @@ def test_get_pdr_df_multiple_fetches():
     captured_output = StringIO()
     sys.stdout = captured_output
 
-    save_backoff_limit = 4
-    pagination_limit = 2
-    st_timest = 1704110400000
-    fin_timest = 1704115800000
+    save_backoff_limit = 40
+    pagination_limit = 20
+    st_timest = UnixTimeMs(1704110400000)
+    fin_timest = UnixTimeMs(1704111600000)
     table.get_pdr_df(
-        fetch_filtered_predictions,
-        "sapphire-mainnet",
-        st_timest,
-        fin_timest,
-        save_backoff_limit,
-        pagination_limit,
-        {"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
+        fetch_function=fetch_filtered_predictions,
+        network="sapphire-mainnet",
+        st_ut=st_timest,
+        fin_ut=fin_timest,
+        save_backoff_limit=save_backoff_limit,
+        pagination_limit=pagination_limit,
+        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
     )
-
     printed_text = captured_output.getvalue().strip()
 
     # test fetches multiple times
@@ -238,4 +238,4 @@ def test_get_pdr_df_multiple_fetches():
     count_saves = printed_text.count("Saved")
     assert count_saves == 2
 
-    assert len(table.df) == 5
+    assert len(table.df) == 50
