@@ -16,6 +16,15 @@ class CSVDataStore:
         folder_path = os.path.join(self.base_path, dataset_identifier)
         os.makedirs(folder_path, exist_ok=True)
         return folder_path
+    
+    def _fill_with_zero(self, number: int, length: int = 10) -> str:
+        """
+        Fills the given number with zeros to make it 10 digits long.
+        @args:
+            number: int - number to fill with zeros
+        """
+        number_str = str(number)
+        return f"{(length - len(number_str)) * '0'}{number_str}"
 
     def _create_file_name(
             self,
@@ -33,12 +42,10 @@ class CSVDataStore:
             end_time: int - end time of the data TIMESTAMP
             row_count: int - number of rows in the data
         """
-        fill_with_zero_start = 10 - len(str(start_time))
-        fill_with_zero_end = 10 - len(str(end_time))
-        start_time = f"{fill_with_zero_start * '0'}{start_time}"
-        end_time = f"{fill_with_zero_end * '0'}{end_time}"
+        start_time_str = self._fill_with_zero(start_time)
+        end_time_str = self._fill_with_zero(end_time)
 
-        return f"{dataset_identifier}_from_{start_time}_to_{end_time}_{row_count}.csv"
+        return f"{dataset_identifier}_from_{start_time_str}_to_{end_time_str}_{row_count}.csv"
 
     def _create_file_path(
             self,
