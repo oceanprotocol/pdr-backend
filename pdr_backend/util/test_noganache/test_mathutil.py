@@ -8,7 +8,7 @@ from pdr_backend.util.mathutil import (
     all_nan,
     fill_nans,
     has_nan,
-    nmse,
+    classif_acc,
     round_sig,
     string_to_bytes32,
 )
@@ -169,12 +169,17 @@ def _test_fill_nans(pdl):
 
 
 @enforce_types
-def test_nmse():
-    y = np.array([10.0, 12.0, 13.0, 20.0])
-    yhat = np.array([9.0, 11.0, 14.0, 21.0])
-    ymin, ymax = 10.0, 20.0
-    e = nmse(yhat, y, ymin, ymax)
-    assert 0.035 <= e <= 0.036
+def test_classif_acc():
+    ybool = np.array([True, True, False, True])
+
+    ybool_hat = np.array([True, True, False, True])
+    assert classif_acc(ybool_hat, ybool) == 1.0
+
+    ybool_hat = np.array([False, False, True, False])
+    assert classif_acc(ybool_hat, ybool) == 0.0
+
+    ybool_hat = np.array([True, False, False, True])
+    assert classif_acc(ybool_hat, ybool) == 0.75
 
 
 @enforce_types

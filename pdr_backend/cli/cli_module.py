@@ -18,8 +18,7 @@ from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.predictoor.approach1.predictoor_agent1 import PredictoorAgent1
-from pdr_backend.predictoor.approach3.predictoor_agent3 import PredictoorAgent3
+from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
@@ -76,17 +75,7 @@ def do_predictoor(args, nested_args=None):
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-
-    approach = args.APPROACH
-    if approach == 1:
-        agent = PredictoorAgent1(ppss)
-
-    elif approach == 3:
-        agent = PredictoorAgent3(ppss)
-
-    else:
-        raise ValueError(f"Unknown predictoor approach {approach}")
-
+    agent = PredictoorAgent(ppss)
     agent.run()
 
 
