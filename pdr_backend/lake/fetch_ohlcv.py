@@ -69,10 +69,10 @@ def safe_fetch_ohlcv_ccxt(
 
 @enforce_types
 def safe_fetch_ohlcv_dydx(
+    exch,
     symbol: str,
-    resolution: str,
-    st_ut: UnixTimeMs,
-    fin_ut: UnixTimeMs,
+    timeframe: str,
+    since: UnixTimeMs,
     limit: int,
 ) -> Union[List[tuple], None]:
     """
@@ -94,13 +94,13 @@ def safe_fetch_ohlcv_dydx(
     """
 
     try:
-        return fetch_dydx_data(
-            symbol=symbol,
-            resolution=resolution,
-            st_ut=st_ut,
-            fin_ut=fin_ut,
-            limit=limit,
-        )
+        if exch == "dydx":
+            return fetch_dydx_data(
+                symbol=symbol,
+                resolution=timeframe,
+                st_ut=since,
+                limit=limit,
+            )
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
@@ -168,7 +168,7 @@ def _filter_within_timerange(
 
 
 def fetch_dydx_data(
-    symbol: str, resolution: str, st_ut: UnixTimeMs, fin_ut: UnixTimeMs, limit: int
+    symbol: str, resolution: str, st_ut: UnixTimeMs, limit: int
 ) -> Union[List[tuple], None]:
     """
     @description
@@ -201,11 +201,12 @@ def fetch_dydx_data(
     else:
         minutes = resolution_to_minutes[resolution]
 
-    start_time = UnixTimeMs.to_dt(st_ut)
-    end_time = UnixTimeMs.to_dt(fin_ut)
+    st_ut = UnixTimeMs.to_dt(st_ut)
+    start_time = st_ut
+    end_time = datetime.now(timezone.utc)
 
     # Handle bad dates
-    if end_time <= start_time:
+    if end_time < start_time:
         logger.fatal("Start time must be earlier than end time.")
         return None
     elif start_time > datetime.now(timezone.utc):
