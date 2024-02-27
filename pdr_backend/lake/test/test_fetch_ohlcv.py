@@ -1,5 +1,5 @@
 import ccxt
-from datetime import datetime, timedelta, timezone  # DELETE
+from datetime import datetime, timedelta, timezone
 import pytest
 from enforce_typing import enforce_types
 
