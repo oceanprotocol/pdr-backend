@@ -101,7 +101,9 @@ def test_safe_fetch_ohlcv(exch):
         100,
     )
     result = safe_fetch_ohlcv_dydx("dydx", symbol, timeframe, since, limit)
-    assert_safe_fetch_ohlcv_dydx_ok(result)
+    assert result is not None
+    assert len(result) == 1
+    assert len(result["candles"]) == 3
 
 
 @enforce_types
@@ -113,11 +115,3 @@ def assert_raw_tohlc_data_ok(raw_tohlc_data):
         assert isinstance(item[0], int)
         for val in item[1:]:
             assert isinstance(val, float)
-
-
-@enforce_types
-def assert_safe_fetch_ohlcv_dydx_ok(result):
-    # Result should return one list called 'candles' that contains 3 lists of 100 candles data
-    assert result is not None
-    assert len(result) == 1
-    assert len(result["candles"]) == 3
