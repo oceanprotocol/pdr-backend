@@ -59,7 +59,7 @@ def test_clean_raw_ohlcv():
 
 @enforce_types
 @pytest.mark.parametrize("exch", [ccxt.binanceus(), ccxt.kraken()])
-def test_safe_fetch_ohlcv(exch):
+def test_safe_fetch_ohlcv_ccxt(exch):
     since = UnixTimeMs.from_timestr("2023-06-18")
     symbol, timeframe, limit = "ETH/USDT", "5m", 1000
 
@@ -92,19 +92,6 @@ def test_safe_fetch_ohlcv(exch):
     v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
     assert v is None
 
-    # happy path dydx
-    fifteen_min_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
-    symbol, timeframe, since, limit = (
-        "BTC-USD",
-        "5MINS",
-        UnixTimeMs.from_dt(fifteen_min_ago),
-        100,
-    )
-    result = safe_fetch_ohlcv_dydx("dydx", symbol, timeframe, since, limit)
-    assert result is not None
-    assert len(result) == 1
-    assert len(result["candles"]) == 3
-
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):
@@ -115,3 +102,19 @@ def assert_raw_tohlc_data_ok(raw_tohlc_data):
         assert isinstance(item[0], int)
         for val in item[1:]:
             assert isinstance(val, float)
+
+
+def test_safe_fetch_ohlcv_dydx():
+    # happy path dydx
+    fifteen_min_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
+    exch, symbol, timeframe, since, limit = (
+        "dydx",
+        "BTC-USD",
+        "5MINS",
+        UnixTimeMs.from_dt(fifteen_min_ago),
+        100,
+    )
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+    assert result is not None
+    assert len(result) == 1
+    assert len(result["candles"]) == 3
