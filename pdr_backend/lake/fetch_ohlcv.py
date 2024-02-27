@@ -1,14 +1,11 @@
-from datetime import datetime, timedelta, timezone
 import logging
-from typing import List, Union, Tuple
+from typing import List, Union
 
-import numpy as np
-import polars as pl
-import requests
 from enforce_typing import enforce_types
+import numpy as np
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
@@ -17,15 +14,6 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
 
-# Int minutes will be used for updating the loop end_time
-resolution_to_minutes = {
-        "1MIN": 1,
-        "5MINS": 5,
-        "15MINS": 15,
-        "30MINS": 30,
-        "1HOUR": 60,
-        "1DAY": 1440,
-}
 
 @enforce_types
 def safe_fetch_ohlcv_ccxt(
@@ -68,45 +56,6 @@ def safe_fetch_ohlcv_ccxt(
 
 
 @enforce_types
-def safe_fetch_ohlcv_dydx(
-    exch,
-    symbol: str,
-    timeframe: str,
-    since: UnixTimeMs,
-    limit: int,
-) -> Union[List[tuple], None]:
-    """
-    @description
-      calls fetch_dydx_data() but if there's an error it
-      emits a warning and returns None, vs crashing everything
-
-    @arguments
-      exch -- eg dydx
-      symbol -- eg "BTC-USDT"
-      timeframe -- eg "1HOUR", "5MINS"
-      since -- timestamp of first candle. In unix time (in ms)
-      limit -- max is 100 candles to retrieve,
-
-    @return
-    all_data -- [a TOHLCV tuple, for each timestamp].
-        where row 0 is oldest
-        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
-    """
-
-    try:
-        if exch == "dydx":
-            return fetch_dydx_data(
-                symbol=symbol,
-                resolution=timeframe,
-                st_ut=since,
-                limit=limit,
-            )
-    except Exception as e:
-        logger.warning("exchange: %s", e)
-        return None
-
-
-@enforce_types
 def clean_raw_ohlcv(
     raw_tohlcv_data: Union[list, None],
     feed: ArgFeed,
@@ -142,7 +91,7 @@ def _ohlcv_to_uts(tohlcv_data: list) -> list:
 
 
 @enforce_types
-def _warn_if_uts_have_gaps(uts: List[UnixTimeMs], timeframe: Timeframe):
+def _warn_if_uts_have_gaps(uts: List[UnixTimeMs], timeframe: ArgTimeframe):
     if len(uts) <= 1:
         return
 
@@ -165,128 +114,3 @@ def _filter_within_timerange(
 ) -> list:
     uts = _ohlcv_to_uts(tohlcv_data)
     return [vec for ut, vec in zip(uts, tohlcv_data) if st_ut <= ut <= fin_ut]
-
-
-def fetch_dydx_data(
-    symbol: str, resolution: str, st_ut: UnixTimeMs, limit: int
-) -> Union[List[tuple], None]:
-    """
-    @description
-      makes a loop of get requests for dydx v4 exchange candle data,
-        by first converting input params to the correct dydx api syntax ticker: "BTC-USD", resolution: "5MINS", toISO: "2023-10-17T21:00:00.000+00:00",
-        then calls the transform_dydx_data() function dydx's,
-
-    @arguments
-      exch -- dydx
-      symbol -- eg "BTC-USD"
-      timeframe -- eg "5MINS"
-      st_ut -- timestamp of first candle. In unix time (in ms)
-      fin_ut -- timestamp of last candle. In unix time (in ms)
-      limit -- max # candles to retrieve up to 100
-
-    @return
-        all_data -- [a TOHLCV tuple, for each timestamp].
-        where row 0 is oldest
-        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
-    """
-    # Initialize the empty list
-    all_data = []
-
-    # Handle bad dydx resolution
-    if resolution not in resolution_to_minutes:
-        logger.fatal(
-            'Resolution for dydx must be one of the following: "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", "1DAY"'
-        )
-        return None
-    else:
-        minutes = resolution_to_minutes[resolution]
-
-    st_ut = UnixTimeMs.to_dt(st_ut)
-    start_time = st_ut
-    end_time = datetime.now(timezone.utc)
-
-    # Handle bad dates
-    if end_time < start_time:
-        logger.fatal("Start time must be earlier than end time.")
-        return None
-    elif start_time > datetime.now(timezone.utc):
-        logger.fatal("Start time must be earlier than now.")
-        return None
-    elif end_time > datetime.now(timezone.utc):
-        logger.warning("End time is later than now. Dydx will only fetch up until now.")
-
-    # Fetch the data in a loop
-    while end_time > start_time:
-
-        # Initialize parameters for API request
-        end_time_iso = end_time.strftime(
-            "%Y-%m-%dT%H:%M:%S"
-        )  # See format in dydx docs: https://docs.dydx.exchange/developers/indexer/indexer_api#getcandles
-
-        # Fetch the data
-        headers = {"Accept": "application/json"}
-        response = requests.get(
-            f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={resolution}&toISO={end_time_iso}&limit={limit}",
-            headers=headers,
-        )
-        data = response.json()
-
-        # Process and add the fetched data to all_data
-        if "candles" in data:
-
-            transformed_data = transform_dydx_data_to_tuples(data["candles"])
-            all_data.extend(transformed_data)
-
-            # Update end_time for the next iteration
-            end_time = end_time - timedelta(minutes=minutes)
-
-        # Exit loop if no candles are returned
-        else:
-            logger.warning("No candles found.")
-            logger.warning("Aborting dydx loop.")
-            return data
-
-    all_data = sorted(all_data, key=lambda x: x[0])
-    print("dydx data is ", all_data)
-    return all_data
-
-
-def transform_dydx_data_to_tuples(candles) -> List[Tuple]:
-    """
-    Transforms dYdX data to a list of tuples
-    """
-    transformed_data = []
-
-    for candle in candles:
-        timestamp_str = candle.get(
-            "startedAt"
-        )  # Of the format "2024-02-20T23:50:00.000Z"
-        # Handle NaN dates
-        try:
-            timestamp = datetime.strptime(
-                timestamp_str, "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=timezone.utc)
-        except ValueError:
-            continue
-
-        # Handle NaN floats
-        open_price = parse_float(candle["open"])
-        high_price = parse_float(candle["high"])
-        low_price = parse_float(candle["low"])
-        close_price = parse_float(candle["close"])
-        volume = parse_float(candle["baseTokenVolume"])
-
-        row = (timestamp, open_price, high_price, low_price, close_price, volume)
-
-        transformed_data.append(row)
-
-    return transformed_data
-
-
-def parse_float(value):
-    # Attempts to return a float, but if there's an NaN, it
-    # catches the error and returns 0.0, vs crashing everything
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return 0.0

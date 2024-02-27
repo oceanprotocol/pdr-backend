@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta, timezone
 from enforce_typing import enforce_types
 
 import ccxt
 import pytest
+import re
 import requests_mock
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -133,148 +135,142 @@ def mock_nan_dydx_response():
 @enforce_types
 def test_safe_fetch_ohlcv_dydx():
     # test happy path
-    # start_date = UnixTimeMs.from_timestr("2024-02-27_13:00")
-    # start_date = "2024-02-27_13:00"
-    # end_date = UnixTimeMs.from_timestr("2024-02-2_00:15")
-    
-    exch, symbol, resolution, st_ut, limit = (
+    st_ut = UnixTimeMs.from_timestr("2024-02-27_15:30")
+    exch, symbol, timeframe, st_ut, limit = (
         "dydx",
         "BTC-USD",
         "5MINS",
-        UnixTimeMs.from_timestr("2024-02-27_13:25"),
-        #end_date,
+        st_ut,
         100,
     )
 
-    result = safe_fetch_ohlcv_dydx(exch, symbol, resolution, st_ut, limit)
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
+
     assert result is not None
-    assert len(result) == 600
+    assert len(result) == 700
 
 
-# def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
-#     # test nan values are handled gracefully
-#     with requests_mock.Mocker() as m:
-#         m.get(
-#             "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD",
-#             json=mock_nan_dydx_response,
-#         )
+def test_fetch_dydx_data_handles_nan_values(mock_nan_dydx_response):
+    # test nan values are handled gracefully
+    with requests_mock.Mocker() as m:
+        m.get(
+            #re.compile(r'^https://indexer\.dydx\.trade/v4/candles/perpetualMarkets/BTC-USD.*$'),
+            'https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD',
+            json=mock_nan_dydx_response,
+        )
 
-#         start_date = UnixTimeMs.from_timestr("2024-02-20_23:50")
-#         end_date = UnixTimeMs.from_timestr("2024-02-20_23:55")
-#         symbol, resolution, st_ut, fin_ut, limit = (
-#             "BTC-USD",
-#             "5MINS",
-#             start_date,
-#             end_date,
-#             2,
-#         )
+        #start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
+        exch, symbol, resolution, st_ut, limit = (
+            "dydx",
+            "BTC-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-20_23:50"),
+            2,
+        )
 
-#         result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+        result = safe_fetch_ohlcv_dydx(exch, symbol, resolution, st_ut, limit)
 
-#         assert result is not None and len(result) == 1
-#         assert all(isinstance(entry, tuple) for entry in result)
-
-
-# def test_dydx_token_does_not_exist():
-#     # test token must exist
-#     start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
-#     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "RANDOMTOKEN-USD",
-#         "5MINS",
-#         start_date,
-#         end_date,
-#         100,
-#     )
-
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
-
-#     assert "errors" in result
-#     assert result is not None
+        assert result is not None and len(result) == 1
+        assert all(isinstance(entry, tuple) for entry in result)
 
 
-# def test_bad_dydx_token_pair():
-#     # test pair ends with 'USD' -- cannot be USDC, USDT, DAI, or any other coins
-#     start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
-#     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "BTC-ETH",
-#         "5MINS",
-#         start_date,
-#         end_date,
-#         100,
-#     )
+def test_dydx_token_does_not_exist():
+    # test token must exist
+    st_ut = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "RANDOMTOKEN-USD",
+        "5MINS",
+        st_ut,
+        100,
+    )
 
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
 
-#     assert "errors" in result
-#     assert result is not None
-
-
-# def test_bad_dydx_limit():
-#     # test limit must be an int > 0 && <= 100
-#     start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
-#     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "BTC-USD",
-#         "5MINS",
-#         start_date,
-#         end_date,
-#         1000,
-#     )
-
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
-
-#     assert "errors" in result
-#     assert result is not None
+    assert "errors" in result
+    assert result is not None
 
 
-# def test_bad_dydx_resolution():
-#     # test resolution must be "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", or "1DAY"
-#     start_date = UnixTimeMs.from_timestr("2024-02-21_00:00")
-#     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "BTC-USD",
-#         "123minutes",
-#         start_date,
-#         end_date,
-#         100,
-#     )
+def test_bad_dydx_token_pair():
+    # test pair ends with 'USD' -- cannot be USDC, USDT, DAI, or any other coins
+    st_ut = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "BTC-ETH",
+        "5MINS",
+        st_ut,
+        100,
+    )
 
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
 
-#     assert result is None
-
-
-# def test_bad_dydx_start_date():
-#     # test start date must be earlier than end date
-#     start_date = UnixTimeMs.from_timestr("2024-02-22_00:00")
-#     end_date = UnixTimeMs.from_timestr("2024-02-21_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "BTC-USD",
-#         "5MINS",
-#         start_date,
-#         end_date,
-#         100,
-#     )
-
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
-
-#     assert result is None
+    assert "errors" in result
+    assert result is not None
 
 
-# def test_dydx_start_date_before_now():
-#     # test start date must be earlier than now
-#     start_date = UnixTimeMs.from_timestr("2222-02-22_00:00")
-#     end_date = UnixTimeMs.from_timestr("2222-02-22_00:15")
-#     symbol, resolution, st_ut, fin_ut, limit = (
-#         "BTC-USD",
-#         "5MINS",
-#         start_date,
-#         end_date,
-#         100,
-#     )
+def test_bad_dydx_limit():
+    # test limit must be an int > 0 && <= 100
+    st_ut = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "BTC-USD",
+        "5MINS",
+        st_ut,
+        1000,
+    )
 
-#     result = safe_fetch_ohlcv_dydx(symbol, resolution, st_ut, fin_ut, limit)
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
 
-#     assert result is None
+    assert "errors" in result
+    assert result is not None
+
+
+def test_bad_dydx_resolution():
+    # test resolution must be "1MIN", "5MINS", "15MINS", "30MINS", "1HOUR", or "1DAY"
+    st_ut = UnixTimeMs.from_timestr("2024-02-21_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "BTC-USD",
+        "123minutes",
+        st_ut,
+        100,
+    )
+
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
+
+    assert result is None
+
+
+def test_bad_dydx_start_date():
+    # test start date must be earlier than end date
+    now = datetime.now(timezone.utc)
+    fifteen_min_from_now = now + timedelta(minutes=15)
+    fifteen_min_from_now
+    st_ut = UnixTimeMs.from_timestr("2024-02-22_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "BTC-USD",
+        "5MINS",
+        st_ut,
+        100,
+    )
+
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
+
+    assert result is None
+
+
+def test_dydx_start_date_before_now():
+    # test start date must be earlier than now
+    st_ut = UnixTimeMs.from_timestr("2222-02-22_00:00")
+    exch, symbol, timeframe, st_ut, limit = (
+        "dydx",
+        "BTC-USD",
+        "5MINS",
+        st_ut,
+        100,
+    )
+
+    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
+
+    assert result is None
