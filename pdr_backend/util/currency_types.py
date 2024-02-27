@@ -29,6 +29,12 @@ class Eth:
 
         return self.amt_eth < other
 
+    def __le__(self, other) -> bool:
+        if isinstance(other, Eth):
+            return self.amt_eth <= other.amt_eth
+
+        return self.amt_eth <= other
+
     def __gt__(self, other) -> bool:
         if isinstance(other, Eth):
             return self.amt_eth > other.amt_eth
@@ -46,6 +52,12 @@ class Eth:
             return self.amt_eth == other.amt_eth
 
         return self.amt_eth == other
+
+    def __truediv__(self, other) -> "Eth":
+        if isinstance(other, Eth):
+            return Eth(self.amt_eth / other.amt_eth)
+
+        return Eth(self.amt_eth / other)
 
 
 @enforce_types

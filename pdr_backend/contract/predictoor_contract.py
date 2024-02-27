@@ -294,7 +294,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             if self.config.is_sapphire:
                 res, txhash = self.send_encrypted_tx(
                     "submitPredval",
-                    [predicted_value, stake_amt_wei.to_wei(), prediction_ts],
+                    [predicted_value, stake_amt_wei.amt_wei, prediction_ts],
                 )
                 logger.info("Encrypted transaction status code: %s", res)
             else:
