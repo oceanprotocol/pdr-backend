@@ -8,6 +8,7 @@ import yaml
 
 from pdr_backend.deployer.util.config import parse_config
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
+from pdr_backend.deployer.util.models.PredictoorAgentConfig import PredictoorAgentConfig
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
@@ -37,6 +38,7 @@ def generate_deployment_templates(
 
         for idx in range(0, len(config.agents)):
             agent = config.agents[idx]
+            agent.__class__ = PredictoorAgentConfig
             pk1, pk2 = predictoor_keys[idx * 2], predictoor_keys[idx * 2 + 1]
             agent.set_private_key(pk1.private_key)
             agent.set_private_key_2(pk2.private_key)
