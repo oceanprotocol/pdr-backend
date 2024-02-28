@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -19,7 +19,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
-        self.last_allowance = {}
+        self.last_allowance: Dict[str, int] = {}
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
