@@ -59,7 +59,7 @@ class PredictoorAgentConfig(SingleAgentConfig):
                 f"--predictoor_ss.aimodel_ss.input_feeds='[\"{full_pair_name}\"]'",
                 f"--lake_ss.feeds='[\"{lake_feed_name}\"]'",
             ]
-        override_stake = [f"--predictoor_ss.bot_only.stake_amount={stake_amt}"]
+        override_stake = [f"--predictoor_ss.stake_amount={stake_amt}"]
         override_s_until = [
             f"--predictoor_ss.bot_only.s_until_epoch_end={s_until_epoch_end}"
         ]
