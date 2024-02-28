@@ -228,6 +228,7 @@ class PredictoorAgent:
     ):
         web3_config = self._updown_web3_config(direction)
         self.feed_contract.web3_pp.set_web3_config(web3_config)
+        self.feed_contract.set_token(self.feed_contract.web3_pp)
 
         tx = self.feed_contract.submit_prediction(
             direction,
