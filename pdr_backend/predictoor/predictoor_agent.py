@@ -58,8 +58,14 @@ class PredictoorAgent:
 
         rpc_url = self.ppss.web3_pp.rpc_url
         pk2 = os.getenv("PRIVATE_KEY2")
-        assert pk2 is not None, "Need PRIVATE_KEY2 envvar"
+        if pk2 is None:
+            raise ValueError("Need PRIVATE_KEY2 envvar")
+        if not hasattr(self.web3_config_up, "owner"):
+            raise ValueError("Need PRIVATE_KEY envvar")
         self.web3_config_down = Web3Config(rpc_url, pk2)
+
+        if self.web3_config_up.owner == self.web3_config_down.owner:
+            raise ValueError("private keys must differ")
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
