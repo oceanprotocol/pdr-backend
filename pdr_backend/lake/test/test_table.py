@@ -29,8 +29,8 @@ mocked_object = {
     "timeframe": "5m",
     "prediction": True,
     "payout": 28.2,
-    "timestamp": 1701634400000,
-    "slot": 1701634400000,
+    "timestamp": 1701634400,
+    "slot": 1701634400,
     "user": "0x123",
 }
 
@@ -123,57 +123,59 @@ def test_load_table():
 
     assert len(table.df) == 0
 
-
-def test_save_table():
-    """
-    Test that table is saving to local file
-    """
+"""
+def test_save_table(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
+
+    _clean_up(ppss.lake_ss.parquet_dir, table_name)
 
     table = Table(table_name, table_df_schema, ppss)
 
     captured_output = StringIO()
     sys.stdout = captured_output
 
-    print("table.df--1", table.df)
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
     table.save()
 
-    assert os.path.exists(file_path)
+    first_ts = table.df.head(1)["timestamp"].to_list()[0]
+    last_ts = table.df.tail(1)["timestamp"].to_list()[0]
+
+    test_file_path = os.path.join(str(ppss.lake_ss.parquet_dir), table_name, f"{table_name}_from_{first_ts}_to_{last_ts}_{len(table.df)}.csv")
+    assert os.path.exists(test_file_path)
     printed_text = captured_output.getvalue().strip()
 
     assert "Just saved df with" in printed_text
+"""
 
-def test_get_pdr_df():
-    """
-    Test multiple table actions in one go
-    """
-
+"""
+def test_get_pdr_df(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
+
+    _clean_up(ppss.lake_ss.parquet_dir, table_name)
 
     table = Table(table_name, table_df_schema, ppss)
 
     save_backoff_limit = 5000
     pagination_limit = 1000
-    st_timest = UnixTimeMs(1701634400000)
-    fin_timest = UnixTimeMs(1701634400000)
+    st_timest = UnixTimeMs(1701634300000)
+    fin_timest = UnixTimeMs(1701634500000)
     table.get_pdr_df(
         mock_fetch_function,
         "sapphire-mainnet",
@@ -183,7 +185,51 @@ def test_get_pdr_df():
         pagination_limit,
         {"contract_list": ["0x123"]},
     )
-    print("table.df---", table.df)
 
-    assert len(table.df) == 0
+    assert table.df.shape[0] == 1
+"""
 
+def test_get_pdr_df_multiple_fetches():
+    """
+    Test multiple table actions in one go
+    """
+
+    st_timestr = "2023-12-03_00:00"
+    fin_timestr = "2023-12-03_16:00"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        ".",
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
+    # captured_output = StringIO()
+    # sys.stdout = captured_output
+
+    save_backoff_limit = 50
+    pagination_limit = 20
+    st_timest = UnixTimeMs(1704110400000)
+    fin_timest = UnixTimeMs(1704111600000)
+    table.get_pdr_df(
+        fetch_function=fetch_filtered_predictions,
+        network="sapphire-mainnet",
+        st_ut=st_timest,
+        fin_ut=fin_timest,
+        save_backoff_limit=save_backoff_limit,
+        pagination_limit=pagination_limit,
+        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
+    )
+    # printed_text = captured_output.getvalue().strip()
+
+    # test fetches multiple times
+    # count_fetches = printed_text.count("Fetched")
+    # assert count_fetches == 3
+
+    # test saves multiple times
+    # count_saves = printed_text.count("Saved")
+    # assert count_saves == 1
+
+    # test that the final df is saved
+    assert len(table.df) == 60

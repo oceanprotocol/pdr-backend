@@ -20,7 +20,7 @@ class Table:
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        self.df = pl.DataFrame()
+        self.df = pl.DataFrame(schema=df_schema)
         self.load()
 
     @enforce_types
@@ -49,8 +49,6 @@ class Table:
                 self.df.head(1)["timestamp"].to_list()[0]
                 <= self.df.tail(1)["timestamp"].to_list()[0]
             )
-
-
 
         cur_df = self.csv_data_store.read_all(self.table_name, schema=self.df_schema)
 
@@ -84,7 +82,7 @@ class Table:
         save_backoff_count = 0
         pagination_offset = 0
 
-        final_df = pl.DataFrame()
+        final_df = pl.DataFrame([], schema=self.df_schema)
 
         while True:
             # call the function
@@ -108,22 +106,26 @@ class Table:
             if len(final_df) == 0:
                 final_df = df
             else:
-                final_df = pl.concat([final_df, df])
+                final_df = final_df.vstack(df)
 
+            print('len(final_df)',len(final_df))
             save_backoff_count += len(df)
 
-            print(f"  Fetched {len(df)} records from subgraph")
             # save to file if requred number of data has been fetched
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self.df = final_df
+                #self.df = final_df
+                self.df = self.df.vstack(final_df)
+                print("len(self.df)",len(self.df))
                 self.save()
                 print(f"Saved {len(final_df)} records to file while fetching")
-                final_df = pl.DataFrame()
+                final_df = pl.DataFrame([], schema=self.df_schema)
                 save_backoff_count = 0
+
+            print("len(final_df)",len(final_df))
 
             # avoids doing next fetch if we've reached the end
             if len(df) < pagination_limit:
