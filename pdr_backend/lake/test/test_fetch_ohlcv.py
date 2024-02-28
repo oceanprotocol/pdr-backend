@@ -2,6 +2,8 @@ import ccxt
 from datetime import datetime, timedelta, timezone
 import pytest
 from enforce_typing import enforce_types
+import re
+import requests_mock
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import (
@@ -20,6 +22,22 @@ RAW5 = [T5, 0.5, 12, 0.12, 1.1, 7.0]
 RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
 RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
+
+mock_dydx_response = {
+    "candles": [
+        {
+            "startedAt": "2024-02-28T16:50:00.000Z",
+            "open": "61840",
+            "high": "61848",
+            "low": "61687",
+            "close": "61800",
+            "baseTokenVolume": "23.6064",
+            "usdVolume": "1458183.4133",
+            "trades": 284,
+            "startingOpenInterest": "504.4262",
+        }
+    ]
+}
 
 
 @enforce_types
@@ -105,16 +123,36 @@ def assert_raw_tohlc_data_ok(raw_tohlc_data):
 
 
 def test_safe_fetch_ohlcv_dydx():
-    # happy path dydx
-    fifteen_min_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
-    exch, symbol, timeframe, since, limit = (
-        "dydx",
-        "BTC-USD",
-        "5MINS",
-        UnixTimeMs.from_dt(fifteen_min_ago),
-        100,
-    )
-    result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-    assert result is not None
-    assert len(result) == 1
-    assert len(result["candles"]) == 3
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            json=mock_dydx_response,
+        )
+        # happy path dydx
+        exch, symbol, timeframe, since, limit = (
+            "dydx",
+            "BTC-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+
+        # check the result is a list called 'candles' with data for only one 5min candle (because limit=1)
+        assert result is not None
+        assert list(result.keys())[0] == "candles" and len(result) == 1
+
+        # check the candle's data
+        assert (
+            list(result["candles"][0].keys())[0] == "startedAt"
+            and result["candles"][0]["startedAt"] == "2024-02-28T16:50:00.000Z"
+        )
+        assert (
+            list(result["candles"][0].keys())[2] == "high"
+            and result["candles"][0]["high"] == "61848"
+        )
+        assert (
+            list(result["candles"][0].keys())[5] == "baseTokenVolume"
+            and result["candles"][0]["baseTokenVolume"] == "23.6064"
+        )
