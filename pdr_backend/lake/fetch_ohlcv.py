@@ -3,6 +3,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 import numpy as np
+import requests
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
@@ -50,6 +51,53 @@ def safe_fetch_ohlcv_ccxt(
             since=since,
             limit=limit,
         )
+    except Exception as e:
+        logger.warning("exchange: %s", e)
+        return None
+
+
+@enforce_types
+def safe_fetch_ohlcv_dydx(
+    exch,
+    symbol: str,
+    timeframe: str,
+    since: UnixTimeMs,
+    limit: int,
+) -> Union[List[tuple], None]:
+    """
+    @description
+      calls ccxt.exchange.fetch_ohlcv() but if there's an error it
+      emits a warning and returns None, vs crashing everything
+
+    @arguments
+      exch -- eg dydx
+      symbol -- eg "BTC-USD"
+      timeframe -- eg "1HOUR", "5MINS"
+      since -- timestamp of first candle. In unix time (in ms)
+      limit -- max is 100 candles to retrieve,
+
+    @return
+      raw_tohlcv_data -- [a TOHLCV tuple, for each timestamp].
+        where row 0 is oldest
+        and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
+    """
+
+    try:
+        if exch == "dydx":
+            sinceIso = since.to_iso_timestr()
+            headers = {"Accept": "application/json"}
+            response = requests.get(
+                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
+                headers=headers,
+            )
+            response = requests.get(
+                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+                headers=headers,
+            )
+            data = response.json()
+            return data
+        else:
+            return None
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
