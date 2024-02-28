@@ -4,7 +4,7 @@ import os
 from typing import Dict, List, Union
 
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from matplotlib import gridspec
 import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
@@ -119,7 +119,7 @@ class SimEngine:
             mergedohlcv_df,
             testshift,
         )
-        colnames = [col for col in x_df.columns]
+        colnames = list(x_df.columns)
 
         st, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st:fin, :], X[fin : fin + 1]
@@ -130,7 +130,7 @@ class SimEngine:
 
         y_thr = curprice
         ybool = data_f.ycont_to_ytrue(ycont, y_thr)
-        ybool_train, ybool_test = ybool[st:fin], ybool[fin : fin + 1]
+        ybool_train, _ = ybool[st:fin], ybool[fin : fin + 1]
 
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
         model = model_f.build(X_train, ybool_train)
@@ -185,13 +185,11 @@ class SimEngine:
         pred_dir = "UP" if pred_up else "DN"
         true_dir = "UP" if true_up else "DN"
         correct = pred_dir == true_dir
-        correct_s = "Y" if correct else "N"
         self.st.corrects.append(correct)
 
         # track predictoor profit
         tot_stake = pdr_ss.others_stake + pdr_ss.stake_amount
         others_stake_correct = pdr_ss.others_stake * pdr_ss.others_accuracy
-        others_stake_wrong = pdr_ss.others_stake * (1 - pdr_ss.others_accuracy)
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct

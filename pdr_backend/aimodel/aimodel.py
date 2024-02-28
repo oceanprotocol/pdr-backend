@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from enforce_typing import enforce_types
 import numpy as np
 

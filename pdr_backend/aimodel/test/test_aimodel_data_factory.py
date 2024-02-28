@@ -22,7 +22,7 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types
-def test_ycont_to_ytrue(tmpdir):
+def test_ycont_to_ytrue():
     ycont = np.array([8.3, 6.4, 7.5, 8.6, 5.0])
     y_thr = 7.0
     target_ybool = np.array([True, False, True, True, False])
@@ -95,7 +95,7 @@ def test_create_xy__0():
 
 
 @enforce_types
-def test_create_xy_reg__1exchange_1coin_1signal(tmpdir):
+def test_create_xy_reg__1exchange_1coin_1signal():
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     ss = PredictoorSS(d)
     aimodel_data_factory = AimodelDataFactory(ss)
@@ -340,7 +340,7 @@ def test_create_xy_reg__input_type(tmpdir):
 
 
 @enforce_types
-def test_create_xy_reg__handle_nan(tmpdir):
+def test_create_xy_reg__handle_nan():
     # create mergedohlcv_df
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     ss = PredictoorSS(d)
