@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
@@ -395,5 +396,10 @@ def inplace_mock_w3_and_contract_with_tracking(
 
     assert hasattr(web3_pp.web3_config, "w3")
     web3_pp.web3_config.w3 = mock_w3
+    web3_pp.web3_config.copy_with_pk = Mock()
+    copy_config = deepcopy(web3_pp.web3_config)
+    copy_config.owner = "0x3"
+    web3_pp.web3_config.copy_with_pk.return_value = copy_config
+
 
     return _mock_pdr_contract
