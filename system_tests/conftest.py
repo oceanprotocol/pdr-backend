@@ -43,4 +43,5 @@ def mock_predictoor_contract():
     mock_contract.payout_multiple.return_value = None
     mock_contract.get_agg_predval.return_value = (12, 23)
     mock_contract.get_current_epoch.return_value = 100
+    mock_contract.web3_pp = Mock()
     return mock_contract
