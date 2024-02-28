@@ -1,5 +1,7 @@
+import os
 import sys
 from unittest.mock import Mock, patch, MagicMock
+
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
@@ -8,6 +10,7 @@ from pdr_backend.util.web3_config import Web3Config
 def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "development"
+    mock_web3_pp.rpc_url = "http://example.com/rpc"
     mock_web3_pp.subgraph_url = (
         "http://localhost:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
     )
@@ -26,7 +29,13 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, caplog):
+def _test_predictoor_system(
+    mock_feeds, mock_predictoor_contract, approach, caplog, monkeypatch
+):
+    PRIV_KEY = str(os.getenv("PRIVATE_KEY"))
+    PRIV_KEY2 = str(PRIV_KEY[:-4] + "0000")
+    monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
+
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
@@ -61,15 +70,27 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, capl
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_1_system(
-    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract, caplog
+    mock_verify_feed_dependencies,
+    mock_feeds,
+    mock_predictoor_contract,
+    caplog,
+    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1, caplog)
+    _test_predictoor_system(
+        mock_feeds, mock_predictoor_contract, 1, caplog, monkeypatch
+    )
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_3_system(
-    mock_verify_feed_dependencies, mock_feeds, mock_predictoor_contract, caplog
+    mock_verify_feed_dependencies,
+    mock_feeds,
+    mock_predictoor_contract,
+    caplog,
+    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3, caplog)
+    _test_predictoor_system(
+        mock_feeds, mock_predictoor_contract, 3, caplog, monkeypatch
+    )

@@ -89,50 +89,11 @@ def fill_nans(
 
 
 @enforce_types
-def nmse(yhat, y, ymin=None, ymax=None) -> float:
-    """
-    @description
-        Calculates the normalized mean-squared error.
-    @arguments
-        yhat -- 1d array or list of floats -- estimated values of y
-        y -- 1d array or list of floats -- true values
-        ymin, ymax -- float, float -- roughly the min and max; they
-          do not have to be the perfect values of min and max, because
-          they're just here to scale the output into a roughly [0,1] range
-    @return
-        nmse -- float -- normalized mean-squared error
-    """
-    assert len(y) == len(yhat)
-    y, yhat = np.asarray(y), np.asarray(yhat)
-
-    # base case: no entries
-    if len(yhat) == 0:
-        return 0.0
-
-    # condition ymin, ymax
-    if ymin is None and ymax is None:
-        ymin, ymax = min(y), max(y)
-    assert ymin is not None
-    assert ymax is not None
-
-    # base case: both yhat and y are constant, and same values
-    if (ymax == ymin) and (max(yhat) == min(yhat) == max(y) == min(y)):
-        return 0.0
-
-    # yrange
-    yrange = ymax - ymin
-
-    # First, scale true values and predicted values such that:
-    # - true values are in range [0.0, 1.0]
-    # - predicted values follow the same scaling factors
-    y01 = (y - ymin) / yrange
-    yhat01 = (yhat - ymin) / yrange
-
-    mse_xy = np.sum(np.square(y01 - yhat01))
-    mse_x = np.sum(np.square(y01))
-    nmse_result = mse_xy / mse_x
-
-    return nmse_result
+def classif_acc(ytrue_hat, ytrue) -> float:
+    ytrue_hat, ytrue = np.array(ytrue_hat), np.array(ytrue)
+    n_correct = sum(ytrue_hat == ytrue)
+    acc = n_correct / len(ytrue)
+    return acc
 
 
 @enforce_types

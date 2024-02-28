@@ -13,27 +13,42 @@ from pdr_backend.lake.test.resources import (
     ETHUSDT_RAWOHLCV_DFS,
     KRAKEN_BTC_DATA,
     KRAKEN_ETH_DATA,
-    _predictoor_ss,
-    _predictoor_ss_1feed,
     _df_from_raw_data,
     _mergedohlcv_df_ETHUSDT,
 )
 from pdr_backend.ppss.aimodel_ss import AimodelSS
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
+@enforce_types
+def test_ycont_to_ytrue(tmpdir):
+    ycont = np.array([8.3, 6.4, 7.5, 8.6, 5.0])
+    y_thr = 7.0
+    target_ybool = np.array([True, False, True, True, False])
+
+    ybool = AimodelDataFactory.ycont_to_ytrue(ycont, y_thr)
+    assert_array_equal(ybool, target_ybool)
+
+
+@enforce_types
 def test_create_xy__0():
     predictoor_ss = PredictoorSS(
         {
             "predict_feed": "binanceus ETH/USDT c 5m",
+            "approach": 1,
+            "stake_amount": 1,
             "bot_only": {
                 "s_until_epoch_end": 60,
-                "stake_amount": 1,
+            },
+            "sim_only": {
+                "others_stake": 3,
+                "others_accuracy": 0.51,
+                "revenue": 0.93,
             },
             "aimodel_ss": {
                 "input_feeds": ["binanceus ETH/USDT oc"],
-                "approach": "LIN",
+                "approach": "LinearLogistic",
                 "max_n_train": 4,
                 "autoregressive_n": 2,
             },
@@ -58,7 +73,6 @@ def test_create_xy__0():
             [0.1, 0.1, 7.5, 8.6],  # newest
         ]
     )
-    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:open:t-3": [0.1, 0.1, 0.1, 0.1, 0.1],
@@ -70,8 +84,9 @@ def test_create_xy__0():
     target_xrecent = np.array([0.1, 0.1, 8.6, 9.7])
 
     factory = AimodelDataFactory(predictoor_ss)
-    X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
 
+    target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
+    X, y, x_df, xrecent = factory.create_xy(mergedohlcv_df, testshift=0)
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
@@ -80,10 +95,10 @@ def test_create_xy__0():
 
 
 @enforce_types
-def test_create_xy__1exchange_1coin_1signal(tmpdir):
-    ss, _, aimodel_data_factory = _predictoor_ss_1feed(
-        tmpdir, "binanceus ETH/USDT h 5m"
-    )
+def test_create_xy_reg__1exchange_1coin_1signal(tmpdir):
+    d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
+    ss = PredictoorSS(d)
+    aimodel_data_factory = AimodelDataFactory(ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
@@ -203,7 +218,7 @@ def test_create_xy__1exchange_1coin_1signal(tmpdir):
 
 
 @enforce_types
-def test_create_xy__2exchanges_2coins_2signals():
+def test_create_xy_reg__2exchanges_2coins_2signals():
     rawohlcv_dfs = {
         "binanceus": {
             "BTC/USDT": _df_from_raw_data(BINANCE_BTC_DATA),
@@ -215,10 +230,16 @@ def test_create_xy__2exchanges_2coins_2signals():
         },
     }
 
-    ss = _predictoor_ss(
-        "binanceus ETH/USDT h 5m",
-        ["binanceus BTC/USDT,ETH/USDT hl", "kraken BTC/USDT,ETH/USDT hl"],
-    )
+    d = predictoor_ss_test_dict()
+    assert "predict_feed" in d
+    assert "input_feeds" in d["aimodel_ss"]
+    d["predict_feed"] = "binanceus ETH/USDT h 5m"
+    d["aimodel_ss"]["input_feeds"] = [
+        "binanceus BTC/USDT,ETH/USDT hl",
+        "kraken BTC/USDT,ETH/USDT hl",
+    ]
+    ss = PredictoorSS(d)
+
     assert ss.aimodel_ss.autoregressive_n == 3
     assert ss.aimodel_ss.n == (4 + 4) * 3
 
@@ -286,7 +307,7 @@ def test_create_xy__2exchanges_2coins_2signals():
 
 
 @enforce_types
-def test_create_xy__check_timestamp_order(tmpdir):
+def test_create_xy_reg__check_timestamp_order(tmpdir):
     mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     # timestamps should be descending order
@@ -304,7 +325,7 @@ def test_create_xy__check_timestamp_order(tmpdir):
 
 
 @enforce_types
-def test_create_xy__input_type(tmpdir):
+def test_create_xy_reg__input_type(tmpdir):
     mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
@@ -319,9 +340,11 @@ def test_create_xy__input_type(tmpdir):
 
 
 @enforce_types
-def test_create_xy__handle_nan(tmpdir):
+def test_create_xy_reg__handle_nan(tmpdir):
     # create mergedohlcv_df
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
+    ss = PredictoorSS(d)
+    aimodel_data_factory = AimodelDataFactory(ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
