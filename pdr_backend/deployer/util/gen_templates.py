@@ -37,10 +37,10 @@ def generate_deployment_templates(
             predictoor_keys = generate_new_keys(config_name, diff_keys)
 
         for idx in range(0, len(config.agents)):
-            agent: PredictoorAgentConfig = config.agents[idx] # type: ignore
+            agent: PredictoorAgentConfig = config.agents[idx]  # type: ignore
             pk1, pk2 = predictoor_keys[idx * 2], predictoor_keys[idx * 2 + 1]
             agent.set_private_key(pk1.private_key)
-            agent.set_private_key_2(pk2.private_key) # type: ignore
+            agent.set_private_key_2(pk2.private_key)  # type: ignore
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)

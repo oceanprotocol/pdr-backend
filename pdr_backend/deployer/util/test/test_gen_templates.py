@@ -55,7 +55,12 @@ def test_generate_deployment_templates_with_existing_keys(
     deploy_config_mock.agent_config.agents = [MagicMock(), MagicMock()]
     deploy_config_mock.agent_config.type = "predictoor"
     mock_parse_config.return_value = deploy_config_mock
-    mock_read_keys_json.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+    mock_read_keys_json.return_value = [
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    ]
     mock_generate_new_keys.return_value = []
 
     generate_deployment_templates(
