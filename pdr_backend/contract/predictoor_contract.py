@@ -18,9 +18,12 @@ logger = logging.getLogger("predictoor_contract")
 class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
+        self.set_token(web3_pp)
+        self.last_allowance = {}
+
+    def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
         self.token = Token(web3_pp, stake_token)
-        self.last_allowance = {}
 
     def is_valid_subscription(self):
         """Does this account have a subscription to this feed yet?"""
