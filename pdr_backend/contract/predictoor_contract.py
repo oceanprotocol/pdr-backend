@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -18,9 +18,12 @@ logger = logging.getLogger("predictoor_contract")
 class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
+        self.set_token(web3_pp)
+        self.last_allowance: Dict[str, int] = {}
+
+    def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
         self.token = Token(web3_pp, stake_token)
-        self.last_allowance = 0
 
     def is_valid_subscription(self):
         """Does this account have a subscription to this feed yet?"""
@@ -269,14 +272,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         stake_amt_wei = to_wei(stake_amt)
 
         # Check allowance first, only approve if needed
-        if self.last_allowance <= 0:
-            self.last_allowance = self.token.allowance(
+        allowance = self.last_allowance.get(self.config.owner, 0)
+        if allowance <= 0:
+            self.last_allowance[self.config.owner] = self.token.allowance(
                 self.config.owner, self.contract_address
             )
-        if self.last_allowance < stake_amt_wei:
+        if allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, MAX_UINT)
-                self.last_allowance = MAX_UINT
+                self.last_allowance[self.config.owner] = MAX_UINT
             except Exception as e:
                 logger.error(
                     "Error while approving the contract to spend tokens: %s", e
@@ -296,7 +300,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     predicted_value, stake_amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance -= stake_amt_wei
+            self.last_allowance[self.config.owner] -= stake_amt_wei
             logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
