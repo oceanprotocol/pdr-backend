@@ -37,7 +37,7 @@ def generate_deployment_templates(
 
         for idx in range(0, len(config.agents)):
             agent = config.agents[idx]
-            pk1, pk2 = predictoor_keys[idx*2], predictoor_keys[idx*2+1]
+            pk1, pk2 = predictoor_keys[idx * 2], predictoor_keys[idx * 2 + 1]
             agent.set_private_key(pk1.private_key)
             agent.set_private_key_2(pk2.private_key)
 
