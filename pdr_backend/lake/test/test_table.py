@@ -80,7 +80,6 @@ if os.path.exists(file_path):
 if os.path.exists(file_path2):
     os.remove(file_path2)
 
-
 def test_table_initialization():
     """
     Test that table is initialized correctly
@@ -103,7 +102,6 @@ def test_table_initialization():
     assert table.ppss.lake_ss.st_timestr == st_timestr
     assert table.ppss.lake_ss.fin_timestr == fin_timestr
 
-
 def test_load_table():
     """
     Test that table is loading the data from file
@@ -123,7 +121,6 @@ def test_load_table():
 
     assert len(table.df) == 0
 
-"""
 def test_save_table(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
@@ -154,9 +151,7 @@ def test_save_table(tmpdir):
     printed_text = captured_output.getvalue().strip()
 
     assert "Just saved df with" in printed_text
-"""
 
-"""
 def test_get_pdr_df(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
@@ -187,9 +182,8 @@ def test_get_pdr_df(tmpdir):
     )
 
     assert table.df.shape[0] == 1
-"""
 
-def test_get_pdr_df_multiple_fetches():
+def test_get_pdr_df_multiple_fetches(tmpdir):
     """
     Test multiple table actions in one go
     """
@@ -199,16 +193,18 @@ def test_get_pdr_df_multiple_fetches():
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
 
-    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
-    # captured_output = StringIO()
-    # sys.stdout = captured_output
+    _clean_up(ppss.lake_ss.parquet_dir, table_name)
 
-    save_backoff_limit = 50
+    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
+    captured_output = StringIO()
+    sys.stdout = captured_output
+
+    save_backoff_limit = 40
     pagination_limit = 20
     st_timest = UnixTimeMs(1704110400000)
     fin_timest = UnixTimeMs(1704111600000)
@@ -221,15 +217,50 @@ def test_get_pdr_df_multiple_fetches():
         pagination_limit=pagination_limit,
         config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
     )
-    # printed_text = captured_output.getvalue().strip()
+    printed_text = captured_output.getvalue().strip()
 
     # test fetches multiple times
-    # count_fetches = printed_text.count("Fetched")
-    # assert count_fetches == 3
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 3
 
     # test saves multiple times
-    # count_saves = printed_text.count("Saved")
-    # assert count_saves == 1
+    count_saves = printed_text.count("Saved")
+    assert count_saves == 2
 
     # test that the final df is saved
-    assert len(table.df) == 60
+    assert len(table.df) == 50
+
+def test_all(tmpdir):
+    """
+    Test multiple table actions in one go
+    """
+    st_timestr = "2021-12-03"
+    fin_timestr = "2023-12-31"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    _clean_up(ppss.lake_ss.parquet_dir, table_name)
+
+    folder_path = os.path.join(ppss.lake_ss.parquet_dir, table_name)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    #create the csv file
+    file_path = os.path.join(folder_path, f"{table_name}_from_1701634400_to_1701634400_1.csv")
+
+    #write the file
+    with open(file_path, "w") as file:
+        file.write("ID,pair,timeframe,prediction,payout,timestamp,slot,user\n")
+        file.write("0x123,ADA-USDT,5m,True,28.2,1701634400000,1701634400000,0x123\n")
+
+    table = Table(table_name, table_df_schema, ppss)
+    table.df = pl.DataFrame([], table_df_schema)
+    assert len(table.df) == 0
+
+    table.load()
+    assert len(table.df) == 1

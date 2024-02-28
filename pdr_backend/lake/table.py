@@ -28,10 +28,10 @@ class Table:
         """
         Read the data from the Parquet file into a DataFrame object
         """
+        print(f"Loading data for {self.table_name}")
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
-
         self.df = self.csv_data_store.read(self.table_name, st_ut, fin_ut, schema=self.df_schema)
 
     @enforce_types
@@ -82,7 +82,7 @@ class Table:
         save_backoff_count = 0
         pagination_offset = 0
 
-        final_df = pl.DataFrame([], schema=self.df_schema)
+        final_df = pl.DataFrame()
 
         while True:
             # call the function
@@ -108,7 +108,6 @@ class Table:
             else:
                 final_df = final_df.vstack(df)
 
-            print('len(final_df)',len(final_df))
             save_backoff_count += len(df)
 
             # save to file if requred number of data has been fetched
@@ -117,20 +116,21 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                #self.df = final_df
-                self.df = self.df.vstack(final_df)
-                print("len(self.df)",len(self.df))
+                self.df = final_df.clone()
                 self.save()
                 print(f"Saved {len(final_df)} records to file while fetching")
-                final_df = pl.DataFrame([], schema=self.df_schema)
+                final_df = pl.DataFrame()
                 save_backoff_count = 0
-
-            print("len(final_df)",len(final_df))
 
             # avoids doing next fetch if we've reached the end
             if len(df) < pagination_limit:
                 break
             pagination_offset += pagination_limit
+
+        if len(final_df) > 0:
+            self.df = final_df.clone()
+            self.save()
+            print(f"Saved {len(final_df)} records to file while fetching")
 
     @enforce_types
     def _parquet_filename(self) -> str:
