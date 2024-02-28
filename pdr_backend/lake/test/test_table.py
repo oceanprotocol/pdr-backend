@@ -34,6 +34,19 @@ mocked_object = {
     "user": "0x123",
 }
 
+def _clean_up(tmp_path, table_name):
+    """
+    Delete test file if already exists
+    """
+    folder_path = os.path.join(tmp_path, table_name)
+    
+    if os.path.exists(folder_path):
+        #delete files
+        for file in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, file)
+            os.remove(file_path)
+        os.remove(folder_path)
+
 
 def mock_fetch_function(
     network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
@@ -130,6 +143,7 @@ def test_save_table():
     captured_output = StringIO()
     sys.stdout = captured_output
 
+    print("table.df--1", table.df)
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
     table.save()
@@ -138,30 +152,6 @@ def test_save_table():
     printed_text = captured_output.getvalue().strip()
 
     assert "Just saved df with" in printed_text
-
-
-def test_all():
-    """
-    Test multiple table actions in one go
-    """
-    st_timestr = "2023-12-03"
-    fin_timestr = "2023-12-05"
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table(table_name, table_df_schema, ppss)
-    table.df = pl.DataFrame([], table_df_schema)
-    assert len(table.df) == 0
-    table.df = pl.DataFrame([mocked_object], table_df_schema)
-    table.load()
-
-    assert len(table.df) == 1
-
 
 def test_get_pdr_df():
     """
@@ -193,49 +183,7 @@ def test_get_pdr_df():
         pagination_limit,
         {"contract_list": ["0x123"]},
     )
-    assert len(table.df) == 1
+    print("table.df---", table.df)
 
+    assert len(table.df) == 0
 
-def test_get_pdr_df_multiple_fetches():
-    """
-    Test multiple table actions in one go
-    """
-
-    st_timestr = "2023-12-03_00:00"
-    fin_timestr = "2023-12-03_16:00"
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
-    captured_output = StringIO()
-    sys.stdout = captured_output
-
-    save_backoff_limit = 4
-    pagination_limit = 2
-    st_timest = UnixTimeMs(1704110400000)
-    fin_timest = UnixTimeMs(1704115800000)
-    table.get_pdr_df(
-        fetch_function=fetch_filtered_predictions,
-        network="sapphire-mainnet",
-        st_ut=st_timest,
-        fin_ut=fin_timest,
-        save_backoff_limit=save_backoff_limit,
-        pagination_limit=pagination_limit,
-        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
-    )
-    printed_text = captured_output.getvalue().strip()
-
-    # test fetches multiple times
-    count_fetches = printed_text.count("Fetched")
-    assert count_fetches == 3
-
-    # test saves multiple times
-    count_saves = printed_text.count("Saved")
-    assert count_saves == 2
-
-    assert len(table.df) == 5

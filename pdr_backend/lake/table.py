@@ -50,22 +50,15 @@ class Table:
                 <= self.df.tail(1)["timestamp"].to_list()[0]
             )
 
-        filename = self._parquet_filename()
 
-        if os.path.exists(filename):  # "append" existing file
-            cur_df = pl.read_parquet(filename)
-            self.df = pl.concat([cur_df, self.df])
 
-            # drop duplicates
-            self.df = self.df.filter(pl.struct("ID").is_unique())
-            self.df.write_parquet(filename)
-            n_new = self.df.shape[0] - cur_df.shape[0]
-            print(f"  Just appended {n_new} df rows to file {filename}")
-        else:  # write new file
-            self.df.write_parquet(filename)
-            print(
-                f"  Just saved df with {self.df.shape[0]} rows to new file {filename}"
-            )
+        cur_df = self.csv_data_store.read_all(self.table_name, schema=self.df_schema)
+
+        self.df = pl.concat([cur_df, self.df])
+        self.df = self.df.filter(pl.struct("ID").is_unique())
+        self.csv_data_store.write(self.table_name, self.df, schema=self.df_schema)
+        n_new = self.df.shape[0] - cur_df.shape[0]
+        print(f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}")
 
     @enforce_types
     def get_pdr_df(
@@ -84,6 +77,7 @@ class Table:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
+        print(f"Fetching data for {self.table_name}")
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -118,6 +112,7 @@ class Table:
 
             save_backoff_count += len(df)
 
+            print(f"  Fetched {len(df)} records from subgraph")
             # save to file if requred number of data has been fetched
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
