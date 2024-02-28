@@ -56,13 +56,12 @@ class PredictoorAgent:
         # set web3_config_up/down (details in class docstring)
         self.web3_config_up = self.ppss.web3_pp.web3_config
 
-        rpc_url = self.ppss.web3_pp.rpc_url
         pk2 = os.getenv("PRIVATE_KEY2")
         if pk2 is None:
             raise ValueError("Need PRIVATE_KEY2 envvar")
         if not hasattr(self.web3_config_up, "owner"):
             raise ValueError("Need PRIVATE_KEY envvar")
-        self.web3_config_down = Web3Config(rpc_url, pk2)
+        self.web3_config_down = self.web3_config_up.copy_with_pk(pk2)
 
         if self.web3_config_up.owner == self.web3_config_down.owner:
             raise ValueError("private keys must differ")
