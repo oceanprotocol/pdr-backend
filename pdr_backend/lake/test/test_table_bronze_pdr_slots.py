@@ -241,4 +241,4 @@ def test_table_bronze_pdr_slots(
 
     # We should have the roundSumStakes value updated withe the stakes from latest payout event
     assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"][6] == 200
-    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][6] == 2
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][6] == 0

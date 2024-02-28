@@ -98,9 +98,9 @@ def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     # get ref to bronze_slots
     slots_df = tables[bronze_pdr_slots_table_name].df
 
-    #filter out truevals that were already processed
-    filtered_ids = slots_df.filter(slots_df['trueval'].is_not_null())['ID'].to_list()
-    truevals_df = truevals_df.filter(~truevals_df['ID'].is_in(filtered_ids))
+    # filter out truevals that were already processed
+    filtered_ids = slots_df.filter(slots_df["trueval"].is_not_null())["ID"].to_list()
+    truevals_df = truevals_df.filter(~truevals_df["ID"].is_in(filtered_ids))
 
     # do work to join from pdr_truevals onto bronze_pdr_slots
     slots_df = (
@@ -120,7 +120,7 @@ def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
         )
         .select(bronze_pdr_slots_schema.keys())
     )
-    #remove duplicate ids
+    # remove duplicate ids
     slots_df = slots_df.unique(subset=["ID"])
 
     # update dfs
