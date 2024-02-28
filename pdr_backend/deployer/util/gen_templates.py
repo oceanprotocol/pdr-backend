@@ -37,8 +37,8 @@ def generate_deployment_templates(
             predictoor_keys = generate_new_keys(config_name, diff_keys)
 
         for idx in range(0, len(config.agents)):
-            agent = config.agents[idx]
-            agent.__class__ = PredictoorAgentConfig
+            agent: PredictoorAgentConfig = config.agents[idx]
+            # agent.__class__ = PredictoorAgentConfig
             pk1, pk2 = predictoor_keys[idx * 2], predictoor_keys[idx * 2 + 1]
             agent.set_private_key(pk1.private_key)
             agent.set_private_key_2(pk2.private_key)
