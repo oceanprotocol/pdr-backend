@@ -21,9 +21,9 @@ def test_get_folder_path(tmpdir):
 
 def test_create_file_name(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_name = manager._create_file_name("test", 0, 1, 2)
+    file_name = manager._create_file_name("test", 1707030362, 1709060200, 1000)
     print("file_name", file_name)
-    assert file_name == "test_from_0000000000_to_0000000001_2.csv"
+    assert file_name == "test_from_1707030362_to_1709060200_1000.csv"
 
 def test_get_file_paths(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -35,7 +35,7 @@ def test_get_file_paths(tmpdir):
     files = [file_name_1, file_name_2, file_name_3, file_name_4]
 
     folder_path = manager._get_folder_path("test")
-    
+
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
@@ -99,7 +99,7 @@ def test_get_last_file_path(tmpdir):
     file_path_2 = manager._create_file_path("test", 21, 41, 2)
     file_path_3 = manager._create_file_path("test", 42, 62, 2)
     file_path_4 = manager._create_file_path("test", 63, 83, 2)
-    
+
     files = [file_path_1, file_path_2, file_path_3, file_path_4]
 
     folder_path = manager._get_folder_path("test")
@@ -113,7 +113,6 @@ def test_get_last_file_path(tmpdir):
             os.path.join(folder_path, file)
             , "w") as f:
             pass    
-
 
     assert manager._get_last_file_path(f"{tmpdir}/test") == os.path.join(folder_path, file_path_4)
 

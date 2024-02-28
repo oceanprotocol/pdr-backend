@@ -2,6 +2,8 @@ import os
 from typing import List, Optional
 import polars as pl
 
+from polars.type_aliases import SchemaDict
+
 class CSVDataStore:
     def __init__(self, base_path: str):
         self.base_path = base_path
@@ -76,7 +78,10 @@ class CSVDataStore:
         """
         return [data.slice(i, min(1000, len(data) - i)) for i in range(0, len(data), 1000)]
 
-    def write(self, dataset_identifier: str, data: pl.DataFrame):
+    def write(self,
+              dataset_identifier: str,
+              data: pl.DataFrame,
+              schema: Optional[SchemaDict] = None):
         """
         Writes the given data to a csv file in the folder
         corresponding to the given dataset_identifier.
@@ -98,7 +103,7 @@ class CSVDataStore:
 
                 last_file_path = self._get_last_file_path(
                     self._get_folder_path(dataset_identifier))
-                last_file_data = pl.read_csv(last_file_path)
+                last_file_data = pl.read_csv(last_file_path, schema=schema)
                 last_file_data = last_file_data.vstack(remaining_data)
 
                 t_start_time = last_file_data['timestamp'][0]
@@ -133,7 +138,7 @@ class CSVDataStore:
             dataset_identifier: str - identifier of the dataset
         """
         for data in data_list:
-            self.write(data, dataset_identifier)
+            self.write(dataset_identifier, data)
 
     def _get_file_paths(
             self,
@@ -171,7 +176,8 @@ class CSVDataStore:
             self,
             dataset_identifier: str,
             start_time: str,
-            end_time: str
+            end_time: str,
+            schema: Optional[SchemaDict] = None
         ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
@@ -184,13 +190,27 @@ class CSVDataStore:
         @returns:
             pl.DataFrame - data read from the csv file
         """
-        folder_path = self._get_folder_path(dataset_identifier)
-        file_paths = self._get_file_paths(folder_path, start_time, end_time)
-        return pl.read_csv(file_paths[0]) if file_paths else pl.DataFrame()
+        data = self.read_all(dataset_identifier, schema=schema)
+        # if the data is empty, return
+        if len(data) == 0:
+            return data
+        
+        # if the data is not empty,
+        # check the timestamp column exists and is of type int64
+        if "timestamp" not in data.columns:
+            return data
+
+        return data.filter(
+            data['timestamp'] >= int(start_time)
+        ).filter(
+            data['timestamp'] <= int(end_time)
+        )
+        #return pl.read_csv(file_paths[0]) if file_paths else pl.DataFrame()
 
     def read_all(
             self,
-            dataset_identifier: str
+            dataset_identifier: str,
+            schema: Optional[SchemaDict] = None
         ) -> pl.DataFrame:
         """
         Reads all the data from the csv files in the folder
@@ -209,10 +229,10 @@ class CSVDataStore:
         # print("read_all_file_paths", file_paths)
         if file_paths:
         # Read the first file to create the DataFrame
-            data = pl.read_csv(file_paths[0])
+            data = pl.read_csv(file_paths[0], schema=schema)
             # Read the remaining files and append them to the DataFrame
             for file_path in file_paths[1:]:
-                data = data.vstack(pl.read_csv(file_path))
+                data = data.vstack(pl.read_csv(file_path, schema=schema))
             return data
         else:
             return pl.DataFrame()
