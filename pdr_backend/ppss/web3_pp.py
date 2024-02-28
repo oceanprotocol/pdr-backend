@@ -401,5 +401,4 @@ def inplace_mock_w3_and_contract_with_tracking(
     copy_config.owner = "0x3"
     web3_pp.web3_config.copy_with_pk.return_value = copy_config
 
-
     return _mock_pdr_contract
