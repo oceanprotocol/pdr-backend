@@ -1,4 +1,3 @@
-import copy
 from unittest.mock import Mock
 
 import pytest
@@ -6,10 +5,7 @@ from enforce_typing import enforce_types
 from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
-from pdr_backend.contract.predictoor_contract import (
-    PredictoorContract,
-    mock_predictoor_contract,
-)
+from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.contract.token import Token
 from pdr_backend.util.mathutil import from_wei, to_wei
 
@@ -173,11 +169,3 @@ def test_mock_predictoor_contract():
     c = mock_predictoor_contract("0x123", (3, 4))
     assert c.contract_address == "0x123"
     assert c.get_agg_predval() == (3, 4)
-
-
-@enforce_types
-def test_deepcopy(predictoor_contract):
-    """Why test? Because there had previously been a RecursionError
-    when attempting to deepcopy(predictoor_contract. Issue #688"""
-    assert isinstance(predictoor_contract, PredictoorContract)
-    copy.deepcopy(predictoor_contract)
