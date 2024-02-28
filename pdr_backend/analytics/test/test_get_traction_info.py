@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.table import Table
-from pdr_backend.analytics.get_traction_info import get_traction_info_main
+from pdr_backend.analytics.get_predictions_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 
@@ -13,12 +13,12 @@ table_name = "pdr_predictions"
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_traction_info.get_traction_statistics")
-@patch("pdr_backend.analytics.get_traction_info.plot_traction_cum_sum_statistics")
-@patch("pdr_backend.analytics.get_traction_info.plot_traction_daily_statistics")
-@patch("pdr_backend.analytics.get_traction_info.get_slot_statistics")
-@patch("pdr_backend.analytics.get_traction_info.plot_slot_daily_statistics")
-@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_tables")
+@patch("pdr_backend.analytics.get_predictions_info.get_traction_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.plot_traction_cum_sum_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.plot_traction_daily_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.get_slot_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_traction_info_main_mainnet(
     mock_get_gql_tables,
     mock_plot_slot_daily_statistics,
@@ -67,7 +67,7 @@ def test_get_traction_info_main_mainnet(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_traction_info.GQLDataFactory.get_gql_tables")
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_traction_info_empty_data_factory(
     mock_predictions_df,
     tmpdir,

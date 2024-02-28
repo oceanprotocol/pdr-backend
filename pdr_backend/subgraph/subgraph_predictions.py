@@ -32,12 +32,10 @@ class FilterMode(Enum):
 def fetch_filtered_predictions(
     start_ts: UnixTimeS,
     end_ts: UnixTimeS,
-    filters: List[str],
+    addresses: List[str],
     first: int,
     skip: int,
-    network: str,
-    payout_only: bool = False,
-    trueval_only: bool = False,
+    network: str = "mainnet",
 ) -> List[Prediction]:
     """
     Fetches predictions from a subgraph within a specified time range
@@ -51,7 +49,7 @@ def fetch_filtered_predictions(
     Args:
         start_ts: The starting Unix timestamp for the query range.
         end_ts: The ending Unix timestamp for the query range.
-        filters: A list of strings representing the filter
+        addresses: A list of strings representing the filter
             values (contract addresses or predictor IDs).
         network: A string indicating the blockchain network to query ('mainnet' or 'testnet').
         filter_mode: An instance of FilterMode indicating whether to filter
@@ -63,7 +61,6 @@ def fetch_filtered_predictions(
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
     """
-    filter_mode = FilterMode.CONTRACT_TS
 
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
@@ -71,17 +68,10 @@ def fetch_filtered_predictions(
     predictions: List[Prediction] = []
 
     # Convert filters to lowercase
-    filters = [f.lower() for f in filters]
+    filters = [f.lower() for f in addresses]
 
     # pylint: disable=line-too-long
-    if filter_mode == FilterMode.NONE:
-        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
-    elif filter_mode == FilterMode.CONTRACT_TS:
-        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
-    elif filter_mode == FilterMode.CONTRACT:
-        where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
-    elif filter_mode == FilterMode.PREDICTOOR:
-        where_clause = f", where: {{user_: {{id_in: {json.dumps(filters)}}}, slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+    where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
 
     query = f"""
         {{
@@ -155,17 +145,11 @@ def fetch_filtered_predictions(
         predicted_value = None
         stake = None
 
-        if payout_only is True and prediction_sg_dict["payout"] is None:
-            continue
-
         if not prediction_sg_dict["payout"] is None:
             stake = float(prediction_sg_dict["stake"])
             trueval = prediction_sg_dict["payout"]["trueValue"]
             predicted_value = prediction_sg_dict["payout"]["predictedValue"]
             payout = float(prediction_sg_dict["payout"]["payout"])
-
-        if trueval_only is True and trueval is None:
-            continue
 
         prediction = Prediction(
             ID=prediction_sg_dict["id"],

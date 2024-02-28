@@ -9,8 +9,8 @@ class StrMixin:
         class_name = self.__class__.__name__
 
         newline = False
-        if hasattr(self, "__STR_GIVES_NEWLINE__"):
-            newline = self.__STR_GIVES_NEWLINE__  # type: ignore
+        if hasattr(self, "__STR_GIVES_NEWLinearLogisticE__"):
+            newline = self.__STR_GIVES_NEWLinearLogisticE__  # type: ignore
 
         s = []
         s += [f"{class_name}={{"]

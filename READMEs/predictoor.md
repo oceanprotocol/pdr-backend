@@ -65,12 +65,14 @@ What it does:
 1. Grab historical price data from exchanges and stores in `parquet_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
    - Build a model
-   - Predict up/down
+   - Predict
    - Trade
-   - Plot total profit versus time, and more
-   - Log to console, and to `logs/out_<time>.txt`
+   - Plot profit versus time, more
+   - Log to console and `logs/out_<time>.txt`
+   
+"Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
-The baseline settings use a linear model inputting prices of the previous 10 epochs as inputs (autoregressive_n = 10), just BTC close price as input, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
+By default, simulation uses a linear model inputting prices of the previous 2-10 epochs as inputs (autoregressive_n), just BTC close price as input, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
 
@@ -80,27 +82,30 @@ Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) f
 
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
-Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
+Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain. 
 
-Let's get our bot running on testnet first.
+Let's get our predictoor bot running on testnet first.
 
-First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn. [Get them here](testnet-faucet.md).
+The bot does two-sided predictions, like in simulation. This also means it needs two Ethereum accounts, with keys PRIVATE_KEY and PRIVATE_KEY2.
 
-Then, copy & paste your private key as an envvar. In console:
+First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn, for both accounts. [Get them here](testnet-faucet.md).
+
+Then, copy & paste your private keys as envvars. In console:
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
+export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 ```
 
 Update `my_ppss.yaml` as desired.
 
-Then, run a bot with modeling-on-the fly (approach 3). In console:
+Then, run a bot with modeling-on-the fly (approach 2). In console:
 ```console
-pdr predictoor 3 my_ppss.yaml sapphire-testnet
+pdr predictoor 2 my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
 
-At every 5m/1h epoch, it builds & submits >1 times, to maximize accuracy without missing submission deadlines. Specifically: 60 s before predictions are due, it builds a model then submits a prediction. It repeats this until the deadline.
+At every 5m/1h epoch, it builds & submits >1 times, to maximize accuracy without missing submission deadlines. Specifically: 60 s before predictions are due, it builds a model then prediction txs for up and for down (with stake for each). It repeats this until the deadline.
 
 It logs to console, and to `logs/out_<time>.txt`. Like simulation, it uses Python logging framework, configurable in `logging.yaml`.
 
@@ -111,25 +116,26 @@ The CLI has support tools too. Learn about each via:
 - `pdr get_predictions_info -h`
 - and more yet; type `pdr -h` to see
 
-You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).
+You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/predictoor_agent.py), or [querying Predictoor subgraph](subgraph.md).
 
 
 ## 4. Run Predictoor Bot on Sapphire Mainnet
 
 Time to make it real: let's get our bot running on Sapphire _mainnet_.
 
-First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).
+First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md), for each of your two accounts.
 
-Then, copy & paste your private key as an envvar. (You can skip this if it's same as testnet.) In console:
+Then, copy & paste your private keys as envvars. (You can skip this if keys are same as testnet.) In console:
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
+export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 ```
 
 Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
 ```console
-pdr predictoor 3 my_ppss.yaml sapphire-mainnet
+pdr predictoor 2 my_ppss.yaml sapphire-mainnet
 ```
 
 This is where there's real $ at stake. Good luck!
@@ -142,7 +148,6 @@ When running predictoors on mainnet, you have the potential to earn $.
 
 **[Here](payout.md)** are instructions to claim your earnings.
 
-
 Congrats! You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
 
 The next sections describe how to go beyond, by optimizing the model and more.
@@ -151,7 +156,7 @@ The next sections describe how to go beyond, by optimizing the model and more.
 
 The idea: make your own model, tuned for accuracy, which in turn will optimize it for $. Here's how:
 1. Fork `pdr-backend` repo.
-1. Change predictoor approach3 modeling code as you wish, while iterating with simulation.
+1. Change predictoor approach 2 modeling code as you wish, while iterating with simulation.
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
 # Right-size staking
@@ -186,7 +191,7 @@ deployment_configs:
     memory: '512Mi'
     source: "binance"
     type: "predictoor"
-    approach: 3
+    approach: 2
     network: "sapphire-testnet"
     s_until_epoch_end: 20
     pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"

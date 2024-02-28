@@ -187,7 +187,7 @@ def test_single_feed():
     assert ss.signal_str == ""
     assert ss.base_str == "ETH"
     assert ss.quote_str == "USDT"
-    assert ss.timeframe == "1h"
+    assert ss.timeframe_str == "1h"
     assert ss.timeframe_ms == 3600000
     assert ss.timeframe_s == 3600
     assert ss.timeframe_m == 60
