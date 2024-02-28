@@ -200,7 +200,7 @@ class PredictoorAgent:
         tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
 
         logger.info("Submit 'down' prediction tx to chain...")
-        tx2 = self.submit_1prediction_tx(False, stake_up, target_slot)
+        tx2 = self.submit_1prediction_tx(False, stake_down, target_slot)
 
         # handle errors
         if _tx_failed(tx1) or _tx_failed(tx2):
@@ -210,6 +210,7 @@ class PredictoorAgent:
 
             logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
             self.submit_1prediction_tx(True, 1e-10, target_slot)
+            logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
             self.submit_1prediction_tx(False, 1e-10, target_slot)
 
     @enforce_types
