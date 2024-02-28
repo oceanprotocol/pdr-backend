@@ -12,12 +12,16 @@ class PredictoorAgentConfig(SingleAgentConfig):
     pair: str
     timeframe: str
     stake_amt: int
+    private_key_2: Optional[str] = None
     approach: Optional[int] = None
     source: Optional[str] = None
     cpu: Optional[str] = None
     memory: Optional[str] = None
     network: Optional[str] = None
     s_until_epoch_end: Optional[int] = None
+
+    def set_private_key_2(self, pk: str):
+        self.private_key_2 = pk
 
     def update_with_defaults(self, defaults: AgentsDeployConfig):
         for field in defaults.__dict__:
