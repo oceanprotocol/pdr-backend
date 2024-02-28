@@ -22,7 +22,6 @@ class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
     # --------------------------------
     # yaml properties: sim only
     @property
-    # TODO: ?????
     def buy_amt_str(self) -> Union[int, float]:
         """How much to buy. Eg 10."""
         return self.d["sim_only"]["buy_amt"]

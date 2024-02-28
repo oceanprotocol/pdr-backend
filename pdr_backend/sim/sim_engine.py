@@ -132,6 +132,9 @@ class SimEngine:
         ybool = data_f.ycont_to_ytrue(ycont, y_thr)
         ybool_train, _ = ybool[st:fin], ybool[fin : fin + 1]
 
+        curprice_eth = Eth(curprice)
+        trueprice_eth = Eth(trueprice)
+
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
         model = model_f.build(X_train, ybool_train)
 
@@ -161,24 +164,24 @@ class SimEngine:
             conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
             buy_amt_usd = ppss.trader_ss.buy_amt_usd * conf_up
             usdcoin_amt_sent = buy_amt_usd
-            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_sent)
+            tokcoin_amt_recd = self._buy(curprice_eth, usdcoin_amt_sent)
         else:  # sell; exit later by buying
             prob_down = 1.0 - prob_up
             conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
             sell_amt_usd = ppss.trader_ss.buy_amt_usd * conf_down
             p = self.ppss.trader_ss.fee_percent
-            tokcoin_amt_sent = sell_amt_usd / curprice / (1 - p)
-            usdcoin_amt_recd = self._sell(curprice, tokcoin_amt_sent)
+            tokcoin_amt_sent = sell_amt_usd / curprice_eth / (1 - p)
+            usdcoin_amt_recd = self._sell(curprice_eth, tokcoin_amt_sent)
 
         # observe true price
-        true_up = trueprice > curprice
+        true_up = trueprice_eth > curprice_eth
         self.st.ybools_test.append(true_up)
 
         # trader: exit the trading position
         if pred_up:  # we'd bought; so now sell
-            self._sell(trueprice, tokcoin_amt_sell=tokcoin_amt_recd)
+            self._sell(trueprice_eth, tokcoin_amt_sell=tokcoin_amt_recd)
         else:  # we'd sold, so now buy back
-            self._buy(trueprice, usdcoin_amt_spend=usdcoin_amt_recd)
+            self._buy(trueprice_eth, usdcoin_amt_spend=usdcoin_amt_recd)
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         # track prediction
@@ -239,7 +242,7 @@ class SimEngine:
             )
 
     @enforce_types
-    def _buy(self, price: float, usdcoin_amt_spend: Eth) -> Eth:
+    def _buy(self, price: Eth, usdcoin_amt_spend: Eth) -> Eth:
         """
         @description
           Buy tokcoin with usdcoin
@@ -276,8 +279,7 @@ class SimEngine:
         return tokcoin_amt_recd
 
     @enforce_types
-    # TODO: price should also be eth?
-    def _sell(self, price: float, tokcoin_amt_sell: Eth) -> Eth:
+    def _sell(self, price: Eth, tokcoin_amt_sell: Eth) -> Eth:
         """
         @description
           Sell tokcoin for usdcoin

@@ -307,8 +307,8 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
 
 
 @enforce_types
-def test_create_xy_reg__check_timestamp_order(tmpdir):
-    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+def test_create_xy_reg__check_timestamp_order():
+    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT()
 
     # timestamps should be descending order
     uts = mergedohlcv_df["timestamp"].to_list()
@@ -325,8 +325,8 @@ def test_create_xy_reg__check_timestamp_order(tmpdir):
 
 
 @enforce_types
-def test_create_xy_reg__input_type(tmpdir):
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+def test_create_xy_reg__input_type():
+    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT()
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(aimodel_data_factory, AimodelDataFactory)
