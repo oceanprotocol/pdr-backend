@@ -330,7 +330,7 @@ class _MockPredictoorContractWithTracking:
     def get_current_epoch(self) -> int:
         """Returns an epoch number"""
         return self.get_current_epoch_ts() // self.s_per_epoch
-    
+
     def set_token(self, web3_pp):
         pass
 
