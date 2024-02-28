@@ -27,7 +27,7 @@ class PredictoorAgent:
     - When a value can be predicted, call calc_stakes()
 
     Prediction is two-sided: it submits for both up and down directions,
-      with a stake for each. 
+      with a stake for each.
     - But: the contracts have a constraint: an account can only submit
       *one* dir'n at an epoch. But we need to submit *both* dir'ns.
     - Idea: redo smart contracts. Issue: significant work, especially rollout
@@ -55,7 +55,7 @@ class PredictoorAgent:
 
         # set web3_config_up/down (details in class docstring)
         self.web3_config_up = self.ppss.web3_pp.web3_config
-        
+
         rpc_url = self.ppss.web3_pp.rpc_url
         pk2 = os.getenv("PRIVATE_KEY2")
         assert pk2 is not None, "Need PRIVATE_KEY2 envvar"
@@ -72,7 +72,7 @@ class PredictoorAgent:
         print_feeds({feed.address: feed}, "filtered feed")
         self.feed: SubgraphFeed = feed
 
-        # set self.feed_contract. For both up/down. See submit_prediction_tx 
+        # set self.feed_contract. For both up/down. See submit_prediction_tx
         self.feed_contract: PredictoorContract = ppss.web3_pp.get_single_contract(
             feed.address
         )
@@ -198,7 +198,7 @@ class PredictoorAgent:
     ):
         logger.info("Submit 'up' prediction tx to chain...")
         tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
-        
+
         logger.info("Submit 'down' prediction tx to chain...")
         tx2 = self.submit_1prediction_tx(False, stake_up, target_slot)
 
@@ -221,7 +221,7 @@ class PredictoorAgent:
     ):
         web3_config = self._updown_web3_config(direction)
         self.feed_contract.web3_pp.set_web3_config(web3_config)
-        
+
         tx = self.feed_contract.submit_prediction(
             direction,
             stake,
@@ -236,7 +236,6 @@ class PredictoorAgent:
             return self.web3_config_up
         else:
             return self.web3_config_down
-            
 
     @enforce_types
     def calc_stakes(self) -> Tuple[float, float]:
