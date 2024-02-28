@@ -41,7 +41,7 @@ class Web3Config:
             )
             self.w3.middleware_onion.add(http_retry_request_middleware)
 
-    def copy_with_pk(self, pk: str) -> self:
+    def copy_with_pk(self, pk: str):
         return Web3Config(self.rpc_url, pk)
 
     def get_block(
