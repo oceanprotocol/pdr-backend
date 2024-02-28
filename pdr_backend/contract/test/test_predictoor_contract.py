@@ -131,7 +131,9 @@ def test_submit_prediction_trueval_payout(
     assert receipt["status"] == 1
 
     OCEAN_after = OCEAN.balanceOf(owner_addr).to_eth()
-    assert (OCEAN_before - OCEAN_after) == approx(stake_amt, 1e-8)
+    assert (OCEAN_before.amt_eth - OCEAN_after.amt_eth) == approx(
+        stake_amt.amt_eth, 1e-8
+    )
 
     pred_tup = predictoor_contract.get_prediction(
         soonest_ts,
