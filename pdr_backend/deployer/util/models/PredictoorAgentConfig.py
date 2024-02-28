@@ -31,6 +31,7 @@ class PredictoorAgentConfig(SingleAgentConfig):
         for field in self.__dict__:
             if getattr(self, field, None) is None and field not in [
                 "private_key",
+                "private_key_2",
                 "cpu",
                 "memory",
             ]:
