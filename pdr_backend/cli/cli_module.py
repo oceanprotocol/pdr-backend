@@ -146,8 +146,16 @@ def do_claim_OCEAN(args, nested_args=None):
         nested_override_args=nested_args,
     )
     do_ocean_payout(ppss)
+    
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_ocean_payout(ppss)
 
-
+    
 @enforce_types
 def do_claim_ROSE(args, nested_args=None):
     ppss = PPSS(
@@ -155,6 +163,14 @@ def do_claim_ROSE(args, nested_args=None):
         network="sapphire-mainnet",
         nested_override_args=nested_args,
     )
+    do_rose_payout(ppss)
+    
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
     do_rose_payout(ppss)
 
 
