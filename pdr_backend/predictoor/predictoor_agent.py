@@ -25,6 +25,26 @@ class PredictoorAgent:
     - Fetches Predictoor contracts from subgraph, and filters them
     - Monitors each contract for epoch changes.
     - When a value can be predicted, call calc_stakes()
+
+    Prediction is two-sided: it submits for both up and down directions,
+      with a stake for each.
+    - But: the contracts have a constraint: an account can only submit
+      *one* dir'n at an epoch. But we need to submit *both* dir'ns.
+    - Idea: redo smart contracts. Issue: significant work, especially rollout
+    - Idea: bot has *two* accounts: one for up, one for down. Yes this works**
+
+    OK. Assume two private keys are available. How should bot manage this?
+    - Idea: implement with a copy of the contract? (one for up, one for down)
+      - Via copy()? Issue: fails because it's too shallow, misses stuff
+      - Via deepcopy()? Issue: causes infinite recursion (py bug)
+      - Via deepcopy() with surgical changes? Issue: error prone
+      - Via query subgraph twice? Issue: many seconds slower -> annoying
+      - Via fill in whole contract again? Issue: tedious & error prone
+    - Idea: implement with a second Web3Config, and JIT switch on tx calls
+      - **Via 2nd constructor call? Yes, this works.** Easy because few params.
+
+    Summary of how to do two-sided predictions:
+    - two envvars --> two private keys -> two Web3Configs, JIT switch for txs
     """
 
     @enforce_types
@@ -32,6 +52,19 @@ class PredictoorAgent:
         # ppss
         self.ppss = ppss
         logger.info(self.ppss)
+
+        # set web3_config_up/down (details in class docstring)
+        self.web3_config_up = self.ppss.web3_pp.web3_config
+
+        pk2 = os.getenv("PRIVATE_KEY2")
+        if pk2 is None:
+            raise ValueError("Need PRIVATE_KEY2 envvar")
+        if not hasattr(self.web3_config_up, "owner"):
+            raise ValueError("Need PRIVATE_KEY envvar")
+        self.web3_config_down = self.web3_config_up.copy_with_pk(pk2)
+
+        if self.web3_config_up.owner == self.web3_config_down.owner:
+            raise ValueError("private keys must differ")
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
@@ -44,17 +77,10 @@ class PredictoorAgent:
         print_feeds({feed.address: feed}, "filtered feed")
         self.feed: SubgraphFeed = feed
 
-        # set self.feed_contract, self.feed_contract2
+        # set self.feed_contract. For both up/down. See submit_prediction_tx
         self.feed_contract: PredictoorContract = ppss.web3_pp.get_single_contract(
             feed.address
         )
-
-        pk2: Optional[str] = os.getenv("PRIVATE_KEY2")
-        assert pk2 is not None, "Need PRIVATE_KEY2 envvar"
-        rpc_url: str = self.ppss.web3_pp.rpc_url
-        web3_config2 = Web3Config(rpc_url, pk2)
-        self.feed_contract2 = copy.deepcopy(self.feed_contract)
-        self.feed_contract2.web3_pp.set_web3_config(web3_config2)
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():
@@ -176,20 +202,10 @@ class PredictoorAgent:
         target_slot: UnixTimeS,  # a timestamp
     ):
         logger.info("Submit 'up' prediction tx to chain...")
-        tx1 = self.feed_contract.submit_prediction(
-            True,
-            stake_up,
-            target_slot,
-            wait_for_receipt=True,
-        )
+        tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
 
         logger.info("Submit 'down' prediction tx to chain...")
-        tx2 = self.feed_contract2.submit_prediction(
-            False,
-            stake_down,
-            target_slot,
-            wait_for_receipt=True,
-        )
+        tx2 = self.submit_1prediction_tx(False, stake_down, target_slot)
 
         # handle errors
         if _tx_failed(tx1) or _tx_failed(tx2):
@@ -198,22 +214,35 @@ class PredictoorAgent:
             logger.warning(s)
 
             logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
-            self.feed_contract.submit_prediction(
-                True,
-                1e-10,
-                target_slot,
-                wait_for_receipt=True,
-            )
-
+            self.submit_1prediction_tx(True, 1e-10, target_slot)
             logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
-            self.feed_contract2.submit_prediction(
-                False,
-                1e-10,
-                target_slot,
-                wait_for_receipt=True,
-            )
+            self.submit_1prediction_tx(False, 1e-10, target_slot)
 
-        return True
+    @enforce_types
+    def submit_1prediction_tx(
+        self,
+        direction: bool,
+        stake: float,  # in units of Eth
+        target_slot: UnixTimeS,  # a timestamp
+    ):
+        web3_config = self._updown_web3_config(direction)
+        self.feed_contract.web3_pp.set_web3_config(web3_config)
+        self.feed_contract.set_token(self.feed_contract.web3_pp)
+
+        tx = self.feed_contract.submit_prediction(
+            direction,
+            stake,
+            target_slot,
+            wait_for_receipt=True,
+        )
+        return tx
+
+    def _updown_web3_config(self, direction: bool) -> Web3Config:
+        """Returns the web3_config corresponding to up vs down direction"""
+        if direction == True:
+            return self.web3_config_up
+        else:
+            return self.web3_config_down
 
     @enforce_types
     def calc_stakes(self) -> Tuple[float, float]:
