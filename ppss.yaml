@@ -20,7 +20,7 @@ predictoor_ss:
 
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
-    s_start_payouts: 180 # in s. Run payout when there's this seconds left, set to 0 to disable
+    s_start_payouts: 220 # in s. Run payout when there's this seconds left, set to 0 to disable
 
   aimodel_ss:
     input_feeds:
