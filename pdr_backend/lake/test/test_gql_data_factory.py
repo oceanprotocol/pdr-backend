@@ -66,7 +66,7 @@ def test_update():
     assert count_updates == len(gql_data_factory.record_config["tables"].items())
 
 
-def test_load_parquet():
+def test_load_parquet(tmpdir):
     """
     Test GQLDataFactory loads the data for all the tables
     """
@@ -75,7 +75,7 @@ def test_load_parquet():
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -85,6 +85,7 @@ def test_load_parquet():
     assert len(gql_data_factory.record_config["tables"].items()) == 4
 
     table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+
     assert table is not None
     assert type(table.df) == pl.DataFrame
     assert table.df.schema == table.df_schema

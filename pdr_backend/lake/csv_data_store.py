@@ -232,7 +232,7 @@ class CSVDataStore:
                 data = data.vstack(pl.read_csv(file_path, schema=schema))
             return data
 
-        return pl.DataFrame()
+        return pl.DataFrame([], schema=schema)
 
     def _get_last_file_path(self, folder_path: str) -> str:
         """

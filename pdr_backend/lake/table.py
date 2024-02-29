@@ -2,6 +2,8 @@ import logging
 import os
 from typing import Dict, Callable
 import polars as pl
+from polars.type_aliases import SchemaDict
+
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
@@ -16,11 +18,12 @@ logger = logging.getLogger("table")
 
 @enforce_types
 class Table:
-    def __init__(self, table_name: str, df_schema: object, ppss: PPSS):
+    def __init__(self, table_name: str, df_schema: SchemaDict, ppss: PPSS):
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        self.df = pl.DataFrame(schema=df_schema)
+        self.df = pl.DataFrame([], schema=df_schema)
+        print("self.df", self.df)
         self.load()
 
     @enforce_types
