@@ -119,7 +119,11 @@ class PredictoorAgent:
         self.prev_block_timestamp = UnixTimeS(self.cur_timestamp)
 
         # within the time window to run payout?
-        if self.s_start_payouts != 0 and self.cur_epoch_s_left < self.s_start_payouts and self.cur_epoch not in prev_submit_payouts:
+        if (
+            self.s_start_payouts != 0
+            and self.cur_epoch_s_left < self.s_start_payouts
+            and self.cur_epoch not in prev_submit_payouts
+        ):
             # run payout
             web3_config = self._updown_web3_config(True)
             self.feed_contract.web3_pp.set_web3_config(web3_config)
