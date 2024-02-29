@@ -33,10 +33,6 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
 def _test_predictoor_system(
     mock_feeds, mock_predictoor_contract, approach, caplog, monkeypatch
 ):
-    PRIV_KEY = str(os.getenv("PRIVATE_KEY"))
-    PRIV_KEY2 = str(PRIV_KEY[:-4] + "0000")
-    monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
-
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
