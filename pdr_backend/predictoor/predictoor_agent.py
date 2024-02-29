@@ -126,7 +126,9 @@ class PredictoorAgent:
             and self.cur_epoch not in self.prev_submit_payouts
         ):
             # run payout
-            logger.info("Running payouts, set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts")
+            logger.info(
+                "Running payouts, set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts"
+            )
             web3_config = self._updown_web3_config(True)
             self.ppss.web3_pp.set_web3_config(web3_config)
             do_ocean_payout(self.ppss, False)
