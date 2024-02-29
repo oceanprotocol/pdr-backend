@@ -336,6 +336,9 @@ class _MockPredictoorContractWithTracking:
     def set_token(self, web3_pp):
         pass
 
+    def s_start_payouts(self) -> int:
+        return 0 # disabled
+
     def get_current_epoch_ts(self) -> UnixTimeS:
         """Returns a timestamp"""
         return UnixTimeS(self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch)
