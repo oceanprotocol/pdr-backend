@@ -3,8 +3,8 @@ lake_ss:
   parquet_dir: parquet_data
   feeds:
     - binance BTC/USDT ETH/USDT 5m
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
-#    - kraken BTC/USDT 5m
+  #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+  #    - kraken BTC/USDT 5m
   st_timestr: 2023-06-01_00:00 # starting date for data
   fin_timestr: now # ending date for data
 
@@ -12,7 +12,7 @@ predictoor_ss:
   predict_feed: binance BTC/USDT c 5m
   approach: 2 # 1->50/50; 2->model-based
   stake_amount: 100 # How much your bot stakes. In OCEAN per epoch, per feed
-  
+
   sim_only:
     others_stake: 10000 # How much all others' bots stake. In OCEAN per epoch, per feed. Calcs: stake volume = 10e6 $/day/20_feeds = 34700 $/epoch/20_feeds (bc 288 5m epochs/day) = 1735 $/epoch/feed = 2313 OCEAN/epoch/feed (at 1 OCEAN=$0.75)
     others_accuracy: 0.50001 # What percent of others' bots stake is correct. Value in range 0.0-1.0. 0.50001 means mostly 50-50 stake and some small fry predicting a bit accurately
@@ -21,12 +21,13 @@ predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     s_start_payouts: 220 # in s. Run payout when there's this seconds left, set to 0 to disable
+    s_cutoff: 20 # in s. Stop predicting if there's < this time left
 
   aimodel_ss:
     input_feeds:
       - binance BTC/USDT ETH/USDT c 5m
     max_n_train: 5000 # no. epochs to train model on
-    autoregressive_n : 1 # no. epochs that model looks back, to predict next
+    autoregressive_n: 1 # no. epochs that model looks back, to predict next
     approach: LinearLogistic
 
 trader_ss:
@@ -50,7 +51,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
-  test_n : 2000 # number of epochs to simulate
+  test_n: 2000 # number of epochs to simulate
   exchange_only:
     timeout: 30000
     options:
@@ -77,16 +78,16 @@ publisher_ss:
 trueval_ss:
   feeds:
     - binance BTC/USDT 5m
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
-#    - kraken BTC/USDT 5m
+  #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+  #    - kraken BTC/USDT 5m
   batch_size: 30
   sleep_time: 30
 
 dfbuyer_ss:
   feeds:
     - binance BTC/USDT 5m
-#    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
-#    - kraken BTC/USDT 5m
+  #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
+  #    - kraken BTC/USDT 5m
   batch_size: 20
   consume_interval_seconds: 86400
   weekly_spending_limit: 37000
@@ -96,7 +97,7 @@ payout_ss:
 
 topup_ss:
   addresses:
-     - opf_addresses
+    - opf_addresses
 #    - 0xabcd...
 #  min_bal: 20
 #  topup_bal: 30
@@ -104,9 +105,7 @@ topup_ss:
 # ------------------------------------------------------------------
 # Network settings
 
-
 web3_pp:
-
   sapphire-testnet:
     address_file: "~/.ocean/ocean-contracts/artifacts/address.json"
     rpc_url: https://testnet.sapphire.oasis.dev
@@ -148,8 +147,8 @@ web3_pp:
 
 deployment_configs:
   testnet_predictoor_deployment:
-    cpu: '1'
-    memory: '512Mi'
+    cpu: "1"
+    memory: "512Mi"
     source: "binance"
     type: "predictoor"
     approach: 3
@@ -157,11 +156,11 @@ deployment_configs:
     s_until_epoch_end: 20
     pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
     agents:
-      - pair: 'BTC/USDT'
+      - pair: "BTC/USDT"
         stake_amt: 0.1
         timeframe: 5m
         approach: 1
-      - pair: 'ETH/USDT'
+      - pair: "ETH/USDT"
         stake_amt: 1
         timeframe: 1h
         s_until_epoch_end: 100

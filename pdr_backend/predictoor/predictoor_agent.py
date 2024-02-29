@@ -137,6 +137,8 @@ class PredictoorAgent:
         # within the time window to predict?
         if self.cur_epoch_s_left > self.epoch_s_thr:
             return
+        if self.cur_epoch_s_left < self.s_cutoff:
+            return
 
         logger.info(self.status_str())
 
@@ -190,6 +192,11 @@ class PredictoorAgent:
         return self.ppss.predictoor_ss.s_until_epoch_end
 
     @property
+    def s_cutoff(self):
+        """Stop predicting if there's < this time left"""
+        return self.ppss.predictoor_ss.s_cutoff
+
+    @property
     def s_per_epoch(self) -> int:
         return self.feed.seconds_per_epoch
 
@@ -214,6 +221,7 @@ class PredictoorAgent:
         s += f", target_slot={self.target_slot}"
         s += f". {self.cur_epoch_s_left} s left in epoch"
         s += f" (predict if <= {self.epoch_s_thr} s left)"
+        s += f" (stop predictions if <= {self.s_cutoff} s left)"
         s += f". s_per_epoch={self.s_per_epoch}"
         return s
 
