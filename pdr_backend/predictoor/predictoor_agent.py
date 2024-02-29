@@ -1,8 +1,7 @@
-import copy
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
@@ -49,6 +48,7 @@ class PredictoorAgent:
     - two envvars --> two private keys -> two Web3Configs, JIT switch for txs
     """
 
+    # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(self, ppss: PPSS):
         # ppss
@@ -224,7 +224,7 @@ class PredictoorAgent:
     def submit_1prediction_tx(
         self,
         direction: bool,
-        stake: float,  # in units of Eth
+        stake: Eth,  # in units of Eth
         target_slot: UnixTimeS,  # a timestamp
     ):
         web3_config = self._updown_web3_config(direction)
@@ -241,10 +241,10 @@ class PredictoorAgent:
 
     def _updown_web3_config(self, direction: bool) -> Web3Config:
         """Returns the web3_config corresponding to up vs down direction"""
-        if direction == True:
+        if direction is True:
             return self.web3_config_up
-        else:
-            return self.web3_config_down
+
+        return self.web3_config_down
 
     @enforce_types
     def calc_stakes(self) -> Tuple[Eth, Eth]:

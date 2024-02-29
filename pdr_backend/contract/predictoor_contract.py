@@ -20,7 +20,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
-        self.last_allowance: Dict[str, int] = {}
+        self.last_allowance: Dict[str, Wei] = {}
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
