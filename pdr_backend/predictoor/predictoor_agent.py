@@ -15,11 +15,12 @@ from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.payout.payout import do_ocean_payout
-from pdr_backend.util.currency_types import Eth, Wei
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("predictoor_agent")
 
 
+# pylint: disable=too-many-public-methods
 class PredictoorAgent:
     """
     What it does
@@ -126,6 +127,7 @@ class PredictoorAgent:
             and self.cur_epoch not in self.prev_submit_payouts
         ):
             # run payout
+            # pylint: disable=line-too-long
             logger.info(
                 "Running payouts, set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts"
             )

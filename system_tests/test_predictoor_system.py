@@ -1,4 +1,3 @@
-import os
 import sys
 from unittest.mock import Mock, patch, MagicMock
 
@@ -30,9 +29,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-def _test_predictoor_system(
-    mock_feeds, mock_predictoor_contract, approach, caplog, monkeypatch
-):
+def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
