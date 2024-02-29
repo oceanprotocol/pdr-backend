@@ -15,7 +15,7 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
-
+from pdr_backend.payout import do_ocean_payout
 logger = logging.getLogger("predictoor_agent")
 
 
@@ -90,6 +90,7 @@ class PredictoorAgent:
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)
         self.prev_block_number: UnixTimeS = UnixTimeS(0)
         self.prev_submit_epochs: List[int] = []
+        self.prev_submit_payouts: List[int] = []
 
     @enforce_types
     def run(self):
@@ -115,6 +116,18 @@ class PredictoorAgent:
             return
         self.prev_block_number = UnixTimeS(self.cur_block_number)
         self.prev_block_timestamp = UnixTimeS(self.cur_timestamp)
+
+        # within the time window to run payout?
+        if self.s_start_payouts != 0 and self.cur_epoch_s_left < self.s_start_payouts and self.cur_epoch not in prev_submit_payouts:
+            # run payout
+            web3_config = self._updown_web3_config(True)
+            self.feed_contract.web3_pp.set_web3_config(web3_config)
+            do_ocean_payout(web3_config, False)
+            web3_config = self._updown_web3_config(False)
+            self.feed_contract.web3_pp.set_web3_config(web3_config)
+            do_ocean_payout(web3_config, False)
+            self.prev_submit_payouts.append(self.cur_epoch)
+            return
 
         # within the time window to predict?
         if self.cur_epoch_s_left > self.epoch_s_thr:
@@ -160,6 +173,11 @@ class PredictoorAgent:
     @property
     def cur_timestamp(self) -> UnixTimeS:
         return UnixTimeS(self.cur_block["timestamp"])
+
+    @property
+    def s_start_payouts(self) -> int:
+        """Run payout when there's this seconds left"""
+        return self.ppss.predictoor_ss.s_start_payouts
 
     @property
     def epoch_s_thr(self):
