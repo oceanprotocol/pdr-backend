@@ -337,7 +337,7 @@ class _MockPredictoorContractWithTracking:
         pass
 
     def s_start_payouts(self) -> int:
-        return 0 # disabled
+        return 0  # disabled
 
     def get_current_epoch_ts(self) -> UnixTimeS:
         """Returns a timestamp"""
