@@ -73,6 +73,12 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
 
+    @property
+    def s_cutoff(self) -> int:
+        if "s_cutoff" not in self.d["bot_only"]:
+            return 10
+        return self.d["bot_only"]["s_cutoff"]
+
     # --------------------------------
     # setters (add as needed)
     @enforce_types
