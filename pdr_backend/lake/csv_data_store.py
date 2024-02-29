@@ -232,8 +232,8 @@ class CSVDataStore:
             for file_path in file_paths[1:]:
                 data = data.vstack(pl.read_csv(file_path, schema=schema))
             return data
-        else:
-            return pl.DataFrame()
+
+        return pl.DataFrame()
 
     def _get_last_file_path(self, folder_path: str) -> str:
         """
@@ -260,8 +260,8 @@ class CSVDataStore:
         last_file_path = self._get_last_file_path(folder_path)
         if len(last_file_path):
             return int(last_file_path.split("_")[3])
-        else:
-            return None
+
+        return None
 
     def _get_last_file_row_count(self, dataset_identifier: str) -> Optional[int]:
         """

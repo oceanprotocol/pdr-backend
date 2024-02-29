@@ -35,7 +35,7 @@ mocked_object = {
 }
 
 
-def _clean_up(tmp_path, table_name):
+def _clean_up(tmp_path):
     """
     Delete test file if already exists
     """
@@ -72,15 +72,6 @@ table_df_schema = {
     "user": Utf8,
 }
 table_name = "pdr_test_df"
-file_path = f"./parquet_data/{table_name}.parquet"
-file_path2 = "./parquet_data/test_prediction_table_multiple.parquet"
-
-# delete test file if already exists
-if os.path.exists(file_path):
-    os.remove(file_path)
-if os.path.exists(file_path2):
-    os.remove(file_path2)
-
 
 def test_table_initialization():
     """
@@ -136,7 +127,7 @@ def test_save_table(tmpdir):
         fin_timestr=fin_timestr,
     )
 
-    _clean_up(ppss.lake_ss.parquet_dir, table_name)
+    _clean_up(ppss.lake_ss.parquet_dir)
 
     table = Table(table_name, table_df_schema, ppss)
 
@@ -172,7 +163,7 @@ def test_get_pdr_df(tmpdir):
         fin_timestr=fin_timestr,
     )
 
-    _clean_up(ppss.lake_ss.parquet_dir, table_name)
+    _clean_up(ppss.lake_ss.parquet_dir)
 
     table = Table(table_name, table_df_schema, ppss)
 
@@ -208,7 +199,7 @@ def test_get_pdr_df_multiple_fetches(tmpdir):
         fin_timestr=fin_timestr,
     )
 
-    _clean_up(ppss.lake_ss.parquet_dir, table_name)
+    _clean_up(ppss.lake_ss.parquet_dir)
 
     table = Table("test_prediction_table_multiple", predictions_schema, ppss)
     captured_output = StringIO()
@@ -255,7 +246,7 @@ def test_all(tmpdir):
         fin_timestr=fin_timestr,
     )
 
-    _clean_up(ppss.lake_ss.parquet_dir, table_name)
+    _clean_up(ppss.lake_ss.parquet_dir)
 
     folder_path = os.path.join(ppss.lake_ss.parquet_dir, table_name)
     if not os.path.exists(folder_path):

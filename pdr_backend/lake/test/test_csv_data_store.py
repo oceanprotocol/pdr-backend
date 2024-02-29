@@ -1,5 +1,6 @@
-import polars as pl
 import os
+
+import polars as pl
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
@@ -11,10 +12,10 @@ def _clean_up(tmpdir):
     for root, dirs, files in os.walk(tmpdir):
         for file in files:
             os.remove(os.path.join(root, file))
-        for dir in dirs:
+        for directory in dirs:
             # clean up the directory
-            _clean_up(os.path.join(root, dir))
-            os.rmdir(os.path.join(root, dir))
+            _clean_up(os.path.join(root, directory))
+            os.rmdir(os.path.join(root, directory))
 
 
 def test_get_folder_path(tmpdir):
@@ -46,7 +47,7 @@ def test_get_file_paths(tmpdir):
 
     for file in files:
         # create empty files
-        with open(os.path.join(folder_path, file), "w") as f:
+        with open(os.path.join(folder_path, file), "w"):
             pass
 
     # check if empty files are created
@@ -119,7 +120,7 @@ def test_get_last_file_path(tmpdir):
 
     for file in files:
         # create empty files
-        with open(os.path.join(folder_path, file), "w") as f:
+        with open(os.path.join(folder_path, file), "w"):
             pass
 
     assert manager._get_last_file_path(f"{tmpdir}/test") == os.path.join(
