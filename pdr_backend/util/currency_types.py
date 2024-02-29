@@ -1,13 +1,17 @@
+import logging
 from typing import Union
 from enforce_typing import enforce_types
+
+logger = logging.getLogger("currency_types")
 
 
 @enforce_types
 class Eth:
     def __init__(self, amt_eth: Union[int, float]):
-        # TODO: validation
-        if False:
-            raise ValueError("Invalid value in eth {amt_eth}")
+        if amt_eth > 100_000_000_000:
+            logger.warning(
+                "amt_eth=%s is very large. Should it be wei instead?", amt_eth
+            )
 
         self.amt_eth = amt_eth
 
@@ -75,10 +79,6 @@ class Eth:
 @enforce_types
 class Wei:
     def __init__(self, amt_wei: Union[int, float]):
-        # TODO: validation
-        if False:
-            raise ValueError("Invalid value in wei {amt_wei}")
-
         self.amt_wei = amt_wei
 
     # old from_wei
