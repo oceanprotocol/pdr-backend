@@ -34,14 +34,15 @@ mocked_object = {
     "user": "0x123",
 }
 
+
 def _clean_up(tmp_path, table_name):
     """
     Delete test file if already exists
     """
     folder_path = os.path.join(tmp_path, table_name)
-    
+
     if os.path.exists(folder_path):
-        #delete files
+        # delete files
         for file in os.listdir(folder_path):
             file_path = os.path.join(folder_path, file)
             os.remove(file_path)
@@ -80,6 +81,7 @@ if os.path.exists(file_path):
 if os.path.exists(file_path2):
     os.remove(file_path2)
 
+
 def test_table_initialization():
     """
     Test that table is initialized correctly
@@ -102,6 +104,7 @@ def test_table_initialization():
     assert table.ppss.lake_ss.st_timestr == st_timestr
     assert table.ppss.lake_ss.fin_timestr == fin_timestr
 
+
 def test_load_table():
     """
     Test that table is loading the data from file
@@ -120,6 +123,7 @@ def test_load_table():
     table.load()
 
     assert len(table.df) == 0
+
 
 def test_save_table(tmpdir):
     st_timestr = "2023-12-03"
@@ -146,11 +150,16 @@ def test_save_table(tmpdir):
     first_ts = table.df.head(1)["timestamp"].to_list()[0]
     last_ts = table.df.tail(1)["timestamp"].to_list()[0]
 
-    test_file_path = os.path.join(str(ppss.lake_ss.parquet_dir), table_name, f"{table_name}_from_{first_ts}_to_{last_ts}_{len(table.df)}.csv")
+    test_file_path = os.path.join(
+        str(ppss.lake_ss.parquet_dir),
+        table_name,
+        f"{table_name}_from_{first_ts}_to_{last_ts}_{len(table.df)}.csv",
+    )
     assert os.path.exists(test_file_path)
     printed_text = captured_output.getvalue().strip()
 
     assert "Just saved df with" in printed_text
+
 
 def test_get_pdr_df(tmpdir):
     st_timestr = "2023-12-03"
@@ -182,6 +191,7 @@ def test_get_pdr_df(tmpdir):
     )
 
     assert table.df.shape[0] == 1
+
 
 def test_get_pdr_df_multiple_fetches(tmpdir):
     """
@@ -230,6 +240,7 @@ def test_get_pdr_df_multiple_fetches(tmpdir):
     # test that the final df is saved
     assert len(table.df) == 50
 
+
 def test_all(tmpdir):
     """
     Test multiple table actions in one go
@@ -250,10 +261,12 @@ def test_all(tmpdir):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    #create the csv file
-    file_path = os.path.join(folder_path, f"{table_name}_from_1701634400_to_1701634400_1.csv")
+    # create the csv file
+    file_path = os.path.join(
+        folder_path, f"{table_name}_from_1701634400_to_1701634400_1.csv"
+    )
 
-    #write the file
+    # write the file
     with open(file_path, "w") as file:
         file.write("ID,pair,timeframe,prediction,payout,timestamp,slot,user\n")
         file.write("0x123,ADA-USDT,5m,True,28.2,1701634400000,1701634400000,0x123\n")

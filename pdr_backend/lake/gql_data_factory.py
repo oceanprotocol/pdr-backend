@@ -139,9 +139,9 @@ class GQLDataFactory:
                 print("      Given start time, no data to gather. Exit.")
 
             # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
-                table.get_pdr_df
-            )
+            do_fetch: Callable[
+                [str, int, int, int, int, Dict, str], pl.DataFrame
+            ] = table.get_pdr_df
 
             # number of data at which we want to save to file
             save_backoff_limit = 5000

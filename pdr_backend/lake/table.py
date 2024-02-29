@@ -32,7 +32,9 @@ class Table:
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
-        self.df = self.csv_data_store.read(self.table_name, st_ut, fin_ut, schema=self.df_schema)
+        self.df = self.csv_data_store.read(
+            self.table_name, st_ut, fin_ut, schema=self.df_schema
+        )
 
     @enforce_types
     def save(self):
@@ -56,7 +58,9 @@ class Table:
         self.df = self.df.filter(pl.struct("ID").is_unique())
         self.csv_data_store.write(self.table_name, self.df, schema=self.df_schema)
         n_new = self.df.shape[0] - cur_df.shape[0]
-        print(f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}")
+        print(
+            f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
+        )
 
     @enforce_types
     def get_pdr_df(

@@ -2,8 +2,10 @@ import polars as pl
 import os
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
+
 def _get_test_manager(tmpdir):
     return CSVDataStore(str(tmpdir))
+
 
 def _clean_up(tmpdir):
     for root, dirs, files in os.walk(tmpdir):
@@ -14,16 +16,19 @@ def _clean_up(tmpdir):
             _clean_up(os.path.join(root, dir))
             os.rmdir(os.path.join(root, dir))
 
+
 def test_get_folder_path(tmpdir):
     manager = _get_test_manager(tmpdir)
     folder_path = manager._get_folder_path("test")
     assert folder_path == f"{tmpdir}/test"
+
 
 def test_create_file_name(tmpdir):
     manager = _get_test_manager(tmpdir)
     file_name = manager._create_file_name("test", 1707030362, 1709060200, 1000)
     print("file_name", file_name)
     assert file_name == "test_from_1707030362_to_1709060200_1000.csv"
+
 
 def test_get_file_paths(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -41,9 +46,7 @@ def test_get_file_paths(tmpdir):
 
     for file in files:
         # create empty files
-        with open(
-            os.path.join(folder_path, file)
-            , "w") as f:
+        with open(os.path.join(folder_path, file), "w") as f:
             pass
 
     # check if empty files are created
@@ -53,14 +56,19 @@ def test_get_file_paths(tmpdir):
     file_paths = manager._get_file_paths(folder_path, 21, 60)
 
     for file_path in file_paths:
-        assert file_path in [folder_path + "/" + file_name_2, folder_path + "/" + file_name_3]
+        assert file_path in [
+            folder_path + "/" + file_name_2,
+            folder_path + "/" + file_name_3,
+        ]
 
     _clean_up(tmpdir)
+
 
 def test_create_file_path(tmpdir):
     manager = _get_test_manager(tmpdir)
     file_path = manager._create_file_path("test", 1, 2, 2)
     assert file_path == f"{tmpdir}/test/test_from_0000000001_to_0000000002_2.csv"
+
 
 def test_read(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -73,6 +81,7 @@ def test_read(tmpdir):
     assert data.equals(pl.DataFrame({"a": [1, 4], "b": [2, 5], "c": [3, 6]}))
 
     _clean_up(tmpdir)
+
 
 def test_read_all(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -87,11 +96,12 @@ def test_read_all(tmpdir):
         file.write("a,b,c\n7,8,9\n10,11,12")
 
     data = manager.read_all("test")
-    assert data['a'].to_list() == [1, 4, 7, 10]
-    assert data['b'].to_list() == [2, 5, 8, 11]
-    assert data['c'].to_list() == [3, 6, 9, 12]
+    assert data["a"].to_list() == [1, 4, 7, 10]
+    assert data["b"].to_list() == [2, 5, 8, 11]
+    assert data["c"].to_list() == [3, 6, 9, 12]
 
     _clean_up(tmpdir)
+
 
 def test_get_last_file_path(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -109,14 +119,15 @@ def test_get_last_file_path(tmpdir):
 
     for file in files:
         # create empty files
-        with open(
-            os.path.join(folder_path, file)
-            , "w") as f:
-            pass    
+        with open(os.path.join(folder_path, file), "w") as f:
+            pass
 
-    assert manager._get_last_file_path(f"{tmpdir}/test") == os.path.join(folder_path, file_path_4)
+    assert manager._get_last_file_path(f"{tmpdir}/test") == os.path.join(
+        folder_path, file_path_4
+    )
 
     _clean_up(tmpdir)
+
 
 def test_write(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -126,11 +137,12 @@ def test_write(tmpdir):
 
     data = pl.read_csv(file_name)
 
-    assert data['a'].to_list() == [1, 4]
-    assert data['b'].to_list() == [2, 5]
-    assert data['timestamp'].to_list() == [3, 6]
+    assert data["a"].to_list() == [1, 4]
+    assert data["b"].to_list() == [2, 5]
+    assert data["timestamp"].to_list() == [3, 6]
 
     _clean_up(tmpdir)
+
 
 def test_write_append(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -145,8 +157,8 @@ def test_write_append(tmpdir):
 
     data = pl.read_csv(file_name)
 
-    assert data['a'].to_list() == [1, 4, 11, 41]
-    assert data['b'].to_list() == [2, 5, 21, 51]
-    assert data['timestamp'].to_list() == [3, 6, 31, 61]
+    assert data["a"].to_list() == [1, 4, 11, 41]
+    assert data["b"].to_list() == [2, 5, 21, 51]
+    assert data["timestamp"].to_list() == [3, 6, 31, 61]
 
     _clean_up(tmpdir)
