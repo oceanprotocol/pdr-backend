@@ -19,6 +19,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     mock_predictoor_ss = Mock()
     mock_predictoor_ss.get_feed_from_candidates.return_value = mock_feeds["0x1"]
     mock_predictoor_ss.s_until_epoch_end = 100
+    mock_predictoor_ss.s_start_payouts = 0
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
