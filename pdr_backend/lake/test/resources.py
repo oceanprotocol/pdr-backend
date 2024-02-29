@@ -10,7 +10,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
@@ -18,18 +18,11 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT(tmpdir):
-    _, _, aimodel_data_factory = _predictoor_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
+    d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
+    predictoor_ss = PredictoorSS(d)
+    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
     return mergedohlcv_df, aimodel_data_factory
-
-
-@enforce_types
-def _predictoor_ss_1feed(tmpdir, feed):
-    predictoor_ss = _predictoor_ss(feed, [feed])
-    lake_ss = _lake_ss(tmpdir, [feed])
-    ohlcv_data_factory = OhlcvDataFactory(lake_ss)
-    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
-    return predictoor_ss, ohlcv_data_factory, aimodel_data_factory
 
 
 @enforce_types
@@ -58,23 +51,6 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
 def _filter_gql_tables_config(record_config: Dict, record_filter: str) -> Dict:
     # Return a filtered version of record_config for testing
     return {k: v for k, v in record_config["tables"].items() if k == record_filter}
-
-
-@enforce_types
-def _predictoor_ss(feed, feeds):
-    return PredictoorSS(
-        {
-            "predict_feed": feed,
-            "timeframe": "5m",
-            "bot_only": {"s_until_epoch_end": 60, "stake_amount": 1},
-            "aimodel_ss": {
-                "input_feeds": feeds,
-                "approach": "LIN",
-                "max_n_train": 7,
-                "autoregressive_n": 3,
-            },
-        }
-    )
 
 
 @enforce_types

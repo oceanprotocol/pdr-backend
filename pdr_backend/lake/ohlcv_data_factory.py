@@ -6,12 +6,12 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     TOHLCV_SCHEMA_PL,
     TOHLCV_COLS,
 )
-from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv
+from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -127,7 +127,7 @@ class OhlcvDataFactory:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             exch = feed.ccxt_exchange()
-            raw_tohlcv_data = safe_fetch_ohlcv(
+            raw_tohlcv_data = safe_fetch_ohlcv_ccxt(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),
                 timeframe=str(feed.timeframe),
@@ -158,7 +158,7 @@ class OhlcvDataFactory:
         )
 
     def _calc_start_ut_maybe_delete(
-        self, timeframe: Timeframe, filename: str
+        self, timeframe: ArgTimeframe, filename: str
     ) -> UnixTimeMs:
         """
         @description

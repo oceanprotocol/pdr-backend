@@ -4,7 +4,7 @@ from typing import Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.timeframe import s_to_timeframe_str
+from pdr_backend.cli.arg_timeframe import s_to_timeframe_str
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract

@@ -17,6 +17,7 @@ ADA_CONTRACT_ADDRESS = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
 SAMPLE_PREDICTION = Prediction(
     # pylint: disable=line-too-long
     ID="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1698527100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    contract="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
     pair="ADA/USDT",
     timeframe="5m",
     predvalue=True,
@@ -26,7 +27,6 @@ SAMPLE_PREDICTION = Prediction(
     source="binance",
     payout=0.0,
     slot=UnixTimeS(1698527100),
-    address="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
     user="0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
 )
 
@@ -119,7 +119,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
         end_ts=UnixTimeS(1622548800),
         first=1000,
         skip=0,
-        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
 
@@ -127,7 +127,7 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     assert isinstance(predictions[0], Prediction)
     assert predictions[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert predictions[0].pair == "ADA/USDT"
-    assert predictions[0].address[0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
+    assert predictions[0].contract == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     assert predictions[0].truevalue is False
     assert predictions[0].predvalue is True
     assert mock_query_subgraph.call_count == 1
@@ -161,7 +161,7 @@ def test_fetch_filtered_predictions_exception(mock_query_subgraph):
         end_ts=UnixTimeS(1622548800),
         first=1000,
         skip=0,
-        filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         network="mainnet",
     )
 
@@ -178,7 +178,7 @@ def test_fetch_filtered_predictions_no_data():
             end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="xyz",
         )
 
@@ -191,7 +191,7 @@ def test_fetch_filtered_predictions_no_data():
             end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
     assert len(predictions) == 0
@@ -205,7 +205,7 @@ def test_fetch_filtered_predictions_no_data():
             end_ts=UnixTimeS(1622548800),
             first=1000,
             skip=0,
-            filters=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+            addresses=["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
             network="mainnet",
         )
     assert len(predictions) == 0

@@ -15,6 +15,7 @@ from pdr_backend.cli.cli_module import (
     do_get_predictoors_info,
     do_get_traction_info,
     do_lake,
+    do_analytics,
     do_predictoor,
     do_publisher,
     do_sim,
@@ -212,6 +213,17 @@ def test_do_lake(monkeypatch):
 
 
 @enforce_types
+def test_do_analytics(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
+
+    do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
+    mock_f.assert_called()
+
+
+@enforce_types
 def test_do_claim_OCEAN(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.do_ocean_payout", mock_f)
@@ -268,18 +280,10 @@ def test_do_get_traction_info(monkeypatch):
 
 @enforce_types
 def test_do_predictoor(monkeypatch):
-    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent1", MockAgent)
+    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent", MockAgent)
 
     do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
-
-    monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent3", MockAgent)
-
-    do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH3).parse_args())
-    assert MockAgent.was_run
-
-    with pytest.raises(ValueError):
-        do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH_BAD).parse_args())
 
 
 @enforce_types

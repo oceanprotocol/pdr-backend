@@ -6,7 +6,7 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.cli.timeframe import Timeframe
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -39,7 +39,7 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
 
     @property
     def seconds_per_epoch(self):
-        return Timeframe(self.timeframe).s
+        return ArgTimeframe(self.timeframe).s
 
     @property
     def base(self):

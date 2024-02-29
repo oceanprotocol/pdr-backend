@@ -215,20 +215,19 @@ def test_get_pdr_df_multiple_fetches():
     captured_output = StringIO()
     sys.stdout = captured_output
 
-    save_backoff_limit = 4
-    pagination_limit = 2
+    save_backoff_limit = 40
+    pagination_limit = 20
     st_timest = UnixTimeMs(1704110400000)
-    fin_timest = UnixTimeMs(1704115800000)
+    fin_timest = UnixTimeMs(1704111600000)
     table.get_pdr_df(
-        fetch_filtered_predictions,
-        "sapphire-mainnet",
-        st_timest,
-        fin_timest,
-        save_backoff_limit,
-        pagination_limit,
-        {"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
+        fetch_function=fetch_filtered_predictions,
+        network="sapphire-mainnet",
+        st_ut=st_timest,
+        fin_ut=fin_timest,
+        save_backoff_limit=save_backoff_limit,
+        pagination_limit=pagination_limit,
+        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
     )
-
     printed_text = captured_output.getvalue().strip()
 
     # test fetches multiple times
@@ -239,4 +238,4 @@ def test_get_pdr_df_multiple_fetches():
     count_saves = printed_text.count("Saved")
     assert count_saves == 2
 
-    assert len(table.df) == 5
+    assert len(table.df) == 50

@@ -94,6 +94,7 @@ class GQLDataFactory:
         @return
           predictions_df -- *polars* Dataframe. See class docstring
         """
+
         logger.info("Get predictions data across many feeds and timeframes.")
 
         # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
