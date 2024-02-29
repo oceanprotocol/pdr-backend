@@ -83,21 +83,22 @@ def safe_fetch_ohlcv_dydx(
     """
 
     try:
-        if exch == "dydx":
-            sinceIso = since.to_iso_timestr()
-            headers = {"Accept": "application/json"}
-            response = requests.get(
-                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
-                headers=headers,
-            )
-            response = requests.get(
-                f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-                headers=headers,
-            )
-            data = response.json()
-            return data
-        else:
+        if exch != "dydx":
             return None
+        sinceIso = since.to_iso_timestr()
+        headers = {"Accept": "application/json"}
+        response = requests.get(
+            f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}"
+            + f"?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
+            headers=headers,
+        )
+        response = requests.get(
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            + "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            headers=headers,
+        )
+        data = response.json()
+        return data
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None

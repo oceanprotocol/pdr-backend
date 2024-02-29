@@ -3,7 +3,6 @@ from typing import List
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
-import pytest
 
 from pdr_backend.ppss.ppss import mock_feed_ppss, mock_ppss
 from pdr_backend.ppss.web3_pp import (

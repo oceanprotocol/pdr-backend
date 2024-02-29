@@ -1,5 +1,3 @@
-import copy
-
 import numpy as np
 from enforce_typing import enforce_types
 

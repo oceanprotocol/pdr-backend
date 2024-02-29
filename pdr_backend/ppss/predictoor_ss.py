@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.base_ss import SingleFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.currency_types import Eth
 
 # Approaches:
 #  1: Allocate up-vs-down stake equally (50-50). Baseline.
@@ -34,21 +35,21 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         return self.d["approach"]
 
     @property
-    def stake_amount(self) -> int:
+    def stake_amount(self) -> Eth:
         """
         @description
           Total bot stake amount, per epoch, per feed. In OCEAN.
         """
-        return self.d["stake_amount"]
+        return Eth(self.d["stake_amount"])
 
     @property
-    def others_stake(self) -> int:
+    def others_stake(self) -> Eth:
         """
         @description
           How much all others' bots stake. Per epoch, per feed. In OCEAN.
           Simulation only.
         """
-        return self.d["sim_only"]["others_stake"]
+        return Eth(self.d["sim_only"]["others_stake"])
 
     @property
     def others_accuracy(self) -> float:
@@ -60,13 +61,13 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         return self.d["sim_only"]["others_accuracy"]
 
     @property
-    def revenue(self) -> float:
+    def revenue(self) -> Eth:
         """
         @description
           Sales revenue going towards predictoors. Per epoch, per feed. OCEAN.
           Simulation only.
         """
-        return self.d["sim_only"]["revenue"]
+        return Eth(self.d["sim_only"]["revenue"])
 
     @property
     def s_until_epoch_end(self) -> int:

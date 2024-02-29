@@ -120,7 +120,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_dydx_response,
         )
         # happy path dydx
@@ -133,7 +134,8 @@ def test_safe_fetch_ohlcv_dydx():
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
-        # check the result is a list called 'candles' with data for only one 5min candle (because limit=1)
+        # check the result is a list called 'candles' with data for
+        # only one 5min candle (because limit=1)
         assert result is not None
         assert list(result.keys())[0] == "candles" and len(result) == 1
 

@@ -10,7 +10,7 @@ from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.util.mathutil import from_wei
+from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.time_types import UnixTimeS
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
@@ -167,22 +167,24 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
-        ocean_bal = from_wei(OCEAN.balanceOf(address))
-        native_bal = from_wei(web3_pp.get_token_balance(address))
+        ocean_bal = OCEAN.balanceOf(address)
+        native_bal = web3_pp.get_token_balance(address)
 
         ocean_warning = (
-            " LOW OCEAN BALANCE!" if ocean_bal < 10 and name != "trueval" else ""
+            " LOW OCEAN BALANCE!"
+            if ocean_bal < Eth(10).to_wei() and name != "trueval"
+            else ""
         )
-        native_warning = " LOW NATIVE BALANCE!" if native_bal < 10 else ""
+        native_warning = " LOW NATIVE BALANCE!" if native_bal < Eth(10).to_wei() else ""
 
         lfunc = logger.warning if ocean_warning or native_warning else logger.info
 
         lfunc(
             "%s: OCEAN: %.2f%s, Native: %.2f%s",
             name,
-            ocean_bal,
+            ocean_bal.to_eth(),
             ocean_warning,
-            native_bal,
+            native_bal.to_eth(),
             native_warning,
         )
 

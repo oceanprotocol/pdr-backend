@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from enforce_typing import enforce_types
 
@@ -7,7 +6,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.contract.data_nft import DataNft
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("publisher")
 MAX_UINT256 = 2**256 - 1
@@ -20,8 +19,8 @@ def publish_asset(
     feed: ArgFeed,
     trueval_submitter_addr: str,
     feeCollector_addr: str,
-    rate: Union[int, float],
-    cut: Union[int, float],
+    rate: Eth,
+    cut: Eth,
     web3_pp: Web3PP,
 ):
     """Publish one specific asset to chain."""
@@ -36,8 +35,8 @@ def publish_asset(
     feeCollector = web3_config.w3.to_checksum_address(feeCollector_addr)
     trueval_submiter = web3_config.w3.to_checksum_address(trueval_submitter_addr)
 
-    rate_wei = to_wei(rate)
-    cut_wei = to_wei(cut)
+    rate_wei = rate.to_wei()
+    cut_wei = cut.to_wei()
 
     base = feed.pair.base_str
     quote = feed.pair.quote_str
@@ -71,7 +70,7 @@ def publish_asset(
     fre_data: tuple = (
         fre_address,
         [ocean_address, owner, feeCollector, owner],
-        [18, 18, rate_wei, cut_wei, 1],
+        [18, 18, rate_wei.amt_wei, cut_wei.amt_wei, 1],
     )
 
     logs_nft, logs_erc = factory.createNftWithErc20WithFixedRate(

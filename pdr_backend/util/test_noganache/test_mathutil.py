@@ -7,14 +7,12 @@ from enforce_typing import enforce_types
 from pdr_backend.util.mathutil import (
     all_nan,
     fill_nans,
-    from_wei,
     has_nan,
     classif_acc,
     round_sig,
-    str_with_wei,
     string_to_bytes32,
-    to_wei,
 )
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @enforce_types
@@ -186,15 +184,15 @@ def test_classif_acc():
 
 @enforce_types
 def test_wei():
-    assert from_wei(int(1234 * 1e18)) == 1234
-    assert from_wei(int(12.34 * 1e18)) == 12.34
-    assert from_wei(int(0.1234 * 1e18)) == 0.1234
+    assert Wei(int(1234 * 1e18)).to_eth() == Eth(1234)
+    assert Wei(int(12.34 * 1e18)).to_eth() == Eth(12.34)
+    assert Wei(int(0.1234 * 1e18)).to_eth() == Eth(0.1234)
 
-    assert to_wei(1234) == 1234 * 1e18 and type(to_wei(1234)) == int
-    assert to_wei(12.34) == 12.34 * 1e18 and type(to_wei(12.34)) == int
-    assert to_wei(0.1234) == 0.1234 * 1e18 and type(to_wei(0.1234)) == int
+    assert Eth(1234).to_wei() == Wei(1234 * 1e18) and type(Eth(1234).to_wei()) == Wei
+    assert Eth(12.34).to_wei() == Wei(12.34 * 1e18)
+    assert Eth(0.1234).to_wei() == Wei(0.1234 * 1e18)
 
-    assert str_with_wei(int(12.34 * 1e18)) == "12.34 (12340000000000000000 wei)"
+    assert Wei(int(12.34 * 1e18)).str_with_wei() == "12.34 (12340000000000000000 wei)"
 
 
 @enforce_types

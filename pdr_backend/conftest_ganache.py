@@ -8,6 +8,7 @@ from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish_asset import publish_asset
+from pdr_backend.util.currency_types import Eth
 
 CHAIN_ID = 8996
 S_PER_EPOCH = 300
@@ -67,8 +68,8 @@ def predictoor_contract():
         feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
-        rate=3,
-        cut=0.2,
+        rate=Eth(3),
+        cut=Eth(0.2),
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
@@ -85,8 +86,8 @@ def predictoor_contract2():
         feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
-        rate=3,
-        cut=0.2,
+        rate=Eth(3),
+        cut=Eth(0.2),
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
@@ -103,8 +104,8 @@ def predictoor_contract_empty():
         feed=ArgFeed("kraken", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr=w3c.owner,
         feeCollector_addr=w3c.owner,
-        rate=3,
-        cut=0.2,
+        rate=Eth(3),
+        cut=Eth(0.2),
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
