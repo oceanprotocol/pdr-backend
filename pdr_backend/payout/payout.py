@@ -96,7 +96,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     else:
         logger.warning("No rewards available to claim")
 
-    logger.info("Converting wROSE to ROSE")
+    logger.info("Sleeping")
     time.sleep(10)
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
