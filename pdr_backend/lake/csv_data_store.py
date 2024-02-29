@@ -95,8 +95,7 @@ class CSVDataStore:
                 remaining_rows = 1000 - last_file_row_count
 
                 # get the first remaining_rows rows
-                if len(data) < remaining_rows:
-                    remaining_rows = len(data)
+                remaining_rows = min(remaining_rows, len(data))
 
                 remaining_data = data.slice(0, remaining_rows)
 

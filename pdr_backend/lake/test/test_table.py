@@ -73,6 +73,7 @@ table_df_schema = {
 }
 table_name = "pdr_test_df"
 
+
 def test_table_initialization():
     """
     Test that table is initialized correctly
