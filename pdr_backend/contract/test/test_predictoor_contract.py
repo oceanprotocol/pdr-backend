@@ -7,7 +7,7 @@ from pytest import approx
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
 from pdr_backend.contract.token import Token
-from pdr_backend.util.mathutil import from_wei, to_wei
+from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
@@ -59,7 +59,7 @@ def test_get_stake_token(predictoor_contract, web3_pp):
 @enforce_types
 def test_get_price(predictoor_contract):
     price = predictoor_contract.get_price()
-    assert price / 1e18 == approx(3.603)
+    assert price.amt_wei / 1e18 == approx(3.603)
 
 
 @enforce_types
@@ -93,7 +93,7 @@ def test_get_seconds_per_epoch(predictoor_contract):
 def test_get_aggpredval(predictoor_contract):
     current_epoch = predictoor_contract.get_current_epoch_ts()
     aggpredval = predictoor_contract.get_agg_predval(current_epoch)
-    assert aggpredval == (0, 0)
+    assert aggpredval == (Eth(0), Eth(0))
 
 
 @enforce_types
@@ -117,11 +117,11 @@ def test_submit_prediction_trueval_payout(
     OCEAN = ocean_token
     w3 = predictoor_contract.config.w3
     owner_addr = predictoor_contract.config.owner
-    OCEAN_before = from_wei(OCEAN.balanceOf(owner_addr))
+    OCEAN_before = OCEAN.balanceOf(owner_addr).to_eth()
     cur_epoch = predictoor_contract.get_current_epoch_ts()
     soonest_ts = predictoor_contract.soonest_timestamp_to_predict(cur_epoch)
     predval = True
-    stake_amt = 1.0
+    stake_amt = Eth(1.0)
     receipt = predictoor_contract.submit_prediction(
         predval,
         stake_amt,
@@ -130,15 +130,17 @@ def test_submit_prediction_trueval_payout(
     )
     assert receipt["status"] == 1
 
-    OCEAN_after = from_wei(OCEAN.balanceOf(owner_addr))
-    assert (OCEAN_before - OCEAN_after) == approx(stake_amt, 1e-8)
+    OCEAN_after = OCEAN.balanceOf(owner_addr).to_eth()
+    assert (OCEAN_before.amt_eth - OCEAN_after.amt_eth) == approx(
+        stake_amt.amt_eth, 1e-8
+    )
 
     pred_tup = predictoor_contract.get_prediction(
         soonest_ts,
         predictoor_contract.config.owner,
     )
     assert pred_tup[0] == predval
-    assert pred_tup[1] == to_wei(stake_amt)
+    assert pred_tup[1] == stake_amt.to_wei()
 
     w3.provider.make_request("evm_increaseTime", [S_PER_EPOCH * 2])
     w3.provider.make_request("evm_mine", [])
@@ -153,8 +155,8 @@ def test_submit_prediction_trueval_payout(
 
     receipt = predictoor_contract.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
-    OCEAN_final = from_wei(OCEAN.balanceOf(owner_addr))
-    assert OCEAN_before == approx(OCEAN_final, 2.0)  # + sub revenue
+    OCEAN_final = OCEAN.balanceOf(owner_addr).to_eth()
+    assert OCEAN_before.amt_eth == approx(OCEAN_final.amt_eth, 2.0)  # + sub revenue
 
 
 @enforce_types

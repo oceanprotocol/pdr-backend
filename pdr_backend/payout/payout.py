@@ -86,7 +86,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     claimable_rewards = dfrewards_contract.get_claimable_rewards(
         web3_config.owner, wROSE_addr
     )
-    logger.info("Found %s wROSE available to claim", claimable_rewards)
+    logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
 
     if claimable_rewards > 0:
         logger.info("Claiming wROSE rewards...")
@@ -101,7 +101,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     if wROSE_bal == 0:
         logger.warning("wROSE balance is 0")
     else:
-        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal / 1e18)
+        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.to_eth().amt_eth)
         wROSE.withdraw(wROSE_bal)
 
     logger.info("ROSE reward claim done")

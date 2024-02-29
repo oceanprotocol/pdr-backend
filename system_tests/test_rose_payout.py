@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
+from pdr_backend.util.currency_types import Wei, Eth
 
 
 def test_rose_payout_test(caplog):
@@ -12,11 +13,11 @@ def test_rose_payout_test(caplog):
     mock_web3_pp.web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
 
     mock_dfrewards = MagicMock()
-    mock_dfrewards.get_claimable_rewards.return_value = 100
+    mock_dfrewards.get_claimable_rewards.return_value = Eth(100)
     mock_dfrewards.claim_rewards.return_value = None
 
     mock_token = MagicMock()
-    mock_token.balanceOf.return_value = 100 * 1e18
+    mock_token.balanceOf.return_value = Wei(100 * 1e18)
 
     with patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp

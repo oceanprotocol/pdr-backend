@@ -8,8 +8,9 @@ from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.contract.fixed_rate import FixedRate
 from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
-from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
+from pdr_backend.util.mathutil import string_to_bytes32
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.currency_types import Wei, Eth
 
 logger = logging.getLogger("predictoor_contract")
 
@@ -19,7 +20,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
-        self.last_allowance: Dict[str, int] = {}
+        self.last_allowance: Dict[str, Wei] = {}
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
@@ -52,7 +53,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         # get datatoken price
         exchange = FixedRate(self.web3_pp, exchange_addr)
         (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
-        logger.info("Price of feed: %s OCEAN", from_wei(baseTokenAmt_wei))
+        logger.info("Price of feed: %s OCEAN", baseTokenAmt_wei.to_eth())
 
         # approve
         logger.info("Approve spend OCEAN: begin")
@@ -83,7 +84,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         freParams = (  # FreParams
             self.config.w3.to_checksum_address(exchange_addr),  # exchangeContract
             self.config.w3.to_bytes(exchangeId),  # exchangeId
-            baseTokenAmt_wei,  # maxBaseTokenAmount
+            baseTokenAmt_wei.amt_wei,  # maxBaseTokenAmount
             0,  # swapMarketFee
             ZERO_ADDRESS,  # marketFeeAddress
         )
@@ -149,7 +150,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """Returns the token used for staking & purchases. Eg OCEAN."""
         return self.contract_instance.functions.stakeToken().call()
 
-    def get_price(self) -> int:
+    def get_price(self) -> Wei:
         """
         @description
           # OCEAN needed to buy 1 datatoken
@@ -187,7 +188,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """How many seconds are in each epoch? (According to contract)"""
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp: UnixTimeS) -> Tuple[float, float]:
+    def get_agg_predval(self, timestamp: UnixTimeS) -> Tuple[Eth, Eth]:
         """
         @description
           Get aggregated prediction value.
@@ -204,7 +205,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         (nom_wei, denom_wei) = self.contract_instance.functions.getAggPredval(
             timestamp, auth
         ).call(call_params)
-        return from_wei(nom_wei), from_wei(denom_wei)
+
+        nom_wei = Wei(nom_wei)
+        denom_wei = Wei(denom_wei)
+
+        return nom_wei.to_eth(), denom_wei.to_eth()
 
     def payout_multiple(self, slots: List[UnixTimeS], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
@@ -247,7 +252,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def submit_prediction(
         self,
         predicted_value: bool,
-        stake_amt: float,
+        stake_amt: Eth,
         prediction_ts: UnixTimeS,
         wait_for_receipt=True,
     ):
@@ -269,18 +274,18 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
           If False, returns the tx hash immediately after sending.
           If an exception occurs during the  process, returns None.
         """
-        stake_amt_wei = to_wei(stake_amt)
+        stake_amt_wei = stake_amt.to_wei()
 
         # Check allowance first, only approve if needed
-        allowance = self.last_allowance.get(self.config.owner, 0)
-        if allowance <= 0:
+        allowance = self.last_allowance.get(self.config.owner, Wei(0))
+        if allowance <= Wei(0):
             self.last_allowance[self.config.owner] = self.token.allowance(
                 self.config.owner, self.contract_address
             )
         if allowance < stake_amt_wei:
             try:
-                self.token.approve(self.contract_address, MAX_UINT)
-                self.last_allowance[self.config.owner] = MAX_UINT
+                self.token.approve(self.contract_address, Wei(MAX_UINT))
+                self.last_allowance[self.config.owner] = Wei(MAX_UINT)
             except Exception as e:
                 logger.error(
                     "Error while approving the contract to spend tokens: %s", e
@@ -292,12 +297,13 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             txhash = None
             if self.config.is_sapphire:
                 res, txhash = self.send_encrypted_tx(
-                    "submitPredval", [predicted_value, stake_amt_wei, prediction_ts]
+                    "submitPredval",
+                    [predicted_value, stake_amt_wei.amt_wei, prediction_ts],
                 )
                 logger.info("Encrypted transaction status code: %s", res)
             else:
                 tx = self.contract_instance.functions.submitPredval(
-                    predicted_value, stake_amt_wei, prediction_ts
+                    predicted_value, stake_amt_wei.amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
             self.last_allowance[self.config.owner] -= stake_amt_wei
