@@ -68,12 +68,9 @@ def test_predictoor_approach_1_system(
     mock_feeds,
     mock_predictoor_contract,
     caplog,
-    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(
-        mock_feeds, mock_predictoor_contract, 1, caplog, monkeypatch
-    )
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
@@ -82,9 +79,6 @@ def test_predictoor_approach_3_system(
     mock_feeds,
     mock_predictoor_contract,
     caplog,
-    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(
-        mock_feeds, mock_predictoor_contract, 3, caplog, monkeypatch
-    )
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3, caplog)
