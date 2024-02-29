@@ -275,11 +275,11 @@ def test_etl_do_bronze_step(
     # Assert last_event_timestamp == prediction.timestamp
     assert (
         bronze_pdr_slots_df["last_event_timestamp"][1]
-        == _gql_datafactory_etl_predictions_df["timestamp"][1]
+        == _gql_datafactory_etl_payouts_df["timestamp"][1]
     )
     assert (
         bronze_pdr_slots_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_predictions_df["timestamp"][2]
+        == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
 
     # Assert predictions.truevalue == gql truevals_df
