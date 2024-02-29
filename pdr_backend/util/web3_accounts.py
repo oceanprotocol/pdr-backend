@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from eth_account import Account
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.mathutil import to_wei, from_wei
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("web3_accounts")
 
@@ -42,13 +42,13 @@ def view_accounts(addresses: List[str], web3_pp: Web3PP):
         OCEAN_balance = OCEAN_token.balanceOf(address)
 
         logger.info("Account %s", address)
-        logger.info("Native token balance: %s", from_wei(native_token_balance))
-        logger.info("OCEAN balance: %s", from_wei(OCEAN_balance))
+        logger.info("Native token balance: %s", native_token_balance.to_eth())
+        logger.info("OCEAN balance: %s", OCEAN_balance.to_eth())
 
 
 @enforce_types
 def fund_accounts(
-    amount: float, to_addresses: List[str], web3_pp: Web3PP, is_native_token: bool
+    amount: Eth, to_addresses: List[str], web3_pp: Web3PP, is_native_token: bool
 ):
     """
     @description
@@ -75,7 +75,7 @@ def fund_accounts(
         )
         token.transfer(
             address,
-            to_wei(amount),
+            amount.to_wei(),
             account.address,
             True,
         )

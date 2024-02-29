@@ -7,6 +7,7 @@ from eth_account import Account
 
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("core_accounts")
 
@@ -20,13 +21,13 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
     logger.info("Fund accounts with OCEAN, network = %s", web3_pp.network)
     accounts_to_fund = [
         #    account_key_env,   OCEAN_to_send
-        ("PREDICTOOR_PRIVATE_KEY", 2000.0),
-        ("PREDICTOOR2_PRIVATE_KEY", 2000.0),
-        ("PREDICTOOR3_PRIVATE_KEY", 2000.0),
-        ("TRADER_PRIVATE_KEY", 2000.0),
-        ("DFBUYER_PRIVATE_KEY", 10000.0),
-        ("PDR_WEBSOCKET_KEY", 10000.0),
-        ("PDR_MM_USER", 10000.0),
+        ("PREDICTOOR_PRIVATE_KEY", Eth(2000.0)),
+        ("PREDICTOOR2_PRIVATE_KEY", Eth(2000.0)),
+        ("PREDICTOOR3_PRIVATE_KEY", Eth(2000.0)),
+        ("TRADER_PRIVATE_KEY", Eth(2000.0)),
+        ("DFBUYER_PRIVATE_KEY", Eth(10000.0)),
+        ("PDR_WEBSOCKET_KEY", Eth(10000.0)),
+        ("PDR_MM_USER", Eth(10000.0)),
     ]
 
     OCEAN = web3_pp.OCEAN_Token
@@ -48,4 +49,4 @@ def _fund_accounts(accounts_to_fund: List[tuple], owner: str, token: Token):
                 private_key_name,
                 account.address,
             )
-            token.transfer(account.address, amount * 1e18, owner)
+            token.transfer(account.address, amount.to_wei(), owner)

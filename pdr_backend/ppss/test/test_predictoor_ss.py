@@ -1,5 +1,3 @@
-from typing import Optional
-
 from enforce_typing import enforce_types
 import pytest
 

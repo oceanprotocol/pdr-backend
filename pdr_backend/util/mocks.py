@@ -7,6 +7,7 @@ class MockOrder(dict):
 
 
 class MockExchange(ccxt.Exchange):
+    # pylint: disable=unused-argument
     def create_market_buy_order(self, symbol, amount, params={}):
         return MockOrder(
             {
@@ -16,6 +17,7 @@ class MockExchange(ccxt.Exchange):
             }
         )
 
+    # pylint: disable=unused-argument
     def create_market_sell_order(self, symbol, amount, params={}):
         return MockOrder(
             {

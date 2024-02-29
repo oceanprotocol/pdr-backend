@@ -5,10 +5,11 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publish_asset import publish_asset
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("publisher")
-_CUT = 0.2
-_RATE = 3 / (1 + _CUT + 0.001)  # token price
+_CUT = Eth(0.2)
+_RATE = Eth(3 / (1 + float(_CUT) + 0.001))  # token price
 _S_PER_SUBSCRIPTION = 60 * 60 * 24
 
 
