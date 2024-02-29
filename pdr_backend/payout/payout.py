@@ -29,6 +29,8 @@ def request_payout_batches(
         retries = 0
         success = False
 
+        print(".", end="", flush=True)
+
         while retries < 5 and not success:
             try:
                 wait_for_receipt = True
