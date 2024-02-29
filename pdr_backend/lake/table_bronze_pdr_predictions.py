@@ -56,7 +56,7 @@ def _process_predictions(
         slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
         return f"{slot_id}"
 
-    #get column names of predictions_df
+    # get column names of predictions_df
     column_names = predictions_df.columns
     print("column_names---", column_names)
 
