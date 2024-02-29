@@ -39,7 +39,7 @@ def test_rose_payout_test(caplog):
         # Verifying outputs
         assert "Found 100 wROSE available to claim" in caplog.text
         assert "Claiming wROSE rewards..." in caplog.text
-        assert "Converting wROSE to ROSE" in caplog.text
+        assert "Sleeping" in caplog.text
         assert "Found 100.0 wROSE, converting to ROSE..." in caplog.text
         assert "ROSE reward claim done" in caplog.text
 

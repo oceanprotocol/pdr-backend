@@ -66,4 +66,4 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
         )
         mock_predictoor_contract.payout_multiple.assert_any_call([1, 2, 3], True)
         mock_predictoor_contract.payout_multiple.assert_any_call([5, 6, 7], True)
-        assert mock_predictoor_contract.payout_multiple.call_count == 2
+        assert mock_predictoor_contract.payout_multiple.call_count == 4
