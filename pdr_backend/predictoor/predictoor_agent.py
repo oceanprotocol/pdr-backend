@@ -198,6 +198,7 @@ class PredictoorAgent:
         s += f", target_slot={self.target_slot}"
         s += f". {self.cur_epoch_s_left} s left in epoch"
         s += f" (predict if <= {self.epoch_s_thr} s left)"
+        s += f" (stop predictions if <= {self.s_cutoff} s left)"
         s += f". s_per_epoch={self.s_per_epoch}"
         return s
 
