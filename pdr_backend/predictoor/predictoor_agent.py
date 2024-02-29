@@ -15,7 +15,8 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.payout import do_ocean_payout
+from pdr_backend.payout.payout import do_ocean_payout
+
 logger = logging.getLogger("predictoor_agent")
 
 
