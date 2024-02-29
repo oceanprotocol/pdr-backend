@@ -3,7 +3,7 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.base_contract import BaseContract
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @enforce_types
@@ -11,7 +11,7 @@ class FixedRate(BaseContract):
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "FixedRateExchange")
 
-    def get_dt_price(self, exchangeId) -> Tuple[int, int, int, int]:
+    def get_dt_price(self, exchangeId) -> Tuple[Wei, Wei, Wei, Wei]:
         """
         @description
           # OCEAN needed to buy 1 datatoken
@@ -30,16 +30,16 @@ class FixedRate(BaseContract):
         """
         return self.calcBaseInGivenOutDT(
             exchangeId,
-            datatokenAmt_wei=to_wei(1),
-            consumeMktSwapFeeAmt_wei=0,
+            datatokenAmt_wei=Eth(1).to_wei(),
+            consumeMktSwapFeeAmt_wei=Wei(0),
         )
 
     def calcBaseInGivenOutDT(
         self,
         exchangeId,
-        datatokenAmt_wei: int,
-        consumeMktSwapFeeAmt_wei: int,
-    ) -> Tuple[int, int, int, int]:
+        datatokenAmt_wei: Wei,
+        consumeMktSwapFeeAmt_wei: Wei,
+    ) -> Tuple[Wei, Wei, Wei, Wei]:
         """
         @description
            Given an exact target # datatokens, calculates # basetokens
@@ -56,8 +56,10 @@ class FixedRate(BaseContract):
            publishMktFeeAmt_wei - fee to publish market
            consumeMktFeeAmt_wei - fee to consume market
         """
-        return self.contract_instance.functions.calcBaseInGivenOutDT(
+        tup = self.contract_instance.functions.calcBaseInGivenOutDT(
             exchangeId,
-            datatokenAmt_wei,
-            consumeMktSwapFeeAmt_wei,
+            datatokenAmt_wei.amt_wei,
+            consumeMktSwapFeeAmt_wei.amt_wei,
         ).call()
+
+        return (Wei(tup[0]), Wei(tup[1]), Wei(tup[2]), Wei(tup[3]))

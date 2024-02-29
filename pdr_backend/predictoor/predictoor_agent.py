@@ -1,8 +1,7 @@
-import copy
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 
@@ -48,6 +47,7 @@ class PredictoorAgent:
     - two envvars --> two private keys -> two Web3Configs, JIT switch for txs
     """
 
+    # pylint: disable=too-many-instance-attributes
     @enforce_types
     def __init__(self, ppss: PPSS):
         # ppss
@@ -220,8 +220,8 @@ class PredictoorAgent:
     @enforce_types
     def submit_prediction_txs(
         self,
-        stake_up: float,  # in units of Eth
-        stake_down: float,  # ""
+        stake_up: Eth,
+        stake_down: Eth,
         target_slot: UnixTimeS,  # a timestamp
     ):
         logger.info("Submit 'up' prediction tx to chain...")
@@ -237,15 +237,15 @@ class PredictoorAgent:
             logger.warning(s)
 
             logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
-            self.submit_1prediction_tx(True, 1e-10, target_slot)
+            self.submit_1prediction_tx(True, Eth(1e-10), target_slot)
             logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
-            self.submit_1prediction_tx(False, 1e-10, target_slot)
+            self.submit_1prediction_tx(False, Eth(1e-10), target_slot)
 
     @enforce_types
     def submit_1prediction_tx(
         self,
         direction: bool,
-        stake: float,  # in units of Eth
+        stake: Eth,  # in units of Eth
         target_slot: UnixTimeS,  # a timestamp
     ):
         web3_config = self._updown_web3_config(direction)
@@ -262,13 +262,13 @@ class PredictoorAgent:
 
     def _updown_web3_config(self, direction: bool) -> Web3Config:
         """Returns the web3_config corresponding to up vs down direction"""
-        if direction == True:
+        if direction is True:
             return self.web3_config_up
-        else:
-            return self.web3_config_down
+
+        return self.web3_config_down
 
     @enforce_types
-    def calc_stakes(self) -> Tuple[float, float]:
+    def calc_stakes(self) -> Tuple[Eth, Eth]:
         """
         @return
           stake_up -- amt to stake up, in units of Eth
@@ -282,7 +282,7 @@ class PredictoorAgent:
         raise ValueError(approach)
 
     @enforce_types
-    def calc_stakes1(self) -> Tuple[float, float]:
+    def calc_stakes1(self) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 1.
@@ -294,11 +294,11 @@ class PredictoorAgent:
         """
         assert self.ppss.predictoor_ss.approach == 1
         tot_amt = self.ppss.predictoor_ss.stake_amount
-        stake_up, stake_down = 0.50 * tot_amt, 0.50 * tot_amt
+        stake_up, stake_down = tot_amt * 0.50 * tot_amt, tot_amt * 0.50
         return (stake_up, stake_down)
 
     @enforce_types
-    def calc_stakes2(self) -> Tuple[float, float]:
+    def calc_stakes2(self) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
@@ -329,8 +329,8 @@ class PredictoorAgent:
 
         # calc stake amounts
         tot_amt = self.ppss.predictoor_ss.stake_amount
-        stake_up = prob_up * tot_amt
-        stake_down = (1.0 - prob_up) * tot_amt
+        stake_up = tot_amt * prob_up
+        stake_down = tot_amt * (1.0 - prob_up)
 
         return (stake_up, stake_down)
 

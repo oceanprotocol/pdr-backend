@@ -97,21 +97,6 @@ def classif_acc(ytrue_hat, ytrue) -> float:
 
 
 @enforce_types
-def from_wei(amt_wei: int) -> Union[int, float]:
-    return float(amt_wei / 1e18)
-
-
-@enforce_types
-def to_wei(amt_eth: Union[int, float]) -> int:
-    return int(amt_eth * 1e18)
-
-
-@enforce_types
-def str_with_wei(amt_wei: int) -> str:
-    return f"{from_wei(amt_wei)} ({amt_wei} wei)"
-
-
-@enforce_types
 def string_to_bytes32(data) -> bytes:
     if len(data) > 32:
         myBytes32 = data[:32]

@@ -11,7 +11,7 @@ from pdr_backend.analytics.check_network import (
 )
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.currency_types import Eth, Wei
 
 PATH = "pdr_backend.analytics.check_network"
 MOCK_CUR_UT = 1702826080
@@ -96,10 +96,10 @@ def test_check_network_main(  # pylint: disable=unused-argument
         "some_other_address": "0xSomeOtherAddress",
     }
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
-    mock_token.return_value.balanceOf.return_value = to_wei(1000)
+    mock_token.return_value.balanceOf.return_value = Eth(1000).to_wei()
 
     mock_w3 = Mock()  # pylint: disable=not-callable
-    mock_w3.eth.get_balance.return_value = to_wei(1000)
+    mock_w3.eth.get_balance.return_value = Eth(1000).to_wei()
     ppss.web3_pp.web3_config.w3 = mock_w3
     check_network_main(ppss, lookback_hours=24)
 
@@ -157,7 +157,7 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    mock_token.balanceOf.return_value = 1000e18
+    mock_token.balanceOf.return_value = Wei(1000e18)
     ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     check_network_main(ppss, lookback_hours=1)
