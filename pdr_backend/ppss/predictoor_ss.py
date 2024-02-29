@@ -69,6 +69,12 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         return self.d["sim_only"]["revenue"]
 
     @property
+    def s_start_payouts(self) -> int:
+        if "s_start_payouts" in self.d["bot_only"]:
+            return 0
+        return self.d["bot_only"]["s_start_payouts"]
+
+    @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
 
