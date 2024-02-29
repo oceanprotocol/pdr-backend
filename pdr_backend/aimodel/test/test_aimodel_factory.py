@@ -2,13 +2,12 @@ import warnings
 
 import numpy as np
 from numpy.testing import assert_array_equal
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.util.mathutil import classif_acc
 
 PLOT = False  # only turn on for manual testing
@@ -65,10 +64,10 @@ def _test_aimodel_factory(approach):
             X,
             ytrue,
             labels,
-            fig_ax=None,
-            xranges=(mn, mx, mn, mx),
-            fancy_title=True,
-            legend_loc="upper right",
+            fig_ax=fig_ax,
+            xranges=xranges,
+            fancy_title=fancy_title,
+            legend_loc=leg_loc,
         )
 
     # test predict_true() & predict_ptrue()

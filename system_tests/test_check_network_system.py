@@ -6,6 +6,7 @@ from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.currency_types import Wei
 
 
 @patch("pdr_backend.analytics.check_network.print_stats")
@@ -23,12 +24,12 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer, caplog):
     mock_web3_pp.web3_config.owner = "0xowner"
 
     mock_token = MagicMock()
-    mock_token.balanceOf.return_value = int(5e18)
+    mock_token.balanceOf.return_value = Wei(int(5e18))
     mock_token.transfer.return_value = True
 
     mock_web3_pp.OCEAN_Token = mock_token
     mock_web3_pp.NativeToken = mock_token
-    mock_web3_pp.get_token_balance.return_value = 100
+    mock_web3_pp.get_token_balance.return_value = Wei(100)
 
     mock_query_subgraph = Mock()
     mock_query_subgraph.return_value = {

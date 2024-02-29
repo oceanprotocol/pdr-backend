@@ -17,7 +17,7 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 
 @enforce_types
-def _mergedohlcv_df_ETHUSDT(tmpdir):
+def _mergedohlcv_df_ETHUSDT():
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     predictoor_ss = PredictoorSS(d)
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)

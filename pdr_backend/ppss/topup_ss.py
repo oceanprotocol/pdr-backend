@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
+from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
@@ -20,12 +21,14 @@ class TopupSS(StrMixin):
         return self.d["addresses"]
 
     @property
-    def min_bal(self) -> Optional[int]:
-        return self.d.get("min_bal", None)
+    def min_bal(self) -> Optional[Eth]:
+        intt = self.d.get("min_bal", None)
+        return Eth(intt) if intt is not None else None
 
     @property
-    def topup_bal(self) -> Optional[int]:
-        return self.d.get("topup_bal", None)
+    def topup_bal(self) -> Optional[Eth]:
+        intt = self.d.get("topup_bal", None)
+        return Eth(intt) if intt is not None else None
 
     def all_topup_addresses(self, network) -> Dict[str, str]:
         addresses: Dict[str, str] = {}
@@ -41,20 +44,20 @@ class TopupSS(StrMixin):
 
         return addresses
 
-    def get_min_bal(self, token, addr_label) -> int:
+    def get_min_bal(self, token, addr_label) -> Eth:
         if self.min_bal is not None:
             return self.min_bal
 
         if token.name == "ROSE":
-            return 250 if addr_label == "dfbuyer" else 30
+            return Eth(250) if addr_label == "dfbuyer" else Eth(30)
 
-        return 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        return Eth(0) if addr_label in ["trueval", "dfbuyer"] else Eth(20)
 
-    def get_topup_bal(self, token, addr_label) -> int:
+    def get_topup_bal(self, token, addr_label) -> Eth:
         if self.topup_bal is not None:
             return self.topup_bal
 
         if token.name == "ROSE":
-            return 250 if addr_label == "dfbuyer" else 30
+            return Eth(250) if addr_label == "dfbuyer" else Eth(30)
 
-        return 0 if addr_label in ["trueval", "dfbuyer"] else 20
+        return Eth(0) if addr_label in ["trueval", "dfbuyer"] else Eth(20)

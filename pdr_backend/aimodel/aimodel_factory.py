@@ -1,6 +1,6 @@
+import numpy as np
 from enforce_typing import enforce_types
 from sklearn.linear_model import LogisticRegression
-import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
