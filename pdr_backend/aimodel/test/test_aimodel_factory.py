@@ -15,27 +15,23 @@ PLOT = False  # only turn on for manual testing
 
 @enforce_types
 def test_aimodel_factory_LinearLogistic():
-    _test_aimodel_factory(approach="LinearLogistic")
+    _test_aimodel_factory_main(approach="LinearLogistic")
 
 
 @enforce_types
 def test_aimodel_factory_LinearSVC():
-    _test_aimodel_factory(approach="LinearSVC")
+    _test_aimodel_factory_main(approach="LinearSVC")
+
+    
+@enforce_types
+def test_aimodel_factory_Constant():
+    _test_aimodel_factory_main(approach="Constant")
 
 
 @enforce_types
-def _test_aimodel_factory(approach):
-    # settings
-    aimodel_ss = AimodelSS(
-        {
-            "approach": approach,
-            "max_n_train": 7,
-            "autoregressive_n": 3,
-            "input_feeds": ["binance BTC/USDT c"],
-        }
-    )
-
-    # factory
+def _test_aimodel_factory_main(approach):
+    # settings, factory
+    aimodel_ss = _ss(approach)
     factory = AimodelFactory(aimodel_ss)
 
     # data
@@ -51,6 +47,19 @@ def _test_aimodel_factory(approach):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore ConvergenceWarning, more
         model = factory.build(X, ytrue)
+
+    # test predict_true() & predict_ptrue()
+    ytrue_hat = model.predict_true(X)
+    yptrue_hat = model.predict_ptrue(X)
+
+    assert ytrue_hat.shape == yptrue_hat.shape == (N,)
+    assert ytrue_hat.dtype == bool
+    assert yptrue_hat.dtype == float
+
+    if approach != "Constant":
+        assert classif_acc(ytrue_hat, ytrue) > 0.8
+        assert 0 < min(yptrue_hat) < max(yptrue_hat) < 1.0
+    assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
 
     # plot
     if PLOT:
@@ -70,21 +79,38 @@ def _test_aimodel_factory(approach):
             legend_loc=leg_loc,
         )
 
-    # test predict_true() & predict_ptrue()
-    ytrue_hat = model.predict_true(X)
-    yptrue_hat = model.predict_ptrue(X)
-
-    assert ytrue_hat.shape == yptrue_hat.shape == (N,)
-    assert ytrue_hat.dtype == bool
-    assert yptrue_hat.dtype == float
-
-    assert classif_acc(ytrue_hat, ytrue) > 0.8
-    assert 0 < min(yptrue_hat) < max(yptrue_hat) < 1.0
-    assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
-
     assert not PLOT
 
+@enforce_types
+def _ss(approach):
+    return AimodelSS(
+        {
+            "approach": approach,
+            "max_n_train": 7,
+            "autoregressive_n": 3,
+            "input_feeds": ["binance BTC/USDT c"],
+        }
+    )
 
+@enforce_types
+def test_aimodel_factory_constantdata():
+    aimodel_ss = _ss("LinearLogistic") # not constant! That has to emerge
+    factory = AimodelFactory(aimodel_ss)
+
+    N = 1000
+    X = np.random.uniform(-10.0, +10.0, (N, 2))
+
+    ytrue = np.full((N,), True)
+    model = factory.build(X, ytrue)
+    assert_array_equal(model.predict_true(X), np.full((N,), True))
+    assert_array_equal(model.predict_ptrue(X), np.full((N,), 1.0))
+    
+    ytrue = np.full((N,), False)
+    model = factory.build(X, ytrue)
+    assert_array_equal(model.predict_true(X), np.full((N,), False))
+    assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
+
+    
 @enforce_types
 def test_aimodel_accuracy_from_create_xy(aimodel_factory):
     # This is from a test function in test_model_data_factory.py
