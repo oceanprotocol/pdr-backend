@@ -23,6 +23,7 @@ silver_pdr_predictions_schema = {
     "truevalue": Boolean,
     "stake": Float64,
     "payout": Float64,
+    "sum_stake": Float64,
     "sum_revenue": Float64,
     "sum_revenue_df": Float64,
     "sum_revenue_stake": Float64,
@@ -55,38 +56,46 @@ def _process_predictions(
     if len(bronze_pdr_predictions) == 0:
         return tables
 
-    silver_predictions_df = bronze_pdr_predictions.group_by(["user", "contract"]).agg(
-        pl.col("stake").sum().alias("sum_staked"),
-        pl.col("payout").sum().alias("sum_revenue"),
-        pl.when(pl.col("truevalue") == pl.col("predvalue"))
-        .then(pl.col("stake"))
-        .otherwise(0)
-        .sum()
-        .alias("sum_revenue_stake"),
-        pl.col("predvalue").count().alias("count_predictions"),
-        pl.when(pl.col("truevalue") == pl.col("predvalue"))
-        .then(1)
-        .otherwise(0)
-        .sum()
-        .alias("count_wins"),
-        pl.when(pl.col("truevalue") != pl.col("predvalue"))
-        .then(1)
-        .otherwise(0)
-        .sum()
-        .alias("count_losses"),
-    )
-    silver_predictions_df = silver_predictions_df.with_columns(
-        (pl.col("sum_revenue") - pl.col("sum_revenue_stake")).alias("sum_revenue_df")
-    )
-    silver_predictions_df = silver_predictions_df.with_columns(
-        (pl.col("count_wins") >= pl.col("count_losses")).alias("win")
-    )
+    silver_predictions_df = tables[silver_pdr_predictions_table_name].df
 
-    new_silver_predictions_df = silver_predictions_df.join(
-        bronze_pdr_predictions, on=["user", "contract"], how="left"
-    )
+    print(bronze_pdr_predictions)
 
-    tables[silver_pdr_predictions_table_name].df = new_silver_predictions_df
+    for row in bronze_pdr_predictions.rows(named=True):
+        # Sort by latest timestamp then use groupby to get the first row for each user and contract combination
+        result_df = silver_predictions_df.sort("timestamp", descending=True).filter(
+            (pl.col("user") == row["user"]) & (pl.col("contract") == row["contract"])
+        )[0]
+        if len(result_df) > 0:
+            row["sum_stake"] = (
+                result_df["sum_stake"] + row["stake"] if row["stake"] else 0
+            )
+            row["sum_revenue"] = result_df["sum_revenue"] + (
+                row["payout"] if row["payout"] else 0
+            )
+            row["sum_revenue_df"] = result_df["sum_revenue_df"] + row["payout"]
+            row["sum_revenue_stake"] = result_df["sum_revenue_stake"] + row["payout"]
+            row["count_predictions"] = result_df["count_predictions"] + 1
+            row["count_wins"] = result_df["count_wins"] + (
+                1 if row["predvalue"] == row["truevalue"] else 0
+            )
+            row["count_losses"] = result_df["count_losses"] + (
+                0 if row["predvalue"] == row["truevalue"] else 1
+            )
+            row["win"] = row["sum_revenue"] > row["sum_stake"]
+        else:
+            row["sum_stake"] = row["stake"] if row["stake"] else 0
+            row["sum_revenue"] = row["payout"] if row["payout"] else 0
+            row["sum_revenue_df"] = row["payout"]
+            row["sum_revenue_stake"] = row["payout"]
+            row["count_predictions"] = 1
+            row["count_wins"] = 1 if row["predvalue"] == row["truevalue"] else 0
+            row["count_losses"] = 0 if row["predvalue"] == row["truevalue"] else 1
+            row["win"] = row["sum_revenue"] > row["sum_stake"]
+        new_row_df = pl.DataFrame(row, silver_pdr_predictions_schema)
+        new_row_df.select(silver_pdr_predictions_schema).sort("timestamp")
+        silver_predictions_df.extend(new_row_df)
+
+    tables[silver_pdr_predictions_table_name].df = silver_predictions_df
     return tables
 
 

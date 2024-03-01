@@ -91,9 +91,9 @@ _ETL_PAYOUT_TUPS = [
         7.160056238874628619,  # payout
         True,  # predictedValue
         # True,  # trueValue
-        0.0,  # revenue
-        0.0,  # roundSumStakesUp
-        0.0,  # roundSumStakes
+        3.4600000000000004,  # revenue
+        3.4600000000000004,  # roundSumStakesUp
+        3.4600000000000004,  # roundSumStakes
         3.4600000000000004,  # stake
     ),
     (
@@ -102,13 +102,27 @@ _ETL_PAYOUT_TUPS = [
         1699300800,  # slot # Nov 06 2023 19:00:00 GMT
         "ETH/USDT",  # token
         1699300802,  # timestamp
-        0.0,  # payout
-        True,  # predictedValue
+        3.4600000000000004,  # payout
+        False,  # predictedValue
         # False,  # trueValue
-        0.0,  # revenue
+        3.4600000000000004,  # revenue
         0.0,  # roundSumStakesUp
-        0.0,  # roundSumStakes
+        3.4600000000000004,  # roundSumStakes
         3.4600000000000004,  # stake
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
+        1699302600,  # slot # Nov 06 2023 19:00:00 GMT
+        "ETH/USDT",  # token
+        1699302601,  # timestamp
+        7.4400000000000004,  # payout
+        True,  # predictedValue
+        # True,  # trueValue
+        7.4400000000000004,  # revenue
+        5.4400000000000004,  # roundSumStakesUp
+        7.4400000000000004,  # roundSumStakes
+        5.4400000000000004,  # stake
     ),
 ]
 
@@ -170,7 +184,7 @@ _ETL_PREDICTIONS_TUPS = [
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
         "ETH/USDT",
-        "1h",
+        "5m",
         None,
         None,
         None,
@@ -193,6 +207,19 @@ _ETL_PREDICTIONS_TUPS = [
         1699300800,
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
     ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+        "ETH/USDT",
+        "5m",
+        None,
+        None,
+        None,
+        1699302601,
+        "binance",
+        None,
+        1699302600,
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
 ]
 
 
@@ -202,7 +229,7 @@ _ETL_TRUEVAL_TUPS = [
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1698865200",
         1698865201,
         "ETH/USDT",
-        True,
+        False,
         1698865200,  # Nov 01 2023 19:00:00 GMT
     ),
     (
@@ -239,6 +266,13 @@ _ETL_TRUEVAL_TUPS = [
         "ETH/USDT",
         False,
         1699300800,  # Nov 06 2023 19:00:00 GMT
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600",
+        1699302601,
+        "ETH/USDT",
+        True,
+        1699302600,  # Nov 06 2023 19:05:00 GMT
     ),
 ]
 
