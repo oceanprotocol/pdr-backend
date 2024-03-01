@@ -88,7 +88,7 @@ def safe_fetch_ohlcv_dydx(
         sinceIso = since.to_iso_timestr()
         headers = {"Accept": "application/json"}
         baseURL = 'https://indexer.dydx.trade/v4'
-        response = requests.get(f'{baseURL}/candles/perpetualMarkets/{symbol}', params={'resolution': {timeframe}, 'fromISO': {sinceIso},'limit': {limit}}, headers = headers)
+        response = requests.get(f'{baseURL}/candles/perpetualMarkets/{symbol}', params={'resolution': timeframe, 'fromISO': sinceIso,'limit': str(limit)}, headers = headers)
         data = response.json()
         return data
     except Exception as e:

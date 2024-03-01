@@ -1,6 +1,7 @@
 import ccxt
 import pytest
 from enforce_typing import enforce_types
+from typing import Any, Dict, List, Union
 import requests_mock
 
 import polars as pl
