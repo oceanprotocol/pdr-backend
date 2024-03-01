@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 from enforce_typing import enforce_types
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
@@ -29,7 +30,8 @@ class AimodelFactory:
           model -- Aimodel
         """
         a = self.aimodel_ss.approach
-        if min(ybool) == max(ybool) or a == "Constant":
+        do_constant = min(ybool) == max(ybool) or a == "Constant"
+        if do_constant:
             # force two classes in skm
             ybool = copy.copy(ybool)
             ybool[0] = True
@@ -46,6 +48,13 @@ class AimodelFactory:
         scaler.fit(X)
 
         X = scaler.transform(X)
+
+        if not do_constant:
+            n_True, n_False = sum(ybool), sum(np.invert(ybool))
+            smallest_n = min(n_True, n_False)
+            cv = min(smallest_n, 5)
+            if cv > 1:
+                skm = CalibratedClassifierCV(skm, cv=cv)
 
         skm.fit(X, ybool)
 
