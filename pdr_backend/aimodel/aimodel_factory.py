@@ -46,7 +46,7 @@ class AimodelFactory:
         scaler.fit(X)
 
         X = scaler.transform(X)
-        
+
         skm.fit(X, ybool)
 
         model = Aimodel(skm, scaler)

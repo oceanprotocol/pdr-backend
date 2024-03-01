@@ -22,7 +22,7 @@ def test_aimodel_factory_LinearLogistic():
 def test_aimodel_factory_LinearSVC():
     _test_aimodel_factory_main(approach="LinearSVC")
 
-    
+
 @enforce_types
 def test_aimodel_factory_Constant():
     _test_aimodel_factory_main(approach="Constant")
@@ -81,6 +81,7 @@ def _test_aimodel_factory_main(approach):
 
     assert not PLOT
 
+
 @enforce_types
 def _ss(approach):
     return AimodelSS(
@@ -92,9 +93,10 @@ def _ss(approach):
         }
     )
 
+
 @enforce_types
 def test_aimodel_factory_constantdata():
-    aimodel_ss = _ss("LinearLogistic") # not constant! That has to emerge
+    aimodel_ss = _ss("LinearLogistic")  # not constant! That has to emerge
     factory = AimodelFactory(aimodel_ss)
 
     N = 1000
@@ -104,13 +106,13 @@ def test_aimodel_factory_constantdata():
     model = factory.build(X, ytrue)
     assert_array_equal(model.predict_true(X), np.full((N,), True))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 1.0))
-    
+
     ytrue = np.full((N,), False)
     model = factory.build(X, ytrue)
     assert_array_equal(model.predict_true(X), np.full((N,), False))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
 
-    
+
 @enforce_types
 def test_aimodel_accuracy_from_create_xy(aimodel_factory):
     # This is from a test function in test_model_data_factory.py
