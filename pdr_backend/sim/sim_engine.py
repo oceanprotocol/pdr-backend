@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
+from numpy.random import random
 import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
@@ -33,9 +34,10 @@ class SimEngineState:
         self.accs_train: List[float] = []
         self.ybools_test: List[float] = []
         self.ybools_testhat: List[float] = []
+        self.probs_up: List[float] = []
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[Eth] = []
-        self.predictoor_profits_OCEAN: List[Eth] = []
+        self.pdr_profits_OCEAN: List[Eth] = []
 
 
 # pylint: disable=too-many-instance-attributes
@@ -149,6 +151,7 @@ class SimEngine:
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         pred_up: bool = model.predict_true(X_test)[0]  # True or False
+        self.st.probs_up.append(prob_up)
         self.st.ybools_testhat.append(pred_up)
 
         # predictoor: (simulate) submit predictions with stake
@@ -201,8 +204,8 @@ class SimEngine:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
             acct_down_profit += (pdr_ss.revenue + tot_stake) * percent_to_me
-        predictoor_profit_OCEAN = acct_up_profit + acct_down_profit
-        self.st.predictoor_profits_OCEAN.append(predictoor_profit_OCEAN)
+        pdr_profit_OCEAN = acct_up_profit + acct_down_profit
+        self.st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
 
         # track trading profit
         trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
@@ -220,8 +223,10 @@ class SimEngine:
         s += " predictoor profit = "
         s += f"{acct_up_profit.amt_eth:8.5f} up"
         s += f" + {acct_down_profit.amt_eth:8.5f} down"
-        s += f" = {predictoor_profit_OCEAN.amt_eth:8.5f} OCEAN"
-        s += f" (cumulative {sum(self.st.predictoor_profits_OCEAN, Eth(0)).amt_eth:7.2f} OCEAN)"
+        s += f" = {pdr_profit_OCEAN.amt_eth:8.5f} OCEAN"
+        s += (
+            f" (cumulative {sum(self.st.pdr_profits_OCEAN, Eth(0)).amt_eth:7.2f} OCEAN)"
+        )
 
         s += f". Correct: {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
@@ -235,6 +240,7 @@ class SimEngine:
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             self.plot_state.make_plot(  # type: ignore[union-attr]
                 self.st,
+                self.ppss,
                 model,
                 X_train,
                 ybool_train,
@@ -356,20 +362,20 @@ class PlotState:
         self.y01_est: List[float] = []
         self.y01_l: List[float] = []
         self.y01_u: List[float] = []
-        self.jitter: List[float] = []
         self.plotted_before: bool = False
         plt.ion()
         plt.show()
 
     # pylint: disable=too-many-statements
-    def make_plot(self, st, model, X_train, ybool_train, colnames):
+    def make_plot(self, st, ppss, model, X_train, ybool_train, colnames):
+        pdr_ss, tdr_ss = ppss.predictoor_ss, ppss.trader_ss
         fig = self.fig
         ax00, ax01 = self.ax00, self.ax01
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
-        predictoor_profits_OCEAN = [eth.amt_eth for eth in st.predictoor_profits_OCEAN]
+        pdr_profits_OCEAN = [eth.amt_eth for eth in st.pdr_profits_OCEAN]
         trader_profits_USD = [eth.amt_eth for eth in st.trader_profits_USD]
 
-        N = len(predictoor_profits_OCEAN)
+        N = len(pdr_profits_OCEAN)
         N_done = len(self.x)  # what # points have been plotted previously
 
         # set x
@@ -378,7 +384,7 @@ class PlotState:
         next_hx = [next_x[0], next_x[-1]]  # horizontal x
 
         # plot row 0, col 0: predictoor profit vs time
-        y00 = list(np.cumsum(predictoor_profits_OCEAN))
+        y00 = list(np.cumsum(pdr_profits_OCEAN))
         next_y00 = _slice(y00, N_done, N)
         ax00.plot(next_x, next_y00, c="g")
         ax00.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
@@ -387,7 +393,7 @@ class PlotState:
         if not self.plotted_before:
             ax00.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
             ax00.set_xlabel("time", fontsize=FONTSIZE)
-            _label_on_right(ax00)
+            _ylabel_on_right(ax00)
             ax00.margins(0.005, 0.05)
 
         # plot row 0, col 1: % correct vs time
@@ -412,7 +418,7 @@ class PlotState:
         if not self.plotted_before:
             ax01.set_xlabel("time", fontsize=FONTSIZE)
             ax01.set_ylabel("% correct", fontsize=FONTSIZE)
-            _label_on_right(ax01)
+            _ylabel_on_right(ax01)
             ax01.margins(0.01, 0.01)
 
         # plot row 0, col 2: model contour
@@ -432,37 +438,33 @@ class PlotState:
         if not self.plotted_before:
             ax10.set_xlabel("time", fontsize=FONTSIZE)
             ax10.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-            _label_on_right(ax10)
+            _ylabel_on_right(ax10)
             ax10.margins(0.005, 0.05)
 
         # reusable profits scatterplot
-        def _scatter_profits(ax, actor_name: str, denomin, st_profits):
-            while len(self.jitter) < N:
-                self.jitter.append(np.random.uniform())
-            next_jitter = _slice(self.jitter, N_done, N)
+        def _scatter_profits(ax, actor: str, denomin, mnp, mxp, st_profits):
+            next_probs_up = _slice(st.probs_up, N_done, N)
             next_profits = _slice(st_profits, N_done, N)
-            ax.scatter(next_jitter, next_profits, c="b", s=1)
+            c = (random(), random(), random())  # random RGB color
+            ax.scatter(next_probs_up, next_profits, c=c, s=1)
             avg = np.average(st_profits)
-            s = f"{actor_name} profit distr'n. avg={avg:.2f} {denomin}"
+            s = f"{actor} profit distr'n. avg={avg:.2f} {denomin}"
             _set_title(ax, s)
             if not self.plotted_before:
-                buf = 1.0
-                ax.plot([0 - buf, 1 + buf], [0, 0], c="0.2", ls="--", lw=1)
-                _set_ylabel(ax, f"{actor_name} profit ({denomin})")
-                _label_on_right(ax)
-                ax.tick_params(bottom=False, labelbottom=False)
+                ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
+                ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="--", lw=1)
+                _set_xlabel(ax, f"prob(up)")
+                _set_ylabel(ax, f"{actor} profit ({denomin})")
+                _ylabel_on_right(ax)
                 ax.margins(0.05, 0.05)
 
         # plot row 1, col 1: 1d scatter of predictoor profits
-        _scatter_profits(
-            ax11,
-            "pdr",
-            "OCEAN",
-            predictoor_profits_OCEAN,
-        )
+        mnp, mxp = -pdr_ss.stake_amount.amt_eth, +pdr_ss.stake_amount.amt_eth
+        _scatter_profits(ax11, "pdr", "OCEAN", mnp, mxp, pdr_profits_OCEAN)
 
         # plot row 1, col 2: 1d scatter of trader profits
-        _scatter_profits(ax12, "trader", "USD", trader_profits_USD)
+        mnp, mxp = -tdr_ss.buy_amt_usd / 1000.0, +tdr_ss.buy_amt_usd / 1000.0
+        _scatter_profits(ax12, "trader", "USD", mnp, mxp, trader_profits_USD)
 
         # final pieces
         HEIGHT = 7.5  # magic number
@@ -479,6 +481,10 @@ def _shift_one_earlier(s: str):
     return s[:-1] + str(val - 1)
 
 
+def _set_xlabel(ax, s: str):
+    ax.set_xlabel(s, fontsize=FONTSIZE)
+
+
 def _set_ylabel(ax, s: str):
     ax.set_ylabel(s, fontsize=FONTSIZE)
 
@@ -491,7 +497,7 @@ def _slice(a: list, N_done: int, N: int) -> list:
     return [a[i] for i in range(max(0, N_done - 1), N)]
 
 
-def _label_on_right(ax):
+def _ylabel_on_right(ax):
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position("right")
 
