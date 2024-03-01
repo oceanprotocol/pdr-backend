@@ -131,12 +131,7 @@ class PredictoorAgent:
             logger.info(
                 "Running payouts, set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts"
             )
-            web3_config = self._updown_web3_config(True)
-            self.ppss.web3_pp.set_web3_config(web3_config)
-            do_ocean_payout(self.ppss, False)
-            web3_config = self._updown_web3_config(False)
-            self.ppss.web3_pp.set_web3_config(web3_config)
-            do_ocean_payout(self.ppss, False)
+            self.get_payout()
             self.prev_submit_payouts.append(self.cur_epoch)
             return
 
@@ -361,6 +356,19 @@ class PredictoorAgent:
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
         return mergedohlcv_df
+
+    @enforce_types
+    def get_payout(self):
+        """Claims payout"""
+        # Claim for up predictoor
+        web3_config = self._updown_web3_config(True)
+        self.ppss.web3_pp.set_web3_config(web3_config)
+        do_ocean_payout(self.ppss, False)
+
+        # Claim for down predictoor
+        web3_config = self._updown_web3_config(False)
+        self.ppss.web3_pp.set_web3_config(web3_config)
+        do_ocean_payout(self.ppss, False)
 
 
 @enforce_types
