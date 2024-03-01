@@ -120,20 +120,9 @@ class PredictoorAgent:
         self.prev_block_number = UnixTimeS(self.cur_block_number)
         self.prev_block_timestamp = UnixTimeS(self.cur_timestamp)
 
-        # within the time window to run payout?
-        if (
-            self.s_start_payouts != 0
-            and self.cur_epoch_s_left < self.s_start_payouts
-            and self.cur_epoch not in self.prev_submit_payouts
-        ):
-            # run payout
-            # pylint: disable=line-too-long
-            logger.info(
-                "Running payouts, set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts"
-            )
-            self.get_payout()
-            self.prev_submit_payouts.append(self.cur_epoch)
-            return
+        # get payouts
+        # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
+        self.get_payout()
 
         # within the time window to predict?
         if self.cur_epoch_s_left > self.epoch_s_thr:
@@ -359,7 +348,18 @@ class PredictoorAgent:
 
     @enforce_types
     def get_payout(self):
-        """Claims payout"""
+        """Claims payouts"""
+        if (
+            self.s_start_payouts == 0
+            or self.cur_epoch_s_left >= self.s_start_payouts
+            or self.cur_epoch in self.prev_submit_payouts
+        ):
+            return
+
+        logger.info(
+            "Running payouts"
+        )
+        
         # Claim for up predictoor
         web3_config = self._updown_web3_config(True)
         self.ppss.web3_pp.set_web3_config(web3_config)
@@ -370,6 +370,8 @@ class PredictoorAgent:
         self.ppss.web3_pp.set_web3_config(web3_config)
         do_ocean_payout(self.ppss, False)
 
+        # Update previous payouts history to avoid claiming for this epoch again
+        self.prev_submit_payouts.append(self.cur_epoch)
 
 @enforce_types
 def _tx_failed(tx) -> bool:
