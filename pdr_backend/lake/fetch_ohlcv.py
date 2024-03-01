@@ -91,11 +91,13 @@ def safe_fetch_ohlcv_dydx(
             f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}"
             + f"?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
             headers=headers,
+            timeout=20,
         )
         response = requests.get(
             "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
             + "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             headers=headers,
+            timeout=20,
         )
         data = response.json()
         return data
