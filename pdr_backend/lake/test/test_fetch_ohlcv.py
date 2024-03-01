@@ -31,6 +31,8 @@ mock_dydx_response = {
     "candles": [
         {
             "startedAt": "2024-02-28T16:50:00.000Z",
+            "ticker": "BTC-USD",
+            "resolution": "5MINS",
             "open": "61840",
             "high": "61848",
             "low": "61687",
@@ -42,12 +44,39 @@ mock_dydx_response = {
         }
     ]
 }
-mock_bad_token_dydx_response = {
+
+mock_bad_token_dydx_response_1 = {
     "errors": [
         {
             "value": "BTC-ETH",
             "msg": "ticker must be a valid ticker (BTC-USD, etc)",
             "param": "ticker",
+            "location": "params"
+        }
+    ]
+}
+
+mock_bad_token_dydx_response_2 = {
+    "errors": [
+        {
+            "value": "RANDOMTOKEN-USD",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params"
+        }
+    ]
+}
+
+mock_bad_date_dydx_response = {
+    "candles": []
+}
+
+mock_bad_limit_dydx_response = {
+    "errors": [
+        {
+            "value": "100000",
+            "msg": "limit must be a positive integer that is not greater than max: 100",
+            "param": "limit",
             "location": "params"
         }
     ]
@@ -126,7 +155,8 @@ def test_safe_fetch_ohlcv_ccxt(exch):
 
 @enforce_types
 def test_safe_fetch_ohlcv_dydx():
-    # happy path test
+
+    # happy path dydx
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
@@ -142,42 +172,100 @@ def test_safe_fetch_ohlcv_dydx():
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
-        # check the result is a list called 'candles' with data for
-        # only one 5min candle (because limit=1)
-        assert result is not None
-        assert list(result.keys())[0] == "candles" and len(result) == 1
-
-        # check the candle's data
+        assert result is not None and "candles" in result
         assert (
             list(result["candles"][0].keys())[0] == "startedAt"
             and result["candles"][0]["startedAt"] == "2024-02-28T16:50:00.000Z"
         )
         assert (
-            list(result["candles"][0].keys())[2] == "high"
+            list(result["candles"][0].keys())[4] == "high"
             and result["candles"][0]["high"] == "61848"
         )
         assert (
-            list(result["candles"][0].keys())[5] == "baseTokenVolume"
+            list(result["candles"][0].keys())[7] == "baseTokenVolume"
             and result["candles"][0]["baseTokenVolume"] == "23.6064"
         )
 
-    # bad token test
+    # bad token test 1 - pair must end in "-USD"
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
             "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-ETH?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_bad_token_dydx_response,
+            json=mock_bad_token_dydx_response_1,
         )
-        st_ut = UnixTimeMs.from_timestr("2024-02-27")
-        exch, symbol, timeframe, st_ut, limit = (
+        exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-ETH",
             "5MINS",
-            st_ut,
+            UnixTimeMs.from_timestr("2024-02-27"),
             1,
         )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
-        assert "errors" in result
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+        assert result is not None and "errors" in result
+        assert (
+            list(result["errors"][0].keys())[1] == "msg"
+            and result["errors"][0]["msg"] == "ticker must be a valid ticker (BTC-USD, etc)"
+        )
+
+    # bad token test 2 - token must exist
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/RANDOMTOKEN-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            json=mock_bad_token_dydx_response_2,
+        )
+        exch, symbol, timeframe, since, limit = (
+            "dydx",
+            "RANDOMTOKEN-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+        assert result is not None and "errors" in result
+        assert (
+            list(result["errors"][0].keys())[1] == "msg"
+            and result["errors"][0]["msg"] == "ticker must be a valid ticker (BTC-USD, etc)"
+        )
+
+    # bad date test
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/RANDOMTOKEN-USD?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
+            json=mock_bad_date_dydx_response,
+        )
+        exch, symbol, timeframe, since, limit = (
+            "dydx",
+            "RANDOMTOKEN-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2222-02-27"),
+            1,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+        assert result is not None and "candles" in result
+        assert result["candles"] == []
+
+    # bad limit test
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=100000",
+            json=mock_bad_limit_dydx_response,
+        )
+        exch, symbol, timeframe, since, limit = (
+            "dydx",
+            "BTC-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            100000,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+        assert result is not None and "errors" in result
+        assert (
+            list(result["errors"][0].keys())[1] == "msg"
+            and result["errors"][0]["msg"] == "limit must be a positive integer that is not greater than max: 100"
+        )
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):
