@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.strutil import StrMixin
 
-APPROACHES = ["LinearLogistic", "LinearSVC"]
+APPROACHES = ["LinearLogistic", "LinearSVC", "Constant"]
 
 
 @enforce_types
