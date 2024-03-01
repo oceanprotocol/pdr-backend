@@ -1,24 +1,24 @@
 import copy
 import logging
 import os
-from typing import Dict, List, Union
+from typing import Dict, List
 
-import matplotlib.pyplot as plt
+from enforce_typing import enforce_types
 from matplotlib import gridspec
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import random
 import polars as pl
-from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("sim_engine")
 FONTSIZE = 9
@@ -26,8 +26,10 @@ FONTSIZE = 9
 
 # pylint: disable=too-many-instance-attributes
 class SimEngineState:
-    def __init__(self, init_holdings: Dict[str, Union[int, float]]):
-        self.holdings: dict = init_holdings
+    def __init__(self, init_holdings: Dict[str, Eth]):
+        self.holdings: Dict[str, float] = {
+            tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
+        }
         self.init_loop_attributes()
 
     def init_loop_attributes(self):
@@ -36,8 +38,8 @@ class SimEngineState:
         self.ybools_testhat: List[float] = []
         self.probs_up: List[float] = []
         self.corrects: List[bool] = []
-        self.trader_profits_USD: List[Eth] = []
-        self.pdr_profits_OCEAN: List[Eth] = []
+        self.trader_profits_USD: List[float] = []
+        self.pdr_profits_OCEAN: List[float] = []
 
 
 # pylint: disable=too-many-instance-attributes
@@ -114,6 +116,10 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
+        stake_amt = pdr_ss.stake_amount.amt_eth
+        others_stake = pdr_ss.others_stake.amt_eth
+        revenue = pdr_ss.revenue.amt_eth
+        trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)
@@ -134,9 +140,6 @@ class SimEngine:
         ybool = data_f.ycont_to_ytrue(ycont, y_thr)
         ybool_train, _ = ybool[st:fin], ybool[fin : fin + 1]
 
-        curprice_eth = Eth(curprice)
-        trueprice_eth = Eth(trueprice)
-
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
         model = model_f.build(X_train, ybool_train)
 
@@ -155,9 +158,9 @@ class SimEngine:
         self.st.ybools_testhat.append(pred_up)
 
         # predictoor: (simulate) submit predictions with stake
-        acct_up_profit = acct_down_profit = Eth(0.0)
-        stake_up = pdr_ss.stake_amount * prob_up
-        stake_down = pdr_ss.stake_amount * (1.0 - prob_up)
+        acct_up_profit = acct_down_profit = 0.0
+        stake_up = stake_amt * prob_up
+        stake_down = stake_amt * (1.0 - prob_up)
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
@@ -165,26 +168,31 @@ class SimEngine:
         usdcoin_holdings_before = self.st.holdings[self.usdcoin]
         if pred_up:  # buy; exit later by selling
             conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
-            buy_amt_usd = ppss.trader_ss.buy_amt_usd * conf_up
-            usdcoin_amt_sent = buy_amt_usd
-            tokcoin_amt_recd = self._buy(curprice_eth, usdcoin_amt_sent)
+            usdcoin_amt_send = trade_amt * conf_up
+            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
         else:  # sell; exit later by buying
             prob_down = 1.0 - prob_up
             conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
-            sell_amt_usd = ppss.trader_ss.buy_amt_usd * conf_down
+            target_usdcoin_amt_recd = trade_amt * conf_down
             p = self.ppss.trader_ss.fee_percent
-            tokcoin_amt_sent = sell_amt_usd / curprice_eth / (1 - p)
-            usdcoin_amt_recd = self._sell(curprice_eth, tokcoin_amt_sent)
+            tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
+            self._sell(curprice, tokcoin_amt_send)
 
         # observe true price
-        true_up = trueprice_eth > curprice_eth
+        true_up = trueprice > curprice
         self.st.ybools_test.append(true_up)
 
         # trader: exit the trading position
-        if pred_up:  # we'd bought; so now sell
-            self._sell(trueprice_eth, tokcoin_amt_sell=tokcoin_amt_recd)
-        else:  # we'd sold, so now buy back
-            self._buy(trueprice_eth, usdcoin_amt_spend=usdcoin_amt_recd)
+        if pred_up:
+            # we'd bought; so now sell
+            self._sell(trueprice, tokcoin_amt_recd)
+        else:
+            # we'd sold, so buy back the same # tokcoins as we sold
+            # (do *not* buy back the same # usdcoins! Not the same thing!)
+            target_tokcoin_amt_recd = tokcoin_amt_send
+            p = self.ppss.trader_ss.fee_percent
+            usdcoin_amt_send = target_tokcoin_amt_recd * (1 - p) * trueprice
+            tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
         # track prediction
@@ -194,16 +202,16 @@ class SimEngine:
         self.st.corrects.append(correct)
 
         # track predictoor profit
-        tot_stake = pdr_ss.others_stake + pdr_ss.stake_amount
-        others_stake_correct = pdr_ss.others_stake * pdr_ss.others_accuracy
+        tot_stake = others_stake + stake_amt
+        others_stake_correct = others_stake * pdr_ss.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct
-            acct_up_profit += (pdr_ss.revenue + tot_stake) * percent_to_me
+            acct_up_profit += (revenue + tot_stake) * percent_to_me
         else:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
-            acct_down_profit += (pdr_ss.revenue + tot_stake) * percent_to_me
+            acct_down_profit += (revenue + tot_stake) * percent_to_me
         pdr_profit_OCEAN = acct_up_profit + acct_down_profit
         self.st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
 
@@ -221,19 +229,17 @@ class SimEngine:
 
         s += f" prob_up={prob_up:.2f}"
         s += " predictoor profit = "
-        s += f"{acct_up_profit.amt_eth:8.5f} up"
-        s += f" + {acct_down_profit.amt_eth:8.5f} down"
-        s += f" = {pdr_profit_OCEAN.amt_eth:8.5f} OCEAN"
-        s += (
-            f" (cumulative {sum(self.st.pdr_profits_OCEAN, Eth(0)).amt_eth:7.2f} OCEAN)"
-        )
+        s += f"{acct_up_profit:8.5f} up"
+        s += f" + {acct_down_profit:8.5f} down"
+        s += f" = {pdr_profit_OCEAN:8.5f} OCEAN"
+        s += f" (cumulative {sum(self.st.pdr_profits_OCEAN):7.2f} OCEAN)"
 
         s += f". Correct: {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
 
-        s += f". trader profit = ${trader_profit_USD.amt_eth:9.4f}"
-        s += f" (cumulative ${sum(self.st.trader_profits_USD, Eth(0)).amt_eth:9.4f})"
+        s += f". trader profit = ${trader_profit_USD:9.4f}"
+        s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
         logger.info(s)
 
         # plot
@@ -248,24 +254,23 @@ class SimEngine:
             )
 
     @enforce_types
-    def _buy(self, price: Eth, usdcoin_amt_spend: Eth) -> Eth:
+    def _buy(self, price: float, usdcoin_amt_send: float) -> float:
         """
         @description
-          Buy tokcoin with usdcoin
+          Buy tokcoin with usdcoin. That is, swap usdcoin for tokcoin.
 
         @arguments
           price -- amt of usdcoin per token
-          usdcoin_amt_spend -- amount to spend, in usdcoin; spend less if have less
+          usdcoin_amt_send -- # usdcoins to send. It sends less if have less
         @return
-          tokcoin_amt_recd --
+          tokcoin_amt_recd -- # tokcoins received.
         """
-        # simulate buy
-        usdcoin_amt_sent = min(usdcoin_amt_spend, self.st.holdings[self.usdcoin])
-        self.st.holdings[self.usdcoin] -= usdcoin_amt_sent
+        usdcoin_amt_send = min(usdcoin_amt_send, self.st.holdings[self.usdcoin])
+        self.st.holdings[self.usdcoin] -= usdcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = usdcoin_amt_sent * p
-        tokcoin_amt_recd = usdcoin_amt_sent * (1 - p) / price
+        usdcoin_amt_fee = usdcoin_amt_send * p
+        tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
@@ -274,7 +279,7 @@ class SimEngine:
 
         logger.info(
             "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
-            usdcoin_amt_sent,
+            usdcoin_amt_send,
             self.usdcoin,
             tokcoin_amt_recd,
             self.tokcoin,
@@ -285,33 +290,33 @@ class SimEngine:
         return tokcoin_amt_recd
 
     @enforce_types
-    def _sell(self, price: Eth, tokcoin_amt_sell: Eth) -> Eth:
+    def _sell(self, price: float, tokcoin_amt_send: float) -> float:
         """
         @description
-          Sell tokcoin for usdcoin
+          Sell tokcoin for usdcoin. That is, swap tokcoin for usdcoin.
 
         @arguments
           price -- amt of usdcoin per token
-          tokcoin_amt_sell -- how much of coin to sell, in tokcoin
+          tokcoin_amt_send -- # tokcoins to send. It sends less if have less
 
         @return
-          usdcoin_amt_recd -- usdcoin amt received
+          usdcoin_amt_recd -- # usdcoins received
         """
-        tokcoin_amt_sent = tokcoin_amt_sell
-        self.st.holdings[self.tokcoin] -= tokcoin_amt_sent
+        tokcoin_amt_send = min(tokcoin_amt_send, self.st.holdings[self.tokcoin])
+        self.st.holdings[self.tokcoin] -= tokcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = tokcoin_amt_sent * p * price
-        usdcoin_amt_recd = tokcoin_amt_sent * (1 - p) * price
+        usdcoin_amt_fee = tokcoin_amt_send * p * price
+        usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
-            self.ppss.predictoor_ss.pair_str, tokcoin_amt_sent
+            self.ppss.predictoor_ss.pair_str, tokcoin_amt_send
         )
 
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
-            tokcoin_amt_sent,
+            tokcoin_amt_send,
             self.tokcoin,
             usdcoin_amt_recd,
             self.usdcoin,
@@ -368,14 +373,13 @@ class PlotState:
 
     # pylint: disable=too-many-statements
     def make_plot(self, st, ppss, model, X_train, ybool_train, colnames):
-        pdr_ss = ppss.predictoor_ss
+        stake_amt = ppss.predictoor_ss.stake_amount.amt_eth
+
         fig = self.fig
         ax00, ax01 = self.ax00, self.ax01
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
-        pdr_profits_OCEAN = [eth.amt_eth for eth in st.pdr_profits_OCEAN]
-        trader_profits_USD = [eth.amt_eth for eth in st.trader_profits_USD]
 
-        N = len(pdr_profits_OCEAN)
+        N = len(st.pdr_profits_OCEAN)
         N_done = len(self.x)  # what # points have been plotted previously
 
         # set x
@@ -384,7 +388,7 @@ class PlotState:
         next_hx = [next_x[0], next_x[-1]]  # horizontal x
 
         # plot row 0, col 0: predictoor profit vs time
-        y00 = list(np.cumsum(pdr_profits_OCEAN))
+        y00 = list(np.cumsum(st.pdr_profits_OCEAN))
         next_y00 = _slice(y00, N_done, N)
         ax00.plot(next_x, next_y00, c="g")
         ax00.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
@@ -430,7 +434,7 @@ class PlotState:
                 ax03.margins(0.01, 0.01)
 
         # plot row 1, col 0: trader profit vs time
-        y10 = list(np.cumsum(trader_profits_USD))
+        y10 = list(np.cumsum(st.trader_profits_USD))
         next_y10 = _slice(y10, N_done, N)
         ax10.plot(next_x, next_y10, c="b")
         ax10.plot(next_hx, [0, 0], c="0.2", ls="--", lw=1)
@@ -459,12 +463,12 @@ class PlotState:
                 ax.margins(0.05, 0.05)
 
         # plot row 1, col 1: 1d scatter of predictoor profits
-        mnp, mxp = -pdr_ss.stake_amount.amt_eth, +pdr_ss.stake_amount.amt_eth
-        _scatter_profits(ax11, "pdr", "OCEAN", mnp, mxp, pdr_profits_OCEAN)
+        mnp, mxp = -stake_amt, +stake_amt
+        _scatter_profits(ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN)
 
         # plot row 1, col 2: 1d scatter of trader profits
-        mnp, mxp = min(trader_profits_USD), max(trader_profits_USD)
-        _scatter_profits(ax12, "trader", "USD", mnp, mxp, trader_profits_USD)
+        mnp, mxp = min(st.trader_profits_USD), max(st.trader_profits_USD)
+        _scatter_profits(ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD)
 
         # final pieces
         HEIGHT = 7.5  # magic number
