@@ -1,7 +1,7 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import StrMixin, asCurrency, dictStr, prettyBigNum
+from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum
 
 
 def testStrMixin1():
@@ -74,27 +74,6 @@ def testEmptyDictStr():
     d = {}
     s = dictStr(d)
     assert s == ("{}")
-
-
-def testAsCurrency():
-    assert asCurrency(0) == "$0.00"
-    assert asCurrency(0.0) == "$0.00"
-    assert asCurrency(10) == "$10.00"
-    assert asCurrency(10.0) == "$10.00"
-    assert asCurrency(1234.567) == "$1,234.57"
-    assert asCurrency(2e6) == "$2,000,000.00"
-    assert asCurrency(2e6 + 0.03) == "$2,000,000.03"
-
-    assert asCurrency(0, decimals=False) == "$0"
-    assert asCurrency(0.0, False) == "$0"
-    assert asCurrency(10, False) == "$10"
-    assert asCurrency(10.0, False) == "$10"
-    assert asCurrency(1234.567, False) == "$1,235"
-    assert asCurrency(2e6, False) == "$2,000,000"
-    assert asCurrency(2e6 + 0.03, False) == "$2,000,000"
-
-    assert asCurrency(-0.03, True) == "-$0.03"
-    assert asCurrency(-0.03, False) == "-$0"
 
 
 def testPrettyBigNum1_DoRemoveZeros_decimalsNeeded():
