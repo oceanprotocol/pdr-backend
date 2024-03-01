@@ -38,11 +38,20 @@ mock_dydx_response = {
             "baseTokenVolume": "23.6064",
             "usdVolume": "1458183.4133",
             "trades": 284,
-            "startingOpenInterest": "504.4262",
+            "startingOpenInterest": "504.4262"
         }
     ]
 }
-
+mock_bad_token_dydx_response = {
+    "errors": [
+        {
+            "value": "BTC-ETH",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params"
+        }
+    ]
+}
 
 @enforce_types
 def test_clean_raw_ohlcv():
@@ -117,14 +126,13 @@ def test_safe_fetch_ohlcv_ccxt(exch):
 
 @enforce_types
 def test_safe_fetch_ohlcv_dydx():
+    # happy path test
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
-            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_dydx_response,
         )
-        # happy path dydx
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-USD",
@@ -153,6 +161,23 @@ def test_safe_fetch_ohlcv_dydx():
             and result["candles"][0]["baseTokenVolume"] == "23.6064"
         )
 
+    # bad token test
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-ETH?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            json=mock_bad_token_dydx_response,
+        )
+        st_ut = UnixTimeMs.from_timestr("2024-02-27")
+        exch, symbol, timeframe, st_ut, limit = (
+            "dydx",
+            "BTC-ETH",
+            "5MINS",
+            st_ut,
+            1,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, st_ut, limit)
+        assert "errors" in result
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):
