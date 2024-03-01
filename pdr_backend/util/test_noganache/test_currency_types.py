@@ -19,6 +19,7 @@ def test_currency_types_base():
 
 @enforce_types
 def test_currency_types_math_on_Eth():
+    # pylint: disable=pointless-statement
     x1, x2 = Eth(5.0), Eth(2.5)
 
     assert +x1 == Eth(5.0)
@@ -51,6 +52,7 @@ def test_currency_types_math_on_Eth():
 
 @enforce_types
 def test_currency_types_math_on_Wei():
+    # pylint: disable=pointless-statement
     x1, x2 = Wei(5000), Wei(2500)
 
     assert +x1 == Wei(5000)

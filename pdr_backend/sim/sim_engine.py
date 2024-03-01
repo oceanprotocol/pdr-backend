@@ -368,7 +368,7 @@ class PlotState:
 
     # pylint: disable=too-many-statements
     def make_plot(self, st, ppss, model, X_train, ybool_train, colnames):
-        pdr_ss, tdr_ss = ppss.predictoor_ss, ppss.trader_ss
+        pdr_ss = ppss.predictoor_ss
         fig = self.fig
         ax00, ax01 = self.ax00, self.ax01
         ax10, ax11, ax12 = self.ax10, self.ax11, self.ax12
@@ -442,18 +442,18 @@ class PlotState:
             ax10.margins(0.005, 0.05)
 
         # reusable profits scatterplot
-        def _scatter_profits(ax, actor: str, denomin, st_profits):
+        def _scatter_profits(ax, actor: str, denomin, mnp, mxp, st_profits):
             next_probs_up = _slice(st.probs_up, N_done, N)
             next_profits = _slice(st_profits, N_done, N)
             c = (random(), random(), random())  # random RGB color
-            ax.scatter(next_probs_up, next_profits, c=c, s=1)
+            ax.scatter(next_probs_up, next_profits, color=c, s=1)
             avg = np.average(st_profits)
             s = f"{actor} profit distr'n. avg={avg:.2f} {denomin}"
             _set_title(ax, s)
             ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
             if not self.plotted_before:
                 ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-                _set_xlabel(ax, f"prob(up)")
+                _set_xlabel(ax, "prob(up)")
                 _set_ylabel(ax, f"{actor} profit ({denomin})")
                 _ylabel_on_right(ax)
                 ax.margins(0.05, 0.05)
