@@ -450,7 +450,7 @@ class PlotState:
                 ax.plot([0 - buf, 1 + buf], [0, 0], c="0.2", ls="--", lw=1)
                 _set_ylabel(ax, f"{actor_name} profit ({denomin})")
                 _label_on_right(ax)
-                plt.tick_params(bottom=False, labelbottom=False)
+                ax.tick_params(bottom=False, labelbottom=False)
                 ax.margins(0.05, 0.05)
 
         # plot row 1, col 1: 1d scatter of predictoor profits
