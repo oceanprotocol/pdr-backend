@@ -67,6 +67,17 @@ mock_bad_token_dydx_response_2 = {
     ]
 }
 
+mock_bad_timeframe_dydx_response = {
+    "errors": [
+        {
+            "value": "5m",
+            "msg": "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
+            "param": "resolution",
+            "location": "params"
+        }
+    ]
+}
+
 mock_bad_date_dydx_response = {
     "candles": []
 }
@@ -228,16 +239,37 @@ def test_safe_fetch_ohlcv_dydx():
             and result["errors"][0]["msg"] == "ticker must be a valid ticker (BTC-USD, etc)"
         )
 
+    # bad timeframe test
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5m&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            json=mock_bad_timeframe_dydx_response,
+        )
+        exch, symbol, timeframe, since, limit = (
+            "dydx",
+            "BTC-USD",
+            "5m",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+        )
+        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
+        assert result is not None and "errors" in result
+        assert (
+            list(result["errors"][0].keys())[1] == "msg"
+            and result["errors"][0]["msg"] == "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY"
+        )
+
     # bad date test
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/RANDOMTOKEN-USD?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
             json=mock_bad_date_dydx_response,
         )
         exch, symbol, timeframe, since, limit = (
             "dydx",
-            "RANDOMTOKEN-USD",
+            "BTC-USD",
             "5MINS",
             UnixTimeMs.from_timestr("2222-02-27"),
             1,
