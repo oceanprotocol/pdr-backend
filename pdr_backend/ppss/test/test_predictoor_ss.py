@@ -71,9 +71,9 @@ def test_s_start_payouts():
     assert predictoor_ss.s_start_payouts == 0, "Must be unset in the test dict, so should return 0"
 
     # let's set it here
-    d["s_start_payouts"] = 100
+    d["bot_only"]["s_start_payouts"] = 100
     predictoor_ss = PredictoorSS(d)
-    assert predictoor_ss.s_start_payouts == 100, "Must be unset in the test dict, so should return 0"
+    assert predictoor_ss.s_start_payouts == 100, "Must be set to 100"
 
 
 @enforce_types
