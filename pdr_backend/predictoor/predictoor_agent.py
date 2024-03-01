@@ -124,6 +124,10 @@ class PredictoorAgent:
         if self.cur_epoch_s_left < self.s_cutoff:
             return
 
+        if not self.check_balances():
+            logger.error("Not enough balance, cancel prediction")
+            return 
+
         logger.info(self.status_str())
 
         # compute prediction; exit if no good
@@ -334,6 +338,38 @@ class PredictoorAgent:
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
         return mergedohlcv_df
+
+    @enforce_types
+    def check_balances(self) -> bool:
+        up_predictoor_address = self.web3_config_up.owner
+        down_predictoor_address = self.web3_config_down.owner
+
+        minimum_ocean_balance = Eth(self.ppss.predictoor_ss.stake_amount, "wei")
+        minimum_native_balance = Eth("1", "wei")
+        
+        up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(up_predictoor_address)
+        if up_predictoor_balance_ocean < minimum_ocean_balance:
+            logger.error(f"Up predictoor's OCEAN balance too low: ({up_predictoor_balance_ocean})")
+            return False
+
+        down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(down_predictoor_address)
+        if down_predictoor_balance_ocean < minimum_ocean_balance:
+            logger.error(f"Down predictoor's OCEAN balance too low: ({up_predictoor_balance_ocean})")
+            return False
+
+        native_token = NativeToken(self.ppss.web3_pp)
+
+        up_predictoor_balance_rose = native_token.balanceOf(up_predictoor_address)
+        if up_predictoor_balance_rose < minimum_native_balance:
+            logger.error(f"Up predictoor's ROSE balance too low: ({up_predictoor_balance_rose})")
+            return False
+
+        down_predictoor_balance_rose = native_token.balanceOf(down_predictoor_address)
+        if down_predictoor_balance_rose < minimum_native_balance:
+            logger.error(f"Down predictoor's ROSE balance too low: ({up_predictoor_balance_rose})")
+            return False
+
+        return True
 
 
 @enforce_types
