@@ -30,7 +30,7 @@ class AimodelFactory:
           model -- Aimodel
         """
         a = self.aimodel_ss.approach
-        do_constant = (min(ybool) == max(ybool) or a == "Constant")
+        do_constant = min(ybool) == max(ybool) or a == "Constant"
         if do_constant:
             # force two classes in skm
             ybool = copy.copy(ybool)
