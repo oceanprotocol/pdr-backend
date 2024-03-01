@@ -36,7 +36,7 @@ trader_ss:
     fee_percent: 0.0 # simulated % fee
     init_holdings:
       - 100000 USDT
-      - 0 BTC
+      - 2 BTC
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
