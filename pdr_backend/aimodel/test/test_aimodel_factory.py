@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from numpy.testing import assert_array_equal
 from enforce_typing import enforce_types
+from pytest import approx
 
 from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -60,6 +61,12 @@ def _test_aimodel_factory_main(approach):
         assert classif_acc(ytrue_hat, ytrue) > 0.8
         assert 0 < min(yptrue_hat) < max(yptrue_hat) < 1.0
     assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert sum(imps) == approx(1.0, 0.01)
+    assert imps[0] == approx(0.333, abs=0.3)
+    assert imps[1] == approx(0.667, abs=0.3)
 
     # plot
     if PLOT:
