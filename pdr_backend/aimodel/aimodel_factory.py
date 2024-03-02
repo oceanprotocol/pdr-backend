@@ -75,7 +75,7 @@ class AimodelFactory:
             # (SMOTE = Synthetic Minority Oversampling Technique)
             X, ybool = SMOTE().fit_resample(X, ybool)
         else:
-            raise ValueError(ss.balance)
+            raise ValueError(ss.balance_classes)
 
         # scale inputs
         scaler = StandardScaler()
