@@ -68,7 +68,9 @@ def test_s_start_payouts():
     d = predictoor_ss_test_dict()
     predictoor_ss = PredictoorSS(d)
 
-    assert predictoor_ss.s_start_payouts == 0, "Must be unset in the test dict, so should return 0"
+    assert (
+        predictoor_ss.s_start_payouts == 0
+    ), "Must be unset in the test dict, so should return 0"
 
     # let's set it here
     d["bot_only"]["s_start_payouts"] = 100

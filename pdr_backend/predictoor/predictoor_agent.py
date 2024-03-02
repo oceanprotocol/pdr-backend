@@ -356,10 +356,8 @@ class PredictoorAgent:
         ):
             return
 
-        logger.info(
-            "Running payouts"
-        )
-        
+        logger.info("Running payouts")
+
         # Claim for up predictoor
         web3_config = self._updown_web3_config(True)
         self.ppss.web3_pp.set_web3_config(web3_config)
@@ -372,6 +370,7 @@ class PredictoorAgent:
 
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_epoch)
+
 
 @enforce_types
 def _tx_failed(tx) -> bool:
