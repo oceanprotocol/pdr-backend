@@ -23,6 +23,7 @@ def test_sim_engine(tmpdir):
         "input_feeds": input_feeds,
         "approach": "LinearLogistic",
         "max_n_train": 100,
+        "do_weight_recent": True,
         "autoregressive_n": 3,
     }
     ppss.predictoor_ss = PredictoorSS(d)

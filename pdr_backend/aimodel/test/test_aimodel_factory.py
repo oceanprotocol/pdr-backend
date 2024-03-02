@@ -32,7 +32,7 @@ def test_aimodel_factory_Constant():
 @enforce_types
 def _test_aimodel_factory_main(approach):
     # settings, factory
-    aimodel_ss = _ss(approach)
+    aimodel_ss = _ss(approach, do_weight_recent=True)
     factory = AimodelFactory(aimodel_ss)
 
     # data
@@ -90,10 +90,11 @@ def _test_aimodel_factory_main(approach):
 
 
 @enforce_types
-def _ss(approach):
+def _ss(approach: str, do_weight_recent: bool):
     return AimodelSS(
         {
             "approach": approach,
+            "do_weight_recent": do_weight_recent,
             "max_n_train": 7,
             "autoregressive_n": 3,
             "input_feeds": ["binance BTC/USDT c"],
@@ -103,7 +104,8 @@ def _ss(approach):
 
 @enforce_types
 def test_aimodel_factory_constantdata():
-    aimodel_ss = _ss("LinearLogistic")  # not constant! That has to emerge
+    # approach cannot be constant! That has to emerge
+    aimodel_ss = _ss("LinearLogistic", do_weight_recent=False)
     factory = AimodelFactory(aimodel_ss)
 
     N = 1000
@@ -121,8 +123,9 @@ def test_aimodel_factory_constantdata():
 
 
 @enforce_types
-def test_aimodel_accuracy_from_create_xy(aimodel_factory):
-    # This is from a test function in test_model_data_factory.py
+def test_aimodel_accuracy_from_create_xy():
+    aimodel_ss = _ss("LinearLogistic", do_weight_recent=False)
+    aimodel_factory = AimodelFactory(aimodel_ss)
 
     # The underlying AR process is: close[t] = close[t-1] + open[t-1]
     X_trn = np.array(

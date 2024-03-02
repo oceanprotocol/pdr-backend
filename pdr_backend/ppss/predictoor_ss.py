@@ -114,6 +114,7 @@ def predictoor_ss_test_dict(predict_feed: Optional[str] = None) -> dict:
             "input_feeds": input_feeds,
             "approach": "LinearLogistic",
             "max_n_train": 7,
+            "do_weight_recent": True,
             "autoregressive_n": 3,
         },
     }

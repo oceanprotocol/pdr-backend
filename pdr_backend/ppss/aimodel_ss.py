@@ -36,6 +36,10 @@ class AimodelSS(MultiFeedMixin, StrMixin):
         return self.d["max_n_train"]  # eg 50000. S.t. what data is available
 
     @property
+    def do_weight_recent(self) -> bool:
+        return self.d["do_weight_recent"]
+
+    @property
     def autoregressive_n(self) -> int:
         return self.d[
             "autoregressive_n"
