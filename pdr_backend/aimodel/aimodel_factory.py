@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 from enforce_typing import enforce_types
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
 from sklearn.inspection import permutation_importance
@@ -48,17 +48,17 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        n_repeat1, xrecent1, yrecent1 = 10, X[-1,:], ybool[-1]
-        n_repeat2, xrecent2, yrecent2 = 5, X[-2,:], ybool[-2]
-        X = np.append(X, np.repeat(xrecent1[None],n_repeat1,axis=0), axis=0)
-        X = np.append(X, np.repeat(xrecent2[None],n_repeat2,axis=0), axis=0)
+        n_repeat1, xrecent1, yrecent1 = 10, X[-1, :], ybool[-1]
+        n_repeat2, xrecent2, yrecent2 = 5, X[-2, :], ybool[-2]
+        X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
+        X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
         ybool = np.append(ybool, [yrecent1] * n_repeat1)
         ybool = np.append(ybool, [yrecent2] * n_repeat2)
 
         # balance data: generate synthetic samples for minority class.
         # (SMOTE = Synthetic Minority Oversampling Technique)
         smote = SMOTE()
-        X, ybool = smote.fit_resample(X, ybool)  
+        X, ybool = smote.fit_resample(X, ybool)
 
         # scale inputs
         scaler = StandardScaler()
@@ -66,7 +66,7 @@ class AimodelFactory:
         X = scaler.transform(X)
 
         # calibrate output probabilities
-        do_calibrate = (not do_constant)
+        do_calibrate = not do_constant
         if do_calibrate:
             n_True, n_False = sum(ybool), sum(np.invert(ybool))
             smallest_n = min(n_True, n_False)
@@ -80,7 +80,7 @@ class AimodelFactory:
         # calc variable importances
         imps_bunch = permutation_importance(skm, X, ybool, n_repeats=30)
         imps = imps_bunch["importances_mean"]
-        imps = imps / sum(imps) # normalize
+        imps = imps / sum(imps)  # normalize
 
         # return
         model = Aimodel(skm, scaler, imps)

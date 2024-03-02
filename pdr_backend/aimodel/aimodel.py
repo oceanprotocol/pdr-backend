@@ -5,10 +5,10 @@ import numpy as np
 @enforce_types
 class Aimodel:
 
-    def __init__(self, skm, scaler, imps:np.ndarray):
+    def __init__(self, skm, scaler, imps: np.ndarray):
         self._skm = skm  # sklearn model
-        self._scaler = scaler # for scaling X-inputs
-        self._imps = imps # 1d array of [var_i]: rel_importance_float
+        self._scaler = scaler  # for scaling X-inputs
+        self._imps = imps  # 1d array of [var_i]: rel_importance_float
 
     def predict_true(self, X):
         """
@@ -45,7 +45,7 @@ class Aimodel:
         class_i = 1  # this is the class for "True"
         yptrue = np.array([T[i, class_i] for i in range(N)])
         return yptrue
-    
+
     def importance_per_var(self) -> np.ndarray:
         """
         @description
