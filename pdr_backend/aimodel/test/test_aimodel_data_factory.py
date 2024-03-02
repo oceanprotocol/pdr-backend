@@ -33,27 +33,14 @@ def test_ycont_to_ytrue():
 
 @enforce_types
 def test_create_xy__0():
-    predictoor_ss = PredictoorSS(
-        {
-            "predict_feed": "binanceus ETH/USDT c 5m",
-            "approach": 1,
-            "stake_amount": 1,
-            "bot_only": {
-                "s_until_epoch_end": 60,
-            },
-            "sim_only": {
-                "others_stake": 3,
-                "others_accuracy": 0.51,
-                "revenue": 0.93,
-            },
-            "aimodel_ss": {
-                "input_feeds": ["binanceus ETH/USDT oc"],
-                "approach": "LinearLogistic",
-                "max_n_train": 4,
-                "autoregressive_n": 2,
-            },
-        }
+    d = predictoor_ss_test_dict(
+        predict_feed="binanceus ETH/USDT c 5m",
+        input_feeds=["binanceus ETH/USDT oc"],
     )
+    d["aimodel_ss"]["max_n_train"] = 4
+    d["aimodel_ss"]["autoregressive_n"] = 2
+    predictoor_ss = PredictoorSS(d)
+
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest

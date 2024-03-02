@@ -19,6 +19,7 @@ class AimodelFactory:
     def __init__(self, aimodel_ss: AimodelSS):
         self.aimodel_ss = aimodel_ss
 
+    # pylint: disable=too-many-statements
     def build(self, X: np.ndarray, ybool: np.ndarray) -> Aimodel:
         """
         @description
@@ -51,9 +52,9 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant:
+        if do_constant or ss.weight_recent == "None":
             pass
-        elif ss.weight_recent = "10x_5x":
+        elif ss.weight_recent == "10x_5x":
             n_repeat1, xrecent1, yrecent1 = 10, X[-1, :], ybool[-1]
             n_repeat2, xrecent2, yrecent2 = 5, X[-2, :], ybool[-2]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
@@ -72,7 +73,7 @@ class AimodelFactory:
         elif ss.balance_classes == "SMOTE":
             #  generate synthetic samples for minority class
             # (SMOTE = Synthetic Minority Oversampling Technique)
-            X, y = SMOTE().fit_resample(X, ybool)
+            X, ybool = SMOTE().fit_resample(X, ybool)
         else:
             raise ValueError(ss.balance)
 
@@ -89,7 +90,7 @@ class AimodelFactory:
             if cv > 1:
                 skm = CalibratedClassifierCV(skm, cv=cv)
         else:
-            raise ValueError(ss.calibrate_probs)    
+            raise ValueError(ss.calibrate_probs)
 
         # fit model
         skm.fit(X, ybool)
