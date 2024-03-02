@@ -17,6 +17,7 @@ install_requirements = [
     "eth-keys==0.5.0",
     "flask==3.0.2",
     "freezegun==1.4.0",
+    "imblearn",
     "matplotlib==3.7.5",
     "mypy==1.8.0",
     "numpy==1.24.4",

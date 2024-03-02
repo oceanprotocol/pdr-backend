@@ -25,9 +25,10 @@ predictoor_ss:
   aimodel_ss:
     input_feeds:
       - binance BTC/USDT ETH/USDT c 5m
-    max_n_train: 5000 # no. epochs to train model on
-    autoregressive_n: 1 # no. epochs that model looks back, to predict next
     approach: LinearLogistic
+    max_n_train: 5000 # no. epochs to train model on
+    do_weight_recent: True
+    autoregressive_n: 1 # no. epochs that model looks back, to predict next
 
 trader_ss:
   feed: binance BTC/USDT c 5m
