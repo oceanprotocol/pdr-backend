@@ -9,12 +9,12 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("predictoor_agent")
