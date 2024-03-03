@@ -62,10 +62,7 @@ def test_predictoor_ss_test_dict():
     assert d["predict_feed"] == "binance ETH/USDT c 1h"
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
 
-
-@enforce_types
-def test_s_start_payouts():
-    d = predictoor_ss_test_dict()
+    # test s_start_payouts attribute set
     predictoor_ss = PredictoorSS(d)
 
     assert (
