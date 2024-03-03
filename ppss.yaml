@@ -28,7 +28,10 @@ predictoor_ss:
       - binance BTC/USDT ETH/USDT c 5m
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
-    approach: LinearLogistic
+    approach: LinearLogistic # LinearLogistic | LinearSVC | Constant
+    weight_recent: 10x_5x # 10x_5x | None
+    balance_classes: SMOTE # SMOTE | RandomOverSampler | None
+    calibrate_probs: CalibratedClassifierCV_5x # CalibratedClassifierCV_5x | None
 
 trader_ss:
   feed: binance BTC/USDT c 5m
@@ -51,7 +54,7 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
-  test_n: 2000 # number of epochs to simulate
+  test_n: 5000 # number of epochs to simulate
   exchange_only:
     timeout: 30000
     options:
