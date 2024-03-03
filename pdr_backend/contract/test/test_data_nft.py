@@ -8,7 +8,7 @@ from web3.logs import DISCARD
 from pdr_backend.contract.data_nft import DataNft
 from pdr_backend.contract.erc721_factory import Erc721Factory
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
@@ -47,8 +47,8 @@ def test_set_ddo(web3_pp, web3_config):
         [],
     )
 
-    rate = to_wei(3)
-    cut = to_wei(0.2)
+    rate = Eth(3).to_wei().amt_wei
+    cut = Eth(0.2).to_wei().amt_wei
     fre_data = (
         fre_address,
         [ocean_address, owner.address, feeCollector, owner.address],

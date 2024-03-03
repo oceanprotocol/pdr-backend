@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.wrapped_token import WrappedToken
+from pdr_backend.util.currency_types import Wei
 
 
 @enforce_types
@@ -17,4 +18,4 @@ def test_native_token(web3_pp):
         mock.return_value = mock_wrapped_contract
         token = WrappedToken(web3_pp, token_address)
 
-    assert token.withdraw(100, False) == "mock_tx"
+    assert token.withdraw(Wei(100), False) == "mock_tx"

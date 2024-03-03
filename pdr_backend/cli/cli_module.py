@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 
@@ -26,6 +27,7 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
+from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
@@ -146,6 +148,14 @@ def do_claim_OCEAN(args, nested_args=None):
     )
     do_ocean_payout(ppss)
 
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_ocean_payout(ppss)
+
 
 @enforce_types
 def do_claim_ROSE(args, nested_args=None):
@@ -154,6 +164,14 @@ def do_claim_ROSE(args, nested_args=None):
         network="sapphire-mainnet",
         nested_override_args=nested_args,
     )
+    do_rose_payout(ppss)
+
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
     do_rose_payout(ppss)
 
 
@@ -294,7 +312,7 @@ def do_fund_accounts(args, nested_args=None):
         nested_override_args=nested_args,
     )
     to_accounts = args.ACCOUNTS
-    fund_accounts(args.TOKEN_AMOUNT, to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+    fund_accounts(Eth(args.TOKEN_AMOUNT), to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
 
 
 @enforce_types

@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from enforce_typing import enforce_types
 import numpy as np
 
@@ -7,9 +5,10 @@ import numpy as np
 @enforce_types
 class Aimodel:
 
-    def __init__(self, skm, scaler):
+    def __init__(self, skm, scaler, imps: np.ndarray):
         self._skm = skm  # sklearn model
-        self._scaler = scaler
+        self._scaler = scaler  # for scaling X-inputs
+        self._imps = imps  # 1d array of [var_i]: rel_importance_float
 
     def predict_true(self, X):
         """
@@ -26,7 +25,6 @@ class Aimodel:
         #   inconsistent with predict_proba() for svc and maybe others.
         # Rather, draw on the probability output to guarantee consistency.
         yptrue = self.predict_ptrue(X)
-        print(f"in predict_true(); yptrue[:10] = {yptrue[:10]}")
         ytrue = yptrue > 0.5
         return ytrue
 
@@ -47,3 +45,15 @@ class Aimodel:
         class_i = 1  # this is the class for "True"
         yptrue = np.array([T[i, class_i] for i in range(N)])
         return yptrue
+
+    def importance_per_var(self) -> np.ndarray:
+        """
+        @description
+          Report relative importance of each input variable
+
+        @return
+          imps - 1d array of [var_i]: rel_importance_float,
+            where sum(imps) == 1.0
+
+        """
+        return self._imps

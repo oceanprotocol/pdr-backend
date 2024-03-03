@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import Mock
@@ -21,6 +22,7 @@ from pdr_backend.util.contract import _condition_sapphire_keys, get_contract_fil
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("web3_pp")
 
@@ -331,6 +333,9 @@ class _MockPredictoorContractWithTracking:
         """Returns an epoch number"""
         return self.get_current_epoch_ts() // self.s_per_epoch
 
+    def set_token(self, web3_pp):
+        pass
+
     def get_current_epoch_ts(self) -> UnixTimeS:
         """Returns a timestamp"""
         return UnixTimeS(self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch)
@@ -341,7 +346,7 @@ class _MockPredictoorContractWithTracking:
     def submit_prediction(
         self,
         predicted_value: bool,
-        stake_amt: float,
+        stake_amt: Eth,
         prediction_ts: UnixTimeS,
         wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument
@@ -392,5 +397,9 @@ def inplace_mock_w3_and_contract_with_tracking(
 
     assert hasattr(web3_pp.web3_config, "w3")
     web3_pp.web3_config.w3 = mock_w3
+    copy_config = deepcopy(web3_pp.web3_config)
+    copy_config.owner = "0x3"
+    web3_pp.web3_config.copy_with_pk = Mock()  # type: ignore
+    web3_pp.web3_config.copy_with_pk.return_value = copy_config
 
     return _mock_pdr_contract

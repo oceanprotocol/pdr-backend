@@ -6,7 +6,6 @@ from matplotlib import cm
 import numpy as np
 
 from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.util.mathutil import classif_acc
 
 
 @enforce_types
@@ -37,9 +36,6 @@ def plot_model(
       legend_loc -- eg "upper left"
     """
     assert X.shape[1] == 2, "only relevant for 2-d input"
-    N = X.shape[1]
-
-    x0_label, x1_labels = labels
 
     if xranges is None:
         x0_min, x0_max = min(X[:, 0]), max(X[:, 0])

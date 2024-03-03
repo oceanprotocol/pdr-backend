@@ -29,6 +29,8 @@ def request_payout_batches(
         retries = 0
         success = False
 
+        print(".", end="", flush=True)
+
         while retries < 5 and not success:
             try:
                 wait_for_receipt = True
@@ -86,7 +88,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     claimable_rewards = dfrewards_contract.get_claimable_rewards(
         web3_config.owner, wROSE_addr
     )
-    logger.info("Found %s wROSE available to claim", claimable_rewards)
+    logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
 
     if claimable_rewards > 0:
         logger.info("Claiming wROSE rewards...")
@@ -94,14 +96,14 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     else:
         logger.warning("No rewards available to claim")
 
-    logger.info("Converting wROSE to ROSE")
+    logger.info("Sleeping")
     time.sleep(10)
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == 0:
         logger.warning("wROSE balance is 0")
     else:
-        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal / 1e18)
+        logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.to_eth().amt_eth)
         wROSE.withdraw(wROSE_bal)
 
     logger.info("ROSE reward claim done")

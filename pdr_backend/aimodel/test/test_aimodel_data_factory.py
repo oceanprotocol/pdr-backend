@@ -22,7 +22,7 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types
-def test_ycont_to_ytrue(tmpdir):
+def test_ycont_to_ytrue():
     ycont = np.array([8.3, 6.4, 7.5, 8.6, 5.0])
     y_thr = 7.0
     target_ybool = np.array([True, False, True, True, False])
@@ -33,27 +33,14 @@ def test_ycont_to_ytrue(tmpdir):
 
 @enforce_types
 def test_create_xy__0():
-    predictoor_ss = PredictoorSS(
-        {
-            "predict_feed": "binanceus ETH/USDT c 5m",
-            "approach": 1,
-            "stake_amount": 1,
-            "bot_only": {
-                "s_until_epoch_end": 60,
-            },
-            "sim_only": {
-                "others_stake": 3,
-                "others_accuracy": 0.51,
-                "revenue": 0.93,
-            },
-            "aimodel_ss": {
-                "input_feeds": ["binanceus ETH/USDT oc"],
-                "approach": "LinearLogistic",
-                "max_n_train": 4,
-                "autoregressive_n": 2,
-            },
-        }
+    d = predictoor_ss_test_dict(
+        predict_feed="binanceus ETH/USDT c 5m",
+        input_feeds=["binanceus ETH/USDT oc"],
     )
+    d["aimodel_ss"]["max_n_train"] = 4
+    d["aimodel_ss"]["autoregressive_n"] = 2
+    predictoor_ss = PredictoorSS(d)
+
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
@@ -95,7 +82,7 @@ def test_create_xy__0():
 
 
 @enforce_types
-def test_create_xy_reg__1exchange_1coin_1signal(tmpdir):
+def test_create_xy_reg__1exchange_1coin_1signal():
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     ss = PredictoorSS(d)
     aimodel_data_factory = AimodelDataFactory(ss)
@@ -307,8 +294,8 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
 
 
 @enforce_types
-def test_create_xy_reg__check_timestamp_order(tmpdir):
-    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+def test_create_xy_reg__check_timestamp_order():
+    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT()
 
     # timestamps should be descending order
     uts = mergedohlcv_df["timestamp"].to_list()
@@ -325,8 +312,8 @@ def test_create_xy_reg__check_timestamp_order(tmpdir):
 
 
 @enforce_types
-def test_create_xy_reg__input_type(tmpdir):
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT(tmpdir)
+def test_create_xy_reg__input_type():
+    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT()
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(aimodel_data_factory, AimodelDataFactory)
@@ -340,7 +327,7 @@ def test_create_xy_reg__input_type(tmpdir):
 
 
 @enforce_types
-def test_create_xy_reg__handle_nan(tmpdir):
+def test_create_xy_reg__handle_nan():
     # create mergedohlcv_df
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     ss = PredictoorSS(d)

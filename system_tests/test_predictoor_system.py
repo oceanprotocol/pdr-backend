@@ -1,4 +1,3 @@
-import os
 import sys
 from unittest.mock import Mock, patch, MagicMock
 
@@ -20,22 +19,18 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     mock_predictoor_ss = Mock()
     mock_predictoor_ss.get_feed_from_candidates.return_value = mock_feeds["0x1"]
     mock_predictoor_ss.s_until_epoch_end = 100
+    mock_predictoor_ss.s_start_payouts = 0
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
+    mock_web3_config.owner = "0xowner"
     mock_web3_config.get_block.return_value = {"timestamp": 100}
     mock_web3_pp.web3_config = mock_web3_config
 
     return mock_web3_pp, mock_predictoor_ss
 
 
-def _test_predictoor_system(
-    mock_feeds, mock_predictoor_contract, approach, caplog, monkeypatch
-):
-    PRIV_KEY = str(os.getenv("PRIVATE_KEY"))
-    PRIV_KEY2 = str(PRIV_KEY[:-4] + "0000")
-    monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
-
+def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_predictoor_contract
     )
@@ -74,12 +69,9 @@ def test_predictoor_approach_1_system(
     mock_feeds,
     mock_predictoor_contract,
     caplog,
-    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(
-        mock_feeds, mock_predictoor_contract, 1, caplog, monkeypatch
-    )
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
@@ -88,9 +80,6 @@ def test_predictoor_approach_3_system(
     mock_feeds,
     mock_predictoor_contract,
     caplog,
-    monkeypatch,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(
-        mock_feeds, mock_predictoor_contract, 3, caplog, monkeypatch
-    )
+    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3, caplog)
