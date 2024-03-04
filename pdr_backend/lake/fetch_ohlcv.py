@@ -139,9 +139,8 @@ def safe_fetch_ohlcv_dydx(
             print("No candle data found. Encountered the following error: ", errors)
             return errors
 
-        else:
-            print("No candle data found. Dydx response is: ", data)
-            return None
+        print("No candle data found. Dydx response is: ", data)
+        return None
 
     except Exception as e:
         logger.warning("exchange: %s", e)
