@@ -143,7 +143,23 @@ def test_silver_bronze_pdr_predictions(
         "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "slot_id": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700",
         "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",  # f"{contract}"
-        "slot": "1699302700",
+        "slot": 1699302700,
+        "user": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "pair": "ETH/USDT",
+        "timeframe": "5m",
+        "source": "binance",
+        "predvalue": None,
+        "truevalue": False,
+        "stake": None,
+        "payout": None,
+        "timestamp": 1699302700000,
+        "last_event_timestamp": 1699302700000,
+    }
+    row2 = {
+        "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302800-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "slot_id": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302800",
+        "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",  # f"{contract}"
+        "slot": 1699302800,
         "user": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "pair": "ETH/USDT",
         "timeframe": "5m",
@@ -152,20 +168,21 @@ def test_silver_bronze_pdr_predictions(
         "truevalue": False,
         "stake": 11.00000023,
         "payout": 11.00000023,
-        "timestamp": 1699302700,
-        "last_event_timestamp": 1699302700,
+        "timestamp": 1699302800000,
+        "last_event_timestamp": 1699302800000,
     }
     new_row_df = pl.DataFrame(row, bronze_pdr_predictions_schema)
+    new_row_df2 = pl.DataFrame(row2, bronze_pdr_predictions_schema)
     gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df)
+    gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df2)
 
     # Check that new prediction was added to bronce table
-    assert len(gql_tables[bronze_pdr_predictions_table_name].df) == 8
+    assert len(gql_tables[bronze_pdr_predictions_table_name].df) == 9
 
     # Update silver predictions
     get_silver_pdr_predictions_table(gql_tables, ppss)
-    print(gql_tables[silver_pdr_predictions_table_name].df)
 
-     # verify predictions for user=0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd , contract=0x30f1c55e72fe105e4a1fbecdff3145fc14177695
+    # verify predictions for user=0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd , contract=0x30f1c55e72fe105e4a1fbecdff3145fc14177695
     selected_user_prediction = (
         gql_tables[silver_pdr_predictions_table_name]
         .df.sort("timestamp", descending=True)
@@ -174,4 +191,38 @@ def test_silver_bronze_pdr_predictions(
             & (pl.col("contract") == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695")
         )[0]
     )
-    assert selected_user_prediction["sum_revenue"][0] == 80
+    assert selected_user_prediction["sum_revenue"][0] == 21.90000023
+    assert selected_user_prediction["count_wins"][0] == 4
+
+    # Insert new prediction to bronze table
+    row = {
+        "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "slot_id": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700",
+        "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",  # f"{contract}"
+        "slot": 1699302700,
+        "user": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "pair": "ETH/USDT",
+        "timeframe": "5m",
+        "source": "binance",
+        "predvalue": False,
+        "truevalue": False,
+        "stake": 30,
+        "payout": 30,
+        "timestamp": 1699302700000,
+        "last_event_timestamp": 1699302750000,
+    }
+    new_row_df = pl.DataFrame(row, bronze_pdr_predictions_schema)
+    gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df)
+
+    # Update silver predictions
+    get_silver_pdr_predictions_table(gql_tables, ppss)
+    print(gql_tables[silver_pdr_predictions_table_name].df)
+
+    # Check that new prediction didn't change the lengts of the table
+    assert len(gql_tables[silver_pdr_predictions_table_name].df) == 9
+
+    assert gql_tables[silver_pdr_predictions_table_name].df[7]["sum_revenue"][0] == 40.9
+    assert (
+        gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue"][0]
+        == 51.900000229999996
+    )

@@ -113,7 +113,7 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699302600,  # slot # Nov 06 2023 19:00:00 GMT
+        1699302500,  # slot # Nov 06 2023 19:00:00 GMT
         "ETH/USDT",  # token
         1699302601,  # timestamp
         7.4400000000000004,  # payout
