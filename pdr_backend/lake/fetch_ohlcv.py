@@ -131,7 +131,7 @@ def safe_fetch_ohlcv_dydx(
                 ohlcv_data.append(ohlcv_tuple)
             return ohlcv_data
 
-        elif "errors" in data:
+        if "errors" in data:
             errors = []
             for error in data["errors"]:
                 error_tuples = tuple(error.items())
