@@ -12,6 +12,7 @@ install_requirements = [
     "bumpversion",
     "ccxt>=4.1.59",
     "coverage",
+    "duckdb",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.0",
