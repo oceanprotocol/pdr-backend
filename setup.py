@@ -21,7 +21,7 @@ install_requirements = [
     "matplotlib==3.7.5",
     "mypy==1.8.0",
     "numpy==1.26.4",
-    "pandas==2.0.3",
+    "pandas==2.2.1",
     "pathlib",
     "polars==0.20.10",
     "polars[timezone]",
