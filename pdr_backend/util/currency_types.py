@@ -2,7 +2,7 @@ import logging
 from typing import Union
 from enforce_typing import enforce_types
 
-logger = logging.getLogger("curreny_types")
+logger = logging.getLogger("currency_types")
 
 
 @enforce_types
