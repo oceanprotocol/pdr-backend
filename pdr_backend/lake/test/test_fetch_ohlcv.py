@@ -1,11 +1,11 @@
-import ccxt
 from datetime import datetime
-import pytest
-from enforce_typing import enforce_types
 from typing import Any, Dict, List, Union
-import requests_mock
 
+import ccxt
+from enforce_typing import enforce_types
 import polars as pl
+import pytest
+import requests_mock
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import (
