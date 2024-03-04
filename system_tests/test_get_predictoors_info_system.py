@@ -13,6 +13,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.currency_types import Wei
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
@@ -34,7 +35,7 @@ def test_get_predictoors_info_system(
     mock_web3_pp.owner_addrs = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
     mock_token = MagicMock()
-    mock_token.balanceOf.return_value = int(5e18)
+    mock_token.balanceOf.return_value = Wei(int(5e18))
     mock_token.transfer.return_value = True
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"

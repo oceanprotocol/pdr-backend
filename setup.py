@@ -31,6 +31,7 @@ install_requirements = [
     "pytest-env",
     "pyyaml",
     "requests",
+    "requests-mock",
     "scikit-learn",
     "statsmodels",
     "types-pyYAML",

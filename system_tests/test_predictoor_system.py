@@ -23,6 +23,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
+    mock_web3_config.owner = "0xowner"
     mock_web3_config.get_block.return_value = {"timestamp": 100}
     mock_web3_pp.web3_config = mock_web3_config
 

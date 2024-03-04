@@ -81,6 +81,29 @@ def test_ut_to_timestr():
 
 
 @enforce_types
+def test_ut_to_iso_timestr():
+    # ensure it returns a str
+    assert isinstance(UnixTimeMs(0).to_iso_timestr(), str)
+    assert isinstance(UnixTimeMs(1).to_iso_timestr(), str)
+    assert isinstance(UnixTimeMs(1648576500000).to_iso_timestr(), str)
+    assert isinstance(UnixTimeMs(1648576500001).to_iso_timestr(), str)
+
+    # unix start time (Jan 1 1970), with increasing levels of precision
+    assert UnixTimeMs(0).to_iso_timestr() == "1970-01-01T00:00:00.000Z"
+    assert UnixTimeMs(1).to_iso_timestr() == "1970-01-01T00:00:00.001Z"
+    assert UnixTimeMs(123).to_iso_timestr() == "1970-01-01T00:00:00.123Z"
+    assert UnixTimeMs(1000).to_iso_timestr() == "1970-01-01T00:00:01.000Z"
+    assert UnixTimeMs(1234).to_iso_timestr() == "1970-01-01T00:00:01.234Z"
+    assert UnixTimeMs(10002).to_iso_timestr() == "1970-01-01T00:00:10.002Z"
+    assert UnixTimeMs(12345).to_iso_timestr() == "1970-01-01T00:00:12.345Z"
+
+    # modern times
+    assert UnixTimeMs(1648512000000).to_iso_timestr() == "2022-03-29T00:00:00.000Z"
+    assert UnixTimeMs(1648576500000).to_iso_timestr() == "2022-03-29T17:55:00.000Z"
+    assert UnixTimeMs(1648576512345).to_iso_timestr() == "2022-03-29T17:55:12.345Z"
+
+
+@enforce_types
 def test_dt_to_ut_and_back():
     dt = datetime.datetime.strptime("2022-03-29_17:55", "%Y-%m-%d_%H:%M")
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone

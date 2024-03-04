@@ -4,7 +4,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.erc721_factory import Erc721Factory
-from pdr_backend.util.mathutil import to_wei
+from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
@@ -15,8 +15,8 @@ def test_Erc721Factory(web3_pp, web3_config):
     ocean_address = web3_pp.OCEAN_address
     fre_address = web3_pp.get_address("FixedPrice")
 
-    rate = 3
-    cut = 0.2
+    rate = Eth(3).to_wei().amt_wei
+    cut = Eth(0.2).to_wei().amt_wei
 
     nft_data = ("TestToken", "TT", 1, "", True, web3_config.owner)
     erc_data = (
@@ -43,8 +43,8 @@ def test_Erc721Factory(web3_pp, web3_config):
         [
             18,
             18,
-            to_wei(rate),
-            to_wei(cut),
+            rate,
+            cut,
             1,
         ],
     )

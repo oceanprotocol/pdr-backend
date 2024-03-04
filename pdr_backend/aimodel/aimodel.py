@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from enforce_typing import enforce_types
 import numpy as np
 
@@ -26,7 +24,6 @@ class Aimodel:
         #   inconsistent with predict_proba() for svc and maybe others.
         # Rather, draw on the probability output to guarantee consistency.
         yptrue = self.predict_ptrue(X)
-        print(f"in predict_true(); yptrue[:10] = {yptrue[:10]}")
         ytrue = yptrue > 0.5
         return ytrue
 
