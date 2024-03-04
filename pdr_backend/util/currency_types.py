@@ -87,6 +87,9 @@ class Eth(EthUnit):
     def to_eth(self) -> "Eth":
         return self
 
+    @property
+    def amt_eth(self) -> float:
+        return self.amount
 
 @enforce_types
 class Wei(EthUnit):
@@ -101,3 +104,7 @@ class Wei(EthUnit):
 
     def str_with_wei(self) -> str:
         return f"{self.to_eth().amount} eth ({self.amount} wei)"
+
+    @property
+    def amt_wei(self) -> float:
+        return self.amount
