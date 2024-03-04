@@ -42,37 +42,24 @@ class EthUnit:
         return False
 
     def __add__(self, other) -> "EthUnit":
-        if isinstance(other, EthUnit):
-            if isinstance(self, Eth):
-                return Eth(self.amt_eth + other.to_eth().amt_eth)
-            elif isinstance(self, Wei):
-                return Wei(self.amt_wei + other.to_wei().amt_wei)
+        if type(self) is type(other):
+            return self.__class__(self.amount + other.amount)
         return NotImplemented
 
     def __sub__(self, other) -> "EthUnit":
-        if isinstance(other, EthUnit):
-            if isinstance(self, Eth):
-                return Eth(self.amt_eth - other.to_eth().amt_eth)
-            elif isinstance(self, Wei):
-                return Wei(self.amt_wei - other.to_wei().amt_wei)
+        if type(self) is type(other):
+            return self.__class__(self.amount - other.amount)
         return NotImplemented
 
     def __truediv__(self, other) -> "EthUnit":
-        if isinstance(other, EthUnit):
-            if isinstance(self, Eth) and other.amt_eth != 0:
-                return Eth(self.amt_eth / other.to_eth().amt_eth)
-            elif isinstance(self, Wei) and other.to_wei().amt_wei != 0:
-                return Wei(self.amt_wei / other.to_wei().amt_wei)
+        if type(self) is type(other) and other.amount != 0:
+            return self.__class__(self.amount / other.amount)
         return NotImplemented
 
     def __mul__(self, other) -> "EthUnit":
-        if isinstance(other, EthUnit):
-            if isinstance(self, Eth):
-                return Eth(self.amt_eth * other.to_eth().amt_eth)
-            elif isinstance(self, Wei):
-                return Wei(self.amt_wei * other.to_wei().amt_wei)
+        if type(self) is type(other):
+            return self.__class__(self.amount * other.amount)
         return NotImplemented
-
 
     def __pos__(self) -> "EthUnit":
         return self.__class__(+self.amount)
