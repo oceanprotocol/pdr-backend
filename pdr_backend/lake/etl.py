@@ -92,6 +92,5 @@ class ETL:
             )
             self.tables[bronze_pdr_predictions_table_name] = table
 
-        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)        
+        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
         table.append_to_sources(table.df)
-
