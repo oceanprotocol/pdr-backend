@@ -69,8 +69,8 @@ class Table:
         Append the data from the DataFrame object into the CSV file
         It only saves the new data that has been fetched
         """
-        self.csv_data_store.append(self.table_name, data, schema=self.df_schema)
-        n_new = self.df.shape[0]
+        self.csv_data_store.write(self.table_name, data, schema=self.df_schema)
+        n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
         )
@@ -133,10 +133,11 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self.df = final_df.clone()
-                self.save()
+                self._append_to_csv(final_df)
+                # self._append_to_db()
+
                 print(f"Saved {len(final_df)} records to file while fetching")
-                final_df = pl.DataFrame()
+                final_df = pl.DataFrame([], schema=self.df_schema)
                 save_backoff_count = 0
 
             # avoids doing next fetch if we've reached the end
@@ -145,8 +146,9 @@ class Table:
             pagination_offset += pagination_limit
 
         if len(final_df) > 0:
-            self.df = final_df.clone()
-            self.save()
+            self._append_to_csv(final_df)
+            # self._append_to_db()
+
             print(f"Saved {len(final_df)} records to file while fetching")
 
     @enforce_types
