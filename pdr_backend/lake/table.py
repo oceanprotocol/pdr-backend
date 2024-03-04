@@ -2,6 +2,8 @@ import logging
 import os
 from typing import Dict, Callable
 import polars as pl
+from polars.type_aliases import SchemaDict
+
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
@@ -9,17 +11,19 @@ from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 logger = logging.getLogger("table")
 
 
 @enforce_types
 class Table:
-    def __init__(self, table_name: str, df_schema: object, ppss: PPSS):
+    def __init__(self, table_name: str, df_schema: SchemaDict, ppss: PPSS):
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        self.df = pl.DataFrame()
+        self.df = pl.DataFrame([], schema=df_schema)
+        print("self.df", self.df)
         self.load()
 
     @enforce_types
@@ -27,32 +31,19 @@ class Table:
         """
         Read the data from the Parquet file into a DataFrame object
         """
-        filename = self._parquet_filename()
+        print(f"Loading data for {self.table_name}")
+        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
-
-        # load all data from file
-        # check if file exists
-        # if file doesn't exist, return an empty dataframe with the expected schema
-        if os.path.exists(filename):
-            logger.info("Loading parquet for %s", self.table_name)
-            df = pl.read_parquet(filename)
-            df = df.filter(
-                (pl.col("timestamp") >= st_ut) & (pl.col("timestamp") <= fin_ut)
-            )
-        else:
-            logger.info("Create initial df for %s", self.table_name)
-            df = pl.DataFrame(schema=self.df_schema)
-
-        # save data frame in memory
-        self.df = df
+        self.df = self.csv_data_store.read(
+            self.table_name, st_ut, fin_ut, schema=self.df_schema
+        )
 
     @enforce_types
     def save(self):
         """
-        Get the data from subgraph and write it to Parquet file
-        write to parquet file
-        parquet only supports appending via the pyarrow engine
+        Save the data from the DataFrame object into the CSV file
+        It only saves the new data that has been fetched
         """
 
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
@@ -63,22 +54,26 @@ class Table:
                 <= self.df.tail(1)["timestamp"].to_list()[0]
             )
 
-        filename = self._parquet_filename()
+        self.df = self.df.filter(pl.struct("ID").is_unique())
 
-        if os.path.exists(filename):  # "append" existing file
-            cur_df = pl.read_parquet(filename)
-            self.df = pl.concat([cur_df, self.df])
+        if len(self.df) == 0:
+            print(f"  No new data to save for {self.table_name}")
+            return
 
-            # drop duplicates
-            self.df = self.df.filter(pl.struct("ID").is_unique())
-            self.df.write_parquet(filename)
-            n_new = self.df.shape[0] - cur_df.shape[0]
-            print(f"  Just appended {n_new} df rows to file {filename}")
-        else:  # write new file
-            self.df.write_parquet(filename)
-            print(
-                f"  Just saved df with {self.df.shape[0]} rows to new file {filename}"
-            )
+        self._append_to_csv(self.df)
+
+        self.df = pl.DataFrame([], schema=self.df_schema)
+
+    def _append_to_csv(self, data: pl.DataFrame):
+        """
+        Append the data from the DataFrame object into the CSV file
+        It only saves the new data that has been fetched
+        """
+        self.csv_data_store.write(self.table_name, data, schema=self.df_schema)
+        n_new = data.shape[0]
+        print(
+            f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
+        )
 
     @enforce_types
     def get_pdr_df(
@@ -97,6 +92,7 @@ class Table:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
+        print(f"Fetching data for {self.table_name}")
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -127,7 +123,7 @@ class Table:
             if len(final_df) == 0:
                 final_df = df
             else:
-                final_df = pl.concat([final_df, df])
+                final_df = final_df.vstack(df)
 
             save_backoff_count += len(df)
 
@@ -137,16 +133,23 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self.df = final_df
-                self.save()
+                self._append_to_csv(final_df)
+                # self._append_to_db()
+
                 print(f"Saved {len(final_df)} records to file while fetching")
-                final_df = pl.DataFrame()
+                final_df = pl.DataFrame([], schema=self.df_schema)
                 save_backoff_count = 0
 
             # avoids doing next fetch if we've reached the end
             if len(df) < pagination_limit:
                 break
             pagination_offset += pagination_limit
+
+        if len(final_df) > 0:
+            self._append_to_csv(final_df)
+            # self._append_to_db()
+
+            print(f"Saved {len(final_df)} records to file while fetching")
 
     @enforce_types
     def _parquet_filename(self) -> str:
