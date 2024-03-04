@@ -60,9 +60,7 @@ class CSVDataStore:
             end_time: str - end time of the data
         """
 
-        file_name = self._create_file_name(
-            dataset_identifier, start_time, end_time
-        )
+        file_name = self._create_file_name(dataset_identifier, start_time, end_time)
         folder_path = self._get_folder_path(dataset_identifier)
         return os.path.join(folder_path, file_name)
 
@@ -113,7 +111,9 @@ class CSVDataStore:
                 last_file_data.write_csv(last_file_path)
                 # change the name of the file to reflect the new row count
                 new_file_path = self._create_file_path(
-                    dataset_identifier, t_start_time, t_end_time if len(data) >= remaining_rows else None
+                    dataset_identifier,
+                    t_start_time,
+                    t_end_time if len(data) >= remaining_rows else None,
                 )
 
                 print("new_file_path", new_file_path)
@@ -122,7 +122,8 @@ class CSVDataStore:
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
 
         chunks = [
-            data.slice(i, min(max_row_count, len(data) - i)) for i in range(0, len(data), max_row_count)
+            data.slice(i, min(max_row_count, len(data) - i))
+            for i in range(0, len(data), max_row_count)
         ]
 
         for i, chunk in enumerate(chunks):
@@ -131,7 +132,7 @@ class CSVDataStore:
             file_path = self._create_file_path(
                 dataset_identifier,
                 start_time,
-                end_time if len(chunk) >= max_row_count else None
+                end_time if len(chunk) >= max_row_count else None,
             )
             chunk.write_csv(file_path)
 
@@ -154,8 +155,8 @@ class CSVDataStore:
         @returns:
             int - end time from the file_path
         """
-        return int(file_path.split("/")[-1].split("_")[4].replace('.csv', ''))
-    
+        return int(file_path.split("/")[-1].split("_")[4].replace(".csv", ""))
+
     def _get_from_value(self, file_path: str) -> int:
         """
         Returns the start time from the given file_path.
@@ -191,8 +192,10 @@ class CSVDataStore:
             # then, split the filename by "_" and take the 4th and 5th elements
             # then, convert them to int and check if they are in the range
             if self._get_from_value(file_path) >= int(start_time)
-            and (self._get_to_value(file_path) <= int(end_time)
-                 or self._get_to_value(file_path) == 0)
+            and (
+                self._get_to_value(file_path) <= int(end_time)
+                or self._get_to_value(file_path) == 0
+            )
         ]
 
         return file_paths

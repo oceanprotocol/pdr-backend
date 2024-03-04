@@ -76,6 +76,7 @@ def test_create_file_path_without_endtime(tmpdir):
     file_path = manager._create_file_path("test", 1, None)
     assert file_path == f"{tmpdir}/test/test_from_0000000001_to_.csv"
 
+
 def test_read(tmpdir):
     manager = _get_test_manager(tmpdir)
     file_path = manager._create_file_path("test", 1, 2)
@@ -149,6 +150,7 @@ def test_write(tmpdir):
 
     _clean_up(tmpdir)
 
+
 def test_write_1000_rows(tmpdir):
     _clean_up(tmpdir)
 
@@ -162,11 +164,11 @@ def test_write_1000_rows(tmpdir):
     )
     manager.write("test", data)
 
-    folder_path = manager._get_folder_path("test")
+    #folder_path = manager._get_folder_path("test")
 
     # get folder including files
     # folder = os.listdir(folder_path)
-    #print folder files
+    # print folder files
     # print("folder---", folder)
 
     file_name = manager._create_file_path("test", 0, 999)
@@ -178,6 +180,7 @@ def test_write_1000_rows(tmpdir):
     assert data["timestamp"].to_list() == list(range(1000))
 
     _clean_up(tmpdir)
+
 
 def test_write_append(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -198,18 +201,21 @@ def test_write_append(tmpdir):
 
     _clean_up(tmpdir)
 
+
 def test_fill_with_zero():
     manager = CSVDataStore("test")
     assert manager._fill_with_zero(1, 10) == "0000000001"
     assert manager._fill_with_zero(100) == "0000000100"
     assert manager._fill_with_zero(1000) == "0000001000"
 
+
 def test_get_to_value():
     manager = CSVDataStore("test")
-    assert manager._get_to_value('test/test_from_0_to_0000000001.csv') == 1
-    assert manager._get_to_value('test/test_from_0_to_0000000005.csv') == 5
+    assert manager._get_to_value("test/test_from_0_to_0000000001.csv") == 1
+    assert manager._get_to_value("test/test_from_0_to_0000000005.csv") == 5
+
 
 def test_get_from_value():
     manager = CSVDataStore("test")
-    assert manager._get_from_value('test/test_from_0000000001_to_0000000001.csv') == 1
-    assert manager._get_from_value('test/test_from_0000000005_to_.csv') == 5
+    assert manager._get_from_value("test/test_from_0000000001_to_0000000001.csv") == 1
+    assert manager._get_from_value("test/test_from_0000000005_to_.csv") == 5
