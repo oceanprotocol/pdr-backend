@@ -17,7 +17,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
+def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpdir):
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
@@ -42,7 +42,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -72,7 +72,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
             "get_traction_info",
             "2023-12-01",
             "2023-12-31",
-            "./dir",
+            str(tmpdir),
             "ppss.yaml",
             "sapphire-testnet",
         ]
