@@ -1,4 +1,5 @@
 import ccxt
+from datetime import datetime
 import pytest
 from enforce_typing import enforce_types
 from typing import Any, Dict, List, Union
@@ -41,7 +42,7 @@ mock_dydx_response = {
             "baseTokenVolume": "23.6064",
             "usdVolume": "1458183.4133",
             "trades": 284,
-            "startingOpenInterest": "504.4262"
+            "startingOpenInterest": "504.4262",
         }
     ]
 }
@@ -52,7 +53,7 @@ mock_bad_token_dydx_response_1 = {
             "value": "BTC-ETH",
             "msg": "ticker must be a valid ticker (BTC-USD, etc)",
             "param": "ticker",
-            "location": "params"
+            "location": "params",
         }
     ]
 }
@@ -63,7 +64,7 @@ mock_bad_token_dydx_response_2 = {
             "value": "RANDOMTOKEN-USD",
             "msg": "ticker must be a valid ticker (BTC-USD, etc)",
             "param": "ticker",
-            "location": "params"
+            "location": "params",
         }
     ]
 }
@@ -74,14 +75,14 @@ mock_bad_timeframe_dydx_response = {
             "value": "5m",
             "msg": "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
             "param": "resolution",
-            "location": "params"
+            "location": "params",
         }
     ]
 }
 
-mock_bad_date_dydx_response = {
+mock_bad_date_dydx_response: Dict[str, List[Any]] = {
     "candles": []
-}
+}  # Added variable annotation to resolve mypy inferred typing issue
 
 mock_bad_limit_dydx_response = {
     "errors": [
@@ -89,10 +90,11 @@ mock_bad_limit_dydx_response = {
             "value": "100000",
             "msg": "limit must be a positive integer that is not greater than max: 100",
             "param": "limit",
-            "location": "params"
+            "location": "params",
         }
     ]
 }
+
 
 @enforce_types
 def test_clean_raw_ohlcv():
@@ -184,19 +186,12 @@ def test_safe_fetch_ohlcv_dydx():
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
-        assert result is not None and "candles" in result
-        assert (
-            list(result["candles"][0].keys())[0] == "startedAt"
-            and result["candles"][0]["startedAt"] == "2024-02-28T16:50:00.000Z"
-        )
-        assert (
-            list(result["candles"][0].keys())[4] == "high"
-            and result["candles"][0]["high"] == "61848"
-        )
-        assert (
-            list(result["candles"][0].keys())[7] == "baseTokenVolume"
-            and result["candles"][0]["baseTokenVolume"] == "23.6064"
-        )
+        assert result[0][0] == 1709157000000, "Timestamp does not match"
+        assert result[0][1] == 61840, "Open value does not match"
+        assert result[0][2] == 61848, "High value does not match"
+        assert result[0][3] == 61687, "Low value does not match"
+        assert result[0][4] == 61800, "Close value does not match"
+        assert result[0][5] == 23.6064, "Volume does not match"
 
     # bad token test 1 - pair must end in "-USD"
     with requests_mock.Mocker() as m:
@@ -213,11 +208,7 @@ def test_safe_fetch_ohlcv_dydx():
             1,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result is not None and "errors" in result
-        assert (
-            list(result["errors"][0].keys())[1] == "msg"
-            and result["errors"][0]["msg"] == "ticker must be a valid ticker (BTC-USD, etc)"
-        )
+        assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
 
     # bad token test 2 - token must exist
     with requests_mock.Mocker() as m:
@@ -234,11 +225,7 @@ def test_safe_fetch_ohlcv_dydx():
             1,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result is not None and "errors" in result
-        assert (
-            list(result["errors"][0].keys())[1] == "msg"
-            and result["errors"][0]["msg"] == "ticker must be a valid ticker (BTC-USD, etc)"
-        )
+        assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
 
     # bad timeframe test
     with requests_mock.Mocker() as m:
@@ -255,10 +242,9 @@ def test_safe_fetch_ohlcv_dydx():
             1,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result is not None and "errors" in result
-        assert (
-            list(result["errors"][0].keys())[1] == "msg"
-            and result["errors"][0]["msg"] == "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY"
+        assert result[0][1] == (
+            "msg",
+            "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
         )
 
     # bad date test
@@ -276,8 +262,7 @@ def test_safe_fetch_ohlcv_dydx():
             1,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result is not None and "candles" in result
-        assert result["candles"] == []
+        assert result == []
 
     # bad limit test
     with requests_mock.Mocker() as m:
@@ -294,11 +279,11 @@ def test_safe_fetch_ohlcv_dydx():
             100000,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result is not None and "errors" in result
-        assert (
-            list(result["errors"][0].keys())[1] == "msg"
-            and result["errors"][0]["msg"] == "limit must be a positive integer that is not greater than max: 100"
+        assert result[0][1] == (
+            "msg",
+            "limit must be a positive integer that is not greater than max: 100",
         )
+
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):

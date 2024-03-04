@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from typing import List, Union
 
@@ -87,10 +88,60 @@ def safe_fetch_ohlcv_dydx(
             return None
         sinceIso = since.to_iso_timestr()
         headers = {"Accept": "application/json"}
-        baseURL = 'https://indexer.dydx.trade/v4'
-        response = requests.get(f'{baseURL}/candles/perpetualMarkets/{symbol}', params={'resolution': timeframe, 'fromISO': sinceIso,'limit': str(limit)}, headers = headers)
+        baseURL = "https://indexer.dydx.trade/v4"
+        response = requests.get(
+            f"{baseURL}/candles/perpetualMarkets/{symbol}",
+            params={"resolution": timeframe, "fromISO": sinceIso, "limit": str(limit)},
+            headers=headers,
+        )
         data = response.json()
-        return data
+
+        if "candles" in data:
+            ohlcv_data = []
+            for candle in data["candles"]:
+                dt = datetime.strptime(
+                    candle["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )  # Convert ISO date to timestamp
+                timestamp = int(dt.timestamp() * 1000)
+                open_price = (
+                    float(candle["open"]) if candle["open"] is not None else None
+                )
+                high_price = (
+                    float(candle["high"]) if candle["high"] is not None else None
+                )
+                low_price = float(candle["low"]) if candle["low"] is not None else None
+                close_price = (
+                    float(candle["close"]) if candle["close"] is not None else None
+                )
+                volume = (
+                    float(candle["baseTokenVolume"])
+                    if candle["baseTokenVolume"] is not None
+                    else None
+                )
+                # Create tuple from the data & append to list
+                ohlcv_tuple = (
+                    timestamp,
+                    open_price,
+                    high_price,
+                    low_price,
+                    close_price,
+                    volume,
+                )
+                ohlcv_data.append(ohlcv_tuple)
+            return ohlcv_data
+
+        elif "errors" in data:
+            errors = []
+            for error in data["errors"]:
+                error_tuples = tuple(error.items())
+                errors.append(error_tuples)
+            print("No candle data found. Encountered the following error: ", errors)
+            return errors
+
+        else:
+            print("No candle data found. Dydx response is: ", data)
+            return None
+
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
