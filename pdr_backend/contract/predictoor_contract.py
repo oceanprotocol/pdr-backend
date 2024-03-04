@@ -279,9 +279,10 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         # Check allowance first, only approve if needed
         allowance = self.last_allowance.get(self.config.owner, Wei(0))
         if allowance <= Wei(0):
-            self.last_allowance[self.config.owner] = self.token.allowance(
+            allowance_wei = self.token.allowance(
                 self.config.owner, self.contract_address
             )
+            self.last_allowance[self.config.owner] = Wei(allowance_wei)
         if allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, Wei(MAX_UINT))
