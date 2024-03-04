@@ -85,9 +85,6 @@ class Eth(EthUnit):
 
 @enforce_types
 class Wei(EthUnit):
-    def __init__(self, amt_wei: Union[int, float]):
-        super().__init__(amt_wei)
-
     def to_eth(self) -> Eth:
         return Eth(self.amount / 1e18)
 
