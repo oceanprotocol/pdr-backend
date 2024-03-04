@@ -30,7 +30,7 @@ class CSVDataStore:
         return f"{(length - len(number_str)) * '0'}{number_str}"
 
     def _create_file_name(
-        self, dataset_identifier: str, start_time: int, end_time: int, row_count: int
+        self, dataset_identifier: str, start_time: int, end_time: Optional[int]
     ) -> str:
         """
         Creates a file name using the given dataset_identifier,
@@ -39,28 +39,29 @@ class CSVDataStore:
             dataset_identifier: str - identifier of the dataset
             start_time: int - start time of the data TIMESTAMP
             end_time: int - end time of the data TIMESTAMP
-            row_count: int - number of rows in the data
         """
         start_time_str = self._fill_with_zero(start_time)
-        end_time_str = self._fill_with_zero(end_time)
 
-        return f"{dataset_identifier}_from_{start_time_str}_to_{end_time_str}_{row_count}.csv"
+        start_phrase = f"_from_{start_time_str}"
+
+        end_phrase = f"_to_{self._fill_with_zero(end_time)}" if end_time else "_to_"
+
+        return f"{dataset_identifier}{start_phrase}{end_phrase}.csv"
 
     def _create_file_path(
-        self, dataset_identifier: str, start_time: int, end_time: int, row_count: int
+        self, dataset_identifier: str, start_time: int, end_time: Optional[int]
     ) -> str:
         """
         Creates the file path for the given dataset_identifier,
-        start_time, end_time, and row_count.
+        start_time, end_time.
         @args:
             dataset_identifier: str - identifier of the dataset
             start_time: str - start time of the data
             end_time: str - end time of the data
-            row_count: int - number of rows in the data
         """
 
         file_name = self._create_file_name(
-            dataset_identifier, start_time, end_time, row_count
+            dataset_identifier, start_time, end_time
         )
         folder_path = self._get_folder_path(dataset_identifier)
         return os.path.join(folder_path, file_name)
@@ -89,10 +90,11 @@ class CSVDataStore:
             dataset_identifier: str - The dataset identifier
         """
 
+        max_row_count = 1000
         last_file_row_count = self._get_last_file_row_count(dataset_identifier)
         if last_file_row_count is not None:
-            if last_file_row_count < 1000:
-                remaining_rows = 1000 - last_file_row_count
+            if last_file_row_count < max_row_count:
+                remaining_rows = max_row_count - last_file_row_count
 
                 # get the first remaining_rows rows
                 remaining_rows = min(remaining_rows, len(data))
@@ -111,7 +113,7 @@ class CSVDataStore:
                 last_file_data.write_csv(last_file_path)
                 # change the name of the file to reflect the new row count
                 new_file_path = self._create_file_path(
-                    dataset_identifier, t_start_time, t_end_time, len(last_file_data)
+                    dataset_identifier, t_start_time, t_end_time if len(data) >= remaining_rows else None
                 )
 
                 print("new_file_path", new_file_path)
@@ -120,14 +122,16 @@ class CSVDataStore:
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
 
         chunks = [
-            data.slice(i, min(1000, len(data) - i)) for i in range(0, len(data), 1000)
+            data.slice(i, min(max_row_count, len(data) - i)) for i in range(0, len(data), max_row_count)
         ]
 
         for i, chunk in enumerate(chunks):
             start_time = int(chunk["timestamp"][0])
             end_time = int(chunk["timestamp"][-1])
             file_path = self._create_file_path(
-                dataset_identifier, start_time, end_time, len(chunk)
+                dataset_identifier,
+                start_time,
+                end_time if len(chunk) >= max_row_count else None
             )
             chunk.write_csv(file_path)
 
@@ -141,6 +145,26 @@ class CSVDataStore:
         """
         for data in data_list:
             self.write(dataset_identifier, data)
+
+    def _get_to_value(self, file_path: str) -> int:
+        """
+        Returns the end time from the given file_path.
+        @args:
+            file_path: str - path of the file
+        @returns:
+            int - end time from the file_path
+        """
+        return int(file_path.split("/")[-1].split("_")[4].replace('.csv', ''))
+    
+    def _get_from_value(self, file_path: str) -> int:
+        """
+        Returns the start time from the given file_path.
+        @args:
+            file_path: str - path of the file
+        @returns:
+            int - start time from the file_path
+        """
+        return int(file_path.split("/")[-1].split("_")[2])
 
     def _get_file_paths(
         self, folder_path: str, start_time: str, end_time: str
@@ -160,15 +184,15 @@ class CSVDataStore:
         file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
 
         # find files which has a higher start time and lower end time
-        print("file_paths_aaaa", file_paths)
         file_paths = [
             file_path
             for file_path in file_paths
             # firstly, take the filename from the path (/path/to/file.csv -> file.csv)
             # then, split the filename by "_" and take the 4th and 5th elements
             # then, convert them to int and check if they are in the range
-            if int(file_path.split("/")[-1].split("_")[2]) >= int(start_time)
-            and int(file_path.split("/")[-1].split("_")[4]) <= int(end_time)
+            if self._get_from_value(file_path) >= int(start_time)
+            and (self._get_to_value(file_path) <= int(end_time)
+                 or self._get_to_value(file_path) == 0)
         ]
 
         return file_paths
@@ -281,6 +305,8 @@ class CSVDataStore:
 
         last_file_path = os.path.join(folder_path, file_names[-1])
 
-        # parse the row count from the file name
-        row_count = int(last_file_path.split("_")[-1].split(".")[0])
+        # Read the last file
+        last_file = pl.read_csv(last_file_path)
+        row_count = last_file.shape[0]
+
         return row_count

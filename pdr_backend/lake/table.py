@@ -42,9 +42,8 @@ class Table:
     @enforce_types
     def save(self):
         """
-        Get the data from subgraph and write it to Parquet file
-        write to parquet file
-        parquet only supports appending via the pyarrow engine
+        Save the data from the DataFrame object into the CSV file
+        It only saves the new data that has been fetched
         """
 
         assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
@@ -55,12 +54,23 @@ class Table:
                 <= self.df.tail(1)["timestamp"].to_list()[0]
             )
 
-        cur_df = self.csv_data_store.read_all(self.table_name, schema=self.df_schema)
-
-        self.df = pl.concat([cur_df, self.df])
         self.df = self.df.filter(pl.struct("ID").is_unique())
-        self.csv_data_store.write(self.table_name, self.df, schema=self.df_schema)
-        n_new = self.df.shape[0] - cur_df.shape[0]
+
+        if len(self.df) == 0:
+            print(f"  No new data to save for {self.table_name}")
+            return
+
+        self._append_to_csv(self.df)
+
+        self.df = pl.DataFrame([], schema=self.df_schema)
+
+    def _append_to_csv(self, data: pl.DataFrame):
+        """
+        Append the data from the DataFrame object into the CSV file
+        It only saves the new data that has been fetched
+        """
+        self.csv_data_store.append(self.table_name, data, schema=self.df_schema)
+        n_new = self.df.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
         )

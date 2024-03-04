@@ -26,17 +26,17 @@ def test_get_folder_path(tmpdir):
 
 def test_create_file_name(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_name = manager._create_file_name("test", 1707030362, 1709060200, 1000)
-    print("file_name", file_name)
-    assert file_name == "test_from_1707030362_to_1709060200_1000.csv"
+    file_name = manager._create_file_name("test", 1707030362, 1709060200)
+    print("file_name---", file_name)
+    assert file_name == "test_from_1707030362_to_1709060200.csv"
 
 
 def test_get_file_paths(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_name_1 = manager._create_file_name("test", 0, 20, 20)
-    file_name_2 = manager._create_file_name("test", 21, 40, 20)
-    file_name_3 = manager._create_file_name("test", 41, 60, 20)
-    file_name_4 = manager._create_file_name("test", 61, 80, 20)
+    file_name_1 = manager._create_file_name("test", 0, 20)
+    file_name_2 = manager._create_file_name("test", 21, 40)
+    file_name_3 = manager._create_file_name("test", 41, 60)
+    file_name_4 = manager._create_file_name("test", 61, 80)
 
     files = [file_name_1, file_name_2, file_name_3, file_name_4]
 
@@ -67,13 +67,18 @@ def test_get_file_paths(tmpdir):
 
 def test_create_file_path(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_path = manager._create_file_path("test", 1, 2, 2)
-    assert file_path == f"{tmpdir}/test/test_from_0000000001_to_0000000002_2.csv"
+    file_path = manager._create_file_path("test", 1, 2)
+    assert file_path == f"{tmpdir}/test/test_from_0000000001_to_0000000002.csv"
 
+
+def test_create_file_path_without_endtime(tmpdir):
+    manager = _get_test_manager(tmpdir)
+    file_path = manager._create_file_path("test", 1, None)
+    assert file_path == f"{tmpdir}/test/test_from_0000000001_to_.csv"
 
 def test_read(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_path = manager._create_file_path("test", 1, 2, 2)
+    file_path = manager._create_file_path("test", 1, 2)
 
     with open(file_path, "w") as file:
         file.write("a,b,c\n1,2,3\n4,5,6")
@@ -87,8 +92,8 @@ def test_read(tmpdir):
 def test_read_all(tmpdir):
     manager = _get_test_manager(tmpdir)
 
-    file_path_1 = manager._create_file_path("test", 0, 20, 2)
-    file_path_2 = manager._create_file_path("test", 21, 41, 2)
+    file_path_1 = manager._create_file_path("test", 0, 20)
+    file_path_2 = manager._create_file_path("test", 21, 41)
 
     with open(file_path_1, "w") as file:
         file.write("a,b,c\n1,2,3\n4,5,6")
@@ -106,10 +111,10 @@ def test_read_all(tmpdir):
 
 def test_get_last_file_path(tmpdir):
     manager = _get_test_manager(tmpdir)
-    file_path_1 = manager._create_file_path("test", 0, 20, 2)
-    file_path_2 = manager._create_file_path("test", 21, 41, 2)
-    file_path_3 = manager._create_file_path("test", 42, 62, 2)
-    file_path_4 = manager._create_file_path("test", 63, 83, 2)
+    file_path_1 = manager._create_file_path("test", 0, 20)
+    file_path_2 = manager._create_file_path("test", 21, 41)
+    file_path_3 = manager._create_file_path("test", 42, 62)
+    file_path_4 = manager._create_file_path("test", 63, 83)
 
     files = [file_path_1, file_path_2, file_path_3, file_path_4]
 
@@ -134,7 +139,7 @@ def test_write(tmpdir):
     manager = _get_test_manager(tmpdir)
     data = pl.DataFrame({"a": [1, 4], "b": [2, 5], "timestamp": [3, 6]})
     manager.write("test", data)
-    file_name = manager._create_file_path("test", 3, 6, 2)
+    file_name = manager._create_file_path("test", 3, None)
 
     data = pl.read_csv(file_name)
 
@@ -144,6 +149,35 @@ def test_write(tmpdir):
 
     _clean_up(tmpdir)
 
+def test_write_1000_rows(tmpdir):
+    _clean_up(tmpdir)
+
+    manager = _get_test_manager(tmpdir)
+    data = pl.DataFrame(
+        {
+            "a": list(range(1000)),
+            "b": list(range(1000)),
+            "timestamp": list(range(1000)),
+        }
+    )
+    manager.write("test", data)
+
+    folder_path = manager._get_folder_path("test")
+
+    # get folder including files
+    # folder = os.listdir(folder_path)
+    #print folder files
+    # print("folder---", folder)
+
+    file_name = manager._create_file_path("test", 0, 999)
+
+    data = pl.read_csv(file_name)
+
+    assert data["a"].to_list() == list(range(1000))
+    assert data["b"].to_list() == list(range(1000))
+    assert data["timestamp"].to_list() == list(range(1000))
+
+    _clean_up(tmpdir)
 
 def test_write_append(tmpdir):
     manager = _get_test_manager(tmpdir)
@@ -154,7 +188,7 @@ def test_write_append(tmpdir):
     data = pl.DataFrame({"a": [11, 41], "b": [21, 51], "timestamp": [31, 61]})
     manager.write("test", data)
 
-    file_name = manager._create_file_path("test", 3, 61, 4)
+    file_name = manager._create_file_path("test", 3, 61)
 
     data = pl.read_csv(file_name)
 
@@ -163,3 +197,19 @@ def test_write_append(tmpdir):
     assert data["timestamp"].to_list() == [3, 6, 31, 61]
 
     _clean_up(tmpdir)
+
+def test_fill_with_zero():
+    manager = CSVDataStore("test")
+    assert manager._fill_with_zero(1, 10) == "0000000001"
+    assert manager._fill_with_zero(100) == "0000000100"
+    assert manager._fill_with_zero(1000) == "0000001000"
+
+def test_get_to_value():
+    manager = CSVDataStore("test")
+    assert manager._get_to_value('test/test_from_0_to_0000000001.csv') == 1
+    assert manager._get_to_value('test/test_from_0_to_0000000005.csv') == 5
+
+def test_get_from_value():
+    manager = CSVDataStore("test")
+    assert manager._get_from_value('test/test_from_0000000001_to_0000000001.csv') == 1
+    assert manager._get_from_value('test/test_from_0000000005_to_.csv') == 5
