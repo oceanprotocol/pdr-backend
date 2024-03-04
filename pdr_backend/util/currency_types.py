@@ -105,6 +105,7 @@ class Eth(EthUnit):
     def amt_wei(self) -> float:
         return self.to_wei().amt_wei
 
+
 @enforce_types
 class Wei(EthUnit):
     def to_eth(self) -> Eth:
