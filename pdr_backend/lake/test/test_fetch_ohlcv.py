@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import ccxt
 from enforce_typing import enforce_types
@@ -73,7 +72,8 @@ mock_bad_timeframe_dydx_response = {
     "errors": [
         {
             "value": "5m",
-            "msg": "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
+            "msg": "resolution must be a valid Candle Resolution, "
+            "one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
             "param": "resolution",
             "location": "params",
         }
@@ -174,7 +174,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_dydx_response,
         )
         exch, symbol, timeframe, since, limit = (
@@ -197,7 +198,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-ETH?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-ETH"
+            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_bad_token_dydx_response_1,
         )
         exch, symbol, timeframe, since, limit = (
@@ -214,7 +216,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/RANDOMTOKEN-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/RANDOMTOKEN-USD"
+            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_bad_token_dydx_response_2,
         )
         exch, symbol, timeframe, since, limit = (
@@ -231,7 +234,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5m&fromISO=2024-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            "?resolution=5m&fromISO=2024-02-27T00:00:00.000Z&limit=1",
             json=mock_bad_timeframe_dydx_response,
         )
         exch, symbol, timeframe, since, limit = (
@@ -244,14 +248,16 @@ def test_safe_fetch_ohlcv_dydx():
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
         assert result[0][1] == (
             "msg",
-            "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
+            "resolution must be a valid Candle Resolution, "
+            "one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
         )
 
     # bad date test
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            "?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
             json=mock_bad_date_dydx_response,
         )
         exch, symbol, timeframe, since, limit = (
@@ -268,7 +274,8 @@ def test_safe_fetch_ohlcv_dydx():
     with requests_mock.Mocker() as m:
         m.register_uri(
             "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=100000",
+            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
+            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=100000",
             json=mock_bad_limit_dydx_response,
         )
         exch, symbol, timeframe, since, limit = (
