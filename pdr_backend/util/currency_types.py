@@ -2,146 +2,91 @@ import logging
 from typing import Union
 from enforce_typing import enforce_types
 
-logger = logging.getLogger("currency_types")
-
+logger = logging.getLogger("curreny_types")
 
 @enforce_types
-class Eth:
-    def __init__(self, amt_eth: Union[int, float]):
-        if amt_eth > 100_000_000_000:
-            logger.warning(
-                "amt_eth=%s is very large. Should it be wei instead?", amt_eth
-            )
+class EthUnit:
+    def __init__(self, amount: Union[int, float]):
+        self.amount = amount
 
-        self.amt_eth = amt_eth
+    def __str__(self) -> str:
+        return f"{self.amount}"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, EthUnit):
+            return self.to_wei().amount == other.to_wei().amount
+        return False
+
+    def __lt__(self, other) -> bool:
+        if isinstance(other, EthUnit):
+            return self.to_wei().amount < other.to_wei().amount
+        return False
+
+    def __le__(self, other) -> bool:
+        if isinstance(other, EthUnit):
+            return self.to_wei().amount <= other.to_wei().amount
+        return False
+
+    def __gt__(self, other) -> bool:
+        if isinstance(other, EthUnit):
+            return self.to_wei().amount > other.to_wei().amount
+        return False
+
+    def __ge__(self, other) -> bool:
+        if isinstance(other, EthUnit):
+            return self.to_wei().amount >= other.to_wei().amount
+        return False
+
+    def __add__(self, other) -> "EthUnit":
+        if isinstance(other, EthUnit):
+            return self.__class__(self.amount + other.to_wei().amount / 1e18)
+        return NotImplemented
+
+    def __sub__(self, other) -> "EthUnit":
+        if isinstance(other, EthUnit):
+            return self.__class__(self.amount - other.to_wei().amount / 1e18)
+        return NotImplemented
 
     def to_wei(self) -> "Wei":
-        return Wei(int(self.amt_eth * 1e18))
+        """Should be overridden by subclasses"""
+        raise NotImplementedError
 
-    def __str__(self) -> str:
-        return f"{self.amt_eth} eth"
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def __float__(self) -> float:
-        return self.amt_eth
-
-    def __lt__(self, other) -> bool:
-        if isinstance(other, Eth):
-            return self.amt_eth < other.amt_eth
-
-        return self.amt_eth < other
-
-    def __le__(self, other) -> bool:
-        if isinstance(other, Eth):
-            return self.amt_eth <= other.amt_eth
-
-        return self.amt_eth <= other
-
-    def __gt__(self, other) -> bool:
-        if isinstance(other, Eth):
-            return self.amt_eth > other.amt_eth
-
-        return self.amt_eth > other
-
-    def __sub__(self, other) -> "Eth":
-        if isinstance(other, Eth):
-            return Eth(self.amt_eth - other.amt_eth)
-
-        return Eth(self.amt_eth - other)
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, Eth):
-            return self.amt_eth == other.amt_eth
-
-        return self.amt_eth == other
-
-    def __truediv__(self, other) -> "Eth":
-        if isinstance(other, Eth):
-            return Eth(self.amt_eth / other.amt_eth)
-
-        return Eth(self.amt_eth / other)
-
-    def __mul__(self, other) -> "Eth":
-        if isinstance(other, Eth):
-            return Eth(self.amt_eth * other.amt_eth)
-
-        return Eth(self.amt_eth * other)
-
-    def __add__(self, other) -> "Eth":
-        if isinstance(other, Eth):
-            return Eth(self.amt_eth + other.amt_eth)
-
-        return Eth(self.amt_eth + other)
-
-    def __pos__(self) -> "Eth":
-        """This is the unary '+' operator"""
-        return Eth(self.amt_eth)
-
-    def __neg__(self) -> "Eth":
-        """This is the unary '-' operator"""
-        return Eth(-self.amt_eth)
-
+    def to_eth(self) -> "Eth":
+        """Should be overridden by subclasses"""
+        raise NotImplementedError
 
 @enforce_types
-class Wei:
-    def __init__(self, amt_wei: Union[int, float]):
-        self.amt_wei = amt_wei
+class Eth(EthUnit):
+    def __init__(self, amt_eth: Union[int, float]):
+        super().__init__(amt_eth)
+        if amt_eth > 100_000_000_000:
+            logger.warning("amt_eth=%s is very large. Should it be wei instead?", amt_eth)
 
-    # old from_wei
-    def to_eth(self) -> Eth:
-        return Eth(float(self.amt_wei / 1e18))
-
-    def str_with_wei(self) -> str:
-        return f"{self.to_eth().amt_eth} ({self.amt_wei} wei)"
+    def to_wei(self) -> "Wei":
+        return Wei(int(self.amount * 1e18))
 
     def __str__(self) -> str:
-        return f"{self.amt_wei} wei"
+        return f"{self.amount} eth"
 
-    def __repr__(self) -> str:
-        return self.__str__()
+    def to_eth(self) -> "Eth":
+        return self
 
-    def __lt__(self, other) -> bool:
-        if isinstance(other, Wei):
-            return self.amt_wei < other.amt_wei
+@enforce_types
+class Wei(EthUnit):
+    def __init__(self, amt_wei: Union[int, float]):
+        super().__init__(amt_wei)
 
-        return self.amt_wei < other
+    def to_eth(self) -> Eth:
+        return Eth(self.amount / 1e18)
 
-    def __gt__(self, other) -> bool:
-        if isinstance(other, Wei):
-            return self.amt_wei > other.amt_wei
+    def __str__(self) -> str:
+        return f"{self.amount} wei"
 
-        return self.amt_wei > other
+    def to_wei(self) -> "Wei":
+        return self
 
-    def __le__(self, other) -> bool:
-        if isinstance(other, Wei):
-            return self.amt_wei <= other.amt_wei
-
-        return self.amt_wei <= other
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, Wei):
-            return self.amt_wei == other.amt_wei
-
-        return self.amt_wei == other
-
-    def __add__(self, other) -> "Wei":
-        if isinstance(other, Wei):
-            return Wei(self.amt_wei + other.amt_wei)
-
-        return Wei(self.amt_wei + other)
-
-    def __sub__(self, other) -> "Wei":
-        if isinstance(other, Wei):
-            return Wei(self.amt_wei - other.amt_wei)
-
-        return Wei(self.amt_wei - other)
-
-    def __pos__(self) -> "Wei":
-        """This is the unary '+' operator"""
-        return Wei(self.amt_wei)
-
-    def __neg__(self) -> "Wei":
-        """This is the unary '-' operator"""
-        return Wei(-self.amt_wei)
+    def str_with_wei(self) -> str:
+        return f"{self.to_eth().amount} eth ({self.amount} wei)"
