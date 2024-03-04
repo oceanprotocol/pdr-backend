@@ -42,23 +42,31 @@ class EthUnit:
         return False
 
     def __add__(self, other) -> "EthUnit":
-        if type(self) is type(other):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.__class__(self.amount + other.amount)
+        elif isinstance(other, Number):
+            return self.__class__(self.amount + other)
         return NotImplemented
 
     def __sub__(self, other) -> "EthUnit":
-        if type(self) is type(other):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.__class__(self.amount - other.amount)
+        elif isinstance(other, Number):
+            return self.__class__(self.amount - other)
         return NotImplemented
 
     def __truediv__(self, other) -> "EthUnit":
-        if type(self) is type(other) and other.amount != 0:
+        if isinstance(other, EthUnit) and type(self) is type(other) and other.amount != 0:
             return self.__class__(self.amount / other.amount)
+        elif isinstance(other, Number) and other != 0:
+            return self.__class__(self.amount / other)
         return NotImplemented
 
     def __mul__(self, other) -> "EthUnit":
-        if type(self) is type(other):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.__class__(self.amount * other.amount)
+        elif isinstance(other, Number):
+            return self.__class__(self.amount * other)
         return NotImplemented
 
     def __pos__(self) -> "EthUnit":
