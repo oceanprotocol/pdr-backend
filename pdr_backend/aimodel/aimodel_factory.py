@@ -19,6 +19,7 @@ class AimodelFactory:
     def __init__(self, aimodel_ss: AimodelSS):
         self.aimodel_ss = aimodel_ss
 
+    # pylint: disable=too-many-statements
     def build(self, X: np.ndarray, ybool: np.ndarray) -> Aimodel:
         """
         @description
@@ -31,10 +32,10 @@ class AimodelFactory:
         @return
           model -- Aimodel
         """
+        ss = self.aimodel_ss
         n_True, n_False = sum(ybool), sum(np.invert(ybool))
         smallest_n = min(n_True, n_False)
-        approach = self.aimodel_ss.approach
-        do_constant = (n_True == 0) or (n_False == 0) or approach == "Constant"
+        do_constant = (smallest_n == 0) or ss.approach == "Constant"
 
         # initialize skm (sklearn model)
         if do_constant:
@@ -42,32 +43,39 @@ class AimodelFactory:
             ybool = copy.copy(ybool)
             ybool[0], ybool[1] = True, False
             skm = DummyClassifier(strategy="most_frequent")
-        elif approach == "LinearLogistic":
+        elif ss.approach == "LinearLogistic":
             skm = LogisticRegression()
-        elif approach == "LinearSVC":
+        elif ss.approach == "LinearSVC":
             skm = SVC(kernel="linear", probability=True, C=0.025)
         else:
-            raise ValueError(approach)
+            raise ValueError(ss.approach)
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if self.aimodel_ss.do_weight_recent:
+        if do_constant or ss.weight_recent == "None":
+            pass
+        elif ss.weight_recent == "10x_5x":
             n_repeat1, xrecent1, yrecent1 = 10, X[-1, :], ybool[-1]
             n_repeat2, xrecent2, yrecent2 = 5, X[-2, :], ybool[-2]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
             ybool = np.append(ybool, [yrecent1] * n_repeat1)
             ybool = np.append(ybool, [yrecent2] * n_repeat2)
+        else:
+            raise ValueError(ss.weight_recent)
 
-        # balance data: generate synthetic samples for minority class.
-        # (SMOTE = Synthetic Minority Oversampling Technique)
-        do_balance = not do_constant
-        if do_balance:
-            if smallest_n > 5:
-                resampler = SMOTE()
-            else:
-                resampler = RandomOverSampler()
-            X, ybool = resampler.fit_resample(X, ybool)
+        # balance data
+        if do_constant or ss.balance_classes == "None":
+            pass
+        elif smallest_n <= 5 or ss.balance_classes == "RandomOverSampler":
+            #  random oversampling for minority class
+            X, ybool = RandomOverSampler().fit_resample(X, ybool)
+        elif ss.balance_classes == "SMOTE":
+            #  generate synthetic samples for minority class
+            # (SMOTE = Synthetic Minority Oversampling Technique)
+            X, ybool = SMOTE().fit_resample(X, ybool)
+        else:
+            raise ValueError(ss.balance_classes)
 
         # scale inputs
         scaler = StandardScaler()
@@ -75,11 +83,14 @@ class AimodelFactory:
         X = scaler.transform(X)
 
         # calibrate output probabilities
-        do_calibrate = not do_constant
-        if do_calibrate:
+        if do_constant or ss.calibrate_probs == "None":
+            pass
+        elif ss.calibrate_probs == "CalibratedClassifierCV_5x":
             cv = min(smallest_n, 5)
             if cv > 1:
                 skm = CalibratedClassifierCV(skm, cv=cv)
+        else:
+            raise ValueError(ss.calibrate_probs)
 
         # fit model
         skm.fit(X, ybool)

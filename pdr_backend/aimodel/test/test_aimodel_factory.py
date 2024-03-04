@@ -8,7 +8,7 @@ from pytest import approx
 from pdr_backend.aimodel.plot_model import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
 PLOT = False  # only turn on for manual testing
@@ -32,8 +32,8 @@ def test_aimodel_factory_Constant():
 @enforce_types
 def _test_aimodel_factory_main(approach):
     # settings, factory
-    aimodel_ss = _ss(approach, do_weight_recent=True)
-    factory = AimodelFactory(aimodel_ss)
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
+    factory = AimodelFactory(ss)
 
     # data
     y_thr = 2.0
@@ -90,23 +90,10 @@ def _test_aimodel_factory_main(approach):
 
 
 @enforce_types
-def _ss(approach: str, do_weight_recent: bool):
-    return AimodelSS(
-        {
-            "approach": approach,
-            "do_weight_recent": do_weight_recent,
-            "max_n_train": 7,
-            "autoregressive_n": 3,
-            "input_feeds": ["binance BTC/USDT c"],
-        }
-    )
-
-
-@enforce_types
 def test_aimodel_factory_constantdata():
     # approach cannot be constant! That has to emerge
-    aimodel_ss = _ss("LinearLogistic", do_weight_recent=False)
-    factory = AimodelFactory(aimodel_ss)
+    ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
+    factory = AimodelFactory(ss)
 
     N = 1000
     X = np.random.uniform(-10.0, +10.0, (N, 2))
@@ -124,8 +111,8 @@ def test_aimodel_factory_constantdata():
 
 @enforce_types
 def test_aimodel_accuracy_from_create_xy():
-    aimodel_ss = _ss("LinearLogistic", do_weight_recent=False)
-    aimodel_factory = AimodelFactory(aimodel_ss)
+    ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
+    aimodel_factory = AimodelFactory(ss)
 
     # The underlying AR process is: close[t] = close[t-1] + open[t-1]
     X_trn = np.array(
