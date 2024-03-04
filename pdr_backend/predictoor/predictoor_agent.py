@@ -354,7 +354,7 @@ class PredictoorAgent:
 
         down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(down_predictoor_address)
         if down_predictoor_balance_ocean < minimum_ocean_balance:
-            logger.error(f"Down predictoor's OCEAN balance too low: ({up_predictoor_balance_ocean})")
+            logger.error(f"Down predictoor's OCEAN balance too low: ({down_predictoor_balance_ocean})")
             return False
 
         native_token = NativeToken(self.ppss.web3_pp)
@@ -366,7 +366,7 @@ class PredictoorAgent:
 
         down_predictoor_balance_rose = native_token.balanceOf(down_predictoor_address)
         if down_predictoor_balance_rose < minimum_native_balance:
-            logger.error(f"Down predictoor's ROSE balance too low: ({up_predictoor_balance_rose})")
+            logger.error(f"Down predictoor's ROSE balance too low: ({down_predictoor_balance_rose})")
             return False
 
         return True
