@@ -20,7 +20,7 @@ install_requirements = [
     "imblearn",
     "matplotlib==3.7.5",
     "mypy==1.8.0",
-    "numpy==1.24.4",
+    "numpy==1.26.4",
     "pandas==2.0.3",
     "pathlib",
     "polars==0.20.10",
