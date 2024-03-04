@@ -47,7 +47,7 @@ def test_create_and_fill_table(tmpdir):
     test_manager._create_and_fill_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    assert _check_view_exists(tmpdir, test_manager, dataset_identifier)
+    assert _check_view_exists(test_manager, dataset_identifier)
     _clean_up_test_manager(tmpdir, dataset_identifier)
 
 
@@ -57,9 +57,7 @@ def test_insert_to_exist_table(tmpdir):
     test_manager._create_and_fill_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(
-        tmpdir, test_manager, dataset_identifier
-    )
+    check_result, view_name = _check_view_exists(test_manager, dataset_identifier)
     assert check_result
 
     # Insert new data to the table
@@ -69,9 +67,7 @@ def test_insert_to_exist_table(tmpdir):
     test_manager.insert_to_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(
-        tmpdir, test_manager, dataset_identifier
-    )
+    check_result, view_name = _check_view_exists(test_manager, dataset_identifier)
     assert check_result
 
     # Check if the new data is inserted
@@ -93,9 +89,7 @@ def test_insert_to_new_table(tmpdir):
     test_manager.insert_to_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(
-        tmpdir, test_manager, dataset_identifier
-    )
+    check_result, view_name = _check_view_exists(test_manager, dataset_identifier)
     assert check_result
 
     # Check if the new data is inserted
@@ -115,7 +109,7 @@ def test_query_data(tmpdir):
     test_manager.insert_to_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    check_result, _ = _check_view_exists(tmpdir, test_manager, dataset_identifier)
+    check_result, _ = _check_view_exists(test_manager, dataset_identifier)
     assert check_result
 
     # Execute the provided SQL query
@@ -132,9 +126,7 @@ def test_drop_table(tmpdir):
     test_manager.insert_to_table(example_df, dataset_identifier)
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(
-        tmpdir, test_manager, dataset_identifier
-    )
+    check_result, view_name = _check_view_exists(test_manager, dataset_identifier)
     assert check_result
 
     # Drop the table
@@ -157,9 +149,8 @@ def test_fill_from_csv_destination(tmpdir):
     test_manager.fill_from_csv_destination(csv_folder_path, dataset_identifier)
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(
-        tmpdir, test_manager, dataset_identifier
-    )
+    check_result, view_name = _check_view_exists(test_manager, dataset_identifier)
+
     assert check_result
 
     # Check if the new data is inserted
