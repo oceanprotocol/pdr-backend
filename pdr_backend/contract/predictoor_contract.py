@@ -307,7 +307,9 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     predicted_value, stake_amt_wei.amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance[self.config.owner] -= stake_amt_wei
+            allowance_old = self.last_allowance[self.config.owner]
+            new_allowance = allowance_old - stake_amt_wei
+            self.last_allowance[self.config.owner] = new_allowance
             logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
