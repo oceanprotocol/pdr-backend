@@ -56,6 +56,9 @@ class EthUnit:
     def __neg__(self) -> "Currency":
         return self.__class__(-self.amount)
 
+    def __float__(self) -> float:
+        return self.amount
+
     def to_wei(self) -> "Wei":
         """Should be overridden by subclasses"""
         raise NotImplementedError
