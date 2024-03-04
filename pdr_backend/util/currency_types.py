@@ -50,6 +50,12 @@ class EthUnit:
             return self.__class__(self.amount - other.to_wei().amount / 1e18)
         return NotImplemented
 
+    def __pos__(self) -> "Currency":
+        return self.__class__(+self.amount)
+
+    def __neg__(self) -> "Currency":
+        return self.__class__(-self.amount)
+
     def to_wei(self) -> "Wei":
         """Should be overridden by subclasses"""
         raise NotImplementedError
