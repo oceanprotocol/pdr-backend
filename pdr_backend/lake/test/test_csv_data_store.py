@@ -164,7 +164,7 @@ def test_write_1000_rows(tmpdir):
     )
     manager.write("test", data)
 
-    #folder_path = manager._get_folder_path("test")
+    # folder_path = manager._get_folder_path("test")
 
     # get folder including files
     # folder = os.listdir(folder_path)
