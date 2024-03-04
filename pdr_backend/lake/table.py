@@ -35,7 +35,7 @@ class Table:
         print(f"Loading data for {self.table_name}")
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
         self.persistent_data_store = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
-    
+
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
         self.df = self.csv_data_store.read(
@@ -70,7 +70,9 @@ class Table:
         """
         self.persistent_data_store.insert_to_table(data, self.table_name)
         n_new = data.shape[0]
-        print(f"  Just saved df with {n_new} df rows to the database of {self.table_name}")
+        print(
+            f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
+        )
 
     @enforce_types
     def get_pdr_df(

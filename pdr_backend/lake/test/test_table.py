@@ -1,7 +1,6 @@
 from io import StringIO
 import os
 import sys
-import random
 
 from polars import Boolean, Float64, Int64, Utf8
 import polars as pl
@@ -118,6 +117,7 @@ def test_load_table():
 
     assert len(table.df) == 0
 
+
 def test_get_pdr_df(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
@@ -132,7 +132,7 @@ def test_get_pdr_df(tmpdir):
     _clean_up(ppss.lake_ss.parquet_dir)
 
     table = Table(table_name, table_df_schema, ppss)
-    
+
     captured_output = StringIO()
     sys.stdout = captured_output
 
@@ -191,7 +191,7 @@ def test_get_pdr_df_multiple_fetches(tmpdir):
         pagination_limit=pagination_limit,
         config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
     )
-    
+
     printed_text = captured_output.getvalue().strip()
 
     # test fetches multiple times
@@ -240,6 +240,7 @@ def test_all(tmpdir):
     table.load()
     assert len(table.df) == 1
 
+
 def test_append_to_db(tmpdir):
     """
     Test that table is loading the data from file
@@ -264,15 +265,15 @@ def test_append_to_db(tmpdir):
     table._append_to_db(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
 
     result = table.persistent_data_store.query_data(
-        table.table_name,
-        "SELECT * FROM {view_name}"
+        table.table_name, "SELECT * FROM {view_name}"
     )
 
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"
     assert result["timeframe"][0] == "5m"
-    assert result["prediction"][0] == True
+    assert result["prediction"][0] is True
     assert len(result) == 1000
+
 
 def test_append_to_csv(tmpdir):
     """
@@ -298,7 +299,9 @@ def test_append_to_csv(tmpdir):
     table._append_to_csv(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
 
     file_path = os.path.join(
-        ppss.lake_ss.parquet_dir, table_name, f"{table_name}_from_1701634400_to_1701634400.csv"
+        ppss.lake_ss.parquet_dir,
+        table_name,
+        f"{table_name}_from_1701634400_to_1701634400.csv",
     )
 
     assert os.path.exists(file_path)
