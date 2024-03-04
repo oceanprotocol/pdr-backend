@@ -42,7 +42,7 @@ class Table:
             self.table_name, st_ut, fin_ut, schema=self.df_schema
         )
 
-    def _append_both(self, data: pl.DataFrame):
+    def append_to_sources(self, data: pl.DataFrame):
         self._append_to_csv(data)
         self._append_to_db(data)
 
@@ -132,7 +132,7 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self._append_both(final_df)
+                self.append_to_sources(final_df)
 
                 print(f"Saved {len(final_df)} records to file while fetching")
                 final_df = pl.DataFrame([], schema=self.df_schema)
@@ -144,7 +144,7 @@ class Table:
             pagination_offset += pagination_limit
 
         if len(final_df) > 0:
-            self._append_both(final_df)
+            self.append_to_sources(final_df)
 
             print(f"Saved {len(final_df)} records to file while fetching")
 

@@ -92,7 +92,6 @@ class ETL:
             )
             self.tables[bronze_pdr_predictions_table_name] = table
 
-        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
-        table.save()
-        ## Add the CSV and duckDB data store here
-        ## with table.df and table.schema
+        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)        
+        table.append_to_sources(table.df)
+
