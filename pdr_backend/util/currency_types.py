@@ -51,10 +51,10 @@ class EthUnit:
             return self.__class__(self.amount - other.to_wei().amount / 1e18)
         return NotImplemented
 
-    def __pos__(self) -> "Currency":
+    def __pos__(self) -> "EthUnit":
         return self.__class__(+self.amount)
 
-    def __neg__(self) -> "Currency":
+    def __neg__(self) -> "EthUnit":
         return self.__class__(-self.amount)
 
     def __float__(self) -> float:
