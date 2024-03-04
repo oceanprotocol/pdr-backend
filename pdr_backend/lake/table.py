@@ -12,6 +12,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 logger = logging.getLogger("table")
 
@@ -33,47 +34,43 @@ class Table:
         """
         print(f"Loading data for {self.table_name}")
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
+        self.persistent_data_store = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+    
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
         self.df = self.csv_data_store.read(
             self.table_name, st_ut, fin_ut, schema=self.df_schema
         )
 
-    @enforce_types
-    def save(self):
-        """
-        Save the data from the DataFrame object into the CSV file
-        It only saves the new data that has been fetched
-        """
-
-        assert "timestamp" in self.df.columns and self.df["timestamp"].dtype == pl.Int64
-        assert len(self.df) > 0
-        if len(self.df) > 2:
-            assert (
-                self.df.head(1)["timestamp"].to_list()[0]
-                <= self.df.tail(1)["timestamp"].to_list()[0]
-            )
-
-        self.df = self.df.filter(pl.struct("ID").is_unique())
-
-        if len(self.df) == 0:
-            print(f"  No new data to save for {self.table_name}")
-            return
-
-        self._append_to_csv(self.df)
-
-        self.df = pl.DataFrame([], schema=self.df_schema)
+    def _append_both(self, data: pl.DataFrame):
+        self._append_to_csv(data)
+        self._append_to_db(data)
 
     def _append_to_csv(self, data: pl.DataFrame):
         """
         Append the data from the DataFrame object into the CSV file
         It only saves the new data that has been fetched
+
+        @arguments:
+            data - The Polars DataFrame to save.
         """
         self.csv_data_store.write(self.table_name, data, schema=self.df_schema)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
         )
+
+    def _append_to_db(self, data: pl.DataFrame):
+        """
+        Append the data from the DataFrame object into the database
+        It only saves the new data that has been fetched
+
+        @arguments:
+            data - The Polars DataFrame to save.
+        """
+        self.persistent_data_store.insert_to_table(data, self.table_name)
+        n_new = data.shape[0]
+        print(f"  Just saved df with {n_new} df rows to the database of {self.table_name}")
 
     @enforce_types
     def get_pdr_df(
@@ -99,7 +96,7 @@ class Table:
         save_backoff_count = 0
         pagination_offset = 0
 
-        final_df = pl.DataFrame()
+        final_df = pl.DataFrame([], schema=self.df_schema)
 
         while True:
             # call the function
@@ -133,8 +130,7 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self._append_to_csv(final_df)
-                # self._append_to_db()
+                self._append_both(final_df)
 
                 print(f"Saved {len(final_df)} records to file while fetching")
                 final_df = pl.DataFrame([], schema=self.df_schema)
@@ -146,8 +142,7 @@ class Table:
             pagination_offset += pagination_limit
 
         if len(final_df) > 0:
-            self._append_to_csv(final_df)
-            # self._append_to_db()
+            self._append_both(final_df)
 
             print(f"Saved {len(final_df)} records to file while fetching")
 
