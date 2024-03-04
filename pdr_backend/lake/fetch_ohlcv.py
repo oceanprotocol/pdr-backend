@@ -93,6 +93,7 @@ def safe_fetch_ohlcv_dydx(
             f"{baseURL}/candles/perpetualMarkets/{symbol}",
             params={"resolution": timeframe, "fromISO": sinceIso, "limit": str(limit)},
             headers=headers,
+            timeout=20,
         )
         data = response.json()
 

@@ -75,6 +75,14 @@ class Eth:
 
         return Eth(self.amt_eth + other)
 
+    def __pos__(self) -> "Eth":
+        """This is the unary '+' operator"""
+        return Eth(self.amt_eth)
+
+    def __neg__(self) -> "Eth":
+        """This is the unary '-' operator"""
+        return Eth(-self.amt_eth)
+
 
 @enforce_types
 class Wei:
@@ -129,3 +137,11 @@ class Wei:
             return Wei(self.amt_wei - other.amt_wei)
 
         return Wei(self.amt_wei - other)
+
+    def __pos__(self) -> "Wei":
+        """This is the unary '+' operator"""
+        return Wei(self.amt_wei)
+
+    def __neg__(self) -> "Wei":
+        """This is the unary '-' operator"""
+        return Wei(-self.amt_wei)
