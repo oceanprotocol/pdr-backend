@@ -23,7 +23,7 @@ def test_token(web3_pp, web3_config):
     token.approve(alice, allowance_start + 100, True)
     time.sleep(1)
     allowance_end = token.allowance(owner_addr, alice)
-    assert allowance_end - allowance_start == 100
+    assert allowance_end - allowance_start == Wei(100)
 
     balance_start = token.balanceOf(alice)
     token.transfer(alice, Wei(100), owner_addr)
