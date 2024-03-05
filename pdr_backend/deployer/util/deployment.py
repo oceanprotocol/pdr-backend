@@ -119,7 +119,7 @@ def delete_all_pods(provider: CloudProvider, cluster_name, config_name):
     config_name = sanitize_name(config_name)
     if provider.cluster_exists(cluster_name):
         logger.info("Deleting all pods...")
-        command = f"kubectl delete pods --all -n {config_name}"
+        command = f"kubectl delete deployment --all -n {config_name}"
         run_command(command)
 
 
