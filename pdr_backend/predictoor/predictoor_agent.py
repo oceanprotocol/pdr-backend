@@ -9,6 +9,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
@@ -16,10 +17,10 @@ from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.currency_types import Eth
 
-
 logger = logging.getLogger("predictoor_agent")
 
 
+# pylint: disable=too-many-public-methods
 class PredictoorAgent:
     """
     What it does
@@ -92,6 +93,7 @@ class PredictoorAgent:
         self.prev_block_timestamp: UnixTimeS = UnixTimeS(0)
         self.prev_block_number: UnixTimeS = UnixTimeS(0)
         self.prev_submit_epochs: List[int] = []
+        self.prev_submit_payouts: List[int] = []
 
     @enforce_types
     def run(self):
@@ -117,6 +119,10 @@ class PredictoorAgent:
             return
         self.prev_block_number = UnixTimeS(self.cur_block_number)
         self.prev_block_timestamp = UnixTimeS(self.cur_timestamp)
+
+        # get payouts
+        # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
+        self.get_payout()
 
         # within the time window to predict?
         if self.cur_epoch_s_left > self.epoch_s_thr:
@@ -168,6 +174,11 @@ class PredictoorAgent:
     @property
     def cur_timestamp(self) -> UnixTimeS:
         return UnixTimeS(self.cur_block["timestamp"])
+
+    @property
+    def s_start_payouts(self) -> int:
+        """Run payout when there's this seconds left"""
+        return self.ppss.predictoor_ss.s_start_payouts
 
     @property
     def epoch_s_thr(self):
@@ -370,6 +381,30 @@ class PredictoorAgent:
             return False
 
         return True
+
+    def get_payout(self):
+        """Claims payouts"""
+        if (
+            self.s_start_payouts == 0
+            or self.cur_epoch_s_left >= self.s_start_payouts
+            or self.cur_epoch in self.prev_submit_payouts
+        ):
+            return
+
+        logger.info("Running payouts")
+
+        # Claim for up predictoor
+        web3_config = self._updown_web3_config(True)
+        self.ppss.web3_pp.set_web3_config(web3_config)
+        do_ocean_payout(self.ppss, False)
+
+        # Claim for down predictoor
+        web3_config = self._updown_web3_config(False)
+        self.ppss.web3_pp.set_web3_config(web3_config)
+        do_ocean_payout(self.ppss, False)
+
+        # Update previous payouts history to avoid claiming for this epoch again
+        self.prev_submit_payouts.append(self.cur_epoch)
 
 
 @enforce_types
