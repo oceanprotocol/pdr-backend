@@ -20,26 +20,36 @@ class EthUnit(ABC):
     def __eq__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount == other.to_wei().amount
+        if other == 0:
+            return self.amount == 0
         raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __lt__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount < other.to_wei().amount
+        if other == 0:
+            return self.amount < 0
         raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __le__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount <= other.to_wei().amount
+        if other == 0:
+            return self.amount <= 0
         raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __gt__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount > other.to_wei().amount
+        if other == 0:
+            return self.amount > 0
         raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __ge__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount >= other.to_wei().amount
+        if other == 0:
+            return self.amount >= 0
         raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __add__(self, other) -> "EthUnit":
