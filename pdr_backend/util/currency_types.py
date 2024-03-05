@@ -17,29 +17,29 @@ class EthUnit:
         return self.__str__()
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, EthUnit):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount == other.to_wei().amount
-        return False
+        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __lt__(self, other) -> bool:
-        if isinstance(other, EthUnit):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount < other.to_wei().amount
-        return False
+        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __le__(self, other) -> bool:
-        if isinstance(other, EthUnit):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount <= other.to_wei().amount
-        return False
+        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __gt__(self, other) -> bool:
-        if isinstance(other, EthUnit):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount > other.to_wei().amount
-        return False
+        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __ge__(self, other) -> bool:
-        if isinstance(other, EthUnit):
+        if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount >= other.to_wei().amount
-        return False
+        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __add__(self, other) -> "EthUnit":
         if isinstance(other, EthUnit) and type(self) is type(other):
