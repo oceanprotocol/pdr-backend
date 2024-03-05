@@ -192,6 +192,8 @@ def test_allowance_update():
 
         contract.config.owner = "0xowner"
         contract.contract_address = "0xcontract"
+        contract.send_encrypted_tx = Mock()
+        contract.send_encrypted_tx.return_value = (1, 2)
 
         allowance = contract.last_allowance[contract.config.owner]
         assert allowance == Wei(0)
@@ -199,12 +201,13 @@ def test_allowance_update():
         contract.token.allowance.return_value = Wei(1000)
         contract.token.approve = Mock()
 
+        stake_amt = Wei(10)
         contract.submit_prediction(
             predicted_value=True,
-            stake_amt=Wei(10),
+            stake_amt=stake_amt,
             prediction_ts=123,
             wait_for_receipt=True,
         )
 
         allowance = contract.last_allowance[contract.config.owner]
-        assert allowance == Wei(MAX_UINT256)
+        assert allowance == Wei(MAX_UINT256) - stake_amt
