@@ -42,7 +42,7 @@ class Table:
             self.table_name, st_ut, fin_ut, schema=self.df_schema
         )
 
-    def append_to_sources(self, data: pl.DataFrame):
+    def append_to_storage(self, data: pl.DataFrame):
         self._append_to_csv(data)
         self._append_to_db(data)
 
@@ -98,7 +98,7 @@ class Table:
         save_backoff_count = 0
         pagination_offset = 0
 
-        final_df = pl.DataFrame([], schema=self.df_schema)
+        buffer_df = pl.DataFrame([], schema=self.df_schema)
 
         while True:
             # call the function
@@ -119,23 +119,22 @@ class Table:
                 "timestamp"
             )
 
-            if len(final_df) == 0:
-                final_df = df
+            if len(buffer_df) == 0:
+                buffer_df = df
             else:
-                final_df = final_df.vstack(df)
+                buffer_df = buffer_df.vstack(df)
 
             save_backoff_count += len(df)
 
             # save to file if requred number of data has been fetched
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
-            ) and len(final_df) > 0:
+            ) and len(buffer_df) > 0:
                 assert df.schema == self.df_schema
-                # save to parquet
-                self.append_to_sources(final_df)
+                self.append_to_storage(buffer_df)
 
-                print(f"Saved {len(final_df)} records to file while fetching")
-                final_df = pl.DataFrame([], schema=self.df_schema)
+                print(f"Saved {len(buffer_df)} records to file while fetching")
+                buffer_df = pl.DataFrame([], schema=self.df_schema)
                 save_backoff_count = 0
 
             # avoids doing next fetch if we've reached the end
@@ -143,10 +142,9 @@ class Table:
                 break
             pagination_offset += pagination_limit
 
-        if len(final_df) > 0:
-            self.append_to_sources(final_df)
-
-            print(f"Saved {len(final_df)} records to file while fetching")
+        if len(buffer_df) > 0:
+            self.append_to_storage(buffer_df)
+            print(f"Saved {len(buffer_df)} records to file while fetching")
 
     @enforce_types
     def _parquet_filename(self) -> str:
