@@ -102,3 +102,16 @@ def test_math_with_wei_and_eth():
 
     with pytest.raises(TypeError):
         _ = x1 == x2
+
+
+@enforce_types
+def test_compare_to_zero():
+    x1, x2 = Eth(20), Wei(-20)
+
+    assert x1 > 0
+    assert x1 >= 0
+    assert x1 != 0
+
+    assert x2 < 0
+    assert x2 <= 0
+    assert x2 != 0
