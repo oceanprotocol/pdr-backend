@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.token import NativeToken
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -355,8 +356,8 @@ class PredictoorAgent:
         up_predictoor_address = self.web3_config_up.owner
         down_predictoor_address = self.web3_config_down.owner
 
-        minimum_ocean_balance = Eth(self.ppss.predictoor_ss.stake_amount, "wei")
-        minimum_native_balance = Eth("1", "wei")
+        minimum_ocean_balance = Eth(self.ppss.predictoor_ss.stake_amount)
+        minimum_native_balance = Eth(1)
         
         up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(up_predictoor_address)
         if up_predictoor_balance_ocean < minimum_ocean_balance:
