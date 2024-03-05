@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Dict, List, Tuple
 from unittest.mock import Mock
 
@@ -20,7 +21,9 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
-        self.last_allowance: Dict[str, Wei] = {}
+
+        # return Wei(0) for unknown keys
+        self.last_allowance: Dict[str, Wei] = defaultdict(lambda: Wei(0))
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
@@ -277,12 +280,12 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         stake_amt_wei = stake_amt.to_wei()
 
         # Check allowance first, only approve if needed
-        allowance = self.last_allowance.get(self.config.owner, Wei(0))
-        if allowance <= Wei(0):
+        allowance: Wei = self.last_allowance[self.config.owner]
+        if allowance == Wei(0):
             allowance_wei = self.token.allowance(
                 self.config.owner, self.contract_address
             )
-            self.last_allowance[self.config.owner] = Wei(allowance_wei)
+            self.last_allowance[self.config.owner] = allowance_wei
         if allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, Wei(MAX_UINT))
