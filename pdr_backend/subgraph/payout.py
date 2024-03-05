@@ -14,7 +14,7 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         slot: UnixTimeS,
         timestamp: UnixTimeS,
         payout: float,
-        predictedValue: bool,
+        predvalue: bool,
         revenue: float,
         roundSumStakesUp: float,
         roundSumStakes: float,
@@ -26,7 +26,7 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         self.token = token
         self.slot = slot
         self.payout = payout
-        self.predictedValue = predictedValue
+        self.predvalue = predvalue
         self.revenue = revenue
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
@@ -42,7 +42,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         token,
         slot,
         payout,
-        predictedValue,
+        predvalue,
         revenue,
         roundSumStakesUp,
         roundSumStakes,
@@ -56,7 +56,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         token=token,
         slot=UnixTimeS(slot),
         payout=payout,
-        predictedValue=predictedValue,
+        predvalue=predvalue,
         revenue=revenue,
         roundSumStakesUp=roundSumStakesUp,
         roundSumStakes=roundSumStakes,
