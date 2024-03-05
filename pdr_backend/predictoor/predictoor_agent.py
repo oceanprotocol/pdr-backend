@@ -356,8 +356,8 @@ class PredictoorAgent:
         up_predictoor_address = self.web3_config_up.owner
         down_predictoor_address = self.web3_config_down.owner
 
-        minimum_ocean_balance = self.ppss.predictoor_ss.stake_amount
-        minimum_native_balance = Eth(1)
+        minimum_ocean_balance = self.ppss.predictoor_ss.stake_amount.to_wei()
+        minimum_native_balance = Eth(1).to_wei()
 
         up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
             up_predictoor_address
