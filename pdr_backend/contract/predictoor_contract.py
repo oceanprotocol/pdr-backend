@@ -277,7 +277,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
           If False, returns the tx hash immediately after sending.
           If an exception occurs during the  process, returns None.
         """
-        stake_amt_wei = stake_amt.to_wei()
+        stake_amt_wei: Wei = stake_amt.to_wei()
 
         # Check allowance first, only approve if needed
         allowance: Wei = self.last_allowance[self.config.owner]
@@ -310,7 +310,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     predicted_value, stake_amt_wei.amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance[self.config.owner] -= stake_amt_wei
+            self.last_allowance[self.config.owner] -= stake_amt_wei # type: ignore
             logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
