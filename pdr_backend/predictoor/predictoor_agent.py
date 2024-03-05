@@ -133,7 +133,7 @@ class PredictoorAgent:
 
         if not self.check_balances():
             logger.error("Not enough balance, cancel prediction")
-            return 
+            return
 
         logger.info(self.status_str())
 
@@ -356,29 +356,41 @@ class PredictoorAgent:
         up_predictoor_address = self.web3_config_up.owner
         down_predictoor_address = self.web3_config_down.owner
 
-        minimum_ocean_balance = Eth(self.ppss.predictoor_ss.stake_amount)
+        minimum_ocean_balance = self.ppss.predictoor_ss.stake_amount
         minimum_native_balance = Eth(1)
-        
-        up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(up_predictoor_address)
+
+        up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
+            up_predictoor_address
+        )
         if up_predictoor_balance_ocean < minimum_ocean_balance:
-            logger.error(f"Up predictoor's OCEAN balance too low: ({up_predictoor_balance_ocean})")
+            logger.error(
+                f"Up predictoor's OCEAN balance too low: ({up_predictoor_balance_ocean})"
+            )
             return False
 
-        down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(down_predictoor_address)
+        down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
+            down_predictoor_address
+        )
         if down_predictoor_balance_ocean < minimum_ocean_balance:
-            logger.error(f"Down predictoor's OCEAN balance too low: ({down_predictoor_balance_ocean})")
+            logger.error(
+                f"Down predictoor's OCEAN balance too low: ({down_predictoor_balance_ocean})"
+            )
             return False
 
         native_token = NativeToken(self.ppss.web3_pp)
 
         up_predictoor_balance_rose = native_token.balanceOf(up_predictoor_address)
         if up_predictoor_balance_rose < minimum_native_balance:
-            logger.error(f"Up predictoor's ROSE balance too low: ({up_predictoor_balance_rose})")
+            logger.error(
+                f"Up predictoor's ROSE balance too low: ({up_predictoor_balance_rose})"
+            )
             return False
 
         down_predictoor_balance_rose = native_token.balanceOf(down_predictoor_address)
         if down_predictoor_balance_rose < minimum_native_balance:
-            logger.error(f"Down predictoor's ROSE balance too low: ({down_predictoor_balance_rose})")
+            logger.error(
+                f"Down predictoor's ROSE balance too low: ({down_predictoor_balance_rose})"
+            )
             return False
 
         return True
