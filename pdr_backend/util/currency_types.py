@@ -1,4 +1,5 @@
 import logging
+from abc import ABC 
 from typing import Union
 from enforce_typing import enforce_types
 
@@ -6,7 +7,7 @@ logger = logging.getLogger("currency_types")
 
 
 @enforce_types
-class EthUnit:
+class EthUnit(ABC):
     def __init__(self, amount: Union[int, float]):
         self.amount = amount
 
@@ -73,7 +74,7 @@ class EthUnit:
     def to_wei(self) -> "Wei":
         """Should be overridden by subclasses"""
         raise NotImplementedError
-
+    
     def to_eth(self) -> "Eth":
         """Should be overridden by subclasses"""
         raise NotImplementedError
