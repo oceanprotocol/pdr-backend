@@ -59,8 +59,8 @@ def _process_predictions(
     bronze_predictions_df = predictions_df.with_columns(
         [
             pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
-            pl.col("prediction").alias("predvalue"),
-            pl.col("trueval").alias("truevalue"),
+            pl.col("predvalue").alias("predvalue"),
+            pl.col("truevalue").alias("truevalue"),
             pl.col("timestamp").alias("timestamp"),
             pl.col("timestamp").alias("last_event_timestamp"),
         ]
@@ -93,14 +93,14 @@ def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
         predictions_df.join(truevals_df, left_on="slot_id", right_on="ID", how="left")
         .with_columns(
             [
-                pl.col("trueval").fill_null(pl.col("truevalue")),
+                pl.col("truevalue_right").fill_null(pl.col("truevalue")),
                 pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
             ]
         )
         .drop(["truevalue", "last_event_timestamp"])
         .rename(
             {
-                "trueval": "truevalue",
+                "truevalue_right": "truevalue",
                 "timestamp_right": "last_event_timestamp",
             }
         )
@@ -135,7 +135,7 @@ def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
         .with_columns(
             [
                 pl.col("payout_right").fill_null(pl.col("payout")),
-                pl.col("predictedValue").fill_null(pl.col("predvalue")),
+                pl.col("predvalue_right").fill_null(pl.col("predvalue")),
                 pl.col("stake_right").fill_null(pl.col("stake")),
                 pl.col("timestamp_right").fill_null(pl.col("last_event_timestamp")),
             ]
@@ -144,7 +144,7 @@ def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
         .rename(
             {
                 "payout_right": "payout",
-                "predictedValue": "predvalue",
+                "predvalue_right": "predvalue",
                 "stake_right": "stake",
                 "timestamp_right": "last_event_timestamp",
             }
