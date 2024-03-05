@@ -145,7 +145,7 @@ def test_submit_prediction_trueval_payout(
         predictoor_contract.config.owner,
     )
     assert pred_tup[0] == predval
-    assert pred_tup[1] == stake_amt.to_wei()
+    assert pred_tup[1] == stake_amt.amt_wei
 
     w3.provider.make_request("evm_increaseTime", [S_PER_EPOCH * 2])
     w3.provider.make_request("evm_mine", [])
