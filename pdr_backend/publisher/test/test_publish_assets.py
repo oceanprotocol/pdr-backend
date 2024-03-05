@@ -6,6 +6,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.ppss.publisher_ss import mock_publisher_ss
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publish_assets import publish_assets
+from pdr_backend.util.currency_types import Eth
 
 _PATH = "pdr_backend.publisher.publish_assets"
 
@@ -28,15 +29,15 @@ def _test_barge(network, monkeypatch):
 
     n_calls = len(mock_publish_asset.call_args_list)
     assert n_calls == 1 * 3
-
+    print(mock_publish_asset.call_args_list)
     mock_publish_asset.assert_any_call(
         s_per_epoch=300,
         s_per_subscription=60 * 60 * 24,
         feed=ArgFeed("binance", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
         feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
-        rate=3 / (1 + 0.2 + 0.001),
-        cut=0.2,
+        rate=Eth(3 / (1 + 0.2 + 0.001)),
+        cut=Eth(0.2),
         web3_pp=web3_pp,
     )
 

@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
+from pdr_backend.util.currency_types import Eth
 
 _D = {"addresses": ["opf_addresses"]}
 
@@ -54,6 +55,6 @@ def test_topup_ss_bals():
     ROSE = Mock()
     ROSE.name = "ROSE"
 
-    assert ss.get_min_bal("OCEAN", "0") == 100
-    assert ss.get_min_bal("OCEAN", "dfbuyer") == 100
-    assert ss.get_topup_bal("ROSE", "dfbuyer") == 200
+    assert ss.get_min_bal("OCEAN", "0") == Eth(100)
+    assert ss.get_min_bal("OCEAN", "dfbuyer") == Eth(100)
+    assert ss.get_topup_bal("ROSE", "dfbuyer") == Eth(200)
