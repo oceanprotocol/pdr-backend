@@ -14,7 +14,9 @@ def test_currency_types_base():
     assert Eth(12.34).to_wei() == Wei(12.34 * 1e18)
     assert Eth(0.1234).to_wei() == Wei(0.1234 * 1e18)
 
-    assert Wei(int(12.34 * 1e18)).str_with_wei() == "12.34 eth (12340000000000000000 wei)"
+    assert (
+        Wei(int(12.34 * 1e18)).str_with_wei() == "12.34 eth (12340000000000000000 wei)"
+    )
 
 
 @enforce_types
@@ -61,7 +63,7 @@ def test_currency_types_math_on_Wei():
     assert (x1 + x2) == Wei(7500)
     assert (x1 - x2) == Wei(2500)
     assert (x2 - x1) == Wei(-2500)
-    assert x1 * x2 == Wei(5000 * 2500) 
+    assert x1 * x2 == Wei(5000 * 2500)
     assert x1 / x2 == Wei(5000 / 2500)
 
     # don't bother overriding these (more complex, or dangerous)
@@ -74,3 +76,29 @@ def test_currency_types_math_on_Wei():
         10 / x1
     with pytest.raises(TypeError):
         10.0 / x1
+
+
+@enforce_types
+def test_math_with_wei_and_eth():
+    x1, x2 = Wei(5000), Eth(2.5)
+
+    with pytest.raises(TypeError):
+        x1 + x2
+
+    with pytest.raises(TypeError):
+        x1 - x2
+
+    with pytest.raises(TypeError):
+        x1 * x2
+
+    with pytest.raises(TypeError):
+        x1 / x2
+
+    with pytest.raises(TypeError):
+        x1 > x2
+
+    with pytest.raises(TypeError):
+        x1 < x2
+
+    with pytest.raises(TypeError):
+        x1 == x2
