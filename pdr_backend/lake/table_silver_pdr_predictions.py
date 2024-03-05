@@ -2,7 +2,7 @@ from typing import Dict
 
 import polars as pl
 from enforce_typing import enforce_types
-from polars import Boolean, Float64, Int64, Utf8
+from polars import Boolean, Float64, Int64, Utf8, DataFrame
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 
@@ -36,8 +36,30 @@ silver_pdr_predictions_schema = {
 }
 
 
+def update_fields(current_df: dict, previous_df: DataFrame) -> dict:
+    current_df["sum_stake"] = (
+        previous_df["sum_stake"] + current_df["stake"] if current_df["stake"] else 0
+    )
+    current_df["sum_revenue"] = previous_df["sum_revenue"] + (
+        current_df["payout"] if current_df["payout"] else 0
+    )
+    current_df["sum_revenue_df"] = previous_df["sum_revenue_df"] + current_df["payout"]
+    current_df["sum_revenue_stake"] = (
+        previous_df["sum_revenue_stake"] + current_df["payout"]
+    )
+    current_df["count_predictions"] = previous_df["count_predictions"] + 1
+    current_df["count_wins"] = previous_df["count_wins"] + (
+        1 if current_df["predvalue"] == current_df["truevalue"] else 0
+    )
+    current_df["count_losses"] = previous_df["count_losses"] + (
+        0 if current_df["predvalue"] == current_df["truevalue"] else 1
+    )
+    current_df["win"] = current_df["sum_revenue"] > current_df["sum_stake"]
+    return current_df
+
+
 def _process_predictions(
-    collision_obj: object, tables: Dict[str, Table], ppss: PPSS
+    collision_obj: dict, tables: Dict[str, Table], ppss: PPSS
 ) -> Dict[str, Table]:
     """
     @description
@@ -63,13 +85,15 @@ def _process_predictions(
         )
     )
 
+    print(len(bronze_pdr_predictions))
+
     if len(bronze_pdr_predictions) == 0:
         return tables
 
     silver_predictions_df = tables[silver_pdr_predictions_table_name].df
 
     for row in bronze_pdr_predictions.rows(named=True):
-        # Sort by latest timestamp then use groupby to get the first row for each user and contract combination
+        # Sort to get lettest prediction before current one
         result_df = silver_predictions_df.sort("slot", descending=True).filter(
             (pl.col("user") == row["user"])
             & (pl.col("contract") == row["contract"])
@@ -77,22 +101,7 @@ def _process_predictions(
         )[0]
 
         if len(result_df) > 0:
-            row["sum_stake"] = (
-                result_df["sum_stake"] + row["stake"] if row["stake"] else 0
-            )
-            row["sum_revenue"] = result_df["sum_revenue"] + (
-                row["payout"] if row["payout"] else 0
-            )
-            row["sum_revenue_df"] = result_df["sum_revenue_df"] + row["payout"]
-            row["sum_revenue_stake"] = result_df["sum_revenue_stake"] + row["payout"]
-            row["count_predictions"] = result_df["count_predictions"] + 1
-            row["count_wins"] = result_df["count_wins"] + (
-                1 if row["predvalue"] == row["truevalue"] else 0
-            )
-            row["count_losses"] = result_df["count_losses"] + (
-                0 if row["predvalue"] == row["truevalue"] else 1
-            )
-            row["win"] = row["sum_revenue"] > row["sum_stake"]
+            row = update_fields(row, result_df)
         else:
             row["sum_stake"] = row["stake"] if row["stake"] else 0
             row["sum_revenue"] = row["payout"] if row["payout"] else 0
@@ -122,42 +131,19 @@ def _process_predictions(
                 & (pl.col("contract") == row["contract"])
                 & (pl.col("slot") > row["slot"])
             )
-            result_df = row
-
+            result_df = pl.DataFrame(row, silver_pdr_predictions_schema)
             for row_to_update in dfs_to_update.rows(named=True):
-                row_to_update["sum_stake"] = (
-                    result_df["sum_stake"] + row_to_update["stake"]
-                    if row_to_update["stake"]
-                    else 0
+                new_row_df = pl.DataFrame(
+                    update_fields(row_to_update, result_df),
+                    silver_pdr_predictions_schema,
                 )
-                row_to_update["sum_revenue"] = result_df["sum_revenue"] + (
-                    row_to_update["payout"] if row_to_update["payout"] else 0
-                )
-                row_to_update["sum_revenue_df"] = (
-                    result_df["sum_revenue_df"] + row_to_update["payout"]
-                )
-                row_to_update["sum_revenue_stake"] = (
-                    result_df["sum_revenue_stake"] + row_to_update["payout"]
-                )
-                row_to_update["count_predictions"] = result_df["count_predictions"] + 1
-                row_to_update["count_wins"] = result_df["count_wins"] + (
-                    1 if row_to_update["predvalue"] == row_to_update["truevalue"] else 0
-                )
-                row_to_update["count_losses"] = result_df["count_losses"] + (
-                    0 if row_to_update["predvalue"] == row_to_update["truevalue"] else 1
-                )
-                row_to_update["win"] = (
-                    row_to_update["sum_revenue"] > row_to_update["sum_stake"]
-                )
+                result_df = new_row_df
 
                 silver_predictions_df = silver_predictions_df.filter(
                     pl.col("ID") != row_to_update["ID"]
                 )
-                new_row_df = pl.DataFrame(row_to_update, silver_pdr_predictions_schema)
                 new_row_df.select(silver_pdr_predictions_schema)
                 silver_predictions_df.extend(new_row_df)
-
-    print(silver_predictions_df["sum_revenue"].to_list)
 
     tables[silver_pdr_predictions_table_name].df = silver_predictions_df.sort("slot")
     return tables
@@ -170,7 +156,7 @@ def get_silver_pdr_predictions_table(gql_tables: Dict[str, Table], ppss: PPSS) -
         Updates/Creates clean predictions from existing raw tables
     """
 
-    collision_obj: object = {}
+    collision_obj: dict = {}
     # retrieve pred ids that are already in the lake
     if len(gql_tables[silver_pdr_predictions_table_name].df) > 0:
         filtered_table = gql_tables[silver_pdr_predictions_table_name].df.filter(

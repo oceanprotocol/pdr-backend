@@ -153,7 +153,7 @@ def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     )
 
     # update dfs
-    tables[bronze_pdr_predictions_table_name].df = predictions_df
+    tables[bronze_pdr_predictions_table_name].df = predictions_df.sort("timestamp")
     return tables
 
 

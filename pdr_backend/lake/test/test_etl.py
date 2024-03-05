@@ -40,7 +40,7 @@ def test_etl(
 ):
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
+    fin_timestr = "2023-11-06_22:00"
 
     # Mock dfs based on configured st/fin timestamps
     preds = get_filtered_timestamps_df(
@@ -119,8 +119,8 @@ def test_setup_etl(
 
     # Assert original gql has 6 predictions, but we only got 5 due to date
     assert len(etl.tables) == 3
-    assert len(etl.tables["pdr_predictions"].df) == 5
-    assert len(_gql_datafactory_etl_predictions_df) == 6
+    assert len(etl.tables["pdr_predictions"].df) == 6
+    assert len(_gql_datafactory_etl_predictions_df) == 7
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
     assert len(etl.tables["pdr_payouts"].df) != len(_gql_datafactory_etl_payouts_df)
@@ -130,9 +130,9 @@ def test_setup_etl(
     assert len(etl.tables["pdr_truevals"].df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all 3 dfs
-    assert len(etl.tables["pdr_payouts"].df) == 4
-    assert len(etl.tables["pdr_predictions"].df) == 5
-    assert len(etl.tables["pdr_truevals"].df) == 5
+    assert len(etl.tables["pdr_payouts"].df) == 5
+    assert len(etl.tables["pdr_predictions"].df) == 6
+    assert len(etl.tables["pdr_truevals"].df) == 6
 
 
 @enforce_types
@@ -145,7 +145,7 @@ def test_etl_do_bronze_step(
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    assert len(etl.tables["bronze_pdr_predictions"].df) == 5
+    assert len(etl.tables["bronze_pdr_predictions"].df) == 6
 
     bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
     print(bronze_pdr_predictions_df)
@@ -154,7 +154,7 @@ def test_etl_do_bronze_step(
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
         bronze_pdr_predictions_df["contract"][0]
-        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
+        == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     )
     assert (
         bronze_pdr_predictions_df["contract"][1]

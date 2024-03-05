@@ -60,7 +60,7 @@ def test_silver_bronze_pdr_predictions(
     # Check that the silver predictions table has the right schema and length
     get_silver_pdr_predictions_table(gql_tables, ppss)
 
-    # verify predictions for user=0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd , contract=0x30f1c55e72fe105e4a1fbecdff3145fc14177695
+    # verify predictions for give user and contract
     selected_user_prediction = (
         gql_tables[silver_pdr_predictions_table_name]
         .df.sort("timestamp", descending=True)
@@ -139,6 +139,7 @@ def test_silver_bronze_pdr_predictions(
     )
 
     # Insert new prediction to bronze table
+    # pylint: disable=line-too-long
     row = {
         "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "slot_id": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700",
@@ -171,13 +172,31 @@ def test_silver_bronze_pdr_predictions(
         "timestamp": 1699302800000,
         "last_event_timestamp": 1699302800000,
     }
+    row3 = {
+        "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302900-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "slot_id": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302900",
+        "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",  # f"{contract}"
+        "slot": 1699302900,
+        "user": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "pair": "ETH/USDT",
+        "timeframe": "5m",
+        "source": "binance",
+        "predvalue": True,
+        "truevalue": True,
+        "stake": 20,
+        "payout": 20,
+        "timestamp": 1699302900000,
+        "last_event_timestamp": 1699302900000,
+    }
     new_row_df = pl.DataFrame(row, bronze_pdr_predictions_schema)
     new_row_df2 = pl.DataFrame(row2, bronze_pdr_predictions_schema)
+    new_row_df3 = pl.DataFrame(row3, bronze_pdr_predictions_schema)
     gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df)
     gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df2)
+    gql_tables[bronze_pdr_predictions_table_name].df.extend(new_row_df3)
 
     # Check that new prediction was added to bronce table
-    assert len(gql_tables[bronze_pdr_predictions_table_name].df) == 9
+    assert len(gql_tables[bronze_pdr_predictions_table_name].df) == 10
 
     # Update silver predictions
     get_silver_pdr_predictions_table(gql_tables, ppss)
@@ -191,8 +210,8 @@ def test_silver_bronze_pdr_predictions(
             & (pl.col("contract") == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695")
         )[0]
     )
-    assert selected_user_prediction["sum_revenue"][0] == 21.90000023
-    assert selected_user_prediction["count_wins"][0] == 4
+    assert selected_user_prediction["sum_revenue"][0] == 41.90000023
+    assert selected_user_prediction["count_wins"][0] == 5
 
     # Insert new prediction to bronze table
     row = {
@@ -219,10 +238,14 @@ def test_silver_bronze_pdr_predictions(
     print(gql_tables[silver_pdr_predictions_table_name].df)
 
     # Check that new prediction didn't change the lengts of the table
-    assert len(gql_tables[silver_pdr_predictions_table_name].df) == 9
+    assert len(gql_tables[silver_pdr_predictions_table_name].df) == 10
 
     assert gql_tables[silver_pdr_predictions_table_name].df[7]["sum_revenue"][0] == 40.9
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue"][0]
         == 51.900000229999996
+    )
+    assert (
+        gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue"][0]
+        == 71.900000229999996
     )
