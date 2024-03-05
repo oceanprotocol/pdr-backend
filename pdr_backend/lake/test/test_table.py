@@ -271,7 +271,7 @@ def test_append_to_db(tmpdir):
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"
     assert result["timeframe"][0] == "5m"
-    assert result["prediction"][0] is True
+    assert result["predvalue"][0] is True
     assert len(result) == 1000
 
 
