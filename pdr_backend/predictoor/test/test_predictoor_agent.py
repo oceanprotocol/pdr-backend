@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
@@ -16,6 +16,7 @@ from pdr_backend.predictoor.test.mockutil import (
     mock_ppss_1feed,
     mock_ppss_2feeds,
 )
+from pdr_backend.util.currency_types import Eth
 
 
 # ===========================================================================
@@ -232,3 +233,37 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 
         assert_array_equal(expected_X, mock_model.last_X)
         assert_array_equal(expected_yptrue, mock_model.last_yptrue)
+
+
+@enforce_types
+@pytest.mark.parametrize(
+    "up_ocean, down_ocean, up_native, down_native, expected",
+    [
+        (Eth(100), Eth(100), Eth(2), Eth(2), True),  # All balances are sufficient
+        (Eth(0), Eth(100), Eth(2), Eth(2), False),  # Up OCEAN balance too low
+        (Eth(100), Eth(0), Eth(2), Eth(2), False),  # Down OCEAN balance too low
+        (Eth(100), Eth(100), Eth(0), Eth(2), False),  # Up native balance too low
+        (Eth(100), Eth(100), Eth(2), Eth(0), False),  # Down native balance too low
+    ],
+)
+def test_balance_check(
+    tmpdir, monkeypatch, up_ocean, down_ocean, up_native, down_native, expected
+):
+    mock_model = MockModel()
+    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+    aimodel_ss = ppss.predictoor_ss.aimodel_ss
+
+    # do prediction
+    mock_model.aimodel_ss = aimodel_ss
+    agent = PredictoorAgent(ppss)
+
+    agent.feed_contract.token = Mock()
+    agent.feed_contract.token.balanceOf.side_effect = [up_ocean, down_ocean]
+    mock_native_token = Mock()
+    mock_native_token.balanceOf.side_effect = [up_native, down_native]
+
+    with patch(
+        "pdr_backend.predictoor.predictoor_agent.NativeToken",
+        return_value=mock_native_token,
+    ):
+        assert agent.check_balances() == expected
