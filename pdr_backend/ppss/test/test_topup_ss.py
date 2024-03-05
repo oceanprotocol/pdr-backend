@@ -40,7 +40,7 @@ def test_topup_ss():
     ROSE = Mock()
     ROSE.name = "ROSE"
 
-    assert ss.get_min_bal(OCEAN, "0") == Eth(0)
+    assert ss.get_min_bal(OCEAN, "0") == Eth(20)
     assert ss.get_min_bal(OCEAN, "dfbuyer") == Eth(0)
     assert ss.get_min_bal(ROSE, "dfbuyer") == Eth(250)
     assert ss.get_topup_bal(ROSE, "dfbuyer") == Eth(250)

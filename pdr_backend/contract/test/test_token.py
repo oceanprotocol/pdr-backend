@@ -28,7 +28,7 @@ def test_token(web3_pp, web3_config):
     balance_start = token.balanceOf(alice)
     token.transfer(alice, Wei(100), owner_addr)
     balance_end = token.balanceOf(alice)
-    assert balance_end - balance_start == 100
+    assert balance_end - balance_start == Wei(100)
 
 
 @enforce_types
