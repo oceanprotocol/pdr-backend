@@ -56,10 +56,6 @@ def _process_predictions(
         slot_id = _id.split("-")[0] + "-" + _id.split("-")[1]
         return f"{slot_id}"
 
-    # get column names of predictions_df
-    column_names = predictions_df.columns
-    print("column_names---", column_names)
-
     bronze_predictions_df = predictions_df.with_columns(
         [
             pl.col("ID").map_elements(get_slot_id, return_dtype=Utf8).alias("slot_id"),
@@ -93,8 +89,6 @@ def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     predictions_df = tables[bronze_pdr_predictions_table_name].df
 
     # update only the ones within this time range
-    print("truevals_df_columns---", truevals_df.columns)
-    print("predictions_df_columns---", predictions_df.columns)
     predictions_df = (
         predictions_df.join(truevals_df, left_on="slot_id", right_on="ID", how="left")
         .with_columns(
