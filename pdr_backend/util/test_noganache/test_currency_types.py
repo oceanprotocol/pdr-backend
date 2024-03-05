@@ -83,22 +83,22 @@ def test_math_with_wei_and_eth():
     x1, x2 = Wei(5000), Eth(2.5)
 
     with pytest.raises(TypeError):
-        x1 + x2
+        _ = x1 + x2
 
     with pytest.raises(TypeError):
-        x1 - x2
+        _ = x1 - x2
 
     with pytest.raises(TypeError):
-        x1 * x2
+        _ = x1 * x2
 
     with pytest.raises(TypeError):
-        x1 / x2
+        _ = x1 / x2
 
     with pytest.raises(TypeError):
-        x1 > x2
+        _ = x1 > x2
 
     with pytest.raises(TypeError):
-        x1 < x2
+        _ = x1 < x2
 
     with pytest.raises(TypeError):
-        x1 == x2
+        _ = x1 == x2
