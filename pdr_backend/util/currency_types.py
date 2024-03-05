@@ -1,5 +1,5 @@
 import logging
-from abc import ABC 
+from abc import ABC
 from typing import Union
 from enforce_typing import enforce_types
 
@@ -20,27 +20,27 @@ class EthUnit(ABC):
     def __eq__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount == other.to_wei().amount
-        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
+        raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __lt__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount < other.to_wei().amount
-        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
+        raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __le__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount <= other.to_wei().amount
-        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
+        raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __gt__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount > other.to_wei().amount
-        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
+        raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __ge__(self, other) -> bool:
         if isinstance(other, EthUnit) and type(self) is type(other):
             return self.to_wei().amount >= other.to_wei().amount
-        raise ValueError(f"Cannot compare {type(self)} to {type(other)}")
+        raise TypeError(f"Cannot compare {type(self)} to {type(other)}")
 
     def __add__(self, other) -> "EthUnit":
         if isinstance(other, EthUnit) and type(self) is type(other):
@@ -53,7 +53,11 @@ class EthUnit(ABC):
         return self.__class__(self.amount - other)
 
     def __truediv__(self, other) -> "EthUnit":
-        if isinstance(other, EthUnit) and type(self) is type(other) and other.amount != 0:
+        if (
+            isinstance(other, EthUnit)
+            and type(self) is type(other)
+            and other.amount != 0
+        ):
             return self.__class__(self.amount / other.amount)
         return self.__class__(self.amount / other)
 
@@ -74,7 +78,7 @@ class EthUnit(ABC):
     def to_wei(self) -> "Wei":
         """Should be overridden by subclasses"""
         raise NotImplementedError
-    
+
     def to_eth(self) -> "Eth":
         """Should be overridden by subclasses"""
         raise NotImplementedError
