@@ -1,13 +1,18 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
 from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
-from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
+from pdr_backend.contract.predictoor_contract import (
+    PredictoorContract,
+    mock_predictoor_contract,
+)
 from pdr_backend.contract.token import Token
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.publisher.publish_asset import MAX_UINT256
+from pdr_backend.util.currency_types import Eth, Wei
 
 
 @enforce_types
@@ -171,3 +176,35 @@ def test_mock_predictoor_contract():
     c = mock_predictoor_contract("0x123", (3, 4))
     assert c.contract_address == "0x123"
     assert c.get_agg_predval() == (3, 4)
+
+
+@enforce_types
+def test_allowance_update():
+    web3_pp = Mock(spec=Web3PP)
+    mock_token = Mock(spec=Token)
+    address = "0x123"
+    with patch(
+        "pdr_backend.contract.predictoor_contract.Token",
+        autospec=True,
+        return_value=mock_token,
+    ):
+        contract = PredictoorContract(web3_pp, address)
+
+        contract.config.owner = "0xowner"
+        contract.contract_address = "0xcontract"
+
+        allowance = contract.last_allowance[contract.config.owner]
+        assert allowance == Wei(0)
+
+        contract.token.allowance.return_value = Wei(1000)
+        contract.token.approve = Mock()
+
+        contract.submit_prediction(
+            predicted_value=True,
+            stake_amt=Wei(10),
+            prediction_ts=123,
+            wait_for_receipt=True,
+        )
+
+        allowance = contract.last_allowance[contract.config.owner]
+        assert allowance == Wei(MAX_UINT256)
