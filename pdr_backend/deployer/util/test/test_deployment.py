@@ -83,7 +83,7 @@ def test_destroy_cluster_pods(mock_shutil_which):
         with patch("builtins.input", return_value="n"):
             deployment.destroy_cluster(mock_provider, "cluster_name", "config_name")
             mock_run_command.assert_called_once_with(
-                "kubectl delete pods --all -n config-name"
+                "kubectl delete deployment --all -n config-name"
             )
 
 
@@ -109,7 +109,7 @@ def test_delete_all_pods(mock_shutil_which):
     with patch("pdr_backend.deployer.util.deployment.run_command") as mock_run_command:
         deployment.delete_all_pods(mock_provider, "cluster_name", "config_name")
         mock_run_command.assert_called_once_with(
-            "kubectl delete pods --all -n config-name"
+            "kubectl delete deployment --all -n config-name"
         )
 
 
