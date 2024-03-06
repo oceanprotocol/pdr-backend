@@ -14,6 +14,7 @@ def mock_fetch_function(
     return []
 
 
+# pylint: disable=too-many-instance-attributes
 class MyClass:
     def __init__(self, data):
         self.ID = data["ID"]
