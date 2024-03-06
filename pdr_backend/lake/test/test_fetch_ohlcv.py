@@ -263,7 +263,7 @@ def test_safe_fetch_ohlcv_dydx(
             assert result[0][4] == expected_close, "Close price does not match"
         elif expected_error_msg:
             assert (
-                "msg" in result[0][1] and result[0][1][1] == expected_error_msg
+                "msg" in result[1] and result[1][1] == expected_error_msg
             ), "Expected an error message"
         else:
             assert result is None

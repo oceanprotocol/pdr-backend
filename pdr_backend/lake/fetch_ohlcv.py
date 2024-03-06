@@ -113,9 +113,8 @@ def safe_fetch_ohlcv_dydx(
             return dydx_data
 
         elif key_name == "errors" and items:
-            errors = items[0]
-            error_msg = list(errors.items())
-            dydx_data.append(error_msg)
+            for error in data[key_name]:
+                    dydx_data.extend(error.items())
             return dydx_data
 
         return None
