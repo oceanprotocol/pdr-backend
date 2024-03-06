@@ -18,7 +18,6 @@ from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
-FONTSIZE = 9
 
 
 # pylint: disable=too-many-instance-attributes
