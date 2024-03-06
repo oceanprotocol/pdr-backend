@@ -1,4 +1,3 @@
-from hashlib import md5
 from abc import abstractmethod
 from typing import Optional, Literal
 
@@ -23,7 +22,6 @@ class BaseDataStore:
     @abstractmethod
     def query_data(
         self,
-        dataset_identifier: str,
         query: str,
         partition_type: Optional[Literal["date", "address"]] = None,
     ):

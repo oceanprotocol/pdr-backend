@@ -1,5 +1,5 @@
-from pdr_backend.lake.base_data_store import BaseDataStore
 import duckdb
+from pdr_backend.lake.base_data_store import BaseDataStore
 
 
 def _get_data_store(tmpdir):
