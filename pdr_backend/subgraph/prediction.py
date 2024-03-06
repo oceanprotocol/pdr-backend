@@ -13,9 +13,9 @@ class Prediction:
         contract: str,
         pair: str,
         timeframe: str,
-        prediction: Union[bool, None],  # prediction = subgraph.predicted_value
+        predvalue: Union[bool, None],
         stake: Union[float, None],
-        trueval: Union[bool, None],
+        truevalue: Union[bool, None],
         timestamp: UnixTimeS,  # timestamp == prediction submitted timestamp
         source: str,
         payout: Union[float, None],
@@ -26,9 +26,9 @@ class Prediction:
         self.contract = contract
         self.pair = pair
         self.timeframe = timeframe
-        self.prediction = prediction  # predvalue
+        self.predvalue = predvalue
         self.stake = stake
-        self.trueval = trueval  # truevalue
+        self.truevalue = truevalue
         self.timestamp = timestamp
         self.source = source
         self.payout = payout
@@ -46,9 +46,9 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         contract,
         pair_str,
         timeframe_str,
-        prediction,
+        predvalue,
         stake,
-        trueval,
+        truevalue,
         timestamp,
         source,
         payout,
@@ -62,9 +62,9 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
         contract=contract,
         pair=pair_str,
         timeframe=timeframe_str,
-        prediction=prediction,
+        predvalue=predvalue,
         stake=stake,
-        trueval=trueval,
+        truevalue=truevalue,
         timestamp=UnixTimeS(timestamp),
         source=source,
         payout=payout,

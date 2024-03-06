@@ -118,7 +118,7 @@ def fetch_truevals(
             ID=ID,
             token=token,
             timestamp=timestamp,
-            trueval=truevalue,
+            truevalue=truevalue,
             slot=slot,
         )
 

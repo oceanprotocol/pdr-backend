@@ -17,7 +17,7 @@ class MyClass:
         self.ID = data["ID"]
         self.pair = data["pair"]
         self.timeframe = data["timeframe"]
-        self.prediction = data["prediction"]
+        self.predvalue = data["predvalue"]
         self.payout = data["payout"]
         self.timestamp = data["timestamp"]
         self.slot = data["slot"]
@@ -28,7 +28,7 @@ mocked_object = {
     "ID": "0x123",
     "pair": "ADA-USDT",
     "timeframe": "5m",
-    "prediction": True,
+    "predvalue": True,
     "payout": 28.2,
     "timestamp": 1701634400,
     "slot": 1701634400,
@@ -66,7 +66,7 @@ table_df_schema = {
     "ID": Utf8,
     "pair": Utf8,
     "timeframe": Utf8,
-    "prediction": Boolean,
+    "predvalue": Boolean,
     "payout": Float64,
     "timestamp": Int64,
     "slot": Int64,
@@ -271,7 +271,7 @@ def test_append_to_db(tmpdir):
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"
     assert result["timeframe"][0] == "5m"
-    assert result["prediction"][0] is True
+    assert result["predvalue"][0] is True
     assert len(result) == 1000
 
 
