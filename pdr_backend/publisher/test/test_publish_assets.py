@@ -29,7 +29,6 @@ def _test_barge(network, monkeypatch):
 
     n_calls = len(mock_publish_asset.call_args_list)
     assert n_calls == 1 * 3
-    print(mock_publish_asset.call_args_list)
     mock_publish_asset.assert_any_call(
         s_per_epoch=300,
         s_per_subscription=60 * 60 * 24,
