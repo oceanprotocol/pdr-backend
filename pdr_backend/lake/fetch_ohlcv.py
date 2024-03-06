@@ -11,6 +11,7 @@ from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     OHLCV_MULT_MAX,
     OHLCV_MULT_MIN,
+    BASE_URL_DYDX
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -87,9 +88,9 @@ def safe_fetch_ohlcv_dydx(
         if exch != "dydx":
             return None
         headers = {"Accept": "application/json"}
-        baseURL = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
+        # BASE_URL_DYDX = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
         response = requests.get(
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
             headers=headers,
             timeout=20,
         )
@@ -115,7 +116,6 @@ def safe_fetch_ohlcv_dydx(
                 )
                 dydx_data.append(ohlcv_tuple)
 
-            print(dydx_data)
             return dydx_data
 
         elif key_name == "errors" and items:

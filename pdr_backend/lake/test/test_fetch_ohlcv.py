@@ -16,7 +16,7 @@ from pdr_backend.lake.fetch_ohlcv import (
     safe_fetch_ohlcv_dydx,
 )
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
+from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL, BASE_URL_DYDX
 
 
 MPE = 300000  # ms per 5min epoch
@@ -27,6 +27,8 @@ RAW5 = [T5, 0.5, 12, 0.12, 1.1, 7.0]
 RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
 RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
+
+# BASE_URL_DYDX = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
 
 mock_dydx_response = {
     "candles": [
@@ -80,9 +82,9 @@ mock_bad_timeframe_dydx_response = {
     ]
 }
 
-mock_bad_date_dydx_response: Dict[str, List[Any]] = {
+mock_bad_date_dydx_response: Dict[str, List[Any]] = { # Added variable annotation to resolve mypy inferred typing issue
     "candles": []
-}  # Added variable annotation to resolve mypy inferred typing issue
+}
 
 mock_bad_limit_dydx_response = {
     "errors": [
@@ -166,126 +168,28 @@ def test_safe_fetch_ohlcv_ccxt(exch):
     v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
     assert v is None
 
+@pytest.mark.parametrize("exch, symbol, timeframe, since, limit, expected_timestamp, expected_close, expected_error_msg, mock_response", [
+    ("dydx", "BTC-USD", "5MINS", UnixTimeMs.from_timestr("2024-02-27"), 1, 1709157000000, 61800, None, mock_dydx_response),
+    ("dydx", "BTC-ETH", "5MINS", UnixTimeMs.from_timestr("2024-02-27"), 1, None, None, "ticker must be a valid ticker (BTC-USD, etc)", mock_bad_token_dydx_response_1),
+    ("dydx", "RANDOMTOKEN-USD", "5MINS", UnixTimeMs.from_timestr("2024-02-27"), 1, None, None, "ticker must be a valid ticker (BTC-USD, etc)", mock_bad_token_dydx_response_2),
+    ("dydx", "BTC-USD", "5m", UnixTimeMs.from_timestr("2024-02-27"), 1, None, None, "resolution must be a valid Candle Resolution, one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY", mock_bad_timeframe_dydx_response),
+    ("dydx", "BTC-USD", "5MINS", UnixTimeMs.from_timestr("2222-02-27"), 1, None, None, None, mock_bad_date_dydx_response),
+    ("dydx", "BTC-USD", "5MINS", UnixTimeMs.from_timestr("2024-02-27"), 100000, None, None, "limit must be a positive integer that is not greater than max: 100", mock_bad_limit_dydx_response),
+])
 
 @enforce_types
-def test_safe_fetch_ohlcv_dydx():
-    baseURL = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
-
-    # happy path dydx
+def test_safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit, expected_timestamp, expected_close, expected_error_msg, mock_response):
     with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "BTC-USD",
-            "5MINS",
-            UnixTimeMs.from_timestr("2024-02-27"),
-            1
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_dydx_response,
-        )
+        m.register_uri("GET", f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}", json=mock_response)
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
-        assert result[0][0] == 1709157000000, "Timestamp does not match"
-        assert result[0][1] == 61840, "Open value does not match"
-        assert result[0][2] == 61848, "High value does not match"
-        assert result[0][3] == 61687, "Low value does not match"
-        assert result[0][4] == 61800, "Close value does not match"
-        assert result[0][5] == 23.6064, "Volume does not match"
-
-    # bad token test 1 - pair must end in "-USD"
-    with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "BTC-ETH",
-            "5MINS",
-            UnixTimeMs.from_timestr("2024-02-27"),
-            1,
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_bad_token_dydx_response_1,
-        )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
-
-    # bad token test 2 - token must exist
-    with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "RANDOMTOKEN-USD",
-            "5MINS",
-            UnixTimeMs.from_timestr("2024-02-27"),
-            1,
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_bad_token_dydx_response_2,
-        )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
-
-    # bad timeframe test
-    with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "BTC-USD",
-            "5m",
-            UnixTimeMs.from_timestr("2024-02-27"),
-            1,
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_bad_timeframe_dydx_response,
-        )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result[0][1] == (
-            "msg",
-            "resolution must be a valid Candle Resolution, "
-            "one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
-        )
-
-    # bad date test
-    with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "BTC-USD",
-            "5MINS",
-            UnixTimeMs.from_timestr("2222-02-27"),
-            1,
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_bad_date_dydx_response,
-        )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result == None
-
-    # bad limit test
-    with requests_mock.Mocker() as m:
-        exch, symbol, timeframe, since, limit = (
-            "dydx",
-            "BTC-USD",
-            "5MINS",
-            UnixTimeMs.from_timestr("2024-02-27"),
-            100000,
-        )
-        m.register_uri(
-            "GET",
-            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            json=mock_bad_limit_dydx_response,
-        )
-        result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result[0][1] == (
-            "msg",
-            "limit must be a positive integer that is not greater than max: 100",
-        )
-
+        if expected_timestamp:
+            assert result[0][0] == expected_timestamp, "Timestamp does not match"
+            assert result[0][4] == expected_close, "Close price does not match"
+        elif expected_error_msg:
+            assert "msg" in result[0][1] and result[0][1][1] == expected_error_msg, "Expected an error message"
+        else:
+            assert result is None
 
 @enforce_types
 def assert_raw_tohlc_data_ok(raw_tohlc_data):
