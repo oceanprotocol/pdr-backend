@@ -29,12 +29,14 @@ To create a new release for pdr-backend, follow these steps:
 1. Click "Publish release."
 
 What happens then:
+
 - The pdr-backend Github Releases Page will now include this release
 - CI/CD will automatically build and publish a **new Docker image** with the release tag, making it available for installation and use.
 
 # About PyPi
 
 The release process does not include publishing to pypi.
+
 - This is because we have explicitly _not_ put pdr-backend into pypi yet. It's not meant to be used as a library yet. In time, it likely will. Just not yet.
 
 # About Docker
@@ -69,6 +71,7 @@ docker build . -t 'oceanprotocol/pdr-backend:yaml-cli2' .
 ```
 
 Then, start barge, using the custom label:
+
 ```console
 cd ~/code/barge
 export PDR_BACKEND_VERSION=yaml-cli2
@@ -89,4 +92,3 @@ Pros of local testing:
 - [barge.md](barge.md): the main Barge README
 - [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
 - [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.
-

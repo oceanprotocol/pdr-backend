@@ -12,6 +12,7 @@ You can query an Ocean subgraph at one of the following:
 The subgraph url for each network is in the ppss yaml under "subgraph url".
 
 Typically, these are something like:
+
 - Local (barge)
   - http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
   - OR http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph
@@ -23,6 +24,7 @@ Typically, these are something like:
 ### Typical query
 
 For a general overview, here's a good one:
+
 ```text
 query{
   predictContracts{
@@ -56,14 +58,14 @@ query{
         trueValue
       }
     }
-  } 
+  }
 }
 ```
-  
 
 ### Queries in pdr-backend agents
 
 Agents like predictoor and trader do queries via [pdr_backend/util/subgraph.py](https://github.com/oceanprotocol/pdr-backend/blob/main/pdr_backend/util/subgraph.py).
+
 - They call to a subgraph, at a given url, with a particular query
 - and they may filter further
 

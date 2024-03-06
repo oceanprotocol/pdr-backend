@@ -20,6 +20,7 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 #### 2. Execute Payout
 
 From console:
+
 ```console
 pdr claim_OCEAN ppss.yaml
 ```
@@ -35,12 +36,14 @@ It's good practice to run the payout module again. This ensures any failed block
 ### Steps to Request ROSE Rewards
 
 #### 1. Preparation
- - Make sure you requested your Payout mentioned above, between the DF round end and ROSE rewards distribution(on Monday, 4 days after the DF round ends), for all your predictions from the DF round to be counted in ROSE rewards calculation.
- - Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C` to stop the predictions. This is crucial as active submissions can interfere with the payout process.
+
+- Make sure you requested your Payout mentioned above, between the DF round end and ROSE rewards distribution(on Monday, 4 days after the DF round ends), for all your predictions from the DF round to be counted in ROSE rewards calculation.
+- Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C` to stop the predictions. This is crucial as active submissions can interfere with the payout process.
 
 #### 2. Claim ROSE Rewards
 
 From console:
+
 ```console
 pdr claim_ROSE ppss.yaml
 ```

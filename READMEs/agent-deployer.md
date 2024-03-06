@@ -5,15 +5,16 @@
 ## Usage
 
 ### Agent Configurations
-Firstly, you need to set up your agents configuration. This is done by creating a config entry under `deployment_configs` in `ppss.yaml` file. 
+
+Firstly, you need to set up your agents configuration. This is done by creating a config entry under `deployment_configs` in `ppss.yaml` file.
 
 Here is an example structure for your reference:
 
 ```yaml
 deployment_configs:
   testnet_predictoor_deployment:
-    cpu: '1'
-    memory: '512Mi'
+    cpu: "1"
+    memory: "512Mi"
     source: "binance"
     type: "predictoor"
     approach: 3
@@ -21,28 +22,29 @@ deployment_configs:
     s_until_epoch_end: 20
     pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
     agents:
-      - pair: 'BTC/USDT'
+      - pair: "BTC/USDT"
         stake_amt: 15
         timeframe: 5m
         approach: 1
-      - pair: 'ETH/USDT'
+      - pair: "ETH/USDT"
         stake_amt: 20
         timeframe: 1h
         s_until_epoch_end: 60
 ```
 
-*Tip: Specific agent settings (like source, timeframe) will override general settings if provided.*
+_Tip: Specific agent settings (like source, timeframe) will override general settings if provided._
 
 ### Private Keys
 
 Create a `.keys.json` file and format it as follows:
+
 ```
 {
     "config_name": ["pk1", "pk2"...]
 }
 ```
 
-*Note: If you have fewer private keys than number of agents, the tool will create new wallets and update the .keys.json file.*
+_Note: If you have fewer private keys than number of agents, the tool will create new wallets and update the .keys.json file._
 
 ### Generate Templates
 
@@ -96,7 +98,6 @@ pdr deployer logs <config_name> [-p PROVIDER]
 - `<config_name>`: Name of the config.
 - -p, --provider: Cloud provider (optional, choices: "aws", "azure", "gcp"). (optional)
 
-
 ### Remote Container Registry
 
 The `registry` command is used to manage remote registries for agent deployment.
@@ -112,7 +113,6 @@ pdr deployer registry <action> <registry_name> [-p PROVIDER] [-r REGION] [--proj
 - --project_id: Google Cloud project id (optional).
 - --resource_group: Azure resource group (optional).
 
-
 ### Build
 
 The build command is used to build a container image.
@@ -123,7 +123,6 @@ pdr deployer build <image_name> <image_tag>
 
 - `<image_name>`: Image name (default: "pdr_backend").
 - `<image_tag>`: Image tag (default: "deployer").
-
 
 #### Push
 
@@ -136,7 +135,6 @@ pdr deployer push <registry_name> [<image_name>] [<image_tag>]
 - `<registry_name>`: Registry name.
 - `<image_name>`: Image name (default: "pdr_backend").
 - `<image_tag>`: Image tag (default: "deployer").
-
 
 ## Examples
 
