@@ -93,31 +93,25 @@ def safe_fetch_ohlcv_dydx(
             headers=headers,
             timeout=20,
         )
-        data = response.json() # dydx returns a dict with a single key that contains a list of dicts as its value
+        data = response.json()
 
         dydx_data = []
         key_name = next(iter(data))  # Get the first key in the dict
         items = data[key_name]
+
         if key_name == "candles" and items:
             for item in items:
-                # Process & return candle data
                 dt = datetime.strptime(
                     item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
                 )  # Convert ISO date to timestamp
                 timestamp = int(dt.timestamp() * 1000)
-                open_price = float_or_none(item["open"])
-                high_price = float_or_none(item["high"])
-                low_price = float_or_none(item["low"])
-                close_price = float_or_none(item["close"])
-                volume = float_or_none(item["baseTokenVolume"])
-                # Create tuple from the data & append to list
-                ohlcv_tuple = (
+                ohlcv_tuple = ( # Create tuple from the data & append to list
                     timestamp,
-                    open_price,
-                    high_price,
-                    low_price,
-                    close_price,
-                    volume,
+                    float_or_none(item["open"]),
+                    float_or_none(item["high"]),
+                    float_or_none(item["low"]),
+                    float_or_none(item["close"]),
+                    float_or_none(item["baseTokenVolume"])
                 )
                 dydx_data.append(ohlcv_tuple)
 
@@ -125,7 +119,6 @@ def safe_fetch_ohlcv_dydx(
             return dydx_data
 
         elif key_name == "errors" and items:
-        # Return any errors
             errors = items[0]
             error_msg = list(errors.items())
             dydx_data.append(error_msg)
