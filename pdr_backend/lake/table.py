@@ -25,6 +25,9 @@ class Table:
         self.df_schema = df_schema
         self.df = pl.DataFrame([], schema=df_schema)
         print("self.df", self.df)
+        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
+        self.PDS = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+
         self.load()
 
     @enforce_types
@@ -33,9 +36,7 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         print(f"Loading data for {self.table_name}")
-        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
-        self.persistent_data_store = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
-
+        
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
         self.df = self.csv_data_store.read(
@@ -68,11 +69,22 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        self.persistent_data_store.insert_to_table(data, self.table_name)
+        self.PDS.insert_to_table(data, self.table_name)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
         )
+
+    def get_pds_last_record(self) -> pl.DataFrame:
+        """
+        Get the last record from the persistent data store
+
+        @returns
+            pl.DataFrame
+        """
+
+        query = "SELECT * FROM {view_name} ORDER BY timestamp DESC LIMIT 1"
+        return self.PDS.query_data(self.table_name, query)
 
     @enforce_types
     def get_pdr_df(

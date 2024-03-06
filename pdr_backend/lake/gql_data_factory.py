@@ -131,8 +131,18 @@ class GQLDataFactory:
         """
 
         for _, table in self.record_config["tables"].items():
-            filename = table._parquet_filename()
-            st_ut = table._calc_start_ut(filename)
+            print(f"  Updating table {table.table_name}")
+
+            # fetch the last record from the table.PDS (persistent_data_store)
+            last_record = table.get_pds_last_record()
+
+            # if there is no last record, then use the start time of the lake
+            st_ut = (
+                last_record.timestamp
+                if last_record is not None
+                else self.ppss.lake_ss.st_timestamp
+            )
+
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
             if st_ut > min(UnixTimeMs.now(), fin_ut):
