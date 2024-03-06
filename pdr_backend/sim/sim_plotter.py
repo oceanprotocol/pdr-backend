@@ -17,7 +17,14 @@ FONTSIZE = 9
 
 @enforce_types
 class SimPlotter:
-    def __init__(self, include_contour: bool):
+    def __init__(
+            self, 
+            ppss: PPSS,
+            st: SimState,
+            include_contour: bool,
+    ):
+        self.st = st
+        self.ppss = ppss
         self.include_contour = include_contour
 
         fig = plt.figure()
@@ -47,13 +54,12 @@ class SimPlotter:
     # pylint: disable=too-many-statements
     def make_plot(
             self,
-            st: SimState,
-            ppss: PPSS,
             model: Aimodel,
             X_train: np.ndarray,
             ybool_train: np.ndarray,
             colnames: List[str],
     ):
+        ppss, st = self.ppss, self.st
         stake_amt = ppss.predictoor_ss.stake_amount.amt_eth
 
         fig = self.fig
@@ -129,13 +135,13 @@ class SimPlotter:
         # plot row 1, col 1: 1d scatter of predictoor profits
         mnp, mxp = -stake_amt, +stake_amt
         self._scatter_profits(
-            ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN, st, N_done, N,
+            ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN, N_done, N,
         )
 
         # plot row 1, col 2: 1d scatter of trader profits
         mnp, mxp = min(st.trader_profits_USD), max(st.trader_profits_USD)
         self._scatter_profits(
-            ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD, st, N_done, N,
+            ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD, N_done, N,
         )
 
         # final pieces
@@ -154,12 +160,11 @@ class SimPlotter:
             mnp: float,
             mxp: float,
             st_profits: np.ndarray,
-            st: SimState,
             N_done: int,
             N: int,
     ):
         """reusable scatterplot of profit vs p(up)"""
-        next_probs_up = _slice(st.probs_up, N_done, N)
+        next_probs_up = _slice(self.st.probs_up, N_done, N)
         next_profits = _slice(st_profits, N_done, N)
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)

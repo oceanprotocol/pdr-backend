@@ -44,7 +44,7 @@ class SimEngine:
         if self.ppss.sim_ss.do_plot:
             n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
             include_contour = n == 2
-            self.sim_plotter = SimPlotter(include_contour)
+            self.sim_plotter = SimPlotter(self.ppss, self.st, include_contour)
 
         self.logfile = ""
 
@@ -224,8 +224,6 @@ class SimEngine:
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             self.sim_plotter.make_plot(  # type: ignore[union-attr]
-                self.st,
-                self.ppss,
                 model,
                 X_train,
                 ybool_train,
