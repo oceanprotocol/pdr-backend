@@ -88,9 +88,9 @@ def safe_fetch_ohlcv_dydx(
             return None
         sinceIso = since.to_iso_timestr()
         headers = {"Accept": "application/json"}
-        baseURL = "https://indexer.dydx.trade/v4"
+        baseURL = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
         response = requests.get(
-            f"{baseURL}/candles/perpetualMarkets/{symbol}",
+            f"{baseURL}/{symbol}",
             params={"resolution": timeframe, "fromISO": sinceIso, "limit": str(limit)},
             headers=headers,
             timeout=20,
