@@ -1,3 +1,4 @@
+from typing import List
 
 from enforce_typing import enforce_types
 from matplotlib import gridspec
@@ -6,12 +7,16 @@ import numpy as np
 from numpy.random import random
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.plot_model import plot_model
+from pdr_backend.aimodel.aimodel import Aimodel
+from pdr_backend.aimodel.model_plotter import plot_model
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.sim_state import SimState
+
 
 FONTSIZE = 9
 
 @enforce_types
-class SimPlotState:
+class SimPlotter:
     def __init__(self, include_contour: bool):
         self.include_contour = include_contour
 
@@ -40,7 +45,15 @@ class SimPlotState:
         plt.show()
 
     # pylint: disable=too-many-statements
-    def make_plot(self, st, ppss, model, X_train, ybool_train, colnames):
+    def make_plot(
+            self,
+            st: SimState,
+            ppss: PPSS,
+            model: Aimodel,
+            X_train: np.ndarray,
+            ybool_train: np.ndarray,
+            colnames: List[str],
+    ):
         stake_amt = ppss.predictoor_ss.stake_amount.amt_eth
 
         fig = self.fig
@@ -113,30 +126,17 @@ class SimPlotState:
             _ylabel_on_right(ax10)
             ax10.margins(0.005, 0.05)
 
-        # reusable profits scatterplot
-        def _scatter_profits(ax, actor: str, denomin, mnp, mxp, st_profits):
-            next_probs_up = _slice(st.probs_up, N_done, N)
-            next_profits = _slice(st_profits, N_done, N)
-            c = (random(), random(), random())  # random RGB color
-            ax.scatter(next_probs_up, next_profits, color=c, s=1)
-            avg = np.average(st_profits)
-            s = f"{actor} profit distr'n. avg={avg:.2f} {denomin}"
-            _set_title(ax, s)
-            ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
-            if not self.plotted_before:
-                ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-                _set_xlabel(ax, "prob(up)")
-                _set_ylabel(ax, f"{actor} profit ({denomin})")
-                _ylabel_on_right(ax)
-                ax.margins(0.05, 0.05)
-
         # plot row 1, col 1: 1d scatter of predictoor profits
         mnp, mxp = -stake_amt, +stake_amt
-        _scatter_profits(ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN)
+        self._scatter_profits(
+            ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN, st, N_done, N,
+        )
 
         # plot row 1, col 2: 1d scatter of trader profits
         mnp, mxp = min(st.trader_profits_USD), max(st.trader_profits_USD)
-        _scatter_profits(ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD)
+        self._scatter_profits(
+            ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD, st, N_done, N,
+        )
 
         # final pieces
         HEIGHT = 7.5  # magic number
@@ -145,6 +145,34 @@ class SimPlotState:
         fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
         plt.pause(0.001)
         self.plotted_before = True
+
+    def _scatter_profits(
+            self,
+            ax,
+            actor: str,
+            denomin: str,
+            mnp: float,
+            mxp: float,
+            st_profits: np.ndarray,
+            st: SimState,
+            N_done: int,
+            N: int,
+    ):
+        """reusable scatterplot of profit vs p(up)"""
+        next_probs_up = _slice(st.probs_up, N_done, N)
+        next_profits = _slice(st_profits, N_done, N)
+        c = (random(), random(), random())  # random RGB color
+        ax.scatter(next_probs_up, next_profits, color=c, s=1)
+        avg = np.average(st_profits)
+        s = f"{actor} profit distr'n. avg={avg:.2f} {denomin}"
+        _set_title(ax, s)
+        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
+        if not self.plotted_before:
+            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
+            _set_xlabel(ax, "prob(up)")
+            _set_ylabel(ax, f"{actor} profit ({denomin})")
+            _ylabel_on_right(ax)
+            ax.margins(0.05, 0.05)
 
 
 def _shift_one_earlier(s: str):

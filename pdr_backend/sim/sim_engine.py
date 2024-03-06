@@ -12,30 +12,13 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_plot_state import SimPlotState
+from pdr_backend.sim.sim_state import SimState
+from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
-
-
-# pylint: disable=too-many-instance-attributes
-class SimEngineState:
-    def __init__(self, init_holdings: Dict[str, Eth]):
-        self.holdings: Dict[str, float] = {
-            tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
-        }
-        self.init_loop_attributes()
-
-    def init_loop_attributes(self):
-        self.accs_train: List[float] = []
-        self.ybools_test: List[float] = []
-        self.ybools_testhat: List[float] = []
-        self.probs_up: List[float] = []
-        self.corrects: List[bool] = []
-        self.trader_profits_USD: List[float] = []
-        self.pdr_profits_OCEAN: List[float] = []
 
 
 # pylint: disable=too-many-instance-attributes
@@ -53,15 +36,15 @@ class SimEngine:
 
         self.ppss = ppss
 
-        self.st = SimEngineState(
+        self.st = SimState(
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plot_state = None
+        self.sim_plotter = None
         if self.ppss.sim_ss.do_plot:
             n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
             include_contour = n == 2
-            self.sim_plot_state = SimPlotState(include_contour)
+            self.sim_plotter = SimPlotter(include_contour)
 
         self.logfile = ""
 
@@ -240,7 +223,7 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
-            self.sim_plot_state.make_plot(  # type: ignore[union-attr]
+            self.sim_plotter.make_plot(  # type: ignore[union-attr]
                 self.st,
                 self.ppss,
                 model,
