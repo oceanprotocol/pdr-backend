@@ -8,11 +8,7 @@ import requests
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.lake.constants import (
-    OHLCV_MULT_MAX,
-    OHLCV_MULT_MIN,
-    BASE_URL_DYDX
-)
+from pdr_backend.lake.constants import OHLCV_MULT_MAX, OHLCV_MULT_MIN, BASE_URL_DYDX
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
@@ -90,7 +86,7 @@ def safe_fetch_ohlcv_dydx(
         headers = {"Accept": "application/json"}
         response = requests.get(
             f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            headers=headers
+            headers=headers,
         )
         data = response.json()
 
@@ -100,7 +96,9 @@ def safe_fetch_ohlcv_dydx(
 
         if key_name == "candles" and items:
             for item in items:
-                dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")  # Convert ISO date to timestamp
+                dt = datetime.strptime(
+                    item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )  # Convert ISO date to timestamp
                 timestamp = int(dt.timestamp() * 1000)
                 ohlcv_tuple = (
                     timestamp,
@@ -108,7 +106,7 @@ def safe_fetch_ohlcv_dydx(
                     float_or_none(item["high"]),
                     float_or_none(item["low"]),
                     float_or_none(item["close"]),
-                    float_or_none(item["baseTokenVolume"])
+                    float_or_none(item["baseTokenVolume"]),
                 )
                 dydx_data.append(ohlcv_tuple)
 
@@ -126,8 +124,10 @@ def safe_fetch_ohlcv_dydx(
         logger.warning("exchange: %s", e)
         return None
 
+
 def float_or_none(x: str) -> Optional[float]:
     return float(x) if x is not None else None
+
 
 @enforce_types
 def clean_raw_ohlcv(
