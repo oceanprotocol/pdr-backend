@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -86,39 +86,30 @@ def safe_fetch_ohlcv_dydx(
     try:
         if exch != "dydx":
             return None
-        sinceIso = since.to_iso_timestr()
         headers = {"Accept": "application/json"}
         baseURL = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
         response = requests.get(
-            f"{baseURL}/{symbol}",
-            params={"resolution": timeframe, "fromISO": sinceIso, "limit": str(limit)},
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
             headers=headers,
             timeout=20,
         )
-        data = response.json()
+        data = response.json() # dydx returns a dict with a single key that contains a list of dicts as its value
 
-        if "candles" in data:
-            ohlcv_data = []
-            for candle in data["candles"]:
+        dydx_data = []
+        key_name = next(iter(data))  # Get the first key in the dict
+        items = data[key_name]
+        if key_name == "candles" and items:
+            for item in items:
+                # Process & return candle data
                 dt = datetime.strptime(
-                    candle["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                    item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
                 )  # Convert ISO date to timestamp
                 timestamp = int(dt.timestamp() * 1000)
-                open_price = (
-                    float(candle["open"]) if candle["open"] is not None else None
-                )
-                high_price = (
-                    float(candle["high"]) if candle["high"] is not None else None
-                )
-                low_price = float(candle["low"]) if candle["low"] is not None else None
-                close_price = (
-                    float(candle["close"]) if candle["close"] is not None else None
-                )
-                volume = (
-                    float(candle["baseTokenVolume"])
-                    if candle["baseTokenVolume"] is not None
-                    else None
-                )
+                open_price = float_or_none(item["open"])
+                high_price = float_or_none(item["high"])
+                low_price = float_or_none(item["low"])
+                close_price = float_or_none(item["close"])
+                volume = float_or_none(item["baseTokenVolume"])
                 # Create tuple from the data & append to list
                 ohlcv_tuple = (
                     timestamp,
@@ -128,24 +119,26 @@ def safe_fetch_ohlcv_dydx(
                     close_price,
                     volume,
                 )
-                ohlcv_data.append(ohlcv_tuple)
-            return ohlcv_data
+                dydx_data.append(ohlcv_tuple)
 
-        if "errors" in data:
-            errors = []
-            for error in data["errors"]:
-                error_tuples = tuple(error.items())
-                errors.append(error_tuples)
-            print("No candle data found. Encountered the following error: ", errors)
-            return errors
+            print(dydx_data)
+            return dydx_data
 
-        print("No candle data found. Dydx response is: ", data)
+        elif key_name == "errors" and items:
+        # Return any errors
+            errors = items[0]
+            error_msg = list(errors.items())
+            dydx_data.append(error_msg)
+            return dydx_data
+
         return None
 
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
 
+def float_or_none(x: str) -> Optional[float]:
+    return float(x) if x is not None else None
 
 @enforce_types
 def clean_raw_ohlcv(

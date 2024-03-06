@@ -173,17 +173,17 @@ def test_safe_fetch_ohlcv_dydx():
 
     # happy path dydx
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_dydx_response,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-USD",
             "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
-            1,
+            1
+        )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_dydx_response,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
@@ -196,11 +196,6 @@ def test_safe_fetch_ohlcv_dydx():
 
     # bad token test 1 - pair must end in "-USD"
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/BTC-ETH?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_bad_token_dydx_response_1,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-ETH",
@@ -208,16 +203,16 @@ def test_safe_fetch_ohlcv_dydx():
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
         )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_bad_token_dydx_response_1,
+        )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
         assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
 
     # bad token test 2 - token must exist
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/RANDOMTOKEN-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_bad_token_dydx_response_2,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "RANDOMTOKEN-USD",
@@ -225,22 +220,27 @@ def test_safe_fetch_ohlcv_dydx():
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
         )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_bad_token_dydx_response_2,
+        )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
         assert result[0][1] == ("msg", "ticker must be a valid ticker (BTC-USD, etc)")
 
     # bad timeframe test
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/BTC-USD?resolution=5m&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_bad_timeframe_dydx_response,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-USD",
             "5m",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
+        )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_bad_timeframe_dydx_response,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
         assert result[0][1] == (
@@ -251,11 +251,6 @@ def test_safe_fetch_ohlcv_dydx():
 
     # bad date test
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/BTC-USD?resolution=5MINS&fromISO=2222-02-27T00:00:00.000Z&limit=1",
-            json=mock_bad_date_dydx_response,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-USD",
@@ -263,22 +258,27 @@ def test_safe_fetch_ohlcv_dydx():
             UnixTimeMs.from_timestr("2222-02-27"),
             1,
         )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_bad_date_dydx_response,
+        )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
-        assert result == []
+        assert result == None
 
     # bad limit test
     with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            f"{baseURL}/BTC-USD?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=100000",
-            json=mock_bad_limit_dydx_response,
-        )
         exch, symbol, timeframe, since, limit = (
             "dydx",
             "BTC-USD",
             "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
             100000,
+        )
+        m.register_uri(
+            "GET",
+            f"{baseURL}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_bad_limit_dydx_response,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
         assert result[0][1] == (
