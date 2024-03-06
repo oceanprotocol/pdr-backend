@@ -133,16 +133,10 @@ class SimPlotter:
             ax10.margins(0.005, 0.05)
 
         # plot row 1, col 1: 1d scatter of predictoor profits
-        mnp, mxp = -stake_amt, +stake_amt
-        self._scatter_profits(
-            ax11, "pdr", "OCEAN", mnp, mxp, st.pdr_profits_OCEAN, N_done, N,
-        )
+        self._scatterplot_pdr_profit_vs_ptrue(ax11, N_done, N)
 
         # plot row 1, col 2: 1d scatter of trader profits
-        mnp, mxp = min(st.trader_profits_USD), max(st.trader_profits_USD)
-        self._scatter_profits(
-            ax12, "trader", "USD", mnp, mxp, st.trader_profits_USD, N_done, N,
-        )
+        self._scatterplot_tdr_profit_vs_ptrue(ax12, N_done, N)
 
         # final pieces
         HEIGHT = 7.5  # magic number
@@ -152,33 +146,56 @@ class SimPlotter:
         plt.pause(0.001)
         self.plotted_before = True
 
-    def _scatter_profits(
+    def _scatterplot_pdr_profit_vs_ptrue(
             self,
             ax,
-            actor: str,
-            denomin: str,
-            mnp: float,
-            mxp: float,
-            st_profits: np.ndarray,
             N_done: int,
             N: int,
     ):
-        """reusable scatterplot of profit vs p(up)"""
+        stake_amt = self.ppss.predictoor_ss.stake_amount.amt_eth
+        mnp, mxp = -stake_amt, stake_amt
+        avg = np.average(self.st.pdr_profits_OCEAN)
+        next_profits = _slice(self.st.pdr_profits_OCEAN, N_done, N)
         next_probs_up = _slice(self.st.probs_up, N_done, N)
-        next_profits = _slice(st_profits, N_done, N)
+        
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
-        avg = np.average(st_profits)
-        s = f"{actor} profit distr'n. avg={avg:.2f} {denomin}"
+        
+        s = f"pdr profit distr'n. avg={avg:.2f} OCEAN"
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
         if not self.plotted_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, f"{actor} profit ({denomin})")
+            _set_ylabel(ax, f"pdr profit (OCEAN)")
             _ylabel_on_right(ax)
             ax.margins(0.05, 0.05)
 
+    def _scatterplot_tdr_profit_vs_ptrue(
+            self,
+            ax,
+            N_done: int,
+            N: int,
+    ):
+        mnp = min(self.st.trader_profits_USD)
+        mxp = max(self.st.trader_profits_USD)
+        avg = np.average(self.st.trader_profits_USD)
+        next_profits = _slice(self.st.trader_profits_USD, N_done, N)
+        next_probs_up = _slice(self.st.probs_up, N_done, N)
+        
+        c = (random(), random(), random())  # random RGB color
+        ax.scatter(next_probs_up, next_profits, color=c, s=1)
+        
+        s = f"tdr profit distr'n. avg={avg:.2f} USD"
+        
+        _set_title(ax, s)
+        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
+        if not self.plotted_before:
+            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
+            _set_xlabel(ax, "prob(up)")
+            _set_ylabel(ax, f"tdr profit (USD)")
+            _ylabel_on_right(ax)
+            ax.margins(0.05, 0.05)
 
 def _shift_one_earlier(s: str):
     """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
