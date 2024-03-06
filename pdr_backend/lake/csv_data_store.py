@@ -261,6 +261,34 @@ class CSVDataStore:
 
         return pl.DataFrame([], schema=schema)
 
+    def _get_first_file_path(self, folder_path: str) -> str:
+        """
+        Returns the path of the first file in the given folder_path.
+        @args:
+            folder_path: str - path of the folder
+        @returns:
+            str - path of the first file
+        """
+
+        file_names = sorted(os.listdir(folder_path))
+        return os.path.join(folder_path, file_names[0]) if file_names else ""
+    
+    def get_first_timestamp(self, dataset_identifier: str) -> Optional[int]:
+        """
+        Returns the first timestamp from the csv files in the folder
+        corresponding to the given dataset_identifier.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        @returns:
+            Optional[int] - first timestamp from the csv files
+        """
+        folder_path = self._get_folder_path(dataset_identifier)
+        first_file_path = self._get_first_file_path(folder_path)
+        if len(first_file_path):
+            return int(first_file_path.split("_")[2])
+
+        return None
+
     def _get_last_file_path(self, folder_path: str) -> str:
         """
         Returns the path of the last file in the given folder_path.
@@ -275,7 +303,7 @@ class CSVDataStore:
 
     def get_last_timestamp(self, dataset_identifier: str) -> Optional[int]:
         """
-        Returns the last timestamp from the csv files in the folder
+        Returns the last timestamp from the last csv files in the folder
         corresponding to the given dataset_identifier.
         @args:
             dataset_identifier: str - identifier of the dataset

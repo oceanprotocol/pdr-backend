@@ -31,6 +31,8 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -114,6 +116,79 @@ class GQLDataFactory:
 
         return self.record_config["tables"]
 
+    @enforce_types
+    def _get_gql_df(
+        table: Table,
+        fetch_function: Callable,
+        network: str,
+        st_ut: UnixTimeMs,
+        fin_ut: UnixTimeMs,
+        save_backoff_limit: int,
+        pagination_limit: int,
+        config: Dict,
+    ):
+        """
+        @description
+            Fetch raw data from predictoor subgraph
+            Update function for graphql query, returns raw data
+            + Transforms ts into ms as required for data factory
+        """
+        print(f"Fetching data for {table.table_name}")
+        network = get_sapphire_postfix(network)
+
+        # save to file when this amount of data is fetched
+        save_backoff_count = 0
+        pagination_offset = 0
+
+        buffer_df = pl.DataFrame([], schema=table.df_schema)
+
+        while True:
+            # call the function
+            data = fetch_function(
+                st_ut.to_seconds(),
+                fin_ut.to_seconds(),
+                config["contract_list"],
+                pagination_limit,
+                pagination_offset,
+                network,
+            )
+
+            print(f"Fetched {len(data)} from subgraph")
+            # convert predictions to df and transform timestamp into ms
+            df = _object_list_to_df(data, table.df_schema)
+            df = _transform_timestamp_to_ms(df)
+            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
+                "timestamp"
+            )
+
+            if len(buffer_df) == 0:
+                buffer_df = df
+            else:
+                buffer_df = buffer_df.vstack(df)
+
+            save_backoff_count += len(df)
+
+            # save to file if requred number of data has been fetched
+            if (
+                save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
+            ) and len(buffer_df) > 0:
+                assert df.schema == table.df_schema
+                table.append_to_storage(buffer_df)
+                print(f"Saved {len(buffer_df)} records to file while fetching")
+
+                buffer_df = pl.DataFrame([], schema=table.df_schema)
+                save_backoff_count = 0
+
+            # avoids doing next fetch if we've reached the end
+            if len(df) < pagination_limit:
+                break
+            pagination_offset += pagination_limit
+
+        if len(buffer_df) > 0:
+            table.append_to_storage(buffer_df)
+            print(f"Saved {len(buffer_df)} records to file while fetching")
+
+
     def _update(self):
         """
         @description
@@ -130,9 +205,8 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
-        for _, table in self.record_config["tables"].items():
-            filename = table._parquet_filename()
-            st_ut = table._calc_start_ut(filename)
+        for table_name, table in self.record_config["tables"].items():
+            st_ut = table.csv_data_store.get_first_timestamp(table_name)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
             if st_ut > min(UnixTimeMs.now(), fin_ut):
@@ -140,7 +214,7 @@ class GQLDataFactory:
 
             # to satisfy mypy, get an explicit function pointer
             do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
-                table.get_pdr_df
+                self._get_gql_df
             )
 
             # number of data at which we want to save to file
@@ -150,6 +224,7 @@ class GQLDataFactory:
 
             print(f"Updating table {table.table_name}")
             do_fetch(
+                self.record_config["tables"][table.table_name],
                 self.record_config["fetch_functions"][table.table_name],
                 self.ppss.web3_pp.network,
                 st_ut,
@@ -158,4 +233,4 @@ class GQLDataFactory:
                 pagination_limit,
                 self.record_config["config"],
             )
-            table.load()
+

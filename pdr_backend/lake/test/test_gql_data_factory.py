@@ -113,3 +113,91 @@ def test_get_gql_tables(mock_update):
     gql_dfs = gql_data_factory.get_gql_tables()
 
     assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())
+
+# TODO - Fix Table Tests
+# These are more Table + GQL Fetch tests
+def test_get_pdr_df(tmpdir):
+    st_timestr = "2023-12-03"
+    fin_timestr = "2023-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    _clean_up(ppss.lake_ss.parquet_dir)
+
+    table = Table(table_name, table_df_schema, ppss)
+
+    captured_output = StringIO()
+    sys.stdout = captured_output
+
+    save_backoff_limit = 5000
+    pagination_limit = 1000
+    st_timest = UnixTimeMs(1701634300000)
+    fin_timest = UnixTimeMs(1701634500000)
+    table.get_pdr_df(
+        mock_fetch_function,
+        "sapphire-mainnet",
+        st_timest,
+        fin_timest,
+        save_backoff_limit,
+        pagination_limit,
+        {"contract_list": ["0x123"]},
+    )
+
+    printed_text = captured_output.getvalue().strip()
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 1
+    # assert table.df.shape[0] == 1
+
+
+def test_get_pdr_df_multiple_fetches(tmpdir):
+    """
+    Test multiple table actions in one go
+    """
+
+    st_timestr = "2023-12-03_00:00"
+    fin_timestr = "2023-12-03_16:00"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    _clean_up(ppss.lake_ss.parquet_dir)
+
+    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
+
+    captured_output = StringIO()
+    sys.stdout = captured_output
+
+    save_backoff_limit = 40
+    pagination_limit = 20
+    st_timest = UnixTimeMs(1704110400000)
+    fin_timest = UnixTimeMs(1704111600000)
+    table.get_pdr_df(
+        fetch_function=fetch_filtered_predictions,
+        network="sapphire-mainnet",
+        st_ut=st_timest,
+        fin_ut=fin_timest,
+        save_backoff_limit=save_backoff_limit,
+        pagination_limit=pagination_limit,
+        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
+    )
+
+    printed_text = captured_output.getvalue().strip()
+
+    # test fetches multiple times
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 3
+
+    # test saves multiple times
+    count_saves = printed_text.count("Saved")
+    assert count_saves == 2
+
+
