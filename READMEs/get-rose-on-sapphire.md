@@ -74,7 +74,7 @@ Metamask supports Sapphire EVM. Here's how to use it.
 
 To add Sapphire network:
 
-1. Go to https://docs.oasis.io/dapp/sapphire/.
+1. Go to `https://docs.oasis.io/dapp/sapphire/`.
 2. In that page click "click here to register Sapphire Mainnet on Metamask".
 3. Confirm the prompts to switch to Sapphire network
 

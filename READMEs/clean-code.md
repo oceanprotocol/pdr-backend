@@ -93,7 +93,7 @@ To "up your game", here are great books on software engineering, in order to rea
 - Refactoring: Improving the Design of Existing Code, by Martiwn Fowler. This book is a big "unlock" on how to apply refactoring everywhere like a ninja. [Link](https://www.goodreads.com/book/show/44936.Refactoring).
 - Head First Design Patterns, by Eric Freeman et al. Every good SW engineer should have design patterns in their toolbox. This is a good first book on design patterns. [Link](https://www.goodreads.com/book/show/58128.Head_First_Design_Patterns)
 - Design Patterns: Elements of Reusable Object-Oriented Software, by GOF. This is "the bible" on design patterns. It's only so-so on approachability, but nonetheless the content makes it worth it. But start with "Head First Design Patterns". [Link](https://www.goodreads.com/book/show/85009.Design_Patterns)
-- The Pragmatic Programmer: From Journeyman to Master, by Andy Hunt and Dave Thomas. Some people really love this, I found it so-so. But definitely worth a read to round out your SW engineering. https://www.goodreads.com/book/show/4099.The_Pragmatic_Programmer
+- The Pragmatic Programmer: From Journeyman to Master, by Andy Hunt and Dave Thomas. Some people really love this, I found it so-so. But definitely worth a read to round out your SW engineering. [Link](https://www.goodreads.com/book/show/4099.The_Pragmatic_Programmer)
 
 A final one. In general, _when you're coding, you're writing_. Therefore, books on crisp writing are also books about coding (!). The very top of this list is [Strunk & White Elements of Style](https://www.goodreads.com/book/show/33514.The_Elements_of_Style). It's sharper than a razor blade.
 

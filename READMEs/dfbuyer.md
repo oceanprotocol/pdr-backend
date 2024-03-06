@@ -24,7 +24,7 @@ Then, run barge. In barge console:
 
 Open a new console and:
 
-```
+```console
 # Setup virtualenv
 cd pdr-backend
 source venv/bin/activate

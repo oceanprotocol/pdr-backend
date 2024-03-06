@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Using Predictoor Subgraph
 
-### Subgraph URLs
+## Subgraph URLs
 
 You can query an Ocean subgraph at one of the following:
 
@@ -14,12 +14,12 @@ The subgraph url for each network is in the ppss yaml under "subgraph url".
 Typically, these are something like:
 
 - Local (barge)
-  - http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-  - OR http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph
+  - `http://localhost:9000/subgraphs/name/oceanprotocol/ocean-subgraph`
+  - OR `http://172.15.0.15:8000/subgraphs/name/oceanprotocol/ocean-subgraph`
 - Sapphire testnet
-  - https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+  - `https://v4.subgraph.sapphire-testnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph`
 - Sapphire mainnet
-  - https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph
+  - `https://v4.subgraph.sapphire-mainnet.oceanprotocol.com/subgraphs/name/oceanprotocol/ocean-subgraph`
 
 ### Typical query
 

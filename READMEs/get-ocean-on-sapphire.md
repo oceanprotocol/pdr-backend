@@ -9,7 +9,7 @@ There are two approaches to acquire it:
 
 (1) is much simpler. (2) isn't subject to slippage. We cover both below.
 
-# Approach 1: OCEAN-ROSE DEX on Sapphire
+## Approach 1: OCEAN-ROSE DEX on Sapphire
 
 How to use:
 
@@ -22,15 +22,15 @@ Notes:
 - If you see a "Insufficient liquidity" warning, then click the settings gear and toggle "Use secure router = on".
 - Be careful for slippage, always. (Though there _should_ be decent liquidity. [Pool info](https://illuminex.xyz/pools/0x841dd137A2B380DA4568f6745aEAc20EDa910313))
 
-# Approach 2: Bridge OCEAN from Eth mainnet
+## Approach 2: Bridge OCEAN from Eth mainnet
 
 **This approach has three steps:**
 
-1. [Get OCEAN on Eth Mainnet](#1-get-ocean-on-eth-mainnet)
-1. [Transfer OCEAN to Sapphire Mainnet via Celer](#2-transfer-ocean-to-sapphire-mainnet-via-celer)
-1. [Verify Your Tokens on Sapphire Mainnet](#3-verify-your-tokens-on-sapphire-mainnet)
+1. [Get OCEAN on Eth Mainnet](#get-ocean-on-eth-mainnet)
+1. [Transfer OCEAN to Sapphire Mainnet via Celer](#transfer-ocean-to-sapphire-mainnet-via-celer)
+1. [Verify Your Tokens on Sapphire Mainnet](#verify-your-tokens-on-sapphire-mainnet)
 
-## A2:1 Get OCEAN on Eth Mainnet
+## Get OCEAN on Eth Mainnet
 
 **First, create a Wallet.** For optimal support and the ability to transfer ROSE between paratimes, we recommend the Oasis Wallet extension for Chrome. To proceed, [follow instructions in its docs](https://docs.oasis.io/general/manage-tokens/oasis-wallets/browser-extension/#install-the-oasis-wallet-via-chrome-web-store).
 
@@ -38,7 +38,7 @@ Notes:
 
 ⚠️ Sending to the wrong address or network will likely result in the loss of your tokens. To minimize risk: send a small test amount first, and double-check the receiving address and network.
 
-## A2:2 Transfer OCEAN to Sapphire Mainnet via Celer
+## Transfer OCEAN to Sapphire Mainnet via Celer
 
 **First, Navigate to Celer bridge.** [Here](https://cbridge.celer.network/1/23294/OCEAN).
 
@@ -56,7 +56,7 @@ Notes:
 - Review the transaction details.
 - Confirm the transaction from your wallet.
 
-## A2:3 Verify Your Tokens on Sapphire Mainnet
+## Verify Your Tokens on Sapphire Mainnet
 
 Bridging requires several minutes to complete. Your OCEAN will be sent to the address you executed the transaction from.
 

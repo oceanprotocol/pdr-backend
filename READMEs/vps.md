@@ -57,11 +57,11 @@ ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
 Running Barge, the VPS exposes these urls:
 
 - RPC is at:
-  - http://4.245.224.119:8545
-  - or http://74.234.16.165:8545
+  - `http://4.245.224.119:8545`
+  - or `http://74.234.16.165:8545`
 - Subgraph is at:
-  - http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph
-  - or http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph
+  - `http://4.245.224.119:9000/subgraphs/name/oceanprotocol/ocean-subgraph`
+  - or `http://74.234.16.165:9000/subgraphs/name/oceanprotocol/ocean-subgraph`
   - Go there, then copy & paste in the query from [subgraph.md](subgraph.md)
 
 BUT you will not be able to see these yet, because the VPS' ports are not yet open enough. Here's how:
@@ -118,7 +118,7 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-(Ref: https://stackoverflow.com/a/48957722)
+(Ref: `https://stackoverflow.com/a/48957722`)
 
 ### Install Barge In VPS
 
@@ -207,7 +207,7 @@ Further debugging:
 
 - List live docker processes: `docker ps`
 - List all docker processes: `docker ps -a`
-- List names of processes: `docker ps -a | cut -c 347-`. It lists `ocean_pdr-publisher_1`, `ocean_ocean-contracts_1`, ` ocean_pdr-publisher_1`, ..
+- List names of processes: `docker ps -a | cut -c 347-`. It lists `ocean_pdr-publisher_1`, `ocean_ocean-contracts_1`, `ocean_pdr-publisher_1`, ..
 - See log for publishing Ocean contracts: `docker logs ocean_ocean-contracts_1`. With realtime update: `docker logs -f ocean_ocean-contracts_1`
 - See log for publishing prediction feeds: `docker logs ocean_pdr-publisher_1`. With realtime update: `docker logs -f ocean_pdr-publisher_1`
 - Get detailed info about pdr-publisher image: `docker inspect ocean_pdr-publisher_1`

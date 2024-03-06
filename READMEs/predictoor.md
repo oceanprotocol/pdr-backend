@@ -221,9 +221,9 @@ deployment_configs:
 
 Create a `.keys.json` file and add the following:
 
-```
+```json
 {
-    "testnet_predictoor_deployment": ["pk1", "pk2"]
+  "testnet_predictoor_deployment": ["pk1", "pk2"]
 }
 ```
 
@@ -235,7 +235,7 @@ The `generate` command is used to create deployment template files based on a co
 
 Execute the following command to generate the deployment templates:
 
-```
+```console
 pdr deployer generate ppss.yaml testnet_predictoor_deployment k8s testnet_deployments
 ```
 
@@ -249,7 +249,7 @@ The `deploy` command is used to deploy agents that follow the generated template
 
 Execute the following command to deploy the generated config:
 
-```
+```console
 pdr deployer deploy testnet_predictoor_deployment -p gcp -r europe-west2 --project-id
 ```
 
@@ -269,7 +269,7 @@ The `logs` command is used to retrieve logs from deployed agents.
 
 Execute the following command to retrieve logs from the deployed agents:
 
-```
+```console
 pdr deployer logs testnet_predictoor_deployment
 ```
 
@@ -281,7 +281,7 @@ The `destroy` command is used to destroy agents deployed based on a specified co
 
 Execute the following command to destroy the deployed agents:
 
-```
+```console
 pdr deployer destroy testnet_predictoor_deployment
 ```
 

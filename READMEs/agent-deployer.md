@@ -38,7 +38,7 @@ _Tip: Specific agent settings (like source, timeframe) will override general set
 
 Create a `.keys.json` file and format it as follows:
 
-```
+```json
 {
     "config_name": ["pk1", "pk2"...]
 }
@@ -50,7 +50,7 @@ _Note: If you have fewer private keys than number of agents, the tool will creat
 
 The `generate` command is used to create deployment template files based on a configuration file.
 
-```
+```console
 pdr deployer generate <config_path> <config_name> <deployment_method> <output_dir>
 ```
 
@@ -65,7 +65,7 @@ Take a note of the `config_name`, you will need it later!
 
 The `deploy` command is used to deploy agents based on a specified config name.
 
-```
+```console
 pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP] [--subscription_id SUBSCRIPTION_ID]
 ```
 
@@ -80,7 +80,7 @@ pdr deployer deploy <config_name> [-p PROVIDER] [-r REGION] [--project_id PROJEC
 
 The `destroy` command is used to destroy agents deployed based on a specified configuration.
 
-```
+```console
 pdr deployer destroy <config_name> [-p PROVIDER]
 ```
 
@@ -91,7 +91,7 @@ pdr deployer destroy <config_name> [-p PROVIDER]
 
 The `logs` command is used to retrieve logs from deployed agents.
 
-```
+```console
 pdr deployer logs <config_name> [-p PROVIDER]
 ```
 
@@ -102,7 +102,7 @@ pdr deployer logs <config_name> [-p PROVIDER]
 
 The `registry` command is used to manage remote registries for agent deployment.
 
-```
+```console
 pdr deployer registry <action> <registry_name> [-p PROVIDER] [-r REGION] [--project_id PROJECT_ID] [--resource_group RESOURCE_GROUP]
 ```
 
@@ -117,7 +117,7 @@ pdr deployer registry <action> <registry_name> [-p PROVIDER] [-r REGION] [--proj
 
 The build command is used to build a container image.
 
-```
+```console
 pdr deployer build <image_name> <image_tag>
 ```
 
@@ -128,7 +128,7 @@ pdr deployer build <image_name> <image_tag>
 
 The `push` command is used to push container images to a remote registry.
 
-```
+```console
 pdr deployer push <registry_name> [<image_name>] [<image_tag>]
 ```
 

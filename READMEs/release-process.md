@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-**Contents**
+# Contents
 
 - [Release Process (main)](#release-process-including-docker)
 - [About PyPi](#about-pypi)
@@ -41,21 +41,21 @@ The release process does not include publishing to pypi.
 
 # About Docker
 
-### Docker releases from main
+## Docker releases from main
 
 > CI/CD will automatically build and publish a **new Docker image**
 
 To elaborate: we have an automated docker build for pdr-backend `main` branch and for all releases. Github is already connected to dockerhub.
 
-![](./images/dockerbuild.png)
+![dockerbuild](./images/dockerbuild.png)
 
 ### Adding Docker branches
 
-If you want to add Docker branches, go to https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit
+If you want to add Docker branches, go to [oceanprotocol/pdr-backend](https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit).
 
 Then: on "Build rules", add your branch. Below is an example, where Alex is building "pdr-backend: alex" from branch "feature/alex".
 
-![](./images/dockerbranch.png)
+![dockerbranch](./images/dockerbranch.png)
 
 In the last line: you should be able to log in with your username (eg trentmc).
 

@@ -1,4 +1,4 @@
-### Barge flow of calls
+# Barge flow of calls
 
 From getting barge going, here's how it calls specific pdr-backend components and passes arguments.
 
@@ -22,7 +22,7 @@ From getting barge going, here's how it calls specific pdr-backend components an
         - (where `@` is unpacked as eg `publisher ppss.yaml development`) [Ref](https://superuser.com/questions/1586997/what-does-symbol-mean-in-the-context-of#:).
   - Then it goes through the usual CLI at `pdr-backend/pdr_backend/util/cli_module.py`
 
-### How to make changes to calls
+## How to make changes to calls
 
 If you made a change to pdr-backend CLI interface, then barge must call using the updated CLI command.
 

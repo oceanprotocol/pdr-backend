@@ -19,10 +19,10 @@ This example uses Sapphire testnet; you can modify envvars to run on Sapphire ma
 2. [Build a container image](#build-a-container-image)
 3. [Setup & run bot on Azure](#run-bot-on-azure)
    - [Install Azure CLI](#install-azure-cli)
-   - [Build a container image of bot](#build-container-image)
+   - [Build a container image of bot](#build-a-container-image)
    - [Setup ACR](#setup-acr) (Azure Container Registry)
    - [Push image to ACR](#push-image-to-acr)
-   - [Run image on ACI](#run-image-on-azure-aci) (Azure Container Instances)
+   - [Run image on ACI](#run-image-on-aci) (Azure Container Instances)
    - [Monitor container logs](#monitor-container-logs)
 4. Appendix
    - [Further Azure Resources](#further-azure-resources)
@@ -31,7 +31,7 @@ This example uses Sapphire testnet; you can modify envvars to run on Sapphire ma
 > **Warning**
 > These docs are up-to-date as of August 2023. If you encounter any issues or need the latest instructions, please see [Azure docs](https://learn.microsoft.com/en-us/azure/app-service/tutorial-custom-container?tabs=azure-cli&pivots=container-linux) on running containers.
 
-### Get Tokens
+## Get Tokens
 
 [See get-tokens.md](./get-tokens.md).
 
@@ -135,7 +135,7 @@ Where:
 - `--image`: The tag of the container image you've pushed to the registry in the previous step.
 
 > **Note**
-> You can set envvars defined in [Configure Enviroment Variables](#configure-environment-variables) step by passing `--environment-variables <env-variables>` parameter to the `az container create` command.
+> You can set envvars by passing `--environment-variables <env-variables>` parameter to the `az container create` command.
 
 ([Azure docs](https://learn.microsoft.com/en-us/cli/azure/container?view=azure-cli-latest#az-container-create) have more details.)
 
@@ -161,7 +161,7 @@ You can also use the Azure Portal. It's a GUI to manage your container instances
 
 Above, we focused on Azure. Here are several deployment options:
 
-- [Azure - Azure Container Instances (ACI)](#running-on-azure-as-a-container)
+- [Azure - Azure Container Instances (ACI)](#run-image-on-aci)
 - [Heroku - Container Registry & Runtime (Docker Deploys)](https://devcenter.heroku.com/articles/container-registry-and-runtime)
 - [AWS - Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
 - [Google Cloud - Deploying to Cloud Run](https://cloud.google.com/run/docs/deploying)
