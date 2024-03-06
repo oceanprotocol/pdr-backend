@@ -24,7 +24,7 @@ def test_generate_deployment_templates_empty_output_path(
     deploy_config_mock.agent_config.type = "predictoor"
     mock_parse_config.return_value = deploy_config_mock
     mock_read_keys_json.return_value = []
-    mock_generate_new_keys.return_value = [MagicMock()] * 4
+    mock_generate_new_keys.return_value = []
 
     generate_deployment_templates(
         "path", "output_path", DeploymentMethod.K8S, "config_name"
@@ -33,7 +33,7 @@ def test_generate_deployment_templates_empty_output_path(
     mock_open_file.assert_called()
     mock_parse_config.assert_called_once_with("path", "config_name")
     mock_read_keys_json.assert_called_once_with("config_name")
-    mock_generate_new_keys.assert_called_once_with("config_name", 4)
+    mock_generate_new_keys.assert_called_once_with("config_name", 2)
 
 
 @patch("pdr_backend.deployer.util.gen_templates.generate_new_keys")
@@ -55,12 +55,7 @@ def test_generate_deployment_templates_with_existing_keys(
     deploy_config_mock.agent_config.agents = [MagicMock(), MagicMock()]
     deploy_config_mock.agent_config.type = "predictoor"
     mock_parse_config.return_value = deploy_config_mock
-    mock_read_keys_json.return_value = [
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-    ]
+    mock_read_keys_json.return_value = [MagicMock(), MagicMock()]
     mock_generate_new_keys.return_value = []
 
     generate_deployment_templates(
@@ -92,8 +87,8 @@ def test_generate_deployment_templates_needs_new_keys(
     deploy_config_mock.agent_config.agents = [MagicMock(), MagicMock()]
     deploy_config_mock.agent_config.type = "predictoor"
     mock_parse_config.return_value = deploy_config_mock
-    mock_read_keys_json.return_value = [MagicMock(), MagicMock()]
-    mock_generate_new_keys.return_value = [MagicMock()] * 4
+    mock_read_keys_json.return_value = [MagicMock()]
+    mock_generate_new_keys.return_value = [MagicMock(), MagicMock()]
 
     generate_deployment_templates(
         "path", "output_path", DeploymentMethod.K8S, "config_name"
@@ -102,4 +97,4 @@ def test_generate_deployment_templates_needs_new_keys(
     mock_open_file.assert_called()
     mock_parse_config.assert_called_once_with("path", "config_name")
     mock_read_keys_json.assert_called_once_with("config_name")
-    mock_generate_new_keys.assert_called_once_with("config_name", 2)
+    mock_generate_new_keys.assert_called_once_with("config_name", 1)

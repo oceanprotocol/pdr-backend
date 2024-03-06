@@ -12,16 +12,12 @@ class PredictoorAgentConfig(SingleAgentConfig):
     pair: str
     timeframe: str
     stake_amt: int
-    private_key_2: Optional[str] = None
     approach: Optional[int] = None
     source: Optional[str] = None
     cpu: Optional[str] = None
     memory: Optional[str] = None
     network: Optional[str] = None
     s_until_epoch_end: Optional[int] = None
-
-    def set_private_key_2(self, pk: str):
-        self.private_key_2 = pk
 
     def update_with_defaults(self, defaults: AgentsDeployConfig):
         for field in defaults.__dict__:
@@ -31,7 +27,6 @@ class PredictoorAgentConfig(SingleAgentConfig):
         for field in self.__dict__:
             if getattr(self, field, None) is None and field not in [
                 "private_key",
-                "private_key_2",
                 "cpu",
                 "memory",
             ]:
@@ -59,7 +54,7 @@ class PredictoorAgentConfig(SingleAgentConfig):
                 f"--predictoor_ss.aimodel_ss.input_feeds='[\"{full_pair_name}\"]'",
                 f"--lake_ss.feeds='[\"{lake_feed_name}\"]'",
             ]
-        override_stake = [f"--predictoor_ss.stake_amount={stake_amt}"]
+        override_stake = [f"--predictoor_ss.bot_only.stake_amount={stake_amt}"]
         override_s_until = [
             f"--predictoor_ss.bot_only.s_until_epoch_end={s_until_epoch_end}"
         ]
