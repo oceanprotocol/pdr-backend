@@ -1,5 +1,6 @@
+from typing import Dict, List
+
 from enforce_typing import enforce_types
-from typing import Dict
 
 from pdr_backend.util.currency_types import Eth
 
@@ -21,4 +22,3 @@ class SimState:
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[float] = []
         self.pdr_profits_OCEAN: List[float] = []
-

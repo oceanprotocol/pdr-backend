@@ -1,7 +1,6 @@
 import copy
 import logging
 import os
-from typing import Dict, List
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -14,7 +13,6 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -317,4 +315,3 @@ class SimEngine:
             return False
 
         return True
-

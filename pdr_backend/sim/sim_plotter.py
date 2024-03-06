@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from enforce_typing import enforce_types
 from matplotlib import gridspec
@@ -16,13 +16,15 @@ FONTSIZE = 9
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
 
+
+# pylint: disable=too-many-instance-attributes
 class SimPlotter:
     @enforce_types
     def __init__(
-            self, 
-            ppss: PPSS,
-            st: SimState,
-            include_contour: bool,
+        self,
+        ppss: PPSS,
+        st: SimState,
+        include_contour: bool,
     ):
         self.st = st
         self.ppss = ppss
@@ -47,7 +49,7 @@ class SimPlotter:
         self.N: int = 0
         self.N_done: int = 0
         self.x: List[float] = []
-        
+
         self.y01_est: List[float] = []
         self.y01_l: List[float] = []
         self.y01_u: List[float] = []
@@ -58,16 +60,16 @@ class SimPlotter:
     # pylint: disable=too-many-statements
     @enforce_types
     def make_plot(
-            self,
-            model: Aimodel,
-            X_train: np.ndarray,
-            ybool_train: np.ndarray,
-            colnames: List[str],
+        self,
+        model: Aimodel,
+        X_train: np.ndarray,
+        ybool_train: np.ndarray,
+        colnames: List[str],
     ):
         """
         @description
           Create / update whole plot, with many subplots
-        
+
         @arguments
           model --
           X_train -- 2d array of [sample_i, var_i]:cont_value -- model trn inputs
@@ -93,13 +95,13 @@ class SimPlotter:
                 self.ax03.margins(0.01, 0.01)
 
         # plot row 1, col 0: trader profit vs time
-        self._lineplot_tdr_profit_vs_time(self.ax10)
+        self._lineplot_trader_profit_vs_time(self.ax10)
 
         # plot row 1, col 1: 1d scatter of predictoor profits
         self._scatterplot_pdr_profit_vs_ptrue(self.ax11)
 
         # plot row 1, col 2: 1d scatter of trader profits
-        self._scatterplot_tdr_profit_vs_ptrue(self.ax12)
+        self._scatterplot_trader_profit_vs_ptrue(self.ax12)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -129,7 +131,7 @@ class SimPlotter:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             _ylabel_on_right(ax)
             ax.margins(0.005, 0.05)
-        
+
     @enforce_types
     def _lineplot_acc_vs_time(self, ax):
         for i in range(self.N_done, self.N):
@@ -157,7 +159,7 @@ class SimPlotter:
             ax.margins(0.01, 0.01)
 
     @enforce_types
-    def _lineplot_tdr_profit_vs_time(self, ax):
+    def _lineplot_trader_profit_vs_time(self, ax):
         y10 = list(np.cumsum(self.st.trader_profits_USD))
         next_y10 = _slice(y10, self.N_done, self.N)
         ax.plot(self.next_x, next_y10, c="b")
@@ -176,46 +178,48 @@ class SimPlotter:
         avg = np.average(self.st.pdr_profits_OCEAN)
         next_profits = _slice(self.st.pdr_profits_OCEAN, self.N_done, self.N)
         next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-        
+
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
-        
+
         s = f"pdr profit distr'n. avg={avg:.2f} OCEAN"
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
         if not self.plotted_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, f"pdr profit (OCEAN)")
+            _set_ylabel(ax, "pdr profit (OCEAN)")
             _ylabel_on_right(ax)
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _scatterplot_tdr_profit_vs_ptrue(self, ax):
+    def _scatterplot_trader_profit_vs_ptrue(self, ax):
         mnp = min(self.st.trader_profits_USD)
         mxp = max(self.st.trader_profits_USD)
         avg = np.average(self.st.trader_profits_USD)
         next_profits = _slice(self.st.trader_profits_USD, self.N_done, self.N)
         next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-        
+
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
-        
-        s = f"tdr profit distr'n. avg={avg:.2f} USD"
-        
+
+        s = f"trader profit distr'n. avg={avg:.2f} USD"
+
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
         if not self.plotted_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, f"tdr profit (USD)")
+            _set_ylabel(ax, "trader profit (USD)")
             _ylabel_on_right(ax)
             ax.margins(0.05, 0.05)
 
-def _contour_labels(colnames: List[str]) -> List[str]:
+
+def _contour_labels(colnames: List[str]) -> Tuple[str]:
     labels = tuple([_shift_one_earlier(colname) for colname in colnames])
     return labels
-            
+
+
 def _shift_one_earlier(s: str):
     """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
     val = int(s[-1])
