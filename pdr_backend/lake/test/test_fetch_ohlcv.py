@@ -28,8 +28,6 @@ RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
 RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 
-# BASE_URL_DYDX = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
-
 mock_dydx_response = {
     "candles": [
         {

@@ -88,11 +88,9 @@ def safe_fetch_ohlcv_dydx(
         if exch != "dydx":
             return None
         headers = {"Accept": "application/json"}
-        # BASE_URL_DYDX = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
         response = requests.get(
             f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
-            headers=headers,
-            timeout=20,
+            headers=headers
         )
         data = response.json()
 
@@ -102,11 +100,9 @@ def safe_fetch_ohlcv_dydx(
 
         if key_name == "candles" and items:
             for item in items:
-                dt = datetime.strptime(
-                    item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                )  # Convert ISO date to timestamp
+                dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")  # Convert ISO date to timestamp
                 timestamp = int(dt.timestamp() * 1000)
-                ohlcv_tuple = ( # Create tuple from the data & append to list
+                ohlcv_tuple = (
                     timestamp,
                     float_or_none(item["open"]),
                     float_or_none(item["high"]),
