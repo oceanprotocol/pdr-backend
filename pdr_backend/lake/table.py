@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 import polars as pl
 from polars.type_aliases import SchemaDict
 
@@ -36,7 +36,7 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         print(f"Loading data for {self.table_name}")
-        
+
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
         self.df = self.csv_data_store.read(
@@ -75,7 +75,7 @@ class Table:
             f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
         )
 
-    def get_pds_last_record(self) -> pl.DataFrame:
+    def get_pds_last_record(self) -> Optional[pl.DataFrame]:
         """
         Get the last record from the persistent data store
 
@@ -84,7 +84,11 @@ class Table:
         """
 
         query = "SELECT * FROM {view_name} ORDER BY timestamp DESC LIMIT 1"
-        return self.PDS.query_data(self.table_name, query)
+        try:
+            return self.PDS.query_data(self.table_name, query)
+        except Exception as e:
+            print(f"Error fetching last record from PDS: {e}")
+            return None
 
     @enforce_types
     def get_pdr_df(

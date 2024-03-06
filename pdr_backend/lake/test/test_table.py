@@ -9,6 +9,7 @@ from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.test.conftest import _clean_up
 
 
 # pylint: disable=too-many-instance-attributes
@@ -34,20 +35,6 @@ mocked_object = {
     "slot": 1701634400,
     "user": "0x123",
 }
-
-
-def _clean_up(tmp_path):
-    """
-    Delete test file if already exists
-    """
-    folder_path = os.path.join(tmp_path, table_name)
-
-    if os.path.exists(folder_path):
-        # delete files
-        for file in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file)
-            os.remove(file_path)
-        os.remove(folder_path)
 
 
 def mock_fetch_function(
@@ -264,9 +251,7 @@ def test_append_to_db(tmpdir):
 
     table._append_to_db(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
 
-    result = table.PDS.query_data(
-        table.table_name, "SELECT * FROM {view_name}"
-    )
+    result = table.PDS.query_data(table.table_name, "SELECT * FROM {view_name}")
 
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"
@@ -310,6 +295,7 @@ def test_append_to_csv(tmpdir):
         lines = file.readlines()
         assert len(lines) == 1001
 
+
 def test_get_last_record():
     """
     Test that table is loading the data from file
@@ -341,7 +327,9 @@ def test_get_last_record():
     }
 
     table._append_to_db(pl.DataFrame([mocked_object] * 999, schema=table_df_schema))
-    table._append_to_db(pl.DataFrame([alternative_mocked_object], schema=table_df_schema))
+    table._append_to_db(
+        pl.DataFrame([alternative_mocked_object], schema=table_df_schema)
+    )
 
     last_record = table.get_pds_last_record()
     assert last_record["timestamp"][0] == UnixTimeMs(1701635500000)

@@ -131,8 +131,6 @@ class GQLDataFactory:
         """
 
         for _, table in self.record_config["tables"].items():
-            print(f"  Updating table {table.table_name}")
-
             # fetch the last record from the table.PDS (persistent_data_store)
             last_record = table.get_pds_last_record()
 
@@ -149,9 +147,9 @@ class GQLDataFactory:
                 print("      Given start time, no data to gather. Exit.")
 
             # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
-                table.get_pdr_df
-            )
+            do_fetch: Callable[
+                [str, int, int, int, int, Dict, str], pl.DataFrame
+            ] = table.get_pdr_df
 
             # number of data at which we want to save to file
             save_backoff_limit = 5000
