@@ -62,6 +62,18 @@ def test_predictoor_ss_test_dict():
     assert d["predict_feed"] == "binance ETH/USDT c 1h"
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
 
+    # test s_start_payouts attribute set
+    predictoor_ss = PredictoorSS(d)
+
+    assert (
+        predictoor_ss.s_start_payouts == 0
+    ), "Must be unset in the test dict, so should return 0"
+
+    # let's set it here
+    d["bot_only"]["s_start_payouts"] = 100
+    predictoor_ss = PredictoorSS(d)
+    assert predictoor_ss.s_start_payouts == 100, "Must be set to 100"
+
 
 @enforce_types
 def test_predictoor_ss_bad_approach():
