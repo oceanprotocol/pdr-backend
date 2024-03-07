@@ -12,6 +12,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.util.mathutil import classif_acc
@@ -223,8 +224,8 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
-            model_plot_args = (model, X_train, ybool_train, colnames)
-            self.sim_plotter.make_plot(model_plot_args)
+            d = AimodelPlotdata(model, X_train, ybool_train, colnames)
+            self.sim_plotter.make_plot(d)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:

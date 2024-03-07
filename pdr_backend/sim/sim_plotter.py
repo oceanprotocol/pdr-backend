@@ -12,6 +12,7 @@ from statsmodels.stats.proportion import proportion_confint
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.model_plotter import plot_model
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.sim.sim_state import SimState
 
 FONTSIZE = 9
@@ -70,13 +71,10 @@ class SimPlotter:
 
     # pylint: disable=too-many-statements
     @enforce_types
-    def make_plot(self, model_plot_args: tuple):
+    def make_plot(self, aimodel_plotdata: AimodelPlotdata):
         """
         @description
           Create / update whole plot, with many subplots
-
-        @arguments
-          model_plot_args -- see _plot_model_contour()
         """
         # update N, N_done, x. **Update x only after updating N, N_done!**
         self.N = len(self.st.pdr_profits_OCEAN)
@@ -91,7 +89,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._maybe_plot_model_contour(model_plot_args)
+        self._maybe_plot_model_contour(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -210,25 +208,13 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _maybe_plot_model_contour(self, model_plot_args: tuple):
-        """
-        @arguments
-          model_plot_args -- a tuple composed of:
-            model -- Aimodel
-            X_train -- 2d array [sample_i, var_i]:cont_value -- model trn inputs
-            ybool_train -- 1d array [sample_i]:bool_value -- model trn outputs
-            colnames -- [var_i]:str -- name for each of the X inputs
-        """
-        (model, X_train, ybool_train, colnames) = model_plot_args
-        assert isinstance(model, Aimodel)
-        assert isinstance(X_train, np.ndarray)
-        assert isinstance(ybool_train, np.ndarray)
-        assert isinstance(colnames, list)
-
+    def _maybe_plot_model_contour(self, d: AimodelPlotdata):
         if self.include_contour:
             ax = self.ax_model_contour
-            labels = _contour_labels(colnames)
-            plot_model(model, X_train, ybool_train, labels, (self.fig, ax))
+            labels = _contour_labels(d.colnames)
+            plot_model(
+                d.model, d.X_train, d.ybool_train, labels, (self.fig, ax),
+            )
             if not self.plotted_before:
                 ax.margins(0.01, 0.01)
 
