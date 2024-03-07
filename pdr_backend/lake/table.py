@@ -1,12 +1,10 @@
 import logging
-import os
 from typing import Dict, Callable, Optional
 import polars as pl
 from polars.type_aliases import SchemaDict
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
