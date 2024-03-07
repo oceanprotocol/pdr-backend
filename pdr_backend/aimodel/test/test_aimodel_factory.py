@@ -7,13 +7,13 @@ from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.aimodel.aimodel_plotter import plot_aimodel_contour
+from pdr_backend.aimodel.aimodel_plotter import plot_aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
-plt_show_path = "pdr_backend.sim.sim_plotter.plt.show"
+plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
 
 @enforce_types
@@ -73,7 +73,7 @@ def _test_aimodel_factory_2vars_main(approach):
         colnames = ["x0", "x1"]
         slicing_x = np.array([0.0, 1.0]) # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel_contour(
+        plot_aimodel(
             aimodel_plotdata,
             fig_ax=None,
             legend_loc="upper right",
@@ -144,7 +144,7 @@ def test_aimodel_factory_1var():
     factory = AimodelFactory(ss)
 
     # data
-    N = 1000
+    N = 50
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 1))
     ycont = 3.0 + 4.0 * X[:, 0]
@@ -163,7 +163,7 @@ def test_aimodel_factory_1var():
         colnames = ["x0"]
         slicing_x = np.array([0.1]) # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel_contour(aimodel_plotdata)
+        plot_aimodel(aimodel_plotdata)
 
     if SHOW_PLOT: # manual testing only
         _plot()    
@@ -205,7 +205,7 @@ def test_aimodel_factory_4vars():
         colnames = ["x0", "x1", "x3", "x4"]
         slicing_x = np.array([0.1, 1.0, 2.0, 3.0]) # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel_contour(aimodel_plotdata)
+        plot_aimodel(aimodel_plotdata)
 
     if SHOW_PLOT: # manual testing only
         _plot()    

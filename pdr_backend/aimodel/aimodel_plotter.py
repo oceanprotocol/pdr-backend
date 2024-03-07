@@ -10,14 +10,14 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel_contour(
+def plot_aimodel(
         aimodel_plotdata: AimodelPlotdata,
         fig_ax=None,
         legend_loc: str = "lower right",
 ):
     """
     @description
-      Plot the model response in a contour plot.
+      Plot the model response in a line plot (1 var) contour plot (>1 vars)
       And overlay X-data. (Training data or otherwise.)
       If the model has >2 vars, it plots the 2 most important vars.
 
@@ -29,16 +29,104 @@ def plot_aimodel_contour(
         colnames -- list [dim_i]:X_column_name
         slicing_x -- arrat [dim_i]:floatval - when >2 dims, plot about this pt
       fig_ax -- None or (fig, ax) to easily embed into existing plot
-      legend_loc -- eg "upper left"
+      legend_loc -- eg "upper left". Applies only to contour plots.
+    """
+    if aimodel_plotdata.n == 1:
+        _plot_aimodel_lineplot(aimodel_plotdata, fig_ax)
+    else:
+        _plot_aimodel_contour(aimodel_plotdata, fig_ax, legend_loc)
+
+    
+@enforce_types
+def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
+    """
+    @description
+      Plot the model, when there's 1 input x-var. Use a line plot.
+      Will fail if not 1 var.
+    """
+    # aimodel data
+    assert aimodel_plotdata.n == 1
+    d = aimodel_plotdata
+    (model, X, ytrue, colnames, slicing_x) = \
+        d.model, d.X_train, d.ytrue_train, d.colnames, d.slicing_x
+
+    # start fig
+    if fig_ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig, ax = fig_ax
+        ax.cla()  # clear axis
+
+    # calc min/max
+    x0_min, x0_max = min(X[:, 0]), max(X[:, 0])
+
+    # calc mesh_X = uniform grid
+    mesh_x = np.linspace(x0_min, x0_max, 200)
+    mesh_N = len(mesh_x)
+    mesh_X = np.reshape(mesh_x, (mesh_N, 1))
+    
+    # calc z = model operating on mesh_X
+    z = model.predict_ptrue(mesh_X)
+
+    # line plot: model response surface
+    ax.plot(mesh_x, z, c="k", label="model prob(true)")
+    
+    # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
+    x = X[:,0]
+    N = len(x)
+    jitter = np.random.rand(N) * 0.1
+    
+    ytrue_hat = model.predict_true(X)
+    correct = ytrue_hat == ytrue
+    wrong = np.invert(correct)
+
+    ax.scatter(x[wrong], ytrue[wrong], s=5, c="yellow", label="wrong")
+
+    yfalse = np.invert(ytrue)
+    ax.scatter(x[ytrue], ytrue[ytrue], s=1, c="c", label="trn data true")
+    ax.scatter(x[yfalse], ytrue[yfalse], s=1, c="r", label="trn data false")
+
+    ax.set_title(f"Prob(true) vs {colnames[0]}")
+    ax.set_xlabel(colnames[0])
+    ax.set_ylabel("Prob(true)")
+
+    HEIGHT = 9  # magic number
+    WIDTH = HEIGHT
+    fig.set_size_inches(WIDTH, HEIGHT)
+
+    ax.legend(loc="upper left")
+    plt.show()
+
+    
+@enforce_types
+def _plot_aimodel_contour(
+        aimodel_plotdata: AimodelPlotdata,
+        fig_ax,
+        legend_loc,
+):
+    """
+    @description
+      Plot the model, when there's >=2 input x-vars. Use a contour plot.
+      If >2 vars, it plots the 2 most important vars. Will fail if <2 vars.
+      It overlays X-data. (Training data or otherwise.)
     """
     # aimodel data
     d = aimodel_plotdata
     (model, X, ytrue, colnames, slicing_x) = \
         d.model, d.X_train, d.ytrue_train, d.colnames, d.slicing_x
+    nvars = d.n
+    assert nvars >= 2
+
+    # start fig
+    if fig_ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig, ax = fig_ax
+        ax.cla()  # clear axis
 
     # take 2 most impt vars
     nvars = X.shape[1]
-    assert nvars > 0
+    assert nvars > 1
     if nvars == 1:
         impt_I = [0, 0]
     elif nvars == 2:
@@ -51,13 +139,6 @@ def plot_aimodel_contour(
     # calc min/max
     x0_min, x0_max = min(impt_X[:, 0]), max(impt_X[:, 0])
     x1_min, x1_max = min(impt_X[:, 1]), max(impt_X[:, 1])
-
-    # start fig
-    if fig_ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig, ax = fig_ax
-        ax.cla()  # clear axis
 
     # calc mesh_X = uniform grid across two most important dimensions,
     #  and every other dimension i has value slicing_x[i]
@@ -74,14 +155,14 @@ def plot_aimodel_contour(
     # calc Z = model operating on mesh_X
     Z = model.predict_ptrue(mesh_X).reshape(dim1.shape)
 
-    # contour plot on Z
+    # contour plot: model response surface
     ax.contourf(dim0, dim1, Z, levels=25, cmap=cm.RdBu)  # type: ignore[attr-defined]
 
+    # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
     ytrue_hat = model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
 
-    # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
     ax.scatter(impt_X[:, 0][wrong], impt_X[:, 1][wrong], s=40, c="yellow", label="wrong")
 
     yfalse = np.invert(ytrue)

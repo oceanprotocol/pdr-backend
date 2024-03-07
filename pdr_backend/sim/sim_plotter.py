@@ -11,7 +11,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.aimodel_plotter import plot_aimodel_contour
+from pdr_backend.aimodel.aimodel_plotter import plot_aimodel
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 
@@ -45,7 +45,7 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        self.ax_aimodel_contour = fig.add_subplot(gs[:, 3])
+        self.ax_aimodel = fig.add_subplot(gs[:, 3])
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -81,7 +81,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._plot_aimodel_contour(aimodel_plotdata)
+        self._plot_aimodel(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -200,9 +200,9 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _plot_aimodel_contour(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_contour
-        plot_aimodel_contour(d, (self.fig, ax))
+    def _plot_aimodel(self, d: AimodelPlotdata):
+        ax = self.ax_aimodel
+        plot_aimodel(d, (self.fig, ax))
         if not self.plotted_before:
             ax.margins(0.01, 0.01)
 

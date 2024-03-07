@@ -37,3 +37,8 @@ class AimodelPlotdata:
         self.ytrue_train = ytrue_train
         self.colnames = colnames
         self.slicing_x = slicing_x
+
+    @property
+    def n(self) -> int:
+        """Number of input dimensions == # columns in X"""
+        return self.X_train.shape[1]
