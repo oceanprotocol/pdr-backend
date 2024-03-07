@@ -1,6 +1,7 @@
 import copy
 import logging
 import os
+from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -38,11 +39,12 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plotter = None
         if self.ppss.sim_ss.do_plot:
             n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
             include_contour = n == 2
             self.sim_plotter = SimPlotter(self.ppss, self.st, include_contour)
+        else:
+            self.sim_plotter = Mock(spec=SimPlotter)
 
         self.logfile = ""
 
@@ -221,12 +223,8 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
-            self.sim_plotter.make_plot(  # type: ignore[union-attr]
-                model,
-                X_train,
-                ybool_train,
-                colnames,
-            )
+            model_plot_args = (model, X_train, ybool_train, colnames)
+            self.sim_plotter.do_plot(model_plot_args)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
