@@ -71,7 +71,7 @@ def _test_aimodel_factory_2vars_main(approach):
     # plot
     def _plot():
         colnames = ["x0", "x1"]
-        slicing_x = np.array([0.0, 1.0]) # arbitrary
+        slicing_x = np.array([0.0, 1.0])  # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
         plot_aimodel(
             aimodel_plotdata,
@@ -79,13 +79,13 @@ def _test_aimodel_factory_2vars_main(approach):
             legend_loc="upper right",
         )
 
-    if SHOW_PLOT: # manual testing only
+    if SHOW_PLOT:  # manual testing only
         _plot()
-    else: # CI & typical test flows
+    else:  # CI & typical test flows
         with patch(plt_show_path):
             _plot()
     assert not SHOW_PLOT
-    
+
 
 @enforce_types
 def test_aimodel_factory_constantdata():
@@ -148,7 +148,7 @@ def test_aimodel_factory_1var():
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 1))
     ycont = 3.0 + 4.0 * X[:, 0]
-    y_thr = np.average(ycont) # avg gives good class balance
+    y_thr = np.average(ycont)  # avg gives good class balance
     ytrue = ycont > y_thr
 
     # build model
@@ -161,17 +161,17 @@ def test_aimodel_factory_1var():
     # plot
     def _plot():
         colnames = ["x0"]
-        slicing_x = np.array([0.1]) # arbitrary
+        slicing_x = np.array([0.1])  # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
         plot_aimodel(aimodel_plotdata)
 
-    if SHOW_PLOT: # manual testing only
-        _plot()    
-    else: # CI & typical test flows
+    if SHOW_PLOT:  # manual testing only
+        _plot()
+    else:  # CI & typical test flows
         with patch(plt_show_path):
             _plot()
     assert not SHOW_PLOT
-    
+
 
 @enforce_types
 def test_aimodel_factory_4vars():
@@ -185,7 +185,7 @@ def test_aimodel_factory_4vars():
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 4))
     ycont = 3.0 + 4.0 * X[:, 0] + 3.0 * X[:, 1] + 2.0 * X[:, 2] + 1.0 * X[:, 3]
-    y_thr = np.average(ycont) # avg gives good class balance
+    y_thr = np.average(ycont)  # avg gives good class balance
     ytrue = ycont > y_thr
 
     # build model
@@ -195,23 +195,21 @@ def test_aimodel_factory_4vars():
     imps = model.importance_per_var()
     assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
     assert sum(imps) == approx(1.0, 0.01)
-    assert imps[0] == approx(4.0/10.0, abs=0.2)
-    assert imps[1] == approx(3.0/10.0, abs=0.2)
-    assert imps[2] == approx(2.0/10.0, abs=0.2)
-    assert imps[3] == approx(1.0/10.0, abs=0.2)
+    assert imps[0] == approx(4.0 / 10.0, abs=0.2)
+    assert imps[1] == approx(3.0 / 10.0, abs=0.2)
+    assert imps[2] == approx(2.0 / 10.0, abs=0.2)
+    assert imps[3] == approx(1.0 / 10.0, abs=0.2)
 
     # plot
     def _plot():
         colnames = ["x0", "x1", "x3", "x4"]
-        slicing_x = np.array([0.1, 1.0, 2.0, 3.0]) # arbitrary
+        slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
         aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
         plot_aimodel(aimodel_plotdata)
 
-    if SHOW_PLOT: # manual testing only
-        _plot()    
-    else: # CI & typical test flows
+    if SHOW_PLOT:  # manual testing only
+        _plot()
+    else:  # CI & typical test flows
         with patch(plt_show_path):
             _plot()
     assert not SHOW_PLOT
-    
-

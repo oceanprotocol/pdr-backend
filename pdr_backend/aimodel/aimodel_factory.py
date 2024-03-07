@@ -22,10 +22,10 @@ class AimodelFactory:
 
     # pylint: disable=too-many-statements
     def build(
-            self,
-            X: np.ndarray,
-            ytrue: np.ndarray,
-            show_warnings:bool=True,
+        self,
+        X: np.ndarray,
+        ytrue: np.ndarray,
+        show_warnings: bool = True,
     ) -> Aimodel:
         """
         @description
@@ -100,11 +100,11 @@ class AimodelFactory:
             raise ValueError(ss.calibrate_probs)
 
         # fit model
-        if show_warnings: # show ConvergenceWarning, more
+        if show_warnings:  # show ConvergenceWarning, more
             skm.fit(X, ytrue)
-        else: 
+        else:
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore")  
+                warnings.simplefilter("ignore")
                 skm.fit(X, ytrue)
 
         # calc variable importances

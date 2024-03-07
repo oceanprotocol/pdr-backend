@@ -11,9 +11,9 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 @enforce_types
 def plot_aimodel(
-        aimodel_plotdata: AimodelPlotdata,
-        fig_ax=None,
-        legend_loc: str = "lower right",
+    aimodel_plotdata: AimodelPlotdata,
+    fig_ax=None,
+    legend_loc: str = "lower right",
 ):
     """
     @description
@@ -36,9 +36,10 @@ def plot_aimodel(
     else:
         _plot_aimodel_contour(aimodel_plotdata, fig_ax, legend_loc)
 
-        
-J = [] # jitter
-    
+
+J = np.array([], dtype=float)  # jitter
+
+
 @enforce_types
 def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     """
@@ -49,9 +50,9 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     # aimodel data
     assert aimodel_plotdata.n == 1
     d = aimodel_plotdata
-    (model, X, ytrue, colnames, slicing_x) = \
-        d.model, d.X_train, d.ytrue_train, d.colnames, d.slicing_x
-    x = X[:,0]
+    X, ytrue = d.X_train, d.ytrue_train
+
+    x = X[:, 0]
     N = len(x)
 
     # start fig
@@ -65,34 +66,36 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     mesh_x = np.linspace(min(x), max(x), 200)
     mesh_N = len(mesh_x)
     mesh_X = np.reshape(mesh_x, (mesh_N, 1))
-    
-    # calc z = model operating on mesh_X
-    z = model.predict_ptrue(mesh_X)
 
-    # yellow vertical bars = where model was wrong    
-    ytrue_hat = model.predict_true(X)
+    # calc z = model operating on mesh_X
+    z = d.model.predict_ptrue(mesh_X)
+
+    # calc ytrue_hat - model's response
+    ytrue_hat = d.model.predict_true(X)
+
+    # yellow vertical bars = where model was wrong
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
-
     for i, xi in enumerate(x[wrong]):
-        label = "wrong" if i==0 else None
+        label = "wrong" if i == 0 else None
         ax.plot([xi, xi], [0.0, 1.0], linewidth=1, c="yellow", label=label)
 
     # line plot: model response surface
     ax.plot(mesh_x, z, c="k", label="model prob(true)")
-    
-    # scatterplots: cyan=training_T, red=training_F
-    while len(J) < N:
-        J.append(np.random.rand() * 0.05)
-    Ja = np.array(J)
-    yfalse = np.invert(ytrue)
-    ax.scatter(
-        x[ytrue], ytrue[ytrue] - Ja[ytrue], s=3, c="c", label="trn data true")
-    ax.scatter(
-        x[yfalse], ytrue[yfalse] + Ja[yfalse], s=3, c="r", label="trn data false")
 
-    ax.set_title(f"Prob(true) vs {colnames[0]}")
-    ax.set_xlabel(colnames[0])
+    # scatterplots: cyan=training_T, red=training_F
+    global J
+    while J.shape[0] < N:
+        J = np.append(J, np.random.rand() * 0.05)
+    yfalse = np.invert(ytrue)
+    y1 = ytrue[ytrue] - J[ytrue] + 0.025
+    y2 = ytrue[yfalse] + J[yfalse] - 0.025
+    ax.scatter(x[ytrue], y1, s=2, c="c", label="trn data true")
+    ax.scatter(x[yfalse], y2, s=2, c="r", label="trn data false")
+
+    # labels
+    ax.set_title(f"Prob(true) vs {d.colnames[0]}")
+    ax.set_xlabel(d.colnames[0])
     ax.set_ylabel("Prob(true)")
 
     HEIGHT = 9  # magic number
@@ -102,12 +105,12 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     ax.legend(loc="upper left")
     plt.show()
 
-    
+
 @enforce_types
 def _plot_aimodel_contour(
-        aimodel_plotdata: AimodelPlotdata,
-        fig_ax,
-        legend_loc,
+    aimodel_plotdata: AimodelPlotdata,
+    fig_ax,
+    legend_loc,
 ):
     """
     @description
@@ -117,8 +120,7 @@ def _plot_aimodel_contour(
     """
     # aimodel data
     d = aimodel_plotdata
-    (model, X, ytrue, colnames, slicing_x) = \
-        d.model, d.X_train, d.ytrue_train, d.colnames, d.slicing_x
+    X, ytrue = d.X_train, d.ytrue_train
     nvars = d.n
     assert nvars >= 2
 
@@ -137,9 +139,9 @@ def _plot_aimodel_contour(
     elif nvars == 2:
         impt_I = [0, 1]
     else:
-        impt_I = np.argsort(model.importance_per_var())[::-1][:2]
-    impt_X = X[:,impt_I]
-    impt_colnames = [colnames[i] for i in impt_I]
+        impt_I = np.argsort(d.model.importance_per_var())[::-1][:2]
+    impt_X = X[:, impt_I]
+    impt_colnames = [d.colnames[i] for i in impt_I]
 
     # calc min/max
     x0_min, x0_max = min(impt_X[:, 0]), max(impt_X[:, 0])
@@ -151,24 +153,26 @@ def _plot_aimodel_contour(
     feature_y = np.linspace(x1_min, x1_max, 200)
     dim0, dim1 = np.meshgrid(feature_x, feature_y)
     mesh_0, mesh_1 = dim0.ravel(), dim1.ravel()
-    mesh_impt_X = np.array([mesh_0, mesh_1]).T # [sample_i][impt_dim_i]
-    slicing_X = np.reshape(slicing_x, (1, nvars)) # [0][dim_i]
+    mesh_impt_X = np.array([mesh_0, mesh_1]).T  # [sample_i][impt_dim_i]
+    slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][dim_i]
     mesh_N = mesh_impt_X.shape[0]
-    mesh_X = np.repeat(slicing_X, mesh_N, axis=0) # [sample_i][dim_i]
-    mesh_X[:,impt_I] = mesh_impt_X
+    mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][dim_i]
+    mesh_X[:, impt_I] = mesh_impt_X
 
     # calc Z = model operating on mesh_X
-    Z = model.predict_ptrue(mesh_X).reshape(dim1.shape)
+    Z = d.model.predict_ptrue(mesh_X).reshape(dim1.shape)
 
     # contour plot: model response surface
     ax.contourf(dim0, dim1, Z, levels=25, cmap=cm.RdBu)  # type: ignore[attr-defined]
 
     # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
-    ytrue_hat = model.predict_true(X)
+    ytrue_hat = d.model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
 
-    ax.scatter(impt_X[:, 0][wrong], impt_X[:, 1][wrong], s=40, c="yellow", label="wrong")
+    ax.scatter(
+        impt_X[:, 0][wrong], impt_X[:, 1][wrong], s=40, c="yellow", label="wrong"
+    )
 
     yfalse = np.invert(ytrue)
     ax.scatter(impt_X[:, 0][ytrue], impt_X[:, 1][ytrue], s=5, c="c", label="true")

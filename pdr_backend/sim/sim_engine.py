@@ -224,10 +224,14 @@ class SimEngine:
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             colnames = [_shift_one_earlier(colname) for colname in colnames]
-            most_recent_x = X[-1,:]
-            slicing_x = most_recent_x # plot about the most recent x
+            most_recent_x = X[-1, :]
+            slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
-                model, X_train, ybool_train, colnames, slicing_x,
+                model,
+                X_train,
+                ybool_train,
+                colnames,
+                slicing_x,
             )
             self.sim_plotter.make_plot(d)
 

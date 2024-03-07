@@ -5,17 +5,18 @@ import numpy as np
 
 from pdr_backend.aimodel.aimodel import Aimodel
 
+
 @enforce_types
 class AimodelPlotdata:
     """Simple class to manage many inputs going into plot_model."""
-    
+
     def __init__(
-            self,
-            model: Aimodel,
-            X_train: np.ndarray,
-            ytrue_train: np.ndarray,
-            colnames: List[str],
-            slicing_x: np.ndarray,
+        self,
+        model: Aimodel,
+        X_train: np.ndarray,
+        ytrue_train: np.ndarray,
+        colnames: List[str],
+        slicing_x: np.ndarray,
     ):
         """
         @arguments
@@ -26,10 +27,15 @@ class AimodelPlotdata:
           slicing_x -- arrat [dim_i]:floatval - when >2 dims, plot about this pt
         """
         # preconditions
-        assert X_train.shape[1] == len(colnames) == slicing_x.shape[0], \
-            (X_train.shape[1], len(colnames), slicing_x.shape[0])
-        assert X_train.shape[0] == ytrue_train.shape[0], \
-            (X_train.shape[0], ytrue_train.shape[0])
+        assert X_train.shape[1] == len(colnames) == slicing_x.shape[0], (
+            X_train.shape[1],
+            len(colnames),
+            slicing_x.shape[0],
+        )
+        assert X_train.shape[0] == ytrue_train.shape[0], (
+            X_train.shape[0],
+            ytrue_train.shape[0],
+        )
 
         # set values
         self.model = model
