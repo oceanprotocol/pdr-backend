@@ -5,7 +5,7 @@ from numpy.testing import assert_array_equal
 from enforce_typing import enforce_types
 from pytest import approx
 
-from pdr_backend.aimodel.plot_model import plot_model
+from pdr_backend.aimodel.model_plotter import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict

@@ -9,6 +9,7 @@ def get_k8s_predictoor_template(
     cpu,
     memory,
     private_key,
+    private_key_2,
     run_command,
 ):
     run_command_args = ""
@@ -47,6 +48,8 @@ spec:
         env:
           - name: PRIVATE_KEY
             value: {private_key}
+          - name: PRIVATE_KEY2
+            value: {private_key_2}
       restartPolicy: Always
     """
     return template

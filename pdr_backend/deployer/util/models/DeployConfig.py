@@ -52,6 +52,7 @@ class DeployConfig:
                     cpu=predictoor.cpu,
                     memory=predictoor.memory,
                     private_key=predictoor.private_key,
+                    private_key_2=predictoor.private_key_2,
                     run_command=run_command,
                 ),
                 full_name,

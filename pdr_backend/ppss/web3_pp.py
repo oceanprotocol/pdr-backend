@@ -359,7 +359,7 @@ class _MockPredictoorContractWithTracking:
         prediction_ts: UnixTimeS,
         wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument
-        assert stake_amt <= 3
+        assert stake_amt <= Eth(3)
         if prediction_ts in self._prediction_slots:
             logger.debug("(Replace prev pred at time slot {%s})", prediction_ts)
         self._prediction_slots.append(prediction_ts)

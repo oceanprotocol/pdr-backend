@@ -8,6 +8,7 @@ import yaml
 
 from pdr_backend.deployer.util.config import parse_config
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
+from pdr_backend.deployer.util.models.PredictoorAgentConfig import PredictoorAgentConfig
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 from pdr_backend.deployer.util.models.DeploymentInfo import DeploymentInfo
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod
@@ -27,17 +28,22 @@ def generate_deployment_templates(
     deployment_config: DeployConfig = parse_config(path, config_name)
     config: AgentsDeployConfig = deployment_config.agent_config
     # set the private keys
-    predictoor_keys = read_keys_json(config_name)
-    diff_keys = len(config.agents) - len(predictoor_keys)
-    if diff_keys > 0:
-        predictoor_keys = generate_new_keys(config_name, diff_keys)
-    for agent, key in zip(config.agents, predictoor_keys):
-        agent.set_private_key(key.private_key)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
 
     deployment_names = []
     if config.type == "predictoor":
+        predictoor_keys = read_keys_json(config_name)
+        diff_keys = len(config.agents) * 2 - len(predictoor_keys)
+        if diff_keys > 0:
+            predictoor_keys = generate_new_keys(config_name, diff_keys)
+
+        for idx, agent in enumerate(config.agents):
+            agent: PredictoorAgentConfig = config.agents[idx]  # type: ignore
+            pk1, pk2 = predictoor_keys[idx * 2], predictoor_keys[idx * 2 + 1]
+            agent.set_private_key(pk1.private_key)
+            agent.set_private_key_2(pk2.private_key)  # type: ignore
+
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         for template in deployment_config.predictoor_templates(deployment_method):
             template.write(output_path)
             deployment_names.append(template.name)

@@ -50,6 +50,6 @@ def test_sim_engine(tmpdir):
     ppss.sim_ss = SimSS(d)
 
     # go
-    with mock.patch("pdr_backend.sim.sim_engine.plt.show"):
+    with mock.patch("pdr_backend.sim.sim_plotter.plt.show"):
         sim_engine = SimEngine(ppss)
         sim_engine.run()
