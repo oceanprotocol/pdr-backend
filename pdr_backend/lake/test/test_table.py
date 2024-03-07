@@ -251,7 +251,7 @@ def test_append_to_db(tmpdir):
 
     table._append_to_db(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
 
-    result = table.PDS.query_data(table.table_name, "SELECT * FROM {view_name}")
+    result = table.PDS.query_data(f"SELECT * FROM {table.table_name}")
 
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"

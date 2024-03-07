@@ -83,9 +83,9 @@ class Table:
             pl.DataFrame
         """
 
-        query = "SELECT * FROM {view_name} ORDER BY timestamp DESC LIMIT 1"
+        query = f"SELECT * FROM {self.table_name} ORDER BY timestamp DESC LIMIT 1"
         try:
-            return self.PDS.query_data(self.table_name, query)
+            return self.PDS.query_data(query)
         except Exception as e:
             print(f"Error fetching last record from PDS: {e}")
             return None
