@@ -12,16 +12,18 @@ Barge is a Docker container to run a local Ganache network having Predictoor con
 ## Contents
 
 Main:
+
 - [Install Barge](#install-barge)
 
 Reference: how to run barge with...
+
 - [No agents](#barge-basic) - just ganache network & Predictoor contracts
 - [One agent](#barge-one-agent) - eg trueval bot
 - [All agents](#barge-all-agents) - predictoor, trader, trueval, dfbuyer bots
 
 Finally:
-- [Change Barge Itself](#change-barge-itself)
 
+- [Change Barge Itself](#change-barge-itself)
 
 ## Install Barge
 
@@ -34,13 +36,14 @@ Finally:
 git clone https://github.com/oceanprotocol/barge
 cd barge
 
-# Clean up previous Ocean-related dirs & containers (optional but recommended) 
+# Clean up previous Ocean-related dirs & containers (optional but recommended)
 rm -rf ~/.ocean
 ./cleanup.sh
 docker system prune -a --volumes
 ```
 
 **Then, get Docker running.** To run barge, you need the Docker engine running. Here's how:
+
 - If you're on Linux: you're good, there's nothing extra to do
 
 Congrats! Barge is installed and ready to be run.
@@ -50,10 +53,12 @@ The sections below describe different ways to run barge. They're for reference o
 ## Barge Basic
 
 Barge with basic Predictoor components is:
+
 - local chain (ganache)
 - predictoor-related smart contracts deployed to chain
 
 To run this, go to the barge console and:
+
 ```console
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
@@ -65,6 +70,7 @@ When barge runs, it will auto-publish DT3 tokens. Currently this is {`BTC/USDT`,
 Barge can run with any subset of the agents.
 
 For example, to run barge with just trueval agent:
+
 ```console
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval
 ```
@@ -78,6 +84,7 @@ To run with all agents:
 ```
 
 This will run all of the following at once:
+
 - local chain (ganache)
 - predictoor-related smart contracts deployed to chain
 - trueval agent

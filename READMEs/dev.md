@@ -14,15 +14,18 @@ Follow directions to install pdr-backend in [predictoor.md](predictoor.md)
 ## Setup Barge
 
 **Local barge.** If you're on ubuntu, you can run barge locally.
+
 - First, [install barge](barge.md#install-barge).
 - Then, run it. In barge console: `./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph`
 
 **Or, remote barge.** If you're on MacOS or Windows, run barge on VPS.
+
 - Follow the instructions in [vps.md](vps.md)
 
 ### Setup dev environment
 
 Open a new "work" console and:
+
 ```console
 # Setup virtualenv
 cd pdr-backend
@@ -40,6 +43,7 @@ All other settings are in [`ppss.yaml`](../ppss.yaml). Some of these are used in
 ### Local Usage: Testing & linting
 
 In work console, run tests:
+
 ```console
 # (ensure PRIVATE_KEY set as above)
 
@@ -58,6 +62,7 @@ pytest
 ```
 
 In work console, run linting checks:
+
 ```console
 # mypy does static type-checking and more. Configure it via mypy.ini
 mypy ./
@@ -71,15 +76,18 @@ black ./
 
 =======
 Check code coverage:
+
 ```console
 coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
 coverage report # show results
 ```
+
 ### Local Usage: Run a custom agent
 
 Let's say you want to change the trader agent, and use off-the-shelf agents for everything else. Here's how.
 
 In barge console:
+
 ```console
 # (Hit ctrl-c to stop existing barge)
 
@@ -88,6 +96,7 @@ In barge console:
 ```
 
 In work console:
+
 ```console
 #(ensure envvars set as above)
 
@@ -102,6 +111,7 @@ pdr trader 1 ppss.yaml barge-pytest
 ## Remote Usage
 
 In the CLI, simply point to a different network:
+
 ```console
 # run on testnet
 pdr trader ppss.yaml sapphire-testnet
