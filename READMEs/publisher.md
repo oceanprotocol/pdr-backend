@@ -16,13 +16,15 @@ Follow directions in [predictoor.md](predictoor.md)
 First, [install barge](barge.md#install-barge)
 
 Then, run barge. In barge console:
+
 ```console
 # Run barge with just predictoor contracts, queryable, but no agents
 ./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
 ```
 
 Open a new console and:
-```console
+
+````console
 # Setup virtualenv
 cd pdr-backend
 source venv/bin/activate
@@ -42,12 +44,12 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 Then, run publisher bot. In console:
 ```console
 pdr publisher my_ppss.yaml development
-```
-
+````
 
 ## Remote Usage
 
 In the CLI, simply point to a different network:
+
 ```console
 # run on testnet
 pdr publisher my_ppss.yaml sapphire-testnet

@@ -1,10 +1,11 @@
 import logging
 import sys
-from typing import Dict
+from typing import Dict, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("topup")
 
@@ -65,15 +66,17 @@ def topup_main(ppss: PPSS):
     sys.exit(0)
 
 
-def do_transfer(token, address, owner, owner_bal, min_bal, topup_bal):
+def do_transfer(
+    token, address, owner, owner_bal, min_bal: Eth, topup_bal: Eth
+) -> Tuple[Eth, bool]:
     bal = token.balanceOf(address).to_eth()
 
     symbol = "ROSE" if token.name == "ROSE" else "OCEAN"
 
     failed = False
-    transfered_amount = 0
+    transfered_amount = Eth(0)
 
-    if min_bal > 0 and bal < min_bal:
+    if min_bal > Eth(0) and bal < min_bal:
         logger.info("Transferring %s %s to %s...", topup_bal.amt_eth, symbol, address)
         if owner_bal > topup_bal:
             token.transfer(

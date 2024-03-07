@@ -1,37 +1,37 @@
 # Run Remote Predictoor/Trader Bot, Remote Network
 
 This README describes:
-- Running a *remote predictoor or trader* bot (agent), on Azure
-- On a *remote network* where other bots are remote
+
+- Running a _remote predictoor or trader_ bot (agent), on Azure
+- On a _remote network_ where other bots are remote
 - It uses containers
 
 You will build a container, upload it to Azure Container Registry, and finally run it using Azure Container Instances.
 
 This example uses Sapphire testnet; you can modify envvars to run on Sapphire mainnet.
 
-
 **Steps:**
 
 1. Setup
-    - [Get tokens](#get-tokens)
-    - [Pre-requisites](#pre-requisites)
-    - [Install bot](#install-bot)
+   - [Get tokens](#get-tokens)
+   - [Pre-requisites](#pre-requisites)
+   - [Install bot](#install-bot)
 2. [Build a container image](#build-a-container-image)
-2. [Setup & run bot on Azure](#run-bot-on-azure)
-    - [Install Azure CLI](#install-azure-cli)
-    - [Build a container image of bot](#build-container-image)
-    - [Setup ACR](#setup-acr) (Azure Container Registry)
-    - [Push image to ACR](#push-image-to-acr)
-    - [Run image on ACI](#run-image-on-azure-aci) (Azure Container Instances)
-    - [Monitor container logs](#monitor-container-logs)
-3. Appendix
-    - [Further Azure Resources](#further-azure-resources)
-    - [Other Deployment Venues](#other-deployment-venues)
+3. [Setup & run bot on Azure](#run-bot-on-azure)
+   - [Install Azure CLI](#install-azure-cli)
+   - [Build a container image of bot](#build-a-container-image)
+   - [Setup ACR](#setup-acr) (Azure Container Registry)
+   - [Push image to ACR](#push-image-to-acr)
+   - [Run image on ACI](#run-image-on-aci) (Azure Container Instances)
+   - [Monitor container logs](#monitor-container-logs)
+4. Appendix
+   - [Further Azure Resources](#further-azure-resources)
+   - [Other Deployment Venues](#other-deployment-venues)
 
 > **Warning**
 > These docs are up-to-date as of August 2023. If you encounter any issues or need the latest instructions, please see [Azure docs](https://learn.microsoft.com/en-us/azure/app-service/tutorial-custom-container?tabs=azure-cli&pivots=container-linux) on running containers.
 
-### Get Tokens
+## Get Tokens
 
 [See get-tokens.md](./get-tokens.md).
 
@@ -45,12 +45,12 @@ The predictoor/trader bots run code that lives in `pdr-backend` repo.
 
 [Install pdr-backend](install.md).
 
-
 ## Build a Container Image
 
 Here, we will build a container image for your bot.
 
 In console, in the root directory of your repo, run:
+
 ```console
 # if docker
 docker build -t pdr-backend-<botname>:latest .
@@ -62,7 +62,6 @@ podman build -t pdr-backend-<botname>:latest .
 Where `botname` = the name of your bot.
 
 This command builds a container image using the Dockerfile in the current directory and tag it as `pdr-backend-<botname>:latest`. You can use any tag you'd like.
-
 
 ## Run Bot on Azure
 
@@ -83,6 +82,7 @@ az acr create --name <ACR_NAME> --resource-group <resource group name> --sku <sk
 ```
 
 Where:
+
 - `--name`: The name of the container registry. It should be specified in lower case. You will need it in the next step.
 - `--resource-group`: The name of the resource group where you want to create the ACR. You can learn more about managing resource groups from [Azure's documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal).
 - `--sku`: Pricing tier for ACR, accepted values are: `Basic`, `Standard`, `Premium`.
@@ -123,23 +123,26 @@ The tag command is used to assign a new tag to your image. This is necessary bec
 Finally, you can run your image as a container on Azure Container Instances (ACI). Make sure to replace `<acr_name>` with the actual name of your ACR.
 
 To create a container instance with 1 core and 1Gb of memory: in console:
+
 ```console
 az container create --resource-group <resource-group-name> --name <container-instance-name> --image <acr-name>.azurecr.io/pdr-backend-<botname>:latest --cpu 1 --memory 1
 ```
 
 Where:
+
 - `--name`: The name of the container instance. You will need it in the next step.
 - `--resource-group`: The name of the resource group where you want to create the ACR. You can learn more about managing resource groups from [Azure's documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal).
 - `--image`: The tag of the container image you've pushed to the registry in the previous step.
 
 > **Note**
-> You can set envvars defined in [Configure Enviroment Variables](#configure-environment-variables) step by passing `--environment-variables <env-variables>` parameter to the `az container create` command.
+> You can set envvars by passing `--environment-variables <env-variables>` parameter to the `az container create` command.
 
 ([Azure docs](https://learn.microsoft.com/en-us/cli/azure/container?view=azure-cli-latest#az-container-create) have more details.)
 
 ### Monitor container logs
 
 In console:
+
 ```console
 az container logs --resource-group <resource-group-name> --name <container-instance-name>
 ```
@@ -154,14 +157,13 @@ The [Azure docs](https://learn.microsoft.com/en-us/cli/azure/container?view=azur
 
 You can also use the Azure Portal. It's a GUI to manage your container instances. Through it, you can create new instances, start & stop containers, scale them, and more.
 
-
 ### Other Deployment Venues
 
 Above, we focused on Azure. Here are several deployment options:
 
-- [Azure - Azure Container Instances (ACI)](#running-on-azure-as-a-container)
+- [Azure - Azure Container Instances (ACI)](#run-image-on-aci)
 - [Heroku - Container Registry & Runtime (Docker Deploys)](https://devcenter.heroku.com/articles/container-registry-and-runtime)
-- [AWS -  Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
+- [AWS - Deploy Docker Containers on Amazon ECS](https://aws.amazon.com/getting-started/hands-on/deploy-docker-containers/)
 - [Google Cloud - Deploying to Cloud Run](https://cloud.google.com/run/docs/deploying)
 
 ## Other READMEs
