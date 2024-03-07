@@ -85,8 +85,10 @@ def safe_fetch_ohlcv_dydx(
             return None
         headers = {"Accept": "application/json"}
         response = requests.get(
-            f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}&fromISO={since.to_iso_timestr()}&limit={limit}",
+            f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}"
+            f"&fromISO={since.to_iso_timestr()}&limit={limit}",
             headers=headers,
+            timeout=20,
         )
         data = response.json()
 
@@ -96,9 +98,7 @@ def safe_fetch_ohlcv_dydx(
 
         if key_name == "candles" and items:
             for item in items:
-                dt = datetime.strptime(
-                    item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                )  # Convert ISO date to timestamp
+                dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
                 timestamp = int(dt.timestamp() * 1000)
                 ohlcv_tuple = (
                     timestamp,
@@ -112,9 +112,10 @@ def safe_fetch_ohlcv_dydx(
 
             return dydx_data
 
-        elif key_name == "errors" and items:
-            for error in data[key_name]:
-                    dydx_data.extend(error.items())
+        if key_name == "errors" and items:
+            errors = items[0]
+            error_msg = tuple(errors.items())
+            dydx_data.append(error_msg)
             return dydx_data
 
         return None
