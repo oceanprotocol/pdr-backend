@@ -62,7 +62,7 @@ class PersistentDataStore(BaseDataStore):
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
-    def query_data(self, query: str, partition_type: None = None) -> pl.DataFrame:
+    def query_data(self, query: str) -> pl.DataFrame:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:

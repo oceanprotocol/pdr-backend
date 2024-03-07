@@ -9,6 +9,7 @@ from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.test.conftest import _clean_up
 
 
 # pylint: disable=too-many-instance-attributes
@@ -34,20 +35,6 @@ mocked_object = {
     "slot": 1701634400,
     "user": "0x123",
 }
-
-
-def _clean_up(tmp_path):
-    """
-    Delete test file if already exists
-    """
-    folder_path = os.path.join(tmp_path, table_name)
-
-    if os.path.exists(folder_path):
-        # delete files
-        for file in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file)
-            os.remove(file_path)
-        os.remove(folder_path)
 
 
 def mock_fetch_function(
@@ -264,7 +251,7 @@ def test_append_to_db(tmpdir):
 
     table._append_to_db(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
 
-    result = table.persistent_data_store.query_data(f"SELECT * FROM {table.table_name}")
+    result = table.PDS.query_data(f"SELECT * FROM {table.table_name}")
 
     assert result["ID"][0] == "0x123"
     assert result["pair"][0] == "ADA-USDT"
@@ -307,3 +294,46 @@ def test_append_to_csv(tmpdir):
     with open(file_path, "r") as file:
         lines = file.readlines()
         assert len(lines) == 1001
+
+
+def test_get_last_record():
+    """
+    Test that table is loading the data from file
+    """
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        ".",
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    table = Table(table_name, table_df_schema, ppss)
+    table.load()
+
+    assert len(table.df) == 0
+
+    alternative_mocked_object = {
+        "ID": "0x123-test",
+        "pair": "ADA-USDT-2",
+        "timeframe": "5m",
+        "prediction": True,
+        "payout": 28.2,
+        "timestamp": 1701635500000,
+        "slot": 1701635500000,
+        "user": "0x123-2",
+    }
+
+    table._append_to_db(pl.DataFrame([mocked_object] * 999, schema=table_df_schema))
+    table._append_to_db(
+        pl.DataFrame([alternative_mocked_object], schema=table_df_schema)
+    )
+
+    last_record = table.get_pds_last_record()
+    assert last_record["timestamp"][0] == UnixTimeMs(1701635500000)
+    assert last_record["slot"][0] == UnixTimeMs(1701635500000)
+    assert last_record["user"][0] == "0x123-2"
+    assert last_record["ID"][0] == "0x123-test"
+    assert last_record["pair"][0] == "ADA-USDT-2"

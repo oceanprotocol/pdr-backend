@@ -1,12 +1,10 @@
 import logging
-import os
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 import polars as pl
 from polars.type_aliases import SchemaDict
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
@@ -25,6 +23,9 @@ class Table:
         self.df_schema = df_schema
         self.df = pl.DataFrame([], schema=df_schema)
         print("self.df", self.df)
+        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
+        self.PDS = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+
         self.load()
 
     @enforce_types
@@ -33,8 +34,6 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         print(f"Loading data for {self.table_name}")
-        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
-        self.persistent_data_store = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
 
         st_ut = self.ppss.lake_ss.st_timestamp
         fin_ut = self.ppss.lake_ss.fin_timestamp
@@ -68,11 +67,26 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        self.persistent_data_store.insert_to_table(data, self.table_name)
+        self.PDS.insert_to_table(data, self.table_name)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
         )
+
+    def get_pds_last_record(self) -> Optional[pl.DataFrame]:
+        """
+        Get the last record from the persistent data store
+
+        @returns
+            pl.DataFrame
+        """
+
+        query = f"SELECT * FROM {self.table_name} ORDER BY timestamp DESC LIMIT 1"
+        try:
+            return self.PDS.query_data(query)
+        except Exception as e:
+            print(f"Error fetching last record from PDS: {e}")
+            return None
 
     @enforce_types
     def get_pdr_df(
@@ -147,45 +161,3 @@ class Table:
             self.append_to_sources(final_df)
 
             print(f"Saved {len(final_df)} records to file while fetching")
-
-    @enforce_types
-    def _parquet_filename(self) -> str:
-        """
-        @description
-            Computes the lake-path for the parquet file.
-
-        @arguments
-            filename_str -- eg "subgraph_predictions"
-
-        @return
-            parquet_filename -- name for parquet file.
-        """
-        basename = f"{self.table_name}.parquet"
-        filename = os.path.join(self.ppss.lake_ss.parquet_dir, basename)
-        return filename
-
-    @enforce_types
-    def _calc_start_ut(self, filename: str) -> UnixTimeMs:
-        """
-        @description
-            Calculate start timestamp, reconciling whether file exists and where
-            its data starts. If file exists, you can only append to end.
-
-        @arguments
-        filename - parquet file with data. May or may not exist.
-
-        @return
-        start_ut - timestamp (ut) to start grabbing data for (in ms)
-        """
-        if not os.path.exists(filename):
-            print("      No file exists yet, so will fetch all data")
-            return self.ppss.lake_ss.st_timestamp
-
-        print("      File already exists")
-        if not has_data(filename):
-            print("      File has no data, so delete it")
-            os.remove(filename)
-            return self.ppss.lake_ss.st_timestamp
-
-        file_utN = newest_ut(filename)
-        return UnixTimeMs(file_utN + 1000)
