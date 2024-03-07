@@ -36,6 +36,8 @@ def plot_aimodel(
     else:
         _plot_aimodel_contour(aimodel_plotdata, fig_ax, legend_loc)
 
+        
+J = [] # jitter
     
 @enforce_types
 def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
@@ -49,6 +51,8 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     d = aimodel_plotdata
     (model, X, ytrue, colnames, slicing_x) = \
         d.model, d.X_train, d.ytrue_train, d.colnames, d.slicing_x
+    x = X[:,0]
+    N = len(x)
 
     # start fig
     if fig_ax is None:
@@ -57,34 +61,35 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
         fig, ax = fig_ax
         ax.cla()  # clear axis
 
-    # calc min/max
-    x0_min, x0_max = min(X[:, 0]), max(X[:, 0])
-
     # calc mesh_X = uniform grid
-    mesh_x = np.linspace(x0_min, x0_max, 200)
+    mesh_x = np.linspace(min(x), max(x), 200)
     mesh_N = len(mesh_x)
     mesh_X = np.reshape(mesh_x, (mesh_N, 1))
     
     # calc z = model operating on mesh_X
     z = model.predict_ptrue(mesh_X)
 
-    # line plot: model response surface
-    ax.plot(mesh_x, z, c="k", label="model prob(true)")
-    
-    # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
-    x = X[:,0]
-    N = len(x)
-    jitter = np.random.rand(N) * 0.1
-    
+    # yellow vertical bars = where model was wrong    
     ytrue_hat = model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
 
-    ax.scatter(x[wrong], ytrue[wrong], s=5, c="yellow", label="wrong")
+    for i, xi in enumerate(x[wrong]):
+        label = "wrong" if i==0 else None
+        ax.plot([xi, xi], [0.0, 1.0], linewidth=1, c="yellow", label=label)
 
+    # line plot: model response surface
+    ax.plot(mesh_x, z, c="k", label="model prob(true)")
+    
+    # scatterplots: cyan=training_T, red=training_F
+    while len(J) < N:
+        J.append(np.random.rand() * 0.05)
+    Ja = np.array(J)
     yfalse = np.invert(ytrue)
-    ax.scatter(x[ytrue], ytrue[ytrue], s=1, c="c", label="trn data true")
-    ax.scatter(x[yfalse], ytrue[yfalse], s=1, c="r", label="trn data false")
+    ax.scatter(
+        x[ytrue], ytrue[ytrue] - Ja[ytrue], s=3, c="c", label="trn data true")
+    ax.scatter(
+        x[yfalse], ytrue[yfalse] + Ja[yfalse], s=3, c="r", label="trn data false")
 
     ax.set_title(f"Prob(true) vs {colnames[0]}")
     ax.set_xlabel(colnames[0])
