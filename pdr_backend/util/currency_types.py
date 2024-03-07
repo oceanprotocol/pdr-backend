@@ -97,11 +97,11 @@ class EthUnit(ABC):
 @enforce_types
 class Eth(EthUnit):
     def __init__(self, amt_eth: Union[int, float]):
-        super().__init__(amt_eth)
         if amt_eth > 100_000_000_000:
             logger.warning(
                 "amt_eth=%s is very large. Should it be wei instead?", amt_eth
             )
+        super().__init__(amt_eth)
 
     def to_wei(self) -> "Wei":
         return Wei(int(self.amount * 1e18))
