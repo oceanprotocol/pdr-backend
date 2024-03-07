@@ -364,7 +364,8 @@ class PredictoorAgent:
         )
         if up_predictoor_balance_ocean < minimum_ocean_balance:
             logger.error(
-                "Up predictoor's OCEAN balance too low: (%s)", up_predictoor_balance_ocean
+                "Up predictoor's OCEAN balance too low: (%s)",
+                up_predictoor_balance_ocean,
             )
             return False
 
@@ -373,7 +374,8 @@ class PredictoorAgent:
         )
         if down_predictoor_balance_ocean < minimum_ocean_balance:
             logger.error(
-                "Down predictoor's OCEAN balance too low: (%s)", down_predictoor_balance_ocean
+                "Down predictoor's OCEAN balance too low: (%s)",
+                down_predictoor_balance_ocean,
             )
             return False
 
@@ -389,7 +391,8 @@ class PredictoorAgent:
         down_predictoor_balance_rose = native_token.balanceOf(down_predictoor_address)
         if down_predictoor_balance_rose < minimum_native_balance:
             logger.error(
-                "Down predictoor's ROSE balance too low: (%s)", down_predictoor_balance_rose
+                "Down predictoor's ROSE balance too low: (%s)",
+                down_predictoor_balance_rose,
             )
             return False
 
