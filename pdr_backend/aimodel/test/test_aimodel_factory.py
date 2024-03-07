@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import warnings
 
 import numpy as np
@@ -5,13 +6,14 @@ from numpy.testing import assert_array_equal
 from enforce_typing import enforce_types
 from pytest import approx
 
-from pdr_backend.aimodel.model_plotter import plot_model
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_plotter import plot_aimodel_contour
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-PLOT = False  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types
@@ -69,25 +71,29 @@ def _test_aimodel_factory_main(approach):
     assert imps[1] == approx(0.667, abs=0.3)
 
     # plot
-    if PLOT:
-        labels = ("x0", "x1")
+    def _plot():
+        colnames = ["x0", "x1"]
+        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames)
         fancy_title = True
         leg_loc = "upper right"
         fig_ax = None
         xranges = (mn, mx, mn, mx)
-        plot_model(
-            model,
-            X,
-            ytrue,
-            labels,
+        plot_aimodel_contour(
+            aimodel_plotdata,
             fig_ax=fig_ax,
             xranges=xranges,
             fancy_title=fancy_title,
             legend_loc=leg_loc,
         )
 
-    assert not PLOT
-
+    if SHOW_PLOT: # manual testing only
+        _plot()
+        raise ValueError("SHOW_PLOT should be off for official tests")
+    
+    else: # CI & typical test flows
+        with patch("pdr_backend.sim.sim_plotter.plt.show"):
+            _plot()
+    
 
 @enforce_types
 def test_aimodel_factory_constantdata():

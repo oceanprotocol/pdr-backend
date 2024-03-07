@@ -10,9 +10,9 @@ from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.util.mathutil import classif_acc
@@ -224,6 +224,7 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
+            colnames = [_shift_one_earlier(colname) for colname in colnames]
             d = AimodelPlotdata(model, X_train, ybool_train, colnames)
             self.sim_plotter.make_plot(d)
 
@@ -314,3 +315,10 @@ class SimEngine:
             return False
 
         return True
+
+
+@enforce_types
+def _shift_one_earlier(s: str):
+    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
+    val = int(s[-1])
+    return s[:-1] + str(val - 1)

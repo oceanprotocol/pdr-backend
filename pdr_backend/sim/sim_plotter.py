@@ -10,9 +10,9 @@ from numpy.random import random
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.aimodel.model_plotter import plot_model
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.aimodel.aimodel_plotter import plot_aimodel_contour
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.sim.sim_state import SimState
 
 FONTSIZE = 9
@@ -27,18 +27,18 @@ class SimPlotter:
         self,
         ppss: PPSS,
         st: SimState,
-        include_contour: bool,
+        do_plot_aimodel_contour: bool,
     ):
         # engine state, ss
         self.st = st
         self.ppss = ppss
-        self.include_contour = include_contour
+        self.do_plot_aimodel_contour = do_plot_aimodel_contour
 
         # figure, subplots
         fig = plt.figure()
         self.fig = fig
 
-        if include_contour:
+        if do_plot_aimodel_contour:
             gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
         else:
             gs = gridspec.GridSpec(2, 3, width_ratios=[5, 1, 1])
@@ -50,10 +50,10 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        if include_contour:
-            self.ax_model_contour = fig.add_subplot(gs[:, 3])
+        if do_plot_aimodel_contour:
+            self.ax_aimodel_contour = fig.add_subplot(gs[:, 3])
         else:
-            self.ax_model_contour = Mock(spec=Axes)
+            self.ax_aimodel_contour = Mock(spec=Axes)
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -89,7 +89,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._maybe_plot_model_contour(aimodel_plotdata)
+        self._maybe_plot_aimodel_contour(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -208,28 +208,12 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _maybe_plot_model_contour(self, d: AimodelPlotdata):
-        if self.include_contour:
-            ax = self.ax_model_contour
-            labels = _contour_labels(d.colnames)
-            plot_model(
-                d.model, d.X_train, d.ybool_train, labels, (self.fig, ax),
-            )
+    def _maybe_plot_aimodel_contour(self, d: AimodelPlotdata):
+        if self.do_plot_aimodel_contour:
+            ax = self.ax_aimodel_contour
+            plot_aimodel_contour(d, (self.fig, ax))
             if not self.plotted_before:
                 ax.margins(0.01, 0.01)
-
-
-@enforce_types
-def _contour_labels(colnames: List[str]) -> Tuple[str]:
-    labels = tuple([_shift_one_earlier(colname) for colname in colnames])
-    return labels
-
-
-@enforce_types
-def _shift_one_earlier(s: str):
-    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
-    val = int(s[-1])
-    return s[:-1] + str(val - 1)
 
 
 @enforce_types

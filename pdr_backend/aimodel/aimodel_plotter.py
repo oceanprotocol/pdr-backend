@@ -6,14 +6,12 @@ from matplotlib import cm
 import numpy as np
 
 from pdr_backend.aimodel.aimodel import Aimodel
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_model(
-    model: Aimodel,
-    X: np.ndarray,
-    ytrue: np.ndarray,
-    labels: Tuple[str, str],
+def plot_aimodel_contour(
+        aimodel_plotdata: AimodelPlotdata,
     fig_ax=None,
     xranges=None,
     fancy_title: bool = False,
@@ -26,16 +24,23 @@ def plot_model(
       Only relevant when the model has 2-d input.
 
     @arguments
-      model
-      X -- [sample_i][dim_i]:floatval -- training model inputs (or other)
-      ytrue -- [sample_i]:boolval -- training model outputs (or other)
-      labels -- (x0 axis label, x1 axis label)
+      aimodel_plotdata -- holds:
+        model -- Aimodel
+        X_train -- array [sample_i][dim_i]:floatval -- trn model inputs (or other)
+        ytrue_train -- array [sample_i]:boolval -- trn model outputs (or other)
+        colnames -- list [dim_i]:X_column_name
       fig_ax -- None or (fig, ax) to easily embed into existing plot
       xranges -- None or (x0_min, x0_max, x1_min, x1_max) -- plot boundaries
       fancy_title -- should title have model accuracy info?
       legend_loc -- eg "upper left"
     """
+    d = aimodel_plotdata
+    (model, X, ytrue, colnames) = d.model, d.X_train, d.ytrue_train, d.colnames
+    
     assert X.shape[1] == 2, "only relevant for 2-d input"
+    
+    assert len(colnames) == 2
+    labels = tuple(colnames) # (x0 axis label, x1 axis label)    
 
     if xranges is None:
         x0_min, x0_max = min(X[:, 0]), max(X[:, 0])
