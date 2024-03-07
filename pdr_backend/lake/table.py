@@ -31,7 +31,7 @@ class Table:
         """
         print(f"Loading data for {self.table_name}")
 
-        self.df = pl.DataFrame([], schema=df_schema)
+        self.df = pl.DataFrame([], schema=self.df_schema)
         print("self.df", self.df)
 
     def append_to_storage(self, data: pl.DataFrame):

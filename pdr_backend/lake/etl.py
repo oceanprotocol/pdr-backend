@@ -7,7 +7,7 @@ from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
-    get_bronze_pdr_predictions_table,
+    get_bronze_pdr_predictions_data_with_SQL,
 )
 
 
@@ -92,5 +92,5 @@ class ETL:
             )
             self.tables[bronze_pdr_predictions_table_name] = table
 
-        table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
-        table.append_to_storage(table.df)
+        data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
+        table.append_to_storage(data)

@@ -20,7 +20,7 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
-
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 @pytest.fixture()
 def sample_payouts():
@@ -318,7 +318,6 @@ def _gql_datafactory_second_predictions_df():
 
     return predictions_df
 
-
 def _clean_up(tmpdir):
     for root, dirs, files in os.walk(tmpdir):
         for file in files:
@@ -327,3 +326,21 @@ def _clean_up(tmpdir):
             # clean up the directory
             _clean_up(os.path.join(root, directory))
             os.rmdir(os.path.join(root, directory))
+
+
+def _clean_up_persistent_data_store(tmpdir, table_name = None):
+    # Clean up PDS
+    persistent_data_store = PersistentDataStore(str(tmpdir))
+
+    # Select tables from duckdb
+    views = persistent_data_store.duckdb_conn.execute(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+    ).fetchall()
+
+    # Drop the view and table
+    if table_name in [table[0] for table in views]:
+        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
+
+    if table_name is None:
+        for table in views:
+            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table[0]}")

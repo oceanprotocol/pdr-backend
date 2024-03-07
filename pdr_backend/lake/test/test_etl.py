@@ -12,11 +12,15 @@ from pdr_backend.lake.table_pdr_predictions import (
 )
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
 # Step 2. ETL -> do_bronze_step()
 
+def _get_test_PDS(tmpdir):
+    return PersistentDataStore(str(tmpdir))
 
 @enforce_types
 def get_filtered_timestamps_df(
@@ -112,6 +116,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
     # please note date, including Nov 1st
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -139,9 +144,9 @@ def test_etl_do_bronze_step(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    gql_tables["pdr_predictions"].df = preds
-    gql_tables["pdr_truevals"].df = truevals
-    gql_tables["pdr_payouts"].df = payouts
+    gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].append_to_storage(payouts)
 
     mock_get_gql_tables.return_value = gql_tables
 
@@ -151,16 +156,27 @@ def test_etl_do_bronze_step(
     # Work 2: Do sync
     etl.do_sync_step()
 
-    assert len(etl.tables["pdr_predictions"].df) == 6
-
+    pds_instance = _get_test_PDS(tmpdir)
+    ## assert len(etl.tables["pdr_predictions"].df) == 6
+    pdr_predictions_records = pds_instance.query_data(
+        f"""
+            SELECT * FROM {predictions_table_name}
+        """)
+    assert len(pdr_predictions_records) == 6
     # Work 3: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    assert len(etl.tables["bronze_pdr_predictions"].df) == 6
-
-    bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
-
+    ## assert len(etl.tables["bronze_pdr_predictions"].df) == 6
+    bronze_pdr_predictions_records = pds_instance.query_data(
+        f"""
+            SELECT * FROM bronze_pdr_predictions
+        """)
+    assert len(bronze_pdr_predictions_records) == 6
+    
+    # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
+    bronze_pdr_predictions_df = bronze_pdr_predictions_records
+    
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
         bronze_pdr_predictions_df["contract"][0]
