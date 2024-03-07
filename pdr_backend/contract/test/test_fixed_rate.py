@@ -25,7 +25,7 @@ def test_FixedRate(predictoor_contract, web3_pp):
         consumeMktFeeAmt_wei,
     ) = tup
 
-    assert baseTokenAmt_wei.amt_eth == approx(3.603)
+    assert baseTokenAmt_wei.to_eth().amt_eth == approx(3.603)
 
     assert oceanFeeAmt_wei.amt_eth == approx(0.003)
     assert publishMktFeeAmt_wei.amt_eth == approx(0.6)
