@@ -5,6 +5,8 @@ import polars as pl
 
 from pdr_backend.subgraph.prediction import (
     Prediction,
+    mock_first_predictions,
+    mock_second_predictions,
     mock_daily_predictions,
     mock_prediction,
 )
@@ -291,3 +293,25 @@ def _gql_datafactory_etl_truevals_df():
     )
 
     return truevals_df
+
+
+@pytest.fixture()
+def _gql_datafactory_first_predictions_df():
+    _predictions = mock_first_predictions()
+    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df
+
+
+@pytest.fixture()
+def _gql_datafactory_second_predictions_df():
+    _predictions = mock_second_predictions()
+    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df
