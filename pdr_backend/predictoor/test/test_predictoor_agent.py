@@ -239,11 +239,11 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 @pytest.mark.parametrize(
     "up_ocean, down_ocean, up_native, down_native, expected",
     [
-        (Eth(100), Eth(100), Eth(2), Eth(2), True),  # All balances are sufficient
-        (Eth(0), Eth(100), Eth(2), Eth(2), False),  # Up OCEAN balance too low
-        (Eth(100), Eth(0), Eth(2), Eth(2), False),  # Down OCEAN balance too low
-        (Eth(100), Eth(100), Eth(0), Eth(2), False),  # Up native balance too low
-        (Eth(100), Eth(100), Eth(2), Eth(0), False),  # Down native balance too low
+        (Eth(100).to_wei(), Eth(100).to_wei(), Eth(2).to_wei(), Eth(2).to_wei(), True),  # All balances are sufficient
+        (Eth(0).to_wei(), Eth(100).to_wei(), Eth(2).to_wei(), Eth(2).to_wei(), False),  # Up OCEAN balance too low
+        (Eth(100).to_wei(), Eth(0).to_wei(), Eth(2).to_wei(), Eth(2).to_wei(), False),  # Down OCEAN balance too low
+        (Eth(100).to_wei(), Eth(100).to_wei(), Eth(0).to_wei(), Eth(2).to_wei(), False),  # Up native balance too low
+        (Eth(100).to_wei(), Eth(100).to_wei(), Eth(2).to_wei(), Eth(0).to_wei(), False),  # Down native balance too low
     ],
 )
 def test_balance_check(
