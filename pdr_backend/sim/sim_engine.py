@@ -224,7 +224,7 @@ class SimEngine:
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             model_plot_args = (model, X_train, ybool_train, colnames)
-            self.sim_plotter.do_plot(model_plot_args)
+            self.sim_plotter.make_plot(model_plot_args)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
