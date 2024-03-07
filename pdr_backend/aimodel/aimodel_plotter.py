@@ -12,10 +12,10 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 @enforce_types
 def plot_aimodel_contour(
         aimodel_plotdata: AimodelPlotdata,
-    fig_ax=None,
-    xranges=None,
-    fancy_title: bool = False,
-    legend_loc: str = "lower right",
+        fig_ax=None,
+        xranges=None,
+        fancy_title: bool = False,
+        legend_loc: str = "lower right",
 ):
     """
     @description
