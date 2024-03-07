@@ -11,7 +11,10 @@ from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.aimodel_plotter import plot_aimodel
+from pdr_backend.aimodel.aimodel_plotter import (
+    plot_aimodel_response,
+    plot_aimodel_varimps,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 
@@ -81,7 +84,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._plot_aimodel(aimodel_plotdata)
+        self._plot_aimodel_response(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -200,9 +203,9 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _plot_aimodel(self, d: AimodelPlotdata):
+    def _plot_aimodel_response(self, d: AimodelPlotdata):
         ax = self.ax_aimodel
-        plot_aimodel(d, (self.fig, ax))
+        plot_aimodel_response(d, (self.fig, ax))
         if not self.plotted_before:
             ax.margins(0.01, 0.01)
 

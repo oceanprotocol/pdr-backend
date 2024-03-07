@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel(
+def plot_aimodel_response(
     aimodel_plotdata: AimodelPlotdata,
     fig_ax=None,
     legend_loc: str = "lower right",
@@ -24,10 +24,10 @@ def plot_aimodel(
     @arguments
       aimodel_plotdata -- holds:
         model -- Aimodel
-        X_train -- array [sample_i][dim_i]:floatval -- trn model inputs (or other)
+        X_train -- array [sample_i][var_i]:floatval -- trn model inputs (or other)
         ytrue_train -- array [sample_i]:boolval -- trn model outputs (or other)
-        colnames -- list [dim_i]:X_column_name
-        slicing_x -- arrat [dim_i]:floatval - when >2 dims, plot about this pt
+        colnames -- list [var_i]:X_column_name
+        slicing_x -- arrat [var_i]:floatval - when >2 dims, plot about this pt
       fig_ax -- None or (fig, ax) to easily embed into existing plot
       legend_loc -- eg "upper left". Applies only to contour plots.
     """
@@ -153,10 +153,10 @@ def _plot_aimodel_contour(
     feature_y = np.linspace(x1_min, x1_max, 200)
     dim0, dim1 = np.meshgrid(feature_x, feature_y)
     mesh_0, mesh_1 = dim0.ravel(), dim1.ravel()
-    mesh_impt_X = np.array([mesh_0, mesh_1]).T  # [sample_i][impt_dim_i]
-    slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][dim_i]
+    mesh_impt_X = np.array([mesh_0, mesh_1]).T  # [sample_i][impt_var_i]
+    slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][var_i]
     mesh_N = mesh_impt_X.shape[0]
-    mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][dim_i]
+    mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]
     mesh_X[:, impt_I] = mesh_impt_X
 
     # calc Z = model operating on mesh_X
@@ -187,4 +187,52 @@ def _plot_aimodel_contour(
     fig.set_size_inches(WIDTH, HEIGHT)
 
     ax.legend(loc=legend_loc)
+    plt.show()
+
+
+@enforce_types
+def plot_aimodel_varimps(
+        varnames: List[str],
+        imps_tup: tuple,
+        fig_ax=None,
+):
+    """
+    @description
+      Bar plot showing rel importance of vars
+      Including 95% confidence intervals (2.0 stddevs)
+
+    @arguments
+      varnames -- variable names
+      imps_tup -- tuple of (imps_avg, imps_stddev)
+      fig_ax -- None or (fig, ax) to easily embed into existing plot
+    """
+    imps_avg, imps_stddev = np.array(imps_tup[0]), np.array(imps_tup[1])
+    assert len(imps_avg.shape) == 1
+    assert len(imps_stddev.shape) == 1
+    assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
+    assert min(imps_avg) >= 0.0
+    assert min(imps_stddev) >= 0.0
+    
+    # start fig
+    if fig_ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig, ax = fig_ax
+        ax.cla()  # clear axis
+
+    # foo plot
+    y_pos = np.arange(len(varnames))
+    error = np.random.rand(len(varnames))
+
+    ax.barh(y_pos, imps_avg, xerr=imps_stddev*2, align="center")
+    ax.set_yticks(y_pos, labels=varnames)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel("Rel importance")
+    ax.set_title("Variable importances")
+
+
+    HEIGHT = 9  # magic number
+    WIDTH = HEIGHT
+    fig.set_size_inches(WIDTH, HEIGHT)
+
     plt.show()

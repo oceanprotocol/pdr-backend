@@ -5,10 +5,15 @@ import numpy as np
 @enforce_types
 class Aimodel:
 
-    def __init__(self, skm, scaler, imps: np.ndarray):
+    def __init__(
+            self,
+            skm,
+            scaler,
+            imps_tup: tuple,
+    ):
         self._skm = skm  # sklearn model
         self._scaler = scaler  # for scaling X-inputs
-        self._imps = imps  # 1d array of [var_i]: rel_importance_float
+        self._imps_tup = imps_tup # tuple of (imps_avg, imps_stddev)
 
     def predict_true(self, X):
         """
@@ -46,14 +51,16 @@ class Aimodel:
         yptrue = np.array([T[i, class_i] for i in range(N)])
         return yptrue
 
-    def importance_per_var(self) -> np.ndarray:
+    def importance_per_var(self, include_stddev:bool=False):
         """
         @description
           Report relative importance of each input variable
 
         @return
-          imps - 1d array of [var_i]: rel_importance_float,
-            where sum(imps) == 1.0
-
+          imps_avg - 1d array of [var_i]: rel_importance_float
+          (optional) imps_stddev -- array [var_i]: rel_stddev_float
         """
-        return self._imps
+        if include_stddev:
+            return self._imps_tup
+        else:
+            return self._imps_tup[0]

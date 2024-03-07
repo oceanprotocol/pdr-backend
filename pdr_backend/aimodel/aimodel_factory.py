@@ -109,12 +109,19 @@ class AimodelFactory:
 
         # calc variable importances
         if do_constant:
-            imps = np.ones((X.shape[1],), dtype=float)
+            n = X.shape[1]
+            imps_mean = [1.0] * n
+            imps_stddev = [0.0] * n
         else:
             imps_bunch = permutation_importance(skm, X, ytrue, n_repeats=30)
-            imps = imps_bunch["importances_mean"]
-        imps = imps / sum(imps)  # normalize
+            imps_mean = imps_bunch["importances_mean"]
+            imps_stddev = imps_bunch["importances_std"]
+
+        # normalize
+        s = sum(imps_mean)
+        imps_mean = np.array(imps_mean) / s 
+        imps_stddev = np.array(imps_stddev) / s
 
         # return
-        model = Aimodel(skm, scaler, imps)
+        model = Aimodel(skm, scaler, (imps_mean, imps_stddev))
         return model

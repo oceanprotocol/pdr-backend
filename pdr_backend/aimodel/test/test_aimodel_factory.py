@@ -7,12 +7,16 @@ from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.aimodel.aimodel_plotter import plot_aimodel
+from pdr_backend.aimodel.aimodel_plotter import (
+    plot_aimodel_response,
+    plot_aimodel_imptvars,
+)
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
+
 plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
 
@@ -69,21 +73,14 @@ def _test_aimodel_factory_2vars_main(approach):
     assert imps[1] == approx(0.667, abs=0.3)
 
     # plot
-    def _plot():
-        colnames = ["x0", "x1"]
-        slicing_x = np.array([0.0, 1.0])  # arbitrary
-        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel(
-            aimodel_plotdata,
-            fig_ax=None,
-            legend_loc="upper right",
-        )
-
-    if SHOW_PLOT:  # manual testing only
-        _plot()
-    else:  # CI & typical test flows
+    colnames = ["x0", "x1"]
+    slicing_x = np.array([0.0, 1.0])  # arbitrary
+    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    if SHOW_PLOT:
+        plot_aimodel_response(d, fig_ax=None, legend_loc="upper left")
+    else:
         with patch(plt_show_path):
-            _plot()
+            plot_aimodel_response(d, fig_ax=None, legend_loc="upper left")
     assert not SHOW_PLOT
 
 
@@ -159,22 +156,19 @@ def test_aimodel_factory_1var():
     assert_array_equal(imps, np.array([1.0]))
 
     # plot
-    def _plot():
-        colnames = ["x0"]
-        slicing_x = np.array([0.1])  # arbitrary
-        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel(aimodel_plotdata)
-
-    if SHOW_PLOT:  # manual testing only
-        _plot()
-    else:  # CI & typical test flows
+    colnames = ["x0"]
+    slicing_x = np.array([0.1])  # arbitrary
+    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    if SHOW_PLOT:
+        plot_aimodel_response(aimodel_plotdata)
+    else:
         with patch(plt_show_path):
-            _plot()
+            plot_aimodel_response(aimodel_plotdata)
     assert not SHOW_PLOT
 
 
 @enforce_types
-def test_aimodel_factory_4vars():
+def test_aimodel_factory_4vars_response():
     """4 input vars. It will plot the 2 most important vars"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
@@ -187,6 +181,7 @@ def test_aimodel_factory_4vars():
     ycont = 3.0 + 4.0 * X[:, 0] + 3.0 * X[:, 1] + 2.0 * X[:, 2] + 1.0 * X[:, 3]
     y_thr = np.average(ycont)  # avg gives good class balance
     ytrue = ycont > y_thr
+    colnames = ["x0", "x1", "x3", "x4"]
 
     # build model
     model = factory.build(X, ytrue, show_warnings=False)
@@ -200,16 +195,28 @@ def test_aimodel_factory_4vars():
     assert imps[2] == approx(2.0 / 10.0, abs=0.2)
     assert imps[3] == approx(1.0 / 10.0, abs=0.2)
 
-    # plot
-    def _plot():
-        colnames = ["x0", "x1", "x3", "x4"]
-        slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
-        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-        plot_aimodel(aimodel_plotdata)
+    # plot model response
+    slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
+    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
 
-    if SHOW_PLOT:  # manual testing only
-        _plot()
-    else:  # CI & typical test flows
+    if SHOW_PLOT:
+        plot_aimodel_response(aimodel_plotdata)
+    else:
         with patch(plt_show_path):
-            _plot()
+            plot_aimodel_response(aimodel_plotdata)
+    assert not SHOW_PLOT
+
+        
+@enforce_types
+def test_aimodel_factory_4vars_varimps():
+    varnames = ["x0", "x1", "x2", "x3"]
+    imps_avg = [0.1, 0.2, 0.3, 0.4]
+    imps_stddev = [0.01, 0.01, 0.03, 0.01]
+    imps_tup = (imps_avg, imps_stddev)
+    
+    if SHOW_PLOT:
+        plot_aimodel_varimps(varnames, imps_tup)
+    else:
+        with patch(plt_show_path):
+            plot_aimodel_varimps(varnames, imps_tup)
     assert not SHOW_PLOT
