@@ -1,3 +1,5 @@
+import os
+
 from typing import List
 from enforce_typing import enforce_types
 import pytest
@@ -315,3 +317,13 @@ def _gql_datafactory_second_predictions_df():
     )
 
     return predictions_df
+
+
+def _clean_up(tmpdir):
+    for root, dirs, files in os.walk(tmpdir):
+        for file in files:
+            os.remove(os.path.join(root, file))
+        for directory in dirs:
+            # clean up the directory
+            _clean_up(os.path.join(root, directory))
+            os.rmdir(os.path.join(root, directory))

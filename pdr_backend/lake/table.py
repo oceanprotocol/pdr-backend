@@ -1,13 +1,10 @@
 import logging
-import os
-from typing import Dict
+from typing import Optional
 import polars as pl
 from polars.type_aliases import SchemaDict
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.plutil import has_data, newest_ut
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
@@ -20,9 +17,19 @@ class Table:
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        
+        self.df = pl.DataFrame([], schema=df_schema)
+        print("self.df", self.df)
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
-        self.persistent_data_store = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        self.PDS = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+
+        self.load()
+
+    @enforce_types
+    def load(self):
+        """
+        Read the data from the Parquet file into a DataFrame object
+        """
+        print(f"Loading data for {self.table_name}")
 
         self.df = pl.DataFrame([], schema=df_schema)
         print("self.df", self.df)
@@ -53,8 +60,23 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        self.persistent_data_store.insert_to_table(data, self.table_name)
+        self.PDS.insert_to_table(data, self.table_name)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
         )
+
+    def get_pds_last_record(self) -> Optional[pl.DataFrame]:
+        """
+        Get the last record from the persistent data store
+
+        @returns
+            pl.DataFrame
+        """
+
+        query = f"SELECT * FROM {self.table_name} ORDER BY timestamp DESC LIMIT 1"
+        try:
+            return self.PDS.query_data(query)
+        except Exception as e:
+            print(f"Error fetching last record from PDS: {e}")
+            return None

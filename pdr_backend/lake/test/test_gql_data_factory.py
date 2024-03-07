@@ -4,6 +4,7 @@ import sys
 import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.test.conftest import _clean_up
 
 
 def mock_fetch_function(
@@ -11,6 +12,39 @@ def mock_fetch_function(
 ):
     print(network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config)
     return []
+
+
+# pylint: disable=too-many-instance-attributes
+class MyClass:
+    def __init__(self, data):
+        self.ID = data["ID"]
+        self.pair = data["pair"]
+        self.timeframe = data["timeframe"]
+        self.predvalue = data["predvalue"]
+        self.payout = data["payout"]
+        self.timestamp = data["timestamp"]
+        self.slot = data["slot"]
+        self.user = data["user"]
+
+
+mocked_object = {
+    "ID": "0x123",
+    "pair": "ADA-USDT",
+    "timeframe": "5m",
+    "predvalue": True,
+    "payout": 28.2,
+    "timestamp": 1701634400,
+    "slot": 1701634400,
+    "user": "0x123",
+}
+
+
+def mock_fetch_function_with_data(
+    network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+):
+    print(network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config)
+    # demo data
+    return [MyClass(mocked_object)]
 
 
 def test_gql_data_factory():
@@ -33,7 +67,7 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-def test_update():
+def test_update(tmpdir):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
@@ -42,7 +76,7 @@ def test_update():
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -62,8 +96,45 @@ def test_update():
     gql_data_factory._update()
 
     printed_text = captured_output.getvalue().strip()
-    count_updates = printed_text.count("Updating")
-    assert count_updates == len(gql_data_factory.record_config["tables"].items())
+    count_updates = printed_text.count("Updating table")
+    tables = gql_data_factory.record_config["tables"].items()
+    assert count_updates == len(tables)
+
+
+def test_update_data(tmpdir):
+    """
+    Test GQLDataFactory update calls the update function for all the tables
+    """
+    _clean_up(tmpdir)
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+    fns = {
+        "pdr_predictions": mock_fetch_function_with_data,
+        "pdr_subscriptions": mock_fetch_function,
+        "pdr_truevals": mock_fetch_function,
+        "pdr_payouts": mock_fetch_function,
+    }
+
+    gql_data_factory = GQLDataFactory(ppss)
+    for table_name in gql_data_factory.record_config["fetch_functions"]:
+        gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
+
+    gql_data_factory._update()
+
+    last_record = gql_data_factory.record_config["tables"][
+        "pdr_predictions"
+    ].get_pds_last_record()
+    assert last_record is not None
+    assert len(last_record) > 0
+    assert last_record["pair"][0] == "ADA-USDT"
+    assert last_record["timeframe"][0] == "5m"
 
 
 def test_load_parquet(tmpdir):

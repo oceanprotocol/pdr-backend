@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Optional, Literal
 
 import duckdb
 from enforce_typing import enforce_types
@@ -9,7 +8,7 @@ class BaseDataStore:
     @enforce_types
     def __init__(self, base_directory=str):
         """
-        Initialize a PartitionedDataStore instance.
+        Initialize a DataStore instance.
         @arguments:
             base_directory - The base directory to store the partitioned Parquet files.
         """
@@ -20,9 +19,5 @@ class BaseDataStore:
         )  # Keep a persistent connection
 
     @abstractmethod
-    def query_data(
-        self,
-        query: str,
-        partition_type: Optional[Literal["date", "address"]] = None,
-    ):
+    def query_data(self, query: str):
         pass

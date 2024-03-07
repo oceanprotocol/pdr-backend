@@ -118,6 +118,7 @@ class GQLDataFactory:
 
     @enforce_types
     def _get_gql_df(
+        self,
         table: Table,
         fetch_function: Callable,
         network: str,

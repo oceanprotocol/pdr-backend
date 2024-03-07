@@ -7,7 +7,6 @@ import polars as pl
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
-
 class PersistentDataStore(BaseDataStore):
     """
     A class to store and retrieve persistent data.
@@ -56,15 +55,13 @@ class PersistentDataStore(BaseDataStore):
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
         ).fetchall()
 
-        print(f">>>> tables... {tables}")
-
         if table_name in [table[0] for table in tables]:
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
-    def query_data(self, query: str, partition_type: None = None) -> pl.DataFrame:
+    def query_data(self, query: str) -> pl.DataFrame:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
