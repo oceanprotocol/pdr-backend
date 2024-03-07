@@ -70,7 +70,7 @@ class SimPlotter:
 
     # pylint: disable=too-many-statements
     @enforce_types
-    def do_plot(self, model_plot_args: tuple):
+    def make_plot(self, model_plot_args: tuple):
         """
         @description
           Create / update whole plot, with many subplots
