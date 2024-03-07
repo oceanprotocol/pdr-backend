@@ -27,21 +27,16 @@ class SimPlotter:
         self,
         ppss: PPSS,
         st: SimState,
-        do_plot_aimodel_contour: bool,
     ):
         # engine state, ss
         self.st = st
         self.ppss = ppss
-        self.do_plot_aimodel_contour = do_plot_aimodel_contour
 
         # figure, subplots
         fig = plt.figure()
         self.fig = fig
 
-        if do_plot_aimodel_contour:
-            gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
-        else:
-            gs = gridspec.GridSpec(2, 3, width_ratios=[5, 1, 1])
+        gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
@@ -50,10 +45,7 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        if do_plot_aimodel_contour:
-            self.ax_aimodel_contour = fig.add_subplot(gs[:, 3])
-        else:
-            self.ax_aimodel_contour = Mock(spec=Axes)
+        self.ax_aimodel_contour = fig.add_subplot(gs[:, 3])
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -89,7 +81,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._maybe_plot_aimodel_contour(aimodel_plotdata)
+        self._plot_aimodel_contour(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
@@ -208,12 +200,11 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _maybe_plot_aimodel_contour(self, d: AimodelPlotdata):
-        if self.do_plot_aimodel_contour:
-            ax = self.ax_aimodel_contour
-            plot_aimodel_contour(d, (self.fig, ax))
-            if not self.plotted_before:
-                ax.margins(0.01, 0.01)
+    def _plot_aimodel_contour(self, d: AimodelPlotdata):
+        ax = self.ax_aimodel_contour
+        plot_aimodel_contour(d, (self.fig, ax))
+        if not self.plotted_before:
+            ax.margins(0.01, 0.01)
 
 
 @enforce_types

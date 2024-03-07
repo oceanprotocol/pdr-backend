@@ -42,8 +42,7 @@ class SimEngine:
 
         if self.ppss.sim_ss.do_plot:
             n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
-            include_contour = n == 2
-            self.sim_plotter = SimPlotter(self.ppss, self.st, include_contour)
+            self.sim_plotter = SimPlotter(self.ppss, self.st)
         else:
             self.sim_plotter = Mock(spec=SimPlotter)
 
@@ -225,7 +224,11 @@ class SimEngine:
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
             colnames = [_shift_one_earlier(colname) for colname in colnames]
-            d = AimodelPlotdata(model, X_train, ybool_train, colnames)
+            most_recent_x = X[-1,:]
+            slicing_x = most_recent_x # plot about the most recent x
+            d = AimodelPlotdata(
+                model, X_train, ybool_train, colnames, slicing_x,
+            )
             self.sim_plotter.make_plot(d)
 
     @enforce_types

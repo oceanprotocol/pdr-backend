@@ -1,5 +1,4 @@
 from unittest.mock import patch
-import warnings
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -14,25 +13,26 @@ from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
+plt_show_path = "pdr_backend.sim.sim_plotter.plt.show"
 
 
 @enforce_types
-def test_aimodel_factory_LinearLogistic():
-    _test_aimodel_factory_main(approach="LinearLogistic")
+def test_aimodel_factory_2vars_LinearLogistic():
+    _test_aimodel_factory_2vars_main(approach="LinearLogistic")
 
 
 @enforce_types
-def test_aimodel_factory_LinearSVC():
-    _test_aimodel_factory_main(approach="LinearSVC")
+def test_aimodel_factory_2vars_LinearSVC():
+    _test_aimodel_factory_2vars_main(approach="LinearSVC")
 
 
 @enforce_types
-def test_aimodel_factory_Constant():
-    _test_aimodel_factory_main(approach="Constant")
+def test_aimodel_factory_2vars_Constant():
+    _test_aimodel_factory_2vars_main(approach="Constant")
 
 
 @enforce_types
-def _test_aimodel_factory_main(approach):
+def _test_aimodel_factory_2vars_main(approach):
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -47,9 +47,7 @@ def _test_aimodel_factory_main(approach):
     ytrue = ycont > y_thr
 
     # build model
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # ignore ConvergenceWarning, more
-        model = factory.build(X, ytrue)
+    model = factory.build(X, ytrue, show_warnings=False)
 
     # test predict_true() & predict_ptrue()
     ytrue_hat = model.predict_true(X)
@@ -73,26 +71,20 @@ def _test_aimodel_factory_main(approach):
     # plot
     def _plot():
         colnames = ["x0", "x1"]
-        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames)
-        fancy_title = True
-        leg_loc = "upper right"
-        fig_ax = None
-        xranges = (mn, mx, mn, mx)
+        slicing_x = np.array([0.0, 1.0]) # arbitrary
+        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
         plot_aimodel_contour(
             aimodel_plotdata,
-            fig_ax=fig_ax,
-            xranges=xranges,
-            fancy_title=fancy_title,
-            legend_loc=leg_loc,
+            fig_ax=None,
+            legend_loc="upper right",
         )
 
     if SHOW_PLOT: # manual testing only
         _plot()
-        raise ValueError("SHOW_PLOT should be off for official tests")
-    
     else: # CI & typical test flows
-        with patch("pdr_backend.sim.sim_plotter.plt.show"):
+        with patch(plt_show_path):
             _plot()
+    assert not SHOW_PLOT
     
 
 @enforce_types
@@ -142,3 +134,84 @@ def test_aimodel_accuracy_from_create_xy():
 
     yptrue_trn_hat = model.predict_ptrue(X_trn)
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
+
+
+@enforce_types
+def test_aimodel_factory_1var():
+    """1 input var. It will plot that var on both axes"""
+    # settings, factory
+    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 1000
+    mn, mx = -10.0, +10.0
+    X = np.random.uniform(mn, mx, (N, 1))
+    ycont = 3.0 + 4.0 * X[:, 0]
+    y_thr = np.average(ycont) # avg gives good class balance
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, show_warnings=False)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert_array_equal(imps, np.array([1.0]))
+
+    # plot
+    def _plot():
+        colnames = ["x0"]
+        slicing_x = np.array([0.1]) # arbitrary
+        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+        plot_aimodel_contour(aimodel_plotdata)
+
+    if SHOW_PLOT: # manual testing only
+        _plot()    
+    else: # CI & typical test flows
+        with patch(plt_show_path):
+            _plot()
+    assert not SHOW_PLOT
+    
+
+@enforce_types
+def test_aimodel_factory_4vars():
+    """4 input vars. It will plot the 2 most important vars"""
+    # settings, factory
+    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 1000
+    mn, mx = -10.0, +10.0
+    X = np.random.uniform(mn, mx, (N, 4))
+    ycont = 3.0 + 4.0 * X[:, 0] + 3.0 * X[:, 1] + 2.0 * X[:, 2] + 1.0 * X[:, 3]
+    y_thr = np.average(ycont) # avg gives good class balance
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, show_warnings=False)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
+    assert sum(imps) == approx(1.0, 0.01)
+    assert imps[0] == approx(4.0/10.0, abs=0.2)
+    assert imps[1] == approx(3.0/10.0, abs=0.2)
+    assert imps[2] == approx(2.0/10.0, abs=0.2)
+    assert imps[3] == approx(1.0/10.0, abs=0.2)
+
+    # plot
+    def _plot():
+        colnames = ["x0", "x1", "x3", "x4"]
+        slicing_x = np.array([0.1, 1.0, 2.0, 3.0]) # arbitrary
+        aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+        plot_aimodel_contour(aimodel_plotdata)
+
+    if SHOW_PLOT: # manual testing only
+        _plot()    
+    else: # CI & typical test flows
+        with patch(plt_show_path):
+            _plot()
+    assert not SHOW_PLOT
+    
+
