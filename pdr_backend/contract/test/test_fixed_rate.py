@@ -27,9 +27,9 @@ def test_FixedRate(predictoor_contract, web3_pp):
 
     assert baseTokenAmt_wei.to_eth().amt_eth == approx(3.603)
 
-    assert oceanFeeAmt_wei.amt_eth == approx(0.003)
-    assert publishMktFeeAmt_wei.amt_eth == approx(0.6)
-    assert consumeMktFeeAmt_wei.amt_eth == 0
+    assert oceanFeeAmt_wei.to_eth().amt_eth == approx(0.003)
+    assert publishMktFeeAmt_wei.to_eth().amt_eth == approx(0.6)
+    assert consumeMktFeeAmt_wei.to_eth().amt_eth == 0
 
     # test calcBaseInGivenOutDT()
     tup2 = exchange.calcBaseInGivenOutDT(exchangeId, Eth(1).to_wei(), Wei(0))
