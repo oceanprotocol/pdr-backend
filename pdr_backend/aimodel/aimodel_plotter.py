@@ -44,7 +44,7 @@ def plot_aimodel_contour(
     elif nvars == 2:
         impt_I = [0, 1]
     else:
-        impt_I = np.argsort(model.importance_per_var())[:2]
+        impt_I = np.argsort(model.importance_per_var())[::-1][:2]
     impt_X = X[:,impt_I]
     impt_colnames = [colnames[i] for i in impt_I]
 
