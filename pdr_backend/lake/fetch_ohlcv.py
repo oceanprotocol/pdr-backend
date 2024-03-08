@@ -125,8 +125,9 @@ def safe_fetch_ohlcv_dydx(
         return None
 
 
-def float_or_none(x: str) -> Optional[float]:
-    return float(x) if x is not None else None
+@enforce_types
+def float_or_none(x: Optional[str]) -> Optional[float]:
+    return None if x is None else float(x)
 
 
 @enforce_types
