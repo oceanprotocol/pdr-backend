@@ -322,38 +322,69 @@ def test_get_mergedohlcv_df_calls(
     mock_merge_rawohlcv_dfs.assert_called()
 
 
+# =======================================================================
+# issue #657
+
+tohlcv_data1 = [
+    [1709887500000, 3943.99, 3952.91, 3942.95, 3943.73, 2554.4607],
+    [1709887800000, 3943.72, 3950.52, 3943.66, 3943.88, 1373.67],
+    [1709888100000, 3943.87, 3950.45, 3939.4, 3940.03, 1514.3544],
+    [1709888400000, 3940.03, 3945.4, 3930.0, 3934.19, 1659.3454],
+    [1709888700000, 3934.19, 3936.2, 3930.2, 3933.0, 1607.2883],
+    [1709889000000, 3933.0, 3950.73, 3930.57, 3948.14, 3421.5831],
+    [1709889300000, 3948.15, 3949.29, 3942.35, 3943.61, 2034.7834],
+    [1709889600000, 3943.61, 3946.19, 3935.16, 3937.58, 1659.4638],
+    [1709889900000, 3937.58, 3941.11, 3934.6, 3938.53, 801.3086],
+    [1709890200000, 3938.53, 3948.19, 3935.94, 3941.24, 2356.8294],
+    [1709890500000, 3941.25, 3950.49, 3941.24, 3946.01, 2243.4569],
+    [1709890800000, 3946.0, 3949.72, 3943.14, 3944.22, 1262.2829],
+    [1709891100000, 3944.22, 3946.25, 3944.22, 3946.25, 116.9614],
+]
+
+tohlcv_data2 = [
+    [1709887500000, 67289.04, 67390.0, 67274.7, 67300.0, 118.03242],
+    [1709887800000, 67300.01, 67320.0, 67256.4, 67256.41, 68.07976],
+    [1709888100000, 67256.4, 67291.97, 67200.01, 67208.55, 114.46873],
+    [1709888400000, 67208.56, 67213.19, 67040.76, 67070.82, 173.93243],
+    [1709888700000, 67070.82, 67120.57, 67050.0, 67100.0, 175.64183],
+    [1709889000000, 67100.0, 67223.54, 67095.16, 67216.42, 155.12712],
+]
+
+
 @enforce_types
-def test_issue657_1_data_that_works():
-    tohlcv_data = [
-        [1709887500000, 3943.99, 3952.91, 3942.95, 3943.73, 2554.4607],
-        [1709887800000, 3943.72, 3950.52, 3943.66, 3943.88, 1373.67],
-        [1709888100000, 3943.87, 3950.45, 3939.4, 3940.03, 1514.3544],
-        [1709888400000, 3940.03, 3945.4, 3930.0, 3934.19, 1659.3454],
-        [1709888700000, 3934.19, 3936.2, 3930.2, 3933.0, 1607.2883],
-        [1709889000000, 3933.0, 3950.73, 3930.57, 3948.14, 3421.5831],
-        [1709889300000, 3948.15, 3949.29, 3942.35, 3943.61, 2034.7834],
-        [1709889600000, 3943.61, 3946.19, 3935.16, 3937.58, 1659.4638],
-        [1709889900000, 3937.58, 3941.11, 3934.6, 3938.53, 801.3086],
-        [1709890200000, 3938.53, 3948.19, 3935.94, 3941.24, 2356.8294],
-        [1709890500000, 3941.25, 3950.49, 3941.24, 3946.01, 2243.4569],
-        [1709890800000, 3946.0, 3949.72, 3943.14, 3944.22, 1262.2829],
-        [1709891100000, 3944.22, 3946.25, 3944.22, 3946.25, 116.9614],
-    ]
+def test_issue657_infer_orientation():
+    # the following line will *not* cause an issue
+    # -this mimics how the code looked before the fix
+    # -it infers orient="row"
+    pl.DataFrame(tohlcv_data1, schema=TOHLCV_SCHEMA_PL)
+
+    # the following line *will* cause an issue
+    # -this mimics how the code looked before the fix
+    # -it infers orient="col", and therein lies the issue!
+    # -because it's casting [1709887500000, 67289.04, 67390.0, ..] as timestamps
+    with pytest.raises(TypeError):
+        pl.DataFrame(tohlcv_data2, schema=TOHLCV_SCHEMA_PL)
+
+
+@enforce_types
+def test_issue657_set_col_orientation():
+    # the following line *will* cause an issue
+    # - it's = the code before the fix, plus orient="col" (vs inferring)
+    with pytest.raises(TypeError):
+        pl.DataFrame(tohlcv_data1, schema=TOHLCV_SCHEMA_PL, orient="col")
+
+    # the following line *will* cause an issue
+    # - it's = the code before the fix, plus orient="col" (vs inferring)
+    with pytest.raises(TypeError):
+        pl.DataFrame(tohlcv_data2, schema=TOHLCV_SCHEMA_PL, orient="col")
+
+
+@enforce_types
+def test_issue657_set_row_orientation():
+    # the following line will *not* cause an issue
+    # - it's = the code before the fix, plus orient="row" (vs inferring)
+    pl.DataFrame(tohlcv_data1, schema=TOHLCV_SCHEMA_PL, orient="row")
 
     # the following line will *not* cause an issue
-    pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
-
-
-@enforce_types
-def test_issue657_2_data_that_fails():
-    tohlcv_data = [
-        [1709887500000, 67289.04, 67390.0, 67274.7, 67300.0, 118.03242],
-        [1709887800000, 67300.01, 67320.0, 67256.4, 67256.41, 68.07976],
-        [1709888100000, 67256.4, 67291.97, 67200.01, 67208.55, 114.46873],
-        [1709888400000, 67208.56, 67213.19, 67040.76, 67070.82, 173.93243],
-        [1709888700000, 67070.82, 67120.57, 67050.0, 67100.0, 175.64183],
-        [1709889000000, 67100.0, 67223.54, 67095.16, 67216.42, 155.12712],
-    ]
-
-    # the following line *will* cause an issue (prior to #657 being fixed)
-    pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+    # - it's = the code before the fix, plus orient="row" (vs inferring)
+    pl.DataFrame(tohlcv_data2, schema=TOHLCV_SCHEMA_PL, orient="row")

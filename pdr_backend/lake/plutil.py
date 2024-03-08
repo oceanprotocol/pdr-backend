@@ -25,7 +25,7 @@ def initialize_rawohlcv_df(cols: List[str] = []) -> pl.DataFrame:
     """Start an empty df with the expected columns and schema
     Applies transform to get columns
     """
-    df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL)
+    df = pl.DataFrame(data=[], schema=TOHLCV_SCHEMA_PL, orient="row")
     df = df.select(cols if cols else "*")
     return df
 
@@ -192,7 +192,7 @@ def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     """
     # Get all predictions into a dataframe
     obj_dicts = [object.__dict__ for object in objects]
-    obj_df = pl.DataFrame(obj_dicts, schema=schema)
+    obj_df = pl.DataFrame(obj_dicts, schema=schema, orient="row")
     assert obj_df.schema == schema
 
     return obj_df
