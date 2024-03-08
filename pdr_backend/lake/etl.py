@@ -134,4 +134,5 @@ class ETL:
             self.tables[silver_pdr_predictions_table_name] = table
 
         table = get_silver_pdr_predictions_table(self.tables, self.ppss)
+        print(table.df)
         table.save()

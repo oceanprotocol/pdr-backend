@@ -8,7 +8,11 @@ from pdr_backend.subgraph.prediction import (
     mock_daily_predictions,
     mock_prediction,
 )
-from pdr_backend.subgraph.subscription import mock_subscriptions
+from pdr_backend.subgraph.subscription import (
+    Subscription,
+    mock_subscriptions,
+    mock_subscription,
+)
 from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
 from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
 
@@ -16,6 +20,7 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
+from pdr_backend.lake.table_pdr_subscriptions import subscriptions_schema
 
 
 @pytest.fixture()
@@ -276,6 +281,39 @@ _ETL_TRUEVAL_TUPS = [
     ),
 ]
 
+_ETL_SUBSCRIPTIONS_TUPS = [
+    (
+        "ETH/USDT",
+        "5m",
+        "binance",
+        1699300900,
+        "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
+        "2.4979184013322233",
+        98,
+        "0x2433e002Ed10B5D6a3d8d1e0C5D2083BE9E37f1D",
+    ),
+    (
+        "ETH/USDT",
+        "5m",
+        "binance",
+        1699302100,
+        "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
+        "2.4979184013322233",
+        99,
+        "0x2433e002Ed10B5D6a3d8d1e0C5D2083BE9E37f1D",
+    ),
+    (
+        "ETH/USDT",
+        "5m",
+        "binance",
+        1699302100,
+        "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
+        "2.4979184013322233",
+        99,
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+    ),
+]
+
 
 @enforce_types
 def mock_etl_payouts() -> List[Payout]:
@@ -292,6 +330,14 @@ def mock_etl_predictions() -> List[Prediction]:
 @enforce_types
 def mock_etl_truevals() -> List[Trueval]:
     return [mock_trueval(trueval_tuple) for trueval_tuple in _ETL_TRUEVAL_TUPS]
+
+
+@enforce_types
+def mock_etl_subscriptions() -> List[Subscription]:
+    return [
+        mock_subscription(subscription_tuple)
+        for subscription_tuple in _ETL_SUBSCRIPTIONS_TUPS
+    ]
 
 
 @pytest.fixture()
@@ -325,3 +371,14 @@ def _gql_datafactory_etl_truevals_df():
     )
 
     return truevals_df
+
+
+@pytest.fixture()
+def _gql_datafactory_etl_subscriptions_df():
+    _subscriptions = mock_etl_subscriptions()
+    subscriptions_df = _object_list_to_df(_subscriptions, subscriptions_schema)
+    subscriptions_df = subscriptions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return subscriptions_df

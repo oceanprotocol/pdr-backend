@@ -1,10 +1,11 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 import polars as pl
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8, DataFrame
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 
 silver_pdr_predictions_table_name = "silver_pdr_predictions"
@@ -26,6 +27,7 @@ silver_pdr_predictions_schema = {
     "sum_stake": Float64,
     "sum_revenue": Float64,
     "sum_revenue_df": Float64,
+    "sum_revenue_user": Float64,
     "sum_revenue_stake": Float64,
     "win": Boolean,
     "count_wins": Int64,
@@ -36,16 +38,58 @@ silver_pdr_predictions_schema = {
 }
 
 
-def update_fields(current_df: dict, previous_df: DataFrame) -> dict:
+def update_fields(
+    current_df: dict,
+    previous_df: DataFrame,
+    df_subscriptions: DataFrame,
+    user_subscriptions: DataFrame,
+    df_slots: DataFrame,
+) -> dict:
+    if (current_df["predvalue"] == current_df["truevalue"]) & (
+        current_df["truevalue"] is not None
+    ):
+        slot_revenue_from_df = df_subscriptions.filter(
+            (pl.col("timestamp") < (current_df["slot"] * 1000))
+            & ((pl.col("timestamp") + 86400000) > (current_df["slot"] * 1000))
+            & (pl.col("pair") == current_df["pair"])
+            & (pl.col("timeframe") == current_df["timeframe"])
+        ).with_columns(pl.col("last_price_value").sum().alias("sum_revenue"))
+        slot_revenue_from_user = user_subscriptions.filter(
+            (pl.col("timestamp") < (current_df["slot"] * 1000))
+            & ((pl.col("timestamp") + 86400000) > (current_df["slot"] * 1000))
+            & (pl.col("pair") == current_df["pair"])
+            & (pl.col("timeframe") == current_df["timeframe"])
+        ).with_columns(pl.col("last_price_value").sum().alias("sum_revenue"))
+        df_revenue = 0
+        user_revenue = 0
+        if (len(slot_revenue_from_df) > 0) or (len(slot_revenue_from_user) > 0):
+            print(current_df["payout"])
+            # slot_df = df_slots.filter( pl.col("slot") == current_df["slot"] & pl. )
+            df_revenue, user_revenue = get_df_revenue_for_slot(
+                current_df,
+                slot_revenue_from_df[0]["sum_revenue"][0] / 288,
+                slot_revenue_from_user[0]["sum_revenue"][0] / 288,
+                df_slots,
+            )
+        current_df["sum_revenue"] = (
+            previous_df["sum_revenue"] + current_df["payout"]
+            if current_df["payout"]
+            else 0
+        )
+        current_df["sum_revenue_df"] = previous_df["sum_revenue_df"] + df_revenue
+        current_df["sum_revenue_user"] = previous_df["sum_revenue_user"] + user_revenue
+        current_df["sum_revenue_stake"] = (
+            previous_df["sum_revenue_stake"]
+            + (current_df["payout"] if current_df["payout"] else 0)
+            - (df_revenue + user_revenue)
+        )
+    else:
+        current_df["sum_revenue"] = previous_df["sum_revenue"]
+        current_df["sum_revenue_df"] = previous_df["sum_revenue_df"]
+        current_df["sum_revenue_user"] = previous_df["sum_revenue_user"]
+        current_df["sum_revenue_stake"] = previous_df["sum_revenue_stake"]
     current_df["sum_stake"] = (
         previous_df["sum_stake"] + current_df["stake"] if current_df["stake"] else 0
-    )
-    current_df["sum_revenue"] = previous_df["sum_revenue"] + (
-        current_df["payout"] if current_df["payout"] else 0
-    )
-    current_df["sum_revenue_df"] = previous_df["sum_revenue_df"] + current_df["payout"]
-    current_df["sum_revenue_stake"] = (
-        previous_df["sum_revenue_stake"] + current_df["payout"]
     )
     current_df["count_predictions"] = previous_df["count_predictions"] + 1
     current_df["count_wins"] = previous_df["count_wins"] + (
@@ -58,6 +102,26 @@ def update_fields(current_df: dict, previous_df: DataFrame) -> dict:
     return current_df
 
 
+def get_df_revenue_for_slot(
+    current_df: dict,
+    slot_revenue_from_df: int,
+    slot_revenue_from_user: int,
+    current_slot: DataFrame,
+) -> Tuple[int, int]:
+    """
+    total_stakes = (
+        current_slot["roundSumStakeUp"]
+        if current_slot["trueval"]
+        else current_slot["roundSumStake"] - current_slot["roundSumStakeUp"]
+    )
+    """
+    total_stakes = 5
+    print(current_df["stake"])
+    df_payout = current_df["stake"] * (5 + slot_revenue_from_df / total_stakes)
+    user_payout = current_df["stake"] * (5 + slot_revenue_from_user / total_stakes)
+    return df_payout[0], user_payout[0]
+
+
 def _process_predictions(
     collision_obj: dict, tables: Dict[str, Table], ppss: PPSS
 ) -> Dict[str, Table]:
@@ -68,6 +132,10 @@ def _process_predictions(
         2. Transform predictions to bronze
         3. Concat to existing table
     """
+
+    df_subscription_addresses = []
+    df_subscription_addresses.append(get_opf_addresses("sapphire-mainnet")["dfbuyer"])
+    df_subscription_addresses.append(get_opf_addresses("sapphire-mainnet")["websocket"])
 
     # only add new predictions
     bronze_pdr_predictions = tables["bronze_pdr_predictions"].df.filter(
@@ -85,7 +153,18 @@ def _process_predictions(
         )
     )
 
-    print(len(bronze_pdr_predictions))
+    subscriptions_df = tables["pdr_subscriptions"].df.filter(
+        (pl.col("timestamp") >= ppss.lake_ss.st_timestamp)
+        & (pl.col("timestamp") <= ppss.lake_ss.fin_timestamp)
+    )
+
+    data_farming_subscriptions_df = subscriptions_df.filter(
+        pl.col("user").is_in(df_subscription_addresses)
+    )
+
+    subscriptions_df = subscriptions_df.filter(
+        pl.col("user").is_in(df_subscription_addresses).not_()
+    )
 
     if len(bronze_pdr_predictions) == 0:
         return tables
@@ -101,11 +180,18 @@ def _process_predictions(
         )[0]
 
         if len(result_df) > 0:
-            row = update_fields(row, result_df)
+            row = update_fields(
+                row,
+                result_df,
+                data_farming_subscriptions_df,
+                subscriptions_df,
+                subscriptions_df,
+            )
         else:
             row["sum_stake"] = row["stake"] if row["stake"] else 0
             row["sum_revenue"] = row["payout"] if row["payout"] else 0
             row["sum_revenue_df"] = row["payout"]
+            row["sum_revenue_user"] = row["payout"]
             row["sum_revenue_stake"] = row["payout"]
             row["count_predictions"] = 1
             row["count_wins"] = 1 if row["predvalue"] == row["truevalue"] else 0
@@ -134,7 +220,13 @@ def _process_predictions(
             result_df = pl.DataFrame(row, silver_pdr_predictions_schema)
             for row_to_update in dfs_to_update.rows(named=True):
                 new_row_df = pl.DataFrame(
-                    update_fields(row_to_update, result_df),
+                    update_fields(
+                        row_to_update,
+                        result_df,
+                        data_farming_subscriptions_df,
+                        subscriptions_df,
+                        subscriptions_df,
+                    ),
                     silver_pdr_predictions_schema,
                 )
                 result_df = new_row_df
