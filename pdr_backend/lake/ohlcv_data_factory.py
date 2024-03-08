@@ -137,7 +137,11 @@ class OhlcvDataFactory:
             tohlcv_data = clean_raw_ohlcv(raw_tohlcv_data, feed, st_ut, fin_ut)
 
             # concat both TOHLCV data
-            next_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+            next_df = pl.DataFrame(
+                tohlcv_data,
+                schema=TOHLCV_SCHEMA_PL,
+                orient="row",
+            )
             df = concat_next_df(df, next_df)
 
             if len(tohlcv_data) < limit:  # no more data, we're at newest time
