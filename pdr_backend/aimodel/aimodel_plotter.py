@@ -206,12 +206,13 @@ def plot_aimodel_varimps(
       imps_tup -- tuple of (imps_avg, imps_stddev)
       fig_ax -- None or (fig, ax) to easily embed into existing plot
     """
-    imps_avg, imps_stddev = np.array(imps_tup[0]), np.array(imps_tup[1])
-    assert len(imps_avg.shape) == 1
-    assert len(imps_stddev.shape) == 1
-    assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
-    assert min(imps_avg) >= 0.0
-    assert min(imps_stddev) >= 0.0
+    imps_avg, imps_stddev = imps_tup
+
+    # re-order in descending imps_avg
+    I = np.argsort(imps_avg)[::-1]
+    imps_avg = imps_avg[I]
+    imps_stddev = imps_stddev[I]
+    varnames = [varnames[i] for i in I]
     
     # start fig
     if fig_ax is None:
@@ -220,11 +221,12 @@ def plot_aimodel_varimps(
         fig, ax = fig_ax
         ax.cla()  # clear axis
 
-    # foo plot
+    # plot
     y_pos = np.arange(len(varnames))
     error = np.random.rand(len(varnames))
 
     ax.barh(y_pos, imps_avg, xerr=imps_stddev*2, align="center")
+    ax.set_xlim(left=0.0)
     ax.set_yticks(y_pos, labels=varnames)
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel("Rel importance")

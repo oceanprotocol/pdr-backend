@@ -9,7 +9,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
-    plot_aimodel_imptvars,
+    plot_aimodel_varimps,
 )
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
@@ -209,9 +209,12 @@ def test_aimodel_factory_4vars_response():
         
 @enforce_types
 def test_aimodel_factory_4vars_varimps():
-    varnames = ["x0", "x1", "x2", "x3"]
-    imps_avg = [0.1, 0.2, 0.3, 0.4]
-    imps_stddev = [0.01, 0.01, 0.03, 0.01]
+    varnames = ["x0", "x1", "x2", "x3", "x5"]
+    imps_avg = np.array([1.0, 5.0, 2.0, 0.0, 1.0])
+    imps_stddev = np.array([0.5, 0.3, 1.0, 0.5, 2.0])
+    _sum = sum(imps_avg)
+    imps_avg = imps_avg / _sum
+    imps_stddev = imps_stddev / _sum
     imps_tup = (imps_avg, imps_stddev)
     
     if SHOW_PLOT:
