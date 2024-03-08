@@ -15,7 +15,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = True  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
@@ -207,11 +207,32 @@ def test_aimodel_factory_4vars_response():
     assert not SHOW_PLOT
 
         
+         
 @enforce_types
-def test_aimodel_factory_4vars_varimps():
-    varnames = ["x0", "x1", "x2", "x3", "x5"]
-    imps_avg = np.array([1.0, 5.0, 2.0, 0.0, 1.0])
-    imps_stddev = np.array([0.5, 0.3, 1.0, 0.5, 2.0])
+def test_aimodel_factory_5vars_varimps():
+     _test_aimodel_factory_nvars_varimps(
+         n=5,
+         imps_avg=np.array([1.0, 5.0, 2.0, 0.0, 1.0]),
+     )
+     
+
+@enforce_types
+def test_aimodel_factory_25vars_varimps():
+     _test_aimodel_factory_nvars_varimps(25)
+
+     
+@enforce_types
+def test_aimodel_factory_100vars_varimps():
+     _test_aimodel_factory_nvars_varimps(100)
+
+     
+@enforce_types
+def _test_aimodel_factory_nvars_varimps(n:int, imps_avg=None):
+    varnames = [f"x{i}" for i in range(n)]
+    if imps_avg is None:
+        imps_avg = np.array([n - i + 1 for i in range(n)])
+    assert imps_avg.shape[0] == n
+    imps_stddev = imps_avg / 4.0
     _sum = sum(imps_avg)
     imps_avg = imps_avg / _sum
     imps_stddev = imps_stddev / _sum

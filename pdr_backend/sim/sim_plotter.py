@@ -42,7 +42,7 @@ class SimPlotter:
         fig = plt.figure()
         self.fig = fig
 
-        gs = gridspec.GridSpec(2, 5, width_ratios=[3, 1, 1, 2, 5])
+        gs = gridspec.GridSpec(2, 5, width_ratios=[3, 1, 1, 3, 5])
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
@@ -174,7 +174,7 @@ class SimPlotter:
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
 
-        s = f"pdr profit distr'n. avg={avg:.2f} OCEAN"
+        s = f"pdr profit dist. avg={avg:.2f} OCEAN"
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
         if not self.plotted_before:
@@ -196,7 +196,7 @@ class SimPlotter:
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
 
-        s = f"trader profit distr'n. avg={avg:.2f} USD"
+        s = f"trader profit dist. avg={avg:.2f} USD"
 
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)

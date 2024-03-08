@@ -210,11 +210,24 @@ def plot_aimodel_varimps(
     n = len(varnames)
     imps_avg, imps_stddev = imps_tup
 
-    # re-order in ascending imps_avg 
-    I = np.argsort(imps_avg)
+    # re-order in descending imps_avg 
+    I = np.argsort(imps_avg)[::-1]
     imps_avg = imps_avg[I]
     imps_stddev = imps_stddev[I]
     varnames = [varnames[i] for i in I]
+
+    # if >60 vars, truncate to top 60+1
+    if n > 60:
+        rest_avg = sum(imps_avg[60:])
+        rest_stddev = np.average(imps_stddev[60:])
+        imps_avg = np.append(imps_avg[:60], rest_avg)
+        imps_stddev = np.append(imps_stddev[:60], rest_stddev)
+        varnames = varnames[:60] + ["rest"]
+        n = 60+1
+
+    # put in percent scales
+    imps_avg = imps_avg * 100.0
+    imps_stddev = imps_stddev * 100.0
     
     # start fig
     if fig_ax is None:
@@ -229,16 +242,18 @@ def plot_aimodel_varimps(
     # plot
     ytick_ylocs = np.arange(n) # eg [0, 1, 2, .., 9] for 10 vars
 
+    ax.xaxis.grid(visible=True, color="0.9", linestyle="--", linewidth=1) 
     err_lw = 3 if n < 15 else 1
     ax.barh(ytick_ylocs,
             imps_avg,
             color="0.5",
             xerr=imps_stddev*2,
-            error_kw=dict(ecolor='0.9', lw=err_lw, capsize=0, capthick=0),
+            error_kw=dict(ecolor="0.9", lw=err_lw, capsize=0, capthick=0),
             align="center")
+    ax.invert_yaxis() # highest-impact vars on top
     ax.set_xlim(left=0.0)
     ax.set_yticks(ytick_ylocs, labels=varnames, fontsize=FONTSIZE)
-    ax.set_xlabel("Rel importance", fontsize=FONTSIZE)
+    ax.set_xlabel("Relative importance (%)", fontsize=FONTSIZE)
     ax.set_title("Variable importances")
 
 
