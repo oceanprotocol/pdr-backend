@@ -28,71 +28,6 @@ RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
 RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 
-mock_dydx_response = {
-    "candles": [
-        {
-            "startedAt": "2024-02-28T16:50:00.000Z",
-            "ticker": "BTC-USD",
-            "resolution": "5MINS",
-            "open": "61840",
-            "high": "61848",
-            "low": "61687",
-            "close": "61800",
-            "baseTokenVolume": "23.6064",
-            "usdVolume": "1458183.4133",
-            "trades": 284,
-            "startingOpenInterest": "504.4262",
-        }
-    ]
-}
-
-mock_bad_token_dydx_response_1 = {
-    "errors": [
-        {
-            "value": "BTC-ETH",
-            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
-            "param": "ticker",
-            "location": "params",
-        }
-    ]
-}
-
-mock_bad_token_dydx_response_2 = {
-    "errors": [
-        {
-            "value": "RANDOMTOKEN-USD",
-            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
-            "param": "ticker",
-            "location": "params",
-        }
-    ]
-}
-
-mock_bad_timeframe_dydx_response = {
-    "errors": [
-        {
-            "value": "5m",
-            "msg": "resolution must be a valid Candle Resolution, "
-            "one of 1MIN,5MINS,...",
-            "param": "resolution",
-            "location": "params",
-        }
-    ]
-}
-
-mock_bad_date_dydx_response: Dict[str, List[Any]] = {"candles": []}
-
-mock_bad_limit_dydx_response = {
-    "errors": [
-        {
-            "value": "100000",
-            "msg": "limit must be a positive integer that is not greater than max: 100",
-            "param": "limit",
-            "location": "params",
-        }
-    ]
-}
-
 
 @enforce_types
 def test_clean_raw_ohlcv():
@@ -163,6 +98,71 @@ def test_safe_fetch_ohlcv_ccxt(exch):
     # ensure a None is returned when warning
     v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
     assert v is None
+
+mock_dydx_response = {
+    "candles": [
+        {
+            "startedAt": "2024-02-28T16:50:00.000Z",
+            "ticker": "BTC-USD",
+            "resolution": "5MINS",
+            "open": "61840",
+            "high": "61848",
+            "low": "61687",
+            "close": "61800",
+            "baseTokenVolume": "23.6064",
+            "usdVolume": "1458183.4133",
+            "trades": 284,
+            "startingOpenInterest": "504.4262",
+        }
+    ]
+}
+
+mock_bad_token_dydx_response_1 = {
+    "errors": [
+        {
+            "value": "BTC-ETH",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_token_dydx_response_2 = {
+    "errors": [
+        {
+            "value": "RANDOMTOKEN-USD",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_timeframe_dydx_response = {
+    "errors": [
+        {
+            "value": "5m",
+            "msg": "resolution must be a valid Candle Resolution, "
+            "one of 1MIN,5MINS,...",
+            "param": "resolution",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_date_dydx_response: Dict[str, List[Any]] = {"candles": []}
+
+mock_bad_limit_dydx_response = {
+    "errors": [
+        {
+            "value": "100000",
+            "msg": "limit must be a positive integer that is not greater than max: 100",
+            "param": "limit",
+            "location": "params",
+        }
+    ]
+}
 
 
 @pytest.mark.parametrize(
