@@ -108,20 +108,51 @@ class AimodelFactory:
                 skm.fit(X, ytrue)
 
         # calc variable importances
-        if do_constant:
-            n = X.shape[1]
-            imps_mean = [1.0] * n
-            imps_stddev = [0.0] * n
-        else:
-            imps_bunch = permutation_importance(skm, X, ytrue, n_repeats=30)
-            imps_mean = imps_bunch["importances_mean"]
-            imps_stddev = imps_bunch["importances_std"]
-
-        # normalize
-        s = sum(imps_mean)
-        imps_mean = np.array(imps_mean) / s 
-        imps_stddev = np.array(imps_stddev) / s
+        imps_tup = self._calc_var_importances(do_constant, skm, X, ytrue)
 
         # return
-        model = Aimodel(skm, scaler, (imps_mean, imps_stddev))
+        model = Aimodel(skm, scaler, imps_tup)
         return model
+
+    def _calc_var_importances(self, do_constant: bool, skm, X, ytrue) -> tuple:
+        """
+        @return
+          imps_avg - 1d array of [var_i]: rel_importance_float
+          imps_stddev -- array [var_i]: rel_stddev_float
+        """
+        n = X.shape[1]
+        flat_imps_avg = np.ones((n,), dtype=float) / n
+        flat_imps_stddev = np.ones((n,), dtype=float) / n
+        
+        if do_constant:
+            return flat_imps_avg, flat_imps_stddev
+        
+        imps_bunch = permutation_importance(
+            skm, X, ytrue, n_repeats=30, scoring="accuracy",
+        )
+        imps_avg = imps_bunch.importances_mean
+
+        if max(imps_avg) <= 0: # all vars have negligible importance
+            return flat_imps_avg, flat_imps_stddev
+
+        imps_avg[imps_avg < 0.0] = 0.0 # some vars have negligible importance
+        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+
+        imps_stddev = imps_bunch.importances_std
+
+        # normalize
+        _sum = sum(imps_avg)
+        imps_avg = np.array(imps_avg) / _sum
+        imps_stddev = np.array(imps_stddev) / _sum
+        
+        # postconditions
+        assert imps_avg.shape == (n,)
+        assert imps_stddev.shape == (n,)
+        assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
+        assert min(imps_avg) >= 0.0
+        assert max(imps_avg) > 0
+        assert min(imps_stddev) >= 0.0
+
+        # return
+        imps_tup = (imps_avg, imps_stddev)
+        return imps_tup

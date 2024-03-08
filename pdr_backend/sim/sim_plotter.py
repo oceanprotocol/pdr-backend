@@ -39,7 +39,7 @@ class SimPlotter:
         fig = plt.figure()
         self.fig = fig
 
-        gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
+        gs = gridspec.GridSpec(2, 5, width_ratios=[3, 1, 1, 2, 5])
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
@@ -48,7 +48,8 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        self.ax_aimodel = fig.add_subplot(gs[:, 3])
+        self.ax_aimodel_varimps = fig.add_subplot(gs[:, 3])
+        self.ax_aimodel_response = fig.add_subplot(gs[:, 4])
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -84,6 +85,7 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
+        self._plot_aimodel_varimps(aimodel_plotdata)
         self._plot_aimodel_response(aimodel_plotdata)
 
         # final pieces
@@ -203,8 +205,16 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
+    def _plot_aimodel_varimps(self, d: AimodelPlotdata):
+        ax = self.ax_aimodel_varimps
+        imps_tups = d.model.importance_per_var(include_stddev=True)
+        plot_aimodel_varimps(d.colnames, imps_tups, (self.fig, ax))
+        if not self.plotted_before:
+            ax.margins(0.01, 0.01)
+
+    @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel
+        ax = self.ax_aimodel_response
         plot_aimodel_response(d, (self.fig, ax))
         if not self.plotted_before:
             ax.margins(0.01, 0.01)
