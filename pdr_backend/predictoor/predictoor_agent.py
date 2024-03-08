@@ -217,11 +217,11 @@ class PredictoorAgent:
 
     @property
     def OCEAN(self) -> Token:
-        return self.feed_contract.token
+        return self.ppss.web3_pp.OCEAN_Token
     
     @property
     def ROSE(self) -> NativeToken:
-        return NativeToken(self.ppss.web3_pp)
+        return self.ppss.web3_pp.NativeToken
 
     def status_str(self) -> str:
         s = ""
