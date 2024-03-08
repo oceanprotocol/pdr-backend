@@ -207,6 +207,14 @@ class PredictoorAgent:
     def cur_epoch_s_left(self) -> int:
         return self.next_slot - self.cur_timestamp
 
+    @property  
+    def up_addr(self) -> str:  
+            return self.web3_config_up.owner  
+
+    @property  
+    def down_addr(self) -> str:  
+            return self.web3_config_down.owner 
+
     def status_str(self) -> str:
         s = ""
         s += f"cur_epoch={self.cur_epoch}"
@@ -353,14 +361,11 @@ class PredictoorAgent:
 
     @enforce_types
     def check_balances(self) -> bool:
-        up_predictoor_address = self.web3_config_up.owner
-        down_predictoor_address = self.web3_config_down.owner
-
         minimum_ocean_balance = self.ppss.predictoor_ss.stake_amount.to_wei()
         minimum_native_balance = Eth(1).to_wei()
 
         up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
-            up_predictoor_address
+            self.up_addr
         )
         if up_predictoor_balance_ocean < minimum_ocean_balance:
             logger.error(
@@ -370,7 +375,7 @@ class PredictoorAgent:
             return False
 
         down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
-            down_predictoor_address
+            self.down_addr
         )
         if down_predictoor_balance_ocean < minimum_ocean_balance:
             logger.error(
@@ -381,14 +386,14 @@ class PredictoorAgent:
 
         native_token = NativeToken(self.ppss.web3_pp)
 
-        up_predictoor_balance_rose = native_token.balanceOf(up_predictoor_address)
+        up_predictoor_balance_rose = native_token.balanceOf(self.up_addr)
         if up_predictoor_balance_rose < minimum_native_balance:
             logger.error(
                 "Up predictoor's ROSE balance too low: (%s)", up_predictoor_balance_rose
             )
             return False
 
-        down_predictoor_balance_rose = native_token.balanceOf(down_predictoor_address)
+        down_predictoor_balance_rose = native_token.balanceOf(self.down_addr)
         if down_predictoor_balance_rose < minimum_native_balance:
             logger.error(
                 "Down predictoor's ROSE balance too low: (%s)",
