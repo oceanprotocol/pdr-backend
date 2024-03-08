@@ -80,7 +80,7 @@ def safe_fetch_ohlcv_dydx(
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
     if exch != "dydx":
-            return None
+        return None
     headers = {"Accept": "application/json"}
 
     try:
