@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
@@ -88,6 +89,8 @@ class GQLDataFactory:
             },
         }
 
+    
+    @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
         """
         @description
@@ -115,6 +118,29 @@ class GQLDataFactory:
             assert isinstance(table.df, pl.DataFrame)
 
         return self.record_config["tables"]
+
+
+    @enforce_types
+    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
+        """
+        @description
+            Calculate start timestamp, reconciling whether file exists and where
+            its data starts. If file exists, you can only append to end.
+
+        @arguments
+        table - Table object representing a data object. May or may not exist.
+
+        @return
+        start_ut - timestamp (ut) to start grabbing data for (in ms)
+        """
+        if not table.csv_data_store.has_data(table.table_name):
+            print(f"      GQl data lake <{table.table_name}> is empty. Fetch from start.")
+            return self.ppss.lake_ss.st_timestamp
+
+        # get the first timestamp of the first file
+        file_utN = table.csv_data_store.get_first_timestamp(table.table_name)
+        return UnixTimeMs(file_utN + 1000)
+   
 
     @enforce_types
     def _get_gql_df(
@@ -189,34 +215,8 @@ class GQLDataFactory:
             table.append_to_storage(buffer_df)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
-    @enforce_types
-    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
-        """
-        @description
-            Calculate start timestamp, reconciling whether file exists and where
-            its data starts. If file exists, you can only append to end.
-
-        @arguments
-        filename - parquet file with data. May or may not exist.
-
-        @return
-        start_ut - timestamp (ut) to start grabbing data for (in ms)
-        """
-
-        # TODO @ kdetry gz- Fix os/has_data checks by using the full path
-        if not os.path.exists(table.table_name):
-            print("      No file exists yet, so will fetch all data")
-            return self.ppss.lake_ss.st_timestamp
-
-        print("      File already exists")
-        if not has_data(table.table_name):
-            print("      File has no data, so delete it")
-            os.remove(table.table_name)
-            return self.ppss.lake_ss.st_timestamp
-
-        file_utN = table.csv_data_store.get_first_timestamp(table.table_name)
-        return UnixTimeMs(file_utN + 1000)
     
+    @enforce_types
     def _update(self):
         """
         @description

@@ -136,7 +136,6 @@ def test_update_data(tmpdir):
     assert last_record["pair"][0] == "ADA-USDT"
     assert last_record["timeframe"][0] == "5m"
 
-
 def test_load_parquet(tmpdir):
     """
     Test GQLDataFactory loads the data for all the tables
