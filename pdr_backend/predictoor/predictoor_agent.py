@@ -372,22 +372,22 @@ class PredictoorAgent:
         min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
         min_ROSE_bal = Eth(1).to_wei()
 
-        up_OCEAN_bal = OCEAN.balanceOf(self.up_addr)
+        up_OCEAN_bal = self.OCEAN.balanceOf(self.up_addr)
         if up_OCEAN_bal < min_OCEAN_bal:
             logger.error("Up OCEAN balance low: (%s)", up_OCEAN_bal)
             return False
 
-        down_OCEAN_bal = OCEAN.balanceOf(self.down_addr)
+        down_OCEAN_bal = self.OCEAN.balanceOf(self.down_addr)
         if down_OCEAN_bal < min_OCEAN_bal:
             logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
             return False
 
-        up_ROSE_bal = ROSE.balanceOf(self.up_addr)
+        up_ROSE_bal = self.ROSE.balanceOf(self.up_addr)
         if up_ROSE_bal < min_ROSE_bal:
             logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
             return False
 
-        down_ROSE_bal = ROSE.balanceOf(self.down_addr)
+        down_ROSE_bal = self.ROSE.balanceOf(self.down_addr)
         if down_ROSE_bal < min_ROSE_bal:
             logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
             return False
