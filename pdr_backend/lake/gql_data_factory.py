@@ -189,7 +189,34 @@ class GQLDataFactory:
             table.append_to_storage(buffer_df)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
+    @enforce_types
+    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
+        """
+        @description
+            Calculate start timestamp, reconciling whether file exists and where
+            its data starts. If file exists, you can only append to end.
 
+        @arguments
+        filename - parquet file with data. May or may not exist.
+
+        @return
+        start_ut - timestamp (ut) to start grabbing data for (in ms)
+        """
+
+        # TODO @ kdetry gz- Fix os/has_data checks by using the full path
+        if not os.path.exists(table.table_name):
+            print("      No file exists yet, so will fetch all data")
+            return self.ppss.lake_ss.st_timestamp
+
+        print("      File already exists")
+        if not has_data(table.table_name):
+            print("      File has no data, so delete it")
+            os.remove(table.table_name)
+            return self.ppss.lake_ss.st_timestamp
+
+        file_utN = table.csv_data_store.get_first_timestamp(table.table_name)
+        return UnixTimeMs(file_utN + 1000)
+    
     def _update(self):
         """
         @description
@@ -207,7 +234,7 @@ class GQLDataFactory:
         """
 
         for table_name, table in self.record_config["tables"].items():
-            st_ut = table.csv_data_store.get_first_timestamp(table_name)
+            st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
             if st_ut > min(UnixTimeMs.now(), fin_ut):
