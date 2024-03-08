@@ -1,15 +1,12 @@
-from typing import List, Tuple
-from unittest.mock import Mock
+from typing import List
 
 from enforce_typing import enforce_types
 from matplotlib import gridspec
-from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import random
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,

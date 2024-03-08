@@ -40,11 +40,9 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
+        self.sim_plotter = Mock(spec=SimPlotter)
         if self.ppss.sim_ss.do_plot:
-            n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
             self.sim_plotter = SimPlotter(self.ppss, self.st)
-        else:
-            self.sim_plotter = Mock(spec=SimPlotter)
 
         self.logfile = ""
 
@@ -90,10 +88,6 @@ class SimEngine:
         acc_train = np.average(self.st.accs_train)
         acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
         logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
-
-        import pdb
-
-        pdb.set_trace()
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types

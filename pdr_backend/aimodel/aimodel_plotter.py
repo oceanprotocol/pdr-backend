@@ -1,11 +1,10 @@
-from typing import Dict, List, Tuple
+from typing import List
 
 from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 
-from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.util.constants import FONTSIZE
 
@@ -140,7 +139,8 @@ def _plot_aimodel_contour(
     elif nvars == 2:
         impt_I = [0, 1]
     else:
-        impt_I = np.argsort(d.model.importance_per_var())[::-1][:2]
+        imps = d.model.importance_per_var()
+        impt_I = np.argsort(imps)[::-1][:2]  # type:ignore[assignment]
     impt_X = X[:, impt_I]
     impt_colnames = [d.colnames[i] for i in impt_I]
 
@@ -259,7 +259,7 @@ def plot_aimodel_varimps(
         color="0.5",
         height=bar_lw,
         xerr=imps_stddev * 2,
-        error_kw=dict(ecolor="0.9", lw=err_lw, capsize=0, capthick=0),
+        error_kw={"ecolor": "0.9", "lw": err_lw, "capsize": 0, "capthick": 0},
         align="center",
     )
     ax.invert_yaxis()  # highest-impact vars on top

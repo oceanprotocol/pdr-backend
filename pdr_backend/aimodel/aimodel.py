@@ -62,5 +62,4 @@ class Aimodel:
         """
         if include_stddev:
             return self._imps_tup
-        else:
-            return self._imps_tup[0]
+        return self._imps_tup[0]
