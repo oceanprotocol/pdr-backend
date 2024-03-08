@@ -374,14 +374,14 @@ class PredictoorAgent:
             logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
             return False
 
-        native_token = NativeToken(self.ppss.web3_pp)
+        rose_token = NativeToken(self.ppss.web3_pp)
 
-        up_ROSE_bal = native_token.balanceOf(self.up_addr)
+        up_ROSE_bal = rose_token.balanceOf(self.up_addr)
         if up_ROSE_bal < min_ROSE_bal:
             logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
             return False
 
-        down_ROSE_bal = native_token.balanceOf(self.down_addr)
+        down_ROSE_bal = rose_token.balanceOf(self.down_addr)
         if down_ROSE_bal < min_ROSE_bal:
             logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
             return False
