@@ -101,7 +101,7 @@ class GQLDataFactory:
 
         logger.info("Get predictions data across many feeds and timeframes.")
 
-        # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
+        # st_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
 
@@ -118,40 +118,18 @@ class GQLDataFactory:
 
         return self.record_config["tables"]
 
-    @enforce_types
-    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
-        """
-        @description
-            Calculate start timestamp, reconciling whether file exists and where
-            its data starts. If file exists, you can only append to end.
-
-        @arguments
-        table - Table object representing a data object. May or may not exist.
-
-        @return
-        start_ut - timestamp (ut) to start grabbing data for (in ms)
-        """
-        if not table.csv_data_store.has_data(table.table_name):
-            print(
-                f"      GQl data lake <{table.table_name}> is empty. Fetch from start."
-            )
-            return self.ppss.lake_ss.st_timestamp
-
-        # get the first timestamp of the first file
-        file_utN = table.csv_data_store.get_first_timestamp(table.table_name)
-        return UnixTimeMs(file_utN + 1000)
 
     @enforce_types
-    def _get_gql_df(
+    def _do_subgraph_fetch(
         self,
         table: Table,
         fetch_function: Callable,
         network: str,
         st_ut: UnixTimeMs,
         fin_ut: UnixTimeMs,
-        save_backoff_limit: int,
-        pagination_limit: int,
         config: Dict,
+        save_backoff_limit: int = 5000,
+        pagination_limit: int = 1000,
     ):
         """
         @description
@@ -214,6 +192,7 @@ class GQLDataFactory:
             table.append_to_storage(buffer_df)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
+
     @enforce_types
     def _calc_start_ut(self, table: Table) -> UnixTimeMs:
         """
@@ -236,7 +215,8 @@ class GQLDataFactory:
             else self.ppss.lake_ss.st_timestamp
         )
 
-        return UnixTimeMs(start_ut + 1000)
+        return UnixTimeMs(start_ut + 1000)    
+
 
     def _update(self):
         """
@@ -254,31 +234,19 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
-        for table_name, table in self.record_config["tables"].items():
+        for _, table in self.record_config["tables"].items():
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
-            # to satisfy mypy, get an explicit function pointer
-            do_fetch: Callable[[str, int, int, int, int, Dict, str], pl.DataFrame] = (
-                self._get_gql_df
-            )
-
-            # number of data at which we want to save to file
-            save_backoff_limit = 5000
-            # number of data fetched from the subgraph at a time
-            pagination_limit = 1000
-
             print(f"Updating table {table.table_name}")
-            do_fetch(
-                self.record_config["tables"][table.table_name],
+            self._do_subgraph_fetch(
+                table,
                 self.record_config["fetch_functions"][table.table_name],
                 self.ppss.web3_pp.network,
                 st_ut,
                 fin_ut,
-                save_backoff_limit,
-                pagination_limit,
                 self.record_config["config"],
             )
