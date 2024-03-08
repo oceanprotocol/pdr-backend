@@ -79,25 +79,21 @@ def test_persistent_table(
     # Initialize Table, fill with data, validate
     table = Table(predictions_table_name, predictions_schema, ppss)
 
-    table.persistent_data_store._create_and_fill_table(
+    table.PDS._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
-    assert _check_view_exists(table.persistent_data_store, predictions_table_name)
+    assert _check_view_exists(table.PDS, predictions_table_name)
 
-    result = table.persistent_data_store.query_data(
-        f"SELECT * FROM {predictions_table_name}"
-    )
+    result = table.PDS.query_data(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    table.persistent_data_store.insert_to_table(
+    table.PDS.insert_to_table(
         _gql_datafactory_second_predictions_df, predictions_table_name
     )
 
-    result = table.persistent_data_store.query_data(
-        f"SELECT * FROM {predictions_table_name}"
-    )
+    result = table.PDS.query_data(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 

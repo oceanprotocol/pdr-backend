@@ -1,8 +1,9 @@
 import os
 from typing import List, Optional
 import polars as pl
-
 from polars.type_aliases import SchemaDict
+
+from enforce_typing import enforce_types
 
 
 class CSVDataStore:
@@ -200,21 +201,41 @@ class CSVDataStore:
 
         return file_paths
 
+    @enforce_types
+    def has_data(self, dataset_identifier: str) -> bool:
+        """
+        Returns True if the csv files in the folder
+        corresponding to the given dataset_identifier have data.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        @returns:
+            bool - True if the csv files have data
+        """
+        folder_path = self._get_folder_path(dataset_identifier)
+
+        # check if the csv file has more than 0 bytes
+        return any(
+            os.path.getsize(file_path) > 0
+            for file_path in self._get_file_paths(folder_path, "0", "9999999999999")
+        )
+
+    @enforce_types
     def read(
         self,
         dataset_identifier: str,
-        start_time: str,
-        end_time: str,
+        st_ts: int,
+        end_ts: int,
         schema: Optional[SchemaDict] = None,
+        filter: Optional[bool] = True,
     ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
         corresponding to the given dataset_identifier,
-        start_time, and end_time.
+        st_ts, and end_ts.
         @args:
             dataset_identifier: str - identifier of the dataset
-            start_time: str - start time of the data
-            end_time: str - end time of the data
+            st_ts: int - start time of the data
+            end_ts: int - end time of the data
         @returns:
             pl.DataFrame - data read from the csv file
         """
@@ -225,13 +246,12 @@ class CSVDataStore:
 
         # if the data is not empty,
         # check the timestamp column exists and is of type int64
-        if "timestamp" not in data.columns:
+        if "timestamp" not in data.columns or filter is False:
             return data
 
-        return data.filter(data["timestamp"] >= int(start_time)).filter(
-            data["timestamp"] <= int(end_time)
+        return data.filter(data["timestamp"] >= st_ts).filter(
+            data["timestamp"] <= end_ts
         )
-        # return pl.read_csv(file_paths[0]) if file_paths else pl.DataFrame()
 
     def read_all(
         self, dataset_identifier: str, schema: Optional[SchemaDict] = None

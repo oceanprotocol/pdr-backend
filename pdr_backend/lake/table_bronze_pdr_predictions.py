@@ -41,7 +41,7 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
         f"""
         SELECT 
             pdr_predictions.ID as ID,
-            string_split(pdr_predictions.ID, '-')[0] AS slot_id,
+            string_split(pdr_predictions.ID, '-')[0] || '-' || string_split(pdr_predictions.ID, '-')[1] AS slot_id,
             pdr_predictions.contract as contract,
             pdr_predictions.slot as slot,
             pdr_predictions.user as user,
