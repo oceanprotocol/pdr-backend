@@ -33,25 +33,30 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
     """
     # get the table
     table = Table(bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss)
-    
-    # process all the data like below functions
-    # do it with sql
+
+    # process all the data
     return table.PDS.query_data(f"""
-                        SELECT 
-                            *,
-                            pdr_predictions.timestamp as timestamp,
-                            pdr_truevals.truevalue as truevalue,
-                            pdr_truevals.timestamp as pdr_truevals_timestamp,
-                            pdr_payouts.payout as payout,
-                            pdr_payouts.predvalue as predvalue,
-                            pdr_payouts.stake as stake,
-                            pdr_payouts.timestamp as last_event_timestamp
-                        FROM 
-                            pdr_predictions
-                        LEFT JOIN pdr_truevals
-                            ON pdr_predictions.slot = pdr_truevals.slot
-                        LEFT JOIN pdr_payouts
-                            ON pdr_predictions.ID = pdr_payouts.ID
-                        WHERE pdr_predictions.timestamp >= {ppss.lake_ss.st_timestamp}
-                            AND pdr_predictions.timestamp <= {ppss.lake_ss.fin_timestamp}
-                        """)
+        SELECT 
+            pdr_predictions.ID as ID,
+            string_split(pdr_predictions.ID, '-')[0] AS slot_id,
+            pdr_predictions.contract as contract,
+            pdr_predictions.slot as slot,
+            pdr_predictions.user as user,
+            pdr_predictions.pair as pair,
+            pdr_predictions.timeframe as timeframe,
+            pdr_predictions.source as source,
+            pdr_payouts.predvalue as predvalue,
+            pdr_truevals.truevalue as truevalue,
+            pdr_payouts.stake as stake,
+            pdr_payouts.payout as payout,
+            pdr_predictions.timestamp as timestamp,
+            GREATEST(pdr_predictions.timestamp, pdr_truevals.timestamp, pdr_payouts.timestamp) as last_event_timestamp,
+        FROM 
+            pdr_predictions
+        LEFT JOIN pdr_truevals
+            ON pdr_predictions.slot = pdr_truevals.slot                                
+        LEFT JOIN pdr_payouts
+            ON pdr_predictions.ID = pdr_payouts.ID
+        WHERE pdr_predictions.timestamp >= {ppss.lake_ss.st_timestamp}
+            AND pdr_predictions.timestamp <= {ppss.lake_ss.fin_timestamp}
+    """)

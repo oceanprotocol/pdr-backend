@@ -234,4 +234,3 @@ class GQLDataFactory:
                 pagination_limit,
                 self.record_config["config"],
             )
-
