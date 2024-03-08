@@ -10,6 +10,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
@@ -39,12 +40,9 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
+        self.sim_plotter = Mock(spec=SimPlotter)
         if self.ppss.sim_ss.do_plot:
-            n = self.ppss.predictoor_ss.aimodel_ss.n  # num input vars
-            include_contour = n == 2
-            self.sim_plotter = SimPlotter(self.ppss, self.st, include_contour)
-        else:
-            self.sim_plotter = Mock(spec=SimPlotter)
+            self.sim_plotter = SimPlotter(self.ppss, self.st)
 
         self.logfile = ""
 
@@ -223,8 +221,17 @@ class SimEngine:
 
         # plot
         if self.do_plot(test_i, self.ppss.sim_ss.test_n):
-            model_plot_args = (model, X_train, ybool_train, colnames)
-            self.sim_plotter.do_plot(model_plot_args)
+            colnames = [_shift_one_earlier(colname) for colname in colnames]
+            most_recent_x = X[-1, :]
+            slicing_x = most_recent_x  # plot about the most recent x
+            d = AimodelPlotdata(
+                model,
+                X_train,
+                ybool_train,
+                colnames,
+                slicing_x,
+            )
+            self.sim_plotter.make_plot(d)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
@@ -313,3 +320,10 @@ class SimEngine:
             return False
 
         return True
+
+
+@enforce_types
+def _shift_one_earlier(s: str):
+    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
+    val = int(s[-1])
+    return s[:-1] + str(val - 1)

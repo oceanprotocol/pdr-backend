@@ -1,20 +1,21 @@
-from typing import List, Tuple
-from unittest.mock import Mock
+from typing import List
 
 from enforce_typing import enforce_types
 from matplotlib import gridspec
-from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import random
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.aimodel.model_plotter import plot_model
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.aimodel.aimodel_plotter import (
+    plot_aimodel_response,
+    plot_aimodel_varimps,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.constants import FONTSIZE
 
-FONTSIZE = 9
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
 
@@ -26,21 +27,19 @@ class SimPlotter:
         self,
         ppss: PPSS,
         st: SimState,
-        include_contour: bool,
     ):
         # engine state, ss
         self.st = st
         self.ppss = ppss
-        self.include_contour = include_contour
+
+        # so labels are above lines. Must be before figure()
+        plt.rcParams["axes.axisbelow"] = False
 
         # figure, subplots
         fig = plt.figure()
         self.fig = fig
 
-        if include_contour:
-            gs = gridspec.GridSpec(2, 4, width_ratios=[5, 1, 1, 5])
-        else:
-            gs = gridspec.GridSpec(2, 3, width_ratios=[5, 1, 1])
+        gs = gridspec.GridSpec(2, 6, width_ratios=[5, 1, 1, 0.6, 2, 3])
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
@@ -49,10 +48,10 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        if include_contour:
-            self.ax_model_contour = fig.add_subplot(gs[:, 3])
-        else:
-            self.ax_model_contour = Mock(spec=Axes)
+        # col 3 is empty, for overflow of aimodel_varimps's y-axis labels
+        self.ax_aimodel_varimps = fig.add_subplot(gs[:, 4])
+
+        self.ax_aimodel_response = fig.add_subplot(gs[:, 5])
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -70,13 +69,10 @@ class SimPlotter:
 
     # pylint: disable=too-many-statements
     @enforce_types
-    def do_plot(self, model_plot_args: tuple):
+    def make_plot(self, aimodel_plotdata: AimodelPlotdata):
         """
         @description
           Create / update whole plot, with many subplots
-
-        @arguments
-          model_plot_args -- see _plot_model_contour()
         """
         # update N, N_done, x. **Update x only after updating N, N_done!**
         self.N = len(self.st.pdr_profits_OCEAN)
@@ -91,11 +87,13 @@ class SimPlotter:
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
-        self._maybe_plot_model_contour(model_plot_args)
+        self._plot_aimodel_varimps(aimodel_plotdata)
+        self._plot_aimodel_response(aimodel_plotdata)
 
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
         self.fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
+        plt.subplots_adjust(wspace=0.3)
         plt.pause(0.001)
         self.plotted_before = True
 
@@ -176,7 +174,7 @@ class SimPlotter:
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
 
-        s = f"pdr profit distr'n. avg={avg:.2f} OCEAN"
+        s = f"pdr profit dist. avg={avg:.2f} OCEAN"
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
         if not self.plotted_before:
@@ -198,7 +196,7 @@ class SimPlotter:
         c = (random(), random(), random())  # random RGB color
         ax.scatter(next_probs_up, next_profits, color=c, s=1)
 
-        s = f"trader profit distr'n. avg={avg:.2f} USD"
+        s = f"trader profit dist. avg={avg:.2f} USD"
 
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
@@ -210,40 +208,19 @@ class SimPlotter:
             ax.margins(0.05, 0.05)
 
     @enforce_types
-    def _maybe_plot_model_contour(self, model_plot_args: tuple):
-        """
-        @arguments
-          model_plot_args -- a tuple composed of:
-            model -- Aimodel
-            X_train -- 2d array [sample_i, var_i]:cont_value -- model trn inputs
-            ybool_train -- 1d array [sample_i]:bool_value -- model trn outputs
-            colnames -- [var_i]:str -- name for each of the X inputs
-        """
-        (model, X_train, ybool_train, colnames) = model_plot_args
-        assert isinstance(model, Aimodel)
-        assert isinstance(X_train, np.ndarray)
-        assert isinstance(ybool_train, np.ndarray)
-        assert isinstance(colnames, list)
+    def _plot_aimodel_varimps(self, d: AimodelPlotdata):
+        ax = self.ax_aimodel_varimps
+        imps_tups = d.model.importance_per_var(include_stddev=True)
+        plot_aimodel_varimps(d.colnames, imps_tups, (self.fig, ax))
+        if not self.plotted_before:
+            ax.margins(0.01, 0.01)
 
-        if self.include_contour:
-            ax = self.ax_model_contour
-            labels = _contour_labels(colnames)
-            plot_model(model, X_train, ybool_train, labels, (self.fig, ax))
-            if not self.plotted_before:
-                ax.margins(0.01, 0.01)
-
-
-@enforce_types
-def _contour_labels(colnames: List[str]) -> Tuple[str]:
-    labels = tuple([_shift_one_earlier(colname) for colname in colnames])
-    return labels
-
-
-@enforce_types
-def _shift_one_earlier(s: str):
-    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
-    val = int(s[-1])
-    return s[:-1] + str(val - 1)
+    @enforce_types
+    def _plot_aimodel_response(self, d: AimodelPlotdata):
+        ax = self.ax_aimodel_response
+        plot_aimodel_response(d, (self.fig, ax))
+        if not self.plotted_before:
+            ax.margins(0.01, 0.01)
 
 
 @enforce_types
