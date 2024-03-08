@@ -176,7 +176,7 @@ mock_bad_limit_dydx_response = {
             "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
-            1709157000000,  # 1709139000000
+            1709139000000,
             61800,
             None,
             mock_dydx_response,
