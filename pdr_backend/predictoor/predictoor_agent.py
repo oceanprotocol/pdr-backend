@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.predictoor_contract import PredictoorContract
-from pdr_backend.contract.token import NativeToken
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -215,6 +215,14 @@ class PredictoorAgent:
     def down_addr(self) -> str:
         return self.web3_config_down.owner
 
+    @property
+    def OCEAN(self) -> Token:
+        return self.feed_contract.token
+    
+    @property
+    def ROSE(self) -> NativeToken:
+        return NativeToken(self.ppss.web3_pp)
+
     def status_str(self) -> str:
         s = ""
         s += f"cur_epoch={self.cur_epoch}"
@@ -364,24 +372,22 @@ class PredictoorAgent:
         min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
         min_ROSE_bal = Eth(1).to_wei()
 
-        up_OCEAN_bal = self.feed_contract.token.balanceOf(self.up_addr)
+        up_OCEAN_bal = OCEAN.balanceOf(self.up_addr)
         if up_OCEAN_bal < min_OCEAN_bal:
             logger.error("Up OCEAN balance low: (%s)", up_OCEAN_bal)
             return False
 
-        down_OCEAN_bal = self.feed_contract.token.balanceOf(self.down_addr)
+        down_OCEAN_bal = OCEAN.balanceOf(self.down_addr)
         if down_OCEAN_bal < min_OCEAN_bal:
             logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
             return False
 
-        rose_token = NativeToken(self.ppss.web3_pp)
-
-        up_ROSE_bal = rose_token.balanceOf(self.up_addr)
+        up_ROSE_bal = ROSE.balanceOf(self.up_addr)
         if up_ROSE_bal < min_ROSE_bal:
             logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
             return False
 
-        down_ROSE_bal = rose_token.balanceOf(self.down_addr)
+        down_ROSE_bal = ROSE.balanceOf(self.down_addr)
         if down_ROSE_bal < min_ROSE_bal:
             logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
             return False
