@@ -193,9 +193,9 @@ def _plot_aimodel_contour(
 
 @enforce_types
 def plot_aimodel_varimps(
-        varnames: List[str],
-        imps_tup: tuple,
-        fig_ax=None,
+    varnames: List[str],
+    imps_tup: tuple,
+    fig_ax=None,
 ):
     """
     @description
@@ -210,7 +210,7 @@ def plot_aimodel_varimps(
     n = len(varnames)
     imps_avg, imps_stddev = imps_tup
 
-    # re-order in descending imps_avg 
+    # re-order in descending imps_avg
     I = np.argsort(imps_avg)[::-1]
     imps_avg = imps_avg[I]
     imps_stddev = imps_stddev[I]
@@ -223,12 +223,20 @@ def plot_aimodel_varimps(
         imps_avg = np.append(imps_avg[:40], rest_avg)
         imps_stddev = np.append(imps_stddev[:40], rest_stddev)
         varnames = varnames[:40] + ["rest"]
-        n = 40+1
+        n = 40 + 1
+
+    # if <10 vars, make it like 10
+    if n < 10:
+        n_extra = 10 - n
+        imps_avg = np.append(imps_avg, [0.0] * n_extra)
+        imps_stddev = np.append(imps_stddev, [0.0] * n_extra)
+        varnames = varnames + [""] * n_extra
+        n = 10
 
     # put in percent scales
     imps_avg = imps_avg * 100.0
     imps_stddev = imps_stddev * 100.0
-    
+
     # start fig
     if fig_ax is None:
         # so labels are above lines. Must be before figure()
@@ -240,22 +248,25 @@ def plot_aimodel_varimps(
         ax.cla()  # clear axis
 
     # plot
-    ytick_ylocs = np.arange(n) # eg [0, 1, 2, .., 9] for 10 vars
+    ytick_ylocs = np.arange(n)  # eg [0, 1, 2, .., 9] for 10 vars
 
-    ax.xaxis.grid(visible=True, color="0.9", linestyle="--", linewidth=1) 
+    ax.xaxis.grid(visible=True, color="0.9", linestyle="--", linewidth=1)
+    bar_lw = 0.2 if n < 15 else 0.3
     err_lw = 3 if n < 15 else 1
-    ax.barh(ytick_ylocs,
-            imps_avg,
-            color="0.5",
-            xerr=imps_stddev*2,
-            error_kw=dict(ecolor="0.9", lw=err_lw, capsize=0, capthick=0),
-            align="center")
-    ax.invert_yaxis() # highest-impact vars on top
+    ax.barh(
+        ytick_ylocs,
+        imps_avg,
+        color="0.5",
+        height=bar_lw,
+        xerr=imps_stddev * 2,
+        error_kw=dict(ecolor="0.9", lw=err_lw, capsize=0, capthick=0),
+        align="center",
+    )
+    ax.invert_yaxis()  # highest-impact vars on top
     ax.set_xlim(left=0.0)
     ax.set_yticks(ytick_ylocs, labels=varnames, fontsize=FONTSIZE)
     ax.set_xlabel("Relative importance (%)", fontsize=FONTSIZE)
     ax.set_title("Variable importances")
-
 
     HEIGHT = 9  # magic number
     WIDTH = HEIGHT

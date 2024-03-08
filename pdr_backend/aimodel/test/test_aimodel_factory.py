@@ -134,7 +134,7 @@ def test_aimodel_accuracy_from_create_xy():
 
 
 @enforce_types
-def test_aimodel_factory_1var():
+def test_aimodel_factory_1var_main():
     """1 input var. It will plot that var on both axes"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
@@ -206,38 +206,58 @@ def test_aimodel_factory_4vars_response():
             plot_aimodel_response(aimodel_plotdata)
     assert not SHOW_PLOT
 
-        
-         
+
+@enforce_types
+def test_aimodel_factory_1var_varimps():
+    _test_aimodel_factory_nvars_varimps(n=1)
+
+
+@enforce_types
+def test_aimodel_factory_2vars_varimps():
+    _test_aimodel_factory_nvars_varimps(n=2)
+
+
+@enforce_types
+def test_aimodel_factory_3vars_varimps():
+    _test_aimodel_factory_nvars_varimps(n=3)
+
+
+@enforce_types
+def test_aimodel_factory_4vars_varimps():
+    _test_aimodel_factory_nvars_varimps(n=4)
+
+
 @enforce_types
 def test_aimodel_factory_5vars_varimps():
-     _test_aimodel_factory_nvars_varimps(
-         n=5,
-         imps_avg=np.array([1.0, 5.0, 2.0, 0.0, 1.0]),
-     )
-     
+    _test_aimodel_factory_nvars_varimps(n=5)
+
+
+@enforce_types
+def test_aimodel_factory_10vars_varimps():
+    _test_aimodel_factory_nvars_varimps(n=5)
+
 
 @enforce_types
 def test_aimodel_factory_25vars_varimps():
-     _test_aimodel_factory_nvars_varimps(25)
+    _test_aimodel_factory_nvars_varimps(25)
 
-     
+
 @enforce_types
 def test_aimodel_factory_100vars_varimps():
-     _test_aimodel_factory_nvars_varimps(100)
+    _test_aimodel_factory_nvars_varimps(100)
 
-     
+
 @enforce_types
-def _test_aimodel_factory_nvars_varimps(n:int, imps_avg=None):
+def _test_aimodel_factory_nvars_varimps(n: int):
     varnames = [f"x{i}" for i in range(n)]
-    if imps_avg is None:
-        imps_avg = np.array([n - i + 1 for i in range(n)])
+    imps_avg = np.array([n - i + 1 for i in range(n)])
     assert imps_avg.shape[0] == n
     imps_stddev = imps_avg / 4.0
     _sum = sum(imps_avg)
     imps_avg = imps_avg / _sum
     imps_stddev = imps_stddev / _sum
     imps_tup = (imps_avg, imps_stddev)
-    
+
     if SHOW_PLOT:
         plot_aimodel_varimps(varnames, imps_tup)
     else:

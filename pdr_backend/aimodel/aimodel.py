@@ -6,14 +6,14 @@ import numpy as np
 class Aimodel:
 
     def __init__(
-            self,
-            skm,
-            scaler,
-            imps_tup: tuple,
+        self,
+        skm,
+        scaler,
+        imps_tup: tuple,
     ):
         self._skm = skm  # sklearn model
         self._scaler = scaler  # for scaling X-inputs
-        self._imps_tup = imps_tup # tuple of (imps_avg, imps_stddev)
+        self._imps_tup = imps_tup  # tuple of (imps_avg, imps_stddev)
 
     def predict_true(self, X):
         """
@@ -51,7 +51,7 @@ class Aimodel:
         yptrue = np.array([T[i, class_i] for i in range(N)])
         return yptrue
 
-    def importance_per_var(self, include_stddev:bool=False):
+    def importance_per_var(self, include_stddev: bool = False):
         """
         @description
           Report relative importance of each input variable

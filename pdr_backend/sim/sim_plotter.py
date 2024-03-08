@@ -53,7 +53,7 @@ class SimPlotter:
 
         # col 3 is empty, for overflow of aimodel_varimps's y-axis labels
         self.ax_aimodel_varimps = fig.add_subplot(gs[:, 4])
-        
+
         self.ax_aimodel_response = fig.add_subplot(gs[:, 5])
 
         # attributes to help update plots' state quickly

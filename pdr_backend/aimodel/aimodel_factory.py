@@ -123,19 +123,23 @@ class AimodelFactory:
         n = X.shape[1]
         flat_imps_avg = np.ones((n,), dtype=float) / n
         flat_imps_stddev = np.ones((n,), dtype=float) / n
-        
+
         if do_constant:
             return flat_imps_avg, flat_imps_stddev
-        
+
         imps_bunch = permutation_importance(
-            skm, X, ytrue, n_repeats=30, scoring="accuracy",
+            skm,
+            X,
+            ytrue,
+            n_repeats=30,
+            scoring="accuracy",
         )
         imps_avg = imps_bunch.importances_mean
 
-        if max(imps_avg) <= 0: # all vars have negligible importance
+        if max(imps_avg) <= 0:  # all vars have negligible importance
             return flat_imps_avg, flat_imps_stddev
 
-        imps_avg[imps_avg < 0.0] = 0.0 # some vars have negligible importance
+        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
         assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
 
         imps_stddev = imps_bunch.importances_std
@@ -144,7 +148,7 @@ class AimodelFactory:
         _sum = sum(imps_avg)
         imps_avg = np.array(imps_avg) / _sum
         imps_stddev = np.array(imps_stddev) / _sum
-        
+
         # postconditions
         assert imps_avg.shape == (n,)
         assert imps_stddev.shape == (n,)

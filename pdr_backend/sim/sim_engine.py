@@ -91,7 +91,9 @@ class SimEngine:
         acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
         logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
 
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
