@@ -207,13 +207,13 @@ class PredictoorAgent:
     def cur_epoch_s_left(self) -> int:
         return self.next_slot - self.cur_timestamp
 
-    @property  
-    def up_addr(self) -> str:  
-            return self.web3_config_up.owner  
+    @property
+    def up_addr(self) -> str:
+        return self.web3_config_up.owner
 
-    @property  
-    def down_addr(self) -> str:  
-            return self.web3_config_down.owner 
+    @property
+    def down_addr(self) -> str:
+        return self.web3_config_down.owner
 
     def status_str(self) -> str:
         s = ""
@@ -361,44 +361,29 @@ class PredictoorAgent:
 
     @enforce_types
     def check_balances(self) -> bool:
-        minimum_ocean_balance = self.ppss.predictoor_ss.stake_amount.to_wei()
-        minimum_native_balance = Eth(1).to_wei()
+        min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
+        min_ROSE_bal = Eth(1).to_wei()
 
-        up_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
-            self.up_addr
-        )
-        if up_predictoor_balance_ocean < minimum_ocean_balance:
-            logger.error(
-                "Up predictoor's OCEAN balance too low: (%s)",
-                up_predictoor_balance_ocean,
-            )
+        up_OCEAN_bal = self.feed_contract.token.balanceOf(self.up_addr)
+        if up_OCEAN_bal < min_OCEAN_bal:
+            logger.error("Up OCEAN balance low: (%s)", up_OCEAN_bal)
             return False
 
-        down_predictoor_balance_ocean = self.feed_contract.token.balanceOf(
-            self.down_addr
-        )
-        if down_predictoor_balance_ocean < minimum_ocean_balance:
-            logger.error(
-                "Down predictoor's OCEAN balance too low: (%s)",
-                down_predictoor_balance_ocean,
-            )
+        down_OCEAN_bal = self.feed_contract.token.balanceOf(self.down_addr)
+        if down_OCEAN_bal < min_OCEAN_bal:
+            logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
             return False
 
         native_token = NativeToken(self.ppss.web3_pp)
 
-        up_predictoor_balance_rose = native_token.balanceOf(self.up_addr)
-        if up_predictoor_balance_rose < minimum_native_balance:
-            logger.error(
-                "Up predictoor's ROSE balance too low: (%s)", up_predictoor_balance_rose
-            )
+        up_ROSE_bal = native_token.balanceOf(self.up_addr)
+        if up_ROSE_bal < min_ROSE_bal:
+            logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
             return False
 
-        down_predictoor_balance_rose = native_token.balanceOf(self.down_addr)
-        if down_predictoor_balance_rose < minimum_native_balance:
-            logger.error(
-                "Down predictoor's ROSE balance too low: (%s)",
-                down_predictoor_balance_rose,
-            )
+        down_ROSE_bal = native_token.balanceOf(self.down_addr)
+        if down_ROSE_bal < min_ROSE_bal:
+            logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
             return False
 
         return True
