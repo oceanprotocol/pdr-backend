@@ -156,7 +156,21 @@ class CSVDataStore:
         @returns:
             int - end time from the file_path
         """
-        return int(file_path.split("/")[-1].split("_")[4].replace(".csv", ""))
+        # let's split the string by "/" to get the last element
+        file_signature = file_path.split("/")[-1]
+        
+        # let's find the "from" index inside the string split
+        signature_str_split = file_signature.split("_")
+
+        # let's find the from index and value
+        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
+        to_index = from_index + 3
+        
+        if to_index >= len(signature_str_split):
+            return 0
+        
+        to_value = int(signature_str_split[to_index].replace(".csv", ""))
+        return to_value
 
     def _get_from_value(self, file_path: str) -> int:
         """
@@ -166,7 +180,21 @@ class CSVDataStore:
         @returns:
             int - start time from the file_path
         """
-        return int(file_path.split("/")[-1].split("_")[2])
+        # suppose the following file path "folder1/folder2/pdr_predictions_from_1701503000000_to_1701503000000.csv"
+        # now, we want to split the string, and then find if there is a "from" value and a "to" value
+        # keep in mind that the "to" value can be missing, if the file hasn't yet closed due to row limit
+
+        # let's split the string by "/" to get the last element
+        file_signature = file_path.split("/")[-1]
+
+        # let's find the "from" index inside the string split
+        signature_str_split = file_signature.split("_")
+        
+        # let's find the from index and value
+        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
+        from_value = int(signature_str_split[from_index])
+        
+        return from_value
 
     def _get_file_paths(
         self, folder_path: str, start_time: str, end_time: str

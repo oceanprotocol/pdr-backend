@@ -118,7 +118,6 @@ class GQLDataFactory:
 
         return self.record_config["tables"]
 
-
     @enforce_types
     def _do_subgraph_fetch(
         self,
@@ -192,7 +191,6 @@ class GQLDataFactory:
             table.append_to_storage(buffer_df)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
-
     @enforce_types
     def _calc_start_ut(self, table: Table) -> UnixTimeMs:
         """
@@ -215,8 +213,7 @@ class GQLDataFactory:
             else self.ppss.lake_ss.st_timestamp
         )
 
-        return UnixTimeMs(start_ut + 1000)    
-
+        return UnixTimeMs(start_ut + 1000)
 
     def _update(self):
         """

@@ -58,7 +58,50 @@ def test_table_initialization(tmpdir):
     assert table.ppss.lake_ss.fin_timestr == fin_timestr
 
 
-def test_persistent_table(
+def test_csv_data_store(
+    _gql_datafactory_first_predictions_df,
+    tmpdir,
+):
+    """
+    Test that create table and append existing mock prediction data
+    """
+    st_timestr = "2023-11-01"
+    fin_timestr = "2024-11-03"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    # Initialize Table, fill with data, validate
+    table = Table(predictions_table_name, predictions_schema, ppss)
+    table._append_to_csv(_gql_datafactory_first_predictions_df)
+
+    assert table.csv_data_store.has_data(predictions_table_name)
+
+    print(os.listdir(os.path.join(ppss.lake_ss.parquet_dir,table.table_name)))
+
+    file_path = os.path.join(
+        ppss.lake_ss.parquet_dir,
+        table.table_name,
+        f"{table.table_name}_from_1701503000000_to_.csv",
+    )
+
+    assert os.path.exists(file_path)
+
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        assert len(lines) == 3
+
+    # TODO - Add support for verifying 1001 rows
+    #     with open(file_path, "r") as file:
+    #         lines = file.readlines()
+    #         assert len(lines) == 1001
+
+
+def test_persistent_store(
     _gql_datafactory_first_predictions_df,
     _gql_datafactory_second_predictions_df,
     tmpdir,
@@ -97,74 +140,8 @@ def test_persistent_table(
 
     assert len(result) == 8, "Length of the table is not as expected"
 
-
-# TODO - Update table unit tests that show append_to_storage working
-# TODO - Focus on E2E fetch + ETL test. Do not worry about both append_to_csv + append_to_db.
-
-# def test_append_to_csv(tmpdir):
-#     """
-#     Test that table is loading the data from file
-#     """
-#     st_timestr = "2023-12-03"
-#     fin_timestr = "2024-12-05"
-#     ppss = mock_ppss(
-#         ["binance BTC/USDT c 5m"],
-#         "sapphire-mainnet",
-#         str(tmpdir),
-#         st_timestr=st_timestr,
-#         fin_timestr=fin_timestr,
-#     )
-
-#     _clean_up(ppss.lake_ss.parquet_dir)
-
-#     table = Table(table_name, table_df_schema, ppss)
-#     # query table and assert length
-#     # assert len(table.df) == 0
-
-#     table._append_to_csv(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
-
-#     file_path = os.path.join(
-#         ppss.lake_ss.parquet_dir,
-#         table_name,
-#         f"{table_name}_from_1701634400_to_1701634400.csv",
-#     )
-
-#     assert os.path.exists(file_path)
-
-#     with open(file_path, "r") as file:
-#         lines = file.readlines()
-#         assert len(lines) == 1001
-
-
-# def test_append_to_db(tmpdir):
-#     """
-#     Test that table is loading the data from file
-#     """
-#     st_timestr = "2023-12-03"
-#     fin_timestr = "2024-12-05"
-#     ppss = mock_ppss(
-#         ["binance BTC/USDT c 5m"],
-#         "sapphire-mainnet",
-#         str(tmpdir),
-#         st_timestr=st_timestr,
-#         fin_timestr=fin_timestr,
-#     )
-
-#     _clean_up(ppss.lake_ss.parquet_dir)
-
-#     table = Table(table_name, table_df_schema, ppss)
-
-#     # query table and assert length
-#     # assert len(table.df) == 0
-
-#     table._append_to_db(pl.DataFrame([mocked_object] * 1000, schema=table_df_schema))
-
-#     result = table.persistent_data_store.query_data(
-#         table.table_name, "SELECT * FROM {view_name}"
-#     )
-
-#     assert result["ID"][0] == "0x123"
-#     assert result["pair"][0] == "ADA-USDT"
-#     assert result["timeframe"][0] == "5m"
-#     assert result["predvalue"][0] is True
-#     assert len(result) == 1000
+    assert result["ID"][0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    assert result["pair"][0] == "ADA/USDT"
+    assert result["timeframe"][0] == "5m"
+    assert result["predvalue"][0] is True
+    assert len(result) == 8
