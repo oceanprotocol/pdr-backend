@@ -42,7 +42,7 @@ class SimPlotter:
         fig = plt.figure()
         self.fig = fig
 
-        gs = gridspec.GridSpec(2, 5, width_ratios=[3, 1, 1, 3, 5])
+        gs = gridspec.GridSpec(2, 6, width_ratios=[5, 1, 1, 0.6, 2, 3])
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
@@ -51,8 +51,10 @@ class SimPlotter:
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 2])
 
-        self.ax_aimodel_varimps = fig.add_subplot(gs[:, 3])
-        self.ax_aimodel_response = fig.add_subplot(gs[:, 4])
+        # col 3 is empty, for overflow of aimodel_varimps's y-axis labels
+        self.ax_aimodel_varimps = fig.add_subplot(gs[:, 4])
+        
+        self.ax_aimodel_response = fig.add_subplot(gs[:, 5])
 
         # attributes to help update plots' state quickly
         self.N: int = 0
@@ -94,6 +96,7 @@ class SimPlotter:
         # final pieces
         self.fig.set_size_inches(WIDTH, HEIGHT)
         self.fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
+        plt.subplots_adjust(wspace=0.3)
         plt.pause(0.001)
         self.plotted_before = True
 
