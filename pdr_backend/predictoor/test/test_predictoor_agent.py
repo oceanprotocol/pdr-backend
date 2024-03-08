@@ -237,7 +237,7 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 
 @enforce_types
 @pytest.mark.parametrize(
-    "up_ocean, down_ocean, up_native, down_native, expected",
+    "up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected",
     [
         (
             Eth(100).to_wei(),
@@ -266,18 +266,18 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
             Eth(0).to_wei(),
             Eth(2).to_wei(),
             False,
-        ),  # Up native balance too low
+        ),  # Up ROSE balance too low
         (
             Eth(100).to_wei(),
             Eth(100).to_wei(),
             Eth(2).to_wei(),
             Eth(0).to_wei(),
             False,
-        ),  # Down native balance too low
+        ),  # Down ROSE balance too low
     ],
 )
 def test_balance_check(
-    tmpdir, monkeypatch, up_ocean, down_ocean, up_native, down_native, expected
+    tmpdir, monkeypatch, up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected
 ):
     mock_model = MockModel()
     _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
@@ -288,12 +288,12 @@ def test_balance_check(
     agent = PredictoorAgent(ppss)
 
     agent.feed_contract.token = Mock()
-    agent.feed_contract.token.balanceOf.side_effect = [up_ocean, down_ocean]
-    mock_native_token = Mock()
-    mock_native_token.balanceOf.side_effect = [up_native, down_native]
+    agent.feed_contract.token.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
+    mock_ROSE_token = Mock()
+    mock_ROSE_token.balanceOf.side_effect = [up_ROSE, down_ROSE]
 
     with patch(
         "pdr_backend.predictoor.predictoor_agent.NativeToken",
-        return_value=mock_native_token,
+        return_value=mock_ROSE_token,
     ):
         assert agent.check_balances() == expected
