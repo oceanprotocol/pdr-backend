@@ -11,6 +11,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
+from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("payout")
 
@@ -90,7 +91,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     )
     logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
 
-    if claimable_rewards > 0:
+    if claimable_rewards > Eth(0):
         logger.info("Claiming wROSE rewards...")
         dfrewards_contract.claim_rewards(web3_config.owner, wROSE_addr)
     else:
@@ -100,7 +101,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     time.sleep(10)
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
-    if wROSE_bal == 0:
+    if wROSE_bal == Wei(0):
         logger.warning("wROSE balance is 0")
     else:
         logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.to_eth().amt_eth)

@@ -2,6 +2,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.trader_ss import TraderSS, inplace_make_trader_fast
+from pdr_backend.util.currency_types import Eth
 
 _D = {
     "sim_only": {
@@ -33,8 +34,8 @@ def test_trader_ss():
     assert ss.quote_str == "USDT"
 
     # derivative properties
-    assert ss.buy_amt_usd == 10.0
-    assert ss.init_holdings["USDT"] == 10000.0
+    assert ss.buy_amt_usd == Eth(10.0)
+    assert ss.init_holdings["USDT"] == Eth(10000.0)
 
     # setters
     ss.set_max_tries(12)
