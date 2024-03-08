@@ -92,7 +92,7 @@ def safe_fetch_ohlcv_dydx(
         )
         data = response.json()
 
-        dydx_data = []
+        raw_tohlcv_data = []
         key_name = next(iter(data))  # Get the first key in the dict
         items = data[key_name]
 
@@ -108,15 +108,15 @@ def safe_fetch_ohlcv_dydx(
                     float_or_none(item["close"]),
                     float_or_none(item["baseTokenVolume"]),
                 )
-                dydx_data.append(ohlcv_tuple)
+                raw_tohlcv_data.append(ohlcv_tuple)
 
-            return dydx_data
+            return raw_tohlcv_data
 
         if key_name == "errors" and items:
             errors = items[0]
             error_msg = tuple(errors.items())
-            dydx_data.append(error_msg)
-            return dydx_data
+            raw_tohlcv_data.append(error_msg)
+            return raw_tohlcv_data
 
         return None
 

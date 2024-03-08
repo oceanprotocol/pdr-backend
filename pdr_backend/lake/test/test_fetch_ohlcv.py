@@ -175,7 +175,7 @@ def test_safe_fetch_ohlcv_ccxt(exch):
             "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
-            1709139000000,
+            1709157000000, # 1709139000000
             61800,
             None,
             mock_dydx_response,
