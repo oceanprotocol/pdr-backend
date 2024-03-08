@@ -7,6 +7,7 @@ import polars as pl
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
+
 class PersistentDataStore(BaseDataStore):
     """
     A class to store and retrieve persistent data.

@@ -185,6 +185,28 @@ def test_get_gql_tables(mock_update):
 
     assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())
 
+
+def test_calc_start_ut(tmpdir):
+    """
+    Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
+    """
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+
+    st_ut = gql_data_factory._calc_start_ut(table)
+    assert st_ut.to_seconds() == 1701561601
+
+
 # TODO - Fix Table Tests
 # These are more Table + GQL Fetch tests
 
@@ -271,5 +293,3 @@ def test_get_gql_tables(mock_update):
 #     # test saves multiple times
 #     count_saves = printed_text.count("Saved")
 #     assert count_saves == 2
-
-

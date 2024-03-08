@@ -22,6 +22,7 @@ from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
+
 @pytest.fixture()
 def sample_payouts():
     return mock_payouts()
@@ -318,6 +319,7 @@ def _gql_datafactory_second_predictions_df():
 
     return predictions_df
 
+
 def _clean_up(tmpdir):
     for root, dirs, files in os.walk(tmpdir):
         for file in files:
@@ -328,7 +330,7 @@ def _clean_up(tmpdir):
             os.rmdir(os.path.join(root, directory))
 
 
-def _clean_up_persistent_data_store(tmpdir, table_name = None):
+def _clean_up_persistent_data_store(tmpdir, table_name=None):
     # Clean up PDS
     persistent_data_store = PersistentDataStore(str(tmpdir))
 

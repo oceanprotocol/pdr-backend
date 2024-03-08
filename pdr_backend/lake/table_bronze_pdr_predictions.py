@@ -1,4 +1,3 @@
-
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
@@ -26,16 +25,20 @@ bronze_pdr_predictions_schema = {
     "last_event_timestamp": Int64,
 }
 
+
 def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
     """
     @description
         Get the bronze pdr predictions data
     """
     # get the table
-    table = Table(bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss)
+    table = Table(
+        bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
+    )
 
     # process all the data
-    return table.PDS.query_data(f"""
+    return table.PDS.query_data(
+        f"""
         SELECT 
             pdr_predictions.ID as ID,
             string_split(pdr_predictions.ID, '-')[0] AS slot_id,
@@ -59,4 +62,5 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
             ON pdr_predictions.ID = pdr_payouts.ID
         WHERE pdr_predictions.timestamp >= {ppss.lake_ss.st_timestamp}
             AND pdr_predictions.timestamp <= {ppss.lake_ss.fin_timestamp}
-    """)
+    """
+    )

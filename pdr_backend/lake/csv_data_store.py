@@ -272,7 +272,7 @@ class CSVDataStore:
 
         file_names = sorted(os.listdir(folder_path))
         return os.path.join(folder_path, file_names[0]) if file_names else ""
-    
+
     def get_first_timestamp(self, dataset_identifier: str) -> Optional[int]:
         """
         Returns the first timestamp from the csv files in the folder
@@ -310,11 +310,15 @@ class CSVDataStore:
         @returns:
             Optional[int] - last timestamp from the csv files
         """
-        folder_path = self._get_folder_path(dataset_identifier)
-        last_file_path = self._get_last_file_path(folder_path)
-        if len(last_file_path):
-            return int(last_file_path.split("_")[3])
+        file_path = self._get_last_file_path(self._get_folder_path(dataset_identifier))
+        if len(file_path):
+            to_value = self._get_to_value(file_path)
+            if to_value > 0:
+                return to_value
 
+            # read the last record from the file
+            last_file = pl.read_csv(file_path)
+            return int(last_file["timestamp"][-1])
         return None
 
     def _get_last_file_row_count(self, dataset_identifier: str) -> Optional[int]:

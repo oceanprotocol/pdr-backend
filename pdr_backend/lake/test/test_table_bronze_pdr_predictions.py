@@ -9,7 +9,9 @@ from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )
-from pdr_backend.lake.table_bronze_pdr_predictions import get_bronze_pdr_predictions_data_with_SQL
+from pdr_backend.lake.table_bronze_pdr_predictions import (
+    get_bronze_pdr_predictions_data_with_SQL,
+)
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
@@ -61,20 +63,18 @@ def test_table_bronze_pdr_predictions(
 
     # Work 2: Execute full SQL query
     result = get_bronze_pdr_predictions_data_with_SQL(ppss)
-    
+
     # Final result should have 6 rows
     assert len(result) == 6
-    
+
     # Assert that there will be 1 null value in every column we're joining
     assert result["truevalue"].null_count() == 1
     assert result["stake"].null_count() == 1
     assert result["payout"].null_count() == 1
-    
-    # Validate stake is what we expect    
+
+    # Validate stake is what we expect
     target_stake = [5.46, 5.46, 3.46, 3.46, 3.46, None]
-    bronze_pdr_predictions_stake = (
-        result["stake"].to_list()
-    )
+    bronze_pdr_predictions_stake = result["stake"].to_list()
     for actual_stake, expected_stake in zip(bronze_pdr_predictions_stake, target_stake):
         if actual_stake is None:
             assert actual_stake == expected_stake
@@ -83,9 +83,7 @@ def test_table_bronze_pdr_predictions(
 
     # Validate payout is what we expect
     target_payout = [0.00, 10.93, 7.04, 7.16, 0.0, None]
-    bronze_pdr_predictions_payout = (
-        result["payout"].to_list()
-    )
+    bronze_pdr_predictions_payout = result["payout"].to_list()
     for actual_payout, expected_payout in zip(
         bronze_pdr_predictions_payout, target_payout
     ):

@@ -7,13 +7,11 @@ import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema, 
-    predictions_table_name
+    predictions_schema,
+    predictions_table_name,
 )
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.persistent_data_store import (
-    PersistentDataStore
-)
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 def _check_view_exists(persistent_data_store, table_name):
@@ -21,6 +19,7 @@ def _check_view_exists(persistent_data_store, table_name):
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
     ).fetchall()
     return [table_name in [table[0] for table in tables], table_name]
+
 
 def _clean_up_persistent_data_store(tmpdir, table_name):
     # Clean up PDS
@@ -62,7 +61,7 @@ def test_table_initialization(tmpdir):
 def test_persistent_table(
     _gql_datafactory_first_predictions_df,
     _gql_datafactory_second_predictions_df,
-    tmpdir
+    tmpdir,
 ):
     """
     Test that create table and append existing mock prediction data
@@ -79,14 +78,13 @@ def test_persistent_table(
 
     # Initialize Table, fill with data, validate
     table = Table(predictions_table_name, predictions_schema, ppss)
-    
+
     table.persistent_data_store._create_and_fill_table(
-        _gql_datafactory_first_predictions_df, 
-        predictions_table_name
+        _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
     assert _check_view_exists(table.persistent_data_store, predictions_table_name)
-    
+
     result = table.persistent_data_store.query_data(
         f"SELECT * FROM {predictions_table_name}"
     )
@@ -94,8 +92,7 @@ def test_persistent_table(
 
     # Add second batch of predictions, validate
     table.persistent_data_store.insert_to_table(
-        _gql_datafactory_second_predictions_df, 
-        predictions_table_name
+        _gql_datafactory_second_predictions_df, predictions_table_name
     )
 
     result = table.persistent_data_store.query_data(
@@ -103,7 +100,8 @@ def test_persistent_table(
     )
 
     assert len(result) == 8, "Length of the table is not as expected"
-    
+
+
 # TODO - Update table unit tests that show append_to_storage working
 # TODO - Focus on E2E fetch + ETL test. Do not worry about both append_to_csv + append_to_db.
 
@@ -159,7 +157,7 @@ def test_persistent_table(
 #     _clean_up(ppss.lake_ss.parquet_dir)
 
 #     table = Table(table_name, table_df_schema, ppss)
-    
+
 #     # query table and assert length
 #     # assert len(table.df) == 0
 

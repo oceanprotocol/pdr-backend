@@ -19,8 +19,10 @@ from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 # Step 1. ETL -> do_sync_step()
 # Step 2. ETL -> do_bronze_step()
 
+
 def _get_test_PDS(tmpdir):
     return PersistentDataStore(str(tmpdir))
+
 
 @enforce_types
 def get_filtered_timestamps_df(
@@ -161,7 +163,8 @@ def test_etl_do_bronze_step(
     pdr_predictions_records = pds_instance.query_data(
         f"""
             SELECT * FROM {predictions_table_name}
-        """)
+        """
+    )
     assert len(pdr_predictions_records) == 6
     # Work 3: Do bronze
     etl.do_bronze_step()
@@ -171,12 +174,13 @@ def test_etl_do_bronze_step(
     bronze_pdr_predictions_records = pds_instance.query_data(
         f"""
             SELECT * FROM bronze_pdr_predictions
-        """)
+        """
+    )
     assert len(bronze_pdr_predictions_records) == 6
-    
+
     # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
     bronze_pdr_predictions_df = bronze_pdr_predictions_records
-    
+
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
         bronze_pdr_predictions_df["contract"][0]
