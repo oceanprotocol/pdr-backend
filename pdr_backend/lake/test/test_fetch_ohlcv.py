@@ -73,7 +73,7 @@ mock_bad_timeframe_dydx_response = {
         {
             "value": "5m",
             "msg": "resolution must be a valid Candle Resolution, "
-            "one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
+            "one of 1MIN,5MINS,...",
             "param": "resolution",
             "location": "params",
         }
@@ -211,7 +211,7 @@ def test_safe_fetch_ohlcv_ccxt(exch):
             None,
             None,
             "resolution must be a valid Candle Resolution,"
-            + " one of 1MIN,5MINS,15MINS,30MINS,1HOUR,4HOURS,1DAY",
+            + " one of 1MIN,5MINS,...",
             mock_bad_timeframe_dydx_response,
         ),
         (
