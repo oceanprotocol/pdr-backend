@@ -79,50 +79,50 @@ def safe_fetch_ohlcv_dydx(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
+    if exch != "dydx":
+            return None
+    headers = {"Accept": "application/json"}
 
     try:
-        if exch != "dydx":
-            return None
-        headers = {"Accept": "application/json"}
         response = requests.get(
             f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}"
             f"&fromISO={since.to_iso_timestr()}&limit={limit}",
             headers=headers,
             timeout=20,
         )
-        data = response.json()
-
-        raw_tohlcv_data = []
-        key_name = next(iter(data))  # Get the first key in the dict
-        items = data[key_name]
-
-        if key_name == "candles" and items:
-            for item in items:
-                dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                timestamp = int(dt.timestamp() * 1000)
-                ohlcv_tuple = (
-                    timestamp,
-                    float_or_none(item["open"]),
-                    float_or_none(item["high"]),
-                    float_or_none(item["low"]),
-                    float_or_none(item["close"]),
-                    float_or_none(item["baseTokenVolume"]),
-                )
-                raw_tohlcv_data.append(ohlcv_tuple)
-
-            return raw_tohlcv_data
-
-        if key_name == "errors" and items:
-            errors = items[0]
-            error_msg = tuple(errors.items())
-            raw_tohlcv_data.append(error_msg)
-            return raw_tohlcv_data
-
-        return None
-
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
+
+    data = response.json()
+
+    raw_tohlcv_data = []
+    key_name = next(iter(data))  # Get the first key in the dict
+    items = data[key_name]
+
+    if key_name == "candles" and items:
+        for item in items:
+            dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp = int(dt.timestamp() * 1000)
+            ohlcv_tuple = (
+                timestamp,
+                float_or_none(item["open"]),
+                float_or_none(item["high"]),
+                float_or_none(item["low"]),
+                float_or_none(item["close"]),
+                float_or_none(item["baseTokenVolume"]),
+            )
+            raw_tohlcv_data.append(ohlcv_tuple)
+
+        return raw_tohlcv_data
+
+    if key_name == "errors" and items:
+        errors = items[0]
+        error_msg = tuple(errors.items())
+        raw_tohlcv_data.append(error_msg)
+        return raw_tohlcv_data
+
+    return None
 
 
 @enforce_types
