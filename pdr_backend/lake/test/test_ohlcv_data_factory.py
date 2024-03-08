@@ -320,3 +320,18 @@ def test_get_mergedohlcv_df_calls(
     factory._update_rawohlcv_files.assert_called()
     factory._load_rawohlcv_files.assert_called()
     mock_merge_rawohlcv_dfs.assert_called()
+
+
+@enforce_types
+def test_issue657_dataframe_constructor_error():
+    tohlcv_data = [
+        [1709887500000, 67289.04, 67390.0, 67274.7, 67300.0, 118.03242],
+        [1709887800000, 67300.01, 67320.0, 67256.4, 67256.41, 68.07976],
+        [1709888100000, 67256.4, 67291.97, 67200.01, 67208.55, 114.46873],
+        [1709888400000, 67208.56, 67213.19, 67040.76, 67070.82, 173.93243],
+        [1709888700000, 67070.82, 67120.57, 67050.0, 67100.0, 175.64183],
+        [1709889000000, 67100.0, 67223.54, 67095.16, 67216.42, 155.12712],
+    ]
+
+    # the following line will cause an issue (prior to issue #657 being fixed)
+    pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
