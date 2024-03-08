@@ -17,8 +17,8 @@ from pdr_backend.aimodel.aimodel_plotter import (
 )
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.constants import FONTSIZE
 
-FONTSIZE = 9
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
 
@@ -34,6 +34,9 @@ class SimPlotter:
         # engine state, ss
         self.st = st
         self.ppss = ppss
+
+        # so labels are above lines. Must be before figure()
+        plt.rcParams["axes.axisbelow"] = False
 
         # figure, subplots
         fig = plt.figure()

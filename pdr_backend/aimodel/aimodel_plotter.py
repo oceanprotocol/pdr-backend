@@ -7,6 +7,7 @@ import numpy as np
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.util.constants import FONTSIZE
 
 
 @enforce_types
@@ -95,8 +96,8 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
 
     # labels
     ax.set_title(f"Prob(true) vs {d.colnames[0]}")
-    ax.set_xlabel(d.colnames[0])
-    ax.set_ylabel("Prob(true)")
+    ax.set_xlabel(d.colnames[0], fontsize=FONTSIZE)
+    ax.set_ylabel("Prob(true)", fontsize=FONTSIZE)
 
     HEIGHT = 9  # magic number
     WIDTH = HEIGHT
@@ -179,8 +180,8 @@ def _plot_aimodel_contour(
     ax.scatter(impt_X[:, 0][yfalse], impt_X[:, 1][yfalse], s=5, c="r", label="false")
 
     ax.set_title("Contours = model response")
-    ax.set_xlabel(impt_colnames[0])
-    ax.set_ylabel(impt_colnames[1])
+    ax.set_xlabel(impt_colnames[0], fontsize=FONTSIZE)
+    ax.set_ylabel(impt_colnames[1], fontsize=FONTSIZE)
 
     HEIGHT = 9  # magic number
     WIDTH = HEIGHT
@@ -206,30 +207,38 @@ def plot_aimodel_varimps(
       imps_tup -- tuple of (imps_avg, imps_stddev)
       fig_ax -- None or (fig, ax) to easily embed into existing plot
     """
+    n = len(varnames)
     imps_avg, imps_stddev = imps_tup
 
-    # re-order in descending imps_avg
-    I = np.argsort(imps_avg)[::-1]
+    # re-order in ascending imps_avg 
+    I = np.argsort(imps_avg)
     imps_avg = imps_avg[I]
     imps_stddev = imps_stddev[I]
     varnames = [varnames[i] for i in I]
     
     # start fig
     if fig_ax is None:
+        # so labels are above lines. Must be before figure()
+        plt.rcParams["axes.axisbelow"] = False
+
         fig, ax = plt.subplots()
     else:
         fig, ax = fig_ax
         ax.cla()  # clear axis
 
     # plot
-    y_pos = np.arange(len(varnames))
-    error = np.random.rand(len(varnames))
+    ytick_ylocs = np.arange(n) # eg [0, 1, 2, .., 9] for 10 vars
 
-    ax.barh(y_pos, imps_avg, xerr=imps_stddev*2, align="center")
+    err_lw = 3 if n < 15 else 1
+    ax.barh(ytick_ylocs,
+            imps_avg,
+            color="0.5",
+            xerr=imps_stddev*2,
+            error_kw=dict(ecolor='0.9', lw=err_lw, capsize=0, capthick=0),
+            align="center")
     ax.set_xlim(left=0.0)
-    ax.set_yticks(y_pos, labels=varnames)
-    ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel("Rel importance")
+    ax.set_yticks(ytick_ylocs, labels=varnames, fontsize=FONTSIZE)
+    ax.set_xlabel("Rel importance", fontsize=FONTSIZE)
     ax.set_title("Variable importances")
 
 
