@@ -216,14 +216,14 @@ def plot_aimodel_varimps(
     imps_stddev = imps_stddev[I]
     varnames = [varnames[i] for i in I]
 
-    # if >60 vars, truncate to top 60+1
-    if n > 60:
-        rest_avg = sum(imps_avg[60:])
-        rest_stddev = np.average(imps_stddev[60:])
-        imps_avg = np.append(imps_avg[:60], rest_avg)
-        imps_stddev = np.append(imps_stddev[:60], rest_stddev)
-        varnames = varnames[:60] + ["rest"]
-        n = 60+1
+    # if >40 vars, truncate to top 40+1
+    if n > 40:
+        rest_avg = sum(imps_avg[40:])
+        rest_stddev = np.average(imps_stddev[40:])
+        imps_avg = np.append(imps_avg[:40], rest_avg)
+        imps_stddev = np.append(imps_stddev[:40], rest_stddev)
+        varnames = varnames[:40] + ["rest"]
+        n = 40+1
 
     # put in percent scales
     imps_avg = imps_avg * 100.0
