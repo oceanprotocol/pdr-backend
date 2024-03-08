@@ -117,7 +117,6 @@ class CSVDataStore:
                     t_end_time if len(data) >= remaining_rows else None,
                 )
 
-                print("new_file_path", new_file_path)
                 os.rename(last_file_path, new_file_path)
 
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
@@ -158,19 +157,35 @@ class CSVDataStore:
         """
         # let's split the string by "/" to get the last element
         file_signature = file_path.split("/")[-1]
-        
+
         # let's find the "from" index inside the string split
         signature_str_split = file_signature.split("_")
 
-        # let's find the from index and value
-        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
-        to_index = from_index + 3
-        
+        # let's find the from index and to_index
+        from_index = (
+            next(
+                (
+                    index
+                    for index, str_value in enumerate(signature_str_split)
+                    if "from" in str_value
+                ),
+                None,
+            )
+            + 1
+        )
+        to_index = from_index + 2
+
+        # if to_index is out of bounds, return None
         if to_index >= len(signature_str_split):
-            return 0
+            return None
+
+        # if to_index is not out of bounds, but only `_to_.csv` there is no to_value, return None
+        to_value = signature_str_split[to_index].replace(".csv", "")
+        if to_value == "":
+            return None
         
-        to_value = int(signature_str_split[to_index].replace(".csv", ""))
-        return to_value
+        # return the to_value
+        return int(to_value)
 
     def _get_from_value(self, file_path: str) -> int:
         """
@@ -189,23 +204,33 @@ class CSVDataStore:
 
         # let's find the "from" index inside the string split
         signature_str_split = file_signature.split("_")
-        
+
         # let's find the from index and value
-        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
+        from_index = (
+            next(
+                (
+                    index
+                    for index, str_value in enumerate(signature_str_split)
+                    if "from" in str_value
+                ),
+                None,
+            )
+            + 1
+        )
         from_value = int(signature_str_split[from_index])
-        
+
         return from_value
 
     def _get_file_paths(
-        self, folder_path: str, start_time: str, end_time: str
+        self, folder_path: str, start_time: int, end_time: int
     ) -> List[str]:
         """
         Returns a list of file paths in the given folder_path
         that contain the given start_time and end_time.
         @args:
             folder_path: str - path of the folder
-            start_time: str - start time of the data
-            end_time: str - end time of the data
+            start_time: int - start time of the data
+            end_time: int end time of the data
         @returns:
             List[str] - list of file paths
         """
@@ -213,21 +238,19 @@ class CSVDataStore:
         file_names = os.listdir(folder_path)
         file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
 
-        # find files which has a higher start time and lower end time
-        file_paths = [
-            file_path
-            for file_path in file_paths
-            # firstly, take the filename from the path (/path/to/file.csv -> file.csv)
-            # then, split the filename by "_" and take the 4th and 5th elements
-            # then, convert them to int and check if they are in the range
-            if self._get_from_value(file_path) >= int(start_time)
-            and (
-                self._get_to_value(file_path) <= int(end_time)
-                or self._get_to_value(file_path) == 0
-            )
-        ]
+        valid_paths = []
+        for file_path in file_paths:
+            _has_from_value = isinstance(self._get_from_value(file_path), int)
+            _has_to_value = isinstance(self._get_to_value(file_path), int)
+            
+            if (
+                (_has_from_value and self._get_from_value(file_path) >= start_time)
+                or (_has_to_value and self._get_to_value(file_path) >= start_time)
+                or self._get_from_value(file_path) == None
+            ):
+                valid_paths.append(file_path)
 
-        return file_paths
+        return valid_paths
 
     @enforce_types
     def has_data(self, dataset_identifier: str) -> bool:
@@ -244,26 +267,26 @@ class CSVDataStore:
         # check if the csv file has more than 0 bytes
         return any(
             os.path.getsize(file_path) > 0
-            for file_path in self._get_file_paths(folder_path, "0", "9999999999999")
+            for file_path in self._get_file_paths(folder_path, 0, 9999999999999)
         )
 
     @enforce_types
     def read(
         self,
         dataset_identifier: str,
-        st_ts: int,
-        end_ts: int,
+        start_time: int,
+        end_time: int,
         schema: Optional[SchemaDict] = None,
         filter: Optional[bool] = True,
     ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
         corresponding to the given dataset_identifier,
-        st_ts, and end_ts.
+        start_time, and end_time.
         @args:
             dataset_identifier: str - identifier of the dataset
-            st_ts: int - start time of the data
-            end_ts: int - end time of the data
+            start_time: int - start time of the data
+            end_time: int - end time of the data
         @returns:
             pl.DataFrame - data read from the csv file
         """
@@ -277,8 +300,8 @@ class CSVDataStore:
         if "timestamp" not in data.columns or filter is False:
             return data
 
-        return data.filter(data["timestamp"] >= st_ts).filter(
-            data["timestamp"] <= end_ts
+        return data.filter(data["timestamp"] >= start_time).filter(
+            data["timestamp"] <= end_time
         )
 
     def read_all(

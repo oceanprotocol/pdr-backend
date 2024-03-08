@@ -44,7 +44,7 @@ def test_table_initialization(tmpdir):
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -80,8 +80,6 @@ def test_csv_data_store(
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
     assert table.csv_data_store.has_data(predictions_table_name)
-
-    print(os.listdir(os.path.join(ppss.lake_ss.parquet_dir,table.table_name)))
 
     file_path = os.path.join(
         ppss.lake_ss.parquet_dir,
@@ -140,7 +138,10 @@ def test_persistent_store(
 
     assert len(result) == 8, "Length of the table is not as expected"
 
-    assert result["ID"][0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    assert (
+        result["ID"][0]
+        == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    )
     assert result["pair"][0] == "ADA/USDT"
     assert result["timeframe"][0] == "5m"
     assert result["predvalue"][0] is True
