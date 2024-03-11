@@ -79,6 +79,8 @@ def test_get_predictoors_info_bad_date_range(
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-30"
     ppss = mock_ppss(
@@ -90,8 +92,11 @@ def test_get_predictoors_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
+    predictions_table =  Table(table_name, predictions_df.schema, ppss)
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
+        "pdr_predictions": predictions_table
     }
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -133,6 +138,8 @@ def test_get_predictoors_info_bad_user_address(
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -144,8 +151,11 @@ def test_get_predictoors_info_bad_user_address(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
+        "pdr_predictions": predictions_table
     }
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"

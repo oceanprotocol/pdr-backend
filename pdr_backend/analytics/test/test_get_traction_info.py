@@ -75,6 +75,8 @@ def test_get_traction_info_empty_data_factory(
     mock_predictions_df,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -85,8 +87,11 @@ def test_get_traction_info_empty_data_factory(
         fin_timestr=fin_timestr,
     )
 
+    pdr_prediction_table = Table(table_name, predictions_schema, ppss)
+    pdr_prediction_table.append_to_storage(pl.DataFrame(schema=predictions_schema))
+
     mock_predictions_df.return_value = {
-        "pdr_predictions": Table(table_name, predictions_schema, ppss)
+        "pdr_predictions": pdr_prediction_table
     }
 
     with pytest.raises(AssertionError):
