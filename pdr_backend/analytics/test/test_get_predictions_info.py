@@ -5,6 +5,7 @@ import polars as pl
 from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 table_name = "pdr_predictions"
 
@@ -22,6 +23,8 @@ def test_get_predictions_info_main_mainnet(
     @description
         assert everything works as expected under normal conditions
     """
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -33,7 +36,8 @@ def test_get_predictions_info_main_mainnet(
     )
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = Table(table_name, predictions_df.schema, ppss)
-    predictions_table.df = predictions_df
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -87,6 +91,8 @@ def test_get_predictions_info_bad_date_range(
     @description
         assert date range filter asserts it has records before calculating stats
     """
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-21"
     ppss = mock_ppss(
@@ -98,9 +104,13 @@ def test_get_predictions_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
+        "pdr_predictions": predictions_table
     }
+
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -144,6 +154,8 @@ def test_get_predictions_info_bad_feed(
     @description
         assert feeds filter ends up with records before calculating stats
     """
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -155,8 +167,11 @@ def test_get_predictions_info_bad_feed(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {
-        "pdr_predictions": Table(table_name, predictions_df.schema, ppss)
+        "pdr_predictions": predictions_table
     }
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
@@ -183,11 +198,17 @@ def test_get_predictions_info_bad_feed(
 
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_get_predictions_info_empty(mock_get_gql_tables, tmpdir):
+def test_get_predictions_info_empty(
+    mock_get_gql_tables,
+    _gql_datafactory_first_predictions_df,
+    tmpdir
+):
     """
     @description
         assert data factory returns valid records before calculating stats
     """
+    _clean_up_persistent_data_store(tmpdir)
+
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -198,8 +219,12 @@ def test_get_predictions_info_empty(mock_get_gql_tables, tmpdir):
         fin_timestr=fin_timestr,
     )
 
+    predictions_df = _gql_datafactory_first_predictions_df
+
+    predictions_table = Table(table_name, {}, ppss)
+    predictions_table.append_to_storage(pl.DataFrame([], schema=predictions_df.schema))
     # mockt he gql data factory not having any records
-    mock_get_gql_tables.return_value = {"pdr_predictions": Table(table_name, {}, ppss)}
+    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 

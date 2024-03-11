@@ -43,6 +43,14 @@ def sample_truevals():
     return mock_truevals()
 
 
+@pytest.fixture()
+def _get_test_PDS():
+    def create_persistent_datastore(tmpdir):
+        return PersistentDataStore(str(tmpdir))
+
+    return create_persistent_datastore
+
+
 # pylint: disable=line-too-long
 _ETL_PAYOUT_TUPS = [
     (
@@ -299,8 +307,30 @@ def _gql_datafactory_etl_truevals_df():
 
 
 @pytest.fixture()
+def _mock_fetch_gql():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        return mock_first_predictions()
+
+    return fetch_function
+
+
+@pytest.fixture()
 def _gql_datafactory_first_predictions_df():
     _predictions = mock_first_predictions()
+    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df
+
+
+@pytest.fixture()
+def _gql_datafactory_1k_predictions_df():
+    _predictions = mock_first_predictions(500)
     predictions_df = _object_list_to_df(_predictions, predictions_schema)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
@@ -320,14 +350,18 @@ def _gql_datafactory_second_predictions_df():
     return predictions_df
 
 
-def _clean_up(tmpdir):
-    for root, dirs, files in os.walk(tmpdir):
-        for file in files:
-            os.remove(os.path.join(root, file))
-        for directory in dirs:
-            # clean up the directory
-            _clean_up(os.path.join(root, directory))
-            os.rmdir(os.path.join(root, directory))
+@pytest.fixture()
+def _clean_up_test_folder():
+    def _clean_up(tmpdir):
+        for root, dirs, files in os.walk(tmpdir):
+            for file in files:
+                os.remove(os.path.join(root, file))
+            for directory in dirs:
+                # clean up the directory
+                _clean_up(os.path.join(root, directory))
+                os.rmdir(os.path.join(root, directory))
+
+    return _clean_up
 
 
 def _clean_up_persistent_data_store(tmpdir, table_name=None):

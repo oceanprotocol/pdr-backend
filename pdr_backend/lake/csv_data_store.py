@@ -158,17 +158,27 @@ class CSVDataStore:
         """
         # let's split the string by "/" to get the last element
         file_signature = file_path.split("/")[-1]
-        
+
         # let's find the "from" index inside the string split
         signature_str_split = file_signature.split("_")
 
         # let's find the from index and value
-        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
-        to_index = from_index + 3
-        
+        from_index = (
+            next(
+                (
+                    index
+                    for index, str_value in enumerate(signature_str_split)
+                    if "from" in str_value
+                ),
+                None,
+            )
+            + 1
+        )
+        to_index = from_index + 2
+
         if to_index >= len(signature_str_split):
             return 0
-        
+
         to_value = int(signature_str_split[to_index].replace(".csv", ""))
         return to_value
 
@@ -180,54 +190,34 @@ class CSVDataStore:
         @returns:
             int - start time from the file_path
         """
-        # suppose the following file path "folder1/folder2/pdr_predictions_from_1701503000000_to_1701503000000.csv"
-        # now, we want to split the string, and then find if there is a "from" value and a "to" value
-        # keep in mind that the "to" value can be missing, if the file hasn't yet closed due to row limit
+        # suppose the following file path
+        # "folder1/folder2/pdr_predictions_from_1701503000000_to_1701503000000.csv"
+        # now, we want to split the string, and then find
+        # if there is a "from" value and a "to" value
+        # keep in mind that the "to" value can be missing,
+        # if the file hasn't yet closed due to row limit
 
         # let's split the string by "/" to get the last element
         file_signature = file_path.split("/")[-1]
 
         # let's find the "from" index inside the string split
         signature_str_split = file_signature.split("_")
-        
+
         # let's find the from index and value
-        from_index = next((index for index, str_value in enumerate(signature_str_split) if "from" in str_value), None) + 1
-        from_value = int(signature_str_split[from_index])
-        
-        return from_value
-
-    def _get_file_paths(
-        self, folder_path: str, start_time: str, end_time: str
-    ) -> List[str]:
-        """
-        Returns a list of file paths in the given folder_path
-        that contain the given start_time and end_time.
-        @args:
-            folder_path: str - path of the folder
-            start_time: str - start time of the data
-            end_time: str - end time of the data
-        @returns:
-            List[str] - list of file paths
-        """
-
-        file_names = os.listdir(folder_path)
-        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
-
-        # find files which has a higher start time and lower end time
-        file_paths = [
-            file_path
-            for file_path in file_paths
-            # firstly, take the filename from the path (/path/to/file.csv -> file.csv)
-            # then, split the filename by "_" and take the 4th and 5th elements
-            # then, convert them to int and check if they are in the range
-            if self._get_from_value(file_path) >= int(start_time)
-            and (
-                self._get_to_value(file_path) <= int(end_time)
-                or self._get_to_value(file_path) == 0
+        from_index = (
+            next(
+                (
+                    index
+                    for index, str_value in enumerate(signature_str_split)
+                    if "from" in str_value
+                ),
+                None,
             )
-        ]
+            + 1
+        )
+        from_value = int(signature_str_split[from_index])
 
-        return file_paths
+        return from_value
 
     @enforce_types
     def has_data(self, dataset_identifier: str) -> bool:
@@ -240,12 +230,11 @@ class CSVDataStore:
             bool - True if the csv files have data
         """
         folder_path = self._get_folder_path(dataset_identifier)
+        file_names = os.listdir(folder_path)
+        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
 
         # check if the csv file has more than 0 bytes
-        return any(
-            os.path.getsize(file_path) > 0
-            for file_path in self._get_file_paths(folder_path, "0", "9999999999999")
-        )
+        return any(os.path.getsize(file_path) > 0 for file_path in file_paths)
 
     @enforce_types
     def read(

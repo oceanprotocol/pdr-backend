@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl

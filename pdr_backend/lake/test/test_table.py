@@ -1,16 +1,11 @@
-from io import StringIO
 import os
-import sys
 
-from polars import Boolean, Float64, Int64, Utf8
-import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
@@ -44,12 +39,10 @@ def test_table_initialization(tmpdir):
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-
-    # TODO - PPSS should be using tmpdir
 
     table = Table(predictions_table_name, predictions_schema, ppss)
 
@@ -60,6 +53,7 @@ def test_table_initialization(tmpdir):
 
 def test_csv_data_store(
     _gql_datafactory_first_predictions_df,
+    _gql_datafactory_1k_predictions_df,
     tmpdir,
 ):
     """
@@ -81,7 +75,7 @@ def test_csv_data_store(
 
     assert table.csv_data_store.has_data(predictions_table_name)
 
-    print(os.listdir(os.path.join(ppss.lake_ss.parquet_dir,table.table_name)))
+    print(os.listdir(os.path.join(ppss.lake_ss.parquet_dir, table.table_name)))
 
     file_path = os.path.join(
         ppss.lake_ss.parquet_dir,
@@ -94,11 +88,24 @@ def test_csv_data_store(
     with open(file_path, "r") as file:
         lines = file.readlines()
         assert len(lines) == 3
+        file.close()
 
-    # TODO - Add support for verifying 1001 rows
-    #     with open(file_path, "r") as file:
-    #         lines = file.readlines()
-    #         assert len(lines) == 1001
+    # Add second batch of predictions, validate
+    table._append_to_csv(_gql_datafactory_1k_predictions_df)
+
+    files = os.listdir(os.path.join(ppss.lake_ss.parquet_dir, table.table_name))
+    files.sort(reverse=True)
+
+    assert len(files) == 2
+
+    file_path = os.path.join(
+        ppss.lake_ss.parquet_dir,
+        table.table_name,
+        files[0],
+    )
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        assert len(lines) == 1001
 
 
 def test_persistent_store(
@@ -140,8 +147,37 @@ def test_persistent_store(
 
     assert len(result) == 8, "Length of the table is not as expected"
 
-    assert result["ID"][0] == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
+    assert (
+        result["ID"][0]
+        == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"  # pylint: disable=line-too-long
+    )
     assert result["pair"][0] == "ADA/USDT"
     assert result["timeframe"][0] == "5m"
     assert result["predvalue"][0] is True
     assert len(result) == 8
+
+
+def test_get_records(tmpdir, _gql_datafactory_first_predictions_df):
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    table = Table(predictions_table_name, predictions_schema, ppss)
+    table.PDS._create_and_fill_table(
+        _gql_datafactory_first_predictions_df, predictions_table_name
+    )
+
+    records = table.get_records()
+
+    assert len(records) == len(_gql_datafactory_first_predictions_df)
+    assert records["ID"][0] == _gql_datafactory_first_predictions_df["ID"][0]
+    assert records["pair"][0] == _gql_datafactory_first_predictions_df["pair"][0]
+    assert (
+        records["timeframe"][0] == _gql_datafactory_first_predictions_df["timeframe"][0]
+    )

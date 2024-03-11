@@ -51,13 +51,13 @@ def test_table_bronze_pdr_predictions(
 
     # truevals should have 6
     result_truevals = gql_tables["pdr_truevals"].PDS.query_data(
-        f"SELECT * FROM pdr_truevals"
+        "SELECT * FROM pdr_truevals"
     )
     assert len(result_truevals) == 6
 
     # payouts should have 6
     result_payouts = gql_tables["pdr_payouts"].PDS.query_data(
-        f"SELECT * FROM pdr_payouts"
+        "SELECT * FROM pdr_payouts"
     )
     assert len(result_payouts) == 5
 

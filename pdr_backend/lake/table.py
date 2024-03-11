@@ -17,27 +17,16 @@ class Table:
         self.ppss = ppss
         self.table_name = table_name
         self.df_schema = df_schema
-        self.df = pl.DataFrame([], schema=df_schema)
-        print("self.df", self.df)
+
         self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
         self.PDS = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
 
-        self.load()
-
     @enforce_types
-    def load(self):
-        """
-        Read the data from the Parquet file into a DataFrame object
-        """
-        print(f"Loading data for {self.table_name}")
-
-        self.df = pl.DataFrame([], schema=self.df_schema)
-        print("self.df", self.df)
-
     def append_to_storage(self, data: pl.DataFrame):
         self._append_to_csv(data)
         self._append_to_db(data)
 
+    @enforce_types
     def _append_to_csv(self, data: pl.DataFrame):
         """
         Append the data from the DataFrame object into the CSV file
@@ -52,6 +41,7 @@ class Table:
             f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
         )
 
+    @enforce_types
     def _append_to_db(self, data: pl.DataFrame):
         """
         Append the data from the DataFrame object into the database
@@ -80,3 +70,19 @@ class Table:
         except Exception as e:
             print(f"Error fetching last record from PDS: {e}")
             return None
+
+    @enforce_types
+    def get_records(
+        self,
+        source: Optional[str] = "db",
+    ) -> Optional[pl.DataFrame]:
+        """
+        Get the records from the persistent data store
+
+        @returns
+            pl.DataFrame
+        """
+        if source == "db":
+            return self.PDS.query_data(f"SELECT * FROM {self.table_name}")
+
+        return self.csv_data_store.read_all(self.table_name, schema=self.df_schema)

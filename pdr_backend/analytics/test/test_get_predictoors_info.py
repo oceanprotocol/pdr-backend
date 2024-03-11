@@ -7,6 +7,7 @@ import polars as pl
 from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 table_name = "pdr_predictoors"
 
@@ -20,6 +21,7 @@ def test_get_predictoors_info_main_mainnet(
     _gql_datafactory_first_predictions_df,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -32,7 +34,8 @@ def test_get_predictoors_info_main_mainnet(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = Table(table_name, predictions_df.schema, ppss)
-    predictions_table.df = predictions_df
+    predictions_table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"

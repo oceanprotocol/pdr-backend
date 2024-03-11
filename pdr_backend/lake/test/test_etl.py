@@ -12,16 +12,11 @@ from pdr_backend.lake.table_pdr_predictions import (
 )
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
 # Step 2. ETL -> do_bronze_step()
-
-
-def _get_test_PDS(tmpdir):
-    return PersistentDataStore(str(tmpdir))
 
 
 @enforce_types
@@ -41,8 +36,11 @@ def test_setup_etl(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _get_test_PDS,
     tmpdir,
 ):
+    _clean_up_persistent_data_store(tmpdir)
+
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -72,9 +70,9 @@ def test_setup_etl(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    gql_tables["pdr_predictions"].df = preds
-    gql_tables["pdr_truevals"].df = truevals
-    gql_tables["pdr_payouts"].df = payouts
+    gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].append_to_storage(payouts)
 
     mock_get_gql_tables.return_value = gql_tables
 
@@ -91,22 +89,27 @@ def test_setup_etl(
     # Work 2: Complete ETL sync step - Assert 3 gql_dfs
     etl.do_sync_step()
 
+    pds_instance = _get_test_PDS(tmpdir)
+
     # Assert original gql has 6 predictions, but we only got 5 due to date
     assert len(etl.tables) == 3
-    assert len(etl.tables["pdr_predictions"].df) == 5
+    pdr_predictions_df = pds_instance.query_data("SELECT * FROM pdr_predictions")
+    assert len(pdr_predictions_df) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
-    assert len(etl.tables["pdr_payouts"].df) != len(_gql_datafactory_etl_payouts_df)
-    assert len(etl.tables["pdr_predictions"].df) != len(
-        _gql_datafactory_etl_predictions_df
-    )
-    assert len(etl.tables["pdr_truevals"].df) != len(_gql_datafactory_etl_truevals_df)
+    pdr_payouts_df = pds_instance.query_data("SELECT * FROM pdr_payouts")
+    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
+    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
+
+    pdr_truevals_df = pds_instance.query_data("SELECT * FROM pdr_truevals")
+
+    assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all 3 dfs
-    assert len(etl.tables["pdr_payouts"].df) == 4
-    assert len(etl.tables["pdr_predictions"].df) == 5
-    assert len(etl.tables["pdr_truevals"].df) == 5
+    assert len(pdr_payouts_df) == 4
+    assert len(pdr_predictions_df) == 5
+    assert len(pdr_truevals_df) == 5
 
 
 @enforce_types
@@ -116,6 +119,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _get_test_PDS,
     tmpdir,
 ):
     _clean_up_persistent_data_store(tmpdir)
@@ -159,7 +163,6 @@ def test_etl_do_bronze_step(
     etl.do_sync_step()
 
     pds_instance = _get_test_PDS(tmpdir)
-    ## assert len(etl.tables["pdr_predictions"].df) == 6
     pdr_predictions_records = pds_instance.query_data(
         f"""
             SELECT * FROM {predictions_table_name}
@@ -170,11 +173,8 @@ def test_etl_do_bronze_step(
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    ## assert len(etl.tables["bronze_pdr_predictions"].df) == 6
     bronze_pdr_predictions_records = pds_instance.query_data(
-        f"""
-            SELECT * FROM bronze_pdr_predictions
-        """
+        "SELECT * FROM bronze_pdr_predictions"
     )
     assert len(bronze_pdr_predictions_records) == 6
 
