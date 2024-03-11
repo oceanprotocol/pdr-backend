@@ -349,7 +349,7 @@ class _MockPredictoorContractWithTracking:
     def OCEAN(self):
         return self.token
 
-        @property
+    @property
     def ROSE(self):
         return self.token
 
