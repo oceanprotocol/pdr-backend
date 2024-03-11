@@ -312,6 +312,9 @@ def _mock_fetch_gql():
     def fetch_function(
         network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
     ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
         return mock_first_predictions()
 
     return fetch_function

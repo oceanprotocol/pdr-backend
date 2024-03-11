@@ -243,7 +243,7 @@ class CSVDataStore:
         st_ts: int,
         end_ts: int,
         schema: Optional[SchemaDict] = None,
-        filter: Optional[bool] = True,
+        filter_args: Optional[bool] = True,
     ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
@@ -263,7 +263,7 @@ class CSVDataStore:
 
         # if the data is not empty,
         # check the timestamp column exists and is of type int64
-        if "timestamp" not in data.columns or filter is False:
+        if "timestamp" not in data.columns or filter_args is False:
             return data
 
         return data.filter(data["timestamp"] >= st_ts).filter(
