@@ -183,7 +183,7 @@ class CSVDataStore:
         to_value = signature_str_split[to_index].replace(".csv", "")
         if to_value == "":
             return None
-        
+
         # return the to_value
         return int(to_value)
 
@@ -245,7 +245,7 @@ class CSVDataStore:
         for file_path in file_paths:
             _has_from_value = isinstance(self._get_from_value(file_path), int)
             _has_to_value = isinstance(self._get_to_value(file_path), int)
-            
+
             if (
                 (_has_from_value and self._get_from_value(file_path) >= start_time)
                 or (_has_to_value and self._get_to_value(file_path) >= start_time)

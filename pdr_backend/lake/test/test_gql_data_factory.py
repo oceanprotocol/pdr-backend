@@ -96,9 +96,9 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     assert last_record["timeframe"][0] == "5m"
 
 
-def test_get_records(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
+def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     """
-    Test GQLDataFactory get_records calls the update function for all the tables
+    Test GQLDataFactory update calls the getting the data from tables
     """
     _clean_up_test_folder(tmpdir)
     st_timestr = "2023-12-03"
@@ -123,12 +123,14 @@ def test_get_records(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
-    last_record = gql_data_factory.get_records("db")
-    
-    assert last_record is not None
-    assert len(last_record) > 0
-    assert last_record["pair"][0] == "BTC/USDT"
-    assert last_record["timeframe"][0] == "5m"
+    all_reacords = gql_data_factory.record_config["tables"][
+        "pdr_predictions"
+    ].get_records()
+
+    assert all_reacords is not None
+    assert len(all_reacords) > 0
+    assert all_reacords["pair"][0] == "BTC/USDT"
+    assert all_reacords["timeframe"][0] == "5m"
 
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
