@@ -92,12 +92,10 @@ def test_get_predictoors_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table =  Table(table_name, predictions_df.schema, ppss)
+    predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.append_to_storage(predictions_df)
 
-    mock_get_gql_tables.return_value = {
-        "pdr_predictions": predictions_table
-    }
+    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -154,9 +152,7 @@ def test_get_predictoors_info_bad_user_address(
     predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.append_to_storage(predictions_df)
 
-    mock_get_gql_tables.return_value = {
-        "pdr_predictions": predictions_table
-    }
+    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"
 
