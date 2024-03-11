@@ -161,7 +161,7 @@ class CSVDataStore:
         # let's find the "from" index inside the string split
         signature_str_split = file_signature.split("_")
 
-        # let's find the from index and to_index
+        # let's find the from index and value
         from_index = (
             next(
                 (
@@ -195,9 +195,12 @@ class CSVDataStore:
         @returns:
             int - start time from the file_path
         """
-        # suppose the following file path "folder1/folder2/pdr_predictions_from_1701503000000_to_1701503000000.csv"
-        # now, we want to split the string, and then find if there is a "from" value and a "to" value
-        # keep in mind that the "to" value can be missing, if the file hasn't yet closed due to row limit
+        # suppose the following file path
+        # "folder1/folder2/pdr_predictions_from_1701503000000_to_1701503000000.csv"
+        # now, we want to split the string, and then find
+        # if there is a "from" value and a "to" value
+        # keep in mind that the "to" value can be missing,
+        # if the file hasn't yet closed due to row limit
 
         # let's split the string by "/" to get the last element
         file_signature = file_path.split("/")[-1]
@@ -263,12 +266,11 @@ class CSVDataStore:
             bool - True if the csv files have data
         """
         folder_path = self._get_folder_path(dataset_identifier)
+        file_names = os.listdir(folder_path)
+        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
 
         # check if the csv file has more than 0 bytes
-        return any(
-            os.path.getsize(file_path) > 0
-            for file_path in self._get_file_paths(folder_path, 0, 9999999999999)
-        )
+        return any(os.path.getsize(file_path) > 0 for file_path in file_paths)
 
     @enforce_types
     def read(
@@ -277,7 +279,7 @@ class CSVDataStore:
         start_time: int,
         end_time: int,
         schema: Optional[SchemaDict] = None,
-        filter: Optional[bool] = True,
+        filter_args: Optional[bool] = True,
     ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
@@ -297,7 +299,7 @@ class CSVDataStore:
 
         # if the data is not empty,
         # check the timestamp column exists and is of type int64
-        if "timestamp" not in data.columns or filter is False:
+        if "timestamp" not in data.columns or filter_args is False:
             return data
 
         return data.filter(data["timestamp"] >= start_time).filter(

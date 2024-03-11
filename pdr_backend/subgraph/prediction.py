@@ -74,9 +74,10 @@ def mock_prediction(prediction_tuple: tuple) -> Prediction:
 
 
 @enforce_types
-def mock_first_predictions() -> List[Prediction]:
+def mock_first_predictions(multiplier: int = 1) -> List[Prediction]:
     return [
-        mock_prediction(prediction_tuple) for prediction_tuple in _FIRST_PREDICTION_TUPS
+        mock_prediction(prediction_tuple)
+        for prediction_tuple in _FIRST_PREDICTION_TUPS * multiplier
     ]
 
 

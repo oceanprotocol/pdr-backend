@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
@@ -109,12 +108,7 @@ class GQLDataFactory:
         print(f"  Data fin: {self.ppss.lake_ss.st_timestamp.pretty_timestr()}")
 
         self._update()
-
         logger.info("Get historical data across many subgraphs. Done.")
-
-        # postconditions
-        for _, table in self.record_config["tables"].items():
-            assert isinstance(table.df, pl.DataFrame)
 
         return self.record_config["tables"]
 

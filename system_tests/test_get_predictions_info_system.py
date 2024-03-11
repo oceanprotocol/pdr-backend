@@ -54,7 +54,8 @@ def test_get_predictions_info_system(
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     table = Table("pdr_predictions", predictions_schema, ppss)
-    table.df = predictions_df
+    table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {"pdr_predictions": table}
     mock_get_feed_summary_stats.return_value = predictions_df
 
