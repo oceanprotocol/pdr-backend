@@ -11,12 +11,14 @@ from pdr_backend.accuracy.app import (
     calculate_statistics_for_all_assets,
 )
 from pdr_backend.subgraph.subgraph_slot import PredictSlot
+from pdr_backend.util.time_types import UnixTimeS
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
-    slot="12345",
-    trueValues=[{"ID": "1", "trueValue": True}],
+    timestamp=12345,
+    slot=12345,
+    trueval=True,
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
 )
@@ -24,6 +26,7 @@ SAMPLE_PREDICT_SLOT = PredictSlot(
 
 @enforce_types
 def test_calculate_prediction_result():
+
     # Test the calculate_prediction_prediction_result function with expected inputs
     result = calculate_prediction_result(150.0, 200.0)
     assert result
@@ -41,7 +44,7 @@ def test_process_single_slot():
         correct_predictions,
         slots_evaluated,
     ) = process_single_slot(
-        slot=SAMPLE_PREDICT_SLOT, end_of_previous_day_timestamp=12340
+        slot=SAMPLE_PREDICT_SLOT, end_of_previous_day_timestamp=UnixTimeS(12340)
     )
 
     assert staked_yesterday == 0.0
@@ -59,7 +62,8 @@ def test_aggregate_statistics():
         total_correct_predictions,
         total_slots_evaluated,
     ) = aggregate_statistics(
-        slots=[SAMPLE_PREDICT_SLOT], end_of_previous_day_timestamp=12340
+        slots=[SAMPLE_PREDICT_SLOT],
+        end_of_previous_day_timestamp=UnixTimeS(12340),
     )
     assert total_staked_yesterday == 0.0
     assert total_staked_today == 100.0
@@ -68,7 +72,7 @@ def test_aggregate_statistics():
 
 
 @enforce_types
-@patch("pdr_backend.accuracy.app.fetch_slots_for_all_assets")
+@patch("pdr_backend.accuracy.app.fetch_slots")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Mocks
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
@@ -80,12 +84,14 @@ def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     statistics = calculate_statistics_for_all_assets(
         asset_ids=["0xAsset"],
         contracts_list=contracts_list,
-        start_ts_param=1000,
-        end_ts_param=2000,
+        start_ts_param=UnixTimeS(91000),
+        end_ts_param=UnixTimeS(92000),
         network="mainnet",
     )
 
     print("test_calculate_statistics_for_all_assets", statistics)
     # Verify
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
-    mock_fetch_slots.assert_called_once_with(["0xAsset"], 1000, 2000, "mainnet")
+    mock_fetch_slots.assert_called_once_with(
+        UnixTimeS(91000), UnixTimeS(92000), ["0xAsset"], 1000, 0, "mainnet"
+    )

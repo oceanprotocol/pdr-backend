@@ -20,6 +20,7 @@ from pdr_backend.util.constants import (
     SAPPHIRE_MAINNET_CHAINID,
     SAPPHIRE_TESTNET_CHAINID,
 )
+from pdr_backend.util.time_types import UnixTimeS
 
 _KEYS = KeyAPI(NativeECCBackend)
 logger = logging.getLogger("web3_config")
@@ -39,6 +40,9 @@ class Web3Config:
                 construct_sign_and_send_raw_middleware(self.account)
             )
             self.w3.middleware_onion.add(http_retry_request_middleware)
+
+    def copy_with_pk(self, pk: str):
+        return Web3Config(self.rpc_url, pk)
 
     def get_block(
         self, block: BlockIdentifier, full_transactions: bool = False, tries: int = 0
@@ -102,6 +106,6 @@ class Web3Config:
         return int(block["gasLimit"] * 0.99)
 
     @enforce_types
-    def get_current_timestamp(self):
+    def get_current_timestamp(self) -> UnixTimeS:
         """Returns latest block"""
-        return self.get_block("latest")["timestamp"]
+        return UnixTimeS(self.get_block("latest")["timestamp"])

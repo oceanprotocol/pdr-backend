@@ -11,17 +11,16 @@ from pdr_backend.ppss.aimodel_ss import APPROACHES, AimodelSS
 @enforce_types
 def test_aimodel_ss_happy1():
     d = {
-        "approach": "LIN",
+        "approach": "LinearLogistic",
         "max_n_train": 7,
         "autoregressive_n": 3,
         "input_feeds": ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"],
     }
     ss = AimodelSS(d)
-    assert isinstance(ss.copy(), AimodelSS)
 
     # yaml properties
     assert ss.feeds_strs == ["kraken ETH/USDT hc", "binanceus ETH/USDT,TRX/DAI h"]
-    assert ss.approach == "LIN"
+    assert ss.approach == "LinearLogistic"
     assert ss.max_n_train == 7
     assert ss.autoregressive_n == 3
 
@@ -67,7 +66,7 @@ def test_aimodel_ss_happy2():
 @enforce_types
 def test_aimodel_ss_unhappy1():
     d = {
-        "approach": "LIN",
+        "approach": "LinearLogistic",
         "max_n_train": 7,
         "autoregressive_n": 3,
         "input_feeds": ["kraken ETH/USDT"],  # missing a signal like "c"

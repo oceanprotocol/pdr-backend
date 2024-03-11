@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -9,6 +9,7 @@ from pdr_backend.contract.fixed_rate import FixedRate
 from pdr_backend.contract.token import Token
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.mathutil import from_wei, string_to_bytes32, to_wei
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("predictoor_contract")
 
@@ -17,9 +18,12 @@ logger = logging.getLogger("predictoor_contract")
 class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
+        self.set_token(web3_pp)
+        self.last_allowance: Dict[str, int] = {}
+
+    def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
         self.token = Token(web3_pp, stake_token)
-        self.last_allowance = 0
 
     def is_valid_subscription(self):
         """Does this account have a subscription to this feed yet?"""
@@ -175,15 +179,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         seconds_per_epoch = self.get_secondsPerEpoch()
         return int(current_epoch_ts / seconds_per_epoch)
 
-    def get_current_epoch_ts(self) -> int:
+    def get_current_epoch_ts(self) -> UnixTimeS:
         """returns the current candle start timestamp"""
-        return self.contract_instance.functions.curEpoch().call()
+        return UnixTimeS(self.contract_instance.functions.curEpoch().call())
 
     def get_secondsPerEpoch(self) -> int:
         """How many seconds are in each epoch? (According to contract)"""
         return self.contract_instance.functions.secondsPerEpoch().call()
 
-    def get_agg_predval(self, timestamp: int) -> Tuple[float, float]:
+    def get_agg_predval(self, timestamp: UnixTimeS) -> Tuple[float, float]:
         """
         @description
           Get aggregated prediction value.
@@ -202,7 +206,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         ).call(call_params)
         return from_wei(nom_wei), from_wei(denom_wei)
 
-    def payout_multiple(self, slots: List[int], wait_for_receipt: bool = True):
+    def payout_multiple(self, slots: List[UnixTimeS], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
         call_params = self.web3_pp.tx_call_params()
         try:
@@ -234,15 +238,17 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
             logger.error(e)
             return None
 
-    def soonest_timestamp_to_predict(self, timestamp: int) -> int:
+    def soonest_timestamp_to_predict(self, timestamp: UnixTimeS) -> int:
         """Returns the soonest epoch to predict (expressed as a timestamp)"""
-        return self.contract_instance.functions.soonestEpochToPredict(timestamp).call()
+        return UnixTimeS(
+            self.contract_instance.functions.soonestEpochToPredict(timestamp).call()
+        )
 
     def submit_prediction(
         self,
         predicted_value: bool,
         stake_amt: float,
-        prediction_ts: int,
+        prediction_ts: UnixTimeS,
         wait_for_receipt=True,
     ):
         """
@@ -266,14 +272,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         stake_amt_wei = to_wei(stake_amt)
 
         # Check allowance first, only approve if needed
-        if self.last_allowance <= 0:
-            self.last_allowance = self.token.allowance(
+        allowance = self.last_allowance.get(self.config.owner, 0)
+        if allowance <= 0:
+            self.last_allowance[self.config.owner] = self.token.allowance(
                 self.config.owner, self.contract_address
             )
-        if self.last_allowance < stake_amt_wei:
+        if allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, MAX_UINT)
-                self.last_allowance = MAX_UINT
+                self.last_allowance[self.config.owner] = MAX_UINT
             except Exception as e:
                 logger.error(
                     "Error while approving the contract to spend tokens: %s", e
@@ -293,7 +300,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     predicted_value, stake_amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance -= stake_amt_wei
+            self.last_allowance[self.config.owner] -= stake_amt_wei
             logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
@@ -308,7 +315,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
         """Returns the timeout for submitting truevals, according to contract"""
         return self.contract_instance.functions.trueValSubmitTimeout().call()
 
-    def get_prediction(self, slot: int, address: str):
+    def get_prediction(self, slot: UnixTimeS, address: str):
         """Returns the prediction made by this account, for
         the specified time slot and address."""
         auth_signature = self.config.get_auth_signature()

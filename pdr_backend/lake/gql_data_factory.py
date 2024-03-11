@@ -3,7 +3,6 @@ from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.table import Table
-from pdr_backend.util.timeutil import current_ut_ms, pretty_timestr
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -23,6 +22,10 @@ from pdr_backend.lake.table_pdr_payouts import (
     payouts_schema,
     payouts_table_name,
 )
+from pdr_backend.lake.table_pdr_slots import (
+    slots_schema,
+    slots_table_name,
+)
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.subgraph.subgraph_subscriptions import (
     fetch_filtered_subscriptions,
@@ -31,6 +34,8 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
+from pdr_backend.subgraph.subgraph_slot import fetch_slots
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -39,8 +44,8 @@ logger = logging.getLogger("gql_data_factory")
 class GQLDataFactory:
     """
     Roles:
-    - From each GQL API, fill >=1 gql_dfs -> parquet files data lake
-    - From gql_dfs, calculate other dfs and stats
+    - From each GQL API, fill >=1 gql_tables -> parquet files data lake
+    - From gql_tables, calculate other dfs and stats
     - All timestamps, after fetching, are transformed into milliseconds wherever appropriate
 
     Finally:
@@ -74,12 +79,14 @@ class GQLDataFactory:
                 ),
                 "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
                 "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+                "pdr_slots": Table(slots_table_name, slots_schema, ppss),
             },
             "fetch_functions": {
                 "pdr_predictions": fetch_filtered_predictions,
                 "pdr_subscriptions": fetch_filtered_subscriptions,
                 "pdr_truevals": fetch_truevals,
                 "pdr_payouts": fetch_payouts,
+                "pdr_slots": fetch_slots,
             },
             "config": {
                 "contract_list": contract_list,
@@ -101,8 +108,8 @@ class GQLDataFactory:
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
 
-        print(f"  Data start: {pretty_timestr(self.ppss.lake_ss.st_timestamp)}")
-        print(f"  Data fin: {pretty_timestr(self.ppss.lake_ss.st_timestamp)}")
+        print(f"  Data start: {self.ppss.lake_ss.st_timestamp.pretty_timestr()}")
+        print(f"  Data fin: {self.ppss.lake_ss.st_timestamp.pretty_timestr()}")
 
         self._update()
 
@@ -134,8 +141,8 @@ class GQLDataFactory:
             filename = table._parquet_filename()
             st_ut = table._calc_start_ut(filename)
             fin_ut = self.ppss.lake_ss.fin_timestamp
-            print(f"      Aim to fetch data from start time: {pretty_timestr(st_ut)}")
-            if st_ut > min(current_ut_ms(), fin_ut):
+            print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
+            if st_ut > min(UnixTimeMs.now(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
             # to satisfy mypy, get an explicit function pointer

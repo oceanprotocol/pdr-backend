@@ -9,6 +9,7 @@ from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("subgraph")
 
@@ -29,14 +30,12 @@ class FilterMode(Enum):
 # pylint: disable=too-many-statements
 @enforce_types
 def fetch_filtered_predictions(
-    start_ts: int,
-    end_ts: int,
-    filters: List[str],
+    start_ts: UnixTimeS,
+    end_ts: UnixTimeS,
+    addresses: List[str],
     first: int,
     skip: int,
-    network: str,
-    payout_only: bool = True,
-    trueval_only: bool = True,
+    network: str = "mainnet",
 ) -> List[Prediction]:
     """
     Fetches predictions from a subgraph within a specified time range
@@ -50,7 +49,7 @@ def fetch_filtered_predictions(
     Args:
         start_ts: The starting Unix timestamp for the query range.
         end_ts: The ending Unix timestamp for the query range.
-        filters: A list of strings representing the filter
+        addresses: A list of strings representing the filter
             values (contract addresses or predictor IDs).
         network: A string indicating the blockchain network to query ('mainnet' or 'testnet').
         filter_mode: An instance of FilterMode indicating whether to filter
@@ -62,7 +61,6 @@ def fetch_filtered_predictions(
     Raises:
         Exception: If the specified network is neither 'mainnet' nor 'testnet'.
     """
-    filter_mode = FilterMode.CONTRACT_TS
 
     if network not in ["mainnet", "testnet"]:
         raise Exception("Invalid network, pick mainnet or testnet")
@@ -70,17 +68,10 @@ def fetch_filtered_predictions(
     predictions: List[Prediction] = []
 
     # Convert filters to lowercase
-    filters = [f.lower() for f in filters]
+    filters = [f.lower() for f in addresses]
 
     # pylint: disable=line-too-long
-    if filter_mode == FilterMode.NONE:
-        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
-    elif filter_mode == FilterMode.CONTRACT_TS:
-        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
-    elif filter_mode == FilterMode.CONTRACT:
-        where_clause = f", where: {{slot_: {{predictContract_in: {json.dumps(filters)}, slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
-    elif filter_mode == FilterMode.PREDICTOOR:
-        where_clause = f", where: {{user_: {{id_in: {json.dumps(filters)}}}, slot_: {{slot_gt: {start_ts}, slot_lt: {end_ts}}}}}"
+    where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
 
     query = f"""
         {{
@@ -133,6 +124,7 @@ def fetch_filtered_predictions(
         return []
 
     data = result["data"].get("predictPredictions", [])
+    print(len(data))
     if len(data) == 0:
         return []
 
@@ -144,8 +136,8 @@ def fetch_filtered_predictions(
         pair = info["pair"]
         timeframe = info["timeframe"]
         source = info["source"]
-        timestamp = prediction_sg_dict["timestamp"]
-        slot = prediction_sg_dict["slot"]["slot"]
+        timestamp = UnixTimeS(int(prediction_sg_dict["timestamp"]))
+        slot = UnixTimeS(int(prediction_sg_dict["slot"]["slot"]))
         user = prediction_sg_dict["user"]["id"]
         address = prediction_sg_dict["id"].split("-")[0]
         trueval = None
@@ -153,17 +145,11 @@ def fetch_filtered_predictions(
         predicted_value = None
         stake = None
 
-        if payout_only is True and prediction_sg_dict["payout"] is None:
-            continue
-
         if not prediction_sg_dict["payout"] is None:
             stake = float(prediction_sg_dict["stake"])
             trueval = prediction_sg_dict["payout"]["trueValue"]
             predicted_value = prediction_sg_dict["payout"]["predictedValue"]
             payout = float(prediction_sg_dict["payout"]["payout"])
-
-        if trueval_only is True and trueval is None:
-            continue
 
         prediction = Prediction(
             ID=prediction_sg_dict["id"],

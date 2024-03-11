@@ -81,6 +81,7 @@ OPF-run bots & higher-level tools:
 - `publisher` - publish pdr data feeds
 - `analytics` - analytics tools
 - `payout` - OCEAN & ROSE payout
+- `deployer` - deployer tool
 - `accuracy` - calculates % correct, for display in predictoor.ai webapp
 
 Mid-level building blocks:

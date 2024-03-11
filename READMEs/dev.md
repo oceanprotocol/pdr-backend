@@ -63,7 +63,7 @@ In work console, run linting checks:
 mypy ./
 
 # run linting on code style. Configure it via .pylintrc.
-pylint pdr_backend/*
+pylint *
 
 # auto-fix some pylint complaints like whitespace
 black ./

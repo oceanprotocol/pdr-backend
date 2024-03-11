@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.util.timeutil import timestr_to_ut
+from pdr_backend.util.time_types import UnixTimeMs
 
 _D = {
     "feeds": ["kraken ETH/USDT 5m", "binanceus ETH/USDT,TRX/DAI 1h"],
@@ -29,8 +29,8 @@ def test_lake_ss_basic():
     assert ss.exchange_strs == set(["binanceus", "kraken"])
 
     # derivative properties
-    assert ss.st_timestamp == timestr_to_ut("2023-06-18")
-    assert ss.fin_timestamp == timestr_to_ut("2023-06-21")
+    assert ss.st_timestamp == UnixTimeMs.from_timestr("2023-06-18")
+    assert ss.fin_timestamp == UnixTimeMs.from_timestr("2023-06-21")
     assert ss.feeds == ArgFeeds(
         [
             ArgFeed("kraken", None, "ETH/USDT", "5m"),
@@ -53,8 +53,6 @@ def test_lake_ss_basic():
     # test str
     assert "LakeSS" in str(ss)
 
-    assert isinstance(ss.copy(), LakeSS)
-
 
 @enforce_types
 def test_lake_ss_now():
@@ -64,7 +62,7 @@ def test_lake_ss_now():
 
     assert ss.fin_timestr == "now"
 
-    ut2 = timestr_to_ut("now")
+    ut2 = UnixTimeMs.from_timestr("now")
     assert ss.fin_timestamp / 1000 == pytest.approx(ut2 / 1000, 1.0)
 
 

@@ -12,7 +12,8 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots_for_all_assets, PredictSlot
+from pdr_backend.subgraph.subgraph_slot import fetch_slots, PredictSlot
+from pdr_backend.util.time_types import UnixTimeS
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -50,7 +51,7 @@ def calculate_prediction_result(
 
 @enforce_types
 def process_single_slot(
-    slot: PredictSlot, end_of_previous_day_timestamp: int
+    slot: PredictSlot, end_of_previous_day_timestamp: UnixTimeS
 ) -> Optional[Tuple[float, float, int, int]]:
     """
     Processes a single slot and calculates the staked amounts for yesterday and today,
@@ -72,7 +73,9 @@ def process_single_slot(
         return None
 
     # split the id to get the slot timestamp
-    timestamp = int(slot.ID.split("-")[1])  # Using dot notation for attribute access
+    timestamp = UnixTimeS(
+        int(slot.ID.split("-")[1])
+    )  # Using dot notation for attribute access
 
     if (
         end_of_previous_day_timestamp - SECONDS_IN_A_DAY
@@ -95,13 +98,12 @@ def process_single_slot(
             slots_evaluated,
         )
 
-    true_values: List[Dict[str, Any]] = slot.trueValues or []
-    true_value: Optional[bool] = true_values[0]["trueValue"] if true_values else None
+    true_value = slot.trueval
 
-    if len(true_values) > 0 and prediction_result == true_value:
+    if prediction_result == true_value:
         correct_predictions_count += 1
 
-    if len(true_values) > 0 and true_value is not None:
+    if true_value is not None:
         slots_evaluated += 1
 
     return staked_yesterday, staked_today, correct_predictions_count, slots_evaluated
@@ -109,7 +111,7 @@ def process_single_slot(
 
 @enforce_types
 def aggregate_statistics(
-    slots: List[PredictSlot], end_of_previous_day_timestamp: int
+    slots: List[PredictSlot], end_of_previous_day_timestamp: UnixTimeS
 ) -> Tuple[float, float, int, int]:
     """
     Aggregates statistics across all provided slots for an asset.
@@ -152,8 +154,8 @@ def aggregate_statistics(
 def calculate_statistics_for_all_assets(
     asset_ids: List[str],
     contracts_list: List[ContractIdAndSPE],
-    start_ts_param: int,
-    end_ts_param: int,
+    start_ts_param: UnixTimeS,
+    end_ts_param: UnixTimeS,
     network: str = "mainnet",
 ) -> Dict[str, Dict[str, Any]]:
     """
@@ -171,8 +173,8 @@ def calculate_statistics_for_all_assets(
         calculated statistics such as average accuracy and total staked amounts.
     """
 
-    slots_by_asset = fetch_slots_for_all_assets(
-        asset_ids, start_ts_param, end_ts_param, network
+    slots_by_asset = fetch_slots(
+        start_ts_param, end_ts_param, asset_ids, 1000, 0, network
     )
 
     overall_stats = {}
@@ -182,7 +184,7 @@ def calculate_statistics_for_all_assets(
             staked_today,
             correct_predictions_count,
             slots_evaluated,
-        ) = aggregate_statistics(slots, end_ts_param - SECONDS_IN_A_DAY)
+        ) = aggregate_statistics(slots, UnixTimeS(end_ts_param - SECONDS_IN_A_DAY))
         average_accuracy = (
             0
             if correct_predictions_count == 0
@@ -210,7 +212,9 @@ def calculate_statistics_for_all_assets(
 
 
 @enforce_types
-def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
+def calculate_timeframe_timestamps(
+    contract_timeframe: str,
+) -> Tuple[UnixTimeS, UnixTimeS]:
     """
     Calculates and returns a tuple of Unix timestamps for a start and end time
     based on a given contract timeframe. The start time is determined to be either
@@ -225,7 +229,7 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
         Tuple[int, int]: A tuple containing the start and end Unix timestamps.
     """
 
-    end_ts = int(datetime.utcnow().timestamp())
+    end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
     time_delta = (
         timedelta(weeks=1)
         if contract_timeframe == "5m"
@@ -234,7 +238,7 @@ def calculate_timeframe_timestamps(contract_timeframe: str) -> Tuple[int, int]:
         # if contract_timeframe == "5m"
         # else timedelta(days=1)
     )
-    start_ts = int((datetime.utcnow() - time_delta).timestamp())
+    start_ts = UnixTimeS(int((datetime.utcnow() - time_delta).timestamp()))
 
     return start_ts, end_ts
 

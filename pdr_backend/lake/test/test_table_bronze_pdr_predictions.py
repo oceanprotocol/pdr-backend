@@ -4,8 +4,6 @@ from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     bronze_pdr_predictions_table_name,
-)
-from pdr_backend.lake.table_bronze_pdr_predictions import (
     _process_predictions,
     _process_truevals,
     _process_payouts,
