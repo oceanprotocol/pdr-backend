@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 import polars as pl
 from polars.type_aliases import SchemaDict
 
@@ -147,13 +147,29 @@ class CSVDataStore:
         for data in data_list:
             self.write(dataset_identifier, data)
 
-    def _get_to_value(self, file_path: str) -> int:
+    def _get_to_value(self, file_path: str) -> Union[int, None]:
         """
         Returns the end time from the given file_path.
+
+        This tries to solve for tables with variable name lengths.
+        Table 1: "pdr_predictions"
+        Table 2: "gold_summary_predictions_by_day"
+
+        However, if a table has the keyword "from" or "to" it will fai.
+
+        A better way to do this, would be to search back from end.
+        split("_")[-1] = "1701503000000.csv"
+        split("_")[-2] = "to"
+        split("_")[-3] = "1701500000000"
+        split("_")[-4] = "from"
+
+        It's possible that csv files do not contain a to_value.
+        In this case, the function returns None.
+
         @args:
             file_path: str - path of the file
         @returns:
-            int - end time from the file_path
+            Union[int,None] - end time from the file_path
         """
         # let's split the string by "/" to get the last element
         file_signature = file_path.split("/")[-1]
@@ -162,18 +178,22 @@ class CSVDataStore:
         signature_str_split = file_signature.split("_")
 
         # let's find the from index and value
-        from_index = (
-            next(
-                (
-                    index
-                    for index, str_value in enumerate(signature_str_split)
-                    if "from" in str_value
-                ),
-                None,
-            )
-            + 1
+        from_index, to_index = None, None
+        from_index = next(
+            (
+                index
+                for index, str_value in enumerate(signature_str_split)
+                if "from" in str_value
+            ),
+            None,
         )
-        to_index = from_index + 2
+
+        if from_index is not None:
+            from_index += 1
+            to_index = from_index + 2
+
+        if from_index is None or to_index is None:
+            return None
 
         # if to_index is out of bounds, return None
         if to_index >= len(signature_str_split):
@@ -209,20 +229,19 @@ class CSVDataStore:
         signature_str_split = file_signature.split("_")
 
         # let's find the from index and value
-        from_index = (
-            next(
-                (
-                    index
-                    for index, str_value in enumerate(signature_str_split)
-                    if "from" in str_value
-                ),
-                None,
-            )
-            + 1
+        from_index = next(
+            (
+                index
+                for index, str_value in enumerate(signature_str_split)
+                if "from" in str_value
+            ),
+            None,
         )
-        from_value = int(signature_str_split[from_index])
 
-        return from_value
+        if from_index is not None:
+            return int(signature_str_split[from_index + 1])
+
+        raise ValueError(f"File {file_path} does not contain a 'from' value")
 
     def _get_file_paths(
         self, folder_path: str, start_time: int, end_time: int
@@ -243,14 +262,12 @@ class CSVDataStore:
 
         valid_paths = []
         for file_path in file_paths:
-            _has_from_value = isinstance(self._get_from_value(file_path), int)
-            _has_to_value = isinstance(self._get_to_value(file_path), int)
+            _from_value = self._get_from_value(file_path)
+            _to_value = self._get_to_value(file_path)
 
-            if (
-                (_has_from_value and self._get_from_value(file_path) >= start_time)
-                or (_has_to_value and self._get_to_value(file_path) >= start_time)
-                or self._get_from_value(file_path) == None
-            ):
+            if start_time <= _from_value <= end_time:
+                valid_paths.append(file_path)
+            elif _to_value is not None and start_time <= _to_value <= end_time:
                 valid_paths.append(file_path)
 
         return valid_paths
@@ -358,7 +375,7 @@ class CSVDataStore:
         file_path = self._get_last_file_path(self._get_folder_path(dataset_identifier))
         if len(file_path):
             to_value = self._get_to_value(file_path)
-            if to_value > 0:
+            if to_value is not None and to_value > 0:
                 return to_value
 
             # read the last record from the file
