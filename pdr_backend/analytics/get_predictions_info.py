@@ -23,7 +23,7 @@ class PredFilter:
         gql_data_factory = GQLDataFactory(ppss)
         gql_tables = gql_data_factory.get_gql_tables()
 
-        predictions_df = gql_tables["pdr_predictions"].df
+        predictions_df = gql_tables["pdr_predictions"].get_records()
         assert (
             predictions_df is not None and len(predictions_df) > 0
         ), "Lake has no predictions."

@@ -1,50 +1,9 @@
 from unittest.mock import patch
 from io import StringIO
 import sys
-import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.test.conftest import _clean_up
-
-
-def mock_fetch_function(
-    network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
-):
-    print(network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config)
-    return []
-
-
-# pylint: disable=too-many-instance-attributes
-class MyClass:
-    def __init__(self, data):
-        self.ID = data["ID"]
-        self.pair = data["pair"]
-        self.timeframe = data["timeframe"]
-        self.predvalue = data["predvalue"]
-        self.payout = data["payout"]
-        self.timestamp = data["timestamp"]
-        self.slot = data["slot"]
-        self.user = data["user"]
-
-
-mocked_object = {
-    "ID": "0x123",
-    "pair": "ADA-USDT",
-    "timeframe": "5m",
-    "predvalue": True,
-    "payout": 28.2,
-    "timestamp": 1701634400,
-    "slot": 1701634400,
-    "user": "0x123",
-}
-
-
-def mock_fetch_function_with_data(
-    network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
-):
-    print(network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config)
-    # demo data
-    return [MyClass(mocked_object)]
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 def test_gql_data_factory():
@@ -67,7 +26,7 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-def test_update(tmpdir):
+def test_update(_mock_fetch_gql, tmpdir):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
@@ -81,10 +40,10 @@ def test_update(tmpdir):
         fin_timestr=fin_timestr,
     )
     fns = {
-        "pdr_predictions": mock_fetch_function,
-        "pdr_subscriptions": mock_fetch_function,
-        "pdr_truevals": mock_fetch_function,
-        "pdr_payouts": mock_fetch_function,
+        "pdr_predictions": _mock_fetch_gql,
+        "pdr_subscriptions": _mock_fetch_gql,
+        "pdr_truevals": _mock_fetch_gql,
+        "pdr_payouts": _mock_fetch_gql,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -101,11 +60,11 @@ def test_update(tmpdir):
     assert count_updates == len(tables)
 
 
-def test_update_data(tmpdir):
+def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
-    _clean_up(tmpdir)
+    _clean_up_test_folder(tmpdir)
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -116,10 +75,10 @@ def test_update_data(tmpdir):
         fin_timestr=fin_timestr,
     )
     fns = {
-        "pdr_predictions": mock_fetch_function_with_data,
-        "pdr_subscriptions": mock_fetch_function,
-        "pdr_truevals": mock_fetch_function,
-        "pdr_payouts": mock_fetch_function,
+        "pdr_predictions": _mock_fetch_gql,
+        "pdr_subscriptions": _mock_fetch_gql,
+        "pdr_truevals": _mock_fetch_gql,
+        "pdr_payouts": _mock_fetch_gql,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -133,14 +92,15 @@ def test_update_data(tmpdir):
     ].get_pds_last_record()
     assert last_record is not None
     assert len(last_record) > 0
-    assert last_record["pair"][0] == "ADA-USDT"
+    assert last_record["pair"][0] == "BTC/USDT"
     assert last_record["timeframe"][0] == "5m"
 
 
-def test_load_parquet(tmpdir):
+def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     """
-    Test GQLDataFactory loads the data for all the tables
+    Test GQLDataFactory update calls the getting the data from tables
     """
+    _clean_up_test_folder(tmpdir)
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -150,16 +110,27 @@ def test_load_parquet(tmpdir):
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
+    fns = {
+        "pdr_predictions": _mock_fetch_gql,
+        "pdr_subscriptions": _mock_fetch_gql,
+        "pdr_truevals": _mock_fetch_gql,
+        "pdr_payouts": _mock_fetch_gql,
+    }
 
     gql_data_factory = GQLDataFactory(ppss)
+    for table_name in gql_data_factory.record_config["fetch_functions"]:
+        gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
 
-    assert len(gql_data_factory.record_config["tables"].items()) == 4
+    gql_data_factory._update()
 
-    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+    all_reacords = gql_data_factory.record_config["tables"][
+        "pdr_predictions"
+    ].get_records()
 
-    assert table is not None
-    assert type(table.df) == pl.DataFrame
-    assert table.df.schema == table.df_schema
+    assert all_reacords is not None
+    assert len(all_reacords) > 0
+    assert all_reacords["pair"][0] == "BTC/USDT"
+    assert all_reacords["timeframe"][0] == "5m"
 
 
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
@@ -184,3 +155,60 @@ def test_get_gql_tables(mock_update):
     gql_dfs = gql_data_factory.get_gql_tables()
 
     assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())
+
+
+def test_calc_start_ut(tmpdir):
+    """
+    Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
+    """
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+
+    st_ut = gql_data_factory._calc_start_ut(table)
+    assert st_ut.to_seconds() == 1701561601
+
+
+def test_do_subgraph_fetch(
+    _mock_fetch_gql,
+    _clean_up_test_folder,
+    tmpdir,
+):
+    st_timestr = "2023-12-03"
+    fin_timestr = "2023-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    _clean_up_test_folder(ppss.lake_ss.parquet_dir)
+
+    gql_data_factory = GQLDataFactory(ppss)
+
+    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+
+    captured_output = StringIO()
+    sys.stdout = captured_output
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        _mock_fetch_gql,
+        "sapphire-mainnet",
+        UnixTimeMs(1701634300000),
+        UnixTimeMs(1701634500000),
+        {"contract_list": ["0x123"]},
+    )
+    printed_text = captured_output.getvalue().strip()
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 1
