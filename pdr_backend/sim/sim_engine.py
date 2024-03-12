@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -86,7 +87,7 @@ class SimEngine:
         logger.info("Done all iters.")
 
         acc_train = np.average(self.st.accs_train)
-        acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
+        acc_test = classif_acc(self.st.ytrues_testhat, self.st.ytrues_test)
         logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
@@ -114,14 +115,14 @@ class SimEngine:
         trueprice = ycont_test[-1]
 
         y_thr = curprice
-        ybool = data_f.ycont_to_ytrue(ycont, y_thr)
-        ybool_train, _ = ybool[st:fin], ybool[fin : fin + 1]
+        ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+        ytrue_train, _ = ytrue[st:fin], ytrue[fin : fin + 1]
 
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
-        model = model_f.build(X_train, ybool_train)
+        model = model_f.build(X_train, ytrue_train)
 
-        ybool_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
-        acc_train = classif_acc(ybool_train, ybool_trainhat)
+        ytrue_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
+        acc_train = classif_acc(ytrue_train, ytrue_trainhat)
         self.st.accs_train.append(acc_train)
 
         # current time
@@ -132,7 +133,7 @@ class SimEngine:
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         pred_up: bool = model.predict_true(X_test)[0]  # True or False
         self.st.probs_up.append(prob_up)
-        self.st.ybools_testhat.append(pred_up)
+        self.st.ytrues_testhat.append(pred_up)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
@@ -157,7 +158,7 @@ class SimEngine:
 
         # observe true price
         true_up = trueprice > curprice
-        self.st.ybools_test.append(true_up)
+        self.st.ytrues_test.append(true_up)
 
         # trader: exit the trading position
         if pred_up:
@@ -227,7 +228,7 @@ class SimEngine:
             d = AimodelPlotdata(
                 model,
                 X_train,
-                ybool_train,
+                ytrue_train,
                 colnames,
                 slicing_x,
             )

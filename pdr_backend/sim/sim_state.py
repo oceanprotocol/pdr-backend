@@ -16,8 +16,8 @@ class SimState:
 
     def init_loop_attributes(self):
         self.accs_train: List[float] = []
-        self.ybools_test: List[float] = []
-        self.ybools_testhat: List[float] = []
+        self.ytrues_test: List[float] = []
+        self.ytrues_testhat: List[float] = []
         self.probs_up: List[float] = []
         self.corrects: List[bool] = []
         self.trader_profits_USD: List[float] = []
