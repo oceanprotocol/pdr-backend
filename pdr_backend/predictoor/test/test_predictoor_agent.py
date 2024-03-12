@@ -46,10 +46,17 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     assert ppss.predictoor_ss.approach == approach
     # now we're done the mocking, time for the real work!!
 
+    # mock tokens
+    mock_Token = Mock()
+    mock_Token.balanceOf.return_value = Eth(1000).to_wei()
+
     # real work: main iterations
     agent = PredictoorAgent(ppss)
-    for _ in range(500):
-        agent.take_step()
+    with patch.object(agent, "OCEAN", mock_Token), patch.object(
+        agent, "ROSE", mock_Token
+    ):
+        for _ in range(500):
+            agent.take_step()
 
     # log some final results for debubbing / inspection
     mock_w3 = ppss.web3_pp.web3_config.w3
