@@ -1,6 +1,6 @@
 ---
 name: Enhancement
-about: ''
+about: 'Benefit_yyy, via building_xxx'
 title: '[Component name] Benefit_yyy, via building_xxx'
 labels: 'Type: Enhancement'
 assignees: ''
