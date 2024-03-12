@@ -292,8 +292,8 @@ def test_balance_check(
     mock_ROSE = Mock()
     mock_ROSE.balanceOf.side_effect = [up_ROSE, down_ROSE]
 
+    agent.ppss.web3_pp = Mock(spec=Web3PP)
     agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
-    agent.ppss.web3_pp.ROSE = mock_ROSE
-        
-        
+    agent.ppss.web3_pp.NativeToken = mock_ROSE
+
     assert agent.check_balances() == expected
