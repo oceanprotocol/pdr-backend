@@ -15,10 +15,26 @@ class SimState:
         self.init_loop_attributes()
 
     def init_loop_attributes(self):
-        self.accs_train: List[float] = []
         self.ytrues_test: List[float] = []
-        self.ytrues_testhat: List[float] = []
         self.probs_up: List[float] = []
-        self.corrects: List[bool] = []
-        self.trader_profits_USD: List[float] = []
         self.pdr_profits_OCEAN: List[float] = []
+        self.trader_profits_USD: List[float] = []
+
+    @property
+    def ytrues_testhat(self) -> List[bool]:
+        return [p > 0.5 for p in self.probs_up]
+
+    @property
+    def corrects(self) -> List[bool]:
+        return [(p > 0.5) == t
+                for p, t in zip(self.probs_up, self.ytrues_test)]
+
+    @property
+    def n_correct(self) -> int:
+        return sum(self.corrects)
+
+    @property
+    def n_trials(self) -> int:
+        return len(self.ytrues_test)
+
+    

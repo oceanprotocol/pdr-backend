@@ -16,7 +16,6 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -86,10 +85,6 @@ class SimEngine:
 
         logger.info("Done all iters.")
 
-        acc_train = np.average(self.st.accs_train)
-        acc_test = classif_acc(self.st.ytrues_testhat, self.st.ytrues_test)
-        logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
-
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
@@ -122,8 +117,6 @@ class SimEngine:
         model = model_f.build(X_train, ytrue_train)
 
         ytrue_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
-        acc_train = classif_acc(ytrue_train, ytrue_trainhat)
-        self.st.accs_train.append(acc_train)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -133,7 +126,6 @@ class SimEngine:
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         pred_up: bool = model.predict_true(X_test)[0]  # True or False
         self.st.probs_up.append(prob_up)
-        self.st.ytrues_testhat.append(pred_up)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
@@ -173,12 +165,6 @@ class SimEngine:
             tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
         usdcoin_holdings_after = self.st.holdings[self.usdcoin]
 
-        # track prediction
-        pred_dir = "UP" if pred_up else "DN"
-        true_dir = "UP" if true_up else "DN"
-        correct = pred_dir == true_dir
-        self.st.corrects.append(correct)
-
         # track predictoor profit
         tot_stake = others_stake + stake_amt
         others_stake_correct = others_stake * pdr_ss.others_accuracy
@@ -198,7 +184,10 @@ class SimEngine:
         self.st.trader_profits_USD.append(trader_profit_USD)
 
         # log
-        n_correct, n_trials = sum(self.st.corrects), len(self.st.corrects)
+        (precision, recall, f1_score, _) = precision_recall_fscore_support(
+            self.st.ytrues_test, self.st.ytrues_testhat, average='binary',
+        )
+        n_correct, n_trials = self.st.n_correct, self.st.n_trials
         acc_est = float(n_correct) / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
 
@@ -206,7 +195,7 @@ class SimEngine:
         s += f"ut={ut.pretty_timestr()[9:][:-10]}"
 
         s += f" prob_up={prob_up:.2f}"
-        s += " predictoor profit = "
+        s += " pdr profit = "
         s += f"{acct_up_profit:8.5f} up"
         s += f" + {acct_down_profit:8.5f} down"
         s += f" = {pdr_profit_OCEAN:8.5f} OCEAN"
@@ -215,6 +204,9 @@ class SimEngine:
         s += f". Correct: {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
+        
+        s += f". Precision=: {precision:.3f}, recall={recall:.3f}"
+        s += f", f1_score={f1_score:.3f}"
 
         s += f". trader profit = ${trader_profit_USD:9.4f}"
         s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
