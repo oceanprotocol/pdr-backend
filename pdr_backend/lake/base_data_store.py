@@ -1,23 +1,22 @@
-from abc import abstractmethod
+from typing import Dict
 
-import duckdb
 from enforce_typing import enforce_types
 
 
 class BaseDataStore:
     @enforce_types
-    def __init__(self, base_directory=str):
-        """
-        Initialize a DataStore instance.
-        @arguments:
-            base_directory - The base directory to store the partitioned Parquet files.
-        """
+    def __new__(cls, base_path: str):
+        if not hasattr(cls, "_instances"):
+            cls._instances: Dict[str, "BaseDataStore"] = {}
+        if base_path not in cls._instances:
+            instance = super(BaseDataStore, cls).__new__(cls)
+            cls._instances[base_path] = instance
+        return cls._instances[base_path]
 
-        self.base_directory = base_directory
-        self.duckdb_conn = duckdb.connect(
-            database=f"{self.base_directory}/duckdb.db"
-        )  # Keep a persistent connection
+    @enforce_types
+    def __init__(self, base_path: str):
+        self.base_path = base_path
 
-    @abstractmethod
-    def query_data(self, query: str):
-        pass
+    @classmethod
+    def clear_instances(cls):
+        cls._instances = {}

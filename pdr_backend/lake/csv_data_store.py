@@ -4,12 +4,12 @@ import polars as pl
 from polars.type_aliases import SchemaDict
 
 from enforce_typing import enforce_types
+from pdr_backend.lake.base_data_store import BaseDataStore
 
 
-class CSVDataStore:
-    def __init__(self, base_path: str):
-        self.base_path = base_path
+class CSVDataStore(BaseDataStore):
 
+    @enforce_types
     def _get_folder_path(self, dataset_identifier: str) -> str:
         """
         Returns the folder path for the given dataset_identifier.
@@ -21,6 +21,7 @@ class CSVDataStore:
         os.makedirs(folder_path, exist_ok=True)
         return folder_path
 
+    @enforce_types
     def _fill_with_zero(self, number: int, length: int = 10) -> str:
         """
         Fills the given number with zeros to make it 10 digits long.
@@ -30,6 +31,7 @@ class CSVDataStore:
         number_str = str(number)
         return f"{(length - len(number_str)) * '0'}{number_str}"
 
+    @enforce_types
     def _create_file_name(
         self, dataset_identifier: str, start_time: int, end_time: Optional[int]
     ) -> str:
@@ -49,6 +51,7 @@ class CSVDataStore:
 
         return f"{dataset_identifier}{start_phrase}{end_phrase}.csv"
 
+    @enforce_types
     def _create_file_path(
         self, dataset_identifier: str, start_time: int, end_time: Optional[int]
     ) -> str:
@@ -65,6 +68,7 @@ class CSVDataStore:
         folder_path = self._get_folder_path(dataset_identifier)
         return os.path.join(folder_path, file_name)
 
+    @enforce_types
     def _chunk_data(self, data: pl.DataFrame) -> List[pl.DataFrame]:
         """
         Splits the given data into chunks of up to 1000 rows each.
@@ -136,6 +140,7 @@ class CSVDataStore:
             )
             chunk.write_csv(file_path)
 
+    @enforce_types
     def bulk_write(self, data_list: List[pl.DataFrame], dataset_identifier: str):
         """
         Writes the given list of data to csv files in the folder
@@ -147,6 +152,7 @@ class CSVDataStore:
         for data in data_list:
             self.write(dataset_identifier, data)
 
+    @enforce_types
     def _get_to_value(self, file_path: str) -> Union[int, None]:
         """
         Returns the end time from the given file_path.
@@ -207,6 +213,7 @@ class CSVDataStore:
         # return the to_value
         return int(to_value)
 
+    @enforce_types
     def _get_from_value(self, file_path: str) -> int:
         """
         Returns the start time from the given file_path.
@@ -243,6 +250,7 @@ class CSVDataStore:
 
         raise ValueError(f"File {file_path} does not contain a 'from' value")
 
+    @enforce_types
     def _get_file_paths(
         self, folder_path: str, start_time: int, end_time: int
     ) -> List[str]:
@@ -289,7 +297,6 @@ class CSVDataStore:
         # check if the csv file has more than 0 bytes
         return any(os.path.getsize(file_path) > 0 for file_path in file_paths)
 
-    @enforce_types
     def read(
         self,
         dataset_identifier: str,
@@ -363,6 +370,7 @@ class CSVDataStore:
         file_names = sorted(os.listdir(folder_path))
         return os.path.join(folder_path, file_names[-1]) if file_names else ""
 
+    @enforce_types
     def get_last_timestamp(self, dataset_identifier: str) -> Optional[int]:
         """
         Returns the last timestamp from the last csv files in the folder

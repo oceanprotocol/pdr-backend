@@ -1,7 +1,10 @@
 import os
 import polars as pl
+import duckdb
+
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
 # Initialize the PersistentDataStore instance for testing
@@ -158,3 +161,74 @@ def test_fill_from_csv_destination(tmpdir):
 
     # delete the folder
     os.rmdir(csv_folder_path)
+
+
+def test_multiton_instances(tmpdir):
+    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
+    persistent_data_store_2 = PersistentDataStore(str(tmpdir))
+
+    assert id(persistent_data_store_1) == id(persistent_data_store_2)
+
+    _clean_up_persistent_data_store(tmpdir)
+
+
+def test_clear_instances(tmpdir):
+    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
+    PersistentDataStore.clear_instances()
+    persistent_data_store_2 = PersistentDataStore(str(tmpdir))
+
+    assert id(persistent_data_store_1) != id(persistent_data_store_2)
+
+    _clean_up_persistent_data_store(tmpdir)
+
+
+def test_clear_instances_with_multiple_instances(tmpdir):
+    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
+    persistent_data_store_2 = PersistentDataStore(str(tmpdir))
+    PersistentDataStore.clear_instances()
+    persistent_data_store_3 = PersistentDataStore(str(tmpdir))
+    persistent_data_store_4 = PersistentDataStore(str(tmpdir))
+
+    assert id(persistent_data_store_1) != id(persistent_data_store_3)
+    assert id(persistent_data_store_2) != id(persistent_data_store_3)
+    assert id(persistent_data_store_1) != id(persistent_data_store_4)
+    assert id(persistent_data_store_2) != id(persistent_data_store_4)
+    assert id(persistent_data_store_3) == id(persistent_data_store_4)
+
+    _clean_up_persistent_data_store(tmpdir)
+
+
+def test_multiton_instances_with_different_base_paths(tmpdir):
+    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
+
+    different_path = str(tmpdir) + "/1"
+    os.makedirs(different_path, exist_ok=True)
+    persistent_data_store_2 = PersistentDataStore(different_path)
+
+    assert id(persistent_data_store_1) != id(persistent_data_store_2)
+
+    _clean_up_persistent_data_store(tmpdir)
+    _clean_up_persistent_data_store(different_path)
+
+
+def test_multiton_with_CSVDataStore(tmpdir):
+    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
+    csv_data_store_1 = CSVDataStore(str(tmpdir))
+
+    assert id(persistent_data_store_1) != id(csv_data_store_1)
+
+    # test cls._instances so that it is not the same
+    assert persistent_data_store_1._instances != csv_data_store_1._instances
+
+    _clean_up_persistent_data_store(tmpdir)
+
+
+def test__duckdb_connection(tmpdir):
+    """
+    Test datastore.
+    """
+    assert isinstance(
+        PersistentDataStore(str(tmpdir)).duckdb_conn, duckdb.DuckDBPyConnection
+    ), "The connection is not a DuckDBPyConnection"
+
+    _clean_up_persistent_data_store(tmpdir)
