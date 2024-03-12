@@ -152,7 +152,7 @@ class SimPlotter:
         _set_title(ax, s)
         if not self.plotted_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("% correct", fontsize=FONTSIZE)
+            ax.set_ylabel("% correct [lower, upper bound]", fontsize=FONTSIZE)
             _ylabel_on_right(ax)
             ax.margins(0.01, 0.01)
 
@@ -163,19 +163,20 @@ class SimPlotter:
         next_f1s = _slice(clm.f1s, self.N_done, self.N)
         next_precisions = _slice(clm.precisions, self.N_done, self.N)
         next_recalls = _slice(clm.recalls, self.N_done, self.N)
-
-        ax.plot(self.next_x, next_f1s, "green", label="f1")
-        ax.plot(self.next_x, next_precisions, "red", label="precision")
-        ax.plot(self.next_x, next_recalls, "blue", label="recall")
+        
+        ax.plot(self.next_x, next_precisions, "darkred", label="precision")#top
+        ax.plot(self.next_x, next_f1s, "indianred", label="f1")#mid
+        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")#bot
+        ax.fill_between(self.next_x, next_recalls, next_precisions, color="0.9")
         ax.plot(self.next_hx, [0.5, 0.5], c="0.2", ls="--", lw=1)
-        #ax.set_ylim(bottom=0.4, top=0.6)
-        s = f"f1 = {clm.f1s[-1]:.2f}"
-        s += f", precision = {clm.precisions[-1]:.2f}"
-        s += f", recall = {clm.recalls[-1]:.2f}"
+        ax.set_ylim(bottom=0.25, top=0.75)
+        s = f"f1={clm.f1s[-1]:.4f}"
+        s += f" [recall={clm.recalls[-1]:.4f}"
+        s += f", precision={clm.precisions[-1]:.4f}]"
         _set_title(ax, s)
         if not self.plotted_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("f1 // precision // recall", fontsize=FONTSIZE)
+            ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
             ax.legend(loc="lower left")
             _ylabel_on_right(ax)
             ax.margins(0.01, 0.01)
