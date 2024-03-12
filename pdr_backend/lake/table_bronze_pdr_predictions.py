@@ -1,9 +1,8 @@
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
-
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
@@ -32,11 +31,9 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
         Get the bronze pdr predictions data
     """
     # get the table
-    table = Table(
-        bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
-    )
+    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
 
-    return table.PDS.query_data(
+    return PDS.query_data(
         f"""
         SELECT 
             pdr_predictions.ID as ID,

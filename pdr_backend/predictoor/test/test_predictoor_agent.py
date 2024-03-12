@@ -167,7 +167,6 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
     with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), patch(
         f"{d}.AimodelFactory.build", mock_build
     ):
-
         # initialize agent
         _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch)
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
@@ -205,7 +204,6 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
     with patch(f"{d}.PredictoorAgent.get_ohlcv_data", mock_get_ohlcv_data2), patch(
         f"{d}.AimodelFactory.build", mock_build
     ):
-
         # initialize agent
         feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
         assert ppss.predictoor_ss.approach == 2

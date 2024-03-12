@@ -13,6 +13,8 @@ from pdr_backend.lake.table_pdr_predictions import (
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
+from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
@@ -40,6 +42,7 @@ def test_setup_etl(
     tmpdir,
 ):
     _clean_up_persistent_data_store(tmpdir)
+    _clean_up_table_registry()
 
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
@@ -84,15 +87,10 @@ def test_setup_etl(
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
-    assert len(etl.tables) == 0
-
-    # Work 2: Complete ETL sync step - Assert 3 gql_dfs
-    etl.do_sync_step()
 
     pds_instance = _get_test_PDS(tmpdir)
 
     # Assert original gql has 6 predictions, but we only got 5 due to date
-    assert len(etl.tables) == 3
     pdr_predictions_df = pds_instance.query_data("SELECT * FROM pdr_predictions")
     assert len(pdr_predictions_df) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
@@ -110,6 +108,7 @@ def test_setup_etl(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
+    assert len(TableRegistry().get_tables()) == 5
 
 
 @enforce_types
@@ -123,6 +122,8 @@ def test_etl_do_bronze_step(
     tmpdir,
 ):
     _clean_up_persistent_data_store(tmpdir)
+    _clean_up_table_registry()
+
     # please note date, including Nov 1st
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -159,9 +160,6 @@ def test_etl_do_bronze_step(
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
 
-    # Work 2: Do sync
-    etl.do_sync_step()
-
     pds_instance = _get_test_PDS(tmpdir)
     pdr_predictions_records = pds_instance.query_data(
         f"""
@@ -169,6 +167,7 @@ def test_etl_do_bronze_step(
         """
     )
     assert len(pdr_predictions_records) == 6
+
     # Work 3: Do bronze
     etl.do_bronze_step()
 

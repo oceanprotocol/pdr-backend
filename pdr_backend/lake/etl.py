@@ -1,14 +1,13 @@
-from typing import Dict
 import time
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_data_with_SQL,
 )
+from pdr_backend.lake.table_registry import TableRegistry
 
 
 class ETL:
@@ -25,9 +24,16 @@ class ETL:
 
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
-
         self.gql_data_factory = gql_data_factory
-        self.tables: Dict[str, Table] = {}
+
+        TableRegistry().register_table(
+            bronze_pdr_predictions_table_name,
+            (
+                bronze_pdr_predictions_table_name,
+                bronze_pdr_predictions_schema,
+                self.ppss,
+            ),
+        )
 
     def do_etl(self):
         """
@@ -47,18 +53,6 @@ class ETL:
 
         except Exception as e:
             print(f"Error when executing ETL: {e}")
-
-    def do_sync_step(self):
-        """
-        @description
-            Call data factory to fetch data and update lake
-            The sync will try 3 times to fetch from data_factory, and update the local gql_dfs
-        """
-        gql_tables = self.gql_data_factory.get_gql_tables()
-
-        # rather than override the whole dict, we update the dict
-        for key in gql_tables:
-            self.tables[key] = gql_tables[key]
 
     def do_bronze_step(self):
         """
@@ -83,14 +77,8 @@ class ETL:
         @description
             Update bronze_pdr_predictions table
         """
-        if bronze_pdr_predictions_table_name not in self.tables:
-            # Load existing bronze tables
-            table = Table(
-                bronze_pdr_predictions_table_name,
-                bronze_pdr_predictions_schema,
-                self.ppss,
-            )
-            self.tables[bronze_pdr_predictions_table_name] = table
-
+        print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
         data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
-        table.append_to_storage(data)
+        TableRegistry().get_table(bronze_pdr_predictions_table_name).append_to_storage(
+            data
+        )

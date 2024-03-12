@@ -4,7 +4,6 @@ import numpy as np
 
 @enforce_types
 class Aimodel:
-
     def __init__(self, skm, scaler, imps: np.ndarray):
         self._skm = skm  # sklearn model
         self._scaler = scaler  # for scaling X-inputs

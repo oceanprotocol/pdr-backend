@@ -25,7 +25,6 @@ SAMPLE_PREDICT_SLOT = PredictSlot(
 
 @enforce_types
 def test_calculate_prediction_result():
-
     # Test the calculate_prediction_prediction_result function with expected inputs
     result = calculate_prediction_result(150.0, 200.0)
     assert result
