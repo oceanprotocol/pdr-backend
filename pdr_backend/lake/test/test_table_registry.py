@@ -63,3 +63,16 @@ def test_get_tables():
         == "test_table2"
     )
     _clean_up_table_registry()
+
+
+def test_clear_tables():
+    test_tables = {
+        "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
+        "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
+    }
+
+    TableRegistry().register_tables(test_tables)
+    assert len(TableRegistry().get_tables()) == 2
+    TableRegistry().clear_tables()
+    assert len(TableRegistry().get_tables()) == 0
+    _clean_up_table_registry()

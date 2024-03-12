@@ -48,3 +48,8 @@ class TableRegistry:
     def unregister_table(self, table_name):
         self._tables.pop(table_name, None)
         return True
+
+    @enforce_types
+    def clear_tables(self):
+        self._tables = {}
+        return True
