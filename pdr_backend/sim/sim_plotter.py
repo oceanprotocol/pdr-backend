@@ -5,7 +5,6 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import random
-from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
@@ -43,7 +42,7 @@ class SimPlotter:
 
         self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
         self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
-        
+
         self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[0, 1])
         self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
 
@@ -145,8 +144,8 @@ class SimPlotter:
 
         ax.plot(self.next_x, next_acc_ests, "green")
         ax.fill_between(self.next_x, next_acc_ls, next_acc_us, color="0.9")
-        ax.plot(self.next_hx, [0.5*100.0, 0.5*100.0], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=0.4*100.0, top=0.6*100.0)
+        ax.plot(self.next_hx, [0.5 * 100.0, 0.5 * 100.0], c="0.2", ls="--", lw=1)
+        ax.set_ylim(bottom=0.4 * 100.0, top=0.6 * 100.0)
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
         _set_title(ax, s)
@@ -163,10 +162,10 @@ class SimPlotter:
         next_f1s = _slice(clm.f1s, self.N_done, self.N)
         next_precisions = _slice(clm.precisions, self.N_done, self.N)
         next_recalls = _slice(clm.recalls, self.N_done, self.N)
-        
-        ax.plot(self.next_x, next_precisions, "darkred", label="precision")#top
-        ax.plot(self.next_x, next_f1s, "indianred", label="f1")#mid
-        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")#bot
+
+        ax.plot(self.next_x, next_precisions, "darkred", label="precision")  # top
+        ax.plot(self.next_x, next_f1s, "indianred", label="f1")  # mid
+        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")  # bot
         ax.fill_between(self.next_x, next_recalls, next_precisions, color="0.9")
         ax.plot(self.next_hx, [0.5, 0.5], c="0.2", ls="--", lw=1)
         ax.set_ylim(bottom=0.25, top=0.75)
@@ -180,7 +179,7 @@ class SimPlotter:
             ax.legend(loc="lower left")
             _ylabel_on_right(ax)
             ax.margins(0.01, 0.01)
-            
+
     @enforce_types
     def _plot_pdr_profit_vs_ptrue(self):
         ax = self.ax_pdr_profit_vs_ptrue
@@ -243,8 +242,8 @@ class SimPlotter:
 
 
 @enforce_types
-def _slice(a: list, N_done: int, N: int, mult:float=1.0) -> list:
-    return [a[i]*mult for i in range(max(0, N_done - 1), N)]
+def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
+    return [a[i] * mult for i in range(max(0, N_done - 1), N)]
 
 
 @enforce_types

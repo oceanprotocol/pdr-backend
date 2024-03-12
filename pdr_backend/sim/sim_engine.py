@@ -116,15 +116,13 @@ class SimEngine:
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
         model = model_f.build(X_train, ytrue_train)
 
-        ytrue_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
-
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        pred_up: bool = model.predict_true(X_test)[0]  # True or False
+        pred_up: bool = prob_up > 0.5
         st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
@@ -158,10 +156,12 @@ class SimEngine:
         acc_est = n_correct / n_trials
         acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
         (precision, recall, f1, _) = precision_recall_fscore_support(
-            st.ytrues, st.ytrues_hat, average='binary',
+            st.ytrues,
+            st.ytrues_hat,
+            average="binary",
         )
         st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
-        
+
         # trader: exit the trading position
         if pred_up:
             # we'd bought; so now sell
