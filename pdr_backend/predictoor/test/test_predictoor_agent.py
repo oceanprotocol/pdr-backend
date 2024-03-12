@@ -49,12 +49,11 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     # mock tokens
     mock_token = Mock()
     mock_token.balanceOf.return_value = Eth(1000).to_wei()
+    ppss.web3_pp.OCEAN_Token = mock_token
+    ppss.web3_pp.NativeToken = mock_token
 
     # real work: main iterations
     agent = PredictoorAgent(ppss)
-    agent.ppss.web3_pp = Mock(spec=Web3PP)
-    agent.ppss.web3_pp.OCEAN_Token = mock_token
-    agent.ppss.web3_pp.NativeToken = mock_token
     for _ in range(500):
         agent.take_step()
 
