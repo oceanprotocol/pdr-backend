@@ -24,8 +24,16 @@ class ETL:
 
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
-
         self.gql_data_factory = gql_data_factory
+
+        TableRegistry().register_table(
+            bronze_pdr_predictions_table_name,
+            (
+                bronze_pdr_predictions_table_name,
+                bronze_pdr_predictions_schema,
+                self.ppss,
+            ),
+        )
 
     def do_etl(self):
         """
@@ -70,14 +78,7 @@ class ETL:
             Update bronze_pdr_predictions table
         """
         print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
-        table = TableRegistry().register_table(
-            bronze_pdr_predictions_table_name,
-            (
-                bronze_pdr_predictions_table_name,
-                bronze_pdr_predictions_schema,
-                self.ppss,
-            ),
-        )
-
         data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
-        table.append_to_storage(data)
+        TableRegistry().get_table(bronze_pdr_predictions_table_name).append_to_storage(
+            data
+        )

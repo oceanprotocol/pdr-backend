@@ -108,7 +108,7 @@ def test_setup_etl(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 4
+    assert len(TableRegistry().get_tables()) == 5
 
 
 @enforce_types
@@ -167,6 +167,7 @@ def test_etl_do_bronze_step(
         """
     )
     assert len(pdr_predictions_records) == 6
+
     # Work 3: Do bronze
     etl.do_bronze_step()
 
