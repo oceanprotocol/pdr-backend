@@ -4,6 +4,7 @@ import sys
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table_registry import TableRegistry
 
 
 def test_gql_data_factory():
@@ -21,7 +22,8 @@ def test_gql_data_factory():
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    assert len(gql_data_factory.record_config["tables"]) > 0
+
+    assert len(TableRegistry().get_tables()) > 0
     assert gql_data_factory.record_config["config"] is not None
     assert gql_data_factory.ppss is not None
 
@@ -56,7 +58,7 @@ def test_update(_mock_fetch_gql, tmpdir):
 
     printed_text = captured_output.getvalue().strip()
     count_updates = printed_text.count("Updating table")
-    tables = gql_data_factory.record_config["tables"].items()
+    tables = TableRegistry().get_tables().items()
     assert count_updates == len(tables)
 
 
@@ -87,9 +89,7 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
-    last_record = gql_data_factory.record_config["tables"][
-        "pdr_predictions"
-    ].get_pds_last_record()
+    last_record = TableRegistry().get_table("pdr_predictions").get_pds_last_record()
     assert last_record is not None
     assert len(last_record) > 0
     assert last_record["pair"][0] == "BTC/USDT"
@@ -123,9 +123,7 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
-    all_reacords = gql_data_factory.record_config["tables"][
-        "pdr_predictions"
-    ].get_records()
+    all_reacords = TableRegistry().get_table("pdr_predictions").get_records()
 
     assert all_reacords is not None
     assert len(all_reacords) > 0
@@ -154,7 +152,7 @@ def test_get_gql_tables(mock_update):
 
     gql_dfs = gql_data_factory.get_gql_tables()
 
-    assert len(gql_dfs.items()) == len(gql_data_factory.record_config["tables"].items())
+    assert len(gql_dfs.items()) == 4
 
 
 def test_calc_start_ut(tmpdir):
@@ -172,7 +170,7 @@ def test_calc_start_ut(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+    table = TableRegistry().get_table("pdr_predictions")
 
     st_ut = gql_data_factory._calc_start_ut(table)
     assert st_ut.to_seconds() == 1701561601
@@ -197,7 +195,7 @@ def test_do_subgraph_fetch(
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = gql_data_factory.record_config["tables"]["pdr_predictions"]
+    table = TableRegistry().get_table("pdr_predictions")
 
     captured_output = StringIO()
     sys.stdout = captured_output

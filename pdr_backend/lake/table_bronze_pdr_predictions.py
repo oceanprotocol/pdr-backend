@@ -1,9 +1,8 @@
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
-
+from pdr_backend.lake.table_registry import TableRegistry
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
@@ -32,9 +31,7 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
         Get the bronze pdr predictions data
     """
     # get the table
-    table = Table(
-        bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
-    )
+    table = TableRegistry().get_table(bronze_pdr_predictions_table_name)
 
     return table.PDS.query_data(
         f"""
