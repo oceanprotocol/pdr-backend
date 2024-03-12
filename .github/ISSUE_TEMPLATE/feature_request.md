@@ -1,20 +1,34 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
+name: Enhancement
+about: ''
+title: '[Component name] Benefit_yyy, via building_xxx'
+labels: 'Type: Enhancement'
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+### Background / motivation
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+Parent epic: [#foo](https://github.com/oceanprotocol/pdr-backend/issues/foo)
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+The problem is / the opportunity is: bar. 
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Here's further context: baz
+
+Candidate approaches: (a) xxx, (b) yyy, and (c) zzz.
+
+We'll use approach (a or b or c).
+
+### TODOs / DoD
+
+Implement approach (a or b or c): xyz.
+
+Tasks:
+- [ ] aaa
+- [ ] bbb
+- [ ] ccc
+
+### Related github issues
+
+- [#mmm](https://github.com/oceanprotocol/pdr-backend/issues/mmm)
+- [#nnn](https://github.com/oceanprotocol/pdr-backend/issues/nnn)
