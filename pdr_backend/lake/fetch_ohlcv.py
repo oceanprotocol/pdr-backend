@@ -1,5 +1,6 @@
+from datetime import datetime
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -7,10 +8,7 @@ import requests
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.lake.constants import (
-    OHLCV_MULT_MAX,
-    OHLCV_MULT_MIN,
-)
+from pdr_backend.lake.constants import OHLCV_MULT_MAX, OHLCV_MULT_MIN, BASE_URL_DYDX
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
@@ -81,29 +79,55 @@ def safe_fetch_ohlcv_dydx(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
+    if exch != "dydx":
+        return None
+    headers = {"Accept": "application/json"}
 
     try:
-        if exch != "dydx":
-            return None
-        sinceIso = since.to_iso_timestr()
-        headers = {"Accept": "application/json"}
         response = requests.get(
-            f"https://indexer.dydx.trade/v4/candles/perpetualMarkets/{symbol}"
-            + f"?resolution={timeframe}&fromISO={sinceIso}&limit={limit}",
+            f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}"
+            f"&fromISO={since.to_iso_timestr()}&limit={limit}",
             headers=headers,
             timeout=20,
         )
-        response = requests.get(
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
-            + "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            headers=headers,
-            timeout=20,
-        )
-        data = response.json()
-        return data
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
+
+    data = response.json()
+
+    raw_tohlcv_data = []
+    key_name = next(iter(data))  # Get the first key in the dict
+    items = data[key_name]
+
+    if key_name == "candles" and items:
+        for item in items:
+            dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp = int(dt.timestamp() * 1000)
+            ohlcv_tuple = (
+                timestamp,
+                float_or_none(item["open"]),
+                float_or_none(item["high"]),
+                float_or_none(item["low"]),
+                float_or_none(item["close"]),
+                float_or_none(item["baseTokenVolume"]),
+            )
+            raw_tohlcv_data.append(ohlcv_tuple)
+
+        return raw_tohlcv_data
+
+    if key_name == "errors" and items:
+        errors = items[0]
+        error_msg = tuple(errors.items())
+        raw_tohlcv_data.append(error_msg)
+        return raw_tohlcv_data
+
+    return None
+
+
+@enforce_types
+def float_or_none(x: Optional[str]) -> Optional[float]:
+    return None if x is None else float(x)
 
 
 @enforce_types

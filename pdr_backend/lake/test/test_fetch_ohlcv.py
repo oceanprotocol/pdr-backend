@@ -1,9 +1,10 @@
-import ccxt
-import pytest
-from enforce_typing import enforce_types
-import requests_mock
+from typing import Any, Dict, List
 
+import ccxt
+from enforce_typing import enforce_types
 import polars as pl
+import pytest
+import requests_mock
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.fetch_ohlcv import (
@@ -15,7 +16,7 @@ from pdr_backend.lake.fetch_ohlcv import (
     safe_fetch_ohlcv_dydx,
 )
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
+from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL, BASE_URL_DYDX
 
 
 MPE = 300000  # ms per 5min epoch
@@ -26,22 +27,6 @@ RAW5 = [T5, 0.5, 12, 0.12, 1.1, 7.0]
 RAW6 = [T6, 0.5, 11, 0.11, 2.2, 7.0]
 RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
-
-mock_dydx_response = {
-    "candles": [
-        {
-            "startedAt": "2024-02-28T16:50:00.000Z",
-            "open": "61840",
-            "high": "61848",
-            "low": "61687",
-            "close": "61800",
-            "baseTokenVolume": "23.6064",
-            "usdVolume": "1458183.4133",
-            "trades": 284,
-            "startingOpenInterest": "504.4262",
-        }
-    ]
-}
 
 
 @enforce_types
@@ -115,43 +100,174 @@ def test_safe_fetch_ohlcv_ccxt(exch):
     assert v is None
 
 
-@enforce_types
-def test_safe_fetch_ohlcv_dydx():
-    with requests_mock.Mocker() as m:
-        m.register_uri(
-            "GET",
-            "https://indexer.dydx.trade/v4/candles/perpetualMarkets/BTC-USD"
-            "?resolution=5MINS&fromISO=2024-02-27T00:00:00.000Z&limit=1",
-            json=mock_dydx_response,
-        )
-        # happy path dydx
-        exch, symbol, timeframe, since, limit = (
+mock_dydx_response = {
+    "candles": [
+        {
+            "startedAt": "2024-02-28T16:50:00.000Z",
+            "ticker": "BTC-USD",
+            "resolution": "5MINS",
+            "open": "61840",
+            "high": "61848",
+            "low": "61687",
+            "close": "61800",
+            "baseTokenVolume": "23.6064",
+            "usdVolume": "1458183.4133",
+            "trades": 284,
+            "startingOpenInterest": "504.4262",
+        }
+    ]
+}
+
+mock_bad_token_dydx_response_1 = {
+    "errors": [
+        {
+            "value": "BTC-ETH",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_token_dydx_response_2 = {
+    "errors": [
+        {
+            "value": "RANDOMTOKEN-USD",
+            "msg": "ticker must be a valid ticker (BTC-USD, etc)",
+            "param": "ticker",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_timeframe_dydx_response = {
+    "errors": [
+        {
+            "value": "5m",
+            "msg": "resolution must be a valid Candle Resolution, "
+            "one of 1MIN,5MINS,...",
+            "param": "resolution",
+            "location": "params",
+        }
+    ]
+}
+
+mock_bad_date_dydx_response: Dict[str, List[Any]] = {"candles": []}
+
+mock_bad_limit_dydx_response = {
+    "errors": [
+        {
+            "value": "100000",
+            "msg": "limit must be a positive integer that is not greater than max: 100",
+            "param": "limit",
+            "location": "params",
+        }
+    ]
+}
+
+
+@pytest.mark.parametrize(
+    "exch, symbol, timeframe, since, limit, expected_timestamp,"
+    + " expected_close, expected_error_msg, mock_response",
+    [
+        (
             "dydx",
             "BTC-USD",
             "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
+            1709139000000,
+            61800,
+            None,
+            mock_dydx_response,
+        ),
+        (
+            "dydx",
+            "BTC-ETH",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+            None,
+            None,
+            "ticker must be a valid ticker (BTC-USD, etc)",
+            mock_bad_token_dydx_response_1,
+        ),
+        (
+            "dydx",
+            "RANDOMTOKEN-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+            None,
+            None,
+            "ticker must be a valid ticker (BTC-USD, etc)",
+            mock_bad_token_dydx_response_2,
+        ),
+        (
+            "dydx",
+            "BTC-USD",
+            "5m",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            1,
+            None,
+            None,
+            "resolution must be a valid Candle Resolution," + " one of 1MIN,5MINS,...",
+            mock_bad_timeframe_dydx_response,
+        ),
+        (
+            "dydx",
+            "BTC-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2222-02-27"),
+            1,
+            None,
+            None,
+            None,
+            mock_bad_date_dydx_response,
+        ),
+        (
+            "dydx",
+            "BTC-USD",
+            "5MINS",
+            UnixTimeMs.from_timestr("2024-02-27"),
+            100000,
+            None,
+            None,
+            "limit must be a positive integer that is not greater than max: 100",
+            mock_bad_limit_dydx_response,
+        ),
+    ],
+)
+@enforce_types
+def test_safe_fetch_ohlcv_dydx(
+    exch,
+    symbol,
+    timeframe,
+    since,
+    limit,
+    expected_timestamp,
+    expected_close,
+    expected_error_msg,
+    mock_response,
+):
+    with requests_mock.Mocker() as m:
+        m.register_uri(
+            "GET",
+            f"{BASE_URL_DYDX}/{symbol}?resolution={timeframe}"
+            f"&fromISO={since.to_iso_timestr()}&limit={limit}",
+            json=mock_response,
         )
         result = safe_fetch_ohlcv_dydx(exch, symbol, timeframe, since, limit)
 
-        # check the result is a list called 'candles' with data for
-        # only one 5min candle (because limit=1)
-        assert result is not None
-        assert list(result.keys())[0] == "candles" and len(result) == 1
-
-        # check the candle's data
-        assert (
-            list(result["candles"][0].keys())[0] == "startedAt"
-            and result["candles"][0]["startedAt"] == "2024-02-28T16:50:00.000Z"
-        )
-        assert (
-            list(result["candles"][0].keys())[2] == "high"
-            and result["candles"][0]["high"] == "61848"
-        )
-        assert (
-            list(result["candles"][0].keys())[5] == "baseTokenVolume"
-            and result["candles"][0]["baseTokenVolume"] == "23.6064"
-        )
+        if expected_timestamp:
+            assert result[0][0] == expected_timestamp, "Timestamp does not match"
+            assert result[0][4] == expected_close, "Close price does not match"
+        elif expected_error_msg:
+            assert (
+                "msg" in result[0][1] and result[0][1][1] == expected_error_msg
+            ), "Expected an error message"
+        else:
+            assert result is None
 
 
 @enforce_types
