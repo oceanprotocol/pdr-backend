@@ -287,13 +287,13 @@ def test_balance_check(
     mock_model.aimodel_ss = aimodel_ss
     agent = PredictoorAgent(ppss)
 
-    agent.feed_contract.token = Mock()
-    agent.feed_contract.token.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
-    mock_ROSE_token = Mock()
-    mock_ROSE_token.balanceOf.side_effect = [up_ROSE, down_ROSE]
+    mock_OCEAN = Mock()
+    mock_OCEAN.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
+    mock_ROSE = Mock()
+    mock_ROSE.balanceOf.side_effect = [up_ROSE, down_ROSE]
 
-    with patch(
-        "pdr_backend.predictoor.predictoor_agent.NativeToken",
-        return_value=mock_ROSE_token,
-    ):
-        assert agent.check_balances() == expected
+    agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
+    agent.ppss.web3_pp.ROSE = mock_ROSE
+        
+        
+    assert agent.check_balances() == expected
