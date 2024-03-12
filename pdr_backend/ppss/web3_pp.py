@@ -339,20 +339,6 @@ class _MockPredictoorContractWithTracking:
     def set_token(self, web3_pp):
         pass
 
-    @property
-    def token(self):
-        token = Mock(spec=Token)
-        token.balanceOf.return_value = Eth(1000).to_wei()
-        return token
-
-    @property
-    def OCEAN(self):
-        return self.token
-
-    @property
-    def ROSE(self):
-        return self.token
-
     def get_current_epoch_ts(self) -> UnixTimeS:
         """Returns a timestamp"""
         return UnixTimeS(self._w3.eth.timestamp // self.s_per_epoch * self.s_per_epoch)
