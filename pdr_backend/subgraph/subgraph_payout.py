@@ -156,8 +156,8 @@ def fetch_payouts(
                 "token": payout["prediction"]["slot"]["predictContract"]["token"][
                     "name"
                 ],
+                "predvalue": bool(payout["predictedValue"]),
                 "slot": UnixTimeS(int(payout["id"].split("-")[1])),
-                "predictedValue": bool(payout["predictedValue"]),
                 "revenue": float(payout["prediction"]["slot"]["revenue"]),
                 "roundSumStakesUp": float(
                     payout["prediction"]["slot"]["roundSumStakesUp"]

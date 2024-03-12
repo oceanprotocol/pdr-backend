@@ -12,11 +12,11 @@ class Trueval:
         ID: str,
         timestamp: UnixTimeS,
         token: str,
-        trueval: Union[bool, None],
+        truevalue: Union[bool, None],
         slot: UnixTimeS,  # slot/epoch timestamp
     ) -> None:
         self.ID = ID
-        self.trueval = trueval
+        self.truevalue = truevalue
         self.timestamp = timestamp
         self.token = token
         self.slot = slot
@@ -28,12 +28,12 @@ class Trueval:
 
 @enforce_types
 def mock_trueval(trueval_tuple: tuple) -> Trueval:
-    (ID, timestamp, token, trueval, slot) = trueval_tuple
+    (ID, timestamp, token, truevalue, slot) = trueval_tuple
     return Trueval(
         ID=ID,
         token=token,
+        truevalue=truevalue,
         slot=UnixTimeS(slot),
-        trueval=trueval,
         timestamp=UnixTimeS(timestamp),
     )
 

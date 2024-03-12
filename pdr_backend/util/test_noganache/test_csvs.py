@@ -18,8 +18,8 @@ def test_save_analysis_csv(tmpdir):
         data = csv.DictReader(f)
         data_rows = list(data)
 
-    assert data_rows[0]["Predicted Value"] == str(predictions[0].prediction)
-    assert data_rows[0]["True Value"] == str(predictions[0].trueval)
+    assert data_rows[0]["Predicted Value"] == str(predictions[0].predvalue)
+    assert data_rows[0]["True Value"] == str(predictions[0].truevalue)
     assert data_rows[0]["Timestamp"] == str(predictions[0].timestamp)
     assert list(data_rows[0].keys()) == [
         "PredictionID",
@@ -46,8 +46,8 @@ def test_save_prediction_csv(tmpdir):
         data = csv.DictReader(f)
         data_rows = list(row for row in data)
 
-    assert data_rows[0]["Predicted Value"] == str(predictions[0].prediction)
-    assert data_rows[0]["True Value"] == str(predictions[0].trueval)
+    assert data_rows[0]["Predicted Value"] == str(predictions[0].predvalue)
+    assert data_rows[0]["True Value"] == str(predictions[0].truevalue)
     assert data_rows[0]["Timestamp"] == str(predictions[0].timestamp)
     assert list(data_rows[0].keys()) == [
         "Predicted Value",

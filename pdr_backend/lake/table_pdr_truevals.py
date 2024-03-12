@@ -7,6 +7,6 @@ truevals_schema = {
     "ID": Utf8,
     "token": Utf8,
     "timestamp": Int64,
-    "trueval": Boolean,
+    "truevalue": Boolean,
     "slot": Int64,
 }

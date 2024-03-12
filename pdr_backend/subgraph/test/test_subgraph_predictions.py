@@ -20,9 +20,9 @@ SAMPLE_PREDICTION = Prediction(
     contract="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
     pair="ADA/USDT",
     timeframe="5m",
-    prediction=True,
+    predvalue=True,
     stake=0.050051425480971974,
-    trueval=False,
+    truevalue=False,
     timestamp=UnixTimeS(1698527000),
     source="binance",
     payout=0.0,
@@ -128,8 +128,8 @@ def test_fetch_filtered_predictions(mock_query_subgraph):
     assert predictions[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert predictions[0].pair == "ADA/USDT"
     assert predictions[0].contract == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
-    assert predictions[0].trueval is False
-    assert predictions[0].prediction is True
+    assert predictions[0].truevalue is False
+    assert predictions[0].predvalue is True
     assert mock_query_subgraph.call_count == 1
 
 

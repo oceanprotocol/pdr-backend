@@ -72,7 +72,8 @@ def test_get_predictoors_info_system(
 
     get_get_predictoor_summary_stats.return_value = predictions_df
     table = Table("pdr_predictions", predictions_schema, ppss)
-    table.df = predictions_df
+    table.append_to_storage(predictions_df)
+
     mock_get_gql_tables.return_value = {"pdr_predictions": table}
 
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
