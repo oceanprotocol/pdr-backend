@@ -42,20 +42,21 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     """
     assert approach in [1, 2]
 
-    _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
-    assert ppss.predictoor_ss.approach == approach
-    # now we're done the mocking, time for the real work!!
-
     # mock tokens
     mock_token = Mock()
     mock_token.balanceOf.return_value = Eth(1000).to_wei()
-    ppss.web3_pp.OCEAN_Token = mock_token
-    ppss.web3_pp.NativeToken = mock_token
 
-    # real work: main iterations
-    agent = PredictoorAgent(ppss)
-    for _ in range(500):
-        agent.take_step()
+    with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
+        "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
+    ):
+        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
+        assert ppss.predictoor_ss.approach == approach
+        # now we're done the mocking, time for the real work!!
+
+        # real work: main iterations
+        agent = PredictoorAgent(ppss)
+        for _ in range(500):
+            agent.take_step()
 
     # log some final results for debubbing / inspection
     mock_w3 = ppss.web3_pp.web3_config.w3
