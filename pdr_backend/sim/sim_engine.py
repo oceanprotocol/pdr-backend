@@ -199,17 +199,17 @@ class SimEngine:
         s += f"{acct_up_profit:8.5f} up"
         s += f" + {acct_down_profit:8.5f} down"
         s += f" = {pdr_profit_OCEAN:8.5f} OCEAN"
-        s += f" (cumulative {sum(self.st.pdr_profits_OCEAN):7.2f} OCEAN)"
+        s += f" (cumul. {sum(self.st.pdr_profits_OCEAN):7.2f} OCEAN)"
 
         s += f". Correct: {n_correct:4d}/{n_trials:4d} "
         s += f"= {acc_est*100:.2f}%"
         s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
         
         s += f". Precision=: {precision:.3f}, recall={recall:.3f}"
-        s += f", f1_score={f1_score:.3f}"
+        s += f", f1={f1_score:.3f}"
 
         s += f". trader profit = ${trader_profit_USD:9.4f}"
-        s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
+        s += f" (cumul. ${sum(self.st.trader_profits_USD):9.4f})"
         logger.info(s)
 
         # plot
