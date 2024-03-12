@@ -1,9 +1,6 @@
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.ppss.ppss import mock_ppss
-
-
-def _clean_up_table_registry():
-    TableRegistry()._tables = {}
+from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
 def _get_mock_ppss():
@@ -17,15 +14,18 @@ def _get_mock_ppss():
 
 
 def test_table_registry():
+    _clean_up_table_registry()
+
     TableRegistry().register_table(
         "test_table", ("test_table", {"test": "test"}, _get_mock_ppss())
     )
     assert len(TableRegistry().get_tables()) == 1
     assert TableRegistry()._tables["test_table"].table_name == "test_table"
-    _clean_up_table_registry()
 
 
 def test_register_tables():
+    _clean_up_table_registry()
+
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
@@ -35,18 +35,20 @@ def test_register_tables():
     assert len(TableRegistry().get_tables()) == 2
     assert TableRegistry()._tables["test_table"].table_name == "test_table"
     assert TableRegistry()._tables["test_table2"].table_name == "test_table2"
-    _clean_up_table_registry()
 
 
 def test_get_table():
+    _clean_up_table_registry()
+
     TableRegistry().register_table(
         "test_table", ("test_table", {"test": "test"}, _get_mock_ppss())
     )
     assert TableRegistry().get_table("test_table").table_name == "test_table"
-    _clean_up_table_registry()
 
 
 def test_get_tables():
+    _clean_up_table_registry()
+
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
@@ -62,10 +64,11 @@ def test_get_tables():
         TableRegistry().get_tables(["test_table2"])["test_table2"].table_name
         == "test_table2"
     )
-    _clean_up_table_registry()
 
 
 def test_clear_tables():
+    _clean_up_table_registry()
+
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
@@ -75,4 +78,3 @@ def test_clear_tables():
     assert len(TableRegistry().get_tables()) == 2
     TableRegistry().clear_tables()
     assert len(TableRegistry().get_tables()) == 0
-    _clean_up_table_registry()

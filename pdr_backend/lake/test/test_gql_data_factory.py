@@ -5,12 +5,15 @@ from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
 def test_gql_data_factory():
     """
     Test GQLDataFactory initialization
     """
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -32,6 +35,8 @@ def test_update(_mock_fetch_gql, tmpdir):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -67,6 +72,8 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     Test GQLDataFactory update calls the update function for all the tables
     """
     _clean_up_test_folder(tmpdir)
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -101,6 +108,8 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     Test GQLDataFactory update calls the getting the data from tables
     """
     _clean_up_test_folder(tmpdir)
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -137,6 +146,7 @@ def test_get_gql_tables(mock_update):
     Test GQLDataFactory's get_gql_tablesreturns all the tables
     """
     mock_update.return_value = None
+    _clean_up_table_registry()
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
@@ -159,6 +169,8 @@ def test_calc_start_ut(tmpdir):
     """
     Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
     """
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -181,6 +193,8 @@ def test_do_subgraph_fetch(
     _clean_up_test_folder,
     tmpdir,
 ):
+    _clean_up_table_registry()
+
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
