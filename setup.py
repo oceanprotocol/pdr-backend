@@ -25,7 +25,7 @@ install_requirements = [
     "pathlib",
     "polars==0.20.10",
     "polars[timezone]",
-    "pyarrow==15.0.0",
+    "pyarrow==15.0.1",
     "pylint==3.1.0",
     "pytest",
     "pytest-asyncio==0.23.5",
