@@ -4,7 +4,7 @@ import pytest
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 
 _D = {"do_plot": False, "log_dir": "logs", "test_n": 2}
 
@@ -52,3 +52,15 @@ def test_log_dir(tmpdir):
     ss = SimSS(d)
     target_log_dir = os.path.join(tmpdir, "logs")
     assert ss.log_dir == target_log_dir
+
+
+@enforce_types
+def test_sim_ss_test_dict(tmpdir):
+    log_dir = os.path.join(tmpdir, "logs")
+    d = sim_ss_test_dict(log_dir)
+    assert d["do_plot"]
+    assert d["log_dir"] == log_dir
+
+    ss = SimSS(d)
+    assert ss.do_plot
+    assert ss.log_dir == log_dir

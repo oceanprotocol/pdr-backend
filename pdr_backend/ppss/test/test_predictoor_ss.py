@@ -45,7 +45,7 @@ def test_predictoor_ss():
 
 @enforce_types
 def test_predictoor_ss_test_dict():
-    # test - reasoonable defaults when nothing passed in
+    # test - reasonable defaults when nothing passed in
     d = predictoor_ss_test_dict()
     f = d["predict_feed"]
     assert "binance" in f or "kraken" in f
@@ -64,16 +64,14 @@ def test_predictoor_ss_test_dict():
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
 
     # test s_start_payouts attribute set
-    predictoor_ss = PredictoorSS(d)
+    ss = PredictoorSS(d)
 
-    assert (
-        predictoor_ss.s_start_payouts == 0
-    ), "Must be unset in the test dict, so should return 0"
+    assert ss.s_start_payouts == 0, "Must be unset in the test dict, so should return 0"
 
     # let's set it here
     d["bot_only"]["s_start_payouts"] = 100
-    predictoor_ss = PredictoorSS(d)
-    assert predictoor_ss.s_start_payouts == 100, "Must be set to 100"
+    ss = PredictoorSS(d)
+    assert ss.s_start_payouts == 100, "Must be set to 100"
 
 
 @enforce_types

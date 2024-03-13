@@ -3,10 +3,10 @@ from unittest import mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.sim_engine import SimEngine
 
 
@@ -25,28 +25,13 @@ def test_sim_engine(tmpdir):
     ppss.predictoor_ss = PredictoorSS(d)
 
     # lake ss
-    d = {
-        "feeds": input_feeds,
-        "parquet_dir": os.path.join(tmpdir, "parquet_data"),
-        "st_timestr": "2023-06-18",
-        "fin_timestr": "2023-06-30",
-        "timeframe": "5m",
-    }
+    parquet_dir = os.path.join(tmpdir, "parquet_data")
+    d = lake_ss_test_dict(parquet_dir, input_feeds)
     ppss.lake_ss = LakeSS(d)
 
     # sim ss
-    d = {
-        "do_plot": True,
-        "log_dir": os.path.join(tmpdir, "logs"),
-        "test_n": 10,
-        "exchange_only": {
-            "timeout": 30000,
-            "options": {
-                "createMarketBuyOrderRequiresPrice": False,
-                "defaultType": "spot",
-            },
-        },
-    }
+    log_dir = os.path.join(tmpdir, "logs")
+    d = sim_ss_test_dict(log_dir)
     ppss.sim_ss = SimSS(d)
 
     # go
