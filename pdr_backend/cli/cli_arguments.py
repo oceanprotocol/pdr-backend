@@ -506,7 +506,7 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 class TopupArgParser(_ArgParser_PPSS_NETWORK):
     @property
-    def network_choices(self):  # all but "development"
+    def network_choices(self):
         return ["sapphire-testnet", "sapphire-mainnet"]
 
 
