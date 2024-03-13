@@ -30,7 +30,7 @@ class ClassifierMetrics:
     def recent_metrics_names() -> List[str]:
         return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall"]
 
-    def recent_metrics(self) -> List[Union[int,float]]:
+    def recent_metrics(self) -> List[Union[int, float]]:
         """Return most recent classifier metrics"""
         assert self.acc_ests, "must have >0 entries to call this"
         return (
@@ -41,7 +41,7 @@ class ClassifierMetrics:
             self.f1s[-1],
             self.precisions[-1],
             self.recalls[-1],
-            )
+        )
 
 
 # pylint: disable=too-many-instance-attributes
@@ -52,7 +52,7 @@ class SimState:
             tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
         }
         self.init_loop_attributes()
-                
+
     def init_loop_attributes(self):
         # 'i' is iteration number i
 
@@ -70,13 +70,17 @@ class SimState:
     @staticmethod
     def recent_metrics_names() -> List[str]:
         """Names of most recent metrics. Use eg for csv header."""
-        return ClassifierMetrics.recent_metrics_names() + \
-            ["pdr_profit_OCEAN", "trader_profit_USD"]
+        return ClassifierMetrics.recent_metrics_names() + [
+            "pdr_profit_OCEAN",
+            "trader_profit_USD",
+        ]
 
     def recent_metrics(self) -> List[Union[int, float]]:
         """Return most recent classifier metrics + profit metrics"""
-        return self.clm.recent_metrics() + \
-            [self.pdr_profits_OCEAN[-1], self.trader_profits_USD[-1]]
+        return self.clm.recent_metrics() + [
+            self.pdr_profits_OCEAN[-1],
+            self.trader_profits_USD[-1],
+        ]
 
     @property
     def ytrues_hat(self) -> List[bool]:

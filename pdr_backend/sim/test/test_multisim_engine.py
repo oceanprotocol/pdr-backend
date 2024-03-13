@@ -38,7 +38,7 @@ def test_multisim1(tmpdir):
     # multisim ss
     d = multisim_ss_test_dict()
     ppss.multisim_ss = MultisimSS(d)
-    
+
     # go
     multisim_engine = MultisimEngine(ppss)
     multisim_engine.run()
@@ -48,4 +48,3 @@ def test_multisim1(tmpdir):
 
     # other tests?
     raise "FIXME"
-    

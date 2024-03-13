@@ -82,26 +82,28 @@ def test_parquet_dir(tmpdir):
     target_parquet_dir = os.path.join(tmpdir, "parquet_data")
     assert ss.parquet_dir == target_parquet_dir
 
+
 @enforce_types
 def test_lake_ss_test_dict_1_default_feeds(tmpdir):
     parquet_dir = os.path.join(tmpdir, "parquet_data")
 
     d = lake_ss_test_dict(parquet_dir)
-    
+
     assert d["parquet_dir"] == parquet_dir
-    
+
     f = d["feeds"][0]
     assert "binance" in f or "kraken" in f
     assert "BTC" in f or "ETH" in f
     assert "5m" in f or "1h" in f
-    
+
     assert "st_timestr" in d
     assert "fin_timestr" in d
     assert "timeframe" in d
-    
+
     ss = LakeSS(d)
     assert ss.parquet_dir == parquet_dir
-    assert ss.feeds 
+    assert ss.feeds
+
 
 @enforce_types
 def test_lake_ss_test_dict_2_specify_feeds(tmpdir):
@@ -110,4 +112,3 @@ def test_lake_ss_test_dict_2_specify_feeds(tmpdir):
     d = lake_ss_test_dict(parquet_dir, feeds)
     assert d["parquet_dir"] == parquet_dir
     assert d["feeds"] == feeds
-    

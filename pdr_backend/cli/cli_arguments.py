@@ -235,10 +235,6 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
-        
-    @property
-    def network_choices(self):
-        return ["sapphire-testnet", "sapphire-mainnet"]
 
 
 @enforce_types
@@ -478,6 +474,7 @@ def print_args(arguments: Namespace):
     for arg_k, arg_v in arguments_dict.items():
         logger.info("%s=%s", arg_k, arg_v)
 
+
 ## below, list *ArgParser classes in same order as HELP_LONG
 
 # main tools
@@ -506,24 +503,27 @@ FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 TruevalArgParser = _ArgParser_PPSS_NETWORK
 DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 PublisherArgParser = _ArgParser_PPSS_NETWORK
-TopupArgParser = _ArgParser_PPSS_NETWORK
+
+
+class TopupArgParser(_ArgParser_PPSS_NETWORK):
+    @property
+    def network_choices(self):  # all but "development"
+        return ["sapphire-testnet", "sapphire-mainnet"]
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
-defined_parsers = { 
+defined_parsers = {
     # main tools
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
-
     # power tools
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
-
     # utilities
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(
         "For specified predictoors, report {accuracy, ..} of each predictoor",
@@ -547,7 +547,6 @@ defined_parsers = {
     "do_fund_accounts": FundAccountsArgParser(
         "Fund multiple wallets from a single address", "fund_accounts"
     ),
-
     # tools for core team
     "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),

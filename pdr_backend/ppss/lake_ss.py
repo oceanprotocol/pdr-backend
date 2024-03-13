@@ -89,14 +89,13 @@ class LakeSS(MultiFeedMixin):
         s += "-" * 10 + "\n"
         return s
 
-    
 
 # =========================================================================
 # utilities for testing
 
 
 @enforce_types
-def lake_ss_test_dict(parquet_dir: str, feeds: Optional[list]=None):
+def lake_ss_test_dict(parquet_dir: str, feeds: Optional[list] = None):
     """Use this function's return dict 'd' to construct LakeSS(d)"""
     feeds = feeds or ["binance BTC/USDT c 5m"]
     d = {
@@ -107,4 +106,3 @@ def lake_ss_test_dict(parquet_dir: str, feeds: Optional[list]=None):
         "timeframe": "5m",
     }
     return d
-
