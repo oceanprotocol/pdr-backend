@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.multisim_ss import MultisimSS
 from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.publisher_ss import PublisherSS
@@ -49,7 +50,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
-        self.multisim_ss = SimSS(d["multisim_ss"])
+        self.multisim_ss = MultisimSS(d["multisim_ss"])
         self.publisher_ss = PublisherSS(d["publisher_ss"], network)
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])

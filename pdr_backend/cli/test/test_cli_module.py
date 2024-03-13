@@ -7,24 +7,25 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_module import (
     _do_main,
+    do_analytics,
     do_check_network,
     do_claim_OCEAN,
     do_claim_ROSE,
+    do_create_accounts,
     do_dfbuyer,
+    do_fund_accounts,
     do_get_predictions_info,
     do_get_predictoors_info,
     do_get_traction_info,
     do_lake,
-    do_analytics,
+    do_multisim,
     do_predictoor,
     do_publisher,
     do_sim,
     do_topup,
-    do_create_accounts,
-    do_view_accounts,
-    do_fund_accounts,
     do_trader,
     do_trueval,
+    do_view_accounts,
 )
 from pdr_backend.ppss.ppss import PPSS
 
@@ -363,7 +364,19 @@ def test_do_sim(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
     with patch("pdr_backend.sim.sim_plotter.plt.show"):
-        do_sim(MockArgParser_PPSS_NETWORK().parse_args())
+        do_sim(MockArgParser_PPSS().parse_args())
+
+    mock_f.assert_called()
+
+    
+
+@enforce_types
+def test_do_multisim(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.MultisimEngine.run", mock_f)
+
+    ppss = MockArgParser_PPSS().parse_args()
+    do_multisim(ppss)
 
     mock_f.assert_called()
 

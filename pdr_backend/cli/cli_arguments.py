@@ -478,7 +478,7 @@ def print_args(arguments: Namespace):
     for arg_k, arg_v in arguments_dict.items():
         logger.info("%s=%s", arg_k, arg_v)
 
-## list *ArgParser classes in same order as HELP_LONG
+## below, list *ArgParser classes in same order as HELP_LONG
 
 # main tools
 SimArgParser = _ArgParser_PPSS
@@ -509,7 +509,7 @@ PublisherArgParser = _ArgParser_PPSS_NETWORK
 TopupArgParser = _ArgParser_PPSS_NETWORK
 
 
-# list each entry in defined_parsers in same order as HELP_LONG
+# below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = { 
     # main tools
     "do_sim": SimArgParser("Run simulation", "sim"),

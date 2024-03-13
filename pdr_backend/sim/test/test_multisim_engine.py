@@ -7,7 +7,7 @@ from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS
-from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.sim.multisim_engine import MultisimEngine
 
 
 @enforce_types
@@ -40,6 +40,12 @@ def test_multisim1(tmpdir):
     ppss.sim_ss = MultisimSS(d)
     
     # go
-    multisim = Multisim(ppss)
-    multisim.run()
+    multisim_engine = MultisimEngine(ppss)
+    multisim_engine.run()
+
+    # csv added?
+    raise "FIXME"
+
+    # other tests?
+    raise "FIXME"
     

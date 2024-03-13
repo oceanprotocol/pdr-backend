@@ -62,19 +62,19 @@ sim_ss: # sim only
       defaultType: spot
 
 multisim_ss:
-  approach: simplesweep # simplesweep | fastsweep (future) | ..
+  approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
   sweep_params:
   - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500 
   - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
   - predictoor_ss.aimodel_ss.balance_classes: None, SMOTE
-  - predictoor_ss.aimodel_ss.input_feeds:
-    - [1]
-      - binance BTC/USDT c 5m
-    - [2]
-      - binance BTC/USDT ETH/USDT c 5m
-    - [3]
-      - binance BTC/USDT c 5m
-      - kraken BTC/USDT c 5m
+#  - predictoor_ss.aimodel_ss.input_feeds:
+#   - [1]
+#     - binance BTC/USDT c 5m
+#   - [2]
+#     - binance BTC/USDT ETH/USDT c 5m
+#   - [3]
+#     - binance BTC/USDT c 5m
+#     - kraken BTC/USDT c 5m
   - trader_ss.buy_amt: 1000 USD, 2000 USD
   
 
