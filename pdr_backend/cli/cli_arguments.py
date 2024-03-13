@@ -4,7 +4,6 @@ import sys
 from argparse import Namespace
 
 from enforce_typing import enforce_types
-
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
