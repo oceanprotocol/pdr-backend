@@ -13,11 +13,9 @@ from pdr_backend.cli.cli_module import (
     do_trader,
     do_claim_OCEAN,
     do_claim_ROSE,
-
     # power tools
     do_lake,
     do_analytics,
-
     # utilities
     do_get_predictoors_info,
     do_get_predictions_info,
@@ -26,13 +24,11 @@ from pdr_backend.cli.cli_module import (
     do_create_accounts,
     do_view_accounts,
     do_fund_accounts,
-
     # tools for core team
     do_trueval,
     do_dfbuyer,
     do_publisher,
     do_topup,
-
     # (and, main)
     _do_main,
 )
@@ -209,6 +205,7 @@ _CLI_PATH = "pdr_backend.cli.cli_module"
 # ---------------------------------------------------------------
 # test: Main tools
 
+
 @enforce_types
 def test_do_sim(monkeypatch):
     mock_f = Mock()
@@ -219,7 +216,7 @@ def test_do_sim(monkeypatch):
 
     mock_f.assert_called()
 
-    
+
 @enforce_types
 def test_do_predictoor(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.PredictoorAgent", MockAgent)
@@ -227,7 +224,7 @@ def test_do_predictoor(monkeypatch):
     do_predictoor(MockArgParser_APPROACH_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
 
-    
+
 @enforce_types
 def test_do_trader(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.TraderAgent1", MockAgent)
@@ -242,7 +239,6 @@ def test_do_trader(monkeypatch):
 
     with pytest.raises(ValueError):
         do_trader(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH_BAD).parse_args())
-
 
 
 @enforce_types
@@ -266,6 +262,7 @@ def test_do_claim_ROSE(monkeypatch):
 # ---------------------------------------------------------------
 # test: Power tools
 
+
 @enforce_types
 def test_do_lake(monkeypatch):
     mock_f = Mock()
@@ -274,7 +271,7 @@ def test_do_lake(monkeypatch):
     do_lake(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
-    
+
 @enforce_types
 def test_do_analytics(monkeypatch):
     mock_f = Mock()
@@ -288,6 +285,7 @@ def test_do_analytics(monkeypatch):
 
 # ---------------------------------------------------------------
 # test: Utilities
+
 
 @enforce_types
 def test_do_get_predictoors_info(monkeypatch):
@@ -327,7 +325,6 @@ def test_do_check_network(monkeypatch):
     mock_f.assert_called()
 
 
-    
 @enforce_types
 def test_do_create_accounts(monkeypatch):
     mock_f = Mock()
@@ -357,9 +354,9 @@ def test_do_fund_accounts(monkeypatch):
     mock_f.assert_called()
 
 
-    
 # ---------------------------------------------------------------
 # test: Tools for core team
+
 
 @enforce_types
 def test_do_trueval(monkeypatch):
@@ -368,7 +365,7 @@ def test_do_trueval(monkeypatch):
     do_trueval(MockArgParser_PPSS_NETWORK().parse_args())
     assert MockAgent.was_run
 
-    
+
 @enforce_types
 def test_do_dfbuyer(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.DFBuyerAgent", MockAgent)
@@ -397,6 +394,7 @@ def test_do_topup(monkeypatch):
 
 # ---------------------------------------------------------------
 # (test _do_main)
+
 
 @enforce_types
 def test_do_main(monkeypatch, capfd):

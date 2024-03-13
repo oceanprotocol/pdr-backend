@@ -101,7 +101,7 @@ def do_trader(args, nested_args=None):
 
     agent.run()
 
-    
+
 @enforce_types
 def do_claim_OCEAN(args, nested_args=None):
     ppss = PPSS(
