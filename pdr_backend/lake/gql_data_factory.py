@@ -33,6 +33,8 @@ from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
+from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -63,30 +65,39 @@ class GQLDataFactory:
 
         # configure all tables that will be recorded onto lake
         self.record_config = {
-            "tables": {
-                "pdr_predictions": Table(
-                    predictions_table_name,
-                    predictions_schema,
-                    ppss,
-                ),
-                "pdr_subscriptions": Table(
-                    subscriptions_table_name,
-                    subscriptions_schema,
-                    ppss,
-                ),
-                "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-                "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-            },
             "fetch_functions": {
-                "pdr_predictions": fetch_filtered_predictions,
-                "pdr_subscriptions": fetch_filtered_subscriptions,
-                "pdr_truevals": fetch_truevals,
-                "pdr_payouts": fetch_payouts,
+                predictions_table_name: fetch_filtered_predictions,
+                subscriptions_table_name: fetch_filtered_subscriptions,
+                truevals_table_name: fetch_truevals,
+                payouts_table_name: fetch_payouts,
             },
             "config": {
                 "contract_list": contract_list,
             },
+            "gql_tables": [
+                predictions_table_name,
+                subscriptions_table_name,
+                truevals_table_name,
+                payouts_table_name,
+            ],
         }
+
+        TableRegistry().register_tables(
+            {
+                predictions_table_name: (
+                    predictions_table_name,
+                    predictions_schema,
+                    self.ppss,
+                ),
+                subscriptions_table_name: (
+                    subscriptions_table_name,
+                    subscriptions_schema,
+                    self.ppss,
+                ),
+                truevals_table_name: (truevals_table_name, truevals_schema, self.ppss),
+                payouts_table_name: (payouts_table_name, payouts_schema, self.ppss),
+            }
+        )
 
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
@@ -110,7 +121,7 @@ class GQLDataFactory:
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
 
-        return self.record_config["tables"]
+        return TableRegistry().get_tables(self.record_config["gql_tables"])
 
     @enforce_types
     def _do_subgraph_fetch(
@@ -199,7 +210,9 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = table.csv_data_store.get_last_timestamp(table.table_name)
+        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
+            table.table_name
+        )
 
         start_ut = (
             last_timestamp
@@ -225,7 +238,9 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
-        for _, table in self.record_config["tables"].items():
+        for _, table in (
+            TableRegistry().get_tables(self.record_config["gql_tables"]).items()
+        ):
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")

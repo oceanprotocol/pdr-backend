@@ -1,7 +1,6 @@
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 

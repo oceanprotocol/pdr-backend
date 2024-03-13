@@ -117,7 +117,6 @@ def fetch_payouts(
     skip: int,
     network: str = "mainnet",
 ) -> List[Payout]:
-
     payouts: List[Payout] = []
 
     query = get_payout_query(

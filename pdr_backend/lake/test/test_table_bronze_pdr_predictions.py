@@ -4,18 +4,17 @@ from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     bronze_pdr_predictions_table_name,
+    get_bronze_pdr_predictions_data_with_SQL,
 )
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    get_bronze_pdr_predictions_data_with_SQL,
-)
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
 @enforce_types
@@ -25,6 +24,8 @@ def test_table_bronze_pdr_predictions(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
+    _clean_up_table_registry()
+
     # please note date, including Nov 1st
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"
