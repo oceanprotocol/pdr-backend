@@ -71,7 +71,7 @@ def test_etl(
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss)
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
     }
 
     gql_tables["pdr_predictions"].df = preds
@@ -113,7 +113,7 @@ def test_etl(
         _gql_datafactory_etl_payouts_df,
         _gql_datafactory_etl_predictions_df,
         _gql_datafactory_etl_truevals_df,
-        _gql_datafactory_etl_slots_df
+        _gql_datafactory_etl_slots_df,
     )
 
 
@@ -241,13 +241,14 @@ def test_etl_do_bronze_step(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
 
+
 @enforce_types
 def test_etl_do_silver_step(
     etl: ETL,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
-    _gql_datafactory_etl_slots_df
+    _gql_datafactory_etl_slots_df,
 ):
     etl.do_silver_step()
 

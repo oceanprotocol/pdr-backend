@@ -22,6 +22,10 @@ from pdr_backend.lake.table_pdr_subscriptions import (
     subscriptions_schema,
     subscriptions_table_name,
 )
+from pdr_backend.lake.table_pdr_slots import (
+    slots_schema,
+    slots_table_name,
+)
 
 
 @enforce_types
@@ -30,6 +34,7 @@ def test_silver_bronze_pdr_predictions(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_subscriptions_df,
+    _gql_datafactory_etl_slots_df,
     tmpdir,
 ):
     # please note date, including Nov 1st
@@ -50,6 +55,9 @@ def test_silver_bronze_pdr_predictions(
         "pdr_subscriptions": Table(
             subscriptions_table_name, subscriptions_schema, ppss
         ),
+        "pdr_slots": Table(
+            slots_table_name, slots_schema, ppss
+        ),
         "bronze_pdr_predictions": Table(
             bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
         ),
@@ -62,7 +70,8 @@ def test_silver_bronze_pdr_predictions(
     gql_tables["pdr_truevals"].df = _gql_datafactory_etl_truevals_df
     gql_tables["pdr_payouts"].df = _gql_datafactory_etl_payouts_df
     gql_tables["pdr_subscriptions"].df = _gql_datafactory_etl_subscriptions_df
-    gql_tables["pdr_payouts"].df = get_bronze_pdr_predictions_table(gql_tables, ppss)
+    gql_tables["pdr_slots"].df = _gql_datafactory_etl_slots_df
+    gql_tables["bronze_pdr_predictions"].df = get_bronze_pdr_predictions_table(gql_tables, ppss).df
 
     assert len(gql_tables[bronze_pdr_predictions_table_name].df) == 7
 
@@ -78,6 +87,8 @@ def test_silver_bronze_pdr_predictions(
             & (pl.col("contract") == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695")
         )[0]
     )
+
+    print(gql_tables[silver_pdr_predictions_table_name].df)
 
     # Check payout sum
     assert (
@@ -99,12 +110,15 @@ def test_silver_bronze_pdr_predictions(
         )[0]["count_per_ID"][0]
     )
 
-    assert selected_user_prediction["sum_revenue_df"][0] == 0
+    assert selected_user_prediction["sum_revenue_df"][0] == 2.000020833333333
     assert selected_user_prediction["sum_stake"][0] == 8.9
+    print(selected_user_prediction["sum_revenue_df"][0]
+        + selected_user_prediction["sum_revenue_stake"][0])
     assert (
         selected_user_prediction["sum_revenue"][0]
         == selected_user_prediction["sum_revenue_df"][0]
         + selected_user_prediction["sum_revenue_stake"][0]
+        + selected_user_prediction["sum_revenue_user"][0]
     )
 
     # Check number of wins and losses
@@ -227,7 +241,7 @@ def test_silver_bronze_pdr_predictions(
             & (pl.col("contract") == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695")
         )[0]
     )
-    assert selected_user_prediction["sum_revenue"][0] == 41.90000023
+    assert selected_user_prediction["sum_revenue"][0] == 39.91999550778564
     assert selected_user_prediction["count_wins"][0] == 5
 
     # Insert new prediction to bronze table
@@ -252,26 +266,32 @@ def test_silver_bronze_pdr_predictions(
 
     # Update silver predictions
     get_silver_pdr_predictions_table(gql_tables, ppss)
-    print(gql_tables[silver_pdr_predictions_table_name].df)
 
     # Check that new prediction didn't change the lengts of the table
     assert len(gql_tables[silver_pdr_predictions_table_name].df) == 10
+    print(gql_tables[silver_pdr_predictions_table_name].df["sum_revenue_df"])
 
-    assert gql_tables[silver_pdr_predictions_table_name].df[7]["sum_revenue"][0] == 40.9
+    assert gql_tables[silver_pdr_predictions_table_name].df[7]["sum_revenue"][0] == 38.919995277785645
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue"][0]
-        == 51.900000229999996
+        == 49.91999550778564
     )
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue"][0]
-        == 71.900000229999996
+        == 69.91999550778564
     )
 
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue_df"][0]
-        == 71.900000229999996
+        == 2.000020833333333
     )
+
+    assert (
+        gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue_user"][0]
+        == 2.1668097059461804
+    )
+
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue_stake"][0]
-        == 71.900000229999996
+        == 65.91996425778564
     )

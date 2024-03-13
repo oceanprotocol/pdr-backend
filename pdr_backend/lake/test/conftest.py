@@ -100,12 +100,12 @@ _ETL_PAYOUT_TUPS = [
         1699124400,  # slot # Nov 04 2023 19:00:00 GMT
         "BNB/USDT",
         1699124402,  # timestamp
-        7.160056238874628619,  # payout
+        3.56000,  # payout
         True,  # predictedValue
         # True,  # trueValue
-        0.92804,  # revenue
-        38.09065,  # roundSumStakesUp
-        93.31532,  # roundSumStakes
+        3.56000,  # revenue
+        2.00002,  # roundSumStakesUp
+        12.00002,  # roundSumStakes
         3.46000,  # stake
     ),
     (
@@ -118,8 +118,8 @@ _ETL_PAYOUT_TUPS = [
         False,  # predictedValue
         # False,  # trueValue
         0.92804,  # revenue
-        47.71968,  # roundSumStakesUp
-        74.30484,  # roundSumStakes
+        32.00002,  # roundSumStakesUp
+        32.00002,  # roundSumStakes
         3.4600000000000004,  # stake
     ),
     (
@@ -128,10 +128,10 @@ _ETL_PAYOUT_TUPS = [
         1699302500,  # slot # Nov 06 2023 19:00:00 GMT
         "ETH/USDT",  # token
         1699302601,  # timestamp
-        7.4400000000000004,  # payout
+        5.459995277785647,  # payout
         True,  # predictedValue
         # True,  # trueValue
-        7.4400000000000004,  # revenue
+        5.459995277785647,  # revenue
         5.4400000000000004,  # roundSumStakesUp
         7.4400000000000004,  # roundSumStakes
         5.4400000000000004,  # stake
@@ -295,7 +295,7 @@ _ETL_SUBSCRIPTIONS_TUPS = [
         "binance",
         1699300900,
         "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
-        "2.4979184013322233",
+        "2000.4979184013322233",
         98,
         "0x2433e002Ed10B5D6a3d8d1e0C5D2083BE9E37f1D",
     ),
@@ -305,7 +305,7 @@ _ETL_SUBSCRIPTIONS_TUPS = [
         "binance",
         1699302100,
         "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
-        "2.4979184013322233",
+        "2000.4979184013322233",
         99,
         "0x2433e002Ed10B5D6a3d8d1e0C5D2083BE9E37f1D",
     ),
@@ -315,7 +315,7 @@ _ETL_SUBSCRIPTIONS_TUPS = [
         "binance",
         1699302100,
         "0x00031f5de899420a46cb29a7376ef174a9d84ad4ce82a909628a65135f8a4729",
-        "2.4979184013322233",
+        "2000.4979184013322233",
         99,
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
     ),
@@ -348,12 +348,12 @@ _ETL_SLOT_TUPS = [
         None,
     ),
     (
-        "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-1699124400",
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699124400",
         1699124400,
         1699124400,  # Nov 04 2023 19:00:00 GMT
         None,
-        None,
-        None,
+        2.00002,
+        12.00002,
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699214300",
@@ -367,25 +367,25 @@ _ETL_SLOT_TUPS = [
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800",
         1699300800,
         1699300800,  # Nov 06 2023 19:00:00 GMT
-        None,
-        None,
-        None,
+        True,
+        32.00002,
+        32.00002,
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699315100",
         1699315100,
         1699315100,  # Nov 07 2023 19:00:00 GMT
-        None,
-        None,
-        None,
+        False,
+        12.00002,
+        22.00012,
     ),
     (
-        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699401600",
-        1699401600,
-        1699401600,  # Nov 08 2023 19:00:00 GMT
-        None,
-        None,
-        None,
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600",
+        1699302600,
+        1699302600,  # Nov 08 2023 19:00:00 GMT
+        True,
+        5.4400000000000004,
+        7.4400000000000004,
     ),
 ]
 
@@ -414,9 +414,9 @@ def mock_etl_subscriptions() -> List[Subscription]:
         for subscription_tuple in _ETL_SUBSCRIPTIONS_TUPS
     ]
 
+
 def mock_etl_slots() -> List[Slot]:
     return [mock_slot(slot_tuple) for slot_tuple in _ETL_SLOT_TUPS]
-
 
 
 @pytest.fixture()
@@ -462,6 +462,8 @@ def _gql_datafactory_etl_subscriptions_df():
 
     return subscriptions_df
 
+
+@pytest.fixture()
 def _gql_datafactory_etl_slots_df():
     _slots = mock_etl_slots()
     slots_df = _object_list_to_df(_slots, slots_schema)
