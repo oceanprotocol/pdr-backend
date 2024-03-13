@@ -96,11 +96,11 @@ class LakeSS(MultiFeedMixin):
 
 
 @enforce_types
-def lake_ss_test_dict(parquet_dir: str, input_feeds: Optional[List[str]]=None):
+def lake_ss_test_dict(parquet_dir: str, feeds: Optional[list]=None):
     """Use this function's return dict 'd' to construct LakeSS(d)"""
-    input_feeds = input_feeds or ["binance BTC/USDT c 5m"]
+    feeds = feeds or ["binance BTC/USDT c 5m"]
     d = {
-        "feeds": input_feeds,
+        "feeds": feeds,
         "parquet_dir": parquet_dir,
         "st_timestr": "2023-06-18",
         "fin_timestr": "2023-06-30",

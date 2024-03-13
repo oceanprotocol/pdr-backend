@@ -45,9 +45,9 @@ def test_multisim_ss_from_dict(tmpdir):
     
 @enforce_types
 def test_multisim_ss_unhappy_inputs():
-    d = multisim_ss_test_dict(sweep_params)
+    d = multisim_ss_test_dict(approach="foo")
     with pytest.raises(ValueError):
-        MultisimSS(aimodel_ss_test_dict(max_n_train=0))
+        MultisimSS(d)
 
 
 @enforce_types
