@@ -11,8 +11,8 @@ contract PredictoorMaster {
     address public immutable owner;
 
     constructor(address oceanTokenAddr_) {
-        instance_up = Predictoor();
-        instance_down = Predictoor();
+        instance_up = new Predictoor();
+        instance_down = new Predictoor();
         instance_up.initialize(msg.sender, oceanTokenAddr_);
         instance_down.initialize(msg.sender, oceanTokenAddr_);
         
@@ -30,7 +30,7 @@ contract PredictoorMaster {
     function sendTokensToInstance(uint256 amtUp, uint256 amtDown) external onlyOwner {
         IERC20 tokenInstance = IERC20(oceanTokenAddr);
         if (amtUp != 0) tokenInstance.transfer(address(instance_up), amtUp);
-        if (amtDown != 0) tokenInstance.transfer(instance_down, amtDown);
+        if (amtDown != 0) tokenInstance.transfer(address(instance_down), amtDown);
     }
 
     ///@notice claim tokens from the instances
