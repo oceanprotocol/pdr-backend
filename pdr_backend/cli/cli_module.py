@@ -22,6 +22,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -55,7 +56,10 @@ def _do_main():
 
 
 # ========================================================================
-# actual cli implementations. In order of help text.
+# actual cli implementations. Given in same order as HELP_LONG
+
+
+# do_help() is implemented in cli_arguments and imported, so nothing needed here
 
 
 @enforce_types
@@ -98,6 +102,59 @@ def do_trader(args, nested_args=None):
 
     agent.run()
 
+    
+@enforce_types
+def do_claim_OCEAN(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
+    do_ocean_payout(ppss)
+
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_ocean_payout(ppss)
+
+
+@enforce_types
+def do_claim_ROSE(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
+    do_rose_payout(ppss)
+
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_rose_payout(ppss)
+
+
+@enforce_types
+def do_multisim(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="development",
+        nested_override_args=nested_args,
+    )
+    multisim_engine = MultisimEngine(ppss)
+    multisim_engine.run()
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_deployer(args, nested_args=None):
+    deployer_main(args)
+
 
 @enforce_types
 def do_lake(args, nested_args=None):
@@ -134,45 +191,6 @@ def do_analytics(args, nested_args=None):
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()
-
-
-# do_help() is implemented in cli_arguments and imported, so nothing needed here
-
-
-@enforce_types
-def do_claim_OCEAN(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network="sapphire-mainnet",
-        nested_override_args=nested_args,
-    )
-    do_ocean_payout(ppss)
-
-    # check if there's a second pk
-    pk2 = os.getenv("PRIVATE_KEY2")
-    if pk2 is None:
-        return
-    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
-    ppss.web3_pp.set_web3_config(web3_config)
-    do_ocean_payout(ppss)
-
-
-@enforce_types
-def do_claim_ROSE(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network="sapphire-mainnet",
-        nested_override_args=nested_args,
-    )
-    do_rose_payout(ppss)
-
-    # check if there's a second pk
-    pk2 = os.getenv("PRIVATE_KEY2")
-    if pk2 is None:
-        return
-    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
-    ppss.web3_pp.set_web3_config(web3_config)
-    do_rose_payout(ppss)
 
 
 @enforce_types
@@ -313,9 +331,3 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(Eth(args.TOKEN_AMOUNT), to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
-
-
-@enforce_types
-# pylint: disable=unused-argument
-def do_deployer(args, nested_args=None):
-    deployer_main(args)

@@ -49,6 +49,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
         self.sim_ss = SimSS(d["sim_ss"])
+        self.multisim_ss = SimSS(d["multisim_ss"])
         self.publisher_ss = PublisherSS(d["publisher_ss"], network)
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])

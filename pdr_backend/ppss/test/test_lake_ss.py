@@ -81,3 +81,33 @@ def test_parquet_dir(tmpdir):
     ss = LakeSS(d)
     target_parquet_dir = os.path.join(tmpdir, "parquet_data")
     assert ss.parquet_dir == target_parquet_dir
+
+@enforce_types
+def test_lake_ss_test_dict_1_default_input_feeds(tmpdir):
+    parquet_dir = os.path.join(tmpdir, "parquet_data")
+
+    d = lake_ss_test_dict(parquet_dir)
+    
+    assert d.parquet_dir == parquet_dir
+    
+    f0 = d["input_feeds"][0]
+    assert "binance" in f or "kraken" in f0
+    assert "BTC" in f or "ETH" in f0
+    assert "5m" in f or "1h" in f0
+    
+    assert "st_timestr" in d
+    assert "fin_timestr" in d
+    assert "timeframe" in d
+    
+    ss = LakeSS(d)
+    assert ss.parquet_dir == parquet_dir
+    assert ss.feeds 
+
+@enforce_types
+def test_lake_ss_test_dict_2_specify_input_feeds(tmpdir):
+    parquet_dir = os.path.join(tmpdir, "parquet_data")
+    input_feeds = ["kraken DOT/USDT c 60m", "dydx DOT/USDT c 60m"]
+    d = lake_ss_test_dict(parquet_dir, input_feeds)
+    assert d["parquet_dir"] == parquet_dir
+    assert d["input_feeds"] == input_feeds
+    

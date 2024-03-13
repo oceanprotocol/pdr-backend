@@ -45,7 +45,7 @@ def test_predictoor_ss():
 
 @enforce_types
 def test_predictoor_ss_test_dict():
-    # test - reasoonable defaults when nothing passed in
+    # test - reasonable defaults when nothing passed in
     d = predictoor_ss_test_dict()
     f = d["predict_feed"]
     assert "binance" in f or "kraken" in f
@@ -72,8 +72,8 @@ def test_predictoor_ss_test_dict():
 
     # let's set it here
     d["bot_only"]["s_start_payouts"] = 100
-    predictoor_ss = PredictoorSS(d)
-    assert predictoor_ss.s_start_payouts == 100, "Must be set to 100"
+    ss = PredictoorSS(d)
+    assert ss.s_start_payouts == 100, "Must be set to 100"
 
 
 @enforce_types
