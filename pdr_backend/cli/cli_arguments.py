@@ -234,10 +234,6 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
 
-    @property
-    def network_choices(self):
-        return ["sapphire-testnet", "sapphire-mainnet"]
-
 
 @enforce_types
 # pylint: disable=too-many-ancestors
@@ -504,7 +500,12 @@ FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 TruevalArgParser = _ArgParser_PPSS_NETWORK
 DfbuyerArgParser = _ArgParser_PPSS_NETWORK
 PublisherArgParser = _ArgParser_PPSS_NETWORK
-TopupArgParser = _ArgParser_PPSS_NETWORK
+
+
+class TopupArgParser(_ArgParser_PPSS_NETWORK):
+    @property
+    def network_choices(self):
+        return ["sapphire-testnet", "sapphire-mainnet"]
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
