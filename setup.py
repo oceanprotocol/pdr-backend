@@ -35,7 +35,7 @@ install_requirements = [
     "requests-mock==1.11.0",
     "scikit-learn==1.4.1.post1",
     "statsmodels==0.14.1",
-    "types-pyYAML==6.0.12.12",
+    "types-pyYAML==6.0.12.20240311",
     "types-requests==2.31.0.20240218",
     "web3==6.15.1",
     "sapphire.py==0.2.2",
