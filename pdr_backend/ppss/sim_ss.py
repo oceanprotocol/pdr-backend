@@ -60,6 +60,9 @@ class SimSS(StrMixin, CCXTExchangeMixin):
         return ["livemock", "livereal", "histmock"]
 
 
+# =========================================================================
+# utilities for testing
+
 @enforce_types
 def sim_ss_test_dict(log_dir: str) -> dict:
     d = {

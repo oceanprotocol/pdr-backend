@@ -64,11 +64,9 @@ def test_predictoor_ss_test_dict():
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
 
     # test s_start_payouts attribute set
-    predictoor_ss = PredictoorSS(d)
+    ss = PredictoorSS(d)
 
-    assert (
-        predictoor_ss.s_start_payouts == 0
-    ), "Must be unset in the test dict, so should return 0"
+    assert ss.s_start_payouts == 0, "Must be unset in the test dict, so should return 0"
 
     # let's set it here
     d["bot_only"]["s_start_payouts"] = 100
