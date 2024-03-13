@@ -26,7 +26,8 @@ class ClassifierMetrics:
         self.precisions.append(precision)
         self.recalls.append(recall)
 
-    def recent_metrics_names(self) -> List[str]:
+    @staticmethod
+    def recent_metrics_names() -> List[str]:
         return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall"]
 
     def recent_metrics(self) -> List[Union[int,float]]:
@@ -66,9 +67,10 @@ class SimState:
         self.pdr_profits_OCEAN: List[float] = []  # [i] : predictoor-profit
         self.trader_profits_USD: List[float] = []  # [i] : trader-profit
 
-    def recent_metrics_names(self) -> List[str]:
+    @staticmethod
+    def recent_metrics_names() -> List[str]:
         """Names of most recent metrics. Use eg for csv header."""
-        return self.clm.recent_metrics_names + \
+        return ClassifierMetrics.recent_metrics_names() + \
             ["pdr_profit_OCEAN", "trader_profit_USD"]
 
     def recent_metrics(self) -> List[Union[int, float]]:

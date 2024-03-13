@@ -3,10 +3,11 @@ from unittest import mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
+from pdr_backend.ppss.multisim_ss import MultisimSS, multisim_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.multisim_engine import MultisimEngine
 
 
@@ -35,9 +36,8 @@ def test_multisim1(tmpdir):
     assert not ppss.sim_ss.do_plot, "don't want to plot for multisim test"
 
     # multisim ss
-    sweep_params = FIXME
-    d = multisim_ss_test_dict(sweep_params)
-    ppss.sim_ss = MultisimSS(d)
+    d = multisim_ss_test_dict()
+    ppss.multisim_ss = MultisimSS(d)
     
     # go
     multisim_engine = MultisimEngine(ppss)

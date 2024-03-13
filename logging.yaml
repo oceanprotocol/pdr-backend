@@ -22,13 +22,13 @@ loggers:
     sim_engine:
         level: INFO
 
-    sim_sweep:
-        level: INFO
-
     predictoor_agent:
         level: INFO
 
     trader_agent:
+        level: INFO
+
+    multisim_engine:
         level: INFO
 
 # for a full list of loggers:

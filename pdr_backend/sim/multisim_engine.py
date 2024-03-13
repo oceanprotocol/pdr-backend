@@ -7,6 +7,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("multisim_engine")
 
@@ -17,11 +19,11 @@ class MultisimEngine:
 
     def run(self):
         logger.info("Multisim engine: start")
-        self.initalize_csv()
-        n_combos = ppss.multisim_ss.n_combos
+        self.initialize_csv()
+        n_combos = self.ppss.multisim_ss.n_combos
         for i in range(n_combos):
             logger.info("Multisim run #%s/%s: start" % (i+1, n_combos))
-            if engine.ppss.sim_ss.do_plot:
+            if self.ppss.sim_ss.do_plot:
                 raise ValueError("For multisim, must have sim_ss.do_plot=False")
             raise "FIXME update PPSS for sim engine now"
             ppss = self.ppss
@@ -37,10 +39,10 @@ class MultisimEngine:
     def initialize_csv(self):
         filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
         self.csv_file = os.path.join(self.ppss.sim_ss.log_dir, filebase)
-        assert not os.path.exists(csv_file), csv_file
+        assert not os.path.exists(self.csv_file), self.csv_file
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
-            row = engine.st.recent_metrics_names()
+            row = SimState.recent_metrics_names()
             writer.writerow(row)
         logger.info("Multisim output file: %s" % self.csv_file)
         

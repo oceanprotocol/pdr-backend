@@ -3,10 +3,10 @@ from unittest import mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.sim_engine import SimEngine
 
 
