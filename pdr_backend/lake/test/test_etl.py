@@ -15,6 +15,7 @@ from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_nam
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
@@ -151,9 +152,9 @@ def test_etl_do_bronze_step(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds)
-    gql_tables["pdr_truevals"].append_to_storage(truevals)
-    gql_tables["pdr_payouts"].append_to_storage(payouts)
+    gql_tables["pdr_predictions"].append_to_storage(preds, True)
+    gql_tables["pdr_truevals"].append_to_storage(truevals, True)
+    gql_tables["pdr_payouts"].append_to_storage(payouts, True)
 
     mock_get_gql_tables.return_value = gql_tables
 
@@ -163,7 +164,7 @@ def test_etl_do_bronze_step(
     pds_instance = _get_test_PDS(tmpdir)
     pdr_predictions_records = pds_instance.query_data(
         f"""
-            SELECT * FROM {predictions_table_name}
+            SELECT * FROM _build_{predictions_table_name}
         """
     )
     assert len(pdr_predictions_records) == 6
@@ -173,7 +174,7 @@ def test_etl_do_bronze_step(
 
     # assert bronze_pdr_predictions_df is created
     bronze_pdr_predictions_records = pds_instance.query_data(
-        "SELECT * FROM bronze_pdr_predictions"
+        "SELECT * FROM _build_bronze_pdr_predictions"
     )
     assert len(bronze_pdr_predictions_records) == 6
 
@@ -252,3 +253,80 @@ def test_etl_do_bronze_step(
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
+
+@enforce_types
+def test_check_build_sql_tables(
+    tmpdir
+):
+    etl = ETL(None, None)
+    pds = PersistentDataStore(str(tmpdir))
+
+    db_tables_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+    #SELECT ALL TABLES FROM DB 
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    # DROP ALL TABLES
+    for table in db_tables:
+        pds.duckdb_conn.execute(f"DROP TABLE {table[0]}")
+
+    pds.create_table(pl.DataFrame(), "_build_a")
+    pds.create_table(pl.DataFrame(), "_build_b")
+    pds.create_table(pl.DataFrame(), "_build_c")
+
+    #check if tables are created
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    assert len(db_tables) == 3
+
+    etl.build_table_names = ["a", "b", "c"]
+    etl._check_build_sql_tables()
+
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    assert len(db_tables) == 0
+
+@enforce_types
+def test_move_build_tables_to_permanent(
+    tmpdir
+):
+    etl = ETL(None, None)
+    pds = PersistentDataStore(str(tmpdir))
+
+    db_tables_query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+    #SELECT ALL TABLES FROM DB 
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    # DROP ALL TABLES
+    for table in db_tables:
+        pds.duckdb_conn.execute(f"DROP TABLE {table[0]}")
+
+    pds.create_table(pl.DataFrame(), "_build_a")
+    pds.create_table(pl.DataFrame(), "_build_b")
+    pds.create_table(pl.DataFrame(), "_build_c")
+
+    #check if tables are created
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    assert len(db_tables) == 3
+
+    etl.build_table_names = ["a", "b", "c"]
+    etl._move_build_tables_to_permanent()
+
+    db_tables = pds.duckdb_conn.execute(
+        db_tables_query
+    ).fetchall()
+
+    assert len(db_tables) == 3
+    assert db_tables[0][0] == "a"
+    assert db_tables[1][0] == "b"
+    assert db_tables[2][0] == "c"
