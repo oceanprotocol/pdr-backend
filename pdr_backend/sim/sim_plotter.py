@@ -5,7 +5,6 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import random
-from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
@@ -44,7 +43,6 @@ class SimPlotter:
         c1, c2, c3 = streamlit.columns((1, 2, 1))
         c11, c12 = c1.container(), c1.container()
         c31, c32 = c3.container(), c3.container()
-
         c4, c5 = streamlit.columns((1, 1))
 
         self.canvas = {
@@ -55,6 +53,7 @@ class SimPlotter:
             "trader_profit_vs_ptrue": c32.empty(),
             "aimodel_varimps": c4.empty(),
             "aimodel_response": c5.empty(),
+            "f1_precision_recall_vs_time": streamlit.empty(),
         }
 
         self.figs = {}
@@ -69,9 +68,6 @@ class SimPlotter:
         self.N_done: int = 0
         self.x: List[float] = []
 
-        self.y01_est: List[float] = []
-        self.y01_l: List[float] = []
-        self.y01_u: List[float] = []
         self.plotted_before: bool = False
 
     # pylint: disable=too-many-statements
@@ -91,6 +87,7 @@ class SimPlotter:
         self._plot_trader_profit_vs_time()
 
         self._plot_accuracy_vs_time()
+        self._plot_f1_precision_recall_vs_time()
         self._plot_pdr_profit_vs_ptrue()
         self._plot_trader_profit_vs_ptrue()
 
@@ -150,29 +147,49 @@ class SimPlotter:
     @enforce_types
     def _plot_accuracy_vs_time(self):
         ax = self.ax_accuracy_vs_time
-        for i in range(self.N_done, self.N):
-            n_correct = sum(self.st.corrects[: i + 1])
-            n_trials = len(self.st.corrects[: i + 1])
-            l, u = proportion_confint(count=n_correct, nobs=n_trials)
-            self.y01_est.append(n_correct / n_trials * 100)
-            self.y01_l.append(l * 100)
-            self.y01_u.append(u * 100)
-        next_y01_est = _slice(self.y01_est, self.N_done, self.N)
-        next_y01_l = _slice(self.y01_l, self.N_done, self.N)
-        next_y01_u = _slice(self.y01_u, self.N_done, self.N)
+        clm = self.st.clm
+        next_acc_ests = _slice(clm.acc_ests, self.N_done, self.N, mult=100.0)
+        next_acc_ls = _slice(clm.acc_ls, self.N_done, self.N, mult=100.0)
+        next_acc_us = _slice(clm.acc_us, self.N_done, self.N, mult=100.0)
 
-        ax.plot(self.next_x, next_y01_est, "green")
-        ax.fill_between(self.next_x, next_y01_l, next_y01_u, color="0.9")
-        ax.plot(self.next_hx, [50, 50], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=40, top=60)
-        now_s = f"{self.y01_est[-1]:.2f}% "
-        now_s += f"[{self.y01_l[-1]:.2f}%, {self.y01_u[-1]:.2f}%]"
-        _set_title(ax, f"% correct vs time. Current: {now_s}")
+        ax.plot(self.next_x, next_acc_ests, "green")
+        ax.fill_between(self.next_x, next_acc_ls, next_acc_us, color="0.9")
+        ax.plot(self.next_hx, [0.5 * 100.0, 0.5 * 100.0], c="0.2", ls="--", lw=1)
+        ax.set_ylim(bottom=0.4 * 100.0, top=0.6 * 100.0)
+        s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
+        s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
+        _set_title(ax, s)
 
         self.canvas["accuracy_vs_time"].pyplot(self.figs["accuracy_vs_time"])
         if not self.plotted_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("% correct", fontsize=FONTSIZE)
+            ax.set_ylabel("% correct [lower, upper bound]", fontsize=FONTSIZE)
+            _ylabel_on_right(ax)
+            ax.margins(0.01, 0.01)
+
+    @enforce_types
+    def _plot_f1_precision_recall_vs_time(self):
+        ax = self.ax_f1_precision_recall_vs_time
+        clm = self.st.clm
+        next_f1s = _slice(clm.f1s, self.N_done, self.N)
+        next_precisions = _slice(clm.precisions, self.N_done, self.N)
+        next_recalls = _slice(clm.recalls, self.N_done, self.N)
+
+        ax.plot(self.next_x, next_precisions, "darkred", label="precision")  # top
+        ax.plot(self.next_x, next_f1s, "indianred", label="f1")  # mid
+        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")  # bot
+        ax.fill_between(self.next_x, next_recalls, next_precisions, color="0.9")
+        ax.plot(self.next_hx, [0.5, 0.5], c="0.2", ls="--", lw=1)
+        ax.set_ylim(bottom=0.25, top=0.75)
+        s = f"f1={clm.f1s[-1]:.4f}"
+        s += f" [recall={clm.recalls[-1]:.4f}"
+        s += f", precision={clm.precisions[-1]:.4f}]"
+        _set_title(ax, s)
+        self.canvas["f1_precision_recall_vs_time"].pyplot(self.figs["f1_precision_recall_vs_time"])
+        if not self.plotted_before:
+            ax.set_xlabel("time", fontsize=FONTSIZE)
+            ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
+            ax.legend(loc="lower left")
             _ylabel_on_right(ax)
             ax.margins(0.01, 0.01)
 
@@ -246,8 +263,8 @@ class SimPlotter:
 
 
 @enforce_types
-def _slice(a: list, N_done: int, N: int) -> list:
-    return [a[i] for i in range(max(0, N_done - 1), N)]
+def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
+    return [a[i] * mult for i in range(max(0, N_done - 1), N)]
 
 
 @enforce_types
