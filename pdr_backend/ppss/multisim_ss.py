@@ -1,9 +1,11 @@
+from collections import OrderedDict
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from enforce_typing import enforce_types
 
+from pdr_backend.util.point_meta import PointMeta
 from pdr_backend.util.strutil import StrMixin
 
 logger = logging.getLogger("multisim_ss")
@@ -18,8 +20,17 @@ class MultisimSS(StrMixin):
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["multisim_ss"]
 
+        point_meta_d = OrderedDict({})
+        for param_d in self.sweep_params: 
+            name, vals_str = _keyval(param_d)
+            vals = vals_str.split(",") 
+            point_meta_d[name] = vals
+        self.point_meta = PointMeta(point_meta_d)
+
         if self.approach not in APPROACH_OPTIONS:
             raise ValueError(self.approach)
+        
+        assert self.point_meta.n_points() > 1
 
     # --------------------------------
     # properties direct from yaml dict
@@ -34,17 +45,21 @@ class MultisimSS(StrMixin):
 
     # --------------------------------
     # derivative properties
-    @property
-    def n_combos(self) -> int:
+    @enforce_types
+    def n_points(self) -> int:
         """Return # combinations = cross product across all parameters"""
-        n_combos = 1
-        for param_d in self.sweep_params:
-            # eg d = {'trader_ss.buy_amt': '10 USD, 20 USD'}
-            vals_str = _val(param_d)  # eg '10 USD, '20 USD'
-            vals = vals_str.split(",")  # eg ['10 USD', '20 USD']
-            n_combos *= len(vals)
-        return n_combos
+        return self.point_meta.n_points()
 
+    @enforce_types
+    def point_i(self, i: int) -> Dict[str, Any]:
+        return self.point_meta.point_i(i)
+    
+
+@enforce_types
+def _key(d: dict) -> tuple:
+    """d has just one item, e.g. {'thekey': 'theval'}. Return the key"""
+    (key, _) = _keyval(d)
+    return key
 
 @enforce_types
 def _val(d: dict) -> tuple:

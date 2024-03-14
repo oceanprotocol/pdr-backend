@@ -15,7 +15,7 @@ def test_multisim_ss_from_yaml_str(tmpdir):
     assert ss.approach == "SimpleSweep"
     assert isinstance(ss.sweep_params, list)
     assert ss.sweep_params
-    assert ss.n_combos > 1
+    assert ss.n_points() > 1
 
     assert "MultisimSS" in str(ss)
 
@@ -37,7 +37,7 @@ def test_multisim_ss_from_dict(tmpdir):
 
     assert ss.approach == "SimpleSweep"
     assert ss.sweep_params == sweep_params
-    assert ss.n_combos == 3 * 2 * 2 * 2
+    assert ss.n_points() == 3 * 2 * 2 * 2
 
     assert "MultisimSS" in str(ss)
 
@@ -58,4 +58,29 @@ def test_multisim_ss_test_dict():
     ss = MultisimSS(d)
     assert ss.approach == "SimpleSweep"
     assert ss.sweep_params
-    assert ss.n_combos > 1
+    assert ss.n_points() > 1
+
+
+@enforce_types
+def test_multisim_ss_points1(tmpdir):
+    sweep_params = [
+        {"predictoor_ss.approach": "1, 2"},
+        {"trader_ss.buy_amt": "10 USD, 20 USD"},
+    ]
+    ss = MultisimSS(multisim_ss_test_dict(sweep_params=sweep_params))
+
+    target_points = [
+        {'trader_ss.buy_amt' : '10 USD', 'predictoor_ss.approach' : "1"},
+        {'trader_ss.buy_amt' : '10 USD', 'predictoor_ss.approach' : "2"},
+        {'trader_ss.buy_amt' : '20 USD', 'predictoor_ss.approach' : "1"},
+        {'trader_ss.buy_amt' : '20 USD', 'predictoor_ss.approach' : "2"},
+        ]
+    
+    assert ss.n_points() == 4
+
+    points = [ss.point_i(i) for i in range(ss.n_points)]
+    assert len(points) == 4
+    import pdb; pdb.set_trace()
+    assert set(points) == set(target_points)
+    assert sorted(points) == sorted(target_points)
+        
