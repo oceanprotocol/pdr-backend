@@ -341,3 +341,9 @@ def test_move_build_tables_to_permanent(tmpdir):
     assert "c" in table_names
     assert "a" in table_names
     assert "b" in table_names
+
+    # Verify no build tables exist
+    table_names = pds.get_table_names()
+
+    for table_name in table_names:
+        assert "_build_" not in table_name
