@@ -41,6 +41,20 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
+    def get_table_names(self):
+        """
+        Get the names of all tables from duckdb main schema.
+        @returns:
+            list - The names of the tables in the dataset.
+        """
+
+        tables = self.duckdb_conn.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+        ).fetchall()
+
+        return [table[0] for table in tables]
+
+    @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
         """
         Insert data to an persistent dataset.
@@ -57,11 +71,9 @@ class PersistentDataStore(BaseDataStore):
         """
 
         # Check if the table exists
-        tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-        ).fetchall()
+        table_names = self.get_table_names()
 
-        if table_name in [table[0] for table in tables]:
+        if table_name in table_names:
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
             self._create_and_fill_table(df, table_name)
@@ -107,13 +119,11 @@ class PersistentDataStore(BaseDataStore):
         """
 
         # Check if the table exists
-        tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-        ).fetchall()
+        table_names = self.get_table_names()
 
-        if temp_table_name in [table[0] for table in tables]:
+        if temp_table_name in table_names:
             # check if the permanent table exists
-            if permanent_table_name not in [table[0] for table in tables]:
+            if permanent_table_name not in table_names:
                 # create table if it does not exist
                 self.duckdb_conn.execute(
                     f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}"

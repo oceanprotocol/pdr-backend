@@ -49,7 +49,7 @@ class ETL:
             truevals_table_name,
         ]
 
-    def _check_build_sql_tables(self):
+    def _drop_build_sql_tables(self):
         """
         @description
             Check if the SQL tables are built
@@ -85,21 +85,21 @@ class ETL:
         print("do_etl - Start ETL.")
 
         try:
-            # Check if the SQL tables exist and drop them if they do
-            self._check_build_sql_tables()
-            print("do_etl - Checked build tables.")
+            # Drop any build tables if they already exist
+            self._drop_build_sql_tables()
+            print("do_etl - Drop build tables.")
 
             # Sync data
             self.gql_data_factory.get_gql_tables()
-            print("do_etl - Synced data.")
+            print("do_etl - Synced data. Start bronze_step.")
 
             self.do_bronze_step()
 
             end_ts = time.time_ns() / 1e9
-            print(f"do_etl - Completed in {end_ts - st_ts} sec.")
+            print(f"do_etl - Completed bronze_step in {end_ts - st_ts} sec.")
 
             self._move_build_tables_to_permanent()
-            print("do_etl - Moved build tables to permanent tables.")
+            print("do_etl - Moved build tables to permanent tables. ETL Complete.")
         except Exception as e:
             print(f"Error when executing ETL: {e}")
 
@@ -128,7 +128,7 @@ class ETL:
         """
         print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
         data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
-        TableRegistry().get_table(bronze_pdr_predictions_table_name).append_to_storage(
+        TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(
             data,
             build_mode=True,
         )
