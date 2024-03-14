@@ -8,8 +8,12 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     get_bronze_pdr_predictions_data_with_SQL,
 )
 from pdr_backend.lake.table_registry import TableRegistry
-
-
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.table_pdr_payouts import payouts_table_name
+from pdr_backend.lake.table_pdr_predictions import predictions_table_name
+from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
+from pdr_backend.lake.table_pdr_truevals import truevals_table_name
+from pdr_backend.lake.plutil import get_table_name
 class ETL:
     """
     @description
@@ -35,6 +39,40 @@ class ETL:
             ),
         )
 
+        self.build_table_names = [
+            bronze_pdr_predictions_table_name,
+            payouts_table_name,
+            predictions_table_name,
+            subscriptions_table_name,
+            truevals_table_name
+        ]
+
+    def _check_build_sql_tables(self):
+        """
+        @description
+            Check if the SQL tables are built
+            If not, build them
+            If exists, drop them and rebuild
+        """
+        # drop the tables if it exists
+
+        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        for table_name in self.build_table_names:
+            pds.drop_table(get_table_name(table_name, build_mode=True))
+
+    def _move_build_tables_to_permanent(self):
+        """
+        @description
+            Move the build tables to permanent tables
+        """
+
+        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        for table_name in self.build_table_names:
+            pds.move_table_data(
+                get_table_name(table_name, build_mode=True),
+                table_name,
+            )
+
     def do_etl(self):
         """
         @description
@@ -45,12 +83,17 @@ class ETL:
         print("do_etl - Start ETL.")
 
         try:
-            self.do_sync_step()
+            # Sync data
+            self.gql_data_factory.get_gql_tables()
+            print("do_etl - Synced data.")
+
             self.do_bronze_step()
 
             end_ts = time.time_ns() / 1e9
             print(f"do_etl - Completed in {end_ts - st_ts} sec.")
 
+            self._move_build_tables_to_permanent()
+            print("do_etl - Moved build tables to permanent tables.")
         except Exception as e:
             print(f"Error when executing ETL: {e}")
 
@@ -80,5 +123,6 @@ class ETL:
         print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
         data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
         TableRegistry().get_table(bronze_pdr_predictions_table_name).append_to_storage(
-            data
+            data,
+            build_mode=True,
         )

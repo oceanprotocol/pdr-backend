@@ -3,6 +3,7 @@ from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.plutil import get_table_name
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
@@ -30,32 +31,37 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
     @description
         Get the bronze pdr predictions data
     """
+    pdr_predictions_table_name = get_table_name("pdr_predictions", True)
+    pdr_truevals_table_name = get_table_name("pdr_truevals", True)
+    pdr_payouts_table_name = get_table_name("pdr_payouts", True)
+
     return PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
         f"""
         SELECT 
-            pdr_predictions.ID as ID,
-            string_split(pdr_predictions.ID, '-')[0] 
-                || '-' || string_split(pdr_predictions.ID, '-')[1] AS slot_id,
-            pdr_predictions.contract as contract,
-            pdr_predictions.slot as slot,
-            pdr_predictions.user as user,
-            pdr_predictions.pair as pair,
-            pdr_predictions.timeframe as timeframe,
-            pdr_predictions.source as source,
-            pdr_payouts.predvalue as predvalue,
-            pdr_truevals.truevalue as truevalue,
-            pdr_payouts.stake as stake,
-            pdr_payouts.payout as payout,
-            pdr_predictions.timestamp as timestamp,
-            GREATEST(pdr_predictions.timestamp, pdr_truevals.timestamp, pdr_payouts.timestamp) 
+            {pdr_predictions_table_name}.ID as ID,
+            string_split({pdr_predictions_table_name}.ID, '-')[0] 
+                || '-' || string_split({pdr_predictions_table_name}.ID, '-')[1] AS slot_id,
+            {pdr_predictions_table_name}.contract as contract,
+            {pdr_predictions_table_name}.slot as slot,
+            {pdr_predictions_table_name}.user as user,
+            {pdr_predictions_table_name}.pair as pair,
+            {pdr_predictions_table_name}.timeframe as timeframe,
+            {pdr_predictions_table_name}.source as source,
+            {pdr_payouts_table_name}.predvalue as predvalue,
+            {pdr_truevals_table_name}.truevalue as truevalue,
+            {pdr_payouts_table_name}.stake as stake,
+            {pdr_payouts_table_name}.payout as payout,
+            {pdr_predictions_table_name}.timestamp as timestamp,
+            GREATEST({pdr_predictions_table_name}.timestamp,
+                {pdr_truevals_table_name}.timestamp, {pdr_payouts_table_name}.timestamp) 
                 as last_event_timestamp,
         FROM 
-            pdr_predictions
-        LEFT JOIN pdr_truevals
-            ON pdr_predictions.slot = pdr_truevals.slot                                
-        LEFT JOIN pdr_payouts
-            ON pdr_predictions.ID = pdr_payouts.ID
-        WHERE pdr_predictions.timestamp >= {ppss.lake_ss.st_timestamp}
-            AND pdr_predictions.timestamp <= {ppss.lake_ss.fin_timestamp}
+            {pdr_predictions_table_name}
+        LEFT JOIN {pdr_truevals_table_name}
+            ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot                                
+        LEFT JOIN {pdr_payouts_table_name}
+            ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
+        WHERE {pdr_predictions_table_name}.timestamp >= {ppss.lake_ss.st_timestamp}
+            AND {pdr_predictions_table_name}.timestamp <= {ppss.lake_ss.fin_timestamp}
     """
     )
