@@ -32,6 +32,7 @@ from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.deployer.deployer import main as deployer_main
+from pdr_backend.prediction_manager.deploy import deploy_prediction_manager_contract
 
 logger = logging.getLogger("cli")
 
@@ -319,3 +320,12 @@ def do_fund_accounts(args, nested_args=None):
 # pylint: disable=unused-argument
 def do_deployer(args, nested_args=None):
     deployer_main(args)
+
+@enforce_types
+def do_deploy_prediction_manager(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+    deploy_prediction_manager_contract(ppss.web3_pp)
