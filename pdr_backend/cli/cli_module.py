@@ -141,12 +141,11 @@ def do_claim_ROSE(args, nested_args=None):
 
 @enforce_types
 def do_multisim(args, nested_args=None):
-    ppss = PPSS(
+    d = PPSS.constructor_dict(
         yaml_filename=args.PPSS_FILE,
-        network="development",
         nested_override_args=nested_args,
     )
-    multisim_engine = MultisimEngine(ppss)
+    multisim_engine = MultisimEngine(d=d)
     multisim_engine.run()
 
 

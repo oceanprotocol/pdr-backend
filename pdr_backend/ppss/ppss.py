@@ -29,7 +29,36 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         yaml_str: Optional[str] = None,
         network: Optional[str] = None,  # eg "development", "sapphire-testnet"
         nested_override_args: Optional[dict] = None,
+        d: Optional[dict] = None,
     ):
+        """
+        @description
+          Construct PPSS.
+        
+          The goal is to get a constructor dict 'd'; then fill the rest from d.
+        
+          Direct way:
+          - pass in 'd'
+        
+          Or, indirect ways:
+          - pass in 'yaml_filename' to load from a yaml file, or
+          - pass in 'yaml_str' for contents like a yaml file
+            (And optionally override some params with nested_override args)
+
+          Whether direct or indirect, 'network' can be input (or default used).
+        """
+        if d is None:
+            d = self.constructor_dict(
+                yaml_filename, yaml_str, nested_override_args
+            )
+        self.fill_from_constructor_dict(d, network)
+
+    @staticmethod
+    def constructor_dict(
+        yaml_filename: Optional[str] = None,
+        yaml_str: Optional[str] = None,
+        nested_override_args: Optional[dict] = None,
+    ) -> dict:
         # preconditions
         assert (
             yaml_filename or yaml_str and not (yaml_filename and yaml_str)
@@ -45,6 +74,9 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         if nested_override_args is not None:
             recursive_update(d, nested_override_args)
 
+        return d
+
+    def fill_from_constructor_dict(self, d:dict, network:Optional[str]):
         # fill attributes from d. Same order as ppss.yaml, to help reading
         self.lake_ss = LakeSS(d["lake_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])

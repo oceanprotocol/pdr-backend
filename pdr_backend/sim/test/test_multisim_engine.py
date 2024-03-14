@@ -14,33 +14,32 @@ from pdr_backend.sim.multisim_engine import MultisimEngine
 @enforce_types
 def test_multisim1(tmpdir):
     s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
+    constructor_d = PPSS.constructor_dict(yaml_str=s)
 
     # Predictoor ss
     predict_feed = "binanceus BTC/USDT c 5m"
     input_feeds = [predict_feed]
     d = predictoor_ss_test_dict(predict_feed, input_feeds)
     d["aimodel_ss"]["max_n_train"] = 100
-    ppss.predictoor_ss = PredictoorSS(d)
+    constructor_d["predictoor_ss"] = d
 
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
     d = lake_ss_test_dict(parquet_dir, input_feeds)
-    ppss.lake_ss = LakeSS(d)
+    constructor_d["lake_ss"] = d
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
     d = sim_ss_test_dict(log_dir)
     d["do_plot"] = False
-    ppss.sim_ss = SimSS(d)
-    assert not ppss.sim_ss.do_plot, "don't want to plot for multisim test"
+    constructor_d["sim_ss"] = d
 
     # multisim ss
     d = multisim_ss_test_dict()
-    ppss.multisim_ss = MultisimSS(d)
+    constructor_d["multisim_ss"] = d
 
     # go
-    multisim_engine = MultisimEngine(ppss)
+    multisim_engine = MultisimEngine(constructor_d)
     multisim_engine.run()
 
     # csv added?

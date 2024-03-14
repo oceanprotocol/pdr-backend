@@ -58,6 +58,16 @@ class MultisimSS(StrMixin):
     def point_i(self, i: int) -> Dict[str, Any]:
         return self.point_meta.point_i(i)
 
+    @enforce_types
+    def nested_args_i(self, point_i: dict) -> dict:
+        """Given a point, construct nested_args dict.
+        The nested_args can then be applied to the ppss construction dict."""
+        args_list = [f"--{key}={val}" for key, val in point.items()]
+        parser = NestedArgParser()
+        _, nested_args = parser.parse_known_args(args_list)
+        return nested_args
+        
+
 # =========================================================================
 # utilities for testing
 

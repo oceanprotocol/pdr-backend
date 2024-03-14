@@ -1,3 +1,4 @@
+import copy
 import csv
 import logging
 import os
@@ -5,9 +6,12 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.nested_arg_parser import flat_to_nested_args
+from pdr_backend.ppss.multisim_ss import MultisimSS
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.dictutil import recursive_update
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("multisim_engine")
@@ -15,26 +19,48 @@ logger = logging.getLogger("multisim_engine")
 
 class MultisimEngine:
     @enforce_types
-    def __init__(self, ppss: PPSS):
-        self.ppss = ppss
+    def __init__(self, d: dict):
+        """
+        @arguments
+          d -- created via PPSS.constructor_dict()
+        """
+        self.d: dict = d
+        self.network = "development"
 
+    @property
+    def ppss(self) -> PPSS:
+        return PPSS(d=self.d, network=self.network)
+    
+    @property
+    def ss(self) -> MultisimSS:
+        return self.ppss.multisim_ss
+
+    @enforce_types
     def run(self):
+        ss = self.ss
         logger.info("Multisim engine: start")
         self.initialize_csv()
-        n_combos = self.ppss.multisim_ss.n_combos
-        for i in range(n_combos):
-            logger.info("Multisim run #%s/%s: start" % (i + 1, n_combos))
-            if self.ppss.sim_ss.do_plot:
-                raise ValueError("For multisim, must have sim_ss.do_plot=False")
-            raise "FIXME update PPSS for sim engine now"
-            ppss = self.ppss
+        n_points = ss.n_points
+        for i in range(n_points):
+            logger.info("Multisim run #%s/%s: start" % (i + 1, ss.n_points))
+            ppss = self.ppss_i(i)
             sim_engine = SimEngine(ppss)
             sim_engine.run()
             run_metrics = sim_engine.st.recent_metrics()
             self.update_csv(run_metrics)
-            logger.info("Multisim run #%s/%s: done" % (i + 1, self.n_engines))
+            logger.info("Multisim run #%s/%s: done" % (i + 1, ss.n_points))
 
         logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
+
+    def ppss_i(self, i: int) -> PPSS:
+        """PPSS for point number i"""
+        point_i = self.ss.point_i(i)
+        nested_args = flat_to_nested_args(point_i)
+        d = copy.deepcopy(self.d)
+        recursive_update(d, nested_args)
+        ppss = PPSS(d=d, network=self.network)
+        assert not ppss.sim_ss.do_plot, "don't plot for multisim_engine"
+        return ppss
 
     @enforce_types
     def initialize_csv(self):
