@@ -57,7 +57,7 @@ class SimPlotter:
 
         self.figs = {}
 
-        for k, _ in self.canvas:
+        for k, _ in self.canvas.items():
             fig, ax = plt.subplots()
             self.figs[k] = fig
             setattr(self, f"ax_{k}", ax)
@@ -247,7 +247,7 @@ class SimPlotter:
 
     @enforce_types
     def _plot_aimodel_varimps(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_varimps
+        ax = self.ax_aimodel_varimps  # type: ignore[attr-defined]
         imps_tups = d.model.importance_per_var(include_stddev=True)
         plot_aimodel_varimps(d.colnames, imps_tups, (self.figs["aimodel_varimps"], ax))
 
@@ -257,7 +257,7 @@ class SimPlotter:
 
     @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_response
+        ax = self.ax_aimodel_response  # type: ignore[attr-defined]
         plot_aimodel_response(d, (self.figs["aimodel_varimps"], ax))
 
         self.canvas["aimodel_response"].pyplot(self.figs["aimodel_response"])
