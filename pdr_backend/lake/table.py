@@ -20,7 +20,7 @@ class Table:
         self.df_schema = df_schema
 
         self.base_path = self.ppss.lake_ss.parquet_dir
-        
+
     @enforce_types
     def append_to_storage(self, data: pl.DataFrame, build_mode: bool = False):
         self._append_to_csv(data)
@@ -55,9 +55,7 @@ class Table:
         table_name = get_table_name(self.table_name, build_mode)
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
         n_new = data.shape[0]
-        print(
-            f"  Just saved df with {n_new} df rows to the database of {table_name}"
-        )
+        print(f"  Just saved df with {n_new} df rows to the database of {table_name}")
 
     def get_pds_last_record(self) -> Optional[pl.DataFrame]:
         """

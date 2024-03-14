@@ -7,6 +7,7 @@ from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.plutil import get_table_name
 
+
 # Initialize the PersistentDataStore instance for testing
 def _get_persistent_data_store(tmpdir):
     example_df = pl.DataFrame(
@@ -233,12 +234,15 @@ def test__duckdb_connection(tmpdir):
 
     _clean_up_persistent_data_store(tmpdir)
 
+
 def test_move_table_data(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
     persistent_data_store.insert_to_table(example_df, get_table_name(table_name, True))
 
     # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, get_table_name(table_name, True))
+    check_result = _check_view_exists(
+        persistent_data_store, get_table_name(table_name, True)
+    )
 
     assert check_result
 

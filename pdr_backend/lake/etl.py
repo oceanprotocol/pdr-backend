@@ -14,6 +14,8 @@ from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.lake.plutil import get_table_name
+
+
 class ETL:
     """
     @description
@@ -44,7 +46,7 @@ class ETL:
             payouts_table_name,
             predictions_table_name,
             subscriptions_table_name,
-            truevals_table_name
+            truevals_table_name,
         ]
 
     def _check_build_sql_tables(self):

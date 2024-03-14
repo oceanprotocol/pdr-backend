@@ -22,7 +22,7 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
     set_col_values,
     text_to_df,
-    get_table_name
+    get_table_name,
 )
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
@@ -305,6 +305,7 @@ def test_text_to_df():
     assert df["timestamp"][0] == 0
     assert df["open"][1] == 10.1
     assert isinstance(df["open"][1], float)
+
 
 @enforce_types
 def test_get_table_name():

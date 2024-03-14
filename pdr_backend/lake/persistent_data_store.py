@@ -114,9 +114,10 @@ class PersistentDataStore(BaseDataStore):
         if temp_table_name in [table[0] for table in tables]:
             # check if the permanent table exists
             if permanent_table_name not in [table[0] for table in tables]:
-                #create table if it does not exist
+                # create table if it does not exist
                 self.duckdb_conn.execute(
-                    f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}")
+                    f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}"
+                )
             else:
                 # Move the data from the temporary table to the permanent table
                 self.duckdb_conn.execute(
