@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
 from pdr_backend.contract.base_contract import BaseContract
 
+
 @enforce_types
 class PredictionManager(BaseContract):
     def __init__(self, web3_pp, address: str):
@@ -14,7 +15,14 @@ class PredictionManager(BaseContract):
         """
         super().__init__(web3_pp, address, "PredictionManager")
 
-    def submit(self, stakes_up: list, stakes_down: list, feeds: list, epoch_start: int, wait_for_receipt=True):
+    def submit(
+        self,
+        stakes_up: list,
+        stakes_down: list,
+        feeds: list,
+        epoch_start: int,
+        wait_for_receipt=True,
+    ):
         """
         @description
           Submits predictions for both upward and downward instances.
@@ -53,9 +61,9 @@ class PredictionManager(BaseContract):
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.getPayout(
-            epochs, feeds
-        ).transact(call_params)
+        tx = self.contract_instance.functions.getPayout(epochs, feeds).transact(
+            call_params
+        )
 
         if not wait_for_receipt:
             return tx
@@ -77,9 +85,9 @@ class PredictionManager(BaseContract):
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.transferERC20(
-            token, to, amount
-        ).transact(call_params)
+        tx = self.contract_instance.functions.transferERC20(token, to, amount).transact(
+            call_params
+        )
 
         if not wait_for_receipt:
             return tx

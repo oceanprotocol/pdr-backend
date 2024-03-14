@@ -15,7 +15,9 @@ def deploy_prediction_manager_contract(web3_pp: Web3PP) -> str:
     )
 
     bytecode_path = os.path.join(
-        os.path.dirname(__file__), "compiled_contracts", "PredictionManager_bytecode.bin"
+        os.path.dirname(__file__),
+        "compiled_contracts",
+        "PredictionManager_bytecode.bin",
     )
 
     with open(abi_path, "r") as abi_file:
