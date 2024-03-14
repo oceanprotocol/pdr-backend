@@ -41,16 +41,19 @@ def compile():
         # Define filenames for the ABI and bytecode
         base_contract_name = os.path.basename(contract_name).split(":")[1]
         abi_filename = os.path.join(output_dir, f"{base_contract_name}_abi.json")
-        bytecode_filename = os.path.join(output_dir, f"{base_contract_name}_bytecode.bin")
+        bytecode_filename = os.path.join(
+            output_dir, f"{base_contract_name}_bytecode.bin"
+        )
 
         # Write the ABI to a file
-        with open(abi_filename, 'w') as abi_file:
-            json.dump(contract_data['abi'], abi_file)
+        with open(abi_filename, "w") as abi_file:
+            json.dump(contract_data["abi"], abi_file)
 
         # Write the bytecode to a file
-        with open(bytecode_filename, 'w') as bytecode_file:
-            bytecode_file.write(contract_data['bin-runtime'])
+        with open(bytecode_filename, "w") as bytecode_file:
+            bytecode_file.write(contract_data["bin-runtime"])
 
     print(f"ABI and bytecode files have been saved to {output_dir}/")
+
 
 compile()

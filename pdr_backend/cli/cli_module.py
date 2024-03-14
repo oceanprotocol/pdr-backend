@@ -321,6 +321,7 @@ def do_fund_accounts(args, nested_args=None):
 def do_deployer(args, nested_args=None):
     deployer_main(args)
 
+
 @enforce_types
 def do_deploy_prediction_manager(args, nested_args=None):
     ppss = PPSS(

@@ -547,7 +547,9 @@ defined_parsers = {
         "Fund multiple wallets from a single address", "fund_accounts"
     ),
     "do_deployer": DeployerArgPaser(),
-    "do_deploy_prediction_manager": _ArgParser_PPSS_NETWORK("Deploy prediction manager contract", "deploy_prediction_manager"),
+    "do_deploy_prediction_manager": _ArgParser_PPSS_NETWORK(
+        "Deploy prediction manager contract", "deploy_prediction_manager"
+    ),
 }
 
 
