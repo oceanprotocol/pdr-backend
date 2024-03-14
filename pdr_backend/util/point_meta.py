@@ -2,21 +2,21 @@ from typing import Any,Dict,List
 
 from enforce_typing import enforce_types
 
-@enforce_types
 class PointMeta(dict):
     """Defines the bounds for a space, that points can occupy."""
     
+    @enforce_types
     def __init__(self, d: Dict[str,List[Any]]):
         """
         @arguments
           d -- dict of [varname] : cand_vals
         """
+        for cand_vals in d.values():
+            if not cand_vals:
+                raise ValueError(d)
         dict.__init__(self, d)
-            
-    def addVar(self, varname: str, cand_vals:List[any]):
-        """Add another variable (dimension) to this space."""
-        self[varname] = cand_vals
-        
+                    
+    @property
     def n_points(self) -> int:
         """Return # combinations = cross product across all parameters"""
         n_points = 1
@@ -24,9 +24,10 @@ class PointMeta(dict):
             n_points *= len(vals)
         return n_points
 
+    @enforce_types
     def point_i(self, i: int) -> Dict[str, Any]:
         """Return point number i"""
-        if i < 0 or i >= self.n_points():
+        if i < 0 or i >= self.n_points:
             raise ValueError(i)
         multiplier = 1
         point = {}
@@ -35,6 +36,7 @@ class PointMeta(dict):
             multiplier *= len(cand_vals)
         return point
     
+    @enforce_types
     def __str__(self):
         s = ""
         s += "PointMeta={"
