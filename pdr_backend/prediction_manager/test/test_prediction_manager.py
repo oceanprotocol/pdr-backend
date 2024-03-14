@@ -23,6 +23,14 @@ def test_transfer_erc20(prediction_manager: PredictionManager, ocean_token, web3
     assert after - before == 100
     assert ocean_token.balance_of(prediction_manager.contract_address) == 0
     
+def test_transfer(prediction_manager: PredictionManager, web3_config):
+    web3_config.w3.eth.send_transaction({"to": prediction_manager.contract_address, "value": 100})
+    assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 100
+    before = web3_config.w3.eth.get_balance(web3_config.owner)
+    prediction_manager.transfer()
+    after = web3_config.w3.eth.get_balance(web3_config.owner)
+    assert after - before == 100
+    assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
 
 @pytest.fixture(scope="module")
 def prediction_manager(web3_pp):
