@@ -30,10 +30,7 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
     @description
         Get the bronze pdr predictions data
     """
-    # get the table
-    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
-
-    return PDS.query_data(
+    return PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
         f"""
         SELECT 
             pdr_predictions.ID as ID,

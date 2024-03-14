@@ -7,6 +7,7 @@ from pdr_backend.lake.table_pdr_predictions import (
     predictions_table_name,
 )
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
 def _check_view_exists(persistent_data_store, table_name):
@@ -73,7 +74,7 @@ def test_csv_data_store(
     table = Table(predictions_table_name, predictions_schema, ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
-    assert table.csv_data_store.has_data(predictions_table_name)
+    assert CSVDataStore(table.base_path).has_data(predictions_table_name)
 
     file_path = os.path.join(
         ppss.lake_ss.parquet_dir,
@@ -125,23 +126,20 @@ def test_persistent_store(
     )
 
     # Initialize Table, fill with data, validate
-    table = Table(predictions_table_name, predictions_schema, ppss)
-
-    table.PDS._create_and_fill_table(
+    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
+    PDS._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
-    assert _check_view_exists(table.PDS, predictions_table_name)
+    assert _check_view_exists(PDS, predictions_table_name)
 
-    result = table.PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    table.PDS.insert_to_table(
-        _gql_datafactory_second_predictions_df, predictions_table_name
-    )
+    PDS.insert_to_table(_gql_datafactory_second_predictions_df, predictions_table_name)
 
-    result = table.PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 
@@ -167,7 +165,9 @@ def test_get_records(tmpdir, _gql_datafactory_first_predictions_df):
     )
 
     table = Table(predictions_table_name, predictions_schema, ppss)
-    table.PDS._create_and_fill_table(
+
+    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
+    PDS._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 

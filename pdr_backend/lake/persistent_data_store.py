@@ -1,6 +1,7 @@
 # The PersistentDataStore class is a subclass of the Base
 import os
 import glob
+import duckdb
 
 from enforce_typing import enforce_types
 import polars as pl
@@ -13,13 +14,17 @@ class PersistentDataStore(BaseDataStore):
     A class to store and retrieve persistent data.
     """
 
-    def __init__(self, base_directory: str):
+    @enforce_types
+    def __init__(self, base_path: str):
         """
         Initialize a PersistentDataStore instance.
         @arguments:
-            base_directory - The base directory to store the persistent data.
+            base_path - The base directory to store the persistent data.
         """
-        super().__init__(base_directory)
+        super().__init__(base_path)
+        self.duckdb_conn = duckdb.connect(
+            database=f"{self.base_path}/duckdb.db"
+        )  # Keep a persistent connection
 
     @enforce_types
     def _create_and_fill_table(

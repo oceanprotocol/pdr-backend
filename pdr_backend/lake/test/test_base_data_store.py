@@ -1,16 +1,18 @@
-import duckdb
 from pdr_backend.lake.base_data_store import BaseDataStore
 
 
-def _get_data_store(tmpdir):
-    return BaseDataStore(str(tmpdir))
+def test_base_data_store_init():
+    base_data_store = BaseDataStore("test")
+    assert base_data_store.base_path == "test"
+    assert base_data_store._instances == {"test": base_data_store}
+    base_data_store._instances = {}
 
 
-def test__duckdb_connection(tmpdir):
-    """
-    Test datastore.
-    """
-    data_store = _get_data_store(tmpdir)
-    assert isinstance(
-        data_store.duckdb_conn, duckdb.DuckDBPyConnection
-    ), "The connection is not a DuckDBPyConnection"
+def test_clear_base_data_store():
+    BaseDataStore._instances = {}
+    assert BaseDataStore._instances == {}
+
+    base_data_store = BaseDataStore("test")
+    assert BaseDataStore._instances == {"test": base_data_store}
+    BaseDataStore.clear_instances()
+    assert BaseDataStore._instances == {}

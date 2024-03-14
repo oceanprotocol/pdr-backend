@@ -4,17 +4,16 @@ from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     bronze_pdr_predictions_table_name,
+    get_bronze_pdr_predictions_data_with_SQL,
 )
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    get_bronze_pdr_predictions_data_with_SQL,
-)
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
@@ -52,16 +51,13 @@ def test_table_bronze_pdr_predictions(
     gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df)
     gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df)
 
+    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
     # truevals should have 6
-    result_truevals = gql_tables["pdr_truevals"].PDS.query_data(
-        "SELECT * FROM pdr_truevals"
-    )
+    result_truevals = PDS.query_data("SELECT * FROM pdr_truevals")
     assert len(result_truevals) == 6
 
     # payouts should have 6
-    result_payouts = gql_tables["pdr_payouts"].PDS.query_data(
-        "SELECT * FROM pdr_payouts"
-    )
+    result_payouts = PDS.query_data("SELECT * FROM pdr_payouts")
     assert len(result_payouts) == 5
 
     # Work 2: Execute full SQL query

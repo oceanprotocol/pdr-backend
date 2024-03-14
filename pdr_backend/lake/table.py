@@ -18,8 +18,7 @@ class Table:
         self.table_name = table_name
         self.df_schema = df_schema
 
-        self.csv_data_store = CSVDataStore(self.ppss.lake_ss.parquet_dir)
-        self.PDS = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        self.base_path = self.ppss.lake_ss.parquet_dir
 
     @enforce_types
     def append_to_storage(self, data: pl.DataFrame):
@@ -35,7 +34,9 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        self.csv_data_store.write(self.table_name, data, schema=self.df_schema)
+        csvds = CSVDataStore(self.base_path)
+        print(f" csvds = {csvds}")
+        csvds.write(self.table_name, data, schema=self.df_schema)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
@@ -50,7 +51,7 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        self.PDS.insert_to_table(data, self.table_name)
+        PersistentDataStore(self.base_path).insert_to_table(data, self.table_name)
         n_new = data.shape[0]
         print(
             f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
@@ -66,7 +67,7 @@ class Table:
 
         query = f"SELECT * FROM {self.table_name} ORDER BY timestamp DESC LIMIT 1"
         try:
-            return self.PDS.query_data(query)
+            return PersistentDataStore(self.base_path).query_data(query)
         except Exception as e:
             print(f"Error fetching last record from PDS: {e}")
             return None
@@ -83,6 +84,10 @@ class Table:
             pl.DataFrame
         """
         if source == "db":
-            return self.PDS.query_data(f"SELECT * FROM {self.table_name}")
+            return PersistentDataStore(self.base_path).query_data(
+                f"SELECT * FROM {self.table_name}"
+            )
 
-        return self.csv_data_store.read_all(self.table_name, schema=self.df_schema)
+        return CSVDataStore(self.base_path).read_all(
+            self.table_name, schema=self.df_schema
+        )

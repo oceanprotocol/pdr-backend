@@ -34,6 +34,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -209,7 +210,9 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = table.csv_data_store.get_last_timestamp(table.table_name)
+        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
+            table.table_name
+        )
 
         start_ut = (
             last_timestamp

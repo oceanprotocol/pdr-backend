@@ -178,3 +178,31 @@ def test_get_from_value():
         == 1
     )
     assert csv_data_store._get_from_value("test/test_from_0000000005_to_.csv") == 5
+
+
+def test_multiton_instances():
+    """
+    This test is to check if the instances of
+    the CSVDataStore are the same
+    """
+    CSVDataStore.clear_instances()
+    csv_data_store_1 = CSVDataStore("test")
+    csv_data_store_2 = CSVDataStore("test")
+    assert csv_data_store_1 == csv_data_store_2
+    assert csv_data_store_1 is csv_data_store_2
+    assert csv_data_store_1.base_path == csv_data_store_2.base_path
+    assert csv_data_store_1._instances == csv_data_store_2._instances
+
+
+def test_multiton_instances_different_base_path():
+    """
+    This test is to check if the instances of
+    the CSVDataStore are different
+    """
+    CSVDataStore.clear_instances()
+    csv_data_store_1 = CSVDataStore("test")
+    csv_data_store_2 = CSVDataStore("test2")
+    assert csv_data_store_1 != csv_data_store_2
+    assert csv_data_store_1 is not csv_data_store_2
+    assert csv_data_store_1.base_path != csv_data_store_2.base_path
+    assert csv_data_store_1._instances == csv_data_store_2._instances
