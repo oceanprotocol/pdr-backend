@@ -1,9 +1,9 @@
 from typing import List
 
-from enforce_typing import enforce_types
-from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+import streamlit
+from enforce_typing import enforce_types
 from numpy.random import random
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
@@ -15,7 +15,6 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.constants import FONTSIZE
 
-import streamlit as streamlit
 streamlit.set_page_config(layout="wide")
 
 
@@ -58,7 +57,7 @@ class SimPlotter:
 
         self.figs = {}
 
-        for k in self.canvas.keys():
+        for k, _ in self.canvas:
             fig, ax = plt.subplots()
             self.figs[k] = fig
             setattr(self, f"ax_{k}", ax)
@@ -95,7 +94,7 @@ class SimPlotter:
         self._plot_aimodel_response(aimodel_plotdata)
 
         # final pieces
-        #plt.subplots_adjust(wspace=0.3)
+        # plt.subplots_adjust(wspace=0.3)
         plt.pause(0.001)
         self.plotted_before = True
 
@@ -185,7 +184,9 @@ class SimPlotter:
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
         _set_title(ax, s)
-        self.canvas["f1_precision_recall_vs_time"].pyplot(self.figs["f1_precision_recall_vs_time"])
+        self.canvas["f1_precision_recall_vs_time"].pyplot(
+            self.figs["f1_precision_recall_vs_time"]
+        )
         if not self.plotted_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
@@ -234,7 +235,9 @@ class SimPlotter:
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
 
-        self.canvas["trader_profit_vs_ptrue"].pyplot(self.figs["trader_profit_vs_ptrue"])
+        self.canvas["trader_profit_vs_ptrue"].pyplot(
+            self.figs["trader_profit_vs_ptrue"]
+        )
         if not self.plotted_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
