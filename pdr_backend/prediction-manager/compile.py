@@ -39,7 +39,7 @@ def compile():
     # Iterate over the compiled contracts
     for contract_name, contract_data in compiled.items():
         # Define filenames for the ABI and bytecode
-        base_contract_name = os.path.basename(contract_name)
+        base_contract_name = os.path.basename(contract_name).split(":")[1]
         abi_filename = os.path.join(output_dir, f"{base_contract_name}_abi.json")
         bytecode_filename = os.path.join(output_dir, f"{base_contract_name}_bytecode.bin")
 
