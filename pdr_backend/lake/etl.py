@@ -83,6 +83,10 @@ class ETL:
         print("do_etl - Start ETL.")
 
         try:
+            # Check if the SQL tables exist and drop them if they do
+            self._check_build_sql_tables()
+            print("do_etl - Checked build tables.")
+
             # Sync data
             self.gql_data_factory.get_gql_tables()
             print("do_etl - Synced data.")
