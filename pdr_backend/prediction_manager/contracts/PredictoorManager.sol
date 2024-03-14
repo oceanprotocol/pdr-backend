@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "./interfaces/IERC20.sol";
 import "./Predictoor.sol";
 
-contract PredictoorMaster {
+contract PredictionManager {
     Predictoor public instance_up;
     Predictoor public instance_down;
     address public immutable oceanTokenAddr;
