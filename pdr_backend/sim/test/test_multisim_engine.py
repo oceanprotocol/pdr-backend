@@ -1,13 +1,12 @@
 import os
-from unittest import mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
-from pdr_backend.ppss.multisim_ss import MultisimSS, multisim_ss_test_dict
+from pdr_backend.ppss.lake_ss import lake_ss_test_dict
+from pdr_backend.ppss.multisim_ss import multisim_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
-from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
+from pdr_backend.ppss.predictoor_ss import predictoor_ss_test_dict
+from pdr_backend.ppss.sim_ss import sim_ss_test_dict
 from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_state import SimState
 

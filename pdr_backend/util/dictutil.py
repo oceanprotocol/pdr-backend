@@ -1,5 +1,3 @@
-from typing import List
-
 from enforce_typing import enforce_types
 
 
@@ -27,5 +25,5 @@ def keyval(d: dict) -> tuple:
     """
     if len(d) != 1:
         raise ValueError((len(d), d))
-    (key, val) = [i for i in d.items()][0]
+    (key, val) = [i for i in d.items()][0]  # pylint: disable=unnecessary-comprehension
     return (key, val)

@@ -47,6 +47,18 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
           Whether direct or indirect, 'network' can be input (or default used).
         """
+        self.lake_ss = None
+        self.predictoor_ss = None
+        self.trader_ss = None
+        self.sim_ss = None
+        self.multisim_ss = None
+        self.publisher_ss = None
+        self.trueval_ss = None
+        self.dfbuyer_ss = None
+        self.payout_ss = None
+        self.web3_pp = None
+        self.topup_ss = None
+
         if d is None:
             d = self.constructor_dict(yaml_filename, yaml_str, nested_override_args)
         self.fill_from_constructor_dict(d, network)

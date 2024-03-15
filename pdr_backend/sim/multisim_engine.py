@@ -1,9 +1,8 @@
 import copy
-from collections import OrderedDict
 import csv
 import logging
 import os
-from typing import Any, Dict, List, Union
+from typing import List, Union
 
 from enforce_typing import enforce_types
 import pandas as pd
@@ -44,19 +43,19 @@ class MultisimEngine:
     @enforce_types
     def run(self):
         ss = self.ss
-        logger.info(f"Multisim engine: start. # runs = {ss.n_runs}")
+        logger.info("Multisim engine: start. # runs = %s", ss.n_runs)
         self.initialize_csv_with_header()
         for run_i in range(ss.n_runs):
             point_i = self.ss.point_i(run_i)
-            logger.info("Multisim run_i=%s: start. Vals=%s" % (run_i, point_i))
+            logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
             ppss = self.ppss_from_point(point_i)
             sim_engine = SimEngine(ppss)
             sim_engine.run()
             run_metrics = sim_engine.st.recent_metrics()
             self.update_csv(run_i, run_metrics, point_i)
-            logger.info("Multisim run_i=%s: done" % run_i)
+            logger.info("Multisim run_i=%s: done", run_i)
 
-        logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
+        logger.info("Multisim engine: done. Output file: %s", self.csv_file)
 
     def ppss_from_point(self, point_i: Point) -> PPSS:
         """
@@ -94,7 +93,7 @@ class MultisimEngine:
             writer = csv.writer(f)
             row = self.csv_header()
             writer.writerow([name.rjust(space) for name, space in zip(row, spaces)])
-        logger.info("Multisim output file: %s" % self.csv_file)
+        logger.info("Multisim output file: %s", self.csv_file)
 
     @enforce_types
     def update_csv(
@@ -112,11 +111,11 @@ class MultisimEngine:
           run_metrics -- output of SimState.recent_metrics() for run #i
           point_i -- value of each sweep param, for run #i
         """
-        assert os.path.exists(self.csv_file), csv_dir
+        assert os.path.exists(self.csv_file), self.csv_file
         spaces = self.spaces()
 
         def _val2str(val):
-            if isinstance(val, int) or isinstance(val, float):
+            if isinstance(val, (float, int)):
                 return f"{val:.4f}"
             return str(val)
 

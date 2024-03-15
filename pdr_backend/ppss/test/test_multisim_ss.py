@@ -3,7 +3,6 @@ import pytest
 
 from pdr_backend.ppss.multisim_ss import MultisimSS, multisim_ss_test_dict
 from pdr_backend.ppss.ppss import fast_test_yaml_str, PPSS
-from pdr_backend.util.dictutil import keyval
 from pdr_backend.util.listutil import obj_in_objlist
 from pdr_backend.util.point import Point
 from pdr_backend.util.point_meta import PointMeta
@@ -26,7 +25,7 @@ def test_multisim_ss_from_yaml_str(tmpdir):
 
 
 @enforce_types
-def test_multisim_ss_from_dict(tmpdir):
+def test_multisim_ss_from_dict():
     sweep_params = [
         {"predictoor_ss.aimodel_ss.max_n_train": "500, 1000, 1500"},
         {"predictoor_ss.aimodel_ss.autoregressive_n": "1, 2"},
@@ -68,7 +67,7 @@ def test_multisim_ss_test_dict():
 
 
 @enforce_types
-def test_multisim_ss_point_meta_and_points(tmpdir):
+def test_multisim_ss_point_meta_and_points():
     var1, var2 = "predictoor_ss.approach", "trader_ss.buy_amt"
     sweep_params = [
         {var1: "1, 2"},

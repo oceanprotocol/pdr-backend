@@ -1,7 +1,6 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.dictutil import keyval
