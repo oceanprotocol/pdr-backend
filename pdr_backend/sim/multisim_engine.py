@@ -84,7 +84,18 @@ class MultisimEngine:
 
     @enforce_types
     def spaces(self) -> List[int]:
-        return [max(len(name), 6) + 3 for name in self.csv_header()]
+        buf = 3
+        spaces = []
+        spaces += [len("run_number") + buf]
+        spaces += [max(len(name), 6) + buf for name in SimState.recent_metrics_names()]
+
+        for var, cand_vals in self.ss.point_meta.items():
+            var_len = len(var)
+            max_val_len = max(len(str(cand_val)) for cand_val in cand_vals)
+            space = max(var_len, max_val_len) + buf
+            spaces.append(space)
+
+        return spaces
 
     @enforce_types
     def initialize_csv_with_header(self):
