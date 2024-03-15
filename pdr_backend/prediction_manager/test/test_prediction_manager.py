@@ -13,37 +13,20 @@ def test_approve(
     predictoor_contract2,
     ocean_token,
 ):
-    assert (
-        ocean_token.allowance(
-            prediction_manager.contract_address, predictoor_contract.contract_address
-        )
-        == 0
-    )
-    assert (
-        ocean_token.allowance(
-            prediction_manager.contract_address, predictoor_contract2.contract_address
-        )
-        == 0
-    )
+    pm = prediction_manager.contract_address
+    pc1 = predictoor_contract.contract_address
+    pc2 = predictoor_contract2.contract_address
+    assert ocean_token.allowance(pm, pc1) == 0
+    assert ocean_token.allowance(pm, pc2) == 0
 
     contract_addrs = [
-        predictoor_contract.contract_address,
-        predictoor_contract2.contract_address,
+        pc1,
+        pc2,
     ]
     prediction_manager.approve_ocean(contract_addrs, True)
 
-    assert (
-        ocean_token.allowance(
-            prediction_manager.contract_address, predictoor_contract.contract_address
-        )
-        == 2**256 - 1
-    )
-    assert (
-        ocean_token.allowance(
-            prediction_manager.contract_address, predictoor_contract2.contract_address
-        )
-        == 2**256 - 1
-    )
+    assert ocean_token.allowance(pm, pc1) == 2**256 - 1
+    assert ocean_token.allowance(pm, pc2) == 2**256 - 1
 
 
 def test_transfer_erc20(
