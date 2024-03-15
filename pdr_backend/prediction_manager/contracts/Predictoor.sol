@@ -36,12 +36,6 @@ contract Predictoor {
         }
     }
 
-    ///@notice get current epoch for a particular feed
-    function getCurEpoch(address feed) public view returns (uint256) {
-        ITemplate3 feedInstance = ITemplate3(feed);
-        return feedInstance.curEpoch();
-    }
-
     ///@notice send predictions (up or Down) to each of the feeds
     function predict(
         bool[] calldata predictions,
@@ -75,12 +69,6 @@ contract Predictoor {
             ITemplate3 feedInstance = ITemplate3(feeds[i]);
             feedInstance.payoutMultiple(epoch_start, address(this));
         }
-    }
-
-    ///@notice indicates the soonest epoch to predict
-    function getStartTime(address feed) public view returns (uint256) {
-        ITemplate3 feedInstance = ITemplate3(feed);
-        return feedInstance.soonestEpochToPredict(block.timestamp);
     }
 
     ///@notice allows to transfer any ERC20 that may be in this contract to another address
