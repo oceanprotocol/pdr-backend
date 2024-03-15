@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+import subprocess
 import sys
 
 from enforce_typing import enforce_types
@@ -10,12 +11,11 @@ from pdr_backend.analytics.get_predictions_info import (
     get_predictoors_info_main,
     get_traction_info_main,
 )
-from pdr_backend.cli.cli_arguments import (
-    do_help_long,
-    get_arg_parser,
-    print_args,
-)
+from pdr_backend.cli.cli_arguments import do_help_long, get_arg_parser, print_args
+from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -25,13 +25,10 @@ from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
-from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.currency_types import Eth
-from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.etl import ETL
-from pdr_backend.deployer.deployer import main as deployer_main
+from pdr_backend.util.topup import topup_main
+from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
 logger = logging.getLogger("cli")
 
@@ -45,6 +42,11 @@ def _do_main():
     func = globals().get(func_name)
     if func is None:
         do_help_long(1)
+
+    if sys.argv[1] == "sim" and sys.argv[0] != "streamlit_entrypoint.py":
+        streamlit_args = ["streamlit", "run", "streamlit_entrypoint.py"] + sys.argv[1:]
+        subprocess.run(streamlit_args, check=False)
+        return
 
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
