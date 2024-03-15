@@ -46,8 +46,8 @@ class MultisimEngine:
         logger.info(f"Multisim engine: start. # runs = {ss.n_runs}")
         self.initialize_csv_with_header()
         for run_i in range(ss.n_runs):
-            logger.info("Multisim run_i=%s: start" % run_i)
             point_i = self.ss.point_i(run_i)
+            logger.info("Multisim run_i=%s: start. Vals=%s" % (run_i, point_i))
             ppss = self.ppss_from_point(point_i)
             sim_engine = SimEngine(ppss)
             sim_engine.run()
