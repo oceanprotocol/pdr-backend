@@ -15,6 +15,7 @@ from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.resources import _clean_up_table_registry
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
@@ -63,7 +64,11 @@ def test_table_bronze_pdr_predictions(
     assert len(result_payouts) == 5
 
     # Work 2: Execute full SQL query
-    result = get_bronze_pdr_predictions_data_with_SQL(ppss)
+    result = get_bronze_pdr_predictions_data_with_SQL(
+        ppss.lake_ss.parquet_dir,
+        st_ms=UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr),
+        fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
+    )
 
     # Final result should have 6 rows
     assert len(result) == 6

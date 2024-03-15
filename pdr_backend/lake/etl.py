@@ -1,4 +1,6 @@
 import time
+from datetime import datetime
+from typing import Dict, List
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
@@ -14,6 +16,7 @@ from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.lake.plutil import get_table_name
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 class ETL:
@@ -41,13 +44,18 @@ class ETL:
             ),
         )
 
-        self.build_table_names = [
-            bronze_pdr_predictions_table_name,
+        self.raw_table_names = [
             payouts_table_name,
             predictions_table_name,
             subscriptions_table_name,
             truevals_table_name,
         ]
+
+        self.bronze_table_names = [
+            bronze_pdr_predictions_table_name,
+        ]
+
+        self.build_table_names = [*self.bronze_table_names, *self.raw_table_names]
 
     def _check_build_sql_tables(self):
         """
@@ -121,13 +129,80 @@ class ETL:
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
+    def _get_max_timestamp_values_from(
+        self, table_names: List, build_mode: bool = False
+    ) -> Dict:
+        """
+        @description
+            Get the max timestamp values from the tables
+
+        @arguments
+            table_names - The list of table names to get the max timestamp values from
+
+        @returns
+            The max timestamp values from the tables
+        """
+
+        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        max_timestamp_query = "SELECT MAX(timestamp) as max_timestamp FROM {}"
+        values = {}
+        for table_name in table_names:
+            calc_table_name = get_table_name(table_name, build_mode)
+            result = pds.query_data(max_timestamp_query.format(calc_table_name))
+            values[calc_table_name] = (
+                result["max_timestamp"][0] if result is not None else None
+            )
+
+        # print(f"1111_get_max_timestamp_values_from - {values}")
+        return values
+
+    def _calc_bronze_start_end_ts(self):
+        """
+        @description
+            Calculate the start and end timestamps for the bronze tables
+            ETL updates should use from_timestamp by calculating
+            max(etl_tables_max_timestamp).
+            ETL updates should use to_timestamp by calculating
+            min(max(source_tables_max_timestamp)).
+        """
+        from_values = self._get_max_timestamp_values_from(
+            self.bronze_table_names
+        ).values()
+        from_timestamp = (
+            min(from_values)
+            if None not in from_values
+            else datetime.strptime(self.ppss.lake_ss.st_timestr, "%Y-%m-%d_%H:%M")
+        )
+
+        to_values = self._get_max_timestamp_values_from(
+            self.raw_table_names, build_mode=True
+        ).values()
+        to_timestamp = (
+            min(to_values)
+            if None not in to_values
+            else datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
+        )
+
+        return from_timestamp, to_timestamp
+
     def update_bronze_pdr_predictions(self):
         """
         @description
             Update bronze_pdr_predictions table
         """
         print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
-        data = get_bronze_pdr_predictions_data_with_SQL(self.ppss)
+        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
+        print(
+            f"update_bronze_pdr_predictions - st_timestamp: {st_timestamp}, fin_timestamp: {fin_timestamp}"
+        )
+
+        data = get_bronze_pdr_predictions_data_with_SQL(
+            path=self.ppss.lake_ss.parquet_dir,
+            st_ms=UnixTimeMs.from_dt(st_timestamp),
+            fin_ms=UnixTimeMs.from_dt(fin_timestamp),
+        )
+
+        print(f"update_bronze_pdr_predictions - data: {data}")
         TableRegistry().get_table(bronze_pdr_predictions_table_name).append_to_storage(
             data,
             build_mode=True,

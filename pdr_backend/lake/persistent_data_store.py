@@ -2,6 +2,7 @@
 import os
 import glob
 import duckdb
+from typing import Optional
 
 from enforce_typing import enforce_types
 import polars as pl
@@ -67,7 +68,7 @@ class PersistentDataStore(BaseDataStore):
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
-    def query_data(self, query: str) -> pl.DataFrame:
+    def query_data(self, query: str) -> Optional[pl.DataFrame]:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
@@ -79,8 +80,14 @@ class PersistentDataStore(BaseDataStore):
             query_data("SELECT * FROM table_name")
         """
 
-        result_df = self.duckdb_conn.execute(query).pl()
-        return result_df
+        try:
+            result_df = self.duckdb_conn.execute(query).pl()
+            return result_df
+        except duckdb.CatalogException as e:
+            if "Table" in str(e) and "not exist" in str(e):
+                return None
+            else:
+                raise e
 
     @enforce_types
     def drop_table(self, table_name: str):

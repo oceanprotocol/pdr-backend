@@ -1,9 +1,9 @@
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import get_table_name
+from pdr_backend.util.time_types import UnixTimeMs
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
@@ -26,7 +26,9 @@ bronze_pdr_predictions_schema = {
 }
 
 
-def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
+def get_bronze_pdr_predictions_data_with_SQL(
+    path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
+) -> pl.DataFrame:
     """
     @description
         Get the bronze pdr predictions data
@@ -35,7 +37,7 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
     pdr_truevals_table_name = get_table_name("pdr_truevals", True)
     pdr_payouts_table_name = get_table_name("pdr_payouts", True)
 
-    return PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
+    return PersistentDataStore(path).query_data(
         f"""
         SELECT 
             {pdr_predictions_table_name}.ID as ID,
@@ -61,7 +63,7 @@ def get_bronze_pdr_predictions_data_with_SQL(ppss: PPSS) -> pl.DataFrame:
             ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot                                
         LEFT JOIN {pdr_payouts_table_name}
             ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
-        WHERE {pdr_predictions_table_name}.timestamp >= {ppss.lake_ss.st_timestamp}
-            AND {pdr_predictions_table_name}.timestamp <= {ppss.lake_ss.fin_timestamp}
+        WHERE {pdr_predictions_table_name}.timestamp >= {st_ms}
+            AND {pdr_predictions_table_name}.timestamp <= {fin_ms}
     """
     )

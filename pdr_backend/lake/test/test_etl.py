@@ -156,6 +156,7 @@ def test_etl_do_bronze_step(
     gql_tables["pdr_truevals"].append_to_storage(truevals, True)
     gql_tables["pdr_payouts"].append_to_storage(payouts, True)
 
+    print(f"1111_gql_tables - {preds['timestamp']}")
     mock_get_gql_tables.return_value = gql_tables
 
     # Work 1: Initialize ETL
@@ -347,3 +348,117 @@ def test_move_build_tables_to_permanent(tmpdir):
     assert "c" in [table[0] for table in db_tables]
     assert "a" in [table[0] for table in db_tables]
     assert "b" in [table[0] for table in db_tables]
+
+
+@enforce_types
+def test_get_max_timestamp_values_from(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    pds = PersistentDataStore(str(tmpdir))
+
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE test_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE test_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE test_table_3 (timestamp TIMESTAMP);
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO test_table_1 VALUES ('2023-11-02 00:00:00');
+        INSERT INTO test_table_2 VALUES ('2023-11-03 00:00:00');
+        INSERT INTO test_table_2 VALUES ('2023-11-09 00:00:00');
+        INSERT INTO test_table_3 VALUES ('2023-11-04 00:00:00');
+        """
+    )
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-07_0:00"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+
+    max_timestamp_values = etl._get_max_timestamp_values_from(
+        ["test_table_1", "test_table_2", "test_table_3"]
+    )
+
+    assert (
+        max_timestamp_values["test_table_1"].strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        max_timestamp_values["test_table_2"].strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-09 00:00:00"
+    )
+    assert (
+        max_timestamp_values["test_table_3"].strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-04 00:00:00"
+    )
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    pds = PersistentDataStore(str(tmpdir))
+
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE test_bronze_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE test_bronze_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE test_bronze_table_3 (timestamp TIMESTAMP);
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE _build_dummy_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE _build_dummy_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE _build_dummy_table_3 (timestamp TIMESTAMP);
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO test_bronze_table_1 VALUES ('2023-11-04 00:00:00');
+        INSERT INTO test_bronze_table_2 VALUES ('2023-11-05 00:00:00');
+        INSERT INTO test_bronze_table_2 VALUES ('2023-11-01 00:00:00');
+        INSERT INTO test_bronze_table_3 VALUES ('2023-11-02 00:00:00');
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO _build_dummy_table_1 VALUES ('2023-11-21 00:00:00');
+        INSERT INTO _build_dummy_table_2 VALUES ('2023-11-23 00:00:00');
+        INSERT INTO _build_dummy_table_2 VALUES ('2023-11-22 00:00:00');
+        INSERT INTO _build_dummy_table_3 VALUES ('2023-11-25 00:00:00');
+        """
+    )
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-07_0:00"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "test_bronze_table_1",
+        "test_bronze_table_2",
+        "test_bronze_table_3",
+    ]
+    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
