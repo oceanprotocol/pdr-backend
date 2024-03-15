@@ -43,8 +43,11 @@ class MultisimSS(StrMixin):
         """Returns the sweep_params as a PointMeta, so easy to work with."""
         point_meta = PointMeta()
         for param_d in self.sweep_params:
-            name, vals_str = keyval(param_d)
-            vals = [val.strip() for val in vals_str.split(",")]
+            name, vals_spec = keyval(param_d)
+            if isinstance(vals_spec, str):
+                vals = [val.strip() for val in vals_spec.split(",")]
+            else:
+                vals = vals_spec
             point_meta[name] = vals
         return point_meta
 

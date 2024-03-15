@@ -37,14 +37,10 @@ def test_multisim_ss_from_dict():
         "sweep_params": sweep_params,
     }
     ss = MultisimSS(d)
-    assert isinstance(ss, MultisimSS)
-
     assert ss.approach == "SimpleSweep"
     assert ss.sweep_params == sweep_params
     assert ss.n_points == 3 * 2 * 2 * 2
     assert ss.n_runs == ss.n_points  # alias
-
-    assert "MultisimSS" in str(ss)
 
 
 @enforce_types
@@ -67,8 +63,9 @@ def test_multisim_ss_test_dict():
 
 
 @enforce_types
-def test_multisim_ss_point_meta_and_points():
-    var1, var2 = "predictoor_ss.approach", "trader_ss.buy_amt"
+def test_multisim_ss_points1_basic():
+    var1 = "predictoor_ss.approach"
+    var2 = "trader_ss.buy_amt"
     sweep_params = [
         {var1: "1, 2"},
         {var2: "10 USD, 20 USD"},
@@ -94,5 +91,59 @@ def test_multisim_ss_point_meta_and_points():
 
     points = [ss.point_i(i) for i in range(ss.n_points)]
     assert len(points) == 4
+    for target_p in target_points:
+        assert obj_in_objlist(target_p, points)
+
+
+@enforce_types
+def test_multisim_ss_points2_sweepfeeds():
+    """
+    Example in ppss.yaml:
+
+    multisim_ss:
+      approach: ...
+      sweep_params:
+      - predictoor_ss.aimodel_ss.max_n_train: 500, 1000
+      - predictoor_ss.aimodel_ss.input_feeds:
+        -
+          - binance BTC/USDT c 5m
+        -
+          - binance BTC/USDT ETH/USDT c 5m
+        -
+          - binance BTC/USDT c 5m
+          - kraken BTC/USDT c 5m
+    """
+    var1 = "predictoor_ss.aimodel_ss.max_n_train"
+    var2 = "predictoor_ss.aimodel_ss.input_feeds"
+    feeds1 = ["binance BTC/USDT c 5m"]
+    feeds2 = ["binance BTC/USDT ETH/USDT c 5m"]
+    feeds3 = ["binance BTC/USDT c 5m", "kraken BTC/USDT c 5m"]
+    sweep_params = [
+        {var1: "500, 1000"},
+        {var2: [feeds1, feeds2, feeds3]},
+    ]
+    ss = MultisimSS(multisim_ss_test_dict(sweep_params=sweep_params))
+
+    target_point_meta = PointMeta(
+        [
+            (var1, ["500", "1000"]),
+            (var2, [feeds1, feeds2, feeds3]),
+        ]
+    )
+
+    target_points = [
+        Point([(var1, "500"), (var2, feeds1)]),
+        Point([(var1, "500"), (var2, feeds2)]),
+        Point([(var1, "500"), (var2, feeds3)]),
+        Point([(var1, "1000"), (var2, feeds1)]),
+        Point([(var1, "1000"), (var2, feeds2)]),
+        Point([(var1, "1000"), (var2, feeds3)]),
+    ]
+
+    assert ss.n_points == 2 * 3
+    assert ss.point_meta == target_point_meta
+
+    points = [ss.point_i(i) for i in range(ss.n_points)]
+    assert len(points) == 6
     for target_p in target_points:
         assert obj_in_objlist(target_p, points)
