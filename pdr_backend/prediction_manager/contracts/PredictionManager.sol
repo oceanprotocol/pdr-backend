@@ -64,6 +64,10 @@ contract PredictionManager {
     function getPayout(uint256[] calldata epoch_start, address[] calldata feeds) external onlyOwner {
         instance_up.getPayout(epoch_start, feeds);
         instance_down.getPayout(epoch_start, feeds);
+
+        IERC20 ocean = IERC20(oceanTokenAddr);
+        instance_up.transferERC20(oceanTokenAddr, address(this), ocean.balanceOf(address(instance_up)));
+        instance_down.transferERC20(oceanTokenAddr, address(this), ocean.balanceOf(address(instance_down)));
     }
 
     /// @notice transfer any ERC20 tokens in this contract to another address
