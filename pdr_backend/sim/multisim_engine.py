@@ -69,10 +69,13 @@ class MultisimEngine:
     @enforce_types
     def initialize_csv(self):
         assert not os.path.exists(self.csv_file), self.csv_file
+        spaces: List[int] = _spaces()
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
             row = SimState.recent_metrics_names()
-            writer.writerow([name.rjust(20) for name in row])
+            writer.writerow(
+                [name.rjust(space) for name, space in zip(row, spaces)]
+            )
         logger.info("Multisim output file: %s" % self.csv_file)
 
     @enforce_types
@@ -85,10 +88,14 @@ class MultisimEngine:
           run_metrics -- output of SimState.recent_metrics()
         """
         assert os.path.exists(self.csv_file), csv_dir
+        spaces: List[int] = _spaces()
         with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
             row = run_metrics
-            writer.writerow([(f"{val:.4f}").rjust(20) for val in row])
+            assert len(row) == len(SimState.recent_metrics_names())
+            writer.writerow(
+                [(f"{val:.4f}").rjust(space) for val, space in zip(row, spaces)]
+            )
 
     @enforce_types
     def load_csv(self) -> pd.DataFrame:
@@ -96,4 +103,11 @@ class MultisimEngine:
         df = pd.read_csv(self.csv_file)
         df.rename(columns=lambda x: x.strip(), inplace=True) # strip whitespace
         return df
+
     
+@enforce_types
+def _spaces() -> List[int]:
+    """How much space for each particular column, in the csv file?"""
+    return [max(len(name), 6) + 2 for name in SimState.recent_metrics_names()]
+    
+

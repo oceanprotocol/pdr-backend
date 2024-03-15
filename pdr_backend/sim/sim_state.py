@@ -37,7 +37,6 @@ class ClassifierMetrics:
             self.acc_ests[-1],
             self.acc_ls[-1],
             self.acc_us[-1],
-            self.precisions[-1],
             self.f1s[-1],
             self.precisions[-1],
             self.recalls[-1],
