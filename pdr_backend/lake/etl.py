@@ -192,9 +192,6 @@ class ETL:
         """
         print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
-        print(
-            f"update_bronze_pdr_predictions - st_timestamp: {st_timestamp}, fin_timestamp: {fin_timestamp}"
-        )
 
         data = get_bronze_pdr_predictions_data_with_SQL(
             path=self.ppss.lake_ss.parquet_dir,
