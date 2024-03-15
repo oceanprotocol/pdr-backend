@@ -321,6 +321,7 @@ def do_fund_accounts(args, nested_args=None):
     to_accounts = args.ACCOUNTS
     fund_accounts(Eth(args.TOKEN_AMOUNT), to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
 
+
 @enforce_types
 # pylint: disable=unused-argument
 def do_deployer(args, nested_args=None):
