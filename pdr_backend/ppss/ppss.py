@@ -23,6 +23,7 @@ from pdr_backend.util.dictutil import recursive_update
 
 @enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
+
     def __init__(
         self,
         yaml_filename: Optional[str] = None,
@@ -47,21 +48,25 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
           Whether direct or indirect, 'network' can be input (or default used).
         """
-        self.lake_ss = None
-        self.predictoor_ss = None
-        self.trader_ss = None
-        self.sim_ss = None
-        self.multisim_ss = None
-        self.publisher_ss = None
-        self.trueval_ss = None
-        self.dfbuyer_ss = None
-        self.payout_ss = None
-        self.web3_pp = None
-        self.topup_ss = None
-
+        # get constructor dict 'd'
         if d is None:
             d = self.constructor_dict(yaml_filename, yaml_str, nested_override_args)
-        self.fill_from_constructor_dict(d, network)
+
+        # fill from constructor dict 'd'
+        self.lake_ss = LakeSS(d["lake_ss"])
+        self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
+        self.trader_ss = TraderSS(d["trader_ss"])
+        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
+        self.multisim_ss = MultisimSS(d["multisim_ss"])
+        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
+        self.trueval_ss = TruevalSS(d["trueval_ss"])
+        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
+        self.payout_ss = PayoutSS(d["payout_ss"])
+        self.web3_pp = Web3PP(d["web3_pp"], network)
+        self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
+
+        # postconditions
+        self.verify_feed_dependencies()
 
     @staticmethod
     def constructor_dict(
@@ -85,22 +90,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             recursive_update(d, nested_override_args)
 
         return d
-
-    def fill_from_constructor_dict(self, d: dict, network: Optional[str]):
-        # fill attributes from d. Same order as ppss.yaml, to help reading
-        self.lake_ss = LakeSS(d["lake_ss"])
-        self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
-        self.trader_ss = TraderSS(d["trader_ss"])
-        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
-        self.multisim_ss = MultisimSS(d["multisim_ss"])
-        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
-        self.trueval_ss = TruevalSS(d["trueval_ss"])
-        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
-        self.payout_ss = PayoutSS(d["payout_ss"])
-        self.web3_pp = Web3PP(d["web3_pp"], network)
-        self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
-
-        self.verify_feed_dependencies()
 
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
