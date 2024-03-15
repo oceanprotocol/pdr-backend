@@ -3,19 +3,10 @@ from typing import Any,Dict,List
 
 from enforce_typing import enforce_types
 
+from pdr_backend.util.point import Point
+
 class PointMeta(OrderedDict):
     """Defines the bounds for a space, that points can occupy."""
-    
-    @enforce_types
-    def __init__(self, d: OrderedDict[str,List[Any]]):
-        """
-        @arguments
-          d -- dict of [varname] : cand_vals
-        """
-        for cand_vals in d.values():
-            if not cand_vals:
-                raise ValueError(d)
-        OrderedDict.__init__(self, d)
                     
     @property
     def n_points(self) -> int:
@@ -26,7 +17,7 @@ class PointMeta(OrderedDict):
         return n_points
 
     @enforce_types
-    def point_i(self, i: int) -> OrderedDict[str, Any]:
+    def point_i(self, i: int) -> Point:
         """
         @description
           Return point #i.
@@ -41,7 +32,7 @@ class PointMeta(OrderedDict):
         if i < 0 or i >= self.n_points:
             raise ValueError(i)
         multiplier = 1
-        point = OrderedDict()
+        point = Point()
         for name, cand_vals in self.items():
             point[name] = cand_vals[(i // multiplier) % len(cand_vals)]
             multiplier *= len(cand_vals)

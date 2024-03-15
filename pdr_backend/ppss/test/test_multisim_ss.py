@@ -1,10 +1,12 @@
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.util.listutil import obj_in_objlist
 from pdr_backend.ppss.multisim_ss import MultisimSS, multisim_ss_test_dict
-from pdr_backend.util.dictutil import keyval
 from pdr_backend.ppss.ppss import fast_test_yaml_str, PPSS
+from pdr_backend.util.dictutil import keyval
+from pdr_backend.util.listutil import obj_in_objlist
+from pdr_backend.util.point import Point
+from pdr_backend.util.point_meta import PointMeta
 
 
 @enforce_types
@@ -66,24 +68,31 @@ def test_multisim_ss_test_dict():
 
 
 @enforce_types
-def test_multisim_ss_points1(tmpdir):
+def test_multisim_ss_point_meta_and_points(tmpdir):
+    var1, var2 = "predictoor_ss.approach", "trader_ss.buy_amt"
     sweep_params = [
-        {"predictoor_ss.approach": "1, 2"},
-        {"trader_ss.buy_amt": "10 USD, 20 USD"},
+        {var1: "1, 2"},
+        {var2: "10 USD, 20 USD"},
     ]
     ss = MultisimSS(multisim_ss_test_dict(sweep_params=sweep_params))
 
-    target_ps = [
-        {'trader_ss.buy_amt' : '10 USD', 'predictoor_ss.approach' : "1"},
-        {'trader_ss.buy_amt' : '10 USD', 'predictoor_ss.approach' : "2"},
-        {'trader_ss.buy_amt' : '20 USD', 'predictoor_ss.approach' : "1"},
-        {'trader_ss.buy_amt' : '20 USD', 'predictoor_ss.approach' : "2"},
+    target_point_meta = PointMeta([
+        (var1, ["1", "2"]),
+        (var2, ["10 USD", "20 USD"]),
+    ])
+    
+    target_points = [
+        Point([(var1, "1"), (var2, "10 USD")]),
+        Point([(var1, "1"), (var2, "20 USD")]),
+        Point([(var1, "2"), (var2, "10 USD")]),
+        Point([(var1, "2"), (var2, "20 USD")]),
         ]
     
-    assert ss.n_points == 4
+    assert ss.n_points == 2 * 2
+    assert ss.point_meta == target_point_meta
 
-    ps = [ss.point_i(i) for i in range(ss.n_points)]
-    assert len(ps) == 4
-    for target_p in target_ps:
-        assert obj_in_objlist(target_p, ps)
+    points = [ss.point_i(i) for i in range(ss.n_points)]
+    assert len(points) == 4
+    for target_p in target_points:
+        assert obj_in_objlist(target_p, points)
         

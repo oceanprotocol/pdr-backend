@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -6,6 +5,7 @@ import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.dictutil import keyval
+from pdr_backend.util.point import Point
 from pdr_backend.util.point_meta import PointMeta
 from pdr_backend.util.strutil import StrMixin
 
@@ -42,12 +42,12 @@ class MultisimSS(StrMixin):
     @property
     def point_meta(self) -> PointMeta:
         """Returns the sweep_params as a PointMeta, so easy to work with."""
-        point_meta_d = OrderedDict({})
+        point_meta = PointMeta()
         for param_d in self.sweep_params: 
             name, vals_str = keyval(param_d)
             vals = [val.strip() for val in vals_str.split(",")]
-            point_meta_d[name] = vals
-        return PointMeta(point_meta_d)
+            point_meta[name] = vals
+        return point_meta
 
     @property
     def n_points(self) -> int:
@@ -57,7 +57,7 @@ class MultisimSS(StrMixin):
     n_runs = n_points # n_runs() in an alias of n_points()
 
     @enforce_types
-    def point_i(self, i: int) -> Dict[str, Any]:
+    def point_i(self, i: int) -> Point:
         return self.point_meta.point_i(i)
         
 

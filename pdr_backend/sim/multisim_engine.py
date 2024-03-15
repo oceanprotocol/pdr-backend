@@ -15,6 +15,7 @@ from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.dictutil import recursive_update
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.point import Point
 
 logger = logging.getLogger("multisim_engine")
 
@@ -57,7 +58,7 @@ class MultisimEngine:
 
         logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
 
-    def ppss_from_point(self, point_i:OrderedDict[str,Any]) -> PPSS:
+    def ppss_from_point(self, point_i:Point) -> PPSS:
         """
         @description
           Compute PPSS for sim_engine run #i
@@ -102,7 +103,7 @@ class MultisimEngine:
             self,
             run_i: int,
             run_metrics: List[Union[int, float]],
-            point_i: OrderedDict[str,Any],
+            point_i: Point,
     ):
         """
         @description
