@@ -12,6 +12,7 @@ from pdr_backend.analytics.get_predictions_info import (
 )
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
+    do_help_short,
     get_arg_parser,
     print_args,
 )
@@ -40,6 +41,8 @@ logger = logging.getLogger("cli")
 @enforce_types
 def _do_main():
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
+        do_help_short(0)
+    if sys.argv[1] == "help_long":
         do_help_long(0)
 
     func_name = f"do_{sys.argv[1]}"
