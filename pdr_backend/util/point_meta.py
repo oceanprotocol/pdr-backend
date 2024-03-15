@@ -1,12 +1,13 @@
+from collections import OrderedDict
 from typing import Any,Dict,List
 
 from enforce_typing import enforce_types
 
-class PointMeta(dict):
+class PointMeta(OrderedDict):
     """Defines the bounds for a space, that points can occupy."""
     
     @enforce_types
-    def __init__(self, d: Dict[str,List[Any]]):
+    def __init__(self, d: OrderedDict[str,List[Any]]):
         """
         @arguments
           d -- dict of [varname] : cand_vals
@@ -14,7 +15,7 @@ class PointMeta(dict):
         for cand_vals in d.values():
             if not cand_vals:
                 raise ValueError(d)
-        dict.__init__(self, d)
+        OrderedDict.__init__(self, d)
                     
     @property
     def n_points(self) -> int:
@@ -25,12 +26,22 @@ class PointMeta(dict):
         return n_points
 
     @enforce_types
-    def point_i(self, i: int) -> Dict[str, Any]:
-        """Return point number i"""
+    def point_i(self, i: int) -> OrderedDict[str, Any]:
+        """
+        @description
+          Return point #i.
+
+        @return
+          point -- OrderedDict, with vars in the same order as self
+
+        @notes
+          We traverse in a very precise order, using integer division & mod.
+          The end result: the code is compact, and we cover all the points.
+        """
         if i < 0 or i >= self.n_points:
             raise ValueError(i)
         multiplier = 1
-        point = {}
+        point = OrderedDict()
         for name, cand_vals in self.items():
             point[name] = cand_vals[(i // multiplier) % len(cand_vals)]
             multiplier *= len(cand_vals)

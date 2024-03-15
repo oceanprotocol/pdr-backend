@@ -16,9 +16,8 @@ from pdr_backend.sim.sim_state import SimState
 def test_multisim1(tmpdir):
     constructor_d = _constructor_d_with_fast_runtime(tmpdir)
 
-    d = multisim_ss_test_dict(
-        sweep_params=[{"predictoor_ss.aimodel_ss.autoregressive_n": "1, 2"}],
-    )
+    param = "predictoor_ss.aimodel_ss.autoregressive_n"
+    d = multisim_ss_test_dict(sweep_params=[{param: "1, 2"}])
     constructor_d["multisim_ss"] = d
 
     # go
@@ -26,7 +25,8 @@ def test_multisim1(tmpdir):
     multisim_engine.run()
 
     # csv ok?
-    target_columns = SimState.recent_metrics_names()
+    target_columns = ["run_number"] + SimState.recent_metrics_names() + [param]
+    assert multisim_engine.csv_header() == target_columns
     assert os.path.exists(multisim_engine.csv_file)
     df = multisim_engine.load_csv()
     assert df.shape[0] == 2 # 2 runs

@@ -10,14 +10,7 @@ def recursive_update(d, u):
         else:
             d[k] = v
 
-@enforce_types   
-def dict_in_dictlist(d: dict, dictlist: List[dict]) -> bool:
-    """Return True if dict d is in dictlist"""
-    for dict_i in dictlist:
-        if d == dict_i:
-            return True
-    return False
-
+            
 @enforce_types
 def keyval(d: dict) -> tuple:
     """

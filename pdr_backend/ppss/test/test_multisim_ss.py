@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.util.dictutil import dict_in_dictlist
+from pdr_backend.util.listutil import obj_in_objlist
 from pdr_backend.ppss.multisim_ss import MultisimSS, multisim_ss_test_dict
 from pdr_backend.util.dictutil import keyval
 from pdr_backend.ppss.ppss import fast_test_yaml_str, PPSS
@@ -83,5 +83,5 @@ def test_multisim_ss_points1(tmpdir):
     ps = [ss.point_i(i) for i in range(ss.n_points)]
     assert len(ps) == 4
     for target_p in target_ps:
-        assert dict_in_dictlist(target_p, ps)
+        assert obj_in_objlist(target_p, ps)
         
