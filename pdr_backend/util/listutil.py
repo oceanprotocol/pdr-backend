@@ -10,3 +10,14 @@ def remove_dups(seq: list):
     seen = set()  # type: ignore[var-annotated]
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
+
+
+@enforce_types
+def obj_in_objlist(obj, objlist: list) -> bool:
+    """Return True if object 'obj' is in 'objlist'.
+    Relies on the object's equality operator.
+    """
+    for obj_i in objlist:
+        if obj == obj_i:
+            return True
+    return False

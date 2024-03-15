@@ -95,7 +95,7 @@ class SimEngine:
         trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        data_f = AimodelDataFactory(pdr_ss)
+        data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
@@ -159,6 +159,7 @@ class SimEngine:
             st.ytrues,
             st.ytrues_hat,
             average="binary",
+            zero_division=0.0,
         )
         st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
 

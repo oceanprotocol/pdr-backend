@@ -2,12 +2,12 @@ version: 1
 disable_existing_loggers: False
 formatters:
     simple:
-        format: "%(asctime)s %(levelname)s %(message)s"
+        format: "%(asctime)s %(name)s %(levelname)s %(message)s"
 
 handlers:
     console:
         class: logging.StreamHandler
-        level: DEBUG
+        level: INFO
         formatter: simple
         stream: ext://sys.stdout
 
@@ -19,7 +19,13 @@ loggers:
         handlers: [console]
         propagate: no
 
+    ohlcv_data_factory:
+        level: WARNING
+
     sim_engine:
+        level: WARNING
+
+    multisim_engine:
         level: INFO
 
     predictoor_agent:
@@ -29,7 +35,7 @@ loggers:
         level: INFO
 
 # for a full list of loggers:
-# grep -r getLogger pdr_backend/* |grep -v Binary| sed -e 's/.*getLogger(\"//' | sed -e 's/\".*//' | uniq | tr -t
+# grep -r getLogger pdr_backend/* |grep -v Binary| sed -e 's/.*getLogger(\"//' | sed -e 's/\".*//' | uniq
 
 root:
     level: INFO
