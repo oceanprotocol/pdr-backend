@@ -159,6 +159,7 @@ class SimEngine:
             st.ytrues,
             st.ytrues_hat,
             average="binary",
+            zero_division=0.0,
         )
         st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
 
