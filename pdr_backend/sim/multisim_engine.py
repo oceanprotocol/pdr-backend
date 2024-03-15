@@ -30,7 +30,8 @@ class MultisimEngine:
         self.network = "development"
 
         filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
-        self.csv_file = os.path.join(self.ppss.sim_ss.log_dir, filebase)
+        log_dir = self.ppss.sim_ss.log_dir  # type: ignore[attr-defined]
+        self.csv_file = os.path.join(log_dir, filebase)
 
     @property
     def ppss(self) -> PPSS:
@@ -38,7 +39,7 @@ class MultisimEngine:
 
     @property
     def ss(self) -> MultisimSS:
-        return self.ppss.multisim_ss
+        return self.ppss.multisim_ss  # type: ignore
 
     @enforce_types
     def run(self):
@@ -69,7 +70,7 @@ class MultisimEngine:
         d = copy.deepcopy(self.d)
         recursive_update(d, nested_args)
         ppss = PPSS(d=d, network=self.network)
-        assert not ppss.sim_ss.do_plot, "don't plot for multisim_engine"
+        assert not ppss.sim_ss.do_plot  # type: ignore[attr-defined]
         return ppss
 
     @enforce_types

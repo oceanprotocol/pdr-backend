@@ -91,14 +91,14 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.lake_ss = LakeSS(d["lake_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
-        self.sim_ss = SimSS(d["sim_ss"])
+        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
         self.multisim_ss = MultisimSS(d["multisim_ss"])
         self.publisher_ss = PublisherSS(d["publisher_ss"], network)
         self.trueval_ss = TruevalSS(d["trueval_ss"])
         self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
         self.payout_ss = PayoutSS(d["payout_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
-        self.topup_ss = TopupSS(d["topup_ss"])
+        self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
 
         self.verify_feed_dependencies()
 
@@ -237,8 +237,8 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "trueval_ss")
-    assert "feeds" in ppss.trueval_ss.d
-    ppss.trueval_ss.d["feeds"] = feeds
+    assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
+    ppss.trueval_ss.d["feeds"] = feeds  # type: ignore[attr-defined]
 
     assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(
