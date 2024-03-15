@@ -9,10 +9,32 @@ from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.multisim_engine import MultisimEngine
+from pdr_backend.sim.sim_state import SimState
 
 
 @enforce_types
 def test_multisim1(tmpdir):
+    constructor_d = _constructor_d_with_fast_runtime(tmpdir)
+
+    d = multisim_ss_test_dict(
+        sweep_params=[{"predictoor_ss.aimodel_ss.autoregressive_n": "1, 2"}],
+    )
+    constructor_d["multisim_ss"] = d
+
+    # go
+    multisim_engine = MultisimEngine(constructor_d)
+    multisim_engine.run()
+
+    # csv ok?
+    target_columns = SimState.recent_metrics_names()
+    assert os.path.exists(multisim_engine.csv_file)
+    df = multisim_engine.load_csv()
+    assert df.shape[0] == 2 # 2 runs
+    assert df.shape[1] == len(target_columns)
+    assert list(df.columns) == target_columns
+
+@enforce_types
+def _constructor_d_with_fast_runtime(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     constructor_d = PPSS.constructor_dict(yaml_str=s)
 
@@ -26,24 +48,15 @@ def test_multisim1(tmpdir):
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
     d = lake_ss_test_dict(parquet_dir, input_feeds)
+    d["st_timestr"] = "2023-06-18"
+    d["fin_timestr"] = "2023-06-19"
     constructor_d["lake_ss"] = d
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
     d = sim_ss_test_dict(log_dir)
     d["do_plot"] = False
+    d["test_n"] = 10
     constructor_d["sim_ss"] = d
 
-    # multisim ss
-    d = multisim_ss_test_dict()
-    constructor_d["multisim_ss"] = d
-
-    # go
-    multisim_engine = MultisimEngine(constructor_d)
-    multisim_engine.run()
-
-    # csv added?
-    raise "FIXME"
-
-    # other tests?
-    raise "FIXME"
+    return constructor_d

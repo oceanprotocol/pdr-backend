@@ -5,6 +5,7 @@ import os
 from typing import List, Union
 
 from enforce_typing import enforce_types
+import pandas as pd
 
 from pdr_backend.cli.nested_arg_parser import flat_to_nested_args
 from pdr_backend.ppss.multisim_ss import MultisimSS
@@ -26,6 +27,9 @@ class MultisimEngine:
         """
         self.d: dict = d
         self.network = "development"
+        
+        filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
+        self.csv_file = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
     @property
     def ppss(self) -> PPSS:
@@ -61,11 +65,9 @@ class MultisimEngine:
         ppss = PPSS(d=d, network=self.network)
         assert not ppss.sim_ss.do_plot, "don't plot for multisim_engine"
         return ppss
-
+    
     @enforce_types
     def initialize_csv(self):
-        filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
-        self.csv_file = os.path.join(self.ppss.sim_ss.log_dir, filebase)
         assert not os.path.exists(self.csv_file), self.csv_file
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
@@ -83,7 +85,12 @@ class MultisimEngine:
           run_metrics -- output of SimState.recent_metrics()
         """
         assert os.path.exists(self.csv_file), csv_dir
-        with open(self.csv_file, "w") as f:
+        with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
             row = run_metrics
             writer.writerow(row)
+
+    @enforce_types
+    def load_csv(self) -> pd.DataFrame:
+        return pd.read_csv(self.csv_file)
+    
