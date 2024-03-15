@@ -23,12 +23,23 @@ def all_nan(
         return np.isnan(x).all()
 
     if isinstance(x, pd.Series):
-        x = x.fillna(value=np.nan, inplace=False)
-        return x.isnull().all()
+        for val in x:
+            if val is None:
+                continue
+            if np.isnan(val):
+                continue
+            return False
+        return True
 
     if isinstance(x, pd.DataFrame):
-        x = x.fillna(value=np.nan)
-        return x.isnull().all().all()
+        for _, row in x.iterrows():
+            for val in row:
+                if val is None:
+                    continue
+                if np.isnan(val):
+                    continue
+                return False
+        return True
 
     # pl.Series or pl.DataFrame
     return all_nan(x.to_numpy())  # type: ignore[union-attr]
