@@ -5,16 +5,16 @@ import "./interfaces/IERC20.sol";
 import "./Predictoor.sol";
 
 contract PredictionManager {
-    Predictoor public instance_up;
-    Predictoor public instance_down;
+    Predictoor public instanceUp;
+    Predictoor public instanceDown;
     address public immutable oceanTokenAddr;
     address public immutable owner;
 
     constructor(address oceanTokenAddr_) {
-        instance_up = new Predictoor();
-        instance_down = new Predictoor();
-        instance_up.initialize(msg.sender, oceanTokenAddr_);
-        instance_down.initialize(msg.sender, oceanTokenAddr_);
+        instanceUp = new Predictoor();
+        instanceDown = new Predictoor();
+        instanceUp.initialize(msg.sender, oceanTokenAddr_);
+        instanceDown.initialize(msg.sender, oceanTokenAddr_);
         
         oceanTokenAddr = oceanTokenAddr_;
         owner = msg.sender;
@@ -27,26 +27,26 @@ contract PredictionManager {
     }
 
     ///@notice send ocean tokens to the instances managed by the master
-    function sendTokensToInstance(uint256 amtUp, uint256 amtDown) internal onlyOwner {
+    function _sendTokensToInstance(uint256 amtUp, uint256 amtDown) internal {
         IERC20 tokenInstance = IERC20(oceanTokenAddr);
-        if (amtUp != 0) tokenInstance.transfer(address(instance_up), amtUp);
-        if (amtDown != 0) tokenInstance.transfer(address(instance_down), amtDown);
+        if (amtUp != 0) tokenInstance.transfer(address(instanceUp), amtUp);
+        if (amtDown != 0) tokenInstance.transfer(address(instanceDown), amtDown);
     }
 
     ///@notice claim tokens from the instances
-    function getTokensFromInstance(address token, uint256 amtUp, uint256 amtDown) internal onlyOwner {
+    function _getTokensFromInstance(address token, uint256 amtUp, uint256 amtDown) internal {
         if (amtUp != 0) {
-            instance_up.transferERC20(token, address(this), amtUp);
+            instanceUp.transferERC20(token, address(this), amtUp);
         }
         if (amtDown != 0) {
-            instance_down.transferERC20(token, address(this), amtDown);
+            instanceDown.transferERC20(token, address(this), amtDown);
         }
     }
 
     ///@notice claim native tokens form the instances
     function getNativeTokenFromInstance() external onlyOwner {
-        instance_up.transfer();
-        instance_down.transfer();
+        instanceUp.transfer();
+        instanceDown.transfer();
     }
 
     ///@notice submit predictions for the strategy of betting on both sides
@@ -56,18 +56,33 @@ contract PredictionManager {
         address[] calldata feeds,
         uint256 epoch_start
     ) external onlyOwner {
-        instance_up.predict(true, stakesUp, feeds, epoch_start);
-        instance_down.predict(false, stakesDown, feeds, epoch_start);
+        uint256 upInstanceFunding = 0;
+        uint256 downInstanceFunding = 0;
+
+        for (uint256 i = 0; i < stakesUp.length; i++) {
+            upInstanceFunding += stakesUp[i];
+        }
+
+        for (uint256 i = 0; i < stakesDown.length; i++) {
+            downInstanceFunding += stakesDown[i];
+        }
+
+        _sendTokensToInstance(upInstanceFunding, downInstanceFunding);
+
+        instanceUp.predict(true, stakesUp, feeds, epoch_start);
+        instanceDown.predict(false, stakesDown, feeds, epoch_start);
     }
 
     ///@notice claim payouts for the strategy of betting on both sides
     function getPayout(uint256[] calldata epoch_start, address[] calldata feeds) external onlyOwner {
-        instance_up.getPayout(epoch_start, feeds);
-        instance_down.getPayout(epoch_start, feeds);
+        instanceUp.getPayout(epoch_start, feeds);
+        instanceDown.getPayout(epoch_start, feeds);
 
         IERC20 ocean = IERC20(oceanTokenAddr);
-        instance_up.transferERC20(oceanTokenAddr, address(this), ocean.balanceOf(address(instance_up)));
-        instance_down.transferERC20(oceanTokenAddr, address(this), ocean.balanceOf(address(instance_down)));
+        uint256 balUp = ocean.balanceOf(address(instanceUp));
+        uint256 balDown = ocean.balanceOf(address(instanceDown));
+
+        _getTokensFromInstance(oceanTokenAddr, balUp, balDown);
     }
 
     /// @notice transfer any ERC20 tokens in this contract to another address
@@ -84,8 +99,8 @@ contract PredictionManager {
 
     /// @notice approves tokens from the instances to the feeds
     function approveOcean(address[] calldata feeds) external onlyOwner {
-        instance_up.approveOcean(feeds);
-        instance_down.approveOcean(feeds);
+        instanceUp.approveOcean(feeds);
+        instanceDown.approveOcean(feeds);
     }
 
     fallback() external payable {}
