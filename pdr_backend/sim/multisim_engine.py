@@ -29,14 +29,14 @@ class MultisimEngine:
         """
         self.d: dict = d
         self.network = "development"
-        
+
         filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
         self.csv_file = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
     @property
     def ppss(self) -> PPSS:
         return PPSS(d=self.d, network=self.network)
-    
+
     @property
     def ss(self) -> MultisimSS:
         return self.ppss.multisim_ss
@@ -58,7 +58,7 @@ class MultisimEngine:
 
         logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
 
-    def ppss_from_point(self, point_i:Point) -> PPSS:
+    def ppss_from_point(self, point_i: Point) -> PPSS:
         """
         @description
           Compute PPSS for sim_engine run #i
@@ -84,8 +84,8 @@ class MultisimEngine:
 
     @enforce_types
     def spaces(self) -> List[int]:
-        return [max(len(name),6) + 3 for name in self.csv_header()]
-    
+        return [max(len(name), 6) + 3 for name in self.csv_header()]
+
     @enforce_types
     def initialize_csv_with_header(self):
         assert not os.path.exists(self.csv_file), self.csv_file
@@ -93,17 +93,15 @@ class MultisimEngine:
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
             row = self.csv_header()
-            writer.writerow(
-                [name.rjust(space) for name, space in zip(row, spaces)]
-            )
+            writer.writerow([name.rjust(space) for name, space in zip(row, spaces)])
         logger.info("Multisim output file: %s" % self.csv_file)
 
     @enforce_types
     def update_csv(
-            self,
-            run_i: int,
-            run_metrics: List[Union[int, float]],
-            point_i: Point,
+        self,
+        run_i: int,
+        run_metrics: List[Union[int, float]],
+        point_i: Point,
     ):
         """
         @description
@@ -116,10 +114,12 @@ class MultisimEngine:
         """
         assert os.path.exists(self.csv_file), csv_dir
         spaces = self.spaces()
+
         def _val2str(val):
             if isinstance(val, int) or isinstance(val, float):
                 return f"{val:.4f}"
             return str(val)
+
         with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
             row = [str(run_i)] + run_metrics + list(point_i.values())
@@ -132,6 +132,5 @@ class MultisimEngine:
     def load_csv(self) -> pd.DataFrame:
         """Load csv as a pandas Dataframe."""
         df = pd.read_csv(self.csv_file)
-        df.rename(columns=lambda x: x.strip(), inplace=True) # strip whitespace
+        df.rename(columns=lambda x: x.strip(), inplace=True)  # strip whitespace
         return df
-

@@ -20,7 +20,7 @@ def test_multisim_ss_from_yaml_str(tmpdir):
     assert isinstance(ss.sweep_params, list)
     assert ss.sweep_params
     assert ss.n_points > 1
-    assert ss.n_runs == ss.n_points # alias
+    assert ss.n_runs == ss.n_points  # alias
 
     assert "MultisimSS" in str(ss)
 
@@ -43,7 +43,7 @@ def test_multisim_ss_from_dict(tmpdir):
     assert ss.approach == "SimpleSweep"
     assert ss.sweep_params == sweep_params
     assert ss.n_points == 3 * 2 * 2 * 2
-    assert ss.n_runs == ss.n_points # alias
+    assert ss.n_runs == ss.n_points  # alias
 
     assert "MultisimSS" in str(ss)
 
@@ -76,18 +76,20 @@ def test_multisim_ss_point_meta_and_points(tmpdir):
     ]
     ss = MultisimSS(multisim_ss_test_dict(sweep_params=sweep_params))
 
-    target_point_meta = PointMeta([
-        (var1, ["1", "2"]),
-        (var2, ["10 USD", "20 USD"]),
-    ])
-    
+    target_point_meta = PointMeta(
+        [
+            (var1, ["1", "2"]),
+            (var2, ["10 USD", "20 USD"]),
+        ]
+    )
+
     target_points = [
         Point([(var1, "1"), (var2, "10 USD")]),
         Point([(var1, "1"), (var2, "20 USD")]),
         Point([(var1, "2"), (var2, "10 USD")]),
         Point([(var1, "2"), (var2, "20 USD")]),
-        ]
-    
+    ]
+
     assert ss.n_points == 2 * 2
     assert ss.point_meta == target_point_meta
 
@@ -95,4 +97,3 @@ def test_multisim_ss_point_meta_and_points(tmpdir):
     assert len(points) == 4
     for target_p in target_points:
         assert obj_in_objlist(target_p, points)
-        

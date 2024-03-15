@@ -23,7 +23,7 @@ class MultisimSS(StrMixin):
 
         if self.approach not in APPROACH_OPTIONS:
             raise ValueError(self.approach)
-        
+
         assert self.point_meta.n_points > 1
 
     # --------------------------------
@@ -43,7 +43,7 @@ class MultisimSS(StrMixin):
     def point_meta(self) -> PointMeta:
         """Returns the sweep_params as a PointMeta, so easy to work with."""
         point_meta = PointMeta()
-        for param_d in self.sweep_params: 
+        for param_d in self.sweep_params:
             name, vals_str = keyval(param_d)
             vals = [val.strip() for val in vals_str.split(",")]
             point_meta[name] = vals
@@ -54,12 +54,12 @@ class MultisimSS(StrMixin):
         """Return # combinations = cross product across all parameters"""
         return self.point_meta.n_points
 
-    n_runs = n_points # n_runs() in an alias of n_points()
+    n_runs = n_points  # n_runs() in an alias of n_points()
 
     @enforce_types
     def point_i(self, i: int) -> Point:
         return self.point_meta.point_i(i)
-        
+
 
 # =========================================================================
 # utilities for testing

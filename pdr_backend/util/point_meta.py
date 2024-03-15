@@ -1,13 +1,14 @@
 from collections import OrderedDict
-from typing import Any,Dict,List
+from typing import Any, Dict, List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.util.point import Point
 
+
 class PointMeta(OrderedDict):
     """Defines the bounds for a space, that points can occupy."""
-                    
+
     @property
     def n_points(self) -> int:
         """Return # combinations = cross product across all parameters"""
@@ -37,21 +38,22 @@ class PointMeta(OrderedDict):
             point[name] = cand_vals[(i // multiplier) % len(cand_vals)]
             multiplier *= len(cand_vals)
         return point
-    
+
     @enforce_types
     def __str__(self):
         s = ""
         s += "PointMeta={"
         s += f"{len(self)} vars\n"
         varnames = sorted(self.keys())
-        for (i, varname) in enumerate(varnames):
-            if len(varnames) > 1: s += "\n   "
+        for i, varname in enumerate(varnames):
+            if len(varnames) > 1:
+                s += "\n   "
             s += f" name={varname}"
             s += f" , cand_vals={self[varname]}"
-            if i < len(varnames)-1: s += ", "
-            
-        if len(varnames) > 1: s += "\n"
+            if i < len(varnames) - 1:
+                s += ", "
+
+        if len(varnames) > 1:
+            s += "\n"
         s += "/PointMeta}"
         return s
-
-    

@@ -16,4 +16,3 @@ def test_keyval():
         _ = keyval({})
     with pytest.raises(ValueError):
         _ = keyval({"thekey": "theval", "key2": "val2"})
-    

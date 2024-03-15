@@ -34,12 +34,12 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         """
         @description
           Construct PPSS.
-        
+
           The goal is to get a constructor dict 'd'; then fill the rest from d.
-        
+
           Direct way:
           - pass in 'd'
-        
+
           Or, indirect ways:
           - pass in 'yaml_filename' to load from a yaml file, or
           - pass in 'yaml_str' for contents like a yaml file
@@ -48,9 +48,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
           Whether direct or indirect, 'network' can be input (or default used).
         """
         if d is None:
-            d = self.constructor_dict(
-                yaml_filename, yaml_str, nested_override_args
-            )
+            d = self.constructor_dict(yaml_filename, yaml_str, nested_override_args)
         self.fill_from_constructor_dict(d, network)
 
     @staticmethod
@@ -76,7 +74,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         return d
 
-    def fill_from_constructor_dict(self, d:dict, network:Optional[str]):
+    def fill_from_constructor_dict(self, d: dict, network: Optional[str]):
         # fill attributes from d. Same order as ppss.yaml, to help reading
         self.lake_ss = LakeSS(d["lake_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])

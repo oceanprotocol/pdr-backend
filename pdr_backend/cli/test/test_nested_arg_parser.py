@@ -43,7 +43,7 @@ def test_nested_arg_parser__different_data_types():
         "config": {"int": 10, "float": 0.5, "names": ["name1", "name2", 42.42, 42]}
     }
 
-    
+
 @enforce_types
 def test_nested_arg_parser__flat_to_nested_args():
     flat_args = {
@@ -52,7 +52,7 @@ def test_nested_arg_parser__flat_to_nested_args():
         "config.names": "['name1', 'name2', 42.42, 42]",
     }
     nested_args = flat_to_nested_args(flat_args)
-    
+
     assert nested_args == {
         "config": {"int": 10, "float": 0.5, "names": ["name1", "name2", 42.42, 42]}
     }

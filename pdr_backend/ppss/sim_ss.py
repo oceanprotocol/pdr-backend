@@ -63,6 +63,7 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 # =========================================================================
 # utilities for testing
 
+
 @enforce_types
 def sim_ss_test_dict(log_dir: str) -> dict:
     d = {

@@ -3,6 +3,7 @@ import ast
 
 from enforce_typing import enforce_types
 
+
 @enforce_types
 class NestedArgParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -45,6 +46,7 @@ class NestedArgParser(argparse.ArgumentParser):
                 return float(value)
             except ValueError:
                 return value
+
 
 @enforce_types
 def flat_to_nested_args(flat_args: dict) -> dict:

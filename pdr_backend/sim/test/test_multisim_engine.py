@@ -29,15 +29,16 @@ def test_multisim1(tmpdir):
     assert multisim_engine.csv_header() == target_columns
     assert os.path.exists(multisim_engine.csv_file)
     df = multisim_engine.load_csv()
-    assert df.shape[0] == 2 # 2 runs
+    assert df.shape[0] == 2  # 2 runs
     assert df.shape[1] == len(target_columns)
     assert list(df.columns) == target_columns
+
 
 @enforce_types
 def _constructor_d_with_fast_runtime(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     constructor_d = PPSS.constructor_dict(yaml_str=s)
-    
+
     predict_feed = "binanceus BTC/USDT c 5m"
     input_feeds = [predict_feed]
 
