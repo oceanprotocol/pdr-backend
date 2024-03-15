@@ -43,18 +43,17 @@ class MultisimEngine:
     @enforce_types
     def run(self):
         ss = self.ss
-        logger.info("Multisim engine: start")
+        logger.info(f"Multisim engine: start. # runs = {ss.n_runs}")
         self.initialize_csv_with_header()
-        n_points = ss.n_points
-        for i in range(n_points):
-            logger.info("Multisim run #%s/%s: start" % (i + 1, ss.n_points))
-            point_i = self.ss.point_i(i)
+        for run_i in range(ss.n_runs):
+            logger.info("Multisim run_i=%s: start" % run_i)
+            point_i = self.ss.point_i(run_i)
             ppss = self.ppss_from_point(point_i)
             sim_engine = SimEngine(ppss)
             sim_engine.run()
             run_metrics = sim_engine.st.recent_metrics()
-            self.update_csv(i, run_metrics, point_i)
-            logger.info("Multisim run #%s/%s: done" % (i + 1, ss.n_points))
+            self.update_csv(run_i, run_metrics, point_i)
+            logger.info("Multisim run_i=%s: done" % run_i)
 
         logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
 
@@ -101,7 +100,7 @@ class MultisimEngine:
     @enforce_types
     def update_csv(
             self,
-            i: int,
+            run_i: int,
             run_metrics: List[Union[int, float]],
             point_i: OrderedDict[str,Any],
     ):
@@ -110,7 +109,7 @@ class MultisimEngine:
           Update csv with metrics from a given sim run
 
         @arguments
-          i - it's run #i
+          run_i - it's run #i
           run_metrics -- output of SimState.recent_metrics() for run #i
           point_i -- value of each sweep param, for run #i
         """
@@ -122,7 +121,7 @@ class MultisimEngine:
             return str(val)
         with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
-            row = [str(i)] + run_metrics + list(point_i.values())
+            row = [str(run_i)] + run_metrics + list(point_i.values())
             assert len(row) == len(self.csv_header())
             writer.writerow(
                 [_val2str(val).rjust(space) for val, space in zip(row, spaces)]

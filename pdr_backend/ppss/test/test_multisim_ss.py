@@ -18,6 +18,7 @@ def test_multisim_ss_from_yaml_str(tmpdir):
     assert isinstance(ss.sweep_params, list)
     assert ss.sweep_params
     assert ss.n_points > 1
+    assert ss.n_runs == ss.n_points # alias
 
     assert "MultisimSS" in str(ss)
 
@@ -40,6 +41,7 @@ def test_multisim_ss_from_dict(tmpdir):
     assert ss.approach == "SimpleSweep"
     assert ss.sweep_params == sweep_params
     assert ss.n_points == 3 * 2 * 2 * 2
+    assert ss.n_runs == ss.n_points # alias
 
     assert "MultisimSS" in str(ss)
 
