@@ -257,7 +257,7 @@ def test_etl_do_bronze_step(
 
 
 @enforce_types
-def test_check_build_sql_tables(tmpdir):
+def test_drop_build_sql_tables(tmpdir):
 
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
@@ -273,15 +273,12 @@ def test_check_build_sql_tables(tmpdir):
     etl = ETL(ppss, gql_data_factory)
     pds = PersistentDataStore(str(tmpdir))
 
-    db_tables_query = (
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    )
     # SELECT ALL TABLES FROM DB
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
     # DROP ALL TABLES
-    for table in db_tables:
-        pds.duckdb_conn.execute(f"DROP TABLE {table[0]}")
+    for table in table_names:
+        pds.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_a")
@@ -289,16 +286,16 @@ def test_check_build_sql_tables(tmpdir):
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_c")
 
     # check if tables are created
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
-    assert len(db_tables) == 3
+    assert len(table_names) == 3
 
     etl.build_table_names = ["a", "b", "c"]
-    etl._check_build_sql_tables()
+    etl._drop_build_sql_tables()
 
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
-    assert len(db_tables) == 0
+    assert len(table_names) == 0
 
 
 @enforce_types
@@ -318,15 +315,12 @@ def test_move_build_tables_to_permanent(tmpdir):
     etl = ETL(ppss, gql_data_factory)
     pds = PersistentDataStore(str(tmpdir))
 
-    db_tables_query = (
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    )
     # SELECT ALL TABLES FROM DB
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
     # DROP ALL TABLES
-    for table in db_tables:
-        pds.duckdb_conn.execute(f"DROP TABLE {table[0]}")
+    for table_name in table_names:
+        pds.duckdb_conn.execute(f"DROP TABLE {table_name}")
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_a")
@@ -334,20 +328,26 @@ def test_move_build_tables_to_permanent(tmpdir):
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_c")
 
     # check if tables are created
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
-    assert len(db_tables) == 3
+    assert len(table_names) == 3
 
     etl.build_table_names = ["a", "b", "c"]
     etl._move_build_tables_to_permanent()
 
-    db_tables = pds.duckdb_conn.execute(db_tables_query).fetchall()
+    table_names = pds.get_table_names()
 
-    assert len(db_tables) == 3
+    assert len(table_names) == 3
     # check "c" exists in permanent tables
-    assert "c" in [table[0] for table in db_tables]
-    assert "a" in [table[0] for table in db_tables]
-    assert "b" in [table[0] for table in db_tables]
+    assert "c" in table_names
+    assert "a" in table_names
+    assert "b" in table_names
+
+    # Verify no build tables exist
+    table_names = pds.get_table_names()
+
+    for table_name in table_names:
+        assert "_build_" not in table_name
 
 
 @enforce_types

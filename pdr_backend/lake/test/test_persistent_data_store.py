@@ -19,10 +19,8 @@ def _get_persistent_data_store(tmpdir):
 
 
 def _check_view_exists(persistent_data_store, table_name):
-    tables = persistent_data_store.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
-    return [table_name in [table[0] for table in tables], table_name]
+    table_names = persistent_data_store.get_table_names()
+    return [table_name in table_names, table_name]
 
 
 def test_create_and_fill_table(tmpdir):
@@ -121,10 +119,8 @@ def test_drop_table(tmpdir):
     persistent_data_store.drop_table(table_name)
 
     # Check if the view is dropped
-    tables = persistent_data_store.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
-    assert view_name not in [table[0] for table in tables]
+    table_names = persistent_data_store.get_table_names()
+    assert view_name not in table_names
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -250,14 +246,11 @@ def test_move_table_data(tmpdir):
     persistent_data_store.move_table_data(get_table_name(table_name, True), table_name)
 
     # Check if the view is dropped
-    tables = persistent_data_store.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
-
-    assert get_table_name(table_name, True) not in [table[0] for table in tables]
+    table_names = persistent_data_store.get_table_names()
+    assert get_table_name(table_name, True) not in table_names
 
     # Check if the new table is created
-    assert table_name in [table[0] for table in tables]
+    assert table_name in table_names
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(

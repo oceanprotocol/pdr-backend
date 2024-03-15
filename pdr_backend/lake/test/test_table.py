@@ -11,10 +11,8 @@ from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
 def _check_view_exists(persistent_data_store, table_name):
-    tables = persistent_data_store.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
-    return [table_name in [table[0] for table in tables], table_name]
+    table_names = persistent_data_store.get_table_names()
+    return [table_name in table_names, table_name]
 
 
 def _clean_up_persistent_data_store(tmpdir, table_name):
@@ -22,12 +20,10 @@ def _clean_up_persistent_data_store(tmpdir, table_name):
     persistent_data_store = PersistentDataStore(str(tmpdir))
 
     # Select tables from duckdb
-    views = persistent_data_store.duckdb_conn.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-    ).fetchall()
+    table_names = persistent_data_store.get_table_names()
 
-    # Drop the view and table
-    if table_name in [table[0] for table in views]:
+    # Drop the table
+    if table_name in table_names:
         persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
 
 
