@@ -57,7 +57,7 @@ class MultisimEngine:
         logger.info("Multisim engine: done. Output file: %s" % self.csv_file)
 
     def ppss_i(self, i: int) -> PPSS:
-        """PPSS for point number i"""
+        """PPSS for sim_engine run #i"""
         point_i = self.ss.point_i(i)
         nested_args = flat_to_nested_args(point_i)
         d = copy.deepcopy(self.d)
@@ -72,11 +72,17 @@ class MultisimEngine:
         spaces: List[int] = _spaces()
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
-            row = SimState.recent_metrics_names()
+            row = self.csv_header()
             writer.writerow(
                 [name.rjust(space) for name, space in zip(row, spaces)]
             )
         logger.info("Multisim output file: %s" % self.csv_file)
+
+    @enforce_types
+    def csv_header(self) -> List[str]:
+        header = []
+        header += SimState.recent_metrics_names()
+        return header
 
     @enforce_types
     def update_csv(self, run_metrics: List[Union[int, float]]):
@@ -92,7 +98,7 @@ class MultisimEngine:
         with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
             row = run_metrics
-            assert len(row) == len(SimState.recent_metrics_names())
+            assert len(row) == len(self.csv_header())
             writer.writerow(
                 [(f"{val:.4f}").rjust(space) for val, space in zip(row, spaces)]
             )
