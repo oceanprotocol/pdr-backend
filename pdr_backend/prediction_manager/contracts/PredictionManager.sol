@@ -76,13 +76,13 @@ contract PredictionManager {
         tokenInstance.transfer(to, amount);
     }
 
-    /// @notice transfer native tokens from thsi contract to an addrdess
+    /// @notice transfer native tokens from this contract to an addrdess
     function transfer() external payable onlyOwner {
         (bool status,) = address(msg.sender).call{value: address(this).balance}("");
         require(status, "Failed transaction");
     }
 
-    ///@notice approves tokens from the instances to the feeds
+    /// @notice approves tokens from the instances to the feeds
     function approveOcean(address[] calldata feeds) external onlyOwner {
         instance_up.approveOcean(feeds);
         instance_down.approveOcean(feeds);
