@@ -15,7 +15,7 @@ class PredictionManager(BaseContract):
         """
         super().__init__(web3_pp, address, "PredictionManager")
 
-    def submit(
+    def submit_prediction(
         self,
         stakes_up: list,
         stakes_down: list,
