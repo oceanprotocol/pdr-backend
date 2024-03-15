@@ -7,7 +7,7 @@ formatters:
 handlers:
     console:
         class: logging.StreamHandler
-        level: DEBUG
+        level: INFO
         formatter: simple
         stream: ext://sys.stdout
 
@@ -19,16 +19,19 @@ loggers:
         handlers: [console]
         propagate: no
 
+    ohlcv_data_factory:
+        level: WARNING
+
     sim_engine:
         level: WARNING
+
+    multisim_engine:
+        level: INFO
 
     predictoor_agent:
         level: INFO
 
     trader_agent:
-        level: INFO
-
-    multisim_engine:
         level: INFO
 
 # for a full list of loggers:
