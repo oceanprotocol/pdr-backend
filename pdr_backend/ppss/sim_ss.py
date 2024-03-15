@@ -58,3 +58,24 @@ class SimSS(StrMixin, CCXTExchangeMixin):
     @property
     def allowed_tradetypes(self) -> List[str]:
         return ["livemock", "livereal", "histmock"]
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def sim_ss_test_dict(log_dir: str) -> dict:
+    d = {
+        "do_plot": True,
+        "log_dir": log_dir,
+        "test_n": 10,
+        "exchange_only": {
+            "timeout": 30000,
+            "options": {
+                "createMarketBuyOrderRequiresPrice": False,
+                "defaultType": "spot",
+            },
+        },
+    }
+    return d
