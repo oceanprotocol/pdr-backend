@@ -33,7 +33,7 @@ class ClassifierMetrics:
     def recent_metrics(self) -> List[Union[int, float]]:
         """Return most recent classifier metrics"""
         assert self.acc_ests, "must have >0 entries to call this"
-        return (
+        return [
             self.acc_ests[-1],
             self.acc_ls[-1],
             self.acc_us[-1],
@@ -41,7 +41,7 @@ class ClassifierMetrics:
             self.f1s[-1],
             self.precisions[-1],
             self.recalls[-1],
-        )
+        ]
 
 
 # pylint: disable=too-many-instance-attributes
