@@ -72,7 +72,7 @@ class MultisimEngine:
         with open(self.csv_file, "w") as f:
             writer = csv.writer(f)
             row = SimState.recent_metrics_names()
-            writer.writerow(row)
+            writer.writerow([name.rjust(20) for name in row])
         logger.info("Multisim output file: %s" % self.csv_file)
 
     @enforce_types
@@ -88,9 +88,12 @@ class MultisimEngine:
         with open(self.csv_file, "a") as f:
             writer = csv.writer(f)
             row = run_metrics
-            writer.writerow(row)
+            writer.writerow([(f"{val:.4f}").rjust(20) for val in row])
 
     @enforce_types
     def load_csv(self) -> pd.DataFrame:
-        return pd.read_csv(self.csv_file)
+        """Load csv as a pandas Dataframe."""
+        df = pd.read_csv(self.csv_file)
+        df.rename(columns=lambda x: x.strip(), inplace=True) # strip whitespace
+        return df
     
