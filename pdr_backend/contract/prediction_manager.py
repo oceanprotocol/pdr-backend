@@ -37,6 +37,31 @@ class PredictionManager(BaseContract):
         """
         return self.contract_instance.functions.instanceDown().call()
 
+    def claim_dfrewards(
+        self, token_addr: str, dfrewards_addr: str, wait_for_receipt=True
+    ):
+        """
+        @description
+          Claims DF rewards for the given token from the DFRewards contract.
+
+        @arguments
+          token_addr -- str, address of the token contract.
+          dfrewards_addr -- str, address of the DFRewards contract.
+          wait_for_receipt -- bool, if True, waits for the transaction receipt.
+
+        @return
+          tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
+        """
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.claimDFRewards(
+            token_addr, dfrewards_addr
+        ).transact(call_params)
+
+        if not wait_for_receipt:
+            return tx
+
+        return self.config.w3.eth.wait_for_transaction_receipt(tx)
+
     def submit_prediction(
         self,
         stakes_up: List[Wei],
