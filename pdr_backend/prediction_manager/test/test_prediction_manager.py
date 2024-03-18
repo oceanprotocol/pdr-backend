@@ -1,6 +1,7 @@
 from web3.types import RPCEndpoint
 
 from pdr_backend.conftest_ganache import *
+from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.prediction_manager import (
     PredictionManager,
 )  # pylint: disable=wildcard-import
@@ -91,6 +92,40 @@ def test_transfer(prediction_manager: PredictionManager, web3_config):
     after = web3_config.w3.eth.get_balance(web3_config.owner)
     assert after - before == 100
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
+
+
+def test_claim_dfrewards(prediction_manager: PredictionManager, web3_pp, ocean_token):
+    dfrewards_addr = web3_pp.get_address("DFRewards")
+    dfrewards = DFRewards(web3_pp, dfrewards_addr)
+
+    pmup = prediction_manager.predictoor_up_address()
+    pmdown = prediction_manager.predictoor_down_address()
+
+    # approve rewards
+    ocean_token.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
+
+    # allocate rewards
+    tx = dfrewards.contract_instance.functions.allocate(
+        [pmup, pmdown],
+        [100, 100],
+        ocean_token.contract_address,
+    ).transact(web3_pp.tx_call_params())
+    web3_pp.web3_config.w3.eth.wait_for_transaction_receipt(tx)
+
+    # record before balances
+    before_up = ocean_token.balanceOf(pmup)
+    before_down = ocean_token.balanceOf(pmdown)
+
+    # claim rewards
+    prediction_manager.claim_dfrewards(ocean_token.contract_address, dfrewards_addr)
+
+    # record after balances
+    after_up = ocean_token.balanceOf(pmup)
+    after_down = ocean_token.balanceOf(pmdown)
+
+    # assert
+    assert after_up - before_up == Wei(100)
+    assert after_down - before_down == Wei(100)
 
 
 def test_submit_prediction_and_payout(
