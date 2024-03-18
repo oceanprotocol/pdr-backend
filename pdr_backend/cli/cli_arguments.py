@@ -546,6 +546,9 @@ defined_parsers = {
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
+    "do_deploy_prediction_manager": _ArgParser_PPSS_NETWORK(
+        "Deploy prediction manager contract", "deploy_prediction_manager"
+    ),
     # utilities
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(
         "For specified predictoors, report {accuracy, ..} of each predictoor",
@@ -568,9 +571,6 @@ defined_parsers = {
     ),
     "do_fund_accounts": FundAccountsArgParser(
         "Fund multiple wallets from a single address", "fund_accounts"
-    ),
-    "do_deploy_prediction_manager": _ArgParser_PPSS_NETWORK(
-        "Deploy prediction manager contract", "deploy_prediction_manager"
     ),
     # tools for core team
     "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
