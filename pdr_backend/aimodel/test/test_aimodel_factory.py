@@ -15,7 +15,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = True  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
