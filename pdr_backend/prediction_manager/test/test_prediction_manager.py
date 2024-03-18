@@ -129,8 +129,8 @@ def test_submit_prediction_and_payout(
     # first feed up 20, down 30
     # second feed up 40, down 10
     tx_receipt = prediction_manager.submit_prediction(
-        stakes_up=[20, 30],
-        stakes_down=[40, 10],
+        stakes_up=[Wei(20), Wei(30)],
+        stakes_down=[Wei(40), Wei(10)],
         feeds=feeds,
         epoch_start=prediction_epoch,
         wait_for_receipt=True,
