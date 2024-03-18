@@ -166,10 +166,11 @@ def test_etl_do_bronze_step(
     # Work 3: Do bronze
     etl.do_bronze_step()
 
-    
     # assert bronze_pdr_predictions_df is created
     temp_table_name = get_table_name("bronze_pdr_predictions", TableType.TEMP)
-    bronze_pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(temp_table_name))
+    bronze_pdr_predictions_records = pds.query_data(
+        "SELECT * FROM {}".format(temp_table_name)
+    )
     assert len(bronze_pdr_predictions_records) == 6
 
     # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df

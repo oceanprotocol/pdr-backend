@@ -281,6 +281,6 @@ def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) ->
     """
     if table_type == TableType.TEMP:
         return f"_temp_{table_name}"
-    elif table_type == TableType.ETL:
+    if table_type == TableType.ETL:
         return f"_etl_{table_name}"
     return table_name

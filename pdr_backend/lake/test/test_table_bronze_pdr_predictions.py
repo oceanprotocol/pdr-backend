@@ -52,8 +52,12 @@ def test_table_bronze_pdr_predictions(
     gql_tables["pdr_predictions"].append_to_storage(
         _gql_datafactory_etl_predictions_df, TableType.TEMP
     )
-    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df, TableType.TEMP)
-    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df, TableType.TEMP)
+    gql_tables["pdr_truevals"].append_to_storage(
+        _gql_datafactory_etl_truevals_df, TableType.TEMP
+    )
+    gql_tables["pdr_payouts"].append_to_storage(
+        _gql_datafactory_etl_payouts_df, TableType.TEMP
+    )
 
     pds = PersistentDataStore(ppss.lake_ss.parquet_dir)
     # truevals should have 6

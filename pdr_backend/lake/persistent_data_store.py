@@ -63,12 +63,9 @@ class PersistentDataStore(BaseDataStore):
             list - The views inside duckdb main schema.
         """
 
-        views = self.duckdb_conn.execute(
-            "SELECT * FROM duckdb_views;"
-        ).fetchall()
+        views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
 
         return [views]
-
 
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
@@ -93,7 +90,6 @@ class PersistentDataStore(BaseDataStore):
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
             self._create_and_fill_table(df, table_name)
-
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:

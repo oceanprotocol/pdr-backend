@@ -97,7 +97,7 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
         gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
 
     gql_data_factory._update()
-    
+
     temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
     last_record = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
         "SELECT * FROM {} ORDER BY timestamp DESC LIMIT 1".format(temp_table_name)

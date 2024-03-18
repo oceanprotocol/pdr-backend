@@ -23,7 +23,7 @@ from pdr_backend.lake.plutil import (
     set_col_values,
     text_to_df,
     get_table_name,
-    TableType
+    TableType,
 )
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [

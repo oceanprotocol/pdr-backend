@@ -22,7 +22,9 @@ class Table:
         self.base_path = self.ppss.lake_ss.parquet_dir
 
     @enforce_types
-    def append_to_storage(self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL):
+    def append_to_storage(
+        self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL
+    ):
         self._append_to_csv(data)
         self._append_to_db(data, table_type)
 
@@ -44,7 +46,9 @@ class Table:
         )
 
     @enforce_types
-    def _append_to_db(self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL):
+    def _append_to_db(
+        self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL
+    ):
         """
         Append the data from the DataFrame object into the database
         It only saves the new data that has been fetched
