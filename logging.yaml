@@ -20,10 +20,10 @@ loggers:
         propagate: no
 
     ohlcv_data_factory:
-        level: WARNING
+        level: INFO
 
     sim_engine:
-        level: WARNING
+        level: INFO
 
     multisim_engine:
         level: INFO
