@@ -10,26 +10,43 @@ from pdr_backend.cli.nested_arg_parser import NestedArgParser
 
 logger = logging.getLogger("cli")
 
-# besides being main help text, always use the cli order here for implementation
-HELP_LONG = """Predictoor tool
-  Transactions are signed with envvar 'PRIVATE_KEY`.
+HELP_TOP = """Predictoor tool
 
-Usage: pdr help|sim|predictoor|trader|..
+Usage: pdr sim|predictoor|trader|..
+"""
 
+HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
+"""
 
+HELP_HELP = """
+Detailed help:
+  pdr <cmd> -h
+  pdr help_long
+"""
+
+HELP_SIGN = """
+Transactions are signed with envvar 'PRIVATE_KEY`.
+"""
+
+HELP_DOT = """
+To pass args down to ppss, use dot notation.
+Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
+"""
+
+HELP_OTHER_TOOLS = """
 Power tools:
+  pdr multisim PPSS_FILE
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
-  pdr <cmd> -h
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
@@ -44,10 +61,11 @@ Tools for core team:
   pdr publisher PPSS_FILE NETWORK
   pdr topup PPSS_FILE NETWORK
   pytest, black, mypy, pylint, ..
-
-To pass args down to ppss, use dot notation.
-Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
 """
+
+HELP_SHORT = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_SIGN
+
+HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN + HELP_DOT
 
 
 # ========================================================================
@@ -456,6 +474,12 @@ class _ArgParser_DEPLOYER:
 
 
 @enforce_types
+def do_help_short(status_code=0):
+    print(HELP_SHORT)
+    sys.exit(status_code)
+
+
+@enforce_types
 def do_help_long(status_code=0):
     print(HELP_LONG)
     sys.exit(status_code)
@@ -483,6 +507,7 @@ ClaimOceanArgParser = _ArgParser_PPSS
 ClaimRoseArgParser = _ArgParser_PPSS
 
 # power tools
+MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
 LakeArgParser = _ArgParser_PPSS_NETWORK
 AnalyticsArgParser = _ArgParser_PPSS_NETWORK
@@ -517,6 +542,7 @@ defined_parsers = {
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
     # power tools
+    "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),

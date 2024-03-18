@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.1.59",
+    "ccxt==4.2.75",
     "coverage",
     "enforce_typing",
     "eth-account==0.11.0",
@@ -19,7 +19,7 @@ install_requirements = [
     "freezegun==1.4.0",
     "imblearn",
     "matplotlib==3.8.3",
-    "mypy==1.8.0",
+    "mypy==1.9.0",
     "numpy==1.26.4",
     "pandas==2.2.1",
     "pathlib",
@@ -28,7 +28,7 @@ install_requirements = [
     "pyarrow==15.0.1",
     "pylint==3.1.0",
     "pytest",
-    "pytest-asyncio==0.23.5",
+    "pytest-asyncio==0.23.5.post1",
     "pytest-env",
     "pyyaml",
     "requests==2.31.0",
@@ -39,7 +39,7 @@ install_requirements = [
     "types-requests==2.31.0.20240311",
     "web3==6.15.1",
     "sapphire.py==0.2.2",
-    "ocean-contracts==2.0.0a14",  # install this last
+    "ocean-contracts==2.0.4",  # install this last
 ]
 
 # Required to run setup.py:

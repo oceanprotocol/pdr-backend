@@ -12,6 +12,7 @@ from pdr_backend.analytics.get_predictions_info import (
 )
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
+    do_help_short,
     get_arg_parser,
     print_args,
 )
@@ -22,6 +23,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -40,6 +42,8 @@ logger = logging.getLogger("cli")
 @enforce_types
 def _do_main():
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
+        do_help_short(0)
+    if sys.argv[1] == "help_long":
         do_help_long(0)
 
     func_name = f"do_{sys.argv[1]}"
@@ -137,6 +141,16 @@ def do_claim_ROSE(args, nested_args=None):
     web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
     ppss.web3_pp.set_web3_config(web3_config)
     do_rose_payout(ppss)
+
+
+@enforce_types
+def do_multisim(args, nested_args=None):
+    d = PPSS.constructor_dict(
+        yaml_filename=args.PPSS_FILE,
+        nested_override_args=nested_args,
+    )
+    multisim_engine = MultisimEngine(d=d)
+    multisim_engine.run()
 
 
 @enforce_types

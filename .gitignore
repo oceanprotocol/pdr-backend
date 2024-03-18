@@ -169,6 +169,7 @@ dir/
 out*.txt
 my_ppss.yaml
 my_logging.yaml
+logs/
 csvs/
 parquet_data/
 pdr_predictions.parquet 

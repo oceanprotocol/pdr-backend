@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
 
@@ -26,6 +26,22 @@ class ClassifierMetrics:
         self.precisions.append(precision)
         self.recalls.append(recall)
 
+    @staticmethod
+    def recent_metrics_names() -> List[str]:
+        return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall"]
+
+    def recent_metrics(self) -> List[Union[int, float]]:
+        """Return most recent classifier metrics"""
+        assert self.acc_ests, "must have >0 entries to call this"
+        return [
+            self.acc_ests[-1],
+            self.acc_ls[-1],
+            self.acc_us[-1],
+            self.f1s[-1],
+            self.precisions[-1],
+            self.recalls[-1],
+        ]
+
 
 # pylint: disable=too-many-instance-attributes
 @enforce_types
@@ -49,6 +65,21 @@ class SimState:
         # profits
         self.pdr_profits_OCEAN: List[float] = []  # [i] : predictoor-profit
         self.trader_profits_USD: List[float] = []  # [i] : trader-profit
+
+    @staticmethod
+    def recent_metrics_names() -> List[str]:
+        """Names of most recent metrics. Use eg for csv header."""
+        return ClassifierMetrics.recent_metrics_names() + [
+            "pdr_profit_OCEAN",
+            "trader_profit_USD",
+        ]
+
+    def recent_metrics(self) -> List[Union[int, float]]:
+        """Return most recent classifier metrics + profit metrics"""
+        return self.clm.recent_metrics() + [
+            self.pdr_profits_OCEAN[-1],
+            self.trader_profits_USD[-1],
+        ]
 
     @property
     def ytrues_hat(self) -> List[bool]:
