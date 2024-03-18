@@ -182,13 +182,9 @@ def test_submit_prediction_and_payout(
     )
     web3_config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
-    # submit the trueval
-    predictoor_contract.submit_trueval(
-        True, prediction_epoch, False, True
-    )  # submit True for the first contract
-    predictoor_contract2.submit_trueval(
-        False, prediction_epoch, False, True
-    )  # submit False for the second contract
+    # submit the trueval: True for first contract, False for second
+    predictoor_contract.submit_trueval(True, prediction_epoch, False, True)
+    predictoor_contract2.submit_trueval(False, prediction_epoch, False, True)
 
     # time to claim payouts
 
