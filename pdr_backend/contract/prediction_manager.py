@@ -16,6 +16,26 @@ class PredictionManager(BaseContract):
         """
         super().__init__(web3_pp, address, "PredictionManager")
 
+    def predictoor_up_address(self) -> str:
+        """
+        @description
+          Returns the address of the upward predictoor contract.
+        
+        @return
+          address -- str, address of the upward predictoor contract.
+        """
+        return self.contract_instance.functions.instanceUp().call()
+
+    def predictoor_down_address(self) -> str:
+        """
+        @description
+          Returns the address of the downward predictoor contract.
+        
+        @return
+          address -- str, address of the downward predictoor contract.
+        """
+        return self.contract_instance.functions.instanceDown().call()
+
     def submit_prediction(
         self,
         stakes_up: list,
