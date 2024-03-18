@@ -288,7 +288,7 @@ def test_etl_view(tmpdir):
         get_table_name(table_name, False),
         get_table_name(table_name, True)
     )
-    persistent_data_store.query(view_query)
+    persistent_data_store.query_data(view_query)
 
     # Assert number of views is equal to 1
     view_names = persistent_data_store.get_view_names()

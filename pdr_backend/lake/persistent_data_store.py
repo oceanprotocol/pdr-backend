@@ -94,27 +94,6 @@ class PersistentDataStore(BaseDataStore):
         else:
             self._create_and_fill_table(df, table_name)
 
-    
-    @enforce_types
-    def query(self, query: str) -> duckdb.DuckDBResult:
-        """
-        Execute a SQL query across the persistent dataset using DuckDB.
-        @arguments:
-            query - The SQL query to execute.
-        @returns:
-            DuckDBResult - The result of the query. May not be a datarame.
-        @example:
-            query("SELECT * FROM table_name")
-        """
-
-        try:
-            result = self.duckdb_conn.execute(query)
-            return result
-        except duckdb.CatalogException as e:
-            if "Table" in str(e) and "not exist" in str(e):
-                return None
-            raise e
-    
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:
