@@ -6,6 +6,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 def test_gql_data_factory():
@@ -96,7 +97,10 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
-    last_record = TableRegistry().get_table("pdr_predictions").get_pds_last_record()
+    last_record = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
+        "SELECT * FROM _build_pdr_predictions ORDER BY timestamp DESC LIMIT 1"
+    )
+
     assert last_record is not None
     assert len(last_record) > 0
     assert last_record["pair"][0] == "BTC/USDT"
@@ -132,7 +136,9 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
-    all_reacords = TableRegistry().get_table("pdr_predictions").get_records()
+    all_reacords = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
+        "SELECT * FROM _build_pdr_predictions"
+    )
 
     assert all_reacords is not None
     assert len(all_reacords) > 0

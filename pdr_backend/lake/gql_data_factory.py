@@ -31,10 +31,11 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.plutil import _object_list_to_df, get_table_name
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.csv_data_store import CSVDataStore
+
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -181,7 +182,7 @@ class GQLDataFactory:
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
                 assert df.schema == table.df_schema
-                table.append_to_storage(buffer_df)
+                table.append_to_storage(buffer_df, build_mode=True)
                 print(f"Saved {len(buffer_df)} records to file while fetching")
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
@@ -193,7 +194,7 @@ class GQLDataFactory:
             pagination_offset += pagination_limit
 
         if len(buffer_df) > 0:
-            table.append_to_storage(buffer_df)
+            table.append_to_storage(buffer_df, build_mode=True)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
     @enforce_types
@@ -247,7 +248,7 @@ class GQLDataFactory:
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
-            print(f"Updating table {table.table_name}")
+            print(f"Updating table {get_table_name(table.table_name)}")
             self._do_subgraph_fetch(
                 table,
                 self.record_config["fetch_functions"][table.table_name],
@@ -256,3 +257,5 @@ class GQLDataFactory:
                 fin_ut,
                 self.record_config["config"],
             )
+
+        print("GQLDataFactory - Update done.")

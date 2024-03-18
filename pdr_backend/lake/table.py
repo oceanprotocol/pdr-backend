@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.plutil import get_table_name
 
 logger = logging.getLogger("table")
 
@@ -21,9 +22,9 @@ class Table:
         self.base_path = self.ppss.lake_ss.parquet_dir
 
     @enforce_types
-    def append_to_storage(self, data: pl.DataFrame):
+    def append_to_storage(self, data: pl.DataFrame, build_mode: bool = False):
         self._append_to_csv(data)
-        self._append_to_db(data)
+        self._append_to_db(data, build_mode)
 
     @enforce_types
     def _append_to_csv(self, data: pl.DataFrame):
@@ -43,7 +44,7 @@ class Table:
         )
 
     @enforce_types
-    def _append_to_db(self, data: pl.DataFrame):
+    def _append_to_db(self, data: pl.DataFrame, build_mode: bool = False):
         """
         Append the data from the DataFrame object into the database
         It only saves the new data that has been fetched
@@ -51,11 +52,10 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        PersistentDataStore(self.base_path).insert_to_table(data, self.table_name)
+        table_name = get_table_name(self.table_name, build_mode)
+        PersistentDataStore(self.base_path).insert_to_table(data, table_name)
         n_new = data.shape[0]
-        print(
-            f"  Just saved df with {n_new} df rows to the database of {self.table_name}"
-        )
+        print(f"  Just saved df with {n_new} df rows to the database of {table_name}")
 
     def get_pds_last_record(self) -> Optional[pl.DataFrame]:
         """

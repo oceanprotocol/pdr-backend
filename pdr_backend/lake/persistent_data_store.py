@@ -1,6 +1,7 @@
 # The PersistentDataStore class is a subclass of the Base
 import os
 import glob
+from typing import Optional
 import duckdb
 
 from enforce_typing import enforce_types
@@ -41,6 +42,20 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
+    def get_table_names(self):
+        """
+        Get the names of all tables from duckdb main schema.
+        @returns:
+            list - The names of the tables in the dataset.
+        """
+
+        tables = self.duckdb_conn.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+        ).fetchall()
+
+        return [table[0] for table in tables]
+
+    @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
         """
         Insert data to an persistent dataset.
@@ -57,17 +72,15 @@ class PersistentDataStore(BaseDataStore):
         """
 
         # Check if the table exists
-        tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-        ).fetchall()
+        table_names = self.get_table_names()
 
-        if table_name in [table[0] for table in tables]:
+        if table_name in table_names:
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
-    def query_data(self, query: str) -> pl.DataFrame:
+    def query_data(self, query: str) -> Optional[pl.DataFrame]:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
@@ -79,11 +92,16 @@ class PersistentDataStore(BaseDataStore):
             query_data("SELECT * FROM table_name")
         """
 
-        result_df = self.duckdb_conn.execute(query).pl()
-        return result_df
+        try:
+            result_df = self.duckdb_conn.execute(query).pl()
+            return result_df
+        except duckdb.CatalogException as e:
+            if "Table" in str(e) and "not exist" in str(e):
+                return None
+            raise e
 
     @enforce_types
-    def drop_table(self, table_name: str, ds_type: str = "table"):
+    def drop_table(self, table_name: str):
         """
         Drop the persistent table.
         @arguments:
@@ -92,11 +110,39 @@ class PersistentDataStore(BaseDataStore):
         @example:
             drop_table("people")
         """
+        # Drop the table if it exists
+        self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
 
-        if ds_type not in ["view", "table"]:
-            raise ValueError("ds_type must be either 'view' or 'table'")
+    @enforce_types
+    def move_table_data(self, temp_table_name: str, permanent_table_name: str):
+        """
+        Move the table data from the temporary storage to the permanent storage.
+        @arguments:
+            temp_table_name - The name of the temporary table.
+            permanent_table_name - The name of the permanent table.
+        @example:
+            move_table_data("temp_people", "people")
+        """
 
-        self.duckdb_conn.execute(f"DROP {ds_type} {table_name}")
+        # Check if the table exists
+        table_names = self.get_table_names()
+
+        if temp_table_name in table_names:
+            # check if the permanent table exists
+            if permanent_table_name not in table_names:
+                # create table if it does not exist
+                self.duckdb_conn.execute(
+                    f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}"
+                )
+            else:
+                # Move the data from the temporary table to the permanent table
+                self.duckdb_conn.execute(
+                    f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table_name}"
+                )
+
+            self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {temp_table_name}")
+        else:
+            raise Exception(f"Table {temp_table_name} does not exist")
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):

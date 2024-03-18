@@ -265,3 +265,13 @@ def filter_and_drop_columns(
         Modified dataframe
     """
     return df.filter(pl.col(target_column).is_in(ids)).drop(columns_to_drop)
+
+
+@enforce_types
+def get_table_name(table_name: str, build_mode: bool = False) -> str:
+    """
+    Get the table name with the build mode prefix
+    """
+    if build_mode:
+        return f"_build_{table_name}"
+    return table_name
