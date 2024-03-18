@@ -124,7 +124,6 @@ class PersistentDataStore(BaseDataStore):
         # Drop the table if it exists
         self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
 
-
     @enforce_types
     def drop_view(self, view_name: str):
         """
@@ -136,7 +135,6 @@ class PersistentDataStore(BaseDataStore):
         """
         # Drop the table if it exists
         self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
-
 
     @enforce_types
     def move_table_data(self, temp_table_name: str, permanent_table_name: str):
