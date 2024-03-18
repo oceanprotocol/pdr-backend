@@ -248,6 +248,7 @@ _CACHED_YAML_FILE_S = None
 @enforce_types
 def fast_test_yaml_str(tmpdir=None):
     """Use this for testing. It has fast runtime."""
+    import pdb; pdb.set_trace()
     global _CACHED_YAML_FILE_S
     if _CACHED_YAML_FILE_S is None:
         filename = os.path.abspath("ppss.yaml")
@@ -264,6 +265,8 @@ def fast_test_yaml_str(tmpdir=None):
         )
 
         assert "log_dir: logs" in s
+        import pdb; pdb.set_trace()
         s = s.replace("log_dir: logs", f"log_dir: {os.path.join(tmpdir, 'logs')}")
+        import pdb; pdb.set_trace()
 
     return s

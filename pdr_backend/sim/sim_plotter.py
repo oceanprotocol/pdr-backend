@@ -3,6 +3,7 @@ from typing import List
 from enforce_typing import enforce_types
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import savefig
 import numpy as np
 from numpy.random import random
 
@@ -59,19 +60,35 @@ class SimPlotter:
         self.N_done: int = 0
         self.x: List[float] = []
 
-        self.plotted_before: bool = False
-
-        # push plot to screen
-        plt.ion()
-        plt.show()
+        self.shown_plot_before: bool = False
+        self.computed_plot_before: bool = False
 
     # pylint: disable=too-many-statements
     @enforce_types
-    def make_plot(self, aimodel_plotdata: AimodelPlotdata):
+    def compute_plot(
+            self,
+            aimodel_plotdata: AimodelPlotdata,
+            do_show_plot: bool,
+            do_save_plot: bool,
+    ) -> Optional[str]:
         """
         @description
           Create / update whole plot, with many subplots
+
+        @arguments
+          aimodel_plotdata -- has model, X_train, etc
+          do_show_plot -- render on-screen in a window?
+          do_save_plot -- export as png?
+
+        @return
+          plot_filename - filename of saved plot (None if not done)
         """
+        if do_show_plot and not self.shown_plot_before:
+            # push plot to screen
+            plt.ion()
+            plt.show()
+            self.shown_plot_before = True
+
         # update N, N_done, x. **Update x only after updating N, N_done!**
         self.N = len(self.st.pdr_profits_OCEAN)
         self.N_done = len(self.x)  # what # points have been plotted previously
@@ -89,12 +106,24 @@ class SimPlotter:
         self._plot_aimodel_varimps(aimodel_plotdata)
         self._plot_aimodel_response(aimodel_plotdata)
 
-        # final pieces
+        # final pieces of making plot
         self.fig.set_size_inches(WIDTH, HEIGHT)
         self.fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
         plt.subplots_adjust(wspace=0.3)
-        plt.pause(0.001)
-        self.plotted_before = True
+
+        # save to png?
+        plot_filename = None
+        if do_save_plot:
+            plot_filename = ppss.sim_ss.unique_final_img_filename()
+            savefig(filename)
+
+        # wrapup for reloop
+        if do_show_plot:
+            plt.pause(0.001)
+        self.computed_plot_before = True
+
+        return plot_filename
+            
 
     @property
     def next_x(self) -> List[float]:
@@ -114,7 +143,7 @@ class SimPlotter:
         ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
         s = f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN"
         _set_title(ax, s)
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
             ax.set_xlabel("time", fontsize=FONTSIZE)
             _ylabel_on_right(ax)
@@ -128,7 +157,7 @@ class SimPlotter:
         ax.plot(self.next_x, next_y10, c="b")
         ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
         _set_title(ax, f"Trader profit vs time. Current: ${y10[-1]:.2f}")
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             ax.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
             _ylabel_on_right(ax)
@@ -149,7 +178,7 @@ class SimPlotter:
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
         _set_title(ax, s)
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             ax.set_ylabel("% correct [lower, upper bound]", fontsize=FONTSIZE)
             _ylabel_on_right(ax)
@@ -173,7 +202,7 @@ class SimPlotter:
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
         _set_title(ax, s)
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
             ax.legend(loc="lower left")
@@ -195,7 +224,7 @@ class SimPlotter:
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
             _set_ylabel(ax, "pdr profit (OCEAN)")
@@ -218,7 +247,7 @@ class SimPlotter:
 
         _set_title(ax, s)
         ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
             _set_ylabel(ax, "trader profit (USD)")
@@ -230,14 +259,14 @@ class SimPlotter:
         ax = self.ax_aimodel_varimps
         imps_tups = d.model.importance_per_var(include_stddev=True)
         plot_aimodel_varimps(d.colnames, imps_tups, (self.fig, ax))
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.margins(0.01, 0.01)
 
     @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):
         ax = self.ax_aimodel_response
         plot_aimodel_response(d, (self.fig, ax))
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.margins(0.01, 0.01)
 
 

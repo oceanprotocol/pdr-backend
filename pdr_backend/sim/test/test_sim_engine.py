@@ -31,10 +31,14 @@ def test_sim_engine(tmpdir):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir)
+    d = sim_ss_test_dict(log_dir, final_img_filebase="final")
     ppss.sim_ss = SimSS(d)
 
     # go
     with mock.patch("pdr_backend.sim.sim_plotter.plt.show"):
         sim_engine = SimEngine(ppss)
         sim_engine.run()
+
+    #
+    target_name = os.path.join(log_dir, "final_0.png")
+    assert os.path.exists(final_img_filename)

@@ -15,7 +15,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
@@ -263,4 +263,45 @@ def _test_aimodel_factory_nvars_varimps(n: int):
     else:
         with patch(plt_show_path):
             plot_aimodel_varimps(varnames, imps_tup)
+    assert not SHOW_PLOT
+    
+@enforce_types
+def test_aimodel_factory_1var_balance_classes():
+    """Experiments on #731:
+    [Sim] When balancing classes, all predictions are 'up'. Weird"""
+    # settings, factory
+    d = aimodel_ss_test_dict(
+        approach="LinearLogistic",
+        weight_recent="None",
+        balance_classes="SMOTE",
+        calibrate_probs="None",
+    )
+    ss = AimodelSS(d)
+    print(ss)
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 150
+    mn, mx = -10.0, +10.0
+    X = np.random.uniform(mn, mx, (N, 1))
+    ycont = 3.0 + 4.0 * X[:, 0]
+    y_thr = np.average(ycont)  # avg gives good class balance
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, show_warnings=False)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert_array_equal(imps, np.array([1.0]))
+
+    # plot
+    colnames = ["x0"]
+    slicing_x = np.array([0.1])  # arbitrary
+    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    if SHOW_PLOT:
+        plot_aimodel_response(aimodel_plotdata)
+    else:
+        with patch(plt_show_path):
+            plot_aimodel_response(aimodel_plotdata)
     assert not SHOW_PLOT
