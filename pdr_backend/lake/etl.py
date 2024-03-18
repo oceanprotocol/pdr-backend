@@ -148,7 +148,7 @@ class ETL:
         values = {}
         for table_name in table_names:
             calc_table_name = get_table_name(table_name, build_mode)
-            result = pds.query_data(max_timestamp_query.format(calc_table_name))
+            result = pds.query(max_timestamp_query.format(calc_table_name))
             values[calc_table_name] = (
                 result["max_timestamp"][0] if result is not None else None
             )

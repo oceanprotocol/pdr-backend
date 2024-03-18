@@ -374,7 +374,7 @@ def _clean_up_persistent_data_store(tmpdir, table_name=None):
     # Select tables from duckdb
     table_names = persistent_data_store.get_table_names()
 
-    # Drop the view and table
+    # Drop the tables
     if table_name in table_names:
         persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
 

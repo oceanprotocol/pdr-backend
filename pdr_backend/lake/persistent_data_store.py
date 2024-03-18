@@ -56,6 +56,21 @@ class PersistentDataStore(BaseDataStore):
         return [table[0] for table in tables]
 
     @enforce_types
+    def get_view_names(self):
+        """
+        Get the names of all views from duckdb main schema.
+        @returns:
+            list - The views inside duckdb main schema.
+        """
+
+        views = self.duckdb_conn.execute(
+            "SELECT * FROM duckdb_views;"
+        ).fetchall()
+
+        return [views]
+
+
+    @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
         """
         Insert data to an persistent dataset.
@@ -80,7 +95,7 @@ class PersistentDataStore(BaseDataStore):
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
-    def query_data(self, query: str) -> Optional[pl.DataFrame]:
+    def query(self, query: str) -> Optional[pl.DataFrame]:
         """
         Execute a SQL query across the persistent dataset using DuckDB.
         @arguments:
@@ -89,7 +104,7 @@ class PersistentDataStore(BaseDataStore):
         @returns:
             pl.DataFrame - The result of the query.
         @example:
-            query_data("SELECT * FROM table_name")
+            query("SELECT * FROM table_name")
         """
 
         try:
@@ -106,7 +121,6 @@ class PersistentDataStore(BaseDataStore):
         Drop the persistent table.
         @arguments:
             table_name - A unique name for the table.
-            ds_type - The type of the dataset to drop. Either "table" or "view".
         @example:
             drop_table("people")
         """

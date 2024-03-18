@@ -10,7 +10,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
-def _check_view_exists(persistent_data_store, table_name):
+def _table_exists(persistent_data_store, table_name):
     table_names = persistent_data_store.get_table_names()
     return [table_name in table_names, table_name]
 
@@ -127,15 +127,15 @@ def test_persistent_store(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
-    assert _check_view_exists(PDS, predictions_table_name)
+    assert _table_exists(PDS, predictions_table_name)
 
-    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
     PDS.insert_to_table(_gql_datafactory_second_predictions_df, predictions_table_name)
 
-    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 

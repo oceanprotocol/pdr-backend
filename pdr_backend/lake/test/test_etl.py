@@ -92,16 +92,16 @@ def test_setup_etl(
     pds_instance = _get_test_PDS(tmpdir)
 
     # Assert original gql has 6 predictions, but we only got 5 due to date
-    pdr_predictions_df = pds_instance.query_data("SELECT * FROM pdr_predictions")
+    pdr_predictions_df = pds_instance.query("SELECT * FROM pdr_predictions")
     assert len(pdr_predictions_df) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
-    pdr_payouts_df = pds_instance.query_data("SELECT * FROM pdr_payouts")
+    pdr_payouts_df = pds_instance.query("SELECT * FROM pdr_payouts")
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
 
-    pdr_truevals_df = pds_instance.query_data("SELECT * FROM pdr_truevals")
+    pdr_truevals_df = pds_instance.query("SELECT * FROM pdr_truevals")
 
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
@@ -163,7 +163,7 @@ def test_etl_do_bronze_step(
     etl = ETL(ppss, gql_data_factory)
 
     pds_instance = _get_test_PDS(tmpdir)
-    pdr_predictions_records = pds_instance.query_data(
+    pdr_predictions_records = pds_instance.query(
         f"""
             SELECT * FROM _build_{predictions_table_name}
         """
@@ -174,7 +174,7 @@ def test_etl_do_bronze_step(
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    bronze_pdr_predictions_records = pds_instance.query_data(
+    bronze_pdr_predictions_records = pds_instance.query(
         "SELECT * FROM _build_bronze_pdr_predictions"
     )
     assert len(bronze_pdr_predictions_records) == 6

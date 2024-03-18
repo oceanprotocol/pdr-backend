@@ -67,7 +67,7 @@ class Table:
 
         query = f"SELECT * FROM {self.table_name} ORDER BY timestamp DESC LIMIT 1"
         try:
-            return PersistentDataStore(self.base_path).query_data(query)
+            return PersistentDataStore(self.base_path).query(query)
         except Exception as e:
             print(f"Error fetching last record from PDS: {e}")
             return None
@@ -84,7 +84,7 @@ class Table:
             pl.DataFrame
         """
         if source == "db":
-            return PersistentDataStore(self.base_path).query_data(
+            return PersistentDataStore(self.base_path).query(
                 f"SELECT * FROM {self.table_name}"
             )
 

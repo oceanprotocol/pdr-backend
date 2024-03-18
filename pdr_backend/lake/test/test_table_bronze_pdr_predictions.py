@@ -56,11 +56,11 @@ def test_table_bronze_pdr_predictions(
 
     PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
     # truevals should have 6
-    result_truevals = PDS.query_data("SELECT * FROM _build_pdr_truevals")
+    result_truevals = PDS.query("SELECT * FROM _build_pdr_truevals")
     assert len(result_truevals) == 6
 
     # payouts should have 6
-    result_payouts = PDS.query_data("SELECT * FROM _build_pdr_payouts")
+    result_payouts = PDS.query("SELECT * FROM _build_pdr_payouts")
     assert len(result_payouts) == 5
 
     # Work 2: Execute full SQL query
