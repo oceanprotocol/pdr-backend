@@ -14,6 +14,7 @@ from pdr_backend.cli.cli_module import (
     do_claim_OCEAN,
     do_claim_ROSE,
     # power tools
+    do_multisim,
     do_lake,
     do_analytics,
     # utilities
@@ -269,6 +270,17 @@ def test_do_claim_ROSE(monkeypatch):
 
 # ---------------------------------------------------------------
 # test: Power tools
+
+
+@enforce_types
+def test_do_multisim(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.MultisimEngine.run", mock_f)
+
+    ppss = MockArgParser_PPSS().parse_args()
+    do_multisim(ppss)
+
+    mock_f.assert_called()
 
 
 @enforce_types
