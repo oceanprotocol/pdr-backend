@@ -17,6 +17,12 @@ def test_version(
     assert version == "0.1.0", "Version should be 0.1.0"
 
 
+def test_get_up_predictoor_address(
+    prediction_manager: PredictionManager,
+):
+    address = prediction_manager.predictoor_up_address()
+    assert address
+
 def test_approve(
     prediction_manager: PredictionManager,
     predictoor_contract,
