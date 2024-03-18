@@ -1,4 +1,4 @@
-from pdr_backend.conftest_ganache import * # pylint: disable=wildcard-import
+from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.contract.prediction_manager import (
     PredictionManager,
 )
