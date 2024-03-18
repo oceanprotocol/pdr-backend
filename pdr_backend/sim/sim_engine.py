@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -15,7 +16,6 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_backend.util.mathutil import classif_acc
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -85,44 +85,36 @@ class SimEngine:
 
         logger.info("Done all iters.")
 
-        acc_train = np.average(self.st.accs_train)
-        acc_test = classif_acc(self.st.ybools_testhat, self.st.ybools_test)
-        logger.info("Final acc_train=%.5f, acc_test=%.5f", acc_train, acc_test)
-
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
-        ppss, pdr_ss = self.ppss, self.ppss.predictoor_ss
+        ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
         stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
         trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        data_f = AimodelDataFactory(pdr_ss)
+        data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
         )
         colnames = list(x_df.columns)
 
-        st, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st:fin, :], X[fin : fin + 1]
-        ycont_train, ycont_test = ycont[st:fin], ycont[fin : fin + 1]
+        st_, fin = 0, X.shape[0] - 1
+        X_train, X_test = X[st_:fin, :], X[fin : fin + 1]
+        ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
 
         curprice = ycont_train[-1]
         trueprice = ycont_test[-1]
 
         y_thr = curprice
-        ybool = data_f.ycont_to_ytrue(ycont, y_thr)
-        ybool_train, _ = ybool[st:fin], ybool[fin : fin + 1]
+        ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+        ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
         model_f = AimodelFactory(pdr_ss.aimodel_ss)
-        model = model_f.build(X_train, ybool_train)
-
-        ybool_trainhat = model.predict_true(X_train)  # eg yhat=zhat[y-5]
-        acc_train = classif_acc(ybool_train, ybool_trainhat)
-        self.st.accs_train.append(acc_train)
+        model = model_f.build(X_train, ytrue_train)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -130,9 +122,8 @@ class SimEngine:
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        pred_up: bool = model.predict_true(X_test)[0]  # True or False
-        self.st.probs_up.append(prob_up)
-        self.st.ybools_testhat.append(pred_up)
+        pred_up: bool = prob_up > 0.5
+        st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
@@ -142,7 +133,7 @@ class SimEngine:
         acct_down_profit -= stake_down
 
         # trader: enter the trading position
-        usdcoin_holdings_before = self.st.holdings[self.usdcoin]
+        usdcoin_holdings_before = st.holdings[self.usdcoin]
         if pred_up:  # buy; exit later by selling
             conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
             usdcoin_amt_send = trade_amt * conf_up
@@ -157,7 +148,20 @@ class SimEngine:
 
         # observe true price
         true_up = trueprice > curprice
-        self.st.ybools_test.append(true_up)
+        st.ytrues.append(true_up)
+
+        # update classifier metrics
+        n_correct = sum(np.array(st.ytrues) == np.array(st.ytrues_hat))
+        n_trials = len(st.ytrues)
+        acc_est = n_correct / n_trials
+        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
+        (precision, recall, f1, _) = precision_recall_fscore_support(
+            st.ytrues,
+            st.ytrues_hat,
+            average="binary",
+            zero_division=0.0,
+        )
+        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
 
         # trader: exit the trading position
         if pred_up:
@@ -170,13 +174,7 @@ class SimEngine:
             p = self.ppss.trader_ss.fee_percent
             usdcoin_amt_send = target_tokcoin_amt_recd * (1 - p) * trueprice
             tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
-        usdcoin_holdings_after = self.st.holdings[self.usdcoin]
-
-        # track prediction
-        pred_dir = "UP" if pred_up else "DN"
-        true_dir = "UP" if true_up else "DN"
-        correct = pred_dir == true_dir
-        self.st.corrects.append(correct)
+        usdcoin_holdings_after = st.holdings[self.usdcoin]
 
         # track predictoor profit
         tot_stake = others_stake + stake_amt
@@ -190,33 +188,30 @@ class SimEngine:
             percent_to_me = stake_down / tot_stake_correct
             acct_down_profit += (revenue + tot_stake) * percent_to_me
         pdr_profit_OCEAN = acct_up_profit + acct_down_profit
-        self.st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
+        st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
 
         # track trading profit
         trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        self.st.trader_profits_USD.append(trader_profit_USD)
+        st.trader_profits_USD.append(trader_profit_USD)
 
         # log
-        n_correct, n_trials = sum(self.st.corrects), len(self.st.corrects)
-        acc_est = float(n_correct) / n_trials
-        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
-
         s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
         s += f"ut={ut.pretty_timestr()[9:][:-10]}"
 
         s += f" prob_up={prob_up:.2f}"
-        s += " predictoor profit = "
-        s += f"{acct_up_profit:8.5f} up"
-        s += f" + {acct_down_profit:8.5f} down"
-        s += f" = {pdr_profit_OCEAN:8.5f} OCEAN"
-        s += f" (cumulative {sum(self.st.pdr_profits_OCEAN):7.2f} OCEAN)"
+        s += " pdr profit = "
+        s += f"{acct_up_profit:7.4f} up"
+        s += f" + {acct_down_profit:7.4f} down"
+        s += f" = {pdr_profit_OCEAN:7.4f} OCEAN"
+        s += f" (cumul. {sum(st.pdr_profits_OCEAN):7.2f} OCEAN)"
 
-        s += f". Correct: {n_correct:4d}/{n_trials:4d} "
-        s += f"= {acc_est*100:.2f}%"
-        s += f" [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
+        s += f". Acc={n_correct:4d}/{n_trials:4d} "
+        s += f"= {acc_est*100:.2f}% [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
+        s += f", prcsn={precision:.3f}, recall={recall:.3f}"
+        s += f", f1={f1:.3f}"
 
         s += f". trader profit = ${trader_profit_USD:9.4f}"
-        s += f" (cumulative ${sum(self.st.trader_profits_USD):9.4f})"
+        s += f" (cumul. ${sum(st.trader_profits_USD):9.4f})"
         logger.info(s)
 
         # plot
@@ -227,7 +222,7 @@ class SimEngine:
             d = AimodelPlotdata(
                 model,
                 X_train,
-                ybool_train,
+                ytrue_train,
                 colnames,
                 slicing_x,
             )

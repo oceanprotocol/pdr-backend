@@ -4,30 +4,49 @@ import sys
 from argparse import Namespace
 
 from enforce_typing import enforce_types
-
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
 
 logger = logging.getLogger("cli")
 
-HELP_LONG = """Predictoor tool
-  Transactions are signed with envvar 'PRIVATE_KEY`.
+HELP_TOP = """Predictoor tool
 
 Usage: pdr sim|predictoor|trader|..
+"""
 
+HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
   pdr predictoor APPROACH PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
-  pdr lake PPSS_FILE NETWORK
-  pdr analytics PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
+"""
+
+HELP_HELP = """
+Detailed help:
+  pdr <cmd> -h
+  pdr help_long
+"""
+
+HELP_SIGN = """
+Transactions are signed with envvar 'PRIVATE_KEY`.
+"""
+
+HELP_DOT = """
+To pass args down to ppss, use dot notation.
+Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
+"""
+
+HELP_OTHER_TOOLS = """
+Power tools:
+  pdr multisim PPSS_FILE
+  pdr deployer (for >1 predictoor bots)
+  pdr lake PPSS_FILE NETWORK
+  pdr analytics PPSS_FILE NETWORK
 
 Utilities:
-  pdr help
-  pdr <cmd> -h
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
@@ -42,10 +61,11 @@ Tools for core team:
   pdr publisher PPSS_FILE NETWORK
   pdr topup PPSS_FILE NETWORK
   pytest, black, mypy, pylint, ..
-
-To pass args down to ppss, use dot notation.
-Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
 """
+
+HELP_SHORT = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_SIGN
+
+HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN + HELP_DOT
 
 
 # ========================================================================
@@ -454,6 +474,12 @@ class _ArgParser_DEPLOYER:
 
 
 @enforce_types
+def do_help_short(status_code=0):
+    print(HELP_SHORT)
+    sys.exit(status_code)
+
+
+@enforce_types
 def do_help_long(status_code=0):
     print(HELP_LONG)
     sys.exit(status_code)
@@ -471,30 +497,33 @@ def print_args(arguments: Namespace):
         logger.info("%s=%s", arg_k, arg_v)
 
 
+## below, list *ArgParser classes in same order as HELP_LONG
+
+# main tools
 SimArgParser = _ArgParser_PPSS
-
 PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
-
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
-
-LakeArgParser = _ArgParser_PPSS_NETWORK
-
 ClaimOceanArgParser = _ArgParser_PPSS
-
 ClaimRoseArgParser = _ArgParser_PPSS
 
+# power tools
+MultisimArgParser = _ArgParser_PPSS
+DeployerArgPaser = _ArgParser_DEPLOYER
+LakeArgParser = _ArgParser_PPSS_NETWORK
+AnalyticsArgParser = _ArgParser_PPSS_NETWORK
+
+# utilities
 GetPredictoorsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS
-
 GetPredictionsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
-
 GetTractionInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
-
 CheckNetworkArgParser = _ArgParser_PPSS_NETWORK_LOOKBACK
+CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
+AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
+FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 
+# Tools for core team
 TruevalArgParser = _ArgParser_PPSS_NETWORK
-
 DfbuyerArgParser = _ArgParser_PPSS_NETWORK
-
 PublisherArgParser = _ArgParser_PPSS_NETWORK
 
 
@@ -504,22 +533,20 @@ class TopupArgParser(_ArgParser_PPSS_NETWORK):
         return ["sapphire-testnet", "sapphire-mainnet"]
 
 
-CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
-
-AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
-
-FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
-
-DeployerArgPaser = _ArgParser_DEPLOYER
-
+# below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
+    # main tools
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
-    "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_analytics": LakeArgParser("Run the analytics tool", "analytics"),
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
+    # power tools
+    "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
+    "do_deployer": DeployerArgPaser(),
+    "do_lake": LakeArgParser("Run the lake tool", "lake"),
+    "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
+    # utilities
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(
         "For specified predictoors, report {accuracy, ..} of each predictoor",
         "get_predictoors_info",
@@ -533,10 +560,6 @@ defined_parsers = {
         "get_traction_info",
     ),
     "do_check_network": CheckNetworkArgParser("Check network", "check_network"),
-    "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
-    "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
-    "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
-    "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_create_accounts": CreateAccountsArgParser(
         "Create multiple accounts..", "create_accounts"
     ),
@@ -546,7 +569,11 @@ defined_parsers = {
     "do_fund_accounts": FundAccountsArgParser(
         "Fund multiple wallets from a single address", "fund_accounts"
     ),
-    "do_deployer": DeployerArgPaser(),
+    # tools for core team
+    "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
+    "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
+    "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
+    "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
 }
 
 
