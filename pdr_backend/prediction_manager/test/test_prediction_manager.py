@@ -124,9 +124,11 @@ def test_submit_prediction_and_payout(
     assert tx_receipt.status == 1, "Transaction failed"
 
     # submit prediction
+    # first feed up 20, down 30
+    # second feed up 40, down 10
     tx_receipt = prediction_manager.submit_prediction(
         stakes_up=[20, 30],
-        stakes_down=[30, 20],
+        stakes_down=[40, 10],
         feeds=feeds,
         epoch_start=prediction_epoch,
         wait_for_receipt=True,
@@ -165,6 +167,22 @@ def test_submit_prediction_and_payout(
     assert bal_after == Wei(
         100
     ), "OCEAN balance of the contract should be 100 after claiming"
+
+    
+    # check predictions one by one
+    pmup = prediction_manager.predictoor_up_address()
+    pmdown = prediction_manager.predictoor_down_address()
+
+    pred_down_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmdown)
+    pred_down_second_feed = predictoor_contract2.get_prediction(prediction_epoch, pmdown)
+    pred_up_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmup)
+    pred_up_second_feed = predictoor_contract2.get_prediction(prediction_epoch, pmup)
+
+    assert pred_down_first_feed == (False, 40, pmdown, True), "Prediction should be False, 30"
+    assert pred_down_second_feed == (False, 10, pmdown, True), "Prediction should be True, 10"
+    assert pred_up_first_feed == (True, 20, pmup, True), "Prediction should be False, 20"
+    assert pred_up_second_feed == (True, 30, pmup, True), "Prediction should be True, 40"
+    
 
 
 @pytest.fixture(scope="module")
