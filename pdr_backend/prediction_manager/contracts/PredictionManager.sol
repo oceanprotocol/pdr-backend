@@ -34,6 +34,7 @@ contract PredictionManager {
             tokenInstance.transfer(address(instanceDown), amtDown);
     }
 
+    ///@notice claims DF rewards from the DFRewards contract
     function claimDFRewards(
         address tokenAddress,
         address dfRewards
@@ -56,6 +57,7 @@ contract PredictionManager {
         }
     }
 
+    ///@notice returns the contract version
     function version() external pure returns (string memory) {
         return "0.1.0";
     }
@@ -66,12 +68,12 @@ contract PredictionManager {
         instanceDown.transfer();
     }
 
-    ///@notice submit predictions for the strategy of betting on both sides
+    ///@notice submit two-sided predicitons
     function submit(
         uint256[] calldata stakesUp,
         uint256[] calldata stakesDown,
         address[] calldata feeds,
-        uint256 epoch_start
+        uint256 epoch
     ) external onlyOwner {
         uint256 upInstanceFunding = 0;
         uint256 downInstanceFunding = 0;
@@ -86,17 +88,17 @@ contract PredictionManager {
 
         _sendTokensToInstance(upInstanceFunding, downInstanceFunding);
 
-        instanceUp.predict(true, stakesUp, feeds, epoch_start);
-        instanceDown.predict(false, stakesDown, feeds, epoch_start);
+        instanceUp.predict(true, stakesUp, feeds, epoch);
+        instanceDown.predict(false, stakesDown, feeds, epoch);
     }
 
-    ///@notice claim payouts for the strategy of betting on both sides
+    ///@notice claim payouts for given feeds and epochs
     function getPayout(
-        uint256[] calldata epoch_start,
+        uint256[] calldata epochs,
         address[] calldata feeds
     ) external onlyOwner {
-        instanceUp.getPayout(epoch_start, feeds);
-        instanceDown.getPayout(epoch_start, feeds);
+        instanceUp.getPayout(epochs, feeds);
+        instanceDown.getPayout(epochs, feeds);
 
         IERC20 ocean = IERC20(oceanTokenAddr);
         uint256 balUp = ocean.balanceOf(address(instanceUp));
