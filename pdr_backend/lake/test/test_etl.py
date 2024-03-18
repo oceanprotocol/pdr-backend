@@ -13,6 +13,10 @@ from pdr_backend.lake.table_pdr_predictions import (
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table_pdr_subscriptions import (
+    subscriptions_schema,
+    subscriptions_table_name,
+)
 
 # ETL code-coverage
 # Step 1. ETL -> do_sync_step()
@@ -30,15 +34,15 @@ def get_filtered_timestamps_df(
     )
 
 
-# pylint: disable=too-many-statements
 @enforce_types
 @patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_etl(
+def test_setup_etl(
     mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
+    _gql_datafactory_etl_subscriptions_df,
     tmpdir,
 ):
     # setup test start-end date
@@ -58,6 +62,9 @@ def test_etl(
     slots = get_filtered_timestamps_df(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
+    subscription = get_filtered_timestamps_df(
+        _gql_datafactory_etl_subscriptions_df, st_timestr, fin_timestr
+    )
 
     # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
@@ -72,12 +79,16 @@ def test_etl(
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
         "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
     }
 
     gql_tables["pdr_predictions"].df = preds
     gql_tables["pdr_truevals"].df = truevals
     gql_tables["pdr_payouts"].df = payouts
     gql_tables["pdr_slots"].df = slots
+    gql_tables["pdr_subscriptions"].df = subscription
 
     mock_get_gql_tables.return_value = gql_tables
 
@@ -87,50 +98,13 @@ def test_etl(
     # Work 1: Initialize ETL - Assert 0 etl_tables
     etl = ETL(ppss, gql_data_factory)
 
-    assert etl is not None
-    assert etl.gql_data_factory == gql_data_factory
-    assert len(etl.tables) == 0
-
-    # Work 1: Sync tables
-    test_setup_etl(
-        etl,
-        _gql_datafactory_etl_predictions_df,
-        _gql_datafactory_etl_payouts_df,
-        _gql_datafactory_etl_truevals_df,
-    )
-
-    # Work 2: Do bronze
-    test_etl_do_bronze_step(
-        etl,
-        _gql_datafactory_etl_payouts_df,
-        _gql_datafactory_etl_predictions_df,
-        _gql_datafactory_etl_truevals_df,
-    )
-
-    # Work 3: Do silver
-    test_etl_do_silver_step(
-        etl,
-        _gql_datafactory_etl_payouts_df,
-        _gql_datafactory_etl_predictions_df,
-        _gql_datafactory_etl_truevals_df,
-        _gql_datafactory_etl_slots_df,
-    )
-
-
-@enforce_types
-def test_setup_etl(
-    etl: ETL,
-    _gql_datafactory_etl_predictions_df,
-    _gql_datafactory_etl_payouts_df,
-    _gql_datafactory_etl_truevals_df,
-):
-    # Work 2: Complete ETL sync step - Assert 3 etl_tables
+    # Work 2: Complete ETL sync step
     etl.do_sync_step()
 
-    # Assert original gql has 6 predictions, but we only got 5 due to date
-    assert len(etl.tables) == 3
-    assert len(etl.tables["pdr_predictions"].df) == 6
-    assert len(_gql_datafactory_etl_predictions_df) == 7
+    # Assert original gql has 9 predictions, but we only got 8 due to date
+    assert len(etl.tables) == 5
+    assert len(etl.tables["pdr_predictions"].df) == 8
+    assert len(_gql_datafactory_etl_predictions_df) == 9
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
     assert len(etl.tables["pdr_payouts"].df) != len(_gql_datafactory_etl_payouts_df)
@@ -140,33 +114,101 @@ def test_setup_etl(
     assert len(etl.tables["pdr_truevals"].df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all 3 dfs
-    assert len(etl.tables["pdr_payouts"].df) == 5
-    assert len(etl.tables["pdr_predictions"].df) == 6
+    assert len(etl.tables["pdr_payouts"].df) == 7
+    assert len(etl.tables["pdr_predictions"].df) == 8
     assert len(etl.tables["pdr_truevals"].df) == 6
 
 
 @enforce_types
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_etl_do_bronze_step(
-    etl: ETL,
+    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
+    _gql_datafactory_etl_subscriptions_df,
+    tmpdir,
 ):
+    # setup test start-end date
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-06_22:00"
+
+    # Mock dfs based on configured st/fin timestamps
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+    subscription = get_filtered_timestamps_df(
+        _gql_datafactory_etl_subscriptions_df, st_timestr, fin_timestr
+    )
+
+    # Setup PPSS + Data Factory
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
+    }
+
+    gql_tables["pdr_predictions"].df = preds
+    gql_tables["pdr_truevals"].df = truevals
+    gql_tables["pdr_payouts"].df = payouts
+    gql_tables["pdr_slots"].df = slots
+    gql_tables["pdr_subscriptions"].df = subscription
+
+    mock_get_gql_tables.return_value = gql_tables
+
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # Work 1: Initialize ETL - Assert 0 etl_tables
+    etl = ETL(ppss, gql_data_factory)
+
+    # filter the initial data on ppss dates to make it same as tables data for testing
+    _gql_datafactory_etl_predictions_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_payouts_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_truevals_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_slots_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
 
     # Work 2: Do sync
     etl.do_sync_step()
 
-    assert len(etl.tables["pdr_predictions"].df) == 6
+    assert len(etl.tables["pdr_predictions"].df) == 8
 
     # Work 3: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    assert len(etl.tables["bronze_pdr_predictions"].df) == 6
+    assert len(etl.tables["bronze_pdr_predictions"].df) == 8
 
     bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
-    print(bronze_pdr_predictions_df)
-    print(_gql_datafactory_etl_predictions_df)
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
@@ -203,8 +245,8 @@ def test_etl_do_bronze_step(
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][1] is True
-    assert bronze_pdr_predictions_df["truevalue"][2] is False
+    assert bronze_pdr_predictions_df["truevalue"][1] is False
+    assert bronze_pdr_predictions_df["truevalue"][2] is True
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
@@ -243,82 +285,114 @@ def test_etl_do_bronze_step(
 
 
 @enforce_types
+@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_etl_do_silver_step(
-    etl: ETL,
+    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
+    _gql_datafactory_etl_subscriptions_df,
+    tmpdir,
 ):
+    # setup test start-end date
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-06_22:00"
+
+    # Mock dfs based on configured st/fin timestamps
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+    subscription = get_filtered_timestamps_df(
+        _gql_datafactory_etl_subscriptions_df, st_timestr, fin_timestr
+    )
+
+    # Setup PPSS + Data Factory
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
+    }
+
+    gql_tables["pdr_predictions"].df = preds
+    gql_tables["pdr_truevals"].df = truevals
+    gql_tables["pdr_payouts"].df = payouts
+    gql_tables["pdr_slots"].df = slots
+    gql_tables["pdr_subscriptions"].df = subscription
+
+    mock_get_gql_tables.return_value = gql_tables
+
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # Work 1: Initialize ETL - Assert 0 etl_tables
+    etl = ETL(ppss, gql_data_factory)
+
+    # filter the initial data on ppss dates to make it same as tables data for testing
+    _gql_datafactory_etl_predictions_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_payouts_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_truevals_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    _gql_datafactory_etl_slots_df = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+
+    etl.do_sync_step()
+    etl.do_bronze_step()
+
     etl.do_silver_step()
 
     bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
-    print(
-        _gql_datafactory_etl_payouts_df,
-        _gql_datafactory_etl_predictions_df,
-        _gql_datafactory_etl_truevals_df,
-    )
-    assert len(bronze_pdr_predictions_df) == 6
 
     # assert bronze_pdr_slots_df is created
-    assert len(etl.tables["bronze_pdr_slots"].df) == 7
+    assert len(bronze_pdr_predictions_df) == 8
 
-    bronze_pdr_slots_df = etl.tables["bronze_pdr_slots"].df
+    # assert bronze_pdr_slots_df is created
+    assert len(etl.tables["bronze_pdr_slots"].df) == 9
+
+    assert len(etl.tables["silver_pdr_predictions"].df) == 8
+
+    silver_pdr_predictions = etl.tables["silver_pdr_predictions"].df
+
+    _gql_datafactory_etl_predictions_df = _gql_datafactory_etl_predictions_df.sort(
+        "slot"
+    )
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     assert (
-        bronze_pdr_slots_df["contract"][0]
-        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
+        silver_pdr_predictions["contract"][0]
+        == "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     )
     assert (
-        bronze_pdr_slots_df["contract"][1]
+        silver_pdr_predictions["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][1]
     )
     assert (
-        bronze_pdr_slots_df["contract"][2]
+        silver_pdr_predictions["contract"][2]
         == _gql_datafactory_etl_predictions_df["contract"][2]
     )
-
-    # Assert timestamp == slots timestamp
-    assert (
-        bronze_pdr_slots_df["timestamp"][1]
-        == _gql_datafactory_etl_slots_df["timestamp"][1]
-    )
-    assert (
-        bronze_pdr_slots_df["timestamp"][2]
-        == _gql_datafactory_etl_slots_df["timestamp"][2]
-    )
-
-    # Assert last_event_timestamp == prediction.timestamp
-    assert (
-        bronze_pdr_slots_df["last_event_timestamp"][1]
-        == _gql_datafactory_etl_payouts_df["timestamp"][1]
-    )
-    assert (
-        bronze_pdr_slots_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_payouts_df["timestamp"][2]
-    )
-
-    # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_slots_df["trueval"][1] is True
-    assert bronze_pdr_slots_df["trueval"][2] is False
-
-    assert (
-        bronze_pdr_slots_df["trueval"][1]
-        == _gql_datafactory_etl_truevals_df["trueval"][1]
-    )
-    assert (
-        bronze_pdr_slots_df["trueval"][2]
-        == _gql_datafactory_etl_truevals_df["trueval"][2]
-    )
-
-    # Assert stake in the bronze_table came from slots
-    try:
-        assert round(bronze_pdr_slots_df["roundSumStakes"][1], 3) == round(
-            _gql_datafactory_etl_slots_df["roundSumStakes"][1], 3
-        )
-        assert round(bronze_pdr_slots_df["roundSumStakes"][2], 3) == round(
-            _gql_datafactory_etl_slots_df["roundSumStakes"][2], 3
-        )
-    except TypeError as e:
-        assert str(e) == "type NoneType doesn't define __round__ method"

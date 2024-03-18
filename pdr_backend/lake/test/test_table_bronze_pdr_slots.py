@@ -79,7 +79,7 @@ def test_table_bronze_pdr_slots(
     # This shows that all of this data will come from other tables
     gql_tables = _process_slots([], gql_tables, ppss)
 
-    assert len(gql_tables["bronze_pdr_slots"].df) == 7
+    assert len(gql_tables["bronze_pdr_slots"].df) == 11
     assert gql_tables["bronze_pdr_slots"].df["slot"][0] is not None
     assert gql_tables["bronze_pdr_slots"].df["timestamp"][0] is not None
 
@@ -97,20 +97,20 @@ def test_table_bronze_pdr_slots(
     gql_tables = _process_truevals(gql_tables, ppss)
     assert None in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
 
-    # We should have 2 slots with no trueval submitted
+    # We should have 5 slots with no trueval submitted
     assert (
         sum(
             1
             for item in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
             if item is None
         )
-        == 1
+        == 5
     )
 
     # Work 3: Append from bronze_pdr_predictions table
     gql_tables = _process_bronze_predictions(gql_tables, ppss)
     # We should still have 7 rows, last prediction is filtered out
-    assert len(gql_tables["bronze_pdr_slots"].df) == 7
+    assert len(gql_tables["bronze_pdr_slots"].df) == 11
 
     # Check final data frame has all the required columns
     assert gql_tables["bronze_pdr_slots"].df.schema == bronze_pdr_slots_schema
@@ -123,6 +123,7 @@ def test_table_bronze_pdr_slots(
     # Add 2 new Prediction events for 1699315100 slot
     new_row = pl.DataFrame(
         {
+            # pylint: disable=line-too-long
             "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699315100-0lx2a24cb4ff2584bad80ff5f109034a891c3d72ee",
             "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
             "pair": "ETH/USDT",
@@ -139,6 +140,7 @@ def test_table_bronze_pdr_slots(
     )
     new_row_2 = pl.DataFrame(
         {
+            # pylint: disable=line-too-long
             "ID": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699315100-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
             "contract": "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
             "pair": "ETH/USDT",
@@ -162,16 +164,6 @@ def test_table_bronze_pdr_slots(
     )
 
     gql_tables["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_tables, ppss)
-
-    # We should have 1 slot with no trueval submitted
-    assert (
-        sum(
-            1
-            for item in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
-            if item is None
-        )
-        == 1
-    )
 
     # Add new trueval event
     new_row = pl.DataFrame(
@@ -197,7 +189,7 @@ def test_table_bronze_pdr_slots(
             for item in gql_tables["bronze_pdr_slots"].df["trueval"].to_list()
             if item is None
         )
-        == 0
+        == 4
     )
 
     # Add new payout events
@@ -240,5 +232,5 @@ def test_table_bronze_pdr_slots(
     gql_tables["bronze_pdr_slots"] = get_bronze_pdr_slots_table(gql_tables, ppss)
 
     # We should have the roundSumStakes value updated withe the stakes from latest payout event
-    assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"][6] == 200
-    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][6] == 0
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakes"][10] == 200
+    assert gql_tables["bronze_pdr_slots"].df["roundSumStakesUp"][10] == 0

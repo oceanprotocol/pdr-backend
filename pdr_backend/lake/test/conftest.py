@@ -72,10 +72,10 @@ _ETL_PAYOUT_TUPS = [
         1698951602,  # timestamp
         "BTC/USDT",  # token
         1698951600,  # slot # Nov 02 2023 19:00:00 GMT
-        10.928642693189679,  # payout
+        0.0,  # payout
         False,  # predictedValue
         # False,  # trueValue
-        0.92804,  # revenue
+        0.0,  # revenue
         45.62968,  # roundSumStakesUp
         72.31484,  # roundSumStakes
         5.46464,  # stake
@@ -125,16 +125,44 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699302500,  # slot # Nov 06 2023 19:00:00 GMT
+        1699302600,  # slot # Nov 06 2023 19:00:00 GMT
         "ETH/USDT",  # token
         1699302601,  # timestamp
-        5.459995277785647,  # payout
+        13.459995277785647,  # payout
         True,  # predictedValue
         # True,  # trueValue
         5.459995277785647,  # revenue
-        5.4400000000000004,  # roundSumStakesUp
-        7.4400000000000004,  # roundSumStakes
+        15.4400000000000004,  # roundSumStakesUp
+        17.4400000000000004,  # roundSumStakes
         5.4400000000000004,  # stake
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600-0xa24dg2b4ff2584bad80ff5f109034a891c3ddd23",
+        "0xa24dg2b4ff2584bad80ff5f109034a891c3ddd23",  # user
+        1699302600,  # slot # Nov 06 2023 19:00:00 GMT
+        "ETH/USDT",  # token
+        1699302603,  # timestamp
+        28.259995277785647,  # payout
+        True,  # predictedValue
+        # True,  # trueValue
+        10.0,  # revenue
+        15.4400000000000004,  # roundSumStakesUp
+        17.4400000000000004,  # roundSumStakes
+        10.0,  # stake
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302600-0xb24dg2b4ff2584bad80ff5f109034a891c3d112d",
+        "0xb24dg2b4ff2584bad80ff5f109034a891c3d112d",  # user
+        1699302600,  # slot # Nov 06 2023 19:00:00 GMT
+        "ETH/USDT",  # token
+        1699302601,  # timestamp
+        0.0,  # payout
+        False,  # predictedValue
+        # True,  # trueValue
+        0.0,  # revenue
+        15.4400000000000004,  # roundSumStakesUp
+        17.4400000000000004,  # roundSumStakes
+        2.0,  # stake
     ),
 ]
 
@@ -230,7 +258,33 @@ _ETL_PREDICTIONS_TUPS = [
         "binance",
         None,
         1699302600,
+        "0xb24dg2b4ff2584bad80ff5f109034a891c3d112d",
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+        "ETH/USDT",
+        "5m",
+        None,
+        None,
+        None,
+        1699302602,
+        "binance",
+        None,
+        1699302600,
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
+        "ETH/USDT",
+        "5m",
+        None,
+        None,
+        None,
+        1699302601,
+        "binance",
+        None,
+        1699302600,
+        "0xa24dg2b4ff2584bad80ff5f109034a891c3ddd23",
     ),
 ]
 
@@ -367,7 +421,7 @@ _ETL_SLOT_TUPS = [
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800",
         1699300800,
         1699300800,  # Nov 06 2023 19:00:00 GMT
-        True,
+        False,
         32.00002,
         32.00002,
     ),
@@ -384,8 +438,32 @@ _ETL_SLOT_TUPS = [
         1699302600,
         1699302600,  # Nov 08 2023 19:00:00 GMT
         True,
-        5.4400000000000004,
-        7.4400000000000004,
+        15.4400000000000004,
+        17.4400000000000004,
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302700",
+        1699302700,
+        1699302700,
+        False,
+        0.0,
+        5.0,
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302800",
+        1699302800,
+        1699302800,
+        True,
+        11.00000023,
+        11.00000023,
+    ),
+    (
+        "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699302900",
+        1699302900,
+        1699302900,
+        None,
+        None,
+        None,
     ),
 ]
 
