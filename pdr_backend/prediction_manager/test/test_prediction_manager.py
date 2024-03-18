@@ -16,6 +16,7 @@ def test_version(
     version = prediction_manager.version()
     assert version == "0.1.0", "Version should be 0.1.0"
 
+
 def test_approve(
     prediction_manager: PredictionManager,
     predictoor_contract,
