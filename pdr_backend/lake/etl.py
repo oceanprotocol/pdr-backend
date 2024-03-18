@@ -82,6 +82,9 @@ class ETL:
                 table_name,
             )
 
+            pds.drop_table(get_table_name(table_name, TableType.TEMP))
+            pds.drop_view(get_table_name(table_name, TableType.ETL))
+
     def do_etl(self):
         """
         @description

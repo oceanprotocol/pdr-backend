@@ -254,7 +254,16 @@ def test_move_table_data(tmpdir):
         get_table_name(table_name, TableType.TEMP), table_name
     )
 
-    # Check if the table is dropped
+    # Assert table hasn't dropped
+    table_names = persistent_data_store.get_table_names()
+    assert get_table_name(table_name, TableType.TEMP) in table_names
+    
+    # Drop interim ETL table
+    persistent_data_store.drop_table(
+        get_table_name(table_name, TableType.TEMP)
+    )
+
+    # Assert temp table is dropped
     table_names = persistent_data_store.get_table_names()
     assert get_table_name(table_name, TableType.TEMP) not in table_names
 
