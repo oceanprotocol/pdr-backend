@@ -35,12 +35,14 @@ def test_approve(
     predictoor_contract2,
     ocean_token,
 ):
-    pmup = predictoor_contract.predictoor_up_address()
-    pmdown = predictoor_contract2.predictoor_down_address()
+    pmup = prediction_manager.predictoor_up_address()
+    pmdown = prediction_manager.predictoor_down_address()
     pc1 = predictoor_contract.contract_address
     pc2 = predictoor_contract2.contract_address
-    assert ocean_token.allowance(pm, pc1) == 0
-    assert ocean_token.allowance(pm, pc2) == 0
+    assert ocean_token.allowance(pmup, pc1) == 0
+    assert ocean_token.allowance(pmup, pc2) == 0
+    assert ocean_token.allowance(pmdown, pc2) == 0
+    assert ocean_token.allowance(pmdown, pc2) == 0
 
     contract_addrs = [
         pc1,
@@ -113,11 +115,15 @@ def test_submit_prediction_and_payout(
         100
     ), "OCEAN balance of the contract should be 100 before submitting"
 
-    # submit prediction
     feeds = [
         predictoor_contract.contract_address,
         predictoor_contract2.contract_address,
     ]
+    # give allowance
+    tx_receipt = prediction_manager.approve_ocean(feeds)
+    assert tx_receipt.status == 1, "Transaction failed"
+
+    # submit prediction
     tx_receipt = prediction_manager.submit_prediction(
         stakes_up=[20, 30],
         stakes_down=[30, 20],
