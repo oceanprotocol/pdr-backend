@@ -25,7 +25,7 @@ def compile():
     print("Compiling:", files)
     compiled = compile_files(
         files,
-        output_values=["abi", "bin-runtime"],
+        output_values=["abi", "bin"],
         solc_version="0.8.13",
         optimize=True,
         optimize_runs=1000,
@@ -50,9 +50,9 @@ def compile():
             json.dump(contract_data["abi"], abi_file)
 
         # Write the bytecode to a file
-        if len(contract_data["bin-runtime"]) > 10:
+        if len(contract_data["bin"]) > 10:
             with open(bytecode_filename, "w") as bytecode_file:
-                bytecode_file.write(contract_data["bin-runtime"])
+                bytecode_file.write(contract_data["bin"])
 
     print(f"ABI and bytecode files have been saved to {output_dir}/")
 
