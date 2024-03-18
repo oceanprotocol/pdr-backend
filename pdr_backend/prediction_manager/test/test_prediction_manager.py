@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 from web3.types import RPCEndpoint
 
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
