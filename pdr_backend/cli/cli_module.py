@@ -323,16 +323,11 @@ def do_fund_accounts(args, nested_args=None):
 
 
 @enforce_types
-# pylint: disable=unused-argument
-def do_deployer(args, nested_args=None):
-    deployer_main(args)
-
-
-@enforce_types
 def do_deploy_prediction_manager(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    deploy_prediction_manager_contract(ppss.web3_pp)
+    contract_address = deploy_prediction_manager_contract(ppss.web3_pp)
+    print(f"Prediction Manager Contract deployed at {contract_address}")

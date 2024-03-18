@@ -16,7 +16,7 @@ class Token(BaseContract):
     def balanceOf(self, account) -> Wei:
         return Wei(self.contract_instance.functions.balanceOf(account).call())
 
-    def transfer(self, to: str, amount: Wei, sender, wait_for_receipt=True):
+    def transfer(self, to: str, amount: Wei, wait_for_receipt=True):
         call_params = self.web3_pp.tx_call_params()
         tx = self.contract_instance.functions.transfer(
             to, int(amount.amt_wei)

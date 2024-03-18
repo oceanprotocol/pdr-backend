@@ -6,6 +6,7 @@ from pdr_backend.contract.prediction_manager import (
     PredictionManager,
 )
 
+
 @pytest.fixture()
 def prediction_manager(web3_pp):
     contract_address = deploy_prediction_manager_contract(web3_pp)

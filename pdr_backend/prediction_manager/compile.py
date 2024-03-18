@@ -19,7 +19,7 @@ def list_files(directory):
     return files_list
 
 
-def compile():
+def compile_contracts():
     install_solc(version="0.8.13")
     files = list_files("./pdr_backend/prediction_manager/contracts/")
     print("Compiling:", files)
@@ -58,4 +58,4 @@ def compile():
 
 
 if __name__ == "__main__":
-    compile()
+    compile_contracts()
