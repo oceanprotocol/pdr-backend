@@ -68,7 +68,7 @@ class PredictionManager(BaseContract):
         stakes_up: List[Wei],
         stakes_down: List[Wei],
         feeds: list,
-        epoch_start: UnixTimeS,
+        epoch: UnixTimeS,
         wait_for_receipt=True,
     ):
         """
@@ -79,7 +79,7 @@ class PredictionManager(BaseContract):
           stakes_up -- list of Wei, stakes for the upward predictions.
           stakes_down -- list of Wei, stakes for the downward predictions.
           feeds -- list of str, addresses of the feeds for predictions.
-          epoch_start -- int, epoch start time for the predictions.
+          epoch -- int, epoch start time for the predictions.
           wait_for_receipt -- bool, if True, waits for the transaction receipt.
 
         @return
@@ -89,13 +89,13 @@ class PredictionManager(BaseContract):
         stakes_down_wei = [s.amt_wei for s in stakes_down]
         if self.config.is_sapphire:
             res, tx = self.send_encrypted_tx(
-                "submit", [stakes_up_wei, stakes_down_wei, feeds, epoch_start]
+                "submit", [stakes_up_wei, stakes_down_wei, feeds, epoch]
             )
             print("Encrypted transaction status code: %s", res)
         else:
             call_params = self.web3_pp.tx_call_params()
             tx = self.contract_instance.functions.submit(
-                stakes_up_wei, stakes_down_wei, feeds, epoch_start
+                stakes_up_wei, stakes_down_wei, feeds, epoch
             ).transact(call_params)
         if not wait_for_receipt:
             return tx
