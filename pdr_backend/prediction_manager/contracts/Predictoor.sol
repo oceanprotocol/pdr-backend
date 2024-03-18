@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/ITemplate3.sol";
+import "./interfaces/IDFRewards.sol";
 
 contract Predictoor {
     bool public initialized;
@@ -23,7 +24,10 @@ contract Predictoor {
 
     /// @notice block unauthorized calls
     modifier onlyMaster() {
-        require(msg.sender == master || msg.sender == owner, "Only owner or master can access");
+        require(
+            msg.sender == master || msg.sender == owner,
+            "Only owner or master can access"
+        );
         _;
     }
 
@@ -34,6 +38,14 @@ contract Predictoor {
         for (uint256 i = 0; i < n; i++) {
             ocean.approve(feeds[i], (2 ** 256) - 1);
         }
+    }
+
+    function claimDFRewards(
+        address tokenAddress,
+        address dfRewards
+    ) external onlyMaster {
+        IDFRewards dfRewardsInstance = IDFRewards(dfRewards);
+        dfRewardsInstance.claimFor(address(this), tokenAddress);
     }
 
     ///@notice send predictions (up or Down) to each of the feeds
@@ -51,10 +63,12 @@ contract Predictoor {
     }
 
     ///@notice send predictiosn to one side, this is useful when an strtategy based on betting on both side is used but the same instance of predictoor can not submit to both sides of a feed
-    function predict(bool side, uint256[] calldata stakes, address[] calldata feeds, uint256 epoch_start)
-        external
-        onlyMaster
-    {
+    function predict(
+        bool side,
+        uint256[] calldata stakes,
+        address[] calldata feeds,
+        uint256 epoch_start
+    ) external onlyMaster {
         uint256 n = stakes.length;
         for (uint256 i = 0; i < n; i++) {
             ITemplate3 feedInstance = ITemplate3(feeds[i]);
@@ -63,7 +77,10 @@ contract Predictoor {
     }
 
     ///@notice claim payouts from predictions
-    function getPayout(uint256[] calldata epoch_start, address[] calldata feeds) external onlyMaster {
+    function getPayout(
+        uint256[] calldata epoch_start,
+        address[] calldata feeds
+    ) external onlyMaster {
         uint256 n = feeds.length;
         for (uint256 i = 0; i < n; i++) {
             ITemplate3 feedInstance = ITemplate3(feeds[i]);
@@ -72,14 +89,20 @@ contract Predictoor {
     }
 
     ///@notice allows to transfer any ERC20 that may be in this contract to another address
-    function transferERC20(address token, address to, uint256 amount) external onlyMaster {
+    function transferERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyMaster {
         IERC20 tokenInstance = IERC20(token);
         tokenInstance.transfer(to, amount);
     }
 
     ///@notice allows tos end any native token in this contract to another address
     function transfer() external payable onlyMaster {
-        (bool status,) = address(msg.sender).call{value: address(this).balance}("");
+        (bool status, ) = address(msg.sender).call{
+            value: address(this).balance
+        }("");
         require(status, "Failed transaction");
     }
 

@@ -34,6 +34,14 @@ contract PredictionManager {
             tokenInstance.transfer(address(instanceDown), amtDown);
     }
 
+    function claimDFRewards(
+        address tokenAddress,
+        address dfRewards
+    ) external onlyOwner {
+        instanceUp.claimDFRewards(tokenAddress, dfRewards);
+        instanceDown.claimDFRewards(tokenAddress, dfRewards);
+    }
+
     ///@notice claim tokens from the instances
     function _getTokensFromInstance(
         address token,
