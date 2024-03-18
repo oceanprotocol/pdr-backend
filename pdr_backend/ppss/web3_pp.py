@@ -319,6 +319,9 @@ class _MockEthWithTracking:
         mock_block = {"timestamp": self.timestamp}
         return mock_block
 
+    def get_balance(self, account):  # pylint: disable=unused-argument
+        return 100e18
+
 
 @enforce_types
 class _MockPredictoorContractWithTracking:
