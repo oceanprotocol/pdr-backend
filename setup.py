@@ -19,7 +19,7 @@ install_requirements = [
     "freezegun==1.4.0",
     "imblearn",
     "matplotlib==3.8.3",
-    "mypy==1.8.0",
+    "mypy==1.9.0",
     "numpy==1.26.4",
     "pandas==2.2.1",
     "pathlib",
