@@ -40,6 +40,11 @@ contract Predictoor {
         }
     }
 
+    ///@notice returns the contract version
+    function version() external pure returns (string memory) {
+        return "0.1.0";
+    }
+
     ///@notice claims DF rewards from the DFRewards contract
     function claimDFRewards(
         address tokenAddress,
