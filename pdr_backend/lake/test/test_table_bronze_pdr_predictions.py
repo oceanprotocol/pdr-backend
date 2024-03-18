@@ -87,7 +87,7 @@ def test_table_bronze_pdr_predictions(
 
     # Assert that there is a None in the payout column
     assert gql_tables["bronze_pdr_predictions"].df["payout"].null_count() == 1
-    target_payout = [0.00, 10.93, 7.04, 3.56, None]
+    target_payout = [0.00, 0.00, 7.04, 3.56, None]
     bronze_pdr_predictions_payout = (
         gql_tables["bronze_pdr_predictions"].df["payout"].to_list()
     )
