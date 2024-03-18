@@ -104,7 +104,7 @@ def test_query(tmpdir):
     assert check_result
 
     # Execute the provided SQL query
-    result_df = persistent_data_store.query(
+    result_df = persistent_data_store.query_data(
         f"SELECT * FROM {table_name} WHERE value > 15"
     )
     assert len(result_df) == 2, "Query did not return the expected number of rows."

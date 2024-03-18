@@ -129,13 +129,13 @@ def test_persistent_store(
 
     assert _table_exists(PDS, predictions_table_name)
 
-    result = PDS.query(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
     PDS.insert_to_table(_gql_datafactory_second_predictions_df, predictions_table_name)
 
-    result = PDS.query(f"SELECT * FROM {predictions_table_name}")
+    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 
