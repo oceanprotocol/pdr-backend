@@ -23,6 +23,7 @@ def test_get_up_predictoor_address(
     address = prediction_manager.predictoor_up_address()
     assert address
 
+def test_get_down_predictoor_address(
 def test_approve(
     prediction_manager: PredictionManager,
     predictoor_contract,
