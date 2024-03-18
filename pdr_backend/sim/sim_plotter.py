@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from enforce_typing import enforce_types
 from matplotlib import gridspec
@@ -81,7 +81,7 @@ class SimPlotter:
           do_save_plot -- export as png?
 
         @return
-          plot_filename - filename of saved plot (None if not done)
+          img_filename - filename of saved plot (None if not done)
         """
         if do_show_plot and not self.shown_plot_before:
             # push plot to screen
@@ -112,17 +112,17 @@ class SimPlotter:
         plt.subplots_adjust(wspace=0.3)
 
         # save to png?
-        plot_filename = None
+        img_filename = None
         if do_save_plot:
-            plot_filename = ppss.sim_ss.unique_final_img_filename()
-            savefig(filename)
+            img_filename = self.ppss.sim_ss.unique_final_img_filename()
+            savefig(img_filename)
 
         # wrapup for reloop
         if do_show_plot:
             plt.pause(0.001)
         self.computed_plot_before = True
 
-        return plot_filename
+        return img_filename
             
 
     @property

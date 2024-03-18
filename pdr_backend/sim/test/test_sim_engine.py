@@ -31,7 +31,7 @@ def test_sim_engine(tmpdir):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, final_img_filebase="final")
+    d = sim_ss_test_dict(True, log_dir, final_img_filebase="final")
     ppss.sim_ss = SimSS(d)
 
     # go
@@ -40,5 +40,5 @@ def test_sim_engine(tmpdir):
         sim_engine.run()
 
     #
-    target_name = os.path.join(log_dir, "final_0.png")
-    assert os.path.exists(final_img_filename)
+    target_img_filename = os.path.join(log_dir, "final_0.png")
+    assert os.path.exists(target_img_filename)

@@ -228,9 +228,9 @@ class SimEngine:
             )
             do_show = self.ppss.sim_ss.do_plot
             do_save = self.ppss.sim_ss.is_final_iter(test_i)
-            saved_filename = self.sim_plotter.compute_plot(d, do_show, do_save)
-            if saved_filename is not None:
-                logger.info("Just saved plot: %s", saved_filename)
+            img_filename = self.sim_plotter.compute_plot(d, do_show, do_save)
+            if img_filename is not None:
+                logger.info("Just saved plot as file: %s", img_filename)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:

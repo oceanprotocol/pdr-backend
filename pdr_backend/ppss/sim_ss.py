@@ -23,13 +23,12 @@ class SimSS(StrMixin, CCXTExchangeMixin):
         if not isinstance(d["do_plot"], bool):
             raise TypeError
 
-        # handle log_dir
-        log_dir = d["log_dir"]
-        if log_dir != os.path.abspath(log_dir):
-            raise ValueError(log_dir)
-        if not os.path.exists(log_dir):
-            logger.warning("Could not find log dir, creating one at: %s", log_dir)
-            os.makedirs(log_dir)
+        # handle log_dir; self.log_dir is supposed to be path-expanded version
+        assert self.log_dir == os.path.abspath(self.log_dir)
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+            s = f"Couldn't find log dir, so created one at: {self.log_dir}"
+            logger.warning(s)
 
         # check final_img_filebase
         if not isinstance(d["final_img_filebase"], str):

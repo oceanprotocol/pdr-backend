@@ -50,7 +50,8 @@ def test_sim_ss_give_values(tmpdir):
 
     # str
     assert "SimSS" in str(ss)
-        
+
+    
 @enforce_types
 def test_sim_ss_do_plot_badpaths(tmpdir):
     d = sim_ss_test_dict(True, _logdir(tmpdir))
@@ -60,12 +61,17 @@ def test_sim_ss_do_plot_badpaths(tmpdir):
 
         
 @enforce_types
-def test_sim_ss_log_dir_badpaths(tmpdir):
-    # rel path given; needs an abs path
+def test_sim_ss_log_dir_relative_path():
+    # it will work with the relative path
+    expanded_path = os.path.abspath("mylogs")
+    had_before = os.path.exists(expanded_path)
     d = sim_ss_test_dict(True, "mylogs")
-    with pytest.raises(ValueError):
-        _ = SimSS(d)
-  
+    ss = SimSS(d)
+    assert ss.log_dir == expanded_path
+    if not had_before:
+        os.rmdir(expanded_path)
+
+    
 @enforce_types
 def test_sim_ss_final_img_filebase_badpaths(tmpdir):
     d = sim_ss_test_dict(True, _logdir(tmpdir))
