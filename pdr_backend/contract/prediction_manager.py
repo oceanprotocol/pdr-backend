@@ -95,6 +95,16 @@ class PredictionManager(BaseContract):
 
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
+    def version(self) -> str:
+        """
+        @description
+          Returns the version of the PredictionManager contract.
+
+        @return
+          version -- str, version of the contract.
+        """
+        return self.contract_instance.functions.version().call()
+
     def approve_ocean(self, feeds: list, wait_for_receipt=True):
         """
         @description
