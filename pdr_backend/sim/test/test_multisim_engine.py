@@ -55,9 +55,7 @@ def _constructor_d_with_fast_runtime(tmpdir):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir)
-    d["do_plot"] = False
-    d["test_n"] = 10
+    d = sim_ss_test_dict(do_plot=False, log_dir=log_dir, test_n=10)
     constructor_d["sim_ss"] = d
 
     return constructor_d

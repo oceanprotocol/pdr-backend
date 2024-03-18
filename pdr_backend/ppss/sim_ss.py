@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 from enforce_typing import enforce_types
@@ -11,6 +11,7 @@ from pdr_backend.util.strutil import StrMixin
 logger = logging.getLogger("sim_ss")
 
 TRADETYPE_OPTIONS = ["livemock", "livereal", "histmock"]
+
 
 @enforce_types
 class SimSS(StrMixin, CCXTExchangeMixin):
@@ -64,7 +65,7 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 
     @property
     def final_img_filebase(self) -> str:
-        return self.d["final_img_filebase"] # eg "final_img"
+        return self.d["final_img_filebase"]  # eg "final_img"
 
     @property
     def test_n(self) -> int:
@@ -81,17 +82,18 @@ class SimSS(StrMixin, CCXTExchangeMixin):
         if iter_i < 0 or iter_i >= self.test_n:
             raise ValueError(iter_i)
         return (iter_i + 1) == self.test_n
-             
+
     def unique_final_img_filename(self) -> str:
         log_dir = self.log_dir
         for try_i in range(1000):
             cand_name = os.path.join(
-                log_dir, f"{self.final_img_filebase}_{try_i}.png",
+                log_dir,
+                f"{self.final_img_filebase}_{try_i}.png",
             )
             if not os.path.exists(cand_name):
                 return cand_name
         raise ValueError("Could not find a unique filename after 1000 tries.")
-    
+
 
 # =========================================================================
 # utilities for testing
@@ -99,11 +101,11 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 
 @enforce_types
 def sim_ss_test_dict(
-        do_plot: bool,
-        log_dir: str,
-        final_img_filebase: Optional[str]=None,
-        test_n: Optional[int]=None,
-        tradetype: Optional[str]=None,
+    do_plot: bool,
+    log_dir: str,
+    final_img_filebase: Optional[str] = None,
+    test_n: Optional[int] = None,
+    tradetype: Optional[str] = None,
 ) -> dict:
     d = {
         "do_plot": do_plot,

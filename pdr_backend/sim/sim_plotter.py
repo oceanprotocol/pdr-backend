@@ -66,10 +66,10 @@ class SimPlotter:
     # pylint: disable=too-many-statements
     @enforce_types
     def compute_plot(
-            self,
-            aimodel_plotdata: AimodelPlotdata,
-            do_show_plot: bool,
-            do_save_plot: bool,
+        self,
+        aimodel_plotdata: AimodelPlotdata,
+        do_show_plot: bool,
+        do_save_plot: bool,
     ) -> Optional[str]:
         """
         @description
@@ -123,7 +123,6 @@ class SimPlotter:
         self.computed_plot_before = True
 
         return img_filename
-            
 
     @property
     def next_x(self) -> List[float]:

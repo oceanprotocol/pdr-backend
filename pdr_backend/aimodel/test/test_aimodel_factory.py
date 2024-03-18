@@ -264,7 +264,8 @@ def _test_aimodel_factory_nvars_varimps(n: int):
         with patch(plt_show_path):
             plot_aimodel_varimps(varnames, imps_tup)
     assert not SHOW_PLOT
-    
+
+
 @enforce_types
 def test_aimodel_factory_1var_balance_classes():
     """Experiments on #731:

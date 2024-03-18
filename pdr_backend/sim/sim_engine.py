@@ -310,7 +310,7 @@ class SimEngine:
         "Plot on this iteration Y/N?"
         if self.ppss.sim_ss.is_final_iter(i):
             return True
-                
+
         if not self.ppss.sim_ss.do_plot:
             return False
 
