@@ -23,6 +23,7 @@ from pdr_backend.lake.plutil import (
     set_col_values,
     text_to_df,
     get_table_name,
+    TableType
 )
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
@@ -312,8 +313,11 @@ def test_get_table_name():
     table_name = get_table_name("test")
     assert table_name == "test"
 
-    table_name = get_table_name("test", True)
-    assert table_name == "_build_test"
+    table_name = get_table_name("test", TableType.TEMP)
+    assert table_name == "_temp_test"
 
-    table_name = get_table_name("test", False)
+    table_name = get_table_name("test", TableType.NORMAL)
     assert table_name == "test"
+
+    table_name = get_table_name("test", TableType.ETL)
+    assert table_name == "_etl_test"

@@ -16,10 +16,7 @@ from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-
-# ETL code-coverage
-# Step 1. ETL -> do_sync_step()
-# Step 2. ETL -> do_bronze_step()
+from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 @enforce_types
@@ -152,31 +149,27 @@ def test_etl_do_bronze_step(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds, True)
-    gql_tables["pdr_truevals"].append_to_storage(truevals, True)
-    gql_tables["pdr_payouts"].append_to_storage(payouts, True)
+    gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
+    gql_tables["pdr_truevals"].append_to_storage(truevals, TableType.TEMP)
+    gql_tables["pdr_payouts"].append_to_storage(payouts, TableType.TEMP)
 
-    print(f"1111_gql_tables - {preds['timestamp']}")
     mock_get_gql_tables.return_value = gql_tables
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
 
     pds = _get_test_PDS(tmpdir)
-    pdr_predictions_records = pds.query_data(
-        f"""
-            SELECT * FROM _build_{predictions_table_name}
-        """
-    )
+    temp_table_name = get_table_name(predictions_table_name, TableType.TEMP)
+    pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(temp_table_name))
     assert len(pdr_predictions_records) == 6
 
     # Work 3: Do bronze
     etl.do_bronze_step()
 
+    
     # assert bronze_pdr_predictions_df is created
-    bronze_pdr_predictions_records = pds.query_data(
-        "SELECT * FROM _build_bronze_pdr_predictions"
-    )
+    temp_table_name = get_table_name("bronze_pdr_predictions", TableType.TEMP)
+    bronze_pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(temp_table_name))
     assert len(bronze_pdr_predictions_records) == 6
 
     # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
@@ -257,7 +250,7 @@ def test_etl_do_bronze_step(
 
 
 @enforce_types
-def test_drop_build_sql_tables(tmpdir):
+def test_drop_temp_sql_tables(tmpdir):
 
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
@@ -281,17 +274,17 @@ def test_drop_build_sql_tables(tmpdir):
         pds.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_c")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
     table_names = pds.get_table_names()
 
     assert len(table_names) == 3
 
-    etl.build_table_names = ["a", "b", "c"]
-    etl._drop_build_sql_tables()
+    etl.temp_table_names = ["a", "b", "c"]
+    etl._drop_temp_sql_tables()
 
     table_names = pds.get_table_names()
 
@@ -299,7 +292,7 @@ def test_drop_build_sql_tables(tmpdir):
 
 
 @enforce_types
-def test_move_build_tables_to_permanent(tmpdir):
+def test_move_from_temp_tables_to_live(tmpdir):
 
     # setup test start-end date
     st_timestr = "2023-11-02_0:00"
@@ -323,17 +316,17 @@ def test_move_build_tables_to_permanent(tmpdir):
         pds.duckdb_conn.execute(f"DROP TABLE {table_name}")
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_build_c")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
     table_names = pds.get_table_names()
 
     assert len(table_names) == 3
 
-    etl.build_table_names = ["a", "b", "c"]
-    etl._move_build_tables_to_permanent()
+    etl.temp_table_names = ["a", "b", "c"]
+    etl._move_from_temp_tables_to_live()
 
     table_names = pds.get_table_names()
 
@@ -347,7 +340,7 @@ def test_move_build_tables_to_permanent(tmpdir):
     table_names = pds.get_table_names()
 
     for table_name in table_names:
-        assert "_build_" not in table_name
+        assert "_temp_" not in table_name
 
 
 @enforce_types
@@ -417,9 +410,9 @@ def test_calc_bronze_start_end_ts(tmpdir):
 
     pds.duckdb_conn.execute(
         """
-        CREATE TABLE _build_dummy_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE _build_dummy_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE _build_dummy_table_3 (timestamp TIMESTAMP);
+        CREATE TABLE _temp_dummy_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE _temp_dummy_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE _temp_dummy_table_3 (timestamp TIMESTAMP);
         """
     )
 
@@ -434,10 +427,10 @@ def test_calc_bronze_start_end_ts(tmpdir):
 
     pds.duckdb_conn.execute(
         """
-        INSERT INTO _build_dummy_table_1 VALUES ('2023-11-21 00:00:00');
-        INSERT INTO _build_dummy_table_2 VALUES ('2023-11-23 00:00:00');
-        INSERT INTO _build_dummy_table_2 VALUES ('2023-11-22 00:00:00');
-        INSERT INTO _build_dummy_table_3 VALUES ('2023-11-25 00:00:00');
+        INSERT INTO _temp_dummy_table_1 VALUES ('2023-11-21 00:00:00');
+        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-23 00:00:00');
+        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-22 00:00:00');
+        INSERT INTO _temp_dummy_table_3 VALUES ('2023-11-25 00:00:00');
         """
     )
 

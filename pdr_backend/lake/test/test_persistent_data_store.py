@@ -5,7 +5,7 @@ import duckdb
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.plutil import get_table_name
+from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 # Initialize the PersistentDataStore instance for testing
@@ -238,21 +238,25 @@ def test__duckdb_connection(tmpdir):
 
 def test_move_table_data(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
-    persistent_data_store.insert_to_table(example_df, get_table_name(table_name, True))
+    persistent_data_store.insert_to_table(example_df, get_table_name(table_name, TableType.TEMP))
 
     # Check if the table is registered
     check_result = _table_exists(
-        persistent_data_store, get_table_name(table_name, True)
+        persistent_data_store,
+        get_table_name(table_name, TableType.TEMP)
     )
 
     assert check_result
 
     # Move the table
-    persistent_data_store.move_table_data(get_table_name(table_name, True), table_name)
+    persistent_data_store.move_table_data(
+        get_table_name(table_name, TableType.TEMP), 
+        table_name
+    )
 
     # Check if the table is dropped
     table_names = persistent_data_store.get_table_names()
-    assert get_table_name(table_name, True) not in table_names
+    assert get_table_name(table_name, TableType.TEMP) not in table_names
 
     # Check if the new table is created
     assert table_name in table_names
@@ -268,15 +272,15 @@ def test_move_table_data(tmpdir):
 
 def test_etl_view(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
-    persistent_data_store.insert_to_table(example_df, get_table_name(table_name, False))
+    persistent_data_store.insert_to_table(example_df, get_table_name(table_name))
 
     other_df = pl.DataFrame(
         {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
     )
-    persistent_data_store.insert_to_table(other_df, get_table_name(table_name, True))
+    persistent_data_store.insert_to_table(other_df, get_table_name(table_name, TableType.TEMP))
 
     # Assemble view query and create the view
-    view_name = "etl_view"
+    view_name = get_table_name(table_name, TableType.ETL)
     view_query = """
     CREATE VIEW {} AS
     ( 
@@ -284,9 +288,9 @@ def test_etl_view(tmpdir):
         UNION ALL
         SELECT * FROM {}
     )""".format(
-        view_name,
-        get_table_name(table_name, False),
-        get_table_name(table_name, True)
+        get_table_name(table_name, TableType.ETL),
+        get_table_name(table_name),
+        get_table_name(table_name, TableType.TEMP)
     )
     persistent_data_store.query_data(view_query)
 
