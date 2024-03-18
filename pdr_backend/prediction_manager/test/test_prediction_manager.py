@@ -1,13 +1,11 @@
 from web3.types import RPCEndpoint
 
-from pdr_backend.conftest_ganache import *
+from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.prediction_manager import (
     PredictionManager,
-)  # pylint: disable=wildcard-import
-from pdr_backend.prediction_manager.deploy import (
-    deploy_prediction_manager_contract,
 )
+
 from pdr_backend.util.currency_types import Wei
 
 
@@ -240,9 +238,3 @@ def test_submit_prediction_and_payout(
         pmup,
         True,
     ), "Prediction should be True, 40"
-
-
-@pytest.fixture(scope="module")
-def prediction_manager(web3_pp):
-    contract_address = deploy_prediction_manager_contract(web3_pp)
-    return PredictionManager(web3_pp, contract_address)
