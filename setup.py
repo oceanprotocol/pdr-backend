@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.1.59",
+    "ccxt==4.2.75",
     "coverage",
     "enforce_typing",
     "eth-account==0.11.0",
@@ -28,7 +28,7 @@ install_requirements = [
     "pyarrow==15.0.1",
     "pylint==3.1.0",
     "pytest",
-    "pytest-asyncio==0.23.5",
+    "pytest-asyncio==0.23.5.post1",
     "pytest-env",
     "pyyaml",
     "requests==2.31.0",
@@ -40,7 +40,7 @@ install_requirements = [
     "web3==6.15.1",
     "sapphire.py==0.2.2",
     "streamlit==1.32.1",
-    "ocean-contracts==2.0.0a14",  # install this last
+    "ocean-contracts==2.0.4",  # install this last
 ]
 
 # Required to run setup.py:
