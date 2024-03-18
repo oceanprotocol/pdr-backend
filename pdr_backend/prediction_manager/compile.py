@@ -21,8 +21,8 @@ def list_files(directory):
 
 def compile():
     install_solc(version="0.8.13")
-    files = list_files("./pdr_backend/prediction-manager/contracts")
-    print(files)
+    files = list_files("./pdr_backend/prediction_manager/contracts/")
+    print("Compiling:", files)
     compiled = compile_files(
         files,
         output_values=["abi", "bin-runtime"],
@@ -50,8 +50,9 @@ def compile():
             json.dump(contract_data["abi"], abi_file)
 
         # Write the bytecode to a file
-        with open(bytecode_filename, "w") as bytecode_file:
-            bytecode_file.write(contract_data["bin-runtime"])
+        if len(contract_data["bin-runtime"]) > 10:
+            with open(bytecode_filename, "w") as bytecode_file:
+                bytecode_file.write(contract_data["bin-runtime"])
 
     print(f"ABI and bytecode files have been saved to {output_dir}/")
 
