@@ -23,11 +23,13 @@ def test_get_up_predictoor_address(
     address = prediction_manager.predictoor_up_address()
     assert address
 
+
 def test_get_down_predictoor_address(
     prediction_manager: PredictionManager,
 ):
     address = prediction_manager.predictoor_down_address()
     assert address
+
 
 def test_approve(
     prediction_manager: PredictionManager,
@@ -168,21 +170,41 @@ def test_submit_prediction_and_payout(
         100
     ), "OCEAN balance of the contract should be 100 after claiming"
 
-    
     # check predictions one by one
     pmup = prediction_manager.predictoor_up_address()
     pmdown = prediction_manager.predictoor_down_address()
 
     pred_down_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmdown)
-    pred_down_second_feed = predictoor_contract2.get_prediction(prediction_epoch, pmdown)
+    pred_down_second_feed = predictoor_contract2.get_prediction(
+        prediction_epoch, pmdown
+    )
     pred_up_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmup)
     pred_up_second_feed = predictoor_contract2.get_prediction(prediction_epoch, pmup)
 
-    assert pred_down_first_feed == (False, 40, pmdown, True), "Prediction should be False, 30"
-    assert pred_down_second_feed == (False, 10, pmdown, True), "Prediction should be True, 10"
-    assert pred_up_first_feed == (True, 20, pmup, True), "Prediction should be False, 20"
-    assert pred_up_second_feed == (True, 30, pmup, True), "Prediction should be True, 40"
-    
+    assert pred_down_first_feed == (
+        False,
+        40,
+        pmdown,
+        True,
+    ), "Prediction should be False, 30"
+    assert pred_down_second_feed == (
+        False,
+        10,
+        pmdown,
+        True,
+    ), "Prediction should be True, 10"
+    assert pred_up_first_feed == (
+        True,
+        20,
+        pmup,
+        True,
+    ), "Prediction should be False, 20"
+    assert pred_up_second_feed == (
+        True,
+        30,
+        pmup,
+        True,
+    ), "Prediction should be True, 40"
 
 
 @pytest.fixture(scope="module")
