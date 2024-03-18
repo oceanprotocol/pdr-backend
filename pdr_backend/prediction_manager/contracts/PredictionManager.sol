@@ -15,7 +15,7 @@ contract PredictionManager {
         instanceDown = new Predictoor();
         instanceUp.initialize(msg.sender, oceanTokenAddr_);
         instanceDown.initialize(msg.sender, oceanTokenAddr_);
-        
+
         oceanTokenAddr = oceanTokenAddr_;
         owner = msg.sender;
     }
@@ -30,17 +30,26 @@ contract PredictionManager {
     function _sendTokensToInstance(uint256 amtUp, uint256 amtDown) internal {
         IERC20 tokenInstance = IERC20(oceanTokenAddr);
         if (amtUp != 0) tokenInstance.transfer(address(instanceUp), amtUp);
-        if (amtDown != 0) tokenInstance.transfer(address(instanceDown), amtDown);
+        if (amtDown != 0)
+            tokenInstance.transfer(address(instanceDown), amtDown);
     }
 
     ///@notice claim tokens from the instances
-    function _getTokensFromInstance(address token, uint256 amtUp, uint256 amtDown) internal {
+    function _getTokensFromInstance(
+        address token,
+        uint256 amtUp,
+        uint256 amtDown
+    ) internal {
         if (amtUp != 0) {
             instanceUp.transferERC20(token, address(this), amtUp);
         }
         if (amtDown != 0) {
             instanceDown.transferERC20(token, address(this), amtDown);
         }
+    }
+
+    function version() external pure returns (string memory) {
+        return "0.1.0";
     }
 
     ///@notice claim native tokens form the instances
@@ -74,7 +83,10 @@ contract PredictionManager {
     }
 
     ///@notice claim payouts for the strategy of betting on both sides
-    function getPayout(uint256[] calldata epoch_start, address[] calldata feeds) external onlyOwner {
+    function getPayout(
+        uint256[] calldata epoch_start,
+        address[] calldata feeds
+    ) external onlyOwner {
         instanceUp.getPayout(epoch_start, feeds);
         instanceDown.getPayout(epoch_start, feeds);
 
@@ -86,14 +98,20 @@ contract PredictionManager {
     }
 
     /// @notice transfer any ERC20 tokens in this contract to another address
-    function transferERC20(address token, address to, uint256 amount) external onlyOwner {
+    function transferERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
         IERC20 tokenInstance = IERC20(token);
         tokenInstance.transfer(to, amount);
     }
 
     /// @notice transfer native tokens from this contract to an addrdess
     function transfer() external payable onlyOwner {
-        (bool status,) = address(msg.sender).call{value: address(this).balance}("");
+        (bool status, ) = address(msg.sender).call{
+            value: address(this).balance
+        }("");
         require(status, "Failed transaction");
     }
 
