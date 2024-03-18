@@ -1,3 +1,4 @@
+from typing import List
 from enforce_typing import enforce_types
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.currency_types import Wei
@@ -38,8 +39,8 @@ class PredictionManager(BaseContract):
 
     def submit_prediction(
         self,
-        stakes_up: list,
-        stakes_down: list,
+        stakes_up: List[Wei],
+        stakes_down: List[Wei],
         feeds: list,
         epoch_start: int,
         wait_for_receipt=True,
@@ -58,16 +59,17 @@ class PredictionManager(BaseContract):
         @return
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
-
+        stakes_up_wei = [s.amt_wei for s in stakes_up]
+        stakes_down_wei = [s.amt_wei for s in stakes_down]
         if self.config.is_sapphire:
             res, tx = self.send_encrypted_tx(
-                "submit", [stakes_up, stakes_down, feeds, epoch_start]
+                "submit", [stakes_up_wei, stakes_down_wei, feeds, epoch_start]
             )
             print("Encrypted transaction status code: %s", res)
         else:
             call_params = self.web3_pp.tx_call_params()
             tx = self.contract_instance.functions.submit(
-                stakes_up, stakes_down, feeds, epoch_start
+                stakes_up_wei, stakes_down_wei, feeds, epoch_start
             ).transact(call_params)
         if not wait_for_receipt:
             return tx
