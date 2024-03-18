@@ -24,13 +24,19 @@ def test_get_up_predictoor_address(
     assert address
 
 def test_get_down_predictoor_address(
+    prediction_manager: PredictionManager,
+):
+    address = prediction_manager.predictoor_down_address()
+    assert address
+
 def test_approve(
     prediction_manager: PredictionManager,
     predictoor_contract,
     predictoor_contract2,
     ocean_token,
 ):
-    pm = prediction_manager.contract_address
+    pmup = predictoor_contract.predictoor_up_address()
+    pmdown = predictoor_contract2.predictoor_down_address()
     pc1 = predictoor_contract.contract_address
     pc2 = predictoor_contract2.contract_address
     assert ocean_token.allowance(pm, pc1) == 0
@@ -43,8 +49,10 @@ def test_approve(
     tx_receipt = prediction_manager.approve_ocean(contract_addrs, True)
     assert tx_receipt.status == 1, "Transaction failed"
 
-    assert ocean_token.allowance(pm, pc1).amt_wei == 2**256 - 1
-    assert ocean_token.allowance(pm, pc2).amt_wei == 2**256 - 1
+    assert ocean_token.allowance(pmup, pc1).amt_wei == 2**256 - 1
+    assert ocean_token.allowance(pmup, pc2).amt_wei == 2**256 - 1
+    assert ocean_token.allowance(pmdown, pc1).amt_wei == 2**256 - 1
+    assert ocean_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
 def test_transfer_erc20(
@@ -138,10 +146,6 @@ def test_submit_prediction_and_payout(
     )  # submit False for the second contract
 
     # time to claim payouts
-    # expected payouts are:
-    # 20 OCEAN for the first contract
-    # 20 OCEAN for the second contract
-    # 40 Total
 
     # get the OCEAN balance of the contract before claiming
     bal_before = ocean_token.balanceOf(prediction_manager.contract_address)
@@ -153,8 +157,8 @@ def test_submit_prediction_and_payout(
     bal_after = ocean_token.balanceOf(prediction_manager.contract_address)
 
     assert bal_after == Wei(
-        40
-    ), "OCEAN balance of the contract should be 40 after claiming"
+        100
+    ), "OCEAN balance of the contract should be 100 after claiming"
 
 
 @pytest.fixture(scope="module")
