@@ -7,6 +7,7 @@ from pdr_backend.contract.prediction_manager import (
 from pdr_backend.prediction_manager.deploy import (
     deploy_prediction_manager_contract,
 )
+from pdr_backend.util.currency_types import Wei
 
 
 def test_approve(
@@ -25,30 +26,39 @@ def test_approve(
         pc1,
         pc2,
     ]
-    prediction_manager.approve_ocean(contract_addrs, True)
+    tx_receipt = prediction_manager.approve_ocean(contract_addrs, True)
+    assert tx_receipt.status == 1, "Transaction failed"
 
-    assert ocean_token.allowance(pm, pc1) == 2**256 - 1
-    assert ocean_token.allowance(pm, pc2) == 2**256 - 1
+    assert ocean_token.allowance(pm, pc1).amt_wei == 2**256 - 1
+    assert ocean_token.allowance(pm, pc2).amt_wei == 2**256 - 1
 
 
 def test_transfer_erc20(
     prediction_manager: PredictionManager, ocean_token, web3_config
 ):
-    ocean_token.transfer(prediction_manager.contract_address, 100)
-    assert ocean_token.balance_of(prediction_manager.contract_address) == 100
-    before = ocean_token.balance_of(web3_config.owner)
-    prediction_manager.transfer_erc20(
-        ocean_token.contract_address, web3_config.owner, 100
+    ocean_token.transfer(
+        prediction_manager.contract_address, Wei(100), web3_config.owner
     )
-    after = ocean_token.balance_of(web3_config.owner)
-    assert after - before == 100
-    assert ocean_token.balance_of(prediction_manager.contract_address) == 0
+    assert ocean_token.balanceOf(prediction_manager.contract_address) == Wei(100)
+    before = ocean_token.balanceOf(web3_config.owner)
+    prediction_manager.transfer_erc20(
+        ocean_token.contract_address, web3_config.owner, Wei(100)
+    )
+    after = ocean_token.balanceOf(web3_config.owner)
+    assert Wei(after.amt_wei - before.amt_wei) == Wei(100)
+    assert ocean_token.balanceOf(prediction_manager.contract_address) == 0
 
 
 def test_transfer(prediction_manager: PredictionManager, web3_config):
-    web3_config.w3.eth.send_transaction(
-        {"to": prediction_manager.contract_address, "value": 100}
+    tx = web3_config.w3.eth.send_transaction(
+        {
+            "to": prediction_manager.contract_address,
+            "value": 100,
+            "gasPrice": web3_config.w3.eth.gas_price,
+            "from": web3_config.owner,
+        }
     )
+    web3_config.w3.eth.wait_for_transaction_receipt(tx)
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 100
     before = web3_config.w3.eth.get_balance(web3_config.owner)
     prediction_manager.transfer()
@@ -57,7 +67,7 @@ def test_transfer(prediction_manager: PredictionManager, web3_config):
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
 
 
-def submit_prediction_and_payout(
+def test_submit_prediction_and_payout(
     prediction_manager: PredictionManager,
     web3_config,
     predictoor_contract: PredictoorContract,
@@ -65,18 +75,20 @@ def submit_prediction_and_payout(
     ocean_token,
 ):
     # the user transfers 100 OCEAN tokens to the prediction manager
-    ocean_token.transfer(prediction_manager.contract_address, 100)
+    ocean_token.transfer(
+        prediction_manager.contract_address, Wei(100), web3_config.owner
+    )
 
     # get the next prediction epoch
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
     # set prediction epoch
-    prediciton_epoch = current_epoch + S_PER_EPOCH * 2
+    prediction_epoch = current_epoch + S_PER_EPOCH * 2
 
     # get the OCEAN balance of the contract before submitting
-    bal_before = ocean_token.balance_of(prediction_manager.contract_address)
-    assert (
-        bal_before == 100
+    bal_before = ocean_token.balanceOf(prediction_manager.contract_address)
+    assert bal_before == Wei(
+        100
     ), "OCEAN balance of the contract should be 100 before submitting"
 
     # submit prediction
@@ -84,16 +96,17 @@ def submit_prediction_and_payout(
         predictoor_contract.contract_address,
         predictoor_contract2.contract_address,
     ]
-    prediction_manager.submit_prediction(
+    tx_receipt = prediction_manager.submit_prediction(
         stakes_up=[20, 30],
         stakes_down=[30, 20],
         feeds=feeds,
-        epoch=prediciton_epoch,
+        epoch_start=prediction_epoch,
         wait_for_receipt=True,
     )
+    assert tx_receipt.status == 1, "Transaction failed"
 
     # get the OCEAN balance of the contract after submitting
-    bal_after = ocean_token.balance_of(prediction_manager.contract_address)
+    bal_after = ocean_token.balanceOf(prediction_manager.contract_address)
     assert bal_after == 0, "OCEAN balance of the contract should be 0 after submitting"
 
     # fast forward time to get payout
@@ -104,10 +117,10 @@ def submit_prediction_and_payout(
 
     # submit the trueval
     predictoor_contract.submit_trueval(
-        True, prediciton_epoch, False, True
+        True, prediction_epoch, False, True
     )  # submit True for the first contract
     predictoor_contract2.submit_trueval(
-        False, prediciton_epoch, False, True
+        False, prediction_epoch, False, True
     )  # submit False for the second contract
 
     # time to claim payouts
@@ -117,17 +130,20 @@ def submit_prediction_and_payout(
     # 40 Total
 
     # get the OCEAN balance of the contract before claiming
-    bal_before = ocean_token.balance_of(prediction_manager.contract_address)
+    bal_before = ocean_token.balanceOf(prediction_manager.contract_address)
 
     # claim
-    prediction_manager.get_payout([prediciton_epoch], feeds, wait_for_receipt=True)
+    prediction_manager.get_payout([prediction_epoch], feeds, wait_for_receipt=True)
 
     # get the OCEAN balance of the contract after claiming
-    bal_after = ocean_token.balance_of(prediction_manager.contract_address)
+    bal_after = ocean_token.balanceOf(prediction_manager.contract_address)
 
-    assert bal_after == 40, "OCEAN balance of the contract should be 40 after claiming"
+    assert bal_after == Wei(
+        40
+    ), "OCEAN balance of the contract should be 40 after claiming"
 
 
 @pytest.fixture(scope="module")
 def prediction_manager(web3_pp):
-    return deploy_prediction_manager_contract(web3_pp)
+    contract_address = deploy_prediction_manager_contract(web3_pp)
+    return PredictionManager(web3_pp, contract_address)
