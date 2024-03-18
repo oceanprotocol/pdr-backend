@@ -86,9 +86,9 @@ class PredictionManager(BaseContract):
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.transferERC20(token, to, amount.amt_wei).transact(
-            call_params
-        )
+        tx = self.contract_instance.functions.transferERC20(
+            token, to, amount.amt_wei
+        ).transact(call_params)
 
         if not wait_for_receipt:
             return tx
