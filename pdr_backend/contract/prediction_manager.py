@@ -1,5 +1,6 @@
 from enforce_typing import enforce_types
 from pdr_backend.contract.base_contract import BaseContract
+from pdr_backend.util.currency_types import Wei
 
 
 @enforce_types
@@ -70,7 +71,7 @@ class PredictionManager(BaseContract):
 
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
-    def transfer_erc20(self, token: str, to: str, amount: int, wait_for_receipt=True):
+    def transfer_erc20(self, token: str, to: str, amount: Wei, wait_for_receipt=True):
         """
         @description
           Transfers any ERC20 token from this contract to another address.
@@ -85,7 +86,7 @@ class PredictionManager(BaseContract):
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.transferERC20(token, to, amount).transact(
+        tx = self.contract_instance.functions.transferERC20(token, to, amount.amt_wei).transact(
             call_params
         )
 
