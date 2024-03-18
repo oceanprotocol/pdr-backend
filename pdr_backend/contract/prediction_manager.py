@@ -20,7 +20,7 @@ class PredictionManager(BaseContract):
         """
         @description
           Returns the address of the upward predictoor contract.
-        
+
         @return
           address -- str, address of the upward predictoor contract.
         """
@@ -30,7 +30,7 @@ class PredictionManager(BaseContract):
         """
         @description
           Returns the address of the downward predictoor contract.
-        
+
         @return
           address -- str, address of the downward predictoor contract.
         """
@@ -58,11 +58,17 @@ class PredictionManager(BaseContract):
         @return
           tx -- transaction hash if wait_for_receipt is False, else the transaction receipt.
         """
-        call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.submit(
-            stakes_up, stakes_down, feeds, epoch_start
-        ).transact(call_params)
 
+        if self.config.is_sapphire:
+            res, tx = self.send_encrypted_tx(
+                "submit", [stakes_up, stakes_down, feeds, epoch_start]
+            )
+            print("Encrypted transaction status code: %s", res)
+        else:
+            call_params = self.web3_pp.tx_call_params()
+            tx = self.contract_instance.functions.submit(
+                stakes_up, stakes_down, feeds, epoch_start
+            ).transact(call_params)
         if not wait_for_receipt:
             return tx
 
