@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -130,6 +131,10 @@ class PredictoorAgent:
         if self.cur_epoch_s_left < self.s_cutoff:
             return
 
+        if not self.check_balances():
+            logger.error("Not enough balance, cancel prediction")
+            return
+
         logger.info(self.status_str())
 
         # compute prediction; exit if no good
@@ -201,6 +206,22 @@ class PredictoorAgent:
     @property
     def cur_epoch_s_left(self) -> int:
         return self.next_slot - self.cur_timestamp
+
+    @property
+    def up_addr(self) -> str:
+        return self.web3_config_up.owner
+
+    @property
+    def down_addr(self) -> str:
+        return self.web3_config_down.owner
+
+    @property
+    def OCEAN(self) -> Token:
+        return self.ppss.web3_pp.OCEAN_Token
+
+    @property
+    def ROSE(self) -> NativeToken:
+        return self.ppss.web3_pp.NativeToken
 
     def status_str(self) -> str:
         s = ""
@@ -347,6 +368,32 @@ class PredictoorAgent:
         return mergedohlcv_df
 
     @enforce_types
+    def check_balances(self) -> bool:
+        min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
+        min_ROSE_bal = Eth(1).to_wei()
+
+        up_OCEAN_bal = self.OCEAN.balanceOf(self.up_addr)
+        if up_OCEAN_bal < min_OCEAN_bal:
+            logger.error("Up OCEAN balance low: (%s)", up_OCEAN_bal)
+            return False
+
+        down_OCEAN_bal = self.OCEAN.balanceOf(self.down_addr)
+        if down_OCEAN_bal < min_OCEAN_bal:
+            logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
+            return False
+
+        up_ROSE_bal = self.ROSE.balanceOf(self.up_addr)
+        if up_ROSE_bal < min_ROSE_bal:
+            logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
+            return False
+
+        down_ROSE_bal = self.ROSE.balanceOf(self.down_addr)
+        if down_ROSE_bal < min_ROSE_bal:
+            logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
+            return False
+
+        return True
+
     def get_payout(self):
         """Claims payouts"""
         if (
