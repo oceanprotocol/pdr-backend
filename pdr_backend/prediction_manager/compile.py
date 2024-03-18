@@ -57,4 +57,5 @@ def compile():
     print(f"ABI and bytecode files have been saved to {output_dir}/")
 
 
-compile()
+if __name__ == "__main__":
+    compile()
