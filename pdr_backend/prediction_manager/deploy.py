@@ -31,7 +31,8 @@ def deploy_prediction_manager_contract(web3_pp: Web3PP) -> str:
         web3_pp.tx_call_params()
     )
     tx_receipt = web3_config.w3.eth.wait_for_transaction_receipt(tx_hash)
-    if tx_receipt.status != 1:
+    if tx_receipt["status"] != 1:
         raise ValueError("PredictionManager contract deployment failed")
-
-    return tx_receipt.contractAddress
+    if "contractAddress" not in tx_receipt:
+        raise ValueError("PredictionManager contract deployment failed")
+    return str(tx_receipt["contractAddress"])

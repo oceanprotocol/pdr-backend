@@ -8,6 +8,7 @@ from pdr_backend.contract.prediction_manager import (
 )
 
 from pdr_backend.util.currency_types import Wei
+from pdr_backend.util.time_types import UnixTimeS
 
 
 def test_version(
@@ -143,7 +144,7 @@ def test_submit_prediction_and_payout(
     current_epoch = predictoor_contract.get_current_epoch_ts()
 
     # set prediction epoch
-    prediction_epoch = current_epoch + S_PER_EPOCH * 2
+    prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 2)
 
     # get the OCEAN balance of the contract before submitting
     bal_before = ocean_token.balanceOf(prediction_manager.contract_address)

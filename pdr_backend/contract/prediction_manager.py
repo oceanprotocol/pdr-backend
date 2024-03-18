@@ -2,6 +2,7 @@ from typing import List
 from enforce_typing import enforce_types
 from pdr_backend.contract.base_contract import BaseContract
 from pdr_backend.util.currency_types import Wei
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -67,7 +68,7 @@ class PredictionManager(BaseContract):
         stakes_up: List[Wei],
         stakes_down: List[Wei],
         feeds: list,
-        epoch_start: int,
+        epoch_start: UnixTimeS,
         wait_for_receipt=True,
     ):
         """
