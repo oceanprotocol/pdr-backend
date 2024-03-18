@@ -31,7 +31,7 @@ contract Predictoor {
         _;
     }
 
-    ///@notice approve unlimmited ocean tokens to the feeds
+    ///@notice approve unlimited ocean tokens to the feeds
     function approveOcean(address[] calldata feeds) public onlyMaster {
         IERC20 ocean = IERC20(oceanTokenAddr);
         uint256 n = feeds.length;
@@ -40,6 +40,7 @@ contract Predictoor {
         }
     }
 
+    ///@notice claims DF rewards from the DFRewards contract
     function claimDFRewards(
         address tokenAddress,
         address dfRewards
@@ -48,7 +49,7 @@ contract Predictoor {
         dfRewardsInstance.claimFor(address(this), tokenAddress);
     }
 
-    ///@notice send predictions (up or Down) to each of the feeds
+    ///@notice send predictions (up and down) to each side
     function predict(
         bool[] calldata predictions,
         uint256[] calldata stakes,
@@ -62,7 +63,7 @@ contract Predictoor {
         }
     }
 
-    ///@notice send predictiosn to one side, this is useful when an strtategy based on betting on both side is used but the same instance of predictoor can not submit to both sides of a feed
+    ///@notice send predictions to one side
     function predict(
         bool side,
         uint256[] calldata stakes,
@@ -88,7 +89,7 @@ contract Predictoor {
         }
     }
 
-    ///@notice allows to transfer any ERC20 that may be in this contract to another address
+    ///@notice allows to transfer any ERC20 that from the contract to given address
     function transferERC20(
         address token,
         address to,
@@ -98,7 +99,7 @@ contract Predictoor {
         tokenInstance.transfer(to, amount);
     }
 
-    ///@notice allows tos end any native token in this contract to another address
+    ///@notice allows to send native token in this contract to given address
     function transfer() external payable onlyMaster {
         (bool status, ) = address(msg.sender).call{
             value: address(this).balance
