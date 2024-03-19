@@ -34,13 +34,13 @@ def test_get_down_predictoor_address(
 
 def test_approve(
     prediction_manager: PredSubmitterManager,
-    predictoor_contract,
+    predictoor_contract1,
     predictoor_contract2,
     ocean_token,
 ):
     pmup = prediction_manager.predictoor_up_address()
     pmdown = prediction_manager.predictoor_down_address()
-    pc1 = predictoor_contract.contract_address
+    pc1 = predictoor_contract1.contract_address
     pc2 = predictoor_contract2.contract_address
     assert ocean_token.allowance(pmup, pc1) == 0
     assert ocean_token.allowance(pmup, pc2) == 0
@@ -133,7 +133,7 @@ def test_claim_dfrewards(
 def test_submit_prediction_and_payout(
     prediction_manager: PredSubmitterManager,
     web3_config,
-    predictoor_contract: PredictoorContract,
+    predictoor_contract1: PredictoorContract,
     predictoor_contract2,
     ocean_token,
 ):
@@ -143,7 +143,7 @@ def test_submit_prediction_and_payout(
     )
 
     # get the next prediction epoch
-    current_epoch = predictoor_contract.get_current_epoch_ts()
+    current_epoch = predictoor_contract1.get_current_epoch_ts()
 
     # set prediction epoch
     prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 2)
@@ -155,7 +155,7 @@ def test_submit_prediction_and_payout(
     ), "OCEAN balance of the contract should be 100 before submitting"
 
     feeds = [
-        predictoor_contract.contract_address,
+        predictoor_contract1.contract_address,
         predictoor_contract2.contract_address,
     ]
     # give allowance
@@ -185,7 +185,7 @@ def test_submit_prediction_and_payout(
     web3_config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 
     # submit the trueval: True for first contract, False for second
-    predictoor_contract.submit_trueval(True, prediction_epoch, False, True)
+    predictoor_contract1.submit_trueval(True, prediction_epoch, False, True)
     predictoor_contract2.submit_trueval(False, prediction_epoch, False, True)
 
     # time to claim payouts
@@ -207,11 +207,11 @@ def test_submit_prediction_and_payout(
     pmup = prediction_manager.predictoor_up_address()
     pmdown = prediction_manager.predictoor_down_address()
 
-    pred_down_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmdown)
+    pred_down_first_feed = predictoor_contract1.get_prediction(prediction_epoch, pmdown)
     pred_down_second_feed = predictoor_contract2.get_prediction(
         prediction_epoch, pmdown
     )
-    pred_up_first_feed = predictoor_contract.get_prediction(prediction_epoch, pmup)
+    pred_up_first_feed = predictoor_contract1.get_prediction(prediction_epoch, pmup)
     pred_up_second_feed = predictoor_contract2.get_prediction(prediction_epoch, pmup)
 
     assert pred_down_first_feed == (
