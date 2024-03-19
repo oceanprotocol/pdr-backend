@@ -6,17 +6,17 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class PredictionManager(BaseContract):
+class PredSubmitterManager(BaseContract):
     def __init__(self, web3_pp, address: str):
         """
         @description
-          Initialize the PredictionManager object with a web3 provider and contract address.
+          Initialize the PredSubmitterManager object with a web3 provider and contract address.
 
         @arguments
           web3_pp -- Web3 provider for interacting with the blockchain.
-          address -- str, the address of the PredictionManager contract.
+          address -- str, the address of the PredSubmitterManager contract.
         """
-        super().__init__(web3_pp, address, "PredictionManager")
+        super().__init__(web3_pp, address, "PredSubmitterManager")
 
     def predictoor_up_address(self) -> str:
         """
@@ -152,7 +152,7 @@ class PredictionManager(BaseContract):
     def version(self) -> str:
         """
         @description
-          Returns the version of the PredictionManager contract.
+          Returns the version of the PredSubmitterManager contract.
 
         @return
           version -- str, version of the contract.

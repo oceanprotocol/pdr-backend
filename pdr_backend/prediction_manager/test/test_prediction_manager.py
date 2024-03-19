@@ -4,7 +4,7 @@ from web3.types import RPCEndpoint
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.prediction_manager import (
-    PredictionManager,
+    PredSubmitterManager,
 )
 
 from pdr_backend.util.currency_types import Wei
@@ -12,28 +12,28 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 def test_version(
-    prediction_manager: PredictionManager,
+    prediction_manager: PredSubmitterManager,
 ):
     version = prediction_manager.version()
     assert version == "0.1.0", "Version should be 0.1.0"
 
 
 def test_get_up_predictoor_address(
-    prediction_manager: PredictionManager,
+    prediction_manager: PredSubmitterManager,
 ):
     address = prediction_manager.predictoor_up_address()
     assert address
 
 
 def test_get_down_predictoor_address(
-    prediction_manager: PredictionManager,
+    prediction_manager: PredSubmitterManager,
 ):
     address = prediction_manager.predictoor_down_address()
     assert address
 
 
 def test_approve(
-    prediction_manager: PredictionManager,
+    prediction_manager: PredSubmitterManager,
     predictoor_contract,
     predictoor_contract2,
     ocean_token,
@@ -61,7 +61,7 @@ def test_approve(
 
 
 def test_transfer_erc20(
-    prediction_manager: PredictionManager, ocean_token, web3_config
+    prediction_manager: PredSubmitterManager, ocean_token, web3_config
 ):
     ocean_token.transfer(
         prediction_manager.contract_address, Wei(100), web3_config.owner
@@ -76,7 +76,7 @@ def test_transfer_erc20(
     assert ocean_token.balanceOf(prediction_manager.contract_address) == 0
 
 
-def test_transfer(prediction_manager: PredictionManager, web3_config):
+def test_transfer(prediction_manager: PredSubmitterManager, web3_config):
     tx = web3_config.w3.eth.send_transaction(
         {
             "to": prediction_manager.contract_address,
@@ -94,7 +94,7 @@ def test_transfer(prediction_manager: PredictionManager, web3_config):
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
 
 
-def test_claim_dfrewards(prediction_manager: PredictionManager, web3_pp, ocean_token):
+def test_claim_dfrewards(prediction_manager: PredSubmitterManager, web3_pp, ocean_token):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
@@ -129,7 +129,7 @@ def test_claim_dfrewards(prediction_manager: PredictionManager, web3_pp, ocean_t
 
 
 def test_submit_prediction_and_payout(
-    prediction_manager: PredictionManager,
+    prediction_manager: PredSubmitterManager,
     web3_config,
     predictoor_contract: PredictoorContract,
     predictoor_contract2,

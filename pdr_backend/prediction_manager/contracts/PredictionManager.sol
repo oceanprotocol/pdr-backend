@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "./interfaces/IERC20.sol";
 import "./PredSubmitter.sol";
 
-contract PredictionManager {
+contract PredSubmitterManager {
     PredSubmitter public instanceUp;
     PredSubmitter public instanceDown;
     address public immutable oceanTokenAddr;
