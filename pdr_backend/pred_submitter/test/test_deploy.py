@@ -1,5 +1,5 @@
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
-from pdr_backend.contract.pred_submitter_manager import (
+from pdr_backend.contract.pred_submitter_mgr import (
     PredSubmitterMgr,
 )
 from pdr_backend.pred_submitter.deploy import (

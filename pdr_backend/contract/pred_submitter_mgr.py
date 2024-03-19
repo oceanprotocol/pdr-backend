@@ -91,7 +91,6 @@ class PredSubmitterMgr(BaseContract):
             res, tx = self.send_encrypted_tx(
                 "submit", [stakes_up_wei, stakes_down_wei, feeds, epoch]
             )
-            print("Encrypted transaction status code: %s", res)
         else:
             call_params = self.web3_pp.tx_call_params()
             tx = self.contract_instance.functions.submit(

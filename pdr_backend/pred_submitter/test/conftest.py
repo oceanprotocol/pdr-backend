@@ -2,7 +2,7 @@ import pytest
 from pdr_backend.pred_submitter.deploy import (
     deploy_pred_submitter_mgr_contract,
 )
-from pdr_backend.contract.pred_submitter_manager import (
+from pdr_backend.contract.pred_submitter_mgr import (
     PredSubmitterMgr,
 )
 
