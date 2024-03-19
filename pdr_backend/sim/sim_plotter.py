@@ -117,10 +117,10 @@ class SimPlotter:
         y00 = list(np.cumsum(self.st.pdr_profits_OCEAN))
         s = f"Predictoor profit vs time. Current: {y00[-1]:.2f} OCEAN"
 
-        df = pd.DataFrame(y00, columns=["predictoor profit (OCEAN)"])
+        y = "predictoor profit (OCEAN)"
+        df = pd.DataFrame(y00, columns=[y])
         df["time"] = range(len(y00))
 
-        y = "predictoor profit (OCEAN)"
         chart = (
             alt.Chart(df, title=s)
             .mark_line()
@@ -143,19 +143,31 @@ class SimPlotter:
 
     @enforce_types
     def _plot_trader_profit_vs_time(self):
-        ax = self.ax_trader_profit_vs_time
         y10 = list(np.cumsum(self.st.trader_profits_USD))
-        next_y10 = _slice(y10, self.N_done, self.N)
-        ax.plot(self.next_x, next_y10, c="b")
-        ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
-        _set_title(ax, f"Trader profit vs time. Current: ${y10[-1]:.2f}")
 
-        self.canvas["trader_profit_vs_time"].pyplot(self.figs["trader_profit_vs_time"])
-        if not self.plotted_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
-            ax.margins(0.005, 0.05)
+        s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
+        y = "trader profit (USD)"
+        df = pd.DataFrame(y10, columns=[y])
+        df["time"] = range(len(y10))
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(
+                x="time",
+                y=y,
+            )
+            .interactive()
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        self.canvas["trader_profit_vs_time"].altair_chart(
+            chart + ref_line, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_accuracy_vs_time(self):
