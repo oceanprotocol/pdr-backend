@@ -3,7 +3,6 @@ from typing import List
 
 from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.analytics.predictoor_stats import (
     get_feed_summary_stats,
     get_predictoor_summary_stats,
@@ -14,64 +13,36 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_daily_statistics,
 )
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.plutil import get_table_name, TableType
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 logger = logging.getLogger("get_predictions_info")
 
 
-class PredFilter:
-    def __init__(self, ppss):
-        gql_data_factory = GQLDataFactory(ppss)
-        gql_tables = gql_data_factory.get_gql_tables()
-
-        predictions_df = gql_tables["pdr_predictions"].get_records()
-        assert (
-            predictions_df is not None and len(predictions_df) > 0
-        ), "Lake has no predictions."
-
-        self.predictions_df = predictions_df
-
-    def filter_timestamp(self, start_timestr, end_timestr):
-        predictions_df = self.predictions_df
-
-        predictions_df = predictions_df.filter(
-            (predictions_df["timestamp"] >= UnixTimeMs.from_timestr(start_timestr))
-            & (predictions_df["timestamp"] <= UnixTimeMs.from_timestr(end_timestr))
-        )
-
-        self.predictions_df = predictions_df
-
-    def filter_feed_addrs(self, feed_addrs):
-        if len(feed_addrs) <= 0:
-            return
-        feed_addrs = [f.lower() for f in feed_addrs]
-
-        predictions_df = self.predictions_df
-        predictions_df = predictions_df.filter(
-            predictions_df["ID"]
-            .map_elements(lambda x: x.split("-")[0].lower())
-            .is_in(feed_addrs)
-        )
-        self.predictions_df = predictions_df
-
-    def filter_user_addrs(self, pdr_addrs):
-        if len(pdr_addrs) <= 0:
-            return
-
-        pdr_addrs = [f.lower() for f in pdr_addrs]
-
-        predictions_df = self.predictions_df
-        predictions_df = predictions_df.filter(predictions_df["user"].is_in(pdr_addrs))
-        self.predictions_df = predictions_df
+@enforce_types
+def _address_list_to_str(addresses: List[str]) -> str:
+    return "(" + ", ".join([f"'{f}'" for f in addresses]) + ")"
 
 
 @enforce_types
 def get_predictions_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, feed_addrs: List[str]
 ):
-    pred_filter = PredFilter(ppss)
-    pred_filter.filter_feed_addrs(feed_addrs)
-    pred_filter.filter_timestamp(start_timestr, end_timestr)
-    predictions_df = pred_filter.predictions_df
+    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+
+    # convert feed addresses to string for SQL query
+    feed_addrs_str = _address_list_to_str(feed_addrs)
+
+    query = f"""
+        SELECT *,
+        FROM {table_name}
+        WHERE
+            timestamp >= {UnixTimeMs.from_timestr(start_timestr)}
+            AND timestamp <= {UnixTimeMs.from_timestr(end_timestr)}
+            AND contract IN {feed_addrs_str}
+    """
+
+    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
 
@@ -83,10 +54,21 @@ def get_predictions_info_main(
 def get_predictoors_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, pdr_addrs: List[str]
 ):
-    pred_filter = PredFilter(ppss)
-    pred_filter.filter_user_addrs(pdr_addrs)
-    pred_filter.filter_timestamp(start_timestr, end_timestr)
-    predictions_df = pred_filter.predictions_df
+    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+
+    # convert feed addresses to string for SQL query
+    pdr_addrs_str = _address_list_to_str(pdr_addrs)
+
+    query = f"""
+        SELECT *,
+        FROM {table_name}
+        WHERE
+            timestamp >= {UnixTimeMs.from_timestr(start_timestr)}
+            AND timestamp <= {UnixTimeMs.from_timestr(end_timestr)}
+            AND user IN {pdr_addrs_str}
+    """
+
+    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
 
@@ -96,9 +78,17 @@ def get_predictoors_info_main(
 
 @enforce_types
 def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
-    pred_filter = PredFilter(ppss)
-    pred_filter.filter_timestamp(start_timestr, end_timestr)
-    predictions_df = pred_filter.predictions_df
+    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+
+    query = f"""
+        SELECT *,
+        FROM {table_name}
+        WHERE
+            timestamp >= {UnixTimeMs.from_timestr(start_timestr)}
+            AND timestamp <= {UnixTimeMs.from_timestr(end_timestr)}
+    """
+
+    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     assert len(predictions_df) > 0, "No records to summarize. Please adjust params."
 
