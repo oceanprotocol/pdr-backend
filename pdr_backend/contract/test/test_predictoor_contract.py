@@ -119,7 +119,6 @@ def test_submit_prediction_trueval_payout(
     predictoor_contract1,
     OCEAN: Token,
 ):
-    OCEAN = OCEAN
     w3 = predictoor_contract1.config.w3
     owner_addr = predictoor_contract1.config.owner
     OCEAN_before = OCEAN.balanceOf(owner_addr).to_eth()
