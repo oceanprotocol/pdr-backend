@@ -54,7 +54,9 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
+  final_img_filebase: final # for name log_dir/{final_img_filebase}_{NR}.png
   test_n: 5000 # number of epochs to simulate
+  tradetype: histmock # histmock | livemock | livereal
   exchange_only:
     timeout: 30000
     options:
