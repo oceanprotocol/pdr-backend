@@ -1,7 +1,9 @@
 from typing import List
 
+import altair as alt
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import streamlit
 from enforce_typing import enforce_types
 from numpy.random import random
@@ -112,20 +114,32 @@ class SimPlotter:
 
     @enforce_types
     def _plot_pdr_profit_vs_time(self):
-        ax = self.ax_pdr_profit_vs_time
         y00 = list(np.cumsum(self.st.pdr_profits_OCEAN))
-        next_y00 = _slice(y00, self.N_done, self.N)
-        ax.plot(self.next_x, next_y00, c="g")
-        ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
-        s = f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN"
-        _set_title(ax, s)
+        s = f"Predictoor profit vs time. Current: {y00[-1]:.2f} OCEAN"
 
-        self.canvas["pdr_profit_vs_time"].pyplot(self.figs["pdr_profit_vs_time"])
+        df = pd.DataFrame(y00, columns=["predictoor profit (OCEAN)"])
+        df["time"] = range(len(y00))
 
-        if not self.plotted_before:
-            ax.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
+        y = "predictoor profit (OCEAN)"
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(
+                x="time",
+                y=y,
+            )
+            .interactive()
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        self.canvas["pdr_profit_vs_time"].altair_chart(
+            chart + ref_line, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_trader_profit_vs_time(self):
