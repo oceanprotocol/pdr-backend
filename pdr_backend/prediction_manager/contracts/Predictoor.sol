@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
-import "./interfaces/ITemplate3.sol";
+import "./interfaces/IFeedContract.sol";
 import "./interfaces/IDFRewards.sol";
 
 contract Predictoor {
@@ -63,7 +63,7 @@ contract Predictoor {
     ) external onlyMaster {
         uint256 n = predictions.length;
         for (uint256 i = 0; i < n; i++) {
-            ITemplate3 feedInstance = ITemplate3(feeds[i]);
+            IFeedContract feedInstance = IFeedContract(feeds[i]);
             feedInstance.submitPredval(predictions[i], stakes[i], epoch_start);
         }
     }
@@ -77,7 +77,7 @@ contract Predictoor {
     ) external onlyMaster {
         uint256 n = stakes.length;
         for (uint256 i = 0; i < n; i++) {
-            ITemplate3 feedInstance = ITemplate3(feeds[i]);
+            IFeedContract feedInstance = IFeedContract(feeds[i]);
             feedInstance.submitPredval(side, stakes[i], epoch_start);
         }
     }
@@ -89,7 +89,7 @@ contract Predictoor {
     ) external onlyMaster {
         uint256 n = feeds.length;
         for (uint256 i = 0; i < n; i++) {
-            ITemplate3 feedInstance = ITemplate3(feeds[i]);
+            IFeedContract feedInstance = IFeedContract(feeds[i]);
             feedInstance.payoutMultiple(epoch_start, address(this));
         }
     }
