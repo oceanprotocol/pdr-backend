@@ -94,7 +94,9 @@ def test_transfer(prediction_manager: PredSubmitterManager, web3_config):
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
 
 
-def test_claim_dfrewards(prediction_manager: PredSubmitterManager, web3_pp, ocean_token):
+def test_claim_dfrewards(
+    prediction_manager: PredSubmitterManager, web3_pp, ocean_token
+):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
