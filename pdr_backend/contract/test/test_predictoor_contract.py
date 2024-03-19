@@ -117,9 +117,9 @@ def test_get_trueValSubmitTimeout(predictoor_contract1):
 @enforce_types
 def test_submit_prediction_trueval_payout(
     predictoor_contract1,
-    ocean_token: Token,
+    OCEAN: Token,
 ):
-    OCEAN = ocean_token
+    OCEAN = OCEAN
     w3 = predictoor_contract1.config.w3
     owner_addr = predictoor_contract1.config.owner
     OCEAN_before = OCEAN.balanceOf(owner_addr).to_eth()

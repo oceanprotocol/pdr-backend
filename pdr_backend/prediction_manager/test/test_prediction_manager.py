@@ -36,16 +36,16 @@ def test_approve(
     prediction_manager: PredSubmitterManager,
     predictoor_contract1,
     predictoor_contract2,
-    ocean_token,
+    OCEAN,
 ):
     pmup = prediction_manager.predictoor_up_address()
     pmdown = prediction_manager.predictoor_down_address()
     pc1 = predictoor_contract1.contract_address
     pc2 = predictoor_contract2.contract_address
-    assert ocean_token.allowance(pmup, pc1) == 0
-    assert ocean_token.allowance(pmup, pc2) == 0
-    assert ocean_token.allowance(pmdown, pc2) == 0
-    assert ocean_token.allowance(pmdown, pc2) == 0
+    assert OCEAN.allowance(pmup, pc1) == 0
+    assert OCEAN.allowance(pmup, pc2) == 0
+    assert OCEAN.allowance(pmdown, pc2) == 0
+    assert OCEAN.allowance(pmdown, pc2) == 0
 
     contract_addrs = [
         pc1,
@@ -54,26 +54,26 @@ def test_approve(
     tx_receipt = prediction_manager.approve_ocean(contract_addrs, True)
     assert tx_receipt.status == 1, "Transaction failed"
 
-    assert ocean_token.allowance(pmup, pc1).amt_wei == 2**256 - 1
-    assert ocean_token.allowance(pmup, pc2).amt_wei == 2**256 - 1
-    assert ocean_token.allowance(pmdown, pc1).amt_wei == 2**256 - 1
-    assert ocean_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
+    assert OCEAN.allowance(pmup, pc1).amt_wei == 2**256 - 1
+    assert OCEAN.allowance(pmup, pc2).amt_wei == 2**256 - 1
+    assert OCEAN.allowance(pmdown, pc1).amt_wei == 2**256 - 1
+    assert OCEAN.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
 def test_transfer_erc20(
-    prediction_manager: PredSubmitterManager, ocean_token, web3_config
+    prediction_manager: PredSubmitterManager, OCEAN, web3_config
 ):
-    ocean_token.transfer(
+    OCEAN.transfer(
         prediction_manager.contract_address, Wei(100), web3_config.owner
     )
-    assert ocean_token.balanceOf(prediction_manager.contract_address) == Wei(100)
-    before = ocean_token.balanceOf(web3_config.owner)
+    assert OCEAN.balanceOf(prediction_manager.contract_address) == Wei(100)
+    before = OCEAN.balanceOf(web3_config.owner)
     prediction_manager.transfer_erc20(
-        ocean_token.contract_address, web3_config.owner, Wei(100)
+        OCEAN.contract_address, web3_config.owner, Wei(100)
     )
-    after = ocean_token.balanceOf(web3_config.owner)
+    after = OCEAN.balanceOf(web3_config.owner)
     assert Wei(after.amt_wei - before.amt_wei) == Wei(100)
-    assert ocean_token.balanceOf(prediction_manager.contract_address) == 0
+    assert OCEAN.balanceOf(prediction_manager.contract_address) == 0
 
 
 def test_transfer(prediction_manager: PredSubmitterManager, web3_config):
@@ -95,7 +95,7 @@ def test_transfer(prediction_manager: PredSubmitterManager, web3_config):
 
 
 def test_claim_dfrewards(
-    prediction_manager: PredSubmitterManager, web3_pp, ocean_token
+    prediction_manager: PredSubmitterManager, web3_pp, OCEAN
 ):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
@@ -104,26 +104,26 @@ def test_claim_dfrewards(
     pmdown = prediction_manager.predictoor_down_address()
 
     # approve rewards
-    ocean_token.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
+    OCEAN.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
 
     # allocate rewards
     tx = dfrewards.contract_instance.functions.allocate(
         [pmup, pmdown],
         [100, 100],
-        ocean_token.contract_address,
+        OCEAN.contract_address,
     ).transact(web3_pp.tx_call_params())
     web3_pp.web3_config.w3.eth.wait_for_transaction_receipt(tx)
 
     # record before balances
-    before_up = ocean_token.balanceOf(pmup)
-    before_down = ocean_token.balanceOf(pmdown)
+    before_up = OCEAN.balanceOf(pmup)
+    before_down = OCEAN.balanceOf(pmdown)
 
     # claim rewards
-    prediction_manager.claim_dfrewards(ocean_token.contract_address, dfrewards_addr)
+    prediction_manager.claim_dfrewards(OCEAN.contract_address, dfrewards_addr)
 
     # record after balances
-    after_up = ocean_token.balanceOf(pmup)
-    after_down = ocean_token.balanceOf(pmdown)
+    after_up = OCEAN.balanceOf(pmup)
+    after_down = OCEAN.balanceOf(pmdown)
 
     # assert
     assert after_up - before_up == Wei(100)
@@ -135,10 +135,10 @@ def test_submit_prediction_and_payout(
     web3_config,
     predictoor_contract1: PredictoorContract,
     predictoor_contract2,
-    ocean_token,
+    OCEAN,
 ):
     # the user transfers 100 OCEAN tokens to the prediction manager
-    ocean_token.transfer(
+    OCEAN.transfer(
         prediction_manager.contract_address, Wei(100), web3_config.owner
     )
 
@@ -149,7 +149,7 @@ def test_submit_prediction_and_payout(
     prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 2)
 
     # get the OCEAN balance of the contract before submitting
-    bal_before = ocean_token.balanceOf(prediction_manager.contract_address)
+    bal_before = OCEAN.balanceOf(prediction_manager.contract_address)
     assert bal_before == Wei(
         100
     ), "OCEAN balance of the contract should be 100 before submitting"
@@ -175,7 +175,7 @@ def test_submit_prediction_and_payout(
     assert tx_receipt.status == 1, "Transaction failed"
 
     # get the OCEAN balance of the contract after submitting
-    bal_after = ocean_token.balanceOf(prediction_manager.contract_address)
+    bal_after = OCEAN.balanceOf(prediction_manager.contract_address)
     assert bal_after == 0, "OCEAN balance of the contract should be 0 after submitting"
 
     # fast forward time to get payout
@@ -191,13 +191,13 @@ def test_submit_prediction_and_payout(
     # time to claim payouts
 
     # get the OCEAN balance of the contract before claiming
-    bal_before = ocean_token.balanceOf(prediction_manager.contract_address)
+    bal_before = OCEAN.balanceOf(prediction_manager.contract_address)
 
     # claim
     prediction_manager.get_payout([prediction_epoch], feeds, wait_for_receipt=True)
 
     # get the OCEAN balance of the contract after claiming
-    bal_after = ocean_token.balanceOf(prediction_manager.contract_address)
+    bal_after = OCEAN.balanceOf(prediction_manager.contract_address)
 
     assert bal_after == Wei(
         100

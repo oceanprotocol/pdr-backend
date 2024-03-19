@@ -53,7 +53,7 @@ def _ppss():
 
 
 @pytest.fixture(scope="session")
-def ocean_token() -> Token:
+def OCEAN() -> Token:
     token_address = _web3_pp().get_address("Ocean")
     return Token(_web3_pp(), token_address)
 
