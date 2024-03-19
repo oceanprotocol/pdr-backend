@@ -88,7 +88,7 @@ class PredSubmitterMgr(BaseContract):
         stakes_up_wei = [s.amt_wei for s in stakes_up]
         stakes_down_wei = [s.amt_wei for s in stakes_down]
         if self.config.is_sapphire:
-            res, tx = self.send_encrypted_tx(
+            _, tx = self.send_encrypted_tx(
                 "submit", [stakes_up_wei, stakes_down_wei, feeds, epoch]
             )
         else:
