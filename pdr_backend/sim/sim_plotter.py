@@ -171,26 +171,43 @@ class SimPlotter:
 
     @enforce_types
     def _plot_accuracy_vs_time(self):
-        ax = self.ax_accuracy_vs_time
         clm = self.st.clm
-        next_acc_ests = _slice(clm.acc_ests, self.N_done, self.N, mult=100.0)
-        next_acc_ls = _slice(clm.acc_ls, self.N_done, self.N, mult=100.0)
-        next_acc_us = _slice(clm.acc_us, self.N_done, self.N, mult=100.0)
-
-        ax.plot(self.next_x, next_acc_ests, "green")
-        ax.fill_between(self.next_x, next_acc_ls, next_acc_us, color="0.9")
-        ax.plot(self.next_hx, [0.5 * 100.0, 0.5 * 100.0], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=0.4 * 100.0, top=0.6 * 100.0)
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
-        _set_title(ax, s)
 
-        self.canvas["accuracy_vs_time"].pyplot(self.figs["accuracy_vs_time"])
-        if not self.plotted_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("% correct [lower, upper bound]", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
-            ax.margins(0.01, 0.01)
+        y = "% correct (lower, upper bound)"
+        acc_ests = [100 * a for a in clm.acc_ests]
+        df = pd.DataFrame(acc_ests, columns=[y])
+        df["acc_ls"] = [100 * a for a in clm.acc_ls]
+        df["acc_us"] = [100 * a for a in clm.acc_us]
+        df["time"] = range(len(clm.acc_ests))
+
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(x="time", y=y, color=alt.value("darkblue"))
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [50]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        area_chart = (
+            alt.Chart(df)
+            .mark_area()
+            .encode(
+                x="time",
+                y=alt.Y("acc_ls", title=y),
+                y2="acc_us",
+                color=alt.value("lightblue"),
+            )
+        )
+
+        self.canvas["accuracy_vs_time"].altair_chart(
+            area_chart + ref_line + chart, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_f1_precision_recall_vs_time(self):
