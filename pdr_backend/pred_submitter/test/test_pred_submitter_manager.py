@@ -4,7 +4,7 @@ from web3.types import RPCEndpoint
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.pred_submitter_manager import (
-    PredSubmitterManager,
+    PredSubmitterMgr,
 )
 
 from pdr_backend.util.currency_types import Wei
@@ -12,28 +12,28 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 def test_version(
-    pred_submitter_mgr: PredSubmitterManager,
+    pred_submitter_mgr: PredSubmitterMgr,
 ):
     version = pred_submitter_mgr.version()
     assert version == "0.1.0", "Version should be 0.1.0"
 
 
 def test_get_up_predictoor_address(
-    pred_submitter_mgr: PredSubmitterManager,
+    pred_submitter_mgr: PredSubmitterMgr,
 ):
     address = pred_submitter_mgr.predictoor_up_address()
     assert address
 
 
 def test_get_down_predictoor_address(
-    pred_submitter_mgr: PredSubmitterManager,
+    pred_submitter_mgr: PredSubmitterMgr,
 ):
     address = pred_submitter_mgr.predictoor_down_address()
     assert address
 
 
 def test_approve(
-    pred_submitter_mgr: PredSubmitterManager,
+    pred_submitter_mgr: PredSubmitterMgr,
     predictoor_contract1,
     predictoor_contract2,
     OCEAN,
@@ -60,7 +60,7 @@ def test_approve(
     assert OCEAN.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
-def test_transfer_erc20(pred_submitter_mgr: PredSubmitterManager, OCEAN, web3_config):
+def test_transfer_erc20(pred_submitter_mgr: PredSubmitterMgr, OCEAN, web3_config):
     OCEAN.transfer(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
     assert OCEAN.balanceOf(pred_submitter_mgr.contract_address) == Wei(100)
     before = OCEAN.balanceOf(web3_config.owner)
@@ -72,7 +72,7 @@ def test_transfer_erc20(pred_submitter_mgr: PredSubmitterManager, OCEAN, web3_co
     assert OCEAN.balanceOf(pred_submitter_mgr.contract_address) == 0
 
 
-def test_transfer(pred_submitter_mgr: PredSubmitterManager, web3_config):
+def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
     tx = web3_config.w3.eth.send_transaction(
         {
             "to": pred_submitter_mgr.contract_address,
@@ -90,7 +90,7 @@ def test_transfer(pred_submitter_mgr: PredSubmitterManager, web3_config):
     assert web3_config.w3.eth.get_balance(pred_submitter_mgr.contract_address) == 0
 
 
-def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterManager, web3_pp, OCEAN):
+def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, OCEAN):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
@@ -125,7 +125,7 @@ def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterManager, web3_pp, OCEA
 
 
 def test_submit_prediction_and_payout(
-    pred_submitter_mgr: PredSubmitterManager,
+    pred_submitter_mgr: PredSubmitterMgr,
     web3_config,
     predictoor_contract1: PredictoorContract,
     predictoor_contract2,
