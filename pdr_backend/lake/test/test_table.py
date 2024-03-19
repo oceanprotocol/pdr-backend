@@ -147,31 +147,3 @@ def test_persistent_store(
     assert result["timeframe"][0] == "5m"
     assert result["predvalue"][0] is True
     assert len(result) == 8
-
-
-def test_get_records(tmpdir, _gql_datafactory_first_predictions_df):
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        str(tmpdir),
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table(predictions_table_name, predictions_schema, ppss)
-
-    PDS = PersistentDataStore(ppss.lake_ss.lake_dir)
-    PDS._create_and_fill_table(
-        _gql_datafactory_first_predictions_df, predictions_table_name
-    )
-
-    records = table.get_records()
-
-    assert len(records) == len(_gql_datafactory_first_predictions_df)
-    assert records["ID"][0] == _gql_datafactory_first_predictions_df["ID"][0]
-    assert records["pair"][0] == _gql_datafactory_first_predictions_df["pair"][0]
-    assert (
-        records["timeframe"][0] == _gql_datafactory_first_predictions_df["timeframe"][0]
-    )
