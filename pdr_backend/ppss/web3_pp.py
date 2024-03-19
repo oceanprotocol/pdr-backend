@@ -251,7 +251,7 @@ class Web3PP(StrMixin):
         """
         if contract_name == "PredSubmitterManager":
             with open(
-                "pdr_backend/prediction_manager/compiled_contracts/PredSubmitterManager_abi.json"
+                "pdr_backend/pred_submitter/compiled_contracts/PredSubmitterManager_abi.json"
             ) as f:
                 return json.load(f)
         path = get_contract_filename(contract_name, self.address_file)

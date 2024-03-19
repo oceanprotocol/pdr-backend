@@ -21,7 +21,7 @@ def list_files(directory):
 
 def compile_contracts():
     install_solc(version="0.8.13")
-    files = list_files("./pdr_backend/prediction_manager/contracts/")
+    files = list_files("./pdr_backend/pred_submitter/contracts/")
     print("Compiling:", files)
     compiled = compile_files(
         files,
