@@ -8,6 +8,6 @@ from pdr_backend.contract.pred_submitter_manager import (
 
 
 @pytest.fixture()
-def prediction_manager(web3_pp):
+def pred_submitter_mgr(web3_pp):
     contract_address = deploy_pred_submitter_mgr_contract(web3_pp)
     return PredSubmitterManager(web3_pp, contract_address)
