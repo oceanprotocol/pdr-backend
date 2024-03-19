@@ -34,7 +34,7 @@ from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.deployer.deployer import main as deployer_main
-from pdr_backend.prediction_manager.deploy import deploy_prediction_manager_contract
+from pdr_backend.pred_submitter.deploy import deploy_prediction_manager_contract
 
 logger = logging.getLogger("cli")
 
