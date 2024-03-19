@@ -53,13 +53,13 @@ def _ppss():
 
 
 @pytest.fixture(scope="session")
-def ocean_token() -> Token:
+def OCEAN() -> Token:
     token_address = _web3_pp().get_address("Ocean")
     return Token(_web3_pp(), token_address)
 
 
 @pytest.fixture(scope="module")  # "module" = invoke once per test module
-def predictoor_contract():
+def predictoor_contract1():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(

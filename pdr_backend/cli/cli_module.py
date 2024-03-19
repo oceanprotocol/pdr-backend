@@ -34,6 +34,7 @@ from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.deployer.deployer import main as deployer_main
+from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 
 logger = logging.getLogger("cli")
 
@@ -333,3 +334,16 @@ def do_fund_accounts(args, nested_args=None):
     )
     to_accounts = args.ACCOUNTS
     fund_accounts(Eth(args.TOKEN_AMOUNT), to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
+
+
+@enforce_types
+def do_deploy_pred_submitter_mgr(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+    contract_address = deploy_pred_submitter_mgr_contract(ppss.web3_pp)
+    logger.info(
+        "Prediction Submitter Manager Contract deployed at %s", contract_address
+    )
