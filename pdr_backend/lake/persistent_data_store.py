@@ -56,6 +56,18 @@ class PersistentDataStore(BaseDataStore):
         return [table[0] for table in tables]
 
     @enforce_types
+    def get_view_names(self):
+        """
+        Get the names of all views from duckdb main schema.
+        @returns:
+            list - The views inside duckdb main schema.
+        """
+
+        views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
+
+        return [views]
+
+    @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
         """
         Insert data to an persistent dataset.
@@ -106,12 +118,23 @@ class PersistentDataStore(BaseDataStore):
         Drop the persistent table.
         @arguments:
             table_name - A unique name for the table.
-            ds_type - The type of the dataset to drop. Either "table" or "view".
         @example:
-            drop_table("people")
+            drop_table("pdr_predictions")
         """
         # Drop the table if it exists
         self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+
+    @enforce_types
+    def drop_view(self, view_name: str):
+        """
+        Drop the view.
+        @arguments:
+            view_name - A unique name for the view.
+        @example:
+            drop_view("_etl_pdr_predictions")
+        """
+        # Drop the table if it exists
+        self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
     def move_table_data(self, temp_table_name: str, permanent_table_name: str):
@@ -139,8 +162,6 @@ class PersistentDataStore(BaseDataStore):
                 self.duckdb_conn.execute(
                     f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table_name}"
                 )
-
-            self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {temp_table_name}")
         else:
             raise Exception(f"Table {temp_table_name} does not exist")
 

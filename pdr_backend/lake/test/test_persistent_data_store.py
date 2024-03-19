@@ -5,7 +5,7 @@ import duckdb
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.plutil import get_table_name
+from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 # Initialize the PersistentDataStore instance for testing
@@ -18,9 +18,14 @@ def _get_persistent_data_store(tmpdir):
     return [PersistentDataStore(str(tmpdir)), example_df, table_name]
 
 
-def _check_view_exists(persistent_data_store, table_name):
+def _table_exists(persistent_data_store, table_name):
     table_names = persistent_data_store.get_table_names()
     return [table_name in table_names, table_name]
+
+
+def _view_exists(persistent_data_store, view_name):
+    view_names = persistent_data_store.get_view_names()
+    return [view_name in view_names, view_name]
 
 
 def test_create_and_fill_table(tmpdir):
@@ -28,8 +33,8 @@ def test_create_and_fill_table(tmpdir):
 
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
-    # Check if the view is registered
-    assert _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    assert _table_exists(persistent_data_store, table_name)
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -38,8 +43,8 @@ def test_insert_to_exist_table(tmpdir):
 
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
-    # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Insert new data to the table
@@ -48,13 +53,13 @@ def test_insert_to_exist_table(tmpdir):
     )
     persistent_data_store.insert_to_table(example_df, table_name)
 
-    # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
-        f"SELECT * FROM {view_name}"
+        f"SELECT * FROM {table_name}"
     ).fetchall()
     assert len(result) == 6
     print(result)
@@ -72,13 +77,13 @@ def test_insert_to_new_table(tmpdir):
 
     persistent_data_store.insert_to_table(example_df, table_name)
 
-    # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
-        f"SELECT * FROM {view_name}"
+        f"SELECT * FROM {table_name}"
     ).fetchall()
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
@@ -90,12 +95,12 @@ def test_insert_to_new_table(tmpdir):
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
-def test_query_data(tmpdir):
+def test_query(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
     persistent_data_store.insert_to_table(example_df, table_name)
 
-    # Check if the view is registered
-    check_result, _ = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, _ = _table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Execute the provided SQL query
@@ -111,16 +116,16 @@ def test_drop_table(tmpdir):
 
     persistent_data_store.insert_to_table(example_df, table_name)
 
-    # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Drop the table
     persistent_data_store.drop_table(table_name)
 
-    # Check if the view is dropped
+    # Check if the table is dropped
     table_names = persistent_data_store.get_table_names()
-    assert view_name not in table_names
+    assert table_name not in table_names
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -132,14 +137,14 @@ def test_fill_from_csv_destination(tmpdir):
 
     persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
 
-    # Check if the view is registered
-    check_result, view_name = _check_view_exists(persistent_data_store, table_name)
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
 
     assert check_result
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
-        f"SELECT * FROM {view_name}"
+        f"SELECT * FROM {table_name}"
     ).fetchall()
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
@@ -233,21 +238,32 @@ def test__duckdb_connection(tmpdir):
 
 def test_move_table_data(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
-    persistent_data_store.insert_to_table(example_df, get_table_name(table_name, True))
+    persistent_data_store.insert_to_table(
+        example_df, get_table_name(table_name, TableType.TEMP)
+    )
 
-    # Check if the view is registered
-    check_result = _check_view_exists(
-        persistent_data_store, get_table_name(table_name, True)
+    # Check if the table is registered
+    check_result = _table_exists(
+        persistent_data_store, get_table_name(table_name, TableType.TEMP)
     )
 
     assert check_result
 
     # Move the table
-    persistent_data_store.move_table_data(get_table_name(table_name, True), table_name)
+    persistent_data_store.move_table_data(
+        get_table_name(table_name, TableType.TEMP), table_name
+    )
 
-    # Check if the view is dropped
+    # Assert table hasn't dropped
     table_names = persistent_data_store.get_table_names()
-    assert get_table_name(table_name, True) not in table_names
+    assert get_table_name(table_name, TableType.TEMP) in table_names
+
+    # Drop interim ETL table
+    persistent_data_store.drop_table(get_table_name(table_name, TableType.TEMP))
+
+    # Assert temp table is dropped
+    table_names = persistent_data_store.get_table_names()
+    assert get_table_name(table_name, TableType.TEMP) not in table_names
 
     # Check if the new table is created
     assert table_name in table_names
@@ -259,3 +275,50 @@ def test_move_table_data(tmpdir):
 
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
+
+
+def test_etl_view(tmpdir):
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+    persistent_data_store.insert_to_table(example_df, get_table_name(table_name))
+
+    other_df = pl.DataFrame(
+        {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
+    )
+    persistent_data_store.insert_to_table(
+        other_df, get_table_name(table_name, TableType.TEMP)
+    )
+
+    # Assemble view query and create the view
+    view_name = get_table_name(table_name, TableType.ETL)
+    view_query = """
+    CREATE VIEW {} AS
+    ( 
+        SELECT * FROM {}
+        UNION ALL
+        SELECT * FROM {}
+    )""".format(
+        get_table_name(table_name, TableType.ETL),
+        get_table_name(table_name),
+        get_table_name(table_name, TableType.TEMP),
+    )
+    persistent_data_store.query_data(view_query)
+
+    # Assert number of views is equal to 1
+    view_names = persistent_data_store.get_view_names()
+    assert len(view_names) == 1
+
+    # Assert view is registered
+    check_result = _view_exists(persistent_data_store, view_name)
+    assert check_result
+
+    # Assert view returns the correct, min(timestamp)
+    result = persistent_data_store.duckdb_conn.execute(
+        f"SELECT min(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-01-01"
+
+    # Assert view returns the correct, max(timestamp)
+    result = persistent_data_store.duckdb_conn.execute(
+        f"SELECT max(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-06-01"

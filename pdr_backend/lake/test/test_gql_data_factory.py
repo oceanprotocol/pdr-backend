@@ -7,6 +7,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 def test_gql_data_factory():
@@ -97,8 +98,9 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
+    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
     last_record = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
-        "SELECT * FROM _build_pdr_predictions ORDER BY timestamp DESC LIMIT 1"
+        "SELECT * FROM {} ORDER BY timestamp DESC LIMIT 1".format(temp_table_name)
     )
 
     assert last_record is not None
@@ -136,8 +138,9 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
 
     gql_data_factory._update()
 
+    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
     all_reacords = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
-        "SELECT * FROM _build_pdr_predictions"
+        "SELECT * FROM {}".format(temp_table_name)
     )
 
     assert all_reacords is not None

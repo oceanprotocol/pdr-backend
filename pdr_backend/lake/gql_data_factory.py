@@ -31,7 +31,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.plutil import _object_list_to_df, get_table_name
+from pdr_backend.lake.plutil import _object_list_to_df, get_table_name, TableType
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.csv_data_store import CSVDataStore
@@ -182,7 +182,7 @@ class GQLDataFactory:
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
                 assert df.schema == table.df_schema
-                table.append_to_storage(buffer_df, build_mode=True)
+                table.append_to_storage(buffer_df, TableType.TEMP)
                 print(f"Saved {len(buffer_df)} records to file while fetching")
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
@@ -194,7 +194,7 @@ class GQLDataFactory:
             pagination_offset += pagination_limit
 
         if len(buffer_df) > 0:
-            table.append_to_storage(buffer_df, build_mode=True)
+            table.append_to_storage(buffer_df, TableType.TEMP)
             print(f"Saved {len(buffer_df)} records to file while fetching")
 
     @enforce_types

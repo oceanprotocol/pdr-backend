@@ -15,7 +15,7 @@ from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
-from pdr_backend.lake.plutil import get_table_name
+from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -55,33 +55,35 @@ class ETL:
             bronze_pdr_predictions_table_name,
         ]
 
-        self.build_table_names = [*self.bronze_table_names, *self.raw_table_names]
+        self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
 
-    def _drop_build_sql_tables(self):
+    def _drop_temp_sql_tables(self):
         """
         @description
-            Check if the SQL tables are built
+            Check if the etl temp tables are built
             If not, build them
             If exists, drop them and rebuild
         """
         # drop the tables if it exists
-
         pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
-        for table_name in self.build_table_names:
-            pds.drop_table(get_table_name(table_name, build_mode=True))
+        for table_name in self.temp_table_names:
+            pds.drop_table(get_table_name(table_name, TableType.TEMP))
 
-    def _move_build_tables_to_permanent(self):
+    def _move_from_temp_tables_to_live(self):
         """
         @description
-            Move the build tables to permanent tables
+            Move the records from our ETL temporary build tables to live, in-production tables
         """
 
         pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
-        for table_name in self.build_table_names:
+        for table_name in self.temp_table_names:
             pds.move_table_data(
-                get_table_name(table_name, build_mode=True),
+                get_table_name(table_name, TableType.TEMP),
                 table_name,
             )
+
+            pds.drop_table(get_table_name(table_name, TableType.TEMP))
+            pds.drop_view(get_table_name(table_name, TableType.ETL))
 
     def do_etl(self):
         """
@@ -94,7 +96,7 @@ class ETL:
 
         try:
             # Drop any build tables if they already exist
-            self._drop_build_sql_tables()
+            self._drop_temp_sql_tables()
             print("do_etl - Drop build tables.")
 
             # Sync data
@@ -106,7 +108,7 @@ class ETL:
             end_ts = time.time_ns() / 1e9
             print(f"do_etl - Completed bronze_step in {end_ts - st_ts} sec.")
 
-            self._move_build_tables_to_permanent()
+            self._move_from_temp_tables_to_live()
             print("do_etl - Moved build tables to permanent tables. ETL Complete.")
         except Exception as e:
             print(f"Error when executing ETL: {e}")
@@ -130,7 +132,7 @@ class ETL:
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
-        self, table_names: List, build_mode: bool = False
+        self, table_names: List, table_type: TableType = TableType.NORMAL
     ) -> Dict:
         """
         @description
@@ -147,13 +149,12 @@ class ETL:
         max_timestamp_query = "SELECT MAX(timestamp) as max_timestamp FROM {}"
         values = {}
         for table_name in table_names:
-            calc_table_name = get_table_name(table_name, build_mode)
+            calc_table_name = get_table_name(table_name, table_type)
             result = pds.query_data(max_timestamp_query.format(calc_table_name))
             values[calc_table_name] = (
                 result["max_timestamp"][0] if result is not None else None
             )
 
-        # print(f"1111_get_max_timestamp_values_from - {values}")
         return values
 
     def _calc_bronze_start_end_ts(self):
@@ -175,7 +176,7 @@ class ETL:
         )
 
         to_values = self._get_max_timestamp_values_from(
-            self.raw_table_names, build_mode=True
+            self.raw_table_names, TableType.TEMP
         ).values()
         to_timestamp = (
             min(to_values)
@@ -202,5 +203,5 @@ class ETL:
         print(f"update_bronze_pdr_predictions - data: {data}")
         TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(
             data,
-            build_mode=True,
+            table_type=TableType.TEMP,
         )
