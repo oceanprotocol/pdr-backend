@@ -162,7 +162,7 @@ def mock_ppss(
     ppss.lake_ss = LakeSS(
         {
             "feeds": feeds,
-            "parquet_dir": os.path.join(tmpdir, "parquet_data"),
+            "lake_dir": os.path.join(tmpdir, "lake_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
         }
@@ -224,10 +224,10 @@ def fast_test_yaml_str(tmpdir=None):
     s = _CACHED_YAML_FILE_S
 
     if tmpdir is not None:
-        assert "parquet_dir: parquet_data" in s
+        assert "lake_dir: lake_data" in s
         s = s.replace(
-            "parquet_dir: parquet_data",
-            f"parquet_dir: {os.path.join(tmpdir, 'parquet_data')}",
+            "lake_dir: lake_data",
+            f"lake_dir: {os.path.join(tmpdir, 'lake_data')}",
         )
 
         assert "log_dir: logs" in s

@@ -123,7 +123,7 @@ def do_analytics(args, nested_args=None):
         4. Dashboards read from lake
 
         Please use nested_args to control lake_ss
-        ie: st_timestr, fin_timestr, parquet_dir
+        ie: st_timestr, fin_timestr, lake_dir
     """
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
@@ -226,7 +226,7 @@ def do_get_traction_info(args, nested_args=None):
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    ppss.lake_ss.d["parquet_dir"] = args.PQDIR
+    ppss.lake_ss.d["lake_dir"] = args.PQDIR
     get_traction_info_main(ppss, args.ST, args.END)
 
 

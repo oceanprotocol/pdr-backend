@@ -19,7 +19,7 @@ class Table:
         self.table_name = table_name
         self.df_schema = df_schema
 
-        self.base_path = self.ppss.lake_ss.parquet_dir
+        self.base_path = self.ppss.lake_ss.lake_dir
 
     @enforce_types
     def append_to_storage(

@@ -246,5 +246,5 @@ class OhlcvDataFactory:
         assert "/" in str(pair_str) or "-" in pair_str, pair_str
         pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
         basename = f"{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
-        filename = os.path.join(self.ss.parquet_dir, basename)
+        filename = os.path.join(self.ss.lake_dir, basename)
         return filename

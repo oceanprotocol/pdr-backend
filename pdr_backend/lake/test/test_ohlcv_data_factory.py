@@ -159,10 +159,10 @@ def test_get_mergedohlcv_df_happypath(tmpdir):
 
 @enforce_types
 def _test_get_mergedohlcv_df_happypath_onetry(tmpdir):
-    parquet_dir = str(tmpdir)
+    lake_dir = str(tmpdir)
 
     ss = _lake_ss(
-        parquet_dir,
+        lake_dir,
         ["binanceus BTC-USDT,ETH/USDT h 5m", "kraken BTC/USDT h 5m"],
         st_timestr="2023-06-18",
         fin_timestr="2023-06-19",

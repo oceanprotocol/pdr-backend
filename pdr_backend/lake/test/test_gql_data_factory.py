@@ -99,7 +99,7 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     gql_data_factory._update()
 
     temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
-    last_record = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
+    last_record = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
         "SELECT * FROM {} ORDER BY timestamp DESC LIMIT 1".format(temp_table_name)
     )
 
@@ -139,7 +139,7 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
     gql_data_factory._update()
 
     temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
-    all_reacords = PersistentDataStore(ppss.lake_ss.parquet_dir).query_data(
+    all_reacords = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
         "SELECT * FROM {}".format(temp_table_name)
     )
 
@@ -214,7 +214,7 @@ def test_do_subgraph_fetch(
         fin_timestr=fin_timestr,
     )
 
-    _clean_up_test_folder(ppss.lake_ss.parquet_dir)
+    _clean_up_test_folder(ppss.lake_ss.lake_dir)
 
     gql_data_factory = GQLDataFactory(ppss)
 

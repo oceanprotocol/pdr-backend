@@ -66,7 +66,7 @@ class _END:
 
 
 class _PQDIR:
-    PQDIR = "my_parquet_data/"
+    PQDIR = "my_lake_data/"
 
 
 class _FEEDS:

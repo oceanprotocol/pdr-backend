@@ -57,7 +57,7 @@ def test_get_traction_statistics(
     assert "daily_unique_predictoors_count" in stats_df.columns
     assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 4]
 
-    pq_dir = "parquet_data/"
+    pq_dir = "lake_data/"
     plot_traction_daily_statistics(stats_df, pq_dir)
     plot_traction_cum_sum_statistics(stats_df, pq_dir)
 
@@ -124,7 +124,7 @@ def test_plot_slot_statistics(
         1.0,
     ]
 
-    pq_dir = "parquet_data/"
+    pq_dir = "lake_data/"
     plot_slot_daily_statistics(slots_df, pq_dir)
 
     assert mock_savefig.call_count == 2
