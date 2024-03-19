@@ -1,6 +1,6 @@
 import pytest
 from pdr_backend.pred_submitter.deploy import (
-    deploy_prediction_manager_contract,
+    deploy_pred_submitter_mgr_contract,
 )
 from pdr_backend.contract.pred_submitter_manager import (
     PredSubmitterManager,
@@ -9,5 +9,5 @@ from pdr_backend.contract.pred_submitter_manager import (
 
 @pytest.fixture()
 def prediction_manager(web3_pp):
-    contract_address = deploy_prediction_manager_contract(web3_pp)
+    contract_address = deploy_pred_submitter_mgr_contract(web3_pp)
     return PredSubmitterManager(web3_pp, contract_address)

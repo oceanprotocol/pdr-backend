@@ -546,8 +546,8 @@ defined_parsers = {
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
-    "do_deploy_prediction_manager": _ArgParser_PPSS_NETWORK(
-        "Deploy prediction manager contract", "deploy_prediction_manager"
+    "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
+        "Deploy prediction manager contract", "deploy_pred_submitter_mgr"
     ),
     # utilities
     "do_get_predictoors_info": GetPredictoorsInfoArgParser(

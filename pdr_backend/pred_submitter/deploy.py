@@ -7,7 +7,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 
 
 @enforce_types
-def deploy_prediction_manager_contract(web3_pp: Web3PP) -> str:
+def deploy_pred_submitter_mgr_contract(web3_pp: Web3PP) -> str:
     web3_config = web3_pp.web3_config
     ocean_addr = web3_pp.get_address("Ocean")
     abi_path = os.path.join(
