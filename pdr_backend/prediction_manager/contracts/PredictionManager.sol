@@ -2,17 +2,17 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
-import "./Predictoor.sol";
+import "./PredSubmitter.sol";
 
 contract PredictionManager {
-    Predictoor public instanceUp;
-    Predictoor public instanceDown;
+    PredSubmitter public instanceUp;
+    PredSubmitter public instanceDown;
     address public immutable oceanTokenAddr;
     address public immutable owner;
 
     constructor(address oceanTokenAddr_) {
-        instanceUp = new Predictoor();
-        instanceDown = new Predictoor();
+        instanceUp = new PredSubmitter();
+        instanceDown = new PredSubmitter();
         instanceUp.initialize(msg.sender, oceanTokenAddr_);
         instanceDown.initialize(msg.sender, oceanTokenAddr_);
 

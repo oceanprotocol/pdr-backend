@@ -5,7 +5,7 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IFeedContract.sol";
 import "./interfaces/IDFRewards.sol";
 
-contract Predictoor {
+contract PredSubmitter {
     bool public initialized;
     address public master;
     address public owner;
