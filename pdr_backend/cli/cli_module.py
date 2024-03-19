@@ -344,4 +344,6 @@ def do_deploy_pred_submitter_mgr(args, nested_args=None):
         nested_override_args=nested_args,
     )
     contract_address = deploy_pred_submitter_mgr_contract(ppss.web3_pp)
-    logger.info("Prediction Submitter Manager Contract deployed at %s", contract_address)
+    logger.info(
+        "Prediction Submitter Manager Contract deployed at %s", contract_address
+    )
