@@ -1,7 +1,6 @@
 import copy
 import logging
 import os
-from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -40,9 +39,7 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plotter = Mock(spec=SimPlotter)
-        if self.ppss.sim_ss.do_plot:
-            self.sim_plotter = SimPlotter(self.ppss, self.st)
+        self.sim_plotter = SimPlotter(self.ppss, self.st)
 
         self.logfile = ""
 
