@@ -60,12 +60,8 @@ def test_approve(
     assert OCEAN.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
-def test_transfer_erc20(
-    prediction_manager: PredSubmitterManager, OCEAN, web3_config
-):
-    OCEAN.transfer(
-        prediction_manager.contract_address, Wei(100), web3_config.owner
-    )
+def test_transfer_erc20(prediction_manager: PredSubmitterManager, OCEAN, web3_config):
+    OCEAN.transfer(prediction_manager.contract_address, Wei(100), web3_config.owner)
     assert OCEAN.balanceOf(prediction_manager.contract_address) == Wei(100)
     before = OCEAN.balanceOf(web3_config.owner)
     prediction_manager.transfer_erc20(
@@ -94,9 +90,7 @@ def test_transfer(prediction_manager: PredSubmitterManager, web3_config):
     assert web3_config.w3.eth.get_balance(prediction_manager.contract_address) == 0
 
 
-def test_claim_dfrewards(
-    prediction_manager: PredSubmitterManager, web3_pp, OCEAN
-):
+def test_claim_dfrewards(prediction_manager: PredSubmitterManager, web3_pp, OCEAN):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
@@ -138,9 +132,7 @@ def test_submit_prediction_and_payout(
     OCEAN,
 ):
     # the user transfers 100 OCEAN tokens to the prediction manager
-    OCEAN.transfer(
-        prediction_manager.contract_address, Wei(100), web3_config.owner
-    )
+    OCEAN.transfer(prediction_manager.contract_address, Wei(100), web3_config.owner)
 
     # get the next prediction epoch
     current_epoch = predictoor_contract1.get_current_epoch_ts()
