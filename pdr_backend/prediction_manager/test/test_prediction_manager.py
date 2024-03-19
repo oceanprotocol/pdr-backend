@@ -169,7 +169,7 @@ def test_submit_prediction_and_payout(
         stakes_up=[Wei(20), Wei(30)],
         stakes_down=[Wei(40), Wei(10)],
         feeds=feeds,
-        epoch_start=prediction_epoch,
+        epoch=prediction_epoch,
         wait_for_receipt=True,
     )
     assert tx_receipt.status == 1, "Transaction failed"
