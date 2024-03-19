@@ -171,6 +171,7 @@ my_ppss.yaml
 my_logging.yaml
 csvs/
 parquet_data/
+lake_data/
 pdr_predictions.parquet 
 
 # pdr_backend accuracy output

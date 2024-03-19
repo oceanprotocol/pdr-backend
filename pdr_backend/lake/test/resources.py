@@ -28,8 +28,8 @@ def _mergedohlcv_df_ETHUSDT():
 
 @enforce_types
 def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
-    parquet_dir = str(tmpdir)
-    ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    lake_dir = str(tmpdir)
+    ss = _lake_ss(lake_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(ss)
     return ss, ohlcv_data_factory
 
@@ -46,8 +46,8 @@ def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     ppss.web3_pp = mock_web3_pp(network)
 
     # setup lake
-    parquet_dir = str(tmpdir)
-    lake_ss = _lake_ss(parquet_dir, [feed], st_timestr, fin_timestr)
+    lake_dir = str(tmpdir)
+    lake_ss = _lake_ss(lake_dir, [feed], st_timestr, fin_timestr)
     ppss.lake_ss = lake_ss
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -60,11 +60,11 @@ def _filter_gql_tables_config(record_config: Dict, record_filter: str) -> Dict:
 
 
 @enforce_types
-def _lake_ss(parquet_dir, feeds, st_timestr=None, fin_timestr=None):
+def _lake_ss(lake_dir, feeds, st_timestr=None, fin_timestr=None):
     return LakeSS(
         {
             "feeds": feeds,
-            "parquet_dir": parquet_dir,
+            "lake_dir": lake_dir,
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",
             "timeframe": "5m",

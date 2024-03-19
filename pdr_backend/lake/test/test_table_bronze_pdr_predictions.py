@@ -59,7 +59,7 @@ def test_table_bronze_pdr_predictions(
         _gql_datafactory_etl_payouts_df, TableType.TEMP
     )
 
-    pds = PersistentDataStore(ppss.lake_ss.parquet_dir)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
     # truevals should have 6
     temp_table_name = get_table_name("pdr_truevals", TableType.TEMP)
     result_truevals = pds.query_data("SELECT * FROM {}".format(temp_table_name))
@@ -72,7 +72,7 @@ def test_table_bronze_pdr_predictions(
 
     # Work 2: Execute full SQL query
     result = get_bronze_pdr_predictions_data_with_SQL(
-        ppss.lake_ss.parquet_dir,
+        ppss.lake_ss.lake_dir,
         st_ms=UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr),
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )

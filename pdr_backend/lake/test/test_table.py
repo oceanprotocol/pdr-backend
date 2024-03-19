@@ -73,7 +73,7 @@ def test_csv_data_store(
     assert CSVDataStore(table.base_path).has_data(predictions_table_name)
 
     file_path = os.path.join(
-        ppss.lake_ss.parquet_dir,
+        ppss.lake_ss.lake_dir,
         table.table_name,
         f"{table.table_name}_from_1701503000000_to_.csv",
     )
@@ -88,13 +88,13 @@ def test_csv_data_store(
     # Add second batch of predictions, validate
     table._append_to_csv(_gql_datafactory_1k_predictions_df)
 
-    files = os.listdir(os.path.join(ppss.lake_ss.parquet_dir, table.table_name))
+    files = os.listdir(os.path.join(ppss.lake_ss.lake_dir, table.table_name))
     files.sort(reverse=True)
 
     assert len(files) == 2
 
     file_path = os.path.join(
-        ppss.lake_ss.parquet_dir,
+        ppss.lake_ss.lake_dir,
         table.table_name,
         files[0],
     )
@@ -122,7 +122,7 @@ def test_persistent_store(
     )
 
     # Initialize Table, fill with data, validate
-    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
+    PDS = PersistentDataStore(ppss.lake_ss.lake_dir)
     PDS._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
@@ -162,7 +162,7 @@ def test_get_records(tmpdir, _gql_datafactory_first_predictions_df):
 
     table = Table(predictions_table_name, predictions_schema, ppss)
 
-    PDS = PersistentDataStore(ppss.lake_ss.parquet_dir)
+    PDS = PersistentDataStore(ppss.lake_ss.lake_dir)
     PDS._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )

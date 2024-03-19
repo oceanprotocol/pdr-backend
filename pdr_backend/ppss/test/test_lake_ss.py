@@ -11,7 +11,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 _D = {
     "feeds": ["kraken ETH/USDT 5m", "binanceus ETH/USDT,TRX/DAI 1h"],
-    "parquet_dir": "parquet_data",
+    "lake_dir": "lake_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
 }
@@ -22,7 +22,7 @@ def test_lake_ss_basic():
     ss = LakeSS(_D)
 
     # yaml properties
-    assert "parquet_data" in ss.parquet_dir
+    assert "lake_data" in ss.lake_dir
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
 
@@ -67,17 +67,17 @@ def test_lake_ss_now():
 
 
 @enforce_types
-def test_parquet_dir(tmpdir):
+def test_lake_dir(tmpdir):
     # rel path given; needs an abs path
     d = copy.deepcopy(_D)
-    d["parquet_dir"] = "parquet_data"
+    d["lake_dir"] = "lake_data"
     ss = LakeSS(d)
-    target_parquet_dir = os.path.abspath("parquet_data")
-    assert ss.parquet_dir == target_parquet_dir
+    target_lake_dir = os.path.abspath("lake_data")
+    assert ss.lake_dir == target_lake_dir
 
     # abs path given
     d = copy.deepcopy(_D)
-    d["parquet_dir"] = os.path.join(tmpdir, "parquet_data")
+    d["lake_dir"] = os.path.join(tmpdir, "lake_data")
     ss = LakeSS(d)
-    target_parquet_dir = os.path.join(tmpdir, "parquet_data")
-    assert ss.parquet_dir == target_parquet_dir
+    target_lake_dir = os.path.join(tmpdir, "lake_data")
+    assert ss.lake_dir == target_lake_dir

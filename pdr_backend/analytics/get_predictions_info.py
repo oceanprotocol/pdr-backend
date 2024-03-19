@@ -104,9 +104,9 @@ def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions_df)
-    plot_traction_cum_sum_statistics(stats_df, ppss.lake_ss.parquet_dir)
-    plot_traction_daily_statistics(stats_df, ppss.lake_ss.parquet_dir)
+    plot_traction_cum_sum_statistics(stats_df, ppss.lake_ss.lake_dir)
+    plot_traction_daily_statistics(stats_df, ppss.lake_ss.lake_dir)
 
     # calculate slot statistics and draw plots
     slots_df = get_slot_statistics(predictions_df)
-    plot_slot_daily_statistics(slots_df, ppss.lake_ss.parquet_dir)
+    plot_slot_daily_statistics(slots_df, ppss.lake_ss.lake_dir)

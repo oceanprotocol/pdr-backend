@@ -1,6 +1,6 @@
 # (web3_pp / network settings is at bottom, because it's long)
 lake_ss:
-  parquet_dir: parquet_data
+  lake_dir: lake_data
   feeds:
     - binance BTC/USDT ETH/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m

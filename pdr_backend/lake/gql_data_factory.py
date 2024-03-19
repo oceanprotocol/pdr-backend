@@ -226,7 +226,7 @@ class GQLDataFactory:
     def _update(self):
         """
         @description
-            Iterate across all gql queries and update their parquet files:
+            Iterate across all gql queries and update their lake data:
             - Predictoors
             - Slots
             - Claims

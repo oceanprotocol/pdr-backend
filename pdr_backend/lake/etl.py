@@ -65,7 +65,7 @@ class ETL:
             If exists, drop them and rebuild
         """
         # drop the tables if it exists
-        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
             pds.drop_table(get_table_name(table_name, TableType.TEMP))
 
@@ -75,7 +75,7 @@ class ETL:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
             pds.move_table_data(
                 get_table_name(table_name, TableType.TEMP),
@@ -145,7 +145,7 @@ class ETL:
             The max timestamp values from the tables
         """
 
-        pds = PersistentDataStore(self.ppss.lake_ss.parquet_dir)
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         max_timestamp_query = "SELECT MAX(timestamp) as max_timestamp FROM {}"
         values = {}
         for table_name in table_names:
@@ -195,7 +195,7 @@ class ETL:
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         data = get_bronze_pdr_predictions_data_with_SQL(
-            path=self.ppss.lake_ss.parquet_dir,
+            path=self.ppss.lake_ss.lake_dir,
             st_ms=UnixTimeMs.from_dt(st_timestamp),
             fin_ms=UnixTimeMs.from_dt(fin_timestamp),
         )
