@@ -22,7 +22,7 @@ class LakeSS(MultiFeedMixin):
         assert self.lake_dir == os.path.abspath(self.lake_dir)
         if not os.path.exists(self.lake_dir):
             logger.warning(
-                "Could not find parquet dir, creating one at: %s", self.lake_dir
+                "Could not find lake dir, creating one at: %s", self.lake_dir
             )
             os.makedirs(self.lake_dir)
 
