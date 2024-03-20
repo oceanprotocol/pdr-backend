@@ -108,7 +108,7 @@ def predictoor_ss_test_dict(
     predict_feed = predict_feed or "binance BTC/USDT c 5m"
     input_feeds = input_feeds or [predict_feed]
     d = {
-        "predict_feed": predict_feed,
+        "predict_feed": [predict_feed],
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
