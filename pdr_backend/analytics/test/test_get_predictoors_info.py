@@ -9,7 +9,7 @@ from pdr_backend.analytics.get_predictions_info import get_predictoors_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
-table_name = "pdr_predictoors"
+table_name = "pdr_predictions"
 
 
 @enforce_types

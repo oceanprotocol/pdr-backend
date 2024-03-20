@@ -67,8 +67,7 @@ def test_get_traction_info_main_mainnet(
 
 
 @enforce_types
-def test_get_traction_info_empty_data_factory(
-    mock_predictions_df,
+def test_get_traction_info_empty_data(
     tmpdir,
 ):
     _clean_up_persistent_data_store(tmpdir)
@@ -84,9 +83,7 @@ def test_get_traction_info_empty_data_factory(
     )
 
     pdr_prediction_table = Table(table_name, predictions_schema, ppss)
-    pdr_prediction_table.append_to_storage(pl.DataFrame(schema=predictions_schema))
-
-    mock_predictions_df.return_value = {"pdr_predictions": pdr_prediction_table}
+    pdr_prediction_table.append_to_storage(pl.DataFrame([], schema=predictions_schema))
 
     with pytest.raises(AssertionError):
         get_traction_info_main(ppss, st_timestr, fin_timestr)

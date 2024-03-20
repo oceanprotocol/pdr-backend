@@ -21,7 +21,7 @@ def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
         Prediction(
-            "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            "{feed_addr}-31232-{user_addr}",
             feed_addr,
             "BTC",
             "5m",
@@ -38,14 +38,17 @@ def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
+
+    data_dir = str(tmpdir)
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        str(tmpdir),
+        data_dir,
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
 
+    print("ppss.lake_ss.lake_dir", ppss.lake_ss.lake_dir)
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
@@ -71,7 +74,7 @@ def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
             "get_traction_info",
             "2023-12-01",
             "2023-12-31",
-            str(tmpdir),
+            f"{data_dir}/lake_data",
             "ppss.yaml",
             "sapphire-testnet",
         ]

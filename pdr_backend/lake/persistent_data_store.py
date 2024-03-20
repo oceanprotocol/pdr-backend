@@ -86,6 +86,8 @@ class PersistentDataStore(BaseDataStore):
         # Check if the table exists
         table_names = self.get_table_names()
 
+        print(f"insert_to_table table_name = {table_name}")
+        print(f"insert_to_table DF = {df}")
         if table_name in table_names:
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:

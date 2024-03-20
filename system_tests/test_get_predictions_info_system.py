@@ -16,9 +16,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-def test_get_predictions_info_system(
-    mock_get_feed_summary_stats, caplog
-):
+def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
     _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 

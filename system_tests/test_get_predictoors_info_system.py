@@ -17,9 +17,7 @@ from pdr_backend.util.currency_types import Wei
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
-def test_get_predictoors_info_system(
-    get_get_predictoor_summary_stats, caplog
-):
+def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
