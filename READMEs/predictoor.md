@@ -42,6 +42,15 @@ pip install -r requirements.txt
 export PATH=$PATH:.
 ```
 
+You need a local copy of Ocean contract addresses [`address.json`](https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json). In console:
+```console
+# make directory if needed
+mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
+
+# copy from github to local directory. Or, use wget if Linux. Or, download via browser.
+curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+```
+
 If you're running MacOS, then in console:
 
 ```console
@@ -100,15 +109,6 @@ Then, copy & paste your private keys as envvars. In console:
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
 export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
-```
-
-Next, you need a local copy of [`address.json`](https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json), so your bot knows where the smart contracts are. Here's how. In console:
-```console
-# make directory if needed
-mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
-
-# copy from github to local directory. Or, use wget if Linux. Or, download via browser.
-curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
 ```
 
 Next, update `my_ppss.yaml` as desired.
