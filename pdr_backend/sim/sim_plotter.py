@@ -271,17 +271,11 @@ class SimPlotter:
         avg = np.average(self.st.pdr_profits_OCEAN)
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
 
-        self.canvas["pdr_profit_vs_ptrue"].pyplot(self.figs["pdr_profit_vs_ptrue"])
-
         y = "pdr profit (OCEAN)"
         df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
         df["prob(up)"] = self.st.probs_up
 
-        chart = (
-            alt.Chart(df, title=s)
-            .mark_circle()
-            .encode(x="prob(up)", y=y)
-        )
+        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
 
         ref_line = (
             alt.Chart(pd.DataFrame({y: [0]}))
@@ -295,30 +289,24 @@ class SimPlotter:
 
     @enforce_types
     def _plot_trader_profit_vs_ptrue(self):
-        ax = self.ax_trader_profit_vs_ptrue
-        mnp = min(self.st.trader_profits_USD)
-        mxp = max(self.st.trader_profits_USD)
         avg = np.average(self.st.trader_profits_USD)
-        next_profits = _slice(self.st.trader_profits_USD, self.N_done, self.N)
-        next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-
-        c = (random(), random(), random())  # random RGB color
-        ax.scatter(next_probs_up, next_profits, color=c, s=1)
-
         s = f"trader profit dist. avg={avg:.2f} USD"
 
-        _set_title(ax, s)
-        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
+        y = "trader profit (USD)"
+        df = pd.DataFrame(self.st.trader_profits_USD, columns=[y])
+        df["prob(up)"] = self.st.probs_up
 
-        self.canvas["trader_profit_vs_ptrue"].pyplot(
-            self.figs["trader_profit_vs_ptrue"]
+        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
         )
-        if not self.computed_plot_before:
-            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-            _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, "trader profit (USD)")
-            _ylabel_on_right(ax)
-            ax.margins(0.05, 0.05)
+
+        self.canvas["trader_profit_vs_ptrue"].altair_chart(
+            chart + ref_line, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_aimodel_varimps(self, d: AimodelPlotdata):
