@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.predictoor_contract import FeedContract
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout
@@ -82,7 +82,7 @@ class PredictoorAgent:
         self.feed: SubgraphFeed = feed
 
         # set self.feed_contract. For both up/down. See submit_prediction_tx
-        self.feed_contract: PredictoorContract = ppss.web3_pp.get_single_contract(
+        self.feed_contract: FeedContract = ppss.web3_pp.get_single_contract(
             feed.address
         )
 

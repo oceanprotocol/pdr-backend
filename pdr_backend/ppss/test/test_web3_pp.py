@@ -138,7 +138,7 @@ def test_web3_pp__query_feed_contracts__get_contracts(monkeypatch):
         return m
 
     with patch(
-        "pdr_backend.contract.predictoor_contract.PredictoorContract",
+        "pdr_backend.contract.predictoor_contract.FeedContract",
         _mock_contract,
     ):
         contracts = web3_pp.get_contracts([feed.address])

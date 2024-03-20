@@ -127,7 +127,7 @@ def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, OCEAN):
 def test_submit_prediction_and_payout(
     pred_submitter_mgr: PredSubmitterMgr,
     web3_config,
-    predictoor_contract1: PredictoorContract,
+    predictoor_contract1: FeedContract,
     predictoor_contract2,
     OCEAN,
 ):

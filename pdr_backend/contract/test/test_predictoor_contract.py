@@ -6,7 +6,7 @@ from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
 from pdr_backend.contract.predictoor_contract import (
-    PredictoorContract,
+    FeedContract,
     mock_predictoor_contract,
 )
 from pdr_backend.contract.token import Token
@@ -187,7 +187,7 @@ def test_allowance_update():
         autospec=True,
         return_value=mock_token,
     ):
-        contract = PredictoorContract(web3_pp, address)
+        contract = FeedContract(web3_pp, address)
 
         contract.config.owner = "0xowner"
         contract.contract_address = "0xcontract"

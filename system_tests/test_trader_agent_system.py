@@ -46,7 +46,7 @@ def _test_trader(
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.contract.token.Token", return_value=mock_token
     ), patch("pdr_backend.payout.payout.WrappedToken", return_value=mock_token), patch(
-        "pdr_backend.payout.payout.PredictoorContract",
+        "pdr_backend.payout.payout.FeedContract",
         return_value=mock_predictoor_contract,
     ), patch(
         "pdr_backend.ppss.ppss.TraderSS",

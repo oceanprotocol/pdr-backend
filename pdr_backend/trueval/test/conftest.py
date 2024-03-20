@@ -30,7 +30,7 @@ def predictoor_contract_mock():
         return m
 
     with patch(
-        "pdr_backend.trueval.trueval_agent.PredictoorContract",
+        "pdr_backend.trueval.trueval_agent.FeedContract",
         return_value=mock_contract(),
     ) as mock_predictoor_contract_mock:
         yield mock_predictoor_contract_mock
