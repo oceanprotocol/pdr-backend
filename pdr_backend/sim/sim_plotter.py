@@ -41,19 +41,18 @@ class SimPlotter:
         # so labels are above lines. Must be before figure()
         plt.rcParams["axes.axisbelow"] = False
 
-        c1, c2, c3 = streamlit.columns((1, 2, 1))
-        c11, c12 = c1.container(), c1.container()
-        c31, c32 = c3.container(), c3.container()
+        c1, c2, c3 = streamlit.columns((1, 1, 2))
         c4, c5 = streamlit.columns((1, 1))
+        c6, c7 = streamlit.columns((1, 1))
 
         self.canvas = {
-            "pdr_profit_vs_time": c11.empty(),
-            "trader_profit_vs_time": c12.empty(),
-            "accuracy_vs_time": c2.empty(),
-            "pdr_profit_vs_ptrue": c31.empty(),
-            "trader_profit_vs_ptrue": c32.empty(),
-            "aimodel_varimps": c4.empty(),
-            "aimodel_response": c5.empty(),
+            "pdr_profit_vs_time": c1.empty(),
+            "trader_profit_vs_time": c2.empty(),
+            "accuracy_vs_time": c3.empty(),
+            "pdr_profit_vs_ptrue": c4.empty(),
+            "trader_profit_vs_ptrue": c5.empty(),
+            "aimodel_varimps": c6.empty(),
+            "aimodel_response": c7.empty(),
             "f1_precision_recall_vs_time": streamlit.empty(),
         }
 
