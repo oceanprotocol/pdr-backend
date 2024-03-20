@@ -24,6 +24,7 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.multisim_engine import MultisimEngine
@@ -33,11 +34,8 @@ from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.currency_types import Eth
-from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.etl import ETL
-from pdr_backend.deployer.deployer import main as deployer_main
-from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
+from pdr_backend.util.topup import topup_main
+from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
 logger = logging.getLogger("cli")
 
