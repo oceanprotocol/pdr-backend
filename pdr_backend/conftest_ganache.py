@@ -59,7 +59,7 @@ def OCEAN() -> Token:
 
 
 @pytest.fixture(scope="module")  # "module" = invoke once per test module
-def predictoor_contract1():
+def feed_contract1():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(
@@ -77,7 +77,7 @@ def predictoor_contract1():
 
 
 @pytest.fixture(scope="module")
-def predictoor_contract2():
+def feed_contract2():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(
@@ -95,7 +95,7 @@ def predictoor_contract2():
 
 
 @pytest.fixture(scope="module")  # "module" = invoke once per test module
-def predictoor_contract_empty():
+def feed_contract_empty():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(

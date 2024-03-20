@@ -11,9 +11,9 @@ from pdr_backend.util.currency_types import Wei
 
 
 @enforce_types
-def test_submit_truevals(predictoor_contract1, web3_pp, predictoor_batcher):
+def test_submit_truevals(feed_contract1, web3_pp, predictoor_batcher):
     web3_config = web3_pp.web3_config
-    current_epoch = predictoor_contract1.get_current_epoch_ts()
+    current_epoch = feed_contract1.get_current_epoch_ts()
 
     # fast forward time
     web3_config.w3.provider.make_request(
@@ -29,23 +29,23 @@ def test_submit_truevals(predictoor_contract1, web3_pp, predictoor_batcher):
     cancels = [False] * len(epochs)
 
     # add predictoor helper as ercdeployer
-    erc721addr = predictoor_contract1.erc721_addr()
+    erc721addr = feed_contract1.erc721_addr()
     datanft = DataNft(web3_pp, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before = [
-        predictoor_contract1.contract_instance.functions.trueValues(i).call()
+        feed_contract1.contract_instance.functions.trueValues(i).call()
         for i in epochs
     ]
     for trueval in truevals_before:
         assert trueval is False
 
     predictoor_batcher.submit_truevals(
-        predictoor_contract1.contract_address, epochs, truevals, cancels
+        feed_contract1.contract_address, epochs, truevals, cancels
     )
 
     truevals_after = [
-        predictoor_contract1.contract_instance.functions.trueValues(i).call()
+        feed_contract1.contract_instance.functions.trueValues(i).call()
         for i in epochs
     ]
     for trueval in truevals_after:
@@ -54,13 +54,13 @@ def test_submit_truevals(predictoor_contract1, web3_pp, predictoor_batcher):
 
 @enforce_types
 def test_submit_truevals_contracts(
-    predictoor_contract1,
-    predictoor_contract2,
+    feed_contract1,
+    feed_contract2,
     web3_pp,
     web3_config,
     predictoor_batcher,
 ):
-    current_epoch = predictoor_contract1.get_current_epoch_ts()
+    current_epoch = feed_contract1.get_current_epoch_ts()
 
     # fast forward time
     web3_config.w3.provider.make_request(
@@ -77,25 +77,25 @@ def test_submit_truevals_contracts(
     truevals = [[True] * len(epochs1), [True] * len(epochs2)]
     cancels = [[False] * len(epochs1), [False] * len(epochs2)]
     addresses = [
-        predictoor_contract1.contract_address,
-        predictoor_contract2.contract_address,
+        feed_contract1.contract_address,
+        feed_contract2.contract_address,
     ]
 
     # add predictoor helper as ercdeployer
-    erc721addr = predictoor_contract1.erc721_addr()
+    erc721addr = feed_contract1.erc721_addr()
     datanft = DataNft(web3_pp, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
-    erc721addr = predictoor_contract2.erc721_addr()
+    erc721addr = feed_contract2.erc721_addr()
     datanft = DataNft(web3_pp, erc721addr)
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before_1 = [
-        predictoor_contract1.contract_instance.functions.trueValues(i).call()
+        feed_contract1.contract_instance.functions.trueValues(i).call()
         for i in epochs1
     ]
 
     truevals_before_2 = [
-        predictoor_contract2.contract_instance.functions.trueValues(i).call()
+        feed_contract2.contract_instance.functions.trueValues(i).call()
         for i in epochs1
     ]
 
@@ -108,12 +108,12 @@ def test_submit_truevals_contracts(
     predictoor_batcher.submit_truevals_contracts(addresses, epochs, truevals, cancels)
 
     truevals_after_1 = [
-        predictoor_contract1.contract_instance.functions.trueValues(i).call()
+        feed_contract1.contract_instance.functions.trueValues(i).call()
         for i in epochs1
     ]
 
     truevals_after_2 = [
-        predictoor_contract2.contract_instance.functions.trueValues(i).call()
+        feed_contract2.contract_instance.functions.trueValues(i).call()
         for i in epochs1
     ]
 
@@ -128,10 +128,10 @@ def test_submit_truevals_contracts(
 
 
 @enforce_types
-def test_consume_multiple(predictoor_contract1, OCEAN, predictoor_batcher):
+def test_consume_multiple(feed_contract1, OCEAN, predictoor_batcher):
     owner = OCEAN.config.owner
 
-    price = predictoor_contract1.get_price()
+    price = feed_contract1.get_price()
     print(price)
 
     times = 10
@@ -141,7 +141,7 @@ def test_consume_multiple(predictoor_contract1, OCEAN, predictoor_batcher):
     balance_before = OCEAN.balanceOf(owner)
 
     predictoor_batcher.consume_multiple(
-        [predictoor_contract1.contract_address], [times], OCEAN.contract_address
+        [feed_contract1.contract_address], [times], OCEAN.contract_address
     )
 
     balance_after = OCEAN.balanceOf(owner)

@@ -103,19 +103,19 @@ class TruevalAgent:
         self, contract_address: str
     ) -> Tuple[FeedContract, int]:
         if contract_address in self.contract_cache:
-            predictoor_contract, seconds_per_epoch = self.contract_cache[
+            feed_contract, seconds_per_epoch = self.contract_cache[
                 contract_address
             ]
         else:
-            predictoor_contract = FeedContract(
+            feed_contract = FeedContract(
                 self.ppss.web3_pp, contract_address
             )
-            seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+            seconds_per_epoch = feed_contract.get_secondsPerEpoch()
             self.contract_cache[contract_address] = (
-                predictoor_contract,
+                feed_contract,
                 seconds_per_epoch,
             )
-        return (predictoor_contract, seconds_per_epoch)
+        return (feed_contract, seconds_per_epoch)
 
     def get_init_and_ts(
         self, slot: int, seconds_per_epoch: int

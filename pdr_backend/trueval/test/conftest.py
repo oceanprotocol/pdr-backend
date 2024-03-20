@@ -21,7 +21,7 @@ def mock_ppss(tmpdir):
 
 
 @pytest.fixture()
-def predictoor_contract_mock():
+def feed_contract_mock():
     def mock_contract(*args, **kwarg):  # pylint: disable=unused-argument
         m = Mock()
         m.get_secondsPerEpoch.return_value = 60
@@ -32,5 +32,5 @@ def predictoor_contract_mock():
     with patch(
         "pdr_backend.trueval.trueval_agent.FeedContract",
         return_value=mock_contract(),
-    ) as mock_predictoor_contract_mock:
-        yield mock_predictoor_contract_mock
+    ) as mock_feed_contract_mock:
+        yield mock_feed_contract_mock

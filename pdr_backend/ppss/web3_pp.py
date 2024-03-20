@@ -285,11 +285,11 @@ def mock_web3_pp(network: str) -> Web3PP:
 @enforce_types
 def inplace_mock_feedgetters(web3_pp, feed: SubgraphFeed):
     # pylint: disable=import-outside-toplevel
-    from pdr_backend.contract.feed_contract import mock_predictoor_contract
+    from pdr_backend.contract.feed_contract import mock_feed_contract
 
     inplace_mock_query_feed_contracts(web3_pp, feed)
 
-    c = mock_predictoor_contract(feed.address)
+    c = mock_feed_contract(feed.address)
     inplace_mock_get_contracts(web3_pp, feed, c)
 
 
@@ -301,14 +301,14 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
 
 @enforce_types
 def inplace_mock_get_contracts(
-    web3_pp: Web3PP, feed: SubgraphFeed, predictoor_contract
+    web3_pp: Web3PP, feed: SubgraphFeed, feed_contract
 ):
     # pylint: disable=import-outside-toplevel
     from pdr_backend.contract.feed_contract import FeedContract
 
-    assert isinstance(predictoor_contract, FeedContract)
+    assert isinstance(feed_contract, FeedContract)
     web3_pp.get_contracts = Mock()
-    web3_pp.get_contracts.return_value = {feed.address: predictoor_contract}
+    web3_pp.get_contracts.return_value = {feed.address: feed_contract}
 
 
 @enforce_types

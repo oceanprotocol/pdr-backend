@@ -23,7 +23,7 @@ def batchify(data: List[Any], batch_size: int):
 
 @enforce_types
 def request_payout_batches(
-    predictoor_contract: FeedContract, batch_size: int, timestamps: List[int]
+    feed_contract: FeedContract, batch_size: int, timestamps: List[int]
 ):
     batches = batchify(timestamps, batch_size)
     for batch in batches:
@@ -35,7 +35,7 @@ def request_payout_batches(
         while retries < 5 and not success:
             try:
                 wait_for_receipt = True
-                predictoor_contract.payout_multiple(batch, wait_for_receipt)
+                feed_contract.payout_multiple(batch, wait_for_receipt)
                 success = True
             except Exception as e:
                 retries += 1

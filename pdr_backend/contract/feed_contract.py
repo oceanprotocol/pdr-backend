@@ -13,7 +13,7 @@ from pdr_backend.util.mathutil import string_to_bytes32
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Wei, Eth
 
-logger = logging.getLogger("predictoor_contract")
+logger = logging.getLogger("feed_contract")
 
 
 @enforce_types
@@ -377,7 +377,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
 
 @enforce_types
-def mock_predictoor_contract(
+def mock_feed_contract(
     contract_address: str,
     agg_predval: tuple = (1, 2),
 ) -> FeedContract:

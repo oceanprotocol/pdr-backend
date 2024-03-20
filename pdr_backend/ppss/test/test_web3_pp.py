@@ -7,7 +7,7 @@ from eth_account.signers.local import LocalAccount
 from web3 import Web3
 from pdr_backend.ppss.ppss import mock_feed_ppss
 
-from pdr_backend.contract.feed_contract import mock_predictoor_contract
+from pdr_backend.contract.feed_contract import mock_feed_contract
 from pdr_backend.ppss.web3_pp import (
     Web3PP,
     inplace_mock_feedgetters,
@@ -169,7 +169,7 @@ def test_inplace_mocks():
     inplace_mock_feedgetters(web3_pp, feed)
     inplace_mock_query_feed_contracts(web3_pp, feed)
 
-    c = mock_predictoor_contract(feed.address)
+    c = mock_feed_contract(feed.address)
     inplace_mock_get_contracts(web3_pp, feed, c)
 
 
