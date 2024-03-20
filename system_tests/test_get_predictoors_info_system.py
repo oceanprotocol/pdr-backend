@@ -14,10 +14,14 @@ from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Wei
+from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
 def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -66,12 +70,16 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, t
         fin_timestr=fin_timestr,
     )
 
+    print("ppss.lake_ss.lake_dir----", ppss.lake_ss.lake_dir)
+
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     get_get_predictoor_summary_stats.return_value = predictions_df
-    table = Table("pdr_predictions", predictions_schema, ppss)
-    table.append_to_storage(predictions_df)
+
+    PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+        predictions_df, "pdr_predictions"
+    )
 
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
@@ -83,7 +91,7 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, t
             "get_predictoors_info",
             "2023-12-01",
             "2023-12-31",
-            f"{data_dir}/lake_data",
+            ppss.lake_ss.lake_dir,
             "ppss.yaml",
             "development",
             "--PDRS",

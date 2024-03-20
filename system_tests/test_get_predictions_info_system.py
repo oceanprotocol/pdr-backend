@@ -13,10 +13,13 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
 def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
     _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -52,8 +55,9 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
-    table = Table("pdr_predictions", predictions_schema, ppss)
-    table.append_to_storage(predictions_df)
+    PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+        predictions_df, "pdr_predictions"
+    )
 
     mock_get_feed_summary_stats.return_value = predictions_df
 
@@ -75,7 +79,7 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir
             "get_predictions_info",
             "2023-12-01",
             "2023-12-31",
-            f"{data_dir}/lake_data",
+            ppss.lake_ss.lake_dir,
             "ppss.yaml",
             "development",
             "--FEEDS",
