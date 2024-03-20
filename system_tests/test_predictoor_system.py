@@ -6,7 +6,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 
 
-def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
+def setup_mock_web3_pp(mock_feeds, mock_feed_contract):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "development"
     mock_web3_pp.rpc_url = "http://example.com/rpc"
@@ -14,7 +14,7 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
         "http://localhost:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
     )
     mock_web3_pp.query_feed_contracts.return_value = mock_feeds
-    mock_web3_pp.get_single_contract.return_value = mock_predictoor_contract
+    mock_web3_pp.get_single_contract.return_value = mock_feed_contract
     mock_web3_pp.w3.eth.block_number = 100
     mock_predictoor_ss = Mock()
     mock_predictoor_ss.get_feed_from_candidates.return_value = mock_feeds["0x1"]
@@ -30,9 +30,9 @@ def setup_mock_web3_pp(mock_feeds, mock_predictoor_contract):
     return mock_web3_pp, mock_predictoor_ss
 
 
-def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, caplog):
+def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
-        mock_feeds, mock_predictoor_contract
+        mock_feeds, mock_feed_contract
     )
 
     merged_ohlcv_df = Mock()
@@ -60,26 +60,26 @@ def _test_predictoor_system(mock_feeds, mock_predictoor_contract, approach, capl
 
         # Additional assertions
         mock_predictoor_ss.get_feed_from_candidates.assert_called_once()
-        mock_predictoor_contract.get_current_epoch.assert_called()
+        mock_feed_contract.get_current_epoch.assert_called()
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_1_system(
     mock_verify_feed_dependencies,
     mock_feeds,
-    mock_predictoor_contract,
+    mock_feed_contract,
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 1, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
 def test_predictoor_approach_3_system(
     mock_verify_feed_dependencies,
     mock_feeds,
-    mock_predictoor_contract,
+    mock_feed_contract,
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_predictoor_contract, 3, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 3, caplog)

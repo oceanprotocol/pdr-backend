@@ -13,11 +13,11 @@ from pdr_backend.util.mathutil import string_to_bytes32
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Wei, Eth
 
-logger = logging.getLogger("predictoor_contract")
+logger = logging.getLogger("feed_contract")
 
 
 @enforce_types
-class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
+class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
@@ -377,11 +377,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
 
 @enforce_types
-def mock_predictoor_contract(
+def mock_feed_contract(
     contract_address: str,
     agg_predval: tuple = (1, 2),
-) -> PredictoorContract:
-    c = Mock(spec=PredictoorContract)
+) -> FeedContract:
+    c = Mock(spec=FeedContract)
     c.contract_address = contract_address
     c.get_agg_predval.return_value = agg_predval
     return c

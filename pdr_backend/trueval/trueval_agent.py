@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
@@ -99,23 +99,17 @@ class TruevalAgent:
         pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
         return pending_slots
 
-    def get_contract_info(
-        self, contract_address: str
-    ) -> Tuple[PredictoorContract, int]:
+    def get_contract_info(self, contract_address: str) -> Tuple[FeedContract, int]:
         if contract_address in self.contract_cache:
-            predictoor_contract, seconds_per_epoch = self.contract_cache[
-                contract_address
-            ]
+            feed_contract, seconds_per_epoch = self.contract_cache[contract_address]
         else:
-            predictoor_contract = PredictoorContract(
-                self.ppss.web3_pp, contract_address
-            )
-            seconds_per_epoch = predictoor_contract.get_secondsPerEpoch()
+            feed_contract = FeedContract(self.ppss.web3_pp, contract_address)
+            seconds_per_epoch = feed_contract.get_secondsPerEpoch()
             self.contract_cache[contract_address] = (
-                predictoor_contract,
+                feed_contract,
                 seconds_per_epoch,
             )
-        return (predictoor_contract, seconds_per_epoch)
+        return (feed_contract, seconds_per_epoch)
 
     def get_init_and_ts(
         self, slot: int, seconds_per_epoch: int

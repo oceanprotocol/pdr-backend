@@ -29,7 +29,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
     @return
       feed -- SubgraphFeed, eg for binance BTC/USDT 5m
       ppss -- PPSS
-      pdr_contract -- PredictoorContract corresponding to the feed
+      pdr_contract -- FeedContract corresponding to the feed
     """
     # mock ppss, feed
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
@@ -98,7 +98,7 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
     contract_func = Mock()
     contract_func.return_value = pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.contract.predictoor_contract.PredictoorContract",
+        "pdr_backend.contract.feed_contract.FeedContract",
         contract_func,
     )
 
