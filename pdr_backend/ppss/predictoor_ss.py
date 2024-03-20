@@ -15,7 +15,7 @@ CAND_APPROACHES = [1, 2]
 
 class PredictoorSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEED_KEY = "predict_feed"
+    FEED_KEY = "predict_feeds"
 
     @enforce_types
     def __init__(self, d: dict):
@@ -28,7 +28,7 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
     # --------------------------------
     # yaml properties
 
-    # (predict_feed defined in base)
+    # (predict_feeds defined in base)
 
     @property
     def approach(self) -> int:
@@ -101,14 +101,14 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feed: Optional[str] = None,
+    predict_feeds: Optional[list] = None,
     input_feeds: Optional[list] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feed = predict_feed or "binance BTC/USDT c 5m"
-    input_feeds = input_feeds or [predict_feed]
+    predict_feeds = predict_feeds or ["binance BTC/USDT c 5m"]
+    input_feeds = input_feeds or [predict_feeds]
     d = {
-        "predict_feed": [predict_feed],
+        "predict_feeds": predict_feeds,
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
