@@ -83,10 +83,10 @@ class SimPlotter:
         @return
           img_filename - filename of saved plot (None if not done)
         """
-        if do_show_plot and not self.shown_plot_before:
-            # push plot to screen
+        if not self.shown_plot_before:
             plt.ion()
-            plt.show()
+            if do_show_plot:
+                plt.show()
             self.shown_plot_before = True
 
         # update N, N_done, x. **Update x only after updating N, N_done!**
