@@ -68,7 +68,6 @@ def test_setup_etl(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-
     gql_tables["pdr_predictions"].append_to_storage(preds)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)

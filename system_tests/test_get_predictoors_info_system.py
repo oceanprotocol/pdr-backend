@@ -17,9 +17,8 @@ from pdr_backend.util.currency_types import Wei
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_predictoors_info_system(
-    mock_get_gql_tables, get_get_predictoor_summary_stats, caplog
+    get_get_predictoor_summary_stats, caplog
 ):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -74,8 +73,6 @@ def test_get_predictoors_info_system(
     table = Table("pdr_predictions", predictions_schema, ppss)
     table.append_to_storage(predictions_df)
 
-    mock_get_gql_tables.return_value = {"pdr_predictions": table}
-
     with patch("pdr_backend.contract.token.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp
     ):
@@ -104,4 +101,3 @@ def test_get_predictoors_info_system(
 
         # Additional assertions
         get_get_predictoor_summary_stats.call_args[0][0].equals(predictions_df)
-        mock_get_gql_tables.assert_called()

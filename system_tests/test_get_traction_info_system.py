@@ -16,8 +16,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpdir):
+def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
@@ -49,10 +48,9 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpd
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
+
     predictions_table = Table("pdr_predictions", predictions_schema, ppss)
     predictions_table.append_to_storage(predictions_df)
-
-    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
