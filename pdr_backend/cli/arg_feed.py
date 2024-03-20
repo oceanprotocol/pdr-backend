@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import List, Optional, Union
 
-import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_exchange import ArgExchange
@@ -87,15 +86,6 @@ class ArgFeed:
                 raise ValueError(feed_str)
         feed = feeds[0]
         return feed
-
-    @enforce_types
-    def ccxt_exchange(self, *args, **kwargs) -> ccxt.Exchange:
-        if "mock" in kwargs and kwargs["mock"] is True:
-            return MockExchange()
-
-        kwargs.pop("mock", None)
-        exchange_class = self.exchange.exchange_class
-        return exchange_class(*args, **kwargs)
 
 
 @enforce_types
