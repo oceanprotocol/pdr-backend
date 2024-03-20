@@ -54,7 +54,9 @@ trader_ss:
 sim_ss: # sim only
   do_plot: True
   log_dir: logs
+  final_img_filebase: final # for name log_dir/{final_img_filebase}_{NR}.png
   test_n: 5000 # number of epochs to simulate
+  tradetype: histmock # histmock | livemock | livereal
   exchange_only:
     timeout: 30000
     options:
@@ -64,18 +66,18 @@ sim_ss: # sim only
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
   sweep_params:
+  - trader_ss.buy_amt: 1000 USD, 2000 USD
   - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500 
   - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
-  - predictoor_ss.aimodel_ss.balance_classes: None, SMOTE
-#  - predictoor_ss.aimodel_ss.input_feeds:
-#   - [1]
-#     - binance BTC/USDT c 5m
-#   - [2]
-#     - binance BTC/USDT ETH/USDT c 5m
-#   - [3]
-#     - binance BTC/USDT c 5m
-#     - kraken BTC/USDT c 5m
-  - trader_ss.buy_amt: 1000 USD, 2000 USD
+  - predictoor_ss.aimodel_ss.input_feeds:
+    -
+      - binance BTC/USDT c 5m
+    -
+      - binance BTC/USDT ETH/USDT c 5m
+#    -
+#      - binance BTC/USDT c 5m
+#      - kraken BTC/USDT c 5m
+
   
 
 # ------------------------------------------------------------------

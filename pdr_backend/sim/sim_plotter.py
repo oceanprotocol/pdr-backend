@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 
 import altair as alt
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import savefig
 import numpy as np
 import pandas as pd
 import streamlit
@@ -68,15 +69,35 @@ class SimPlotter:
         self.N_done: int = 0
         self.x: List[float] = []
 
-        self.plotted_before: bool = False
+        self.shown_plot_before: bool = False
+        self.computed_plot_before: bool = False
 
     # pylint: disable=too-many-statements
     @enforce_types
-    def make_plot(self, aimodel_plotdata: AimodelPlotdata):
+    def compute_plot(
+        self,
+        aimodel_plotdata: AimodelPlotdata,
+        do_show_plot: bool,
+        do_save_plot: bool,
+    ) -> Optional[str]:
         """
         @description
           Create / update whole plot, with many subplots
+
+        @arguments
+          aimodel_plotdata -- has model, X_train, etc
+          do_show_plot -- render on-screen in a window?
+          do_save_plot -- export as png?
+
+        @return
+          img_filename - filename of saved plot (None if not done)
         """
+        if not self.shown_plot_before:
+            plt.ion()
+            if do_show_plot:
+                plt.show()
+            self.shown_plot_before = True
+
         # update N, N_done, x. **Update x only after updating N, N_done!**
         self.N = len(self.st.pdr_profits_OCEAN)
         self.N_done = len(self.x)  # what # points have been plotted previously
@@ -94,13 +115,21 @@ class SimPlotter:
         self._plot_aimodel_varimps(aimodel_plotdata)
         self._plot_aimodel_response(aimodel_plotdata)
 
-        # final pieces
-        # plt.subplots_adjust(wspace=0.3)
-        plt.pause(0.001)
-        self.plotted_before = True
+        # final pieces of making plot
+        plt.subplots_adjust(wspace=0.3)
 
-        plt.ion()
-        plt.show()
+        # save to png?
+        img_filename = None
+        if do_save_plot:
+            img_filename = self.ppss.sim_ss.unique_final_img_filename()
+            savefig(img_filename)
+
+        # wrapup for reloop
+        if do_show_plot:
+            plt.pause(0.001)
+        self.computed_plot_before = True
+
+        return img_filename
 
     @property
     def next_x(self) -> List[float]:
@@ -226,10 +255,11 @@ class SimPlotter:
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
         _set_title(ax, s)
+
         self.canvas["f1_precision_recall_vs_time"].pyplot(
             self.figs["f1_precision_recall_vs_time"]
         )
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.set_xlabel("time", fontsize=FONTSIZE)
             ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
             ax.legend(loc="lower left")
@@ -238,27 +268,30 @@ class SimPlotter:
 
     @enforce_types
     def _plot_pdr_profit_vs_ptrue(self):
-        ax = self.ax_pdr_profit_vs_ptrue
-        stake_amt = self.ppss.predictoor_ss.stake_amount.amt_eth
-        mnp, mxp = -stake_amt, stake_amt
         avg = np.average(self.st.pdr_profits_OCEAN)
-        next_profits = _slice(self.st.pdr_profits_OCEAN, self.N_done, self.N)
-        next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-
-        c = (random(), random(), random())  # random RGB color
-        ax.scatter(next_probs_up, next_profits, color=c, s=1)
-
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
-        _set_title(ax, s)
-        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
 
         self.canvas["pdr_profit_vs_ptrue"].pyplot(self.figs["pdr_profit_vs_ptrue"])
-        if not self.plotted_before:
-            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-            _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, "pdr profit (OCEAN)")
-            _ylabel_on_right(ax)
-            ax.margins(0.05, 0.05)
+
+        y = "pdr profit (OCEAN)"
+        df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
+        df["prob(up)"] = self.st.probs_up
+
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_circle()
+            .encode(x="prob(up)", y=y)
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        self.canvas["pdr_profit_vs_ptrue"].altair_chart(
+            chart + ref_line, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_trader_profit_vs_ptrue(self):
@@ -280,7 +313,7 @@ class SimPlotter:
         self.canvas["trader_profit_vs_ptrue"].pyplot(
             self.figs["trader_profit_vs_ptrue"]
         )
-        if not self.plotted_before:
+        if not self.computed_plot_before:
             ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
             _set_xlabel(ax, "prob(up)")
             _set_ylabel(ax, "trader profit (USD)")
@@ -294,8 +327,6 @@ class SimPlotter:
         plot_aimodel_varimps(d.colnames, imps_tups, (self.figs["aimodel_varimps"], ax))
 
         self.canvas["aimodel_varimps"].pyplot(self.figs["aimodel_varimps"])
-        if not self.plotted_before:
-            ax.margins(0.01, 0.01)
 
     @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):
@@ -303,8 +334,6 @@ class SimPlotter:
         plot_aimodel_response(d, (self.figs["aimodel_varimps"], ax))
 
         self.canvas["aimodel_response"].pyplot(self.figs["aimodel_response"])
-        if not self.plotted_before:
-            ax.margins(0.01, 0.01)
 
 
 @enforce_types

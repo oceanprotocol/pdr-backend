@@ -249,6 +249,11 @@ class Web3PP(StrMixin):
         """
         Returns the ABI for the specified contract
         """
+        if contract_name == "PredSubmitterMgr":
+            with open(
+                "pdr_backend/pred_submitter/compiled_contracts/PredSubmitterMgr_abi.json"
+            ) as f:
+                return json.load(f)
         path = get_contract_filename(contract_name, self.address_file)
 
         if not path.exists():
@@ -318,6 +323,9 @@ class _MockEthWithTracking:
     ):  # pylint: disable=unused-argument
         mock_block = {"timestamp": self.timestamp}
         return mock_block
+
+    def get_balance(self, account):  # pylint: disable=unused-argument
+        return 100e18
 
 
 @enforce_types

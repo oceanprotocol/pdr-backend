@@ -1,7 +1,6 @@
 import copy
 import logging
 import os
-from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -40,9 +39,7 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plotter = Mock(spec=SimPlotter)
-        if self.ppss.sim_ss.do_plot:
-            self.sim_plotter = SimPlotter(self.ppss, self.st)
+        self.sim_plotter = SimPlotter(self.ppss, self.st)
 
         self.logfile = ""
 
@@ -215,7 +212,7 @@ class SimEngine:
         logger.info(s)
 
         # plot
-        if self.do_plot(test_i, self.ppss.sim_ss.test_n):
+        if self.compute_plot(test_i, self.ppss.sim_ss.test_n):
             colnames = [_shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
@@ -226,7 +223,11 @@ class SimEngine:
                 colnames,
                 slicing_x,
             )
-            self.sim_plotter.make_plot(d)
+            do_show = self.ppss.sim_ss.do_plot
+            do_save = self.ppss.sim_ss.is_final_iter(test_i)
+            img_filename = self.sim_plotter.compute_plot(d, do_show, do_save)
+            if img_filename is not None:
+                logger.info("Just saved plot as file: %s", img_filename)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
@@ -302,8 +303,11 @@ class SimEngine:
         return usdcoin_amt_recd
 
     @enforce_types
-    def do_plot(self, i: int, N: int):
+    def compute_plot(self, i: int, N: int):
         "Plot on this iteration Y/N?"
+        if self.ppss.sim_ss.is_final_iter(i):
+            return True
+
         if not self.ppss.sim_ss.do_plot:
             return False
 
