@@ -94,28 +94,43 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
         lake_fs = self.lake_ss.feeds
-        predict_f = self.predictoor_ss.feed
+        predict_fs = self.predictoor_ss.feeds
         aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
 
         # is predictoor_ss.predict_feed in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
         #   because lake holds all signals o,h,l,c,v
-        if not lake_fs.contains_combination(
-            predict_f.exchange, predict_f.pair, predict_f.timeframe
-        ):
-            s = "predictoor_ss.predict_feed not in lake_ss.feeds"
-            s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
-            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
-            raise ValueError(s)
+        for predict_f in predict_fs:
+            if not lake_fs.contains_combination(
+                predict_f.exchange, predict_f.pair, predict_f.timeframe
+            ):
+                s = "predictoor_ss.predict_feed not in lake_ss.feeds"
+                s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
+            
+
+        # enforce that all predict feeds have the same timeframe
+        timeframe = ""
+        for predict_f in predict_fs:
+            if timeframe == "":
+                timeframe = predict_f.timeframe
+                continue
+            if predict_f.timeframe != timeframe:
+                s = "predictoor_ss.predict_feed not in lake_ss.feeds"
+                s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
 
         # do all aimodel_ss input feeds conform to predict feed timeframe?
-        for aimodel_f in aimodel_fs:
-            if aimodel_f.timeframe != predict_f.timeframe:
-                s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
-                s += f"\n  target={predict_f.timeframe}, in predictoor_ss.feed"
-                s += f"\n  found={aimodel_f.timeframe}, in this aimodel feed:"
-                s += f" {aimodel_f}"
-                raise ValueError(s)
+        for predict_f in predict_fs:
+            for aimodel_f in aimodel_fs:
+                if aimodel_f.timeframe != predict_f.timeframe:
+                    s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
+                    s += f"\n  target={predict_f.timeframe}, in predictoor_ss.feed"
+                    s += f"\n  found={aimodel_f.timeframe}, in this aimodel feed:"
+                    s += f" {aimodel_f}"
+                    raise ValueError(s)
 
         # is each predictoor_ss.aimodel_ss.input_feeds in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
@@ -131,12 +146,13 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
         # - check for matching {exchange, pair, timeframe AND signal}
-        if predict_f not in aimodel_fs:
-            s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
-            s += " (accounting for signal too)"
-            s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
-            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
-            raise ValueError(s)
+        for predict_f in predict_fs:
+            if predict_f not in aimodel_fs:
+                s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
+                s += " (accounting for signal too)"
+                s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
 
     def __str__(self):
         s = ""
