@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Any
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
@@ -132,28 +132,45 @@ class ETL:
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
-        self, table_names: List, table_type: TableType = TableType.NORMAL
-    ) -> Dict:
+        self, table_names: List[str], table_type: TableType = TableType.NORMAL
+    ) -> Dict[str, Optional[datetime]]:
         """
         @description
             Get the max timestamp values from the tables
 
         @arguments
             table_names - The list of table names to get the max timestamp values from
-
+            table_type - The type of table to get the max timestamp values from
         @returns
-            The max timestamp values from the tables
+            values - The max timestamp values from the tables
         """
-
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
-        max_timestamp_query = "SELECT MAX(timestamp) as max_timestamp FROM {}"
-        values = {}
-        for table_name in table_names:
-            calc_table_name = get_table_name(table_name, table_type)
-            result = pds.query_data(max_timestamp_query.format(calc_table_name))
-            values[calc_table_name] = (
-                result["max_timestamp"][0] if result is not None else None
+        max_timestamp_query = (
+            "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
+        )
+        queries = [
+            max_timestamp_query.format(
+                get_table_name(table_name, table_type),
+                get_table_name(table_name, table_type),
             )
+            for table_name in table_names
+        ]
+        final_query = " UNION ALL ".join(queries)
+        result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
+
+        values: Any = {}
+
+        if result is None:
+            for table_name in table_names:
+                values[table_name] = None
+
+            return values
+
+        # print(f"_get_max_timestamp_values_from - result: {result}")
+
+        for row in result.rows(named=True):
+            table_name = row["table_name"]
+            max_timestamp = row["max_timestamp"]
+            values[table_name] = max_timestamp
 
         return values
 

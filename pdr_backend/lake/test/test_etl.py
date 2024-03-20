@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from enforce_typing import enforce_types
 
 import polars as pl
@@ -30,9 +29,7 @@ def get_filtered_timestamps_df(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_setup_etl(
-    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
@@ -75,8 +72,6 @@ def test_setup_etl(
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
 
-    mock_get_gql_tables.return_value = gql_tables
-
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
@@ -110,9 +105,7 @@ def test_setup_etl(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_etl_do_bronze_step(
-    mock_get_gql_tables,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
@@ -152,8 +145,6 @@ def test_etl_do_bronze_step(
     gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
     gql_tables["pdr_truevals"].append_to_storage(truevals, TableType.TEMP)
     gql_tables["pdr_payouts"].append_to_storage(payouts, TableType.TEMP)
-
-    mock_get_gql_tables.return_value = gql_tables
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
