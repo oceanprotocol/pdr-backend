@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -31,23 +32,6 @@ class PredictoorAgent:
 
     Prediction is two-sided: it submits for both up and down directions,
       with a stake for each.
-    - But: the contracts have a constraint: an account can only submit
-      *one* dir'n at an epoch. But we need to submit *both* dir'ns.
-    - Idea: redo smart contracts. Issue: significant work, especially rollout
-    - Idea: bot has *two* accounts: one for up, one for down. Yes this works**
-
-    OK. Assume two private keys are available. How should bot manage this?
-    - Idea: implement with a copy of the contract? (one for up, one for down)
-      - Via copy()? Issue: fails because it's too shallow, misses stuff
-      - Via deepcopy()? Issue: causes infinite recursion (py bug)
-      - Via deepcopy() with surgical changes? Issue: error prone
-      - Via query subgraph twice? Issue: many seconds slower -> annoying
-      - Via fill in whole contract again? Issue: tedious & error prone
-    - Idea: implement with a second Web3Config, and JIT switch on tx calls
-      - **Via 2nd constructor call? Yes, this works.** Easy because few params.
-
-    Summary of how to do two-sided predictions:
-    - two envvars --> two private keys -> two Web3Configs, JIT switch for txs
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -57,18 +41,9 @@ class PredictoorAgent:
         self.ppss = ppss
         logger.info(self.ppss)
 
-        # set web3_config_up/down (details in class docstring)
-        self.web3_config_up = self.ppss.web3_pp.web3_config
+        pred_submitter_mgr_addr = self.ppss.predictoor_ss.pred_submitter_mgr
+        self.pred_submitter_mgr = PredSubmitterMgr(self.ppss.web3_pp, pred_submitter_mgr_addr)
 
-        pk2 = os.getenv("PRIVATE_KEY2")
-        if pk2 is None:
-            raise ValueError("Need PRIVATE_KEY2 envvar")
-        if not hasattr(self.web3_config_up, "owner"):
-            raise ValueError("Need PRIVATE_KEY envvar")
-        self.web3_config_down = self.web3_config_up.copy_with_pk(pk2)
-
-        if self.web3_config_up.owner == self.web3_config_down.owner:
-            raise ValueError("private keys must differ")
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
@@ -372,25 +347,7 @@ class PredictoorAgent:
         min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
         min_ROSE_bal = Eth(1).to_wei()
 
-        up_OCEAN_bal = self.OCEAN.balanceOf(self.up_addr)
-        if up_OCEAN_bal < min_OCEAN_bal:
-            logger.error("Up OCEAN balance low: (%s)", up_OCEAN_bal)
-            return False
-
-        down_OCEAN_bal = self.OCEAN.balanceOf(self.down_addr)
-        if down_OCEAN_bal < min_OCEAN_bal:
-            logger.error("Down OCEAN balance low: (%s)", down_OCEAN_bal)
-            return False
-
-        up_ROSE_bal = self.ROSE.balanceOf(self.up_addr)
-        if up_ROSE_bal < min_ROSE_bal:
-            logger.error("Up ROSE balance low: (%s)", up_ROSE_bal)
-            return False
-
-        down_ROSE_bal = self.ROSE.balanceOf(self.down_addr)
-        if down_ROSE_bal < min_ROSE_bal:
-            logger.error("Down ROSE balance low: (%s)", down_ROSE_bal)
-            return False
+        # TODO check manager balance here
 
         return True
 
@@ -405,15 +362,7 @@ class PredictoorAgent:
 
         logger.info("Running payouts")
 
-        # Claim for up predictoor
-        web3_config = self._updown_web3_config(True)
-        self.ppss.web3_pp.set_web3_config(web3_config)
-        do_ocean_payout(self.ppss, False)
-
-        # Claim for down predictoor
-        web3_config = self._updown_web3_config(False)
-        self.ppss.web3_pp.set_web3_config(web3_config)
-        do_ocean_payout(self.ppss, False)
+        # TODO Implement manager payout here. 
 
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_epoch)
