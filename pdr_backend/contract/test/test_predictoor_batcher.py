@@ -34,8 +34,7 @@ def test_submit_truevals(feed_contract1, web3_pp, predictoor_batcher):
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before = [
-        feed_contract1.contract_instance.functions.trueValues(i).call()
-        for i in epochs
+        feed_contract1.contract_instance.functions.trueValues(i).call() for i in epochs
     ]
     for trueval in truevals_before:
         assert trueval is False
@@ -45,8 +44,7 @@ def test_submit_truevals(feed_contract1, web3_pp, predictoor_batcher):
     )
 
     truevals_after = [
-        feed_contract1.contract_instance.functions.trueValues(i).call()
-        for i in epochs
+        feed_contract1.contract_instance.functions.trueValues(i).call() for i in epochs
     ]
     for trueval in truevals_after:
         assert trueval is True
@@ -90,13 +88,11 @@ def test_submit_truevals_contracts(
     datanft.add_to_create_erc20_list(predictoor_batcher.contract_address)
 
     truevals_before_1 = [
-        feed_contract1.contract_instance.functions.trueValues(i).call()
-        for i in epochs1
+        feed_contract1.contract_instance.functions.trueValues(i).call() for i in epochs1
     ]
 
     truevals_before_2 = [
-        feed_contract2.contract_instance.functions.trueValues(i).call()
-        for i in epochs1
+        feed_contract2.contract_instance.functions.trueValues(i).call() for i in epochs1
     ]
 
     for trueval in truevals_before_1:
@@ -108,13 +104,11 @@ def test_submit_truevals_contracts(
     predictoor_batcher.submit_truevals_contracts(addresses, epochs, truevals, cancels)
 
     truevals_after_1 = [
-        feed_contract1.contract_instance.functions.trueValues(i).call()
-        for i in epochs1
+        feed_contract1.contract_instance.functions.trueValues(i).call() for i in epochs1
     ]
 
     truevals_after_2 = [
-        feed_contract2.contract_instance.functions.trueValues(i).call()
-        for i in epochs1
+        feed_contract2.contract_instance.functions.trueValues(i).call() for i in epochs1
     ]
 
     for trueval in truevals_after_1:

@@ -200,9 +200,7 @@ def test_submit_prediction_and_payout(
     pmdown = pred_submitter_mgr.predictoor_down_address()
 
     pred_down_first_feed = feed_contract1.get_prediction(prediction_epoch, pmdown)
-    pred_down_second_feed = feed_contract2.get_prediction(
-        prediction_epoch, pmdown
-    )
+    pred_down_second_feed = feed_contract2.get_prediction(prediction_epoch, pmdown)
     pred_up_first_feed = feed_contract1.get_prediction(prediction_epoch, pmup)
     pred_up_second_feed = feed_contract2.get_prediction(prediction_epoch, pmup)
 

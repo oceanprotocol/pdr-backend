@@ -63,9 +63,7 @@ def test_do_ocean_payout(tmpdir):
     with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), patch(
         "pdr_backend.payout.payout.query_pending_payouts",
         return_value=mock_pending_payouts,
-    ), patch(
-        "pdr_backend.payout.payout.FeedContract", return_value=mock_contract
-    ):
+    ), patch("pdr_backend.payout.payout.FeedContract", return_value=mock_contract):
         do_ocean_payout(ppss, check_network=False)
         print(mock_contract.payout_multiple.call_args_list)
         call_args = mock_contract.payout_multiple.call_args_list

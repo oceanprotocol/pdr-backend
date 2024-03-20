@@ -300,9 +300,7 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
 
 
 @enforce_types
-def inplace_mock_get_contracts(
-    web3_pp: Web3PP, feed: SubgraphFeed, feed_contract
-):
+def inplace_mock_get_contracts(web3_pp: Web3PP, feed: SubgraphFeed, feed_contract):
     # pylint: disable=import-outside-toplevel
     from pdr_backend.contract.feed_contract import FeedContract
 

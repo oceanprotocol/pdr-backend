@@ -77,9 +77,7 @@ def _test_trader(
 def test_trader_approach_1(
     mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, caplog
 ):
-    _test_trader(
-        mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 1, caplog
-    )
+    _test_trader(mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 1, caplog)
 
 
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
@@ -87,6 +85,4 @@ def test_trader_approach_1(
 def test_trader_approach_2(
     mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, caplog
 ):
-    _test_trader(
-        mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 2, caplog
-    )
+    _test_trader(mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 2, caplog)

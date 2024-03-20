@@ -99,17 +99,11 @@ class TruevalAgent:
         pending_slots = pending_slots[: self.ppss.trueval_ss.batch_size]
         return pending_slots
 
-    def get_contract_info(
-        self, contract_address: str
-    ) -> Tuple[FeedContract, int]:
+    def get_contract_info(self, contract_address: str) -> Tuple[FeedContract, int]:
         if contract_address in self.contract_cache:
-            feed_contract, seconds_per_epoch = self.contract_cache[
-                contract_address
-            ]
+            feed_contract, seconds_per_epoch = self.contract_cache[contract_address]
         else:
-            feed_contract = FeedContract(
-                self.ppss.web3_pp, contract_address
-            )
+            feed_contract = FeedContract(self.ppss.web3_pp, contract_address)
             seconds_per_epoch = feed_contract.get_secondsPerEpoch()
             self.contract_cache[contract_address] = (
                 feed_contract,
