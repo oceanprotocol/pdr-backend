@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pytest import approx
 
 from pdr_backend.conftest_ganache import S_PER_EPOCH
-from pdr_backend.contract.predictoor_contract import (
+from pdr_backend.contract.feed_contract import (
     FeedContract,
     mock_predictoor_contract,
 )
@@ -183,7 +183,7 @@ def test_allowance_update():
     mock_token = Mock(spec=Token)
     address = "0x123"
     with patch(
-        "pdr_backend.contract.predictoor_contract.Token",
+        "pdr_backend.contract.feed_contract.Token",
         autospec=True,
         return_value=mock_token,
     ):

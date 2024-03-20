@@ -98,7 +98,7 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
     contract_func = Mock()
     contract_func.return_value = pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.contract.predictoor_contract.FeedContract",
+        "pdr_backend.contract.feed_contract.FeedContract",
         contract_func,
     )
 

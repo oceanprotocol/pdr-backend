@@ -4,7 +4,7 @@ import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import FeedContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish_asset import publish_asset

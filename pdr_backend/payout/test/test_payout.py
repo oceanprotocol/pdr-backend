@@ -4,7 +4,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.dfrewards import DFRewards
-from pdr_backend.contract.predictoor_contract import FeedContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.payout.payout import (
     batchify,
