@@ -45,6 +45,7 @@ class SimPlotter:
         c1, c2, c3 = streamlit.columns((1, 1, 2))
         c4, c5 = streamlit.columns((1, 1))
         c6, c7 = streamlit.columns((1, 1))
+        c8, c9 = streamlit.columns((1, 1))
 
         self.canvas = {
             "pdr_profit_vs_time": c1.empty(),
@@ -54,7 +55,7 @@ class SimPlotter:
             "trader_profit_vs_ptrue": c5.empty(),
             "aimodel_varimps": c6.empty(),
             "aimodel_response": c7.empty(),
-            "f1_precision_recall_vs_time": streamlit.empty(),
+            "f1_precision_recall_vs_time": c8.empty(),
         }
 
         self.figs = {}
@@ -239,32 +240,45 @@ class SimPlotter:
 
     @enforce_types
     def _plot_f1_precision_recall_vs_time(self):
-        ax = self.ax_f1_precision_recall_vs_time
         clm = self.st.clm
-        next_f1s = _slice(clm.f1s, self.N_done, self.N)
-        next_precisions = _slice(clm.precisions, self.N_done, self.N)
-        next_recalls = _slice(clm.recalls, self.N_done, self.N)
-
-        ax.plot(self.next_x, next_precisions, "darkred", label="precision")  # top
-        ax.plot(self.next_x, next_f1s, "indianred", label="f1")  # mid
-        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")  # bot
-        ax.fill_between(self.next_x, next_recalls, next_precisions, color="0.9")
-        ax.plot(self.next_hx, [0.5, 0.5], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=0.25, top=0.75)
         s = f"f1={clm.f1s[-1]:.4f}"
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
-        _set_title(ax, s)
 
-        self.canvas["f1_precision_recall_vs_time"].pyplot(
-            self.figs["f1_precision_recall_vs_time"]
+        y = "% correct (lower, upper bound)"
+        df = pd.DataFrame(clm.f1s, columns=["f1"])
+        df["precisions"] = clm.precisions
+        df["recalls"] = clm.recalls
+        df["time"] = range(len(clm.f1s))
+
+        data_long = pd.melt(
+            df,
+            id_vars=["time"],
+            value_vars=["f1", "precisions", "recalls"],
+            var_name="var",
+            value_name="f1,precisions,recalls",
         )
-        if not self.computed_plot_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
-            ax.legend(loc="lower left")
-            _ylabel_on_right(ax)
-            ax.margins(0.01, 0.01)
+
+        chart = (
+            alt.Chart(data_long)
+            .mark_line()
+            .encode(
+                x="time",
+                y=alt.Y("f1,precisions,recalls", title=y),
+                color="var:N",  # Use the category field for color encoding
+            )
+            .properties(title=s)
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0.5]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        self.canvas["f1_precision_recall_vs_time"].altair_chart(
+            chart + ref_line, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_pdr_profit_vs_ptrue(self):
