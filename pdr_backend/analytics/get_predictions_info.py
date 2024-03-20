@@ -21,7 +21,7 @@ logger = logging.getLogger("get_predictions_info")
 
 @enforce_types
 def _address_list_to_str(addresses: List[str]) -> str:
-    return "(" + ", ".join([f"'{f}'" for f in addresses]) + ")"
+    return "(" + ", ".join([f"'{f.lower()}'" for f in addresses]) + ")"
 
 
 @enforce_types
@@ -74,8 +74,11 @@ def get_predictoors_info_main(
             AND user IN {pdr_addrs_str}
     """
 
+    print("query---1", query)
+
     predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
+    print("predictions_df---1", predictions_df)
     _checks_for_empty_df(predictions_df, table_name)
 
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)

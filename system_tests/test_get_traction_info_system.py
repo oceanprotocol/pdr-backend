@@ -21,7 +21,7 @@ def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
         Prediction(
-            "{feed_addr}-31232-{user_addr}",
+            f"{feed_addr}-31232-{user_addr}",
             feed_addr,
             "BTC",
             "5m",

@@ -17,7 +17,7 @@ from pdr_backend.util.currency_types import Wei
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
-def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
+def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, tmpdir):
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
@@ -39,7 +39,7 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
 
     mock_predictions = [
         Prediction(
-            "{feed_addr}-31232-{user_addr}",
+            f"{feed_addr}-31232-{user_addr}",
             feed_addr,
             "BTC",
             "5m",
@@ -56,10 +56,12 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
+
+    data_dir = str(tmpdir)
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        data_dir,
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -81,7 +83,7 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
             "get_predictoors_info",
             "2023-12-01",
             "2023-12-31",
-            "./dir",
+            f"{data_dir}/lake_data",
             "ppss.yaml",
             "development",
             "--PDRS",
