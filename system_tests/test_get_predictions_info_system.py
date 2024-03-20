@@ -16,7 +16,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
+def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir):
     _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -39,10 +39,12 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
+
+    data_dir = str(tmpdir)
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        ".",
+        data_dir,
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
@@ -73,7 +75,7 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
             "get_predictions_info",
             "2023-12-01",
             "2023-12-31",
-            "./dir",
+            f"{data_dir}/lake_data",
             "ppss.yaml",
             "development",
             "--FEEDS",
