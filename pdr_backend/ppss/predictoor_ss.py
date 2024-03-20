@@ -2,7 +2,7 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.base_ss import SingleFeedMixin
+from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.currency_types import Eth
@@ -13,7 +13,7 @@ from pdr_backend.util.currency_types import Eth
 CAND_APPROACHES = [1, 2]
 
 
-class PredictoorSS(SingleFeedMixin, StrMixin):
+class PredictoorSS(MultiFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEED_KEY = "predict_feeds"
 
