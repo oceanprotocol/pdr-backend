@@ -15,7 +15,7 @@ CAND_APPROACHES = [1, 2]
 
 class PredictoorSS(MultiFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEED_KEY = "predict_feeds"
+    FEEDS_KEY = "predict_feeds"
 
     @enforce_types
     def __init__(self, d: dict):
