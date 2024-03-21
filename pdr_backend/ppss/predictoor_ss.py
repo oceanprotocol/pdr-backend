@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
+from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.currency_types import Eth
 
@@ -13,9 +14,9 @@ from pdr_backend.util.currency_types import Eth
 CAND_APPROACHES = [1, 2]
 
 
-class PredictoorSS(MultiFeedMixin, StrMixin):
+class PredictoorSS(PredictFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEEDS_KEY = "predict_feeds"
+    FEEDS_KEY = "feeds"
 
     @enforce_types
     def __init__(self, d: dict):
