@@ -110,7 +110,10 @@ def predictoor_ss_test_dict(
     input_feeds: Optional[list] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or ["binance BTC/USDT c 5m"]
+    predict_feeds = predict_feeds or [{
+        "predict": "binance BTC/USDT c 5m",
+        "train_on": "binance BTC/USDT c 5m",
+    }]
     input_feeds = input_feeds or [predict_feeds]
     d = {
         "predict_feeds": predict_feeds,
