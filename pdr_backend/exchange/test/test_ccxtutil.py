@@ -1,15 +1,18 @@
-from pdr_backend.util.ccxtutil import CCXTExchangeMixin
+from enforce_typing import enforce_types
+
+from pdr_backend.exchange.ccxtutil import CCXTExchangeMixin
 from pdr_backend.ppss.base_ss import SingleFeedMixin
 
 
 class SingleFeedMixinTest(SingleFeedMixin):
     FEED_KEY = "feed"
 
-
+    
 class CCXTExchangeMixinTest(SingleFeedMixinTest, CCXTExchangeMixin):
     pass
 
 
+@enforce_types
 def test_ccxt_mixin():
     ccxt_mixin = CCXTExchangeMixinTest(
         {"feed": "binance ETH/USDT 5m", "exchange_only": {"key1": "val1"}}
