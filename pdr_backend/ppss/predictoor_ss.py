@@ -80,6 +80,10 @@ class PredictoorSS(MultiFeedMixin, StrMixin):
         return self.d["bot_only"]["s_until_epoch_end"]
 
     @property
+    def pred_submitter_mgr(self) -> str:
+        return self.d["pred_submitter_mgr"]
+
+    @property
     def s_cutoff(self) -> int:
         if "s_cutoff" not in self.d["bot_only"]:
             return 10
