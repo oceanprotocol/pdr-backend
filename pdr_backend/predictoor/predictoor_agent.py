@@ -82,6 +82,43 @@ class PredictoorAgent:
                 break
 
     @enforce_types
+    def prepare_stakes(self, feeds: List[SubgraphFeed]):
+        stakes_up = []
+        stakes_down = []
+        feed_addrs = []
+
+        seconds_per_epoch = None
+        cur_epoch = None
+
+        for feed in feeds:
+            contract = self.ppss.web3_pp.get_single_contract(feed.address)
+            if seconds_per_epoch is None:
+                # this is same for all feeds
+                seconds_per_epoch = feed.seconds_per_epoch
+                cur_epoch = contract.get_current_epoch()
+            next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
+            cur_epoch_s_left = next_slot - self.cur_timestamp
+
+            # within the time window to predict?
+            if cur_epoch_s_left > self.epoch_s_thr:
+                continue
+            if cur_epoch_s_left < self.s_cutoff:
+                continue
+
+            # get the target slot
+
+            # get the stakes
+            stake_up, stake_down = self.calc_stakes(feed)
+
+            # add to lists
+            stakes_up.append(stake_up)
+            stakes_down.append(stake_down)
+            feed_addrs.append(feed.address)
+
+        target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
+
+        return stakes_up, stakes_down, feed_addrs, target_slot
+    @enforce_types
     def take_step(self):
         # at new block number yet?
         if self.cur_block_number <= self.prev_block_number:
