@@ -42,24 +42,24 @@ class PredictoorAgent:
         logger.info(self.ppss)
 
         pred_submitter_mgr_addr = self.ppss.predictoor_ss.pred_submitter_mgr
-        self.pred_submitter_mgr = PredSubmitterMgr(self.ppss.web3_pp, pred_submitter_mgr_addr)
-
+        if not pred_submitter_mgr_addr:
+            raise ValueError("No pred_submitter_mgr_addr is set.")
+        self.pred_submitter_mgr = PredSubmitterMgr(
+            self.ppss.web3_pp, pred_submitter_mgr_addr
+        )
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
-        if not feed:
+        feeds: SubgraphFeed = ppss.predictoor_ss.filter_feeds_from_candidates(
+            cand_feeds
+        )
+        if len(feeds) == 0:
             raise ValueError("No feeds found.")
 
-        print_feeds({feed.address: feed}, "filtered feed")
-        self.feed: SubgraphFeed = feed
-
-        # set self.feed_contract. For both up/down. See submit_prediction_tx
-        self.feed_contract: PredictoorContract = ppss.web3_pp.get_single_contract(
-            feed.address
-        )
+        print_feeds(feeds, "filtered feed")
+        self.feeds: SubgraphFeed = feeds
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():
