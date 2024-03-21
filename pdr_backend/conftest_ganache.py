@@ -4,7 +4,7 @@ import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.publisher.publish_asset import publish_asset
@@ -59,7 +59,7 @@ def OCEAN() -> Token:
 
 
 @pytest.fixture(scope="module")  # "module" = invoke once per test module
-def predictoor_contract1():
+def feed_contract1():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(
@@ -73,11 +73,11 @@ def predictoor_contract1():
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3p, dt_addr)
+    return FeedContract(w3p, dt_addr)
 
 
 @pytest.fixture(scope="module")
-def predictoor_contract2():
+def feed_contract2():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(
@@ -91,11 +91,11 @@ def predictoor_contract2():
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
-    return PredictoorContract(w3p, dt_addr)
+    return FeedContract(w3p, dt_addr)
 
 
 @pytest.fixture(scope="module")  # "module" = invoke once per test module
-def predictoor_contract_empty():
+def feed_contract_empty():
     w3p = _web3_pp()
     w3c = w3p.web3_config
     _, _, _, _, logs = publish_asset(
@@ -109,7 +109,7 @@ def predictoor_contract_empty():
         web3_pp=w3p,
     )
     dt_addr = logs["newTokenAddress"]
-    predictoor_c = PredictoorContract(w3p, dt_addr)
+    predictoor_c = FeedContract(w3p, dt_addr)
     predictoor_c.get_exchanges = Mock(return_value=[])
 
     return predictoor_c

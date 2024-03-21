@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS

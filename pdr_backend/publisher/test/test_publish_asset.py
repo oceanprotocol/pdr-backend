@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 from pytest import approx
 
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.util.currency_types import Eth
@@ -35,7 +35,7 @@ def test_publish_asset(web3_pp, web3_config):
     dt_addr = logs_erc["newTokenAddress"]
     assert web3_config.w3.is_address(dt_addr)
 
-    contract = PredictoorContract(web3_pp, dt_addr)
+    contract = FeedContract(web3_pp, dt_addr)
 
     assert contract.get_secondsPerEpoch() == seconds_per_epoch
     assert (
