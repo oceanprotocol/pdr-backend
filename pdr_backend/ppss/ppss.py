@@ -108,7 +108,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
                 s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
                 s += f"\n  predictoor_ss.predict_feed = {predict_f}"
                 raise ValueError(s)
-            
 
         # enforce that all predict feeds have the same timeframe
         timeframe = ""
