@@ -7,14 +7,14 @@ def test_predict_feed_mixin():
     feed_dict = {
         "feeds": [
             {
-                "predict": "binance BTC/USDT c 5m",
+                "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
                 "train_on": [
                     "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
                     "kraken BTC/USDT c 5m",
                 ],
             },
             {
-                "predict": "binance ETH/USDT c 5m",
+                "predict": "binance ETH/USDT ADA/USDT c 5m",
                 "train_on": "binance BTC/USDT ETH/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
             },
             {
@@ -25,20 +25,44 @@ def test_predict_feed_mixin():
     }
     expected = [
         {
-            "predict": ArgFeed.from_str("binance BTC/USDT c 5m"),
+            "predict": ArgFeeds.from_str("binance BTC/USDT c 5m")
+            + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
             "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
             + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
         },
         {
-            "predict": ArgFeed.from_str("binance ETH/USDT c 5m"),
+            "predict": ArgFeeds.from_str("binance ETH/USDT ADA/USDT c 5m"),
             "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
             + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
         },
         {
-            "predict": ArgFeed.from_str("binance BTC/USDT c 1h"),
+            "predict": ArgFeeds.from_str("binance BTC/USDT c 1h"),
             "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT c 5m"),
         },
     ]
     parser = PredictFeedMixin(feed_dict)
 
     assert parser.feeds == expected
+
+
+def test_parse_feed_obj():
+    parser = PredictFeedMixin({})
+    feed_obj = "binance BTC/USDT c 5m, kraken BTC/USDT c 5m"
+    expected = ArgFeeds.from_str("binance BTC/USDT c 5m") + ArgFeeds.from_str(
+        "kraken BTC/USDT c 5m"
+    )
+    assert parser.parse_feed_obj(feed_obj) == expected
+
+    feed_obj = "binance BTC/USDT c 5m"
+    expected = ArgFeeds.from_str("binance BTC/USDT c 5m")
+    assert parser.parse_feed_obj(feed_obj) == expected
+
+    feed_obj = ["binance BTC/USDT c 5m"]
+    expected = ArgFeeds.from_str("binance BTC/USDT c 5m")
+    assert parser.parse_feed_obj(feed_obj) == expected
+
+    feed_obj = ["binance BTC/USDT c 5m", "kraken BTC/USDT c 5m"]
+    expected = ArgFeeds.from_str("binance BTC/USDT c 5m") + ArgFeeds.from_str(
+        "kraken BTC/USDT c 5m"
+    )
+    assert parser.parse_feed_obj(feed_obj) == expected
