@@ -380,11 +380,20 @@ class PredictoorAgent:
         return mergedohlcv_df
 
     @enforce_types
-    def check_balances(self) -> bool:
-        min_OCEAN_bal = self.ppss.predictoor_ss.stake_amount.to_wei()
+    def check_balances(self, required_OCEAN: int) -> bool:
         min_ROSE_bal = Eth(1).to_wei()
 
-        # TODO check manager balance here
+        # check OCEAN balance
+        OCEAN_bal = self.OCEAN.balanceOf(self.pred_submitter_mgr.contract_address)
+        if OCEAN_bal < required_OCEAN:
+            logger.error("OCEAN balance too low: %s < %s", OCEAN_bal, required_OCEAN)
+            return False
+
+        # check ROSE balance
+        ROSE_bal = self.ROSE.get_balance()
+        if ROSE_bal < min_ROSE_bal:
+            logger.error("ROSE balance too low: %s < %s", ROSE_bal, min_ROSE_bal)
+            return False
 
         return True
 
