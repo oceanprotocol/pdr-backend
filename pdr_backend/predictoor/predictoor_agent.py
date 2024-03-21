@@ -103,7 +103,7 @@ class PredictoorAgent:
             if cur_epoch_s_left > self.epoch_s_thr:
                 continue
             if cur_epoch_s_left < self.s_cutoff:
-                continue
+                break
 
             # get the target slot
 
