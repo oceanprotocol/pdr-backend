@@ -324,11 +324,44 @@ class SimPlotter:
 
     @enforce_types
     def _plot_aimodel_varimps(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_varimps  # type: ignore[attr-defined]
-        imps_tups = d.model.importance_per_var(include_stddev=True)
-        plot_aimodel_varimps(d.colnames, imps_tups, (self.figs["aimodel_varimps"], ax))
+        var_imps, errors = d.model.importance_per_var(include_stddev=True)
+        labels = d.colnames
 
-        self.canvas["aimodel_varimps"].pyplot(self.figs["aimodel_varimps"])
+        var_imps = [100 * a for a in var_imps]
+        errors = [100 * a for a in errors]
+
+        df = pd.DataFrame(var_imps, columns=["importance"])
+        df["label"] = labels
+        df["erorrs"] = errors
+        df["low"] = df["importance"] - df["erorrs"] * 2
+        df["high"] = df["importance"] + df["erorrs"] * 2
+        df.sort_values(by=["importance"], inplace=True, ascending=True)
+
+        chart = (
+            alt.Chart(df)
+            .mark_bar()
+            .encode(
+                x=alt.X("importance", title="Relative importance (%)"),
+                y=alt.Y("label", title=None, sort="-x", axis=alt.Axis(labelLimit=200)),
+            )
+            .properties(title="Variable importances")
+        )
+
+        error_bars = (
+            alt.Chart(df)
+            .mark_rule()
+            .encode(
+                y=alt.Y("label:N", title=None, sort="-x"),
+                x=alt.X("low:Q"),
+                x2=alt.X2("high:Q"),
+                color=alt.value("white"),
+                size=alt.value(4),
+            )
+        )
+
+        self.canvas["aimodel_varimps"].altair_chart(
+            chart + error_bars, use_container_width=True, theme="streamlit"
+        )
 
     @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):

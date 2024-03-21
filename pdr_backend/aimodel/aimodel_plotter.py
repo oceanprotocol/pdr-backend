@@ -215,6 +215,9 @@ def plot_aimodel_varimps(
     imps_avg = imps_avg[I]
     imps_stddev = imps_stddev[I]
     varnames = [varnames[i] for i in I]
+    import pdb
+
+    pdb.set_trace()
 
     # if >40 vars, truncate to top 40+1
     if n > 40:
