@@ -8,15 +8,12 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
-from pdr_backend.contract.predictoor_contract import PredictoorContract
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("predictoor_agent")
@@ -118,6 +115,7 @@ class PredictoorAgent:
         target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
 
         return stakes_up, stakes_down, feed_addrs, target_slot
+
     @enforce_types
     def take_step(self):
         # at new block number yet?
@@ -137,42 +135,30 @@ class PredictoorAgent:
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
         self.get_payout()
 
-        # within the time window to predict?
-        if self.cur_epoch_s_left > self.epoch_s_thr:
-            return
-        if self.cur_epoch_s_left < self.s_cutoff:
-            return
+        logger.info(self.status_str())
 
-        if not self.check_balances():
+
+        stakes_up, stakes_down, feed_addrs, target_slot = self.prepare_stakes(self.feeds)
+        required_OCEAN = sum(stakes_up) + sum(stakes_down)
+        if not self.check_balances(required_OCEAN):
             logger.error("Not enough balance, cancel prediction")
             return
 
-        logger.info(self.status_str())
-
-        # compute prediction; exit if no good
-        submit_epoch, target_slot = self.cur_epoch, self.target_slot
-        logger.info("Predict for time slot = %s...", self.target_slot)
-
-        stake_up, stake_down = self.calc_stakes()
-        s = f"-> Predict result: stake_up={stake_up}, stake_down={stake_down}"
+        s = f"-> Predict result: {stakes_up} up, {stakes_down} down, feeds={feed_addrs}"
         logger.info(s)
-        if stake_up == 0 and stake_down == 0:
-            logger.warning("Done: can't use predval/stake")
+        if required_OCEAN == 0:
+            logger.warning("Done: no stakes to submit")
             return
 
-        # submit prediction to chain
-        self.submit_prediction_txs(stake_up, stake_down, target_slot)
-        self.prev_submit_epochs.append(submit_epoch)
+        # submit prediction to chaineds]
+        self.submit_prediction_txs(stakes_up, stakes_down, target_slot, feed_addrs)
+        self.prev_submit_epochs.append(target_slot)
 
         # start printing for next round
         if logging_has_stdout():
             print("" + "=" * 180)
         logger.info(self.status_str())
         logger.info("Waiting...")
-
-    @property
-    def cur_epoch(self) -> int:
-        return self.feed_contract.get_current_epoch()
 
     @property
     def cur_block(self):
@@ -205,7 +191,7 @@ class PredictoorAgent:
 
     @property
     def s_per_epoch(self) -> int:
-        return self.feed.seconds_per_epoch
+        return self.feeds[0].seconds_per_epoch
 
     @property
     def next_slot(self) -> UnixTimeS:  # a timestamp
@@ -218,14 +204,6 @@ class PredictoorAgent:
     @property
     def cur_epoch_s_left(self) -> int:
         return self.next_slot - self.cur_timestamp
-
-    @property
-    def up_addr(self) -> str:
-        return self.web3_config_up.owner
-
-    @property
-    def down_addr(self) -> str:
-        return self.web3_config_down.owner
 
     @property
     def OCEAN(self) -> Token:
@@ -251,55 +229,27 @@ class PredictoorAgent:
     @enforce_types
     def submit_prediction_txs(
         self,
-        stake_up: Eth,
-        stake_down: Eth,
+        stakes_up: List[Eth],
+        stakes_down: List[Eth],
+        feeds: List[str],
         target_slot: UnixTimeS,  # a timestamp
     ):
-        logger.info("Submit 'up' prediction tx to chain...")
-        tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
-
-        logger.info("Submit 'down' prediction tx to chain...")
-        tx2 = self.submit_1prediction_tx(False, stake_down, target_slot)
+        logger.info("Submitting predictions to the chain...")
+        tx = self.pred_submitter_mgr.submit_prediction(
+            stakes_up=stakes_up,
+            stakes_down=stakes_down,
+            feeds=feeds,
+            epoch=target_slot,
+        )
 
         # handle errors
-        if _tx_failed(tx1) or _tx_failed(tx2):
-            s = "One or both txs failed. So, resubmit both with zero stake."
-            s += f"\ntx1={tx1}\ntx2={tx2}"
+        if _tx_failed(tx):
+            s = "Tx failed So, resubmit both with zero stake."
+            s += f"\ntx1={tx}"
             logger.warning(s)
 
-            logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
-            self.submit_1prediction_tx(True, Eth(1e-10), target_slot)
-            logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
-            self.submit_1prediction_tx(False, Eth(1e-10), target_slot)
-
     @enforce_types
-    def submit_1prediction_tx(
-        self,
-        direction: bool,
-        stake: Eth,  # in units of Eth
-        target_slot: UnixTimeS,  # a timestamp
-    ):
-        web3_config = self._updown_web3_config(direction)
-        self.feed_contract.web3_pp.set_web3_config(web3_config)
-        self.feed_contract.set_token(self.feed_contract.web3_pp)
-
-        tx = self.feed_contract.submit_prediction(
-            direction,
-            stake,
-            target_slot,
-            wait_for_receipt=True,
-        )
-        return tx
-
-    def _updown_web3_config(self, direction: bool) -> Web3Config:
-        """Returns the web3_config corresponding to up vs down direction"""
-        if direction is True:
-            return self.web3_config_up
-
-        return self.web3_config_down
-
-    @enforce_types
-    def calc_stakes(self) -> Tuple[Eth, Eth]:
+    def calc_stakes(self, feed: SubgraphFeed) -> Tuple[Eth, Eth]:
         """
         @return
           stake_up -- amt to stake up, in units of Eth
@@ -309,7 +259,7 @@ class PredictoorAgent:
         if approach == 1:
             return self.calc_stakes1()
         if approach == 2:
-            return self.calc_stakes2()
+            return self.calc_stakes2(feed)
         raise ValueError(approach)
 
     @enforce_types
@@ -408,7 +358,7 @@ class PredictoorAgent:
 
         logger.info("Running payouts")
 
-        # TODO Implement manager payout here. 
+        # TODO Implement manager payout here.
 
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_epoch)
