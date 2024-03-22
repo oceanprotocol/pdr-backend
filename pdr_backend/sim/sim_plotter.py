@@ -121,9 +121,9 @@ class SimPlotter:
 
         # save to png?
         img_filename = None
-        if do_save_plot:
-            img_filename = self.ppss.sim_ss.unique_final_img_filename()
-            savefig(img_filename)
+        # if do_save_plot:
+        #    img_filename = self.ppss.sim_ss.unique_final_img_filename()
+        #    savefig(img_filename)
 
         # wrapup for reloop
         if do_show_plot:
@@ -365,10 +365,8 @@ class SimPlotter:
 
     @enforce_types
     def _plot_aimodel_response(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_response  # type: ignore[attr-defined]
-        plot_aimodel_response(d, (self.figs["aimodel_varimps"], ax))
-
-        self.canvas["aimodel_response"].pyplot(self.figs["aimodel_response"])
+        fig = plot_aimodel_response(d)
+        self.canvas["aimodel_response"].plotly_chart(fig)
 
 
 @enforce_types

@@ -4,6 +4,7 @@ from enforce_typing import enforce_types
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
+import plotly.graph_objects as go
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.util.constants import FONTSIZE
@@ -34,7 +35,7 @@ def plot_aimodel_response(
     if aimodel_plotdata.n == 1:
         _plot_aimodel_lineplot(aimodel_plotdata, fig_ax)
     else:
-        _plot_aimodel_contour(aimodel_plotdata, fig_ax, legend_loc)
+        return _plot_aimodel_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
@@ -109,8 +110,6 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
 @enforce_types
 def _plot_aimodel_contour(
     aimodel_plotdata: AimodelPlotdata,
-    fig_ax,
-    legend_loc,
 ):
     """
     @description
@@ -123,13 +122,6 @@ def _plot_aimodel_contour(
     X, ytrue = d.X_train, d.ytrue_train
     nvars = d.n
     assert nvars >= 2
-
-    # start fig
-    if fig_ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig, ax = fig_ax
-        ax.cla()  # clear axis
 
     # take 2 most impt vars
     nvars = X.shape[1]
@@ -163,32 +155,65 @@ def _plot_aimodel_contour(
     # calc Z = model operating on mesh_X
     Z = d.model.predict_ptrue(mesh_X).reshape(dim1.shape)
 
-    # contour plot: model response surface
-    ax.contourf(dim0, dim1, Z, levels=25, cmap=cm.RdBu)  # type: ignore[attr-defined]
-
     # scatterplots: cyan=training_T, red=training_F, yellow_outline=misclassify
     ytrue_hat = d.model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
 
-    ax.scatter(
-        impt_X[:, 0][wrong], impt_X[:, 1][wrong], s=40, c="yellow", label="wrong"
+    yfalse = np.invert(ytrue)
+
+    fig = go.Figure(
+        data=go.Contour(
+            z=Z,
+            x=dim0[0],
+            y=dim1[:, 0],
+            showscale=False,
+            line_width=0,
+            ncontours=25,
+            colorscale="RdBu",
+        )
     )
 
-    yfalse = np.invert(ytrue)
-    ax.scatter(impt_X[:, 0][ytrue], impt_X[:, 1][ytrue], s=5, c="c", label="true")
-    ax.scatter(impt_X[:, 0][yfalse], impt_X[:, 1][yfalse], s=5, c="r", label="false")
+    fig_scatter = go.Figure(
+        data=go.Scatter(
+            x=impt_X[:, 0][wrong],
+            y=impt_X[:, 1][wrong],
+            mode="markers",
+            marker=dict(color="yellow", size=10),
+            name="wrong",
+        )
+    )
 
-    ax.set_title("Contours = model response")
-    ax.set_xlabel(impt_colnames[0], fontsize=FONTSIZE)
-    ax.set_ylabel(impt_colnames[1], fontsize=FONTSIZE)
+    fig_true = go.Figure(
+        data=go.Scatter(
+            x=impt_X[:, 0][ytrue],
+            y=impt_X[:, 1][ytrue],
+            mode="markers",
+            marker=dict(color="cyan", size=5),
+            name="true",
+        )
+    )
+    fig_false = go.Figure(
+        data=go.Scatter(
+            x=impt_X[:, 0][yfalse],
+            y=impt_X[:, 1][yfalse],
+            mode="markers",
+            marker=dict(color="red", size=5),
+            name="false",
+        )
+    )
 
-    HEIGHT = 9  # magic number
-    WIDTH = HEIGHT
-    fig.set_size_inches(WIDTH, HEIGHT)
+    fig.add_trace(fig_scatter.data[0])
+    fig.add_trace(fig_true.data[0])
+    fig.add_trace(fig_false.data[0])
 
-    ax.legend(loc=legend_loc)
-    plt.show()
+    fig.update_layout(yaxis=dict(range=[x1_min, x1_max]))
+    fig.update_layout(xaxis=dict(range=[x0_min, x0_max]))
+    fig.update_xaxes(title_text=impt_colnames[0])
+    fig.update_yaxes(title_text=impt_colnames[1])
+    fig.update_layout(title="Contours = model response")
+
+    return fig
 
 
 @enforce_types
@@ -215,9 +240,6 @@ def plot_aimodel_varimps(
     imps_avg = imps_avg[I]
     imps_stddev = imps_stddev[I]
     varnames = [varnames[i] for i in I]
-    import pdb
-
-    pdb.set_trace()
 
     # if >40 vars, truncate to top 40+1
     if n > 40:
