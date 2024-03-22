@@ -7,20 +7,17 @@ from pdr_backend.lake.table_pdr_predictions import (
 )
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.subgraph.prediction import Prediction
-from pdr_backend.lake.table import Table
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Wei
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_predictoor_summary_stats")
-def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
+def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -61,11 +58,10 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog, t
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
 
-    data_dir = str(tmpdir)
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        data_dir,
+        ".",
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )

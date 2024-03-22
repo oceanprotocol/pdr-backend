@@ -5,7 +5,6 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
 )
-from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module

@@ -6,7 +6,6 @@ from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
 )
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -81,7 +80,7 @@ def test_traction_info_system(mock_plot_stats, caplog, tmpdir):
             "2023-12-31",
             ppss.lake_ss.lake_dir,
             "ppss.yaml",
-            "sapphire-testnet",
+            "sapphire-mainnet",
         ]
 
         cli_module._do_main()
