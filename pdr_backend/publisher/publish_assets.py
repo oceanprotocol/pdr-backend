@@ -1,7 +1,6 @@
 import logging
 
 from enforce_typing import enforce_types
-
 from pdr_backend.ppss.publisher_ss import PublisherSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.publisher.publish_asset import publish_asset
@@ -18,8 +17,9 @@ def publish_assets(web3_pp: Web3PP, publisher_ss: PublisherSS):
     """
     Publish assets, with opinions on % cut, token price, subscription length,
       timeframe, and choices of feeds.
-    Meant to be used from CLI.
+    Meant to be used from CLI. 86400  300
     """
+
     logger.info("Publish on network = %s", web3_pp.network)
     if web3_pp.network == "development" or "barge" in web3_pp.network:
         trueval_submitter_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"

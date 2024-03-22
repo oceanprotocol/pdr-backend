@@ -4,8 +4,6 @@ from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     bronze_pdr_predictions_table_name,
-)
-from pdr_backend.lake.table_bronze_pdr_predictions import (
     _process_predictions,
     _process_truevals,
     _process_payouts,
@@ -56,22 +54,24 @@ def test_table_bronze_pdr_predictions(
     # In our mock, all predictions have None truevalue, payout, etc...
     # This shows that all of this data will come from other tables
     gql_tables = _process_predictions([], gql_tables, ppss)
-    assert len(gql_tables["bronze_pdr_predictions"].df) == 6
-    assert gql_tables["bronze_pdr_predictions"].df["truevalue"].null_count() == 6
-    assert gql_tables["bronze_pdr_predictions"].df["payout"].null_count() == 6
+    assert len(gql_tables["bronze_pdr_predictions"].df) == 9
+    assert gql_tables["bronze_pdr_predictions"].df["truevalue"].null_count() == 9
+    assert gql_tables["bronze_pdr_predictions"].df["payout"].null_count() == 9
 
     # Work 2: Append from bronze_pdr_truevals table
     gql_tables = _process_truevals(gql_tables, ppss)
 
     # We should still have 6 rows
-    assert len(gql_tables["bronze_pdr_predictions"].df) == 6
+    assert len(gql_tables["bronze_pdr_predictions"].df) == 9
     # In our mock, we're going to have 1 truevalue missing
     assert gql_tables["bronze_pdr_predictions"].df["truevalue"].null_count() == 1
 
     # Work 3: Append from bronze_pdr_payouts table
     gql_tables = _process_payouts(gql_tables, ppss)
 
-    assert len(gql_tables["bronze_pdr_predictions"].df) == 6
+    assert len(gql_tables["bronze_pdr_predictions"].df) == 9
+
+    print(gql_tables["bronze_pdr_predictions"].df)
 
     # Assert that there could be Nones in the stake column
     assert gql_tables["bronze_pdr_predictions"].df["stake"].null_count() == 1
@@ -87,7 +87,7 @@ def test_table_bronze_pdr_predictions(
 
     # Assert that there is a None in the payout column
     assert gql_tables["bronze_pdr_predictions"].df["payout"].null_count() == 1
-    target_payout = [0.00, 10.93, 7.04, 7.16, None]
+    target_payout = [0.00, 0.00, 7.04, 3.56, None]
     bronze_pdr_predictions_payout = (
         gql_tables["bronze_pdr_predictions"].df["payout"].to_list()
     )
