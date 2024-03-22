@@ -11,7 +11,6 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframes,
     verify_timeframes_str,
 )
-from pdr_backend.util.mocks import MockExchange
 
 
 class ArgFeed:
