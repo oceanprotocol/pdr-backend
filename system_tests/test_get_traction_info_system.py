@@ -12,7 +12,6 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
@@ -49,9 +48,11 @@ def test_traction_info_system(mock_plot_stats, caplog):
         fin_timestr=fin_timestr,
     )
 
-    print("ppss.lake_ss.lake_dir", ppss.lake_ss.lake_dir)
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
+
+    # DROP TABLE IF EXISTS
+    PersistentDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
 
     PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
         predictions_df, "pdr_predictions"
@@ -87,7 +88,7 @@ def test_traction_info_system(mock_plot_stats, caplog):
         assert "pdr get_traction_info: Begin" in caplog.text
         assert "Arguments:" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
-        assert "NETWORK=sapphire-testnet" in caplog.text
+        assert "NETWORK=sapphire-mainnet" in caplog.text
         assert caplog.text.count("Chart created:") == 2
 
         # Additional assertions

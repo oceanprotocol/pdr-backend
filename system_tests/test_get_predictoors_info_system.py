@@ -66,12 +66,13 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
         fin_timestr=fin_timestr,
     )
 
-    print("ppss.lake_ss.lake_dir----", ppss.lake_ss.lake_dir)
-
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     get_get_predictoor_summary_stats.return_value = predictions_df
+
+    # DROP TABLE IF EXISTS
+    PersistentDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
 
     PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
         predictions_df, "pdr_predictions"

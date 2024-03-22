@@ -18,7 +18,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
 def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
-    _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
+    _feed = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
     mock_predictions = [
@@ -51,6 +51,9 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
+
+    # DROP TABLE IF EXISTS
+    PersistentDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
 
     PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
         predictions_df, "pdr_predictions"
