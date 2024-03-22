@@ -155,6 +155,13 @@ class GQLDataFactory:
             # number of data fetched from the subgraph at a time
             pagination_limit = 1000
 
+            # fetch subscriptions from 24h earlier to properly calculate revenues
+            st_ut = (
+                (UnixTimeMs(st_ut - 86400000))
+                if table.table_name == subscriptions_table_name
+                else st_ut
+            )
+
             print(f"Updating table {table.table_name}")
             do_fetch(
                 self.record_config["fetch_functions"][table.table_name],

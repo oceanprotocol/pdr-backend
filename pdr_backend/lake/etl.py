@@ -124,6 +124,7 @@ class ETL:
             self.tables[bronze_pdr_predictions_table_name] = table
 
         table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
+        self.tables[bronze_pdr_predictions_table_name] = table
         table.save()
 
     def update_silver_pdr_predictions(self):
@@ -141,7 +142,8 @@ class ETL:
             self.tables[silver_pdr_predictions_table_name] = table
 
         table = get_silver_pdr_predictions_table(self.tables, self.ppss)
-        print(table.df)
+        table.save()
+        self.tables[silver_pdr_predictions_table_name] = table
 
     def update_bronze_pdr_slots(self):
         """
@@ -158,4 +160,5 @@ class ETL:
             self.tables[bronze_pdr_slots_table_name] = table
 
         table = get_bronze_pdr_slots_table(self.tables, self.ppss)
+        self.tables[bronze_pdr_slots_table_name] = table
         table.save()
