@@ -12,7 +12,6 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
