@@ -17,8 +17,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
+def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
     _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -42,11 +41,10 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog, tmpdir
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
 
-    data_dir = str(tmpdir)
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        data_dir,
+        ".",
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
