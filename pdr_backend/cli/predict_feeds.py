@@ -30,19 +30,16 @@ class PredictFeed:
         parsed_objs = []
         for feed in feed_obj:
             # Convert each feed_obj string to ArgFeeds
-            feed_obj = ArgFeeds.from_str(feed)
+            feed_obj = ArgFeeds.from_str(str(feed))
             parsed_objs.extend(feed_obj)
         return parsed_objs
 
     def to_dict(self):
-        return {
-            "predict": self.predict,
-            "train_on": self.train_on
-        }
-    
+        return {"predict": self.predict, "train_on": self.train_on}
+
     def from_dict(d):
         return PredictFeed(d["predict"], d["train_on"])
-        
+
 
 class PredictFeeds(List[PredictFeed]):
     def __init__(self, feeds: List[PredictFeed]):
@@ -50,15 +47,31 @@ class PredictFeeds(List[PredictFeed]):
 
     @classmethod
     def from_array(cls, feeds: List[dict]):
-        return cls([PredictFeed.from_feed_objs(feeds["predict"], feeds["train_on"]) for feeds in feeds])
+        return cls(
+            [
+                PredictFeed.from_feed_objs(feeds["predict"], feeds["train_on"])
+                for feeds in feeds
+            ]
+        )
+
+    @property
+    def feeds_str(self) -> List[str]:
+        set_pairs = []
+        for feed in self:
+            for pairs in [feed.predict, feed.train_on]:
+                for pair in pairs:
+                    if pair not in set_pairs:
+                        set_pairs.append(pair)
+        return set_pairs
 
     @property
     def feeds(self) -> List[str]:
         set_pairs = []
         for feed in self:
-            for pair in [feed.predict, feed.train_on]:
-                if str(pair) not in set_pairs:
-                    set_pairs.extend([str(i) for i in pair])
+            for pairs in [feed.predict, feed.train_on]:
+                for pair in pairs:
+                    if pair not in set_pairs:
+                        set_pairs.append(pair)
         return set_pairs
 
     def to_list(self) -> List[dict]:
