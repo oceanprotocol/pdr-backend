@@ -1,23 +1,23 @@
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from altair import LayerChart
 from enforce_typing import enforce_types
+from numpy.testing import assert_array_equal
+from plotly.graph_objs._figure import Figure
 from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
-from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
-
-plt_show_path = "pdr_backend.aimodel.aimodel_plotter.plt.show"
 
 
 @enforce_types
@@ -76,12 +76,8 @@ def _test_aimodel_factory_2vars_main(approach):
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    if SHOW_PLOT:
-        plot_aimodel_response(d, fig_ax=None, legend_loc="upper left")
-    else:
-        with patch(plt_show_path):
-            plot_aimodel_response(d, fig_ax=None, legend_loc="upper left")
-    assert not SHOW_PLOT
+    figure = plot_aimodel_response(d)
+    assert isinstance(figure, Figure)
 
 
 @enforce_types
@@ -159,12 +155,8 @@ def test_aimodel_factory_1var_main():
     colnames = ["x0"]
     slicing_x = np.array([0.1])  # arbitrary
     aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    if SHOW_PLOT:
-        plot_aimodel_response(aimodel_plotdata)
-    else:
-        with patch(plt_show_path):
-            plot_aimodel_response(aimodel_plotdata)
-    assert not SHOW_PLOT
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
 
 
 @enforce_types
@@ -199,12 +191,8 @@ def test_aimodel_factory_4vars_response():
     slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
     aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
 
-    if SHOW_PLOT:
-        plot_aimodel_response(aimodel_plotdata)
-    else:
-        with patch(plt_show_path):
-            plot_aimodel_response(aimodel_plotdata)
-    assert not SHOW_PLOT
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
 
 
 @enforce_types
@@ -256,11 +244,12 @@ def _test_aimodel_factory_nvars_varimps(n: int):
     _sum = sum(imps_avg)
     imps_avg = imps_avg / _sum
     imps_stddev = imps_stddev / _sum
-    imps_tup = (imps_avg, imps_stddev)
 
-    if SHOW_PLOT:
-        plot_aimodel_varimps(varnames, imps_tup)
-    else:
-        with patch(plt_show_path):
-            plot_aimodel_varimps(varnames, imps_tup)
-    assert not SHOW_PLOT
+    plot_data = Mock(spec=AimodelPlotdata)
+    plot_data.model = Mock()
+    plot_data.model.importance_per_var.return_value = (imps_avg, imps_stddev)
+    plot_data.colnames = Mock()
+    plot_data.colnames.return_value = varnames
+
+    figure = plot_aimodel_varimps(plot_data)
+    assert isinstance(figure, LayerChart)

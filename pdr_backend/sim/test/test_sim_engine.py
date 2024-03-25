@@ -1,6 +1,4 @@
 import os
-from unittest import mock
-
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
@@ -39,10 +37,7 @@ def test_sim_engine(tmpdir):
     ppss.sim_ss = SimSS(d)
 
     # go
-    with mock.patch("pdr_backend.sim.sim_plotter.plt.show"):
-        sim_engine = SimEngine(ppss)
-        sim_engine.run()
+    sim_engine = SimEngine(ppss)
+    sim_engine.run()
 
-    #
-    target_img_filename = os.path.join(log_dir, "final_0.png")
-    assert os.path.exists(target_img_filename)
+    # after implementing the P/C architeture, check state saved
