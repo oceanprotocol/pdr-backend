@@ -243,11 +243,17 @@ def _process_predictions(
             )
         else:
             row["sum_stake"] = row["stake"] if row["stake"] else 0
-            row["sum_revenue"] = (row["payout"] - row["stake"]) if (row["predvalue"] == row["truevalue"]) else -row["stake"]
+            row["sum_revenue"] = (
+                (row["payout"] - row["stake"])
+                if (row["predvalue"] == row["truevalue"])
+                else -row["stake"]
+            )
             row["sum_revenue_df"] = df_revenue
             row["sum_revenue_user"] = user_revenue
             row["sum_revenue_stake"] = (
-                (row["payout"] - (df_revenue + user_revenue + row["stake"])) if (row["predvalue"] == row["truevalue"]) else (row["payout"] - row["stake"])
+                (row["payout"] - (df_revenue + user_revenue + row["stake"]))
+                if (row["predvalue"] == row["truevalue"])
+                else (row["payout"] - row["stake"])
             )
             row["count_predictions"] = 1
             row["count_wins"] = 1 if row["predvalue"] == row["truevalue"] else 0
