@@ -223,11 +223,7 @@ class SimEngine:
                 colnames,
                 slicing_x,
             )
-            do_show = self.ppss.sim_ss.do_plot
-            do_save = self.ppss.sim_ss.is_final_iter(test_i)
-            img_filename = self.sim_plotter.compute_plot(d, do_show, do_save)
-            if img_filename is not None:
-                logger.info("Just saved plot as file: %s", img_filename)
+            self.sim_plotter.compute_plot(d)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:

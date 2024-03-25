@@ -1,8 +1,6 @@
 from typing import List, Optional
 
 import altair as alt
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import savefig
 import numpy as np
 import pandas as pd
 import streamlit
@@ -15,7 +13,6 @@ from pdr_backend.aimodel.aimodel_plotter import (
 )
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_state import SimState
-from pdr_backend.util.constants import FONTSIZE
 
 streamlit.set_page_config(layout="wide")
 
@@ -36,11 +33,6 @@ class SimPlotter:
         self.st = st
         self.ppss = ppss
 
-        plt.close("all")
-
-        # so labels are above lines. Must be before figure()
-        plt.rcParams["axes.axisbelow"] = False
-
         c1, c2, c3 = streamlit.columns((1, 1, 2))
         c4, c5 = streamlit.columns((1, 1))
         c6, c7 = streamlit.columns((1, 1))
@@ -57,28 +49,16 @@ class SimPlotter:
             "f1_precision_recall_vs_time": c8.empty(),
         }
 
-        self.figs = {}
-
-        for k, _ in self.canvas.items():
-            fig, ax = plt.subplots()
-            self.figs[k] = fig
-            setattr(self, f"ax_{k}", ax)
-
         # attributes to help update plots' state quickly
         self.N: int = 0
         self.N_done: int = 0
         self.x: List[float] = []
 
-        self.shown_plot_before: bool = False
-        self.computed_plot_before: bool = False
-
     # pylint: disable=too-many-statements
     @enforce_types
     def compute_plot(
         self,
-        aimodel_plotdata: AimodelPlotdata,
-        do_show_plot: bool,
-        do_save_plot: bool,
+        aimodel_plotdata: AimodelPlotdata
     ) -> Optional[str]:
         """
         @description
@@ -92,12 +72,6 @@ class SimPlotter:
         @return
           img_filename - filename of saved plot (None if not done)
         """
-        if not self.shown_plot_before:
-            plt.ion()
-            if do_show_plot:
-                plt.show()
-            self.shown_plot_before = True
-
         # update N, N_done, x. **Update x only after updating N, N_done!**
         self.N = len(self.st.pdr_profits_OCEAN)
         self.N_done = len(self.x)  # what # points have been plotted previously
@@ -114,22 +88,6 @@ class SimPlotter:
 
         self._plot_aimodel_varimps(aimodel_plotdata)
         self._plot_aimodel_response(aimodel_plotdata)
-
-        # final pieces of making plot
-        plt.subplots_adjust(wspace=0.3)
-
-        # save to png?
-        img_filename = None
-        # if do_save_plot:
-        #    img_filename = self.ppss.sim_ss.unique_final_img_filename()
-        #    savefig(img_filename)
-
-        # wrapup for reloop
-        if do_show_plot:
-            plt.pause(0.001)
-        self.computed_plot_before = True
-
-        return img_filename
 
     @property
     def next_x(self) -> List[float]:
@@ -340,29 +298,3 @@ class SimPlotter:
 def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
     return [a[i] * mult for i in range(max(0, N_done - 1), N)]
 
-
-@enforce_types
-def _set_xlabel(ax, s: str):
-    ax.set_xlabel(s, fontsize=FONTSIZE)
-
-
-@enforce_types
-def _set_ylabel(ax, s: str):
-    ax.set_ylabel(s, fontsize=FONTSIZE)
-
-
-@enforce_types
-def _set_title(ax, s: str):
-    ax.set_title(s, fontsize=FONTSIZE, fontweight="bold")
-
-
-@enforce_types
-def _ylabel_on_right(ax):
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-
-
-@enforce_types
-def _del_lines(ax):
-    for l in ax.lines:
-        l.remove()
