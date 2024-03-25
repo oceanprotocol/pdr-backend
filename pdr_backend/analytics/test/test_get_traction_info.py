@@ -19,9 +19,7 @@ table_name = "pdr_predictions"
 @patch("pdr_backend.analytics.get_predictions_info.plot_traction_daily_statistics")
 @patch("pdr_backend.analytics.get_predictions_info.get_slot_statistics")
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
 def test_get_traction_info_main_mainnet(
-    mock_get_gql_tables,
     mock_plot_slot_daily_statistics,
     mock_get_slot_statistics,
     mock_plot_traction_daily_statistics,
@@ -45,7 +43,6 @@ def test_get_traction_info_main_mainnet(
     predictions_table = Table(table_name, predictions_df.schema, ppss)
     predictions_table.append_to_storage(predictions_df)
 
-    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
     get_traction_info_main(ppss, st_timestr, fin_timestr)
 
     assert len(predictions_df) > 0
@@ -70,9 +67,7 @@ def test_get_traction_info_main_mainnet(
 
 
 @enforce_types
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_get_traction_info_empty_data_factory(
-    mock_predictions_df,
+def test_get_traction_info_empty_data(
     tmpdir,
 ):
     _clean_up_persistent_data_store(tmpdir)
@@ -88,9 +83,7 @@ def test_get_traction_info_empty_data_factory(
     )
 
     pdr_prediction_table = Table(table_name, predictions_schema, ppss)
-    pdr_prediction_table.append_to_storage(pl.DataFrame(schema=predictions_schema))
-
-    mock_predictions_df.return_value = {"pdr_predictions": pdr_prediction_table}
+    pdr_prediction_table.append_to_storage(pl.DataFrame([], schema=predictions_schema))
 
     with pytest.raises(AssertionError):
         get_traction_info_main(ppss, st_timestr, fin_timestr)

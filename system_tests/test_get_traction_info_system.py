@@ -6,23 +6,23 @@ from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
 )
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table import Table
 from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpdir):
+def test_traction_info_system(mock_plot_stats, caplog):
+
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [
         Prediction(
-            "{feed_addr}-31232-{0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd}",
+            f"{feed_addr}-31232-{user_addr}",
             feed_addr,
             "BTC",
             "5m",
@@ -39,20 +39,24 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpd
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
+
     ppss = mock_ppss(
         ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
-        str(tmpdir),
+        ".",
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
 
     predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
-    predictions_table = Table("pdr_predictions", predictions_schema, ppss)
-    predictions_table.append_to_storage(predictions_df)
 
-    mock_get_gql_tables.return_value = {"pdr_predictions": predictions_table}
+    # DROP TABLE IF EXISTS
+    PersistentDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
+
+    PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+        predictions_df, "pdr_predictions"
+    )
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-mainnet"
@@ -73,9 +77,9 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpd
             "get_traction_info",
             "2023-12-01",
             "2023-12-31",
-            str(tmpdir),
+            ppss.lake_ss.lake_dir,
             "ppss.yaml",
-            "sapphire-testnet",
+            "sapphire-mainnet",
         ]
 
         cli_module._do_main()
@@ -84,7 +88,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog, tmpd
         assert "pdr get_traction_info: Begin" in caplog.text
         assert "Arguments:" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
-        assert "NETWORK=sapphire-testnet" in caplog.text
+        assert "NETWORK=sapphire-mainnet" in caplog.text
         assert caplog.text.count("Chart created:") == 2
 
         # Additional assertions
