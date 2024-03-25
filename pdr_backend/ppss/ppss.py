@@ -6,6 +6,7 @@ import yaml
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.multisim_ss import MultisimSS
@@ -94,13 +95,13 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
         lake_fs = self.lake_ss.feeds
-        predict_fs = self.predictoor_ss.feeds
+        predict_fs = PredictFeeds.from_array(self.predictoor_ss.feeds)
         aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
 
         # is predictoor_ss.predict_feed in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
         #   because lake holds all signals o,h,l,c,v
-        for predict_f in predict_fs:
+        for predict_f in predict_fs.feeds:
             if not lake_fs.contains_combination(
                 predict_f.exchange, predict_f.pair, predict_f.timeframe
             ):
@@ -111,7 +112,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # enforce that all predict feeds have the same timeframe
         timeframe = ""
-        for predict_f in predict_fs:
+        for predict_f in predict_fs.feeds_str:
             if timeframe == "":
                 timeframe = predict_f.timeframe
                 continue
@@ -122,7 +123,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
                 raise ValueError(s)
 
         # do all aimodel_ss input feeds conform to predict feed timeframe?
-        for predict_f in predict_fs:
+        for predict_f in predict_fs.feeds_str:
             for aimodel_f in aimodel_fs:
                 if aimodel_f.timeframe != predict_f.timeframe:
                     s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
@@ -145,7 +146,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
         # - check for matching {exchange, pair, timeframe AND signal}
-        for predict_f in predict_fs:
+        for predict_f in predict_fs.feeds:
             if predict_f not in aimodel_fs:
                 s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
                 s += " (accounting for signal too)"
@@ -189,7 +190,7 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    feeds: List[str],  # eg ["binance BTC/USDT ETH/USDT c 5m", "kraken ..."]
+    feeds: PredictFeeds,
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -203,13 +204,10 @@ def mock_ppss(
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
 
-    arg_feeds: ArgFeeds = ArgFeeds.from_strs(feeds)
-    onefeed = str(arg_feeds[0])  # eg "binance BTC/USDT c 5m"
-
     assert hasattr(ppss, "lake_ss")
     ppss.lake_ss = LakeSS(
         {
-            "feeds": feeds,
+            "feeds": feeds.feeds_str,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
@@ -218,14 +216,17 @@ def mock_ppss(
 
     assert hasattr(ppss, "predictoor_ss")
     d = predictoor_ss_test_dict()
-    d["predict_feed"] = onefeed
-    d["aimodel_ss"]["input_feeds"] = feeds
+    d["feeds"] = feeds.feeds_str
+    d["aimodel_ss"]["input_feeds"] = feeds.feeds_str
+    import pdb
+
+    pdb.set_trace()
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(
         {
-            "feed": onefeed,
+            "feed": feeds.feeds_str,
             "sim_only": {
                 "buy_amt": "10 USD",
             },
