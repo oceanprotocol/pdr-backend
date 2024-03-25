@@ -34,6 +34,15 @@ pip install -r requirements.txt
 export PATH=$PATH:.
 ```
 
+You need a local copy of Ocean contract addresses [`address.json`](https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json). In console:
+```console
+# make directory if needed
+mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
+
+# copy from github to local directory. Or, use wget if Linux. Or, download via browser.
+curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+```
+
 If you're running MacOS, then in console:
 
 ```console
@@ -90,8 +99,6 @@ Then, copy & paste your private key as an envvar. In console:
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
-
-Update `my_ppss.yaml` as desired.
 
 Then, run a simple trading bot. In console:
 
