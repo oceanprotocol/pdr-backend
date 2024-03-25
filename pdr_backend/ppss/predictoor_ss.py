@@ -1,8 +1,8 @@
 from typing import Optional
 
 from enforce_typing import enforce_types
+from pdr_backend.cli.predict_feeds import PredictFeeds
 
-from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
 from pdr_backend.util.strutil import StrMixin
@@ -104,19 +104,26 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
 # utilities for testing
 
 
-@enforce_types
-def predictoor_ss_test_dict(
-    predict_feeds: Optional[list] = None,
-    input_feeds: Optional[list] = None,
-) -> dict:
-    """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or [{
+def example_predict_feeds() -> PredictFeeds:
+    return PredictFeeds.from_array([{
         "predict": "binance BTC/USDT c 5m",
         "train_on": "binance BTC/USDT c 5m",
-    }]
-    input_feeds = input_feeds or [predict_feeds]
+    },{
+        "predict": "kraken ETH/USDT c 5m",
+        "train_on": "kraken ETH/USDT c 5m",
+    }])
+
+@enforce_types
+def predictoor_ss_test_dict(
+    predict_feeds: Optional[PredictFeeds] = None,
+    input_feeds: Optional[PredictFeeds] = None,
+) -> dict:
+    """Use this function's return dict 'd' to construct PredictoorSS(d)"""
+    predict_feeds = predict_feeds or example_predict_feeds()
+    input_feeds = input_feeds or predict_feeds.feeds
+    print(predict_feeds, input_feeds)
     d = {
-        "predict_feeds": predict_feeds,
+        "feeds": predict_feeds.to_list(),
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
@@ -130,3 +137,5 @@ def predictoor_ss_test_dict(
         "aimodel_ss": aimodel_ss_test_dict(input_feeds),
     }
     return d
+
+
