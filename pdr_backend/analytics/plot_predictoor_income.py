@@ -6,8 +6,6 @@ import polars as pl
 import streamlit as st
 from polars import DataFrame
 import matplotlib.pyplot as plt
-
-# from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
@@ -27,6 +25,7 @@ def load_data():
         gql_data_factory = GQLDataFactory(ppss)
         etl = ETL(ppss, gql_data_factory)
         etl.do_etl()
+        print(etl.tables)
 
         silver_predictions_table_df = etl.tables[silver_pdr_predictions_table_name].df
         # print(silver_predictions_table_df["user"][0], silver_predictions_table_df["contract"][0])
@@ -64,22 +63,6 @@ def process_data(df: DataFrame, user_addrs, contract_addrs):
     fileds_to_plot_df = fileds_to_plot_df.sort("slot")
 
     return fileds_to_plot_df
-
-
-def plot_revenue_data(df: DataFrame, ax: Axes):
-    # st.line_chart(df.set_index('slot'))
-    df = df.to_pandas()
-    ax[0].set_title("Revenues")
-    ax[0].plot(df["slot"], df["revenue"], label="Revenue")
-    ax[0].plot(df["slot"], df["revenue_df"], label="Revenue DF")
-    ax[0].plot(df["slot"], df["revenue_user"], label="Revenue Subscription")
-    ax[0].plot(df["slot"], df["revenue_stake"], label="Revenue Stake")
-    # ax.set_xticks(df['slot'])
-    # ax.set_xticklabels(df['slot'], rotation=45)
-
-    ax[0].set_xlabel("Slot")
-    ax[0].set_ylabel("OCEAN")
-    ax[0].legend()
 
 
 def plot_income_data(df: DataFrame, ax: Axes):
