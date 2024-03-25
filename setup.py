@@ -23,7 +23,7 @@ install_requirements = [
     "numpy==1.26.4",
     "pandas==2.2.1",
     "pathlib",
-    "polars==0.20.15",
+    "polars==0.20.16",
     "polars[timezone]",
     "pyarrow==15.0.2",
     "pylint==3.1.0",
