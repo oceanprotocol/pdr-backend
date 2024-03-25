@@ -1,20 +1,15 @@
-from typing import List
-
 from enforce_typing import enforce_types
-import matplotlib.pyplot as plt
-from matplotlib import cm
 import numpy as np
 import plotly.graph_objects as go
+import pandas as pd
+import altair as alt
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.util.constants import FONTSIZE
 
 
 @enforce_types
 def plot_aimodel_response(
     aimodel_plotdata: AimodelPlotdata,
-    fig_ax=None,
-    legend_loc: str = "lower right",
 ):
     """
     @description
@@ -33,7 +28,7 @@ def plot_aimodel_response(
       legend_loc -- eg "upper left". Applies only to contour plots.
     """
     if aimodel_plotdata.n == 1:
-        _plot_aimodel_lineplot(aimodel_plotdata, fig_ax)
+        return _plot_aimodel_lineplot(aimodel_plotdata)
     else:
         return _plot_aimodel_contour(aimodel_plotdata)
 
@@ -42,7 +37,7 @@ J = np.array([], dtype=float)  # jitter
 
 
 @enforce_types
-def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
+def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model, when there's 1 input x-var. Use a line plot.
@@ -55,13 +50,6 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
 
     x = X[:, 0]
     N = len(x)
-
-    # start fig
-    if fig_ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig, ax = fig_ax
-        ax.cla()  # clear axis
 
     # calc mesh_X = uniform grid
     mesh_x = np.linspace(min(x), max(x), 200)
@@ -77,12 +65,32 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     # yellow vertical bars = where model was wrong
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
+
+    fig_bars = go.Figure()
+
     for i, xi in enumerate(x[wrong]):
         label = "wrong" if i == 0 else None
-        ax.plot([xi, xi], [0.0, 1.0], linewidth=1, c="yellow", label=label)
+        fig_bars.add_trace(
+            go.Scatter(
+                x=[xi, xi],
+                y=[0.0, 1.0],
+                mode="lines",
+                line=dict(color="yellow", width=1),
+                name=label,
+                showlegend=bool(label),
+            )
+        )
 
     # line plot: model response surface
-    ax.plot(mesh_x, z, c="k", label="model prob(true)")
+    fig_line = go.Figure(
+        data=go.Scatter(
+            x=mesh_x,
+            y=z,
+            mode="lines",
+            line=dict(color="gray"),
+            name="model prob(true)",
+        )
+    )
 
     # scatterplots: cyan=training_T, red=training_F
     global J
@@ -91,20 +99,35 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata, fig_ax):
     yfalse = np.invert(ytrue)
     y1 = ytrue[ytrue] - J[ytrue] + 0.025
     y2 = ytrue[yfalse] + J[yfalse] - 0.025
-    ax.scatter(x[ytrue], y1, s=2, c="c", label="trn data true")
-    ax.scatter(x[yfalse], y2, s=2, c="r", label="trn data false")
 
-    # labels
-    ax.set_title(f"Prob(true) vs {d.colnames[0]}")
-    ax.set_xlabel(d.colnames[0], fontsize=FONTSIZE)
-    ax.set_ylabel("Prob(true)", fontsize=FONTSIZE)
+    fig_scatter_true = go.Figure(
+        data=go.Scatter(
+            x=x[ytrue],
+            y=y1,
+            mode="markers",
+            marker=dict(color="cyan", size=5),
+            name="trn data true",
+        )
+    )
 
-    HEIGHT = 9  # magic number
-    WIDTH = HEIGHT
-    fig.set_size_inches(WIDTH, HEIGHT)
+    fig_scatter_false = go.Figure(
+        data=go.Scatter(
+            x=x[yfalse],
+            y=y2,
+            mode="markers",
+            marker=dict(color="red", size=5),
+            name="trn data false",
+        )
+    )
 
-    ax.legend(loc="upper left")
-    plt.show()
+    fig_scatter_true.add_trace(fig_scatter_false.data[0])
+    fig_scatter_true.add_trace(fig_line.data[0])
+
+    fig_bars.add_trace(fig_scatter_true.data[0])
+    fig_bars.add_trace(fig_scatter_true.data[1])
+    fig_bars.add_trace(fig_scatter_true.data[2])
+
+    return fig_bars
 
 
 @enforce_types
@@ -217,84 +240,48 @@ def _plot_aimodel_contour(
 
 
 @enforce_types
-def plot_aimodel_varimps(
-    varnames: List[str],
-    imps_tup: tuple,
-    fig_ax=None,
-):
+def plot_aimodel_varimps(d: AimodelPlotdata):
     """
     @description
       Bar plot showing rel importance of vars
       Including 95% confidence intervals (2.0 stddevs)
 
     @arguments
-      varnames -- variable names
-      imps_tup -- tuple of (imps_avg, imps_stddev)
-      fig_ax -- None or (fig, ax) to easily embed into existing plot
+      d -- AimodelPlotdata
     """
-    n = len(varnames)
-    imps_avg, imps_stddev = imps_tup
+    var_imps, errors = d.model.importance_per_var(include_stddev=True)
+    labels = d.colnames
 
-    # re-order in descending imps_avg
-    I = np.argsort(imps_avg)[::-1]
-    imps_avg = imps_avg[I]
-    imps_stddev = imps_stddev[I]
-    varnames = [varnames[i] for i in I]
+    var_imps = [100 * a for a in var_imps]
+    errors = [100 * a for a in errors]
 
-    # if >40 vars, truncate to top 40+1
-    if n > 40:
-        rest_avg = sum(imps_avg[40:])
-        rest_stddev = np.average(imps_stddev[40:])
-        imps_avg = np.append(imps_avg[:40], rest_avg)
-        imps_stddev = np.append(imps_stddev[:40], rest_stddev)
-        varnames = varnames[:40] + ["rest"]
-        n = 40 + 1
+    df = pd.DataFrame(var_imps, columns=["importance"])
+    df["label"] = labels
+    df["erorrs"] = errors
+    df["low"] = df["importance"] - df["erorrs"] * 2
+    df["high"] = df["importance"] + df["erorrs"] * 2
+    df.sort_values(by=["importance"], inplace=True, ascending=True)
 
-    # if <10 vars, make it like 10
-    if n < 10:
-        n_extra = 10 - n
-        imps_avg = np.append(imps_avg, [0.0] * n_extra)
-        imps_stddev = np.append(imps_stddev, [0.0] * n_extra)
-        varnames = varnames + [""] * n_extra
-        n = 10
-
-    # put in percent scales
-    imps_avg = imps_avg * 100.0
-    imps_stddev = imps_stddev * 100.0
-
-    # start fig
-    if fig_ax is None:
-        # so labels are above lines. Must be before figure()
-        plt.rcParams["axes.axisbelow"] = False
-
-        fig, ax = plt.subplots()
-    else:
-        fig, ax = fig_ax
-        ax.cla()  # clear axis
-
-    # plot
-    ytick_ylocs = np.arange(n)  # eg [0, 1, 2, .., 9] for 10 vars
-
-    ax.xaxis.grid(visible=True, color="0.9", linestyle="--", linewidth=1)
-    bar_lw = 0.2 if n < 15 else 0.3
-    err_lw = 3 if n < 15 else 1
-    ax.barh(
-        ytick_ylocs,
-        imps_avg,
-        color="0.5",
-        height=bar_lw,
-        xerr=imps_stddev * 2,
-        error_kw={"ecolor": "0.9", "lw": err_lw, "capsize": 0, "capthick": 0},
-        align="center",
+    chart = (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("importance", title="Relative importance (%)"),
+            y=alt.Y("label", title=None, sort="-x", axis=alt.Axis(labelLimit=200)),
+        )
+        .properties(title="Variable importances")
     )
-    ax.invert_yaxis()  # highest-impact vars on top
-    ax.set_xlim(left=0.0)
-    ax.set_yticks(ytick_ylocs, labels=varnames, fontsize=FONTSIZE)
-    ax.set_xlabel("Relative importance (%)", fontsize=FONTSIZE)
-    ax.set_title("Variable importances")
 
-    HEIGHT = 9  # magic number
-    WIDTH = HEIGHT
-    fig.set_size_inches(WIDTH, HEIGHT)
+    error_bars = (
+        alt.Chart(df)
+        .mark_rule()
+        .encode(
+            y=alt.Y("label:N", title=None, sort="-x"),
+            x=alt.X("low:Q"),
+            x2=alt.X2("high:Q"),
+            color=alt.value("white"),
+            size=alt.value(4),
+        )
+    )
 
-    plt.show()
+    return chart + error_bars
