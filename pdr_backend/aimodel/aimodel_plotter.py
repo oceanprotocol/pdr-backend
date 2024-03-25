@@ -29,8 +29,8 @@ def plot_aimodel_response(
     """
     if aimodel_plotdata.n == 1:
         return _plot_aimodel_lineplot(aimodel_plotdata)
-    else:
-        return _plot_aimodel_contour(aimodel_plotdata)
+
+    return _plot_aimodel_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
@@ -75,7 +75,7 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
                 x=[xi, xi],
                 y=[0.0, 1.0],
                 mode="lines",
-                line=dict(color="yellow", width=1),
+                line={"color": "yellow", "width": 1},
                 name=label,
                 showlegend=bool(label),
             )
@@ -87,7 +87,7 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
             x=mesh_x,
             y=z,
             mode="lines",
-            line=dict(color="gray"),
+            line={"color": "gray"},
             name="model prob(true)",
         )
     )
@@ -105,7 +105,7 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
             x=x[ytrue],
             y=y1,
             mode="markers",
-            marker=dict(color="cyan", size=5),
+            marker={"color": "cyan", "size": 5},
             name="trn data true",
         )
     )
@@ -115,7 +115,7 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
             x=x[yfalse],
             y=y2,
             mode="markers",
-            marker=dict(color="red", size=5),
+            marker={"color": "red", "size": 5},
             name="trn data false",
         )
     )
@@ -202,7 +202,7 @@ def _plot_aimodel_contour(
             x=impt_X[:, 0][wrong],
             y=impt_X[:, 1][wrong],
             mode="markers",
-            marker=dict(color="yellow", size=10),
+            marker={"color": "yellow", "size": 10},
             name="wrong",
         )
     )
@@ -212,7 +212,7 @@ def _plot_aimodel_contour(
             x=impt_X[:, 0][ytrue],
             y=impt_X[:, 1][ytrue],
             mode="markers",
-            marker=dict(color="cyan", size=5),
+            marker={"color": "cyan", "size": 5},
             name="true",
         )
     )
@@ -221,7 +221,7 @@ def _plot_aimodel_contour(
             x=impt_X[:, 0][yfalse],
             y=impt_X[:, 1][yfalse],
             mode="markers",
-            marker=dict(color="red", size=5),
+            marker={"color": "red", "size": 5},
             name="false",
         )
     )
@@ -230,8 +230,8 @@ def _plot_aimodel_contour(
     fig.add_trace(fig_true.data[0])
     fig.add_trace(fig_false.data[0])
 
-    fig.update_layout(yaxis=dict(range=[x1_min, x1_max]))
-    fig.update_layout(xaxis=dict(range=[x0_min, x0_max]))
+    fig.update_layout(yaxis={"range": [x1_min, x1_max]})
+    fig.update_layout(xaxis={"range": [x0_min, x0_max]})
     fig.update_xaxes(title_text=impt_colnames[0])
     fig.update_yaxes(title_text=impt_colnames[1])
     fig.update_layout(title="Contours = model response")

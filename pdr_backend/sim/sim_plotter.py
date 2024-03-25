@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import altair as alt
 import numpy as np
 import pandas as pd
@@ -36,7 +34,7 @@ class SimPlotter:
         c1, c2, c3 = streamlit.columns((1, 1, 2))
         c4, c5 = streamlit.columns((1, 1))
         c6, c7 = streamlit.columns((1, 1))
-        c8, c9 = streamlit.columns((1, 1))
+        c8, _ = streamlit.columns((1, 1))
 
         self.canvas = {
             "pdr_profit_vs_time": c1.empty(),
@@ -49,34 +47,16 @@ class SimPlotter:
             "f1_precision_recall_vs_time": c8.empty(),
         }
 
-        # attributes to help update plots' state quickly
-        self.N: int = 0
-        self.N_done: int = 0
-        self.x: List[float] = []
-
     # pylint: disable=too-many-statements
     @enforce_types
-    def compute_plot(
-        self,
-        aimodel_plotdata: AimodelPlotdata
-    ) -> Optional[str]:
+    def compute_plot(self, aimodel_plotdata: AimodelPlotdata) -> None:
         """
         @description
           Create / update whole plot, with many subplots
 
         @arguments
           aimodel_plotdata -- has model, X_train, etc
-          do_show_plot -- render on-screen in a window?
-          do_save_plot -- export as png?
-
-        @return
-          img_filename - filename of saved plot (None if not done)
         """
-        # update N, N_done, x. **Update x only after updating N, N_done!**
-        self.N = len(self.st.pdr_profits_OCEAN)
-        self.N_done = len(self.x)  # what # points have been plotted previously
-        self.x = list(range(0, self.N))
-
         # main work: create/update subplots
         self._plot_pdr_profit_vs_time()
         self._plot_trader_profit_vs_time()
@@ -88,15 +68,6 @@ class SimPlotter:
 
         self._plot_aimodel_varimps(aimodel_plotdata)
         self._plot_aimodel_response(aimodel_plotdata)
-
-    @property
-    def next_x(self) -> List[float]:
-        return _slice(self.x, self.N_done, self.N)
-
-    @property
-    def next_hx(self) -> List[float]:
-        """horizontal x"""
-        return [self.next_x[0], self.next_x[-1]]
 
     @enforce_types
     def _plot_pdr_profit_vs_time(self):
@@ -297,4 +268,3 @@ class SimPlotter:
 @enforce_types
 def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
     return [a[i] * mult for i in range(max(0, N_done - 1), N)]
-

@@ -35,7 +35,7 @@ def test_sim_engine(tmpdir):
     # sim ss
     do_plot = True
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(do_plot, log_dir, final_img_filebase="final", test_n=5)
+    d = sim_ss_test_dict(do_plot, log_dir, test_n=5)
     ppss.sim_ss = SimSS(d)
 
     # go

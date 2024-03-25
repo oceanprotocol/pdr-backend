@@ -31,10 +31,6 @@ class SimSS(StrMixin, CCXTExchangeMixin):
             s = f"Couldn't find log dir, so created one at: {self.log_dir}"
             logger.warning(s)
 
-        # check final_img_filebase
-        if not isinstance(d["final_img_filebase"], str):
-            raise TypeError
-
         # check test_n
         test_n = d["test_n"]
         if not isinstance(test_n, int):
@@ -64,10 +60,6 @@ class SimSS(StrMixin, CCXTExchangeMixin):
         return s
 
     @property
-    def final_img_filebase(self) -> str:
-        return self.d["final_img_filebase"]  # eg "final_img"
-
-    @property
     def test_n(self) -> int:
         return self.d["test_n"]  # eg 200
 
@@ -83,17 +75,6 @@ class SimSS(StrMixin, CCXTExchangeMixin):
             raise ValueError(iter_i)
         return (iter_i + 1) == self.test_n
 
-    def unique_final_img_filename(self) -> str:
-        log_dir = self.log_dir
-        for try_i in range(1000):
-            cand_name = os.path.join(
-                log_dir,
-                f"{self.final_img_filebase}_{try_i}.png",
-            )
-            if not os.path.exists(cand_name):
-                return cand_name
-        raise ValueError("Could not find a unique filename after 1000 tries.")
-
 
 # =========================================================================
 # utilities for testing
@@ -103,14 +84,12 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 def sim_ss_test_dict(
     do_plot: bool,
     log_dir: str,
-    final_img_filebase: Optional[str] = None,
     test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
 ) -> dict:
     d = {
         "do_plot": do_plot,
         "log_dir": log_dir,
-        "final_img_filebase": final_img_filebase or "final_img",
         "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",
         "exchange_only": {
