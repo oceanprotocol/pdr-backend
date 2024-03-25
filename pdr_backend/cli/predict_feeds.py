@@ -52,5 +52,14 @@ class PredictFeeds(List[PredictFeed]):
     def from_array(cls, feeds: List[dict]):
         return cls([PredictFeed.from_feed_objs(feeds["predict"], feeds["train_on"]) for feeds in feeds])
 
-    def to_list(self):
+    @property
+    def feeds(self) -> List[str]:
+        set_pairs = []
+        for feed in self:
+            for pair in [feed.predict, feed.train_on]:
+                if str(pair) not in set_pairs:
+                    set_pairs.extend([str(i) for i in pair])
+        return set_pairs
+
+    def to_list(self) -> List[dict]:
         return [feed.to_dict() for feed in self]
