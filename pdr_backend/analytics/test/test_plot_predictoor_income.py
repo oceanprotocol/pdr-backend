@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 import polars as pl
+import plotly.graph_objects as go
 from pdr_backend.analytics.plot_predictoor_income import (
     load_data,
     process_data,
@@ -87,7 +88,8 @@ def test_process_data():
     assert result.equals(expected_result)
 
 
-def test_plot_income_data():
+@patch("pdr_backend.analytics.plot_predictoor_income.st")
+def test_plot_income_data(mock_st):
     # Mock DataFrame
     df = pl.DataFrame(
         {
@@ -101,12 +103,35 @@ def test_plot_income_data():
         }
     )
 
-    # Mock Axes
-    mock_ax = MagicMock()
+    # Mock Plotly Figure
+    mock_fig = MagicMock(spec=go.Figure)
 
     # Call the function
-    plot_income_data(df, mock_ax)
+    plot_income_data(df, mock_fig)
 
     # Assertions
-    assert mock_ax.set_title.called
-    assert mock_ax.plot.called
+    # Check if add_trace() is called for each income component
+    assert mock_fig.add_trace.call_count == 4
+    mock_fig.add_trace.assert_any_call(
+        go.Scatter(x=[1, 2], y=[100, 200], mode="lines", name="Net income")
+    )
+    mock_fig.add_trace.assert_any_call(
+        go.Scatter(x=[1, 2], y=[50, 150], mode="lines", name="DF income")
+    )
+    mock_fig.add_trace.assert_any_call(
+        go.Scatter(x=[1, 2], y=[30, 80], mode="lines", name="Subscription income")
+    )
+    mock_fig.add_trace.assert_any_call(
+        go.Scatter(x=[1, 2], y=[20, 50], mode="lines", name="Stake income")
+    )
+
+    # Check if update_layout() is called with the expected arguments
+    mock_fig.update_layout.assert_called_once_with(
+        title="Income",
+        xaxis_title="Slot",
+        yaxis_title="OCEAN",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    # Check if st.plotly_chart() is called with the expected arguments
+    mock_st.plotly_chart.assert_called_once_with(mock_fig, use_container_width=True)

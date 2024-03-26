@@ -62,7 +62,7 @@ def process_data(df: DataFrame, user_addrs, contract_addrs):
     return fileds_to_plot_df
 
 
-def plot_income_data(df: DataFrame):
+def plot_income_data(df: DataFrame, fig):
     df = df.with_columns(
         [
             (
@@ -71,7 +71,6 @@ def plot_income_data(df: DataFrame):
         ]
     )
     df = df.to_pandas()
-    fig = go.Figure()
     # Plot each income component
     fig.add_trace(
         go.Scatter(x=df["slot"], y=df["revenue"], mode="lines", name="Net income")
@@ -98,7 +97,8 @@ def plot_income_data(df: DataFrame):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
-    return fig
+    # Display the Plotly figure using Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def main():
@@ -143,10 +143,8 @@ def main():
 
     df = process_data(initial_df, selected_user_addresses, selected_contract_addresses)
 
-    figure = plot_income_data(df)
-
-    # Display the Plotly figure using Streamlit
-    st.plotly_chart(figure, use_container_width=True)
+    fig = go.Figure()
+    plot_income_data(df, fig)
 
 
 if __name__ == "__main__":
