@@ -1,18 +1,13 @@
 import altair as alt
 import numpy as np
 import pandas as pd
-import streamlit
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.aimodel_plotter import (
-    plot_aimodel_response,
-    plot_aimodel_varimps,
-)
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_state import SimState
-
-streamlit.set_page_config(layout="wide")
+from datetime import datetime
+import pickle
+import os
+import glob
 
 
 HEIGHT = 7.5
@@ -24,53 +19,39 @@ class SimPlotter:
     @enforce_types
     def __init__(
         self,
-        ppss: PPSS,
-        st: SimState,
     ):
-        # engine state, ss
-        self.st = st
-        self.ppss = ppss
+        self.st = None
+        self.aimodel_plotdata = None
 
-        c1, c2, c3 = streamlit.columns((1, 1, 2))
-        c4, c5 = streamlit.columns((1, 1))
-        c6, c7 = streamlit.columns((1, 1))
-        c8, _ = streamlit.columns((1, 1))
+    def load_state(self):
+        if not os.path.exists("sim_state"):
+            raise Exception("sim_state folder does not exist. Please run the simulation first.")
 
-        self.canvas = {
-            "pdr_profit_vs_time": c1.empty(),
-            "trader_profit_vs_time": c2.empty(),
-            "accuracy_vs_time": c3.empty(),
-            "pdr_profit_vs_ptrue": c4.empty(),
-            "trader_profit_vs_ptrue": c5.empty(),
-            "aimodel_varimps": c6.empty(),
-            "aimodel_response": c7.empty(),
-            "f1_precision_recall_vs_time": c8.empty(),
-        }
+        if not os.path.exists("sim_state/st_final.pkl"):
+            # TODO logger.info("Simulation still running. Plot will update in real time")
+            latest_file = max(glob.glob('sim_state/st_*.pkl'))
+            self.st = pickle.load(open(latest_file, "rb"))
+            self.aimodel_plotdata = pickle.load(open(latest_file.replace("st_", "aimodel_plotdata_"), "rb"))
+            return self.st, latest_file.replace("sim_state/st_", "").replace(".pkl", "")
 
-    # pylint: disable=too-many-statements
-    @enforce_types
-    def compute_plot(self, aimodel_plotdata: AimodelPlotdata) -> None:
-        """
-        @description
-          Create / update whole plot, with many subplots
+        # TODO: logger.info("Simulation finished. Plotting final results")
+        self.st = pickle.load(open("sim_state/st_final.pkl", "rb"))
+        self.aimodel_plotdata = pickle.load(open("sim_state/aimodel_plotdata_final.pkl", "rb"))
+        return self.st, "final"
 
-        @arguments
-          aimodel_plotdata -- has model, X_train, etc
-        """
-        # main work: create/update subplots
-        self._plot_pdr_profit_vs_time()
-        self._plot_trader_profit_vs_time()
+    def init_state(self):
+        files = glob.glob('sim_state/*')
+        for f in files:
+            os.remove(f)
 
-        self._plot_accuracy_vs_time()
-        self._plot_f1_precision_recall_vs_time()
-        self._plot_pdr_profit_vs_ptrue()
-        self._plot_trader_profit_vs_ptrue()
-
-        self._plot_aimodel_varimps(aimodel_plotdata)
-        self._plot_aimodel_response(aimodel_plotdata)
+    def save_state(self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False):
+        # TODO: for multisim, we could add a unique identifier to the filename and separate states
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3] if not is_final else "final"
+        pickle.dump(sim_state, open(f"sim_state/st_{ts}.pkl", "wb"))
+        pickle.dump(aimodel_plotdata, open(f"sim_state/aimodel_plotdata_{ts}.pkl", "wb"))
 
     @enforce_types
-    def _plot_pdr_profit_vs_time(self):
+    def plot_pdr_profit_vs_time(self):
         y00 = list(np.cumsum(self.st.pdr_profits_OCEAN))
         s = f"Predictoor profit vs time. Current: {y00[-1]:.2f} OCEAN"
 
@@ -94,12 +75,10 @@ class SimPlotter:
             .encode(y=y)
         )
 
-        self.canvas["pdr_profit_vs_time"].altair_chart(
-            chart + ref_line, use_container_width=True, theme="streamlit"
-        )
+        return chart + ref_line
 
     @enforce_types
-    def _plot_trader_profit_vs_time(self):
+    def plot_trader_profit_vs_time(self):
         y10 = list(np.cumsum(self.st.trader_profits_USD))
 
         s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
@@ -122,12 +101,10 @@ class SimPlotter:
             .encode(y=y)
         )
 
-        self.canvas["trader_profit_vs_time"].altair_chart(
-            chart + ref_line, use_container_width=True, theme="streamlit"
-        )
+        return chart + ref_line
 
     @enforce_types
-    def _plot_accuracy_vs_time(self):
+    def plot_accuracy_vs_time(self):
         clm = self.st.clm
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
@@ -162,12 +139,10 @@ class SimPlotter:
             )
         )
 
-        self.canvas["accuracy_vs_time"].altair_chart(
-            area_chart + ref_line + chart, use_container_width=True, theme="streamlit"
-        )
+        return area_chart + ref_line + chart
 
     @enforce_types
-    def _plot_f1_precision_recall_vs_time(self):
+    def plot_f1_precision_recall_vs_time(self):
         clm = self.st.clm
         s = f"f1={clm.f1s[-1]:.4f}"
         s += f" [recall={clm.recalls[-1]:.4f}"
@@ -204,12 +179,10 @@ class SimPlotter:
             .encode(y=y)
         )
 
-        self.canvas["f1_precision_recall_vs_time"].altair_chart(
-            chart + ref_line, use_container_width=True, theme="streamlit"
-        )
+        return chart + ref_line
 
     @enforce_types
-    def _plot_pdr_profit_vs_ptrue(self):
+    def plot_pdr_profit_vs_ptrue(self):
         avg = np.average(self.st.pdr_profits_OCEAN)
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
 
@@ -225,12 +198,10 @@ class SimPlotter:
             .encode(y=y)
         )
 
-        self.canvas["pdr_profit_vs_ptrue"].altair_chart(
-            chart + ref_line, use_container_width=True, theme="streamlit"
-        )
+        return chart + ref_line
 
     @enforce_types
-    def _plot_trader_profit_vs_ptrue(self):
+    def plot_trader_profit_vs_ptrue(self):
         avg = np.average(self.st.trader_profits_USD)
         s = f"trader profit dist. avg={avg:.2f} USD"
 
@@ -246,25 +217,4 @@ class SimPlotter:
             .encode(y=y)
         )
 
-        self.canvas["trader_profit_vs_ptrue"].altair_chart(
-            chart + ref_line, use_container_width=True, theme="streamlit"
-        )
-
-    @enforce_types
-    def _plot_aimodel_varimps(self, d: AimodelPlotdata):
-        chart = plot_aimodel_varimps(d)
-        self.canvas["aimodel_varimps"].altair_chart(
-            chart, use_container_width=True, theme="streamlit"
-        )
-
-    @enforce_types
-    def _plot_aimodel_response(self, d: AimodelPlotdata):
-        chart = plot_aimodel_response(d)
-        self.canvas["aimodel_response"].plotly_chart(
-            chart, use_container_width=True, theme="streamlit"
-        )
-
-
-@enforce_types
-def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
-    return [a[i] * mult for i in range(max(0, N_done - 1), N)]
+        return chart + ref_line

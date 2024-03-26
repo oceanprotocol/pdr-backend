@@ -39,7 +39,7 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plotter = SimPlotter(self.ppss, self.st)
+        self.sim_plotter = SimPlotter()
 
         self.logfile = ""
 
@@ -73,6 +73,8 @@ class SimEngine:
     def run(self):
         self._init_loop_attributes()
         logger.info("Start run")
+
+        self.sim_plotter.init_state()
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
@@ -211,8 +213,9 @@ class SimEngine:
         s += f" (cumul. ${sum(st.trader_profits_USD):9.4f})"
         logger.info(s)
 
-        # plot
-        if self.compute_plot(test_i, self.ppss.sim_ss.test_n):
+        save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
+
+        if save_state:
             colnames = [_shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
@@ -223,7 +226,8 @@ class SimEngine:
                 colnames,
                 slicing_x,
             )
-            self.sim_plotter.compute_plot(d)
+            self.st.iter_number = test_i
+            self.sim_plotter.save_state(self.st, d, is_final_state)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
@@ -299,22 +303,21 @@ class SimEngine:
         return usdcoin_amt_recd
 
     @enforce_types
-    def compute_plot(self, i: int, N: int):
-        "Plot on this iteration Y/N?"
+    def save_state(self, i: int, N: int):
+        "Save state on this iteration Y/N?"
         if self.ppss.sim_ss.is_final_iter(i):
-            return True
+            return True, True
 
-        if not self.ppss.sim_ss.do_plot:
-            return False
+        # TODO: remove do_plot in sim_ss -> if the user wants to plot, they start the streamlit app
 
-        # don't plot first 5 iters -> not interesting
-        # then plot the next 5 -> "stuff's happening!"
-        # then plot every 5th iter, to balance "stuff's happening" w/ speed
+        # don't save first 5 iters -> not interesting
+        # then save the next 5 -> "stuff's happening!"
+        # then save every 5th iter, to balance "stuff's happening" w/ speed
         do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
         if not do_update:
-            return False
+            return False, False
 
-        return True
+        return True, False
 
 
 @enforce_types

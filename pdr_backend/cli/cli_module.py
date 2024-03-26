@@ -75,15 +75,6 @@ def do_sim(args, nested_args=None):
         nested_override_args=nested_args,
     )
 
-    if (
-        sys.argv[1] == "sim"
-        and sys.argv[0] != "streamlit_entrypoint.py"
-        and ppss.sim_ss.do_plot
-    ):
-        streamlit_args = ["streamlit", "run", "streamlit_entrypoint.py"] + sys.argv[1:]
-        subprocess.run(streamlit_args, check=False)
-        return
-
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
