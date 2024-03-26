@@ -4,9 +4,8 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 import polars as pl
 import streamlit as st
+import plotly.graph_objects as go
 from polars import DataFrame
-import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.ppss.ppss import PPSS
@@ -25,10 +24,8 @@ def load_data():
         gql_data_factory = GQLDataFactory(ppss)
         etl = ETL(ppss, gql_data_factory)
         etl.do_etl()
-        print(etl.tables)
 
         silver_predictions_table_df = etl.tables[silver_pdr_predictions_table_name].df
-        # print(silver_predictions_table_df["user"][0], silver_predictions_table_df["contract"][0])
 
         return silver_predictions_table_df
 
@@ -65,7 +62,7 @@ def process_data(df: DataFrame, user_addrs, contract_addrs):
     return fileds_to_plot_df
 
 
-def plot_income_data(df: DataFrame, ax: Axes):
+def plot_income_data(df: DataFrame):
     df = df.with_columns(
         [
             (
@@ -74,17 +71,34 @@ def plot_income_data(df: DataFrame, ax: Axes):
         ]
     )
     df = df.to_pandas()
-    ax.set_title("Income")
-    ax.plot(df["slot"], df["revenue"], label="Net income")
-    ax.plot(df["slot"], df["revenue_df"], label="DF income")
-    ax.plot(df["slot"], df["revenue_user"], label="Subscription income")
-    ax.plot(df["slot"], df["revenue_stake"], label="Stake income")
-    # ax.set_xticks(df['slot'])
-    # ax.set_xticklabels(df['slot'], rotation=45)
+    fig = go.Figure()
+    # Plot each income component
+    fig.add_trace(
+        go.Scatter(x=df["slot"], y=df["revenue"], mode="lines", name="Net income")
+    )
+    fig.add_trace(
+        go.Scatter(x=df["slot"], y=df["revenue_df"], mode="lines", name="DF income")
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df["slot"], y=df["revenue_user"], mode="lines", name="Subscription income"
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df["slot"], y=df["revenue_stake"], mode="lines", name="Stake income"
+        )
+    )
 
-    ax.set_xlabel("Slot")
-    ax.set_ylabel("OCEAN")
-    ax.legend()
+    # Update layout
+    fig.update_layout(
+        title="Income",
+        xaxis_title="Slot",
+        yaxis_title="OCEAN",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    return fig
 
 
 def main():
@@ -129,13 +143,10 @@ def main():
 
     df = process_data(initial_df, selected_user_addresses, selected_contract_addresses)
 
-    # Plot data
-    fig, ax = plt.subplots(1, 1)
-    # plot_revenue_data(df, ax)
-    plot_income_data(df, ax)
+    figure = plot_income_data(df)
 
-    # Show plot
-    st.pyplot(fig)
+    # Display the Plotly figure using Streamlit
+    st.plotly_chart(figure, use_container_width=True)
 
 
 if __name__ == "__main__":
