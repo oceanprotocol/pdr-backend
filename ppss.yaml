@@ -9,10 +9,11 @@ lake_ss:
   fin_timestr: now # ending date for data
 
 predictoor_ss:
-  predict_feed: binance BTC/USDT c 5m
+  predict_feeds: 
+    - binance BTC/USDT c 5m
   approach: 2 # 1->50/50; 2->model-based
   stake_amount: 100 # How much your bot stakes. In OCEAN per epoch, per feed
-
+  pred_submitter_mgr: "0x..." # address of the prediction submitter manager
   sim_only:
     others_stake: 10000 # How much all others' bots stake. In OCEAN per epoch, per feed. Calcs: stake volume = 10e6 $/day/20_feeds = 34700 $/epoch/20_feeds (bc 288 5m epochs/day) = 1735 $/epoch/feed = 2313 OCEAN/epoch/feed (at 1 OCEAN=$0.75)
     others_accuracy: 0.50001 # What percent of others' bots stake is correct. Value in range 0.0-1.0. 0.50001 means mostly 50-50 stake and some small fry predicting a bit accurately
