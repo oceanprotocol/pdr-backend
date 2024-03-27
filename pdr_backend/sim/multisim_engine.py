@@ -2,10 +2,11 @@ import copy
 import csv
 import logging
 import os
+import uuid
 from typing import List, Union
 
-from enforce_typing import enforce_types
 import pandas as pd
+from enforce_typing import enforce_types
 
 from pdr_backend.cli.nested_arg_parser import flat_to_nested_args
 from pdr_backend.ppss.multisim_ss import MultisimSS
@@ -13,8 +14,8 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.dictutil import recursive_update
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.util.point import Point
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("multisim_engine")
 
@@ -50,7 +51,7 @@ class MultisimEngine:
             point_i = self.ss.point_i(run_i)
             logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
             ppss = self.ppss_from_point(point_i)
-            sim_engine = SimEngine(ppss)
+            sim_engine = SimEngine(ppss, multi_id=str(uuid.uuid4()))
             sim_engine.run()
             run_metrics = sim_engine.st.recent_metrics()
             self.update_csv(run_i, run_metrics, point_i)

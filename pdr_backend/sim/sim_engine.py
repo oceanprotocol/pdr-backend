@@ -1,10 +1,11 @@
 import copy
 import logging
 import os
+from typing import Optional
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
@@ -13,8 +14,8 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -23,7 +24,7 @@ logger = logging.getLogger("sim_engine")
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
     @enforce_types
-    def __init__(self, ppss: PPSS):
+    def __init__(self, ppss: PPSS, multi_id: Optional[str] = None):
         # preconditions
         predict_feed = ppss.predictoor_ss.feed
 
@@ -47,6 +48,8 @@ class SimEngine:
             mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
             exchange_params=self.ppss.sim_ss.exchange_params,
         )
+
+        self.multi_id = multi_id
 
     @property
     def tokcoin(self) -> str:
@@ -215,7 +218,8 @@ class SimEngine:
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
-        if save_state:
+        # temporarily we don't allow streamlit supervision of multisim runs
+        if save_state and not self.multi_id:
             colnames = [_shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
