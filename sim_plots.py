@@ -29,11 +29,25 @@ last_ts = None
 sim_plotter = SimPlotter()
 
 while True:
-    st, new_ts = sim_plotter.load_state()
+    try:
+        sim_plotter.load_state()
+        break
+    except Exception as e:
+        time.sleep(3)
+        title.title(f"Waiting for sim state... {e}")
+        continue
+
+while True:
+    try:
+        st, new_ts = sim_plotter.load_state()
+    except EOFError:
+        time.sleep(1)
+        continue
+
     title.title(f"Iter #{st.iter_number} ({new_ts})")
 
     if new_ts == last_ts:
-        time.sleep(5)
+        time.sleep(1)
         continue
 
     canvas["pdr_profit_vs_time"].altair_chart(

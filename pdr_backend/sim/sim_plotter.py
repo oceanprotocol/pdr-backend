@@ -8,6 +8,7 @@ from datetime import datetime
 import pickle
 import os
 import glob
+import time
 
 
 HEIGHT = 7.5
@@ -27,14 +28,29 @@ class SimPlotter:
         if not os.path.exists("sim_state"):
             raise Exception("sim_state folder does not exist. Please run the simulation first.")
 
+        all_state_files = glob.glob('sim_state/st_*.pkl')
+        if not all_state_files:
+            raise Exception("No state files found. Please run the simulation first.")
+
         if not os.path.exists("sim_state/st_final.pkl"):
             # TODO logger.info("Simulation still running. Plot will update in real time")
-            latest_file = max(glob.glob('sim_state/st_*.pkl'))
-            self.st = pickle.load(open(latest_file, "rb"))
-            self.aimodel_plotdata = pickle.load(open(latest_file.replace("st_", "aimodel_plotdata_"), "rb"))
+            # plot previous state to avoid using a pickle that hasn't finished
+            all_state_files = glob.glob('sim_state/st_*.pkl')
+            all_state_files.sort()
+            latest_file = all_state_files[-1]
+            with open(latest_file, "rb") as f:
+                self.st = pickle.load(f)
+
+            with open(latest_file.replace("st_", "aimodel_plotdata_"), "rb") as f:
+                self.aimodel_plotdata = pickle.load(f)
+
             return self.st, latest_file.replace("sim_state/st_", "").replace(".pkl", "")
 
         # TODO: logger.info("Simulation finished. Plotting final results")
+        # TODO: make sure the final state is written to disk!
+        if file_age_in_seconds("sim_state/st_final.pkl") < 3:
+            time.sleep(3)
+
         self.st = pickle.load(open("sim_state/st_final.pkl", "rb"))
         self.aimodel_plotdata = pickle.load(open("sim_state/aimodel_plotdata_final.pkl", "rb"))
         return self.st, "final"
@@ -47,8 +63,11 @@ class SimPlotter:
     def save_state(self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False):
         # TODO: for multisim, we could add a unique identifier to the filename and separate states
         ts = datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3] if not is_final else "final"
-        pickle.dump(sim_state, open(f"sim_state/st_{ts}.pkl", "wb"))
-        pickle.dump(aimodel_plotdata, open(f"sim_state/aimodel_plotdata_{ts}.pkl", "wb"))
+        with open(f"sim_state/st_{ts}.pkl", "wb") as f:
+            pickle.dump(sim_state, f)
+
+        with open(f"sim_state/aimodel_plotdata_{ts}.pkl", "wb") as f:
+            pickle.dump(aimodel_plotdata, f)
 
     @enforce_types
     def plot_pdr_profit_vs_time(self):
@@ -218,3 +237,8 @@ class SimPlotter:
         )
 
         return chart + ref_line
+
+
+def file_age_in_seconds(pathname):
+    stat_result = os.stat(pathname)
+    return time.time() - stat_result.st_mtime
