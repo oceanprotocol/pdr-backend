@@ -76,11 +76,32 @@ def plot_income_data(df: DataFrame, fig):
         go.Scatter(x=df["slot"], y=df["revenue"], mode="lines", name="Net income")
     )
     fig.add_trace(
-        go.Scatter(x=df["slot"], y=df["revenue_df"], mode="lines", name="DF income")
+        go.Scatter(
+            x=df["slot"], y=df["gross_income"], mode="lines", name="Gross income"
+        )
+    )
+
+    # Update layout
+    fig.update_layout(
+        title="Income",
+        xaxis_title="Slot",
+        yaxis_title="OCEAN",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    # Display the Plotly figure using Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_revenue_data(df: DataFrame, fig):
+    df = df.to_pandas()
+    # Plot each income component
+    fig.add_trace(
+        go.Scatter(x=df["slot"], y=df["revenue_df"], mode="lines", name="DF sales")
     )
     fig.add_trace(
         go.Scatter(
-            x=df["slot"], y=df["revenue_user"], mode="lines", name="Subscription income"
+            x=df["slot"], y=df["revenue_user"], mode="lines", name="Non-df income"
         )
     )
     fig.add_trace(
@@ -91,7 +112,26 @@ def plot_income_data(df: DataFrame, fig):
 
     # Update layout
     fig.update_layout(
-        title="Income",
+        title="Revenue",
+        xaxis_title="Slot",
+        yaxis_title="OCEAN",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    # Display the Plotly figure using Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_costs_data(df: DataFrame, fig):
+    df = df.to_pandas()
+    # Plot each income component
+    fig.add_trace(
+        go.Scatter(x=df["slot"], y=df["sum_stake"], mode="lines", name="DF sales")
+    )
+
+    # Update layout
+    fig.update_layout(
+        title="Costs",
         xaxis_title="Slot",
         yaxis_title="OCEAN",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -143,8 +183,14 @@ def main():
 
     df = process_data(initial_df, selected_user_addresses, selected_contract_addresses)
 
-    fig = go.Figure()
-    plot_income_data(df, fig)
+    fig1 = go.Figure()
+    plot_income_data(df, fig1)
+
+    fig2 = go.Figure()
+    plot_revenue_data(df, fig2)
+
+    fig3 = go.Figure()
+    plot_costs_data(df, fig3)
 
 
 if __name__ == "__main__":
