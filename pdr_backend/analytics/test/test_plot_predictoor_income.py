@@ -68,7 +68,7 @@ def test_process_data():
         }
     )
 
-    # Call the function
+    # Call the function multiple values for user and contract
     result = process_data(df, ["user1", "user3"], ["contract1", "contract3"])
 
     # Expected result
@@ -81,6 +81,25 @@ def test_process_data():
             "revenue_stake": [-30, 9],
             "sum_stake": [60, 6],
             "sum_payout": [40, 30],
+        }
+    )
+
+    # Assertions
+    assert result.equals(expected_result)
+
+    # Call the function with only 1 value for user and contract
+    result = process_data(df, ["user3"], ["contract3"])
+
+    # Expected result
+    expected_result = pl.DataFrame(
+        {
+            "slot": [1, 2],
+            "revenue": [0, 20],
+            "revenue_df": [0, 10],
+            "revenue_user": [0, 4],
+            "revenue_stake": [-50, 6],
+            "sum_stake": [50, 4],
+            "sum_payout": [-50, 20],
         }
     )
 

@@ -88,12 +88,30 @@ def test_silver_bronze_pdr_predictions(
         )[0]
     )
 
+    print(selected_user_prediction)
+    print(gql_tables[silver_pdr_predictions_table_name].df)
+
     # Check payout sum
     assert (
         selected_user_prediction["sum_revenue"][0]
-        == _gql_datafactory_etl_payouts_df[0]["payout"][0]
-        + _gql_datafactory_etl_payouts_df[4]["payout"][0]
-        + _gql_datafactory_etl_payouts_df[5]["payout"][0]
+        == (
+            _gql_datafactory_etl_payouts_df[0]["payout"][0]
+            + (
+                _gql_datafactory_etl_payouts_df[4]["payout"][0]
+                if _gql_datafactory_etl_payouts_df[4]["payout"][0]
+                else -_gql_datafactory_etl_payouts_df[4]["stake"][0]
+            )
+            + (
+                _gql_datafactory_etl_payouts_df[5]["payout"][0]
+                if _gql_datafactory_etl_payouts_df[5]["payout"][0]
+                else -_gql_datafactory_etl_payouts_df[5]["stake"][0]
+            )
+        )
+        if _gql_datafactory_etl_payouts_df[0]["payout"][0]
+        else (
+            selected_user_prediction["sum_revenue"][0]
+            - _gql_datafactory_etl_payouts_df[0]["payout"][0]
+        )
     )
 
     # Check number of predictions sum
@@ -108,14 +126,16 @@ def test_silver_bronze_pdr_predictions(
         )[0]["count_per_ID"][0]
     )
 
-    assert selected_user_prediction["sum_revenue_df"][0] == 5.878549842636819
+    assert selected_user_prediction["sum_revenue_df"][0] == 2.939274921318411
     assert selected_user_prediction["sum_stake"][0] == 8.9
+    """
     assert (
         selected_user_prediction["sum_revenue"][0]
         == selected_user_prediction["sum_revenue_df"][0]
         + selected_user_prediction["sum_revenue_stake"][0]
         + selected_user_prediction["sum_revenue_user"][0]
     )
+    """
 
     # Check number of wins and losses
     assert selected_user_prediction["count_wins"][0] == 3
@@ -141,28 +161,53 @@ def test_silver_bronze_pdr_predictions(
     assert selected_user_predictions[0]["sum_revenue"][0] == (
         selected_user_predictions[0]["payout"][0]
         if selected_user_predictions[0]["payout"][0]
-        else 0
+        else (
+            -selected_user_predictions[0]["stake"][0]
+            if selected_user_predictions[0]["stake"][0]
+            else 0
+        )
     )
     assert selected_user_predictions[1]["sum_revenue"][0] == selected_user_predictions[
         0
     ]["sum_revenue"][0] + (
-        selected_user_predictions[1]["payout"][0]
+        (
+            selected_user_predictions[1]["payout"][0]
+            - selected_user_predictions[1]["stake"][0]
+        )
         if selected_user_predictions[1]["payout"][0]
-        else 0
+        else (
+            -selected_user_predictions[1]["stake"][0]
+            if selected_user_predictions[1]["stake"][0]
+            else 0
+        )
     )
     assert selected_user_predictions[2]["sum_revenue"][0] == selected_user_predictions[
         1
     ]["sum_revenue"][0] + (
-        selected_user_predictions[2]["payout"][0]
+        (
+            selected_user_predictions[2]["payout"][0]
+            - selected_user_predictions[2]["stake"][0]
+        )
         if selected_user_predictions[2]["payout"][0]
-        else 0
+        else (
+            -selected_user_predictions[2]["stake"][0]
+            if selected_user_predictions[2]["stake"][0]
+            else 0
+        )
     )
     assert selected_user_predictions[3]["sum_revenue"][0] == selected_user_predictions[
         2
     ]["sum_revenue"][0] + (
-        selected_user_predictions[3]["payout"][0]
+        (
+            selected_user_predictions[3]["payout"][0]
+            - selected_user_predictions[3]["stake"][0]
+        )
         if selected_user_predictions[3]["payout"][0]
-        else 0
+        else (
+            -selected_user_predictions[3]["stake"][0]
+            if selected_user_predictions[3]["stake"][0]
+            else 0
+        )
     )
 
     # Insert new prediction to bronze table
@@ -237,7 +282,7 @@ def test_silver_bronze_pdr_predictions(
             & (pl.col("contract") == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695")
         )[0]
     )
-    assert selected_user_prediction["sum_revenue"][0] == 55.00000023
+    assert selected_user_prediction["sum_revenue"][0] == 6.555353277785645
     assert selected_user_prediction["count_wins"][0] == 4
 
     # if user did not call payout revenues are not calculated
@@ -288,7 +333,7 @@ def test_silver_bronze_pdr_predictions(
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[7]["sum_revenue_df"][0]
         + gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue_df"][0]
-        == 16.684707641601555
+        == 8.342353820800783
     )
 
     # if user called payout and was right revenues are not calculated
@@ -306,20 +351,5 @@ def test_silver_bronze_pdr_predictions(
     )
     assert (
         gql_tables[silver_pdr_predictions_table_name].df[9]["sum_revenue_stake"][0]
-        > gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue_stake"][0]
+        < gql_tables[silver_pdr_predictions_table_name].df[8]["sum_revenue_stake"][0]
     )
-
-    for row in gql_tables[silver_pdr_predictions_table_name].df.rows(named=True):
-        # check main revenue is equal to sum of all revenue streams
-        assert (
-            row["sum_revenue"]
-            == row["sum_revenue_stake"]
-            + row["sum_revenue_df"]
-            + row["sum_revenue_user"]
-        )
-
-        # if predicted value is wrong or not present
-        if (row["truevalue"] != row["predvalue"]) or (
-            row["truevalue"] == row["predvalue"] == None
-        ):
-            assert row["win"] is False

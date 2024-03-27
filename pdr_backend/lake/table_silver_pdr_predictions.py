@@ -109,16 +109,36 @@ def update_fields(
 ) -> dict:
     current_df["sum_revenue"] = (
         (previous_df["sum_revenue"] + (current_df["payout"] - current_df["stake"]))
-        if (current_df["predvalue"] == current_df["truevalue"])
-        else (previous_df["sum_revenue"] - current_df["stake"])
+        if (
+            (current_df["predvalue"] == current_df["truevalue"])
+            and (current_df["predvalue"] is not None)
+        )
+        else (
+            (previous_df["sum_revenue"] - current_df["stake"])
+            if (
+                (current_df["predvalue"] is not None)
+                and (current_df["stake"] is not None)
+            )
+            else previous_df["sum_revenue"]
+        )
     )
     current_df["sum_revenue_df"] = previous_df["sum_revenue_df"][0] + df_revenue
     current_df["sum_revenue_user"] = previous_df["sum_revenue_user"][0] + user_revenue
     current_df["sum_revenue_stake"] = (
         previous_df["sum_revenue_stake"]
         + ((current_df["payout"] - (df_revenue + user_revenue + current_df["stake"])))
-        if (current_df["predvalue"] == current_df["truevalue"])
-        else (previous_df["sum_revenue_stake"] - current_df["stake"])
+        if (
+            (current_df["predvalue"] == current_df["truevalue"])
+            and (current_df["predvalue"] is not None)
+        )
+        else (
+            (previous_df["sum_revenue_stake"] - current_df["stake"])
+            if (
+                (current_df["predvalue"] is not None)
+                and (current_df["stake"] is not None)
+            )
+            else previous_df["sum_revenue_stake"]
+        )
     )
     current_df["sum_stake"] = (
         previous_df["sum_stake"] + current_df["stake"] if current_df["stake"] else 0
@@ -245,15 +265,25 @@ def _process_predictions(
             row["sum_stake"] = row["stake"] if row["stake"] else 0
             row["sum_revenue"] = (
                 (row["payout"] - row["stake"])
-                if (row["predvalue"] == row["truevalue"])
-                else -row["stake"]
+                if (
+                    (row["predvalue"] == row["truevalue"])
+                    and (row["predvalue"] is not None)
+                )
+                else (-row["stake"] if row["stake"] else 0)
             )
             row["sum_revenue_df"] = df_revenue
             row["sum_revenue_user"] = user_revenue
             row["sum_revenue_stake"] = (
                 (row["payout"] - (df_revenue + user_revenue + row["stake"]))
-                if (row["predvalue"] == row["truevalue"])
-                else (row["payout"] - row["stake"])
+                if (
+                    (row["predvalue"] == row["truevalue"])
+                    and (row["predvalue"] is not None)
+                )
+                else (
+                    (row["payout"] - row["stake"])
+                    if ((row["stake"] is not None) and (row["payout"] is not None))
+                    else 0
+                )
             )
             row["count_predictions"] = 1
             row["count_wins"] = 1 if row["predvalue"] == row["truevalue"] else 0
