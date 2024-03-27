@@ -52,7 +52,6 @@ trader_ss:
       defaultType: spot
 
 sim_ss: # sim only
-  do_plot: True
   log_dir: logs
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal

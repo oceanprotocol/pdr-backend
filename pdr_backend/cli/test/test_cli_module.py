@@ -212,15 +212,7 @@ def test_do_sim(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    with patch("pdr_backend.cli.cli_module.subprocess.run") as mock_subprocess:
-        with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
-            do_sim(MockArgParser_PPSS().parse_args())
-
-    mock_subprocess.assert_called()
-    mock_f.assert_not_called()
-
-    with patch("sys.argv", ["streamlit_entrypoint.py", "sim", "ppss.yaml"]):
-        do_sim(MockArgParser_PPSS().parse_args())
+    do_sim(MockArgParser_PPSS().parse_args())
 
     mock_f.assert_called()
 

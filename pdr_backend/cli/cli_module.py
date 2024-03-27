@@ -1,6 +1,5 @@
 import logging
 import os
-import subprocess
 import sys
 
 from enforce_typing import enforce_types

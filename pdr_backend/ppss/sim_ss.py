@@ -20,10 +20,6 @@ class SimSS(StrMixin, CCXTExchangeMixin):
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["sim_ss"]
 
-        # check do_plot
-        if not isinstance(d["do_plot"], bool):
-            raise TypeError
-
         # handle log_dir; self.log_dir is supposed to be path-expanded version
         assert self.log_dir == os.path.abspath(self.log_dir)
         if not os.path.exists(self.log_dir):
@@ -47,10 +43,6 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 
     # --------------------------------
     # properties direct from yaml dict
-    @property
-    def do_plot(self) -> bool:
-        return self.d["do_plot"]
-
     @property
     def log_dir(self) -> str:
         s = self.d["log_dir"]
@@ -82,13 +74,11 @@ class SimSS(StrMixin, CCXTExchangeMixin):
 
 @enforce_types
 def sim_ss_test_dict(
-    do_plot: bool,
     log_dir: str,
     test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
 ) -> dict:
     d = {
-        "do_plot": do_plot,
         "log_dir": log_dir,
         "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",

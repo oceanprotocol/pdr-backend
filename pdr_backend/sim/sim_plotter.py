@@ -1,15 +1,15 @@
+import glob
+import os
+import pickle
+import time
+from datetime import datetime
+
 import altair as alt
 import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from datetime import datetime
-import pickle
-import os
-import glob
-import time
-
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
@@ -26,16 +26,17 @@ class SimPlotter:
 
     def load_state(self):
         if not os.path.exists("sim_state"):
-            raise Exception("sim_state folder does not exist. Please run the simulation first.")
+            raise Exception(
+                "sim_state folder does not exist. Please run the simulation first."
+            )
 
-        all_state_files = glob.glob('sim_state/st_*.pkl')
+        all_state_files = glob.glob("sim_state/st_*.pkl")
         if not all_state_files:
             raise Exception("No state files found. Please run the simulation first.")
 
         if not os.path.exists("sim_state/st_final.pkl"):
-            # TODO logger.info("Simulation still running. Plot will update in real time")
             # plot previous state to avoid using a pickle that hasn't finished
-            all_state_files = glob.glob('sim_state/st_*.pkl')
+            all_state_files = glob.glob("sim_state/st_*.pkl")
             all_state_files.sort()
             latest_file = all_state_files[-1]
             with open(latest_file, "rb") as f:
@@ -46,23 +47,32 @@ class SimPlotter:
 
             return self.st, latest_file.replace("sim_state/st_", "").replace(".pkl", "")
 
-        # TODO: logger.info("Simulation finished. Plotting final results")
-        # TODO: make sure the final state is written to disk!
+        # make sure the final state is written to disk before unpickling
+        # avoid race conditions with the pickling itself
         if file_age_in_seconds("sim_state/st_final.pkl") < 3:
             time.sleep(3)
 
-        self.st = pickle.load(open("sim_state/st_final.pkl", "rb"))
-        self.aimodel_plotdata = pickle.load(open("sim_state/aimodel_plotdata_final.pkl", "rb"))
+        with open("sim_state/st_final.pkl", "rb") as f:
+            self.st = pickle.load(f)
+
+        with open("sim_state/aimodel_plotdata_final.pkl", "rb") as f:
+            self.aimodel_plotdata = pickle.load(f)
+
         return self.st, "final"
 
     def init_state(self):
-        files = glob.glob('sim_state/*')
+        files = glob.glob("sim_state/*")
         for f in files:
             os.remove(f)
 
-    def save_state(self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False):
-        # TODO: for multisim, we could add a unique identifier to the filename and separate states
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3] if not is_final else "final"
+    def save_state(
+        self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False
+    ):
+        ts = (
+            datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3]
+            if not is_final
+            else "final"
+        )
         with open(f"sim_state/st_{ts}.pkl", "wb") as f:
             pickle.dump(sim_state, f)
 

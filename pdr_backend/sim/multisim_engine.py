@@ -70,7 +70,6 @@ class MultisimEngine:
         d = copy.deepcopy(self.d)
         recursive_update(d, nested_args)
         ppss = PPSS(d=d, network=self.network)
-        assert not ppss.sim_ss.do_plot  # type: ignore[attr-defined]
         return ppss
 
     @enforce_types

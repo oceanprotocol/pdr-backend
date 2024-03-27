@@ -1,10 +1,12 @@
-from pdr_backend.sim.sim_plotter import SimPlotter
+import time
+
+import streamlit
+
 from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
-import streamlit
-import time
+from pdr_backend.sim.sim_plotter import SimPlotter
 
 streamlit.set_page_config(layout="wide")
 
@@ -51,11 +53,15 @@ while True:
         continue
 
     canvas["pdr_profit_vs_time"].altair_chart(
-        sim_plotter.plot_pdr_profit_vs_time(), use_container_width=True, theme="streamlit"
+        sim_plotter.plot_pdr_profit_vs_time(),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["trader_profit_vs_time"].altair_chart(
-        sim_plotter.plot_trader_profit_vs_time(), use_container_width=True, theme="streamlit"
+        sim_plotter.plot_trader_profit_vs_time(),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["accuracy_vs_time"].altair_chart(
@@ -63,23 +69,33 @@ while True:
     )
 
     canvas["f1_precision_recall_vs_time"].altair_chart(
-        sim_plotter.plot_f1_precision_recall_vs_time(), use_container_width=True, theme="streamlit"
+        sim_plotter.plot_f1_precision_recall_vs_time(),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["pdr_profit_vs_ptrue"].altair_chart(
-        sim_plotter.plot_pdr_profit_vs_ptrue(), use_container_width=True, theme="streamlit"
+        sim_plotter.plot_pdr_profit_vs_ptrue(),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["trader_profit_vs_ptrue"].altair_chart(
-        sim_plotter.plot_trader_profit_vs_ptrue(), use_container_width=True, theme="streamlit"
+        sim_plotter.plot_trader_profit_vs_ptrue(),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["aimodel_varimps"].altair_chart(
-        plot_aimodel_varimps(sim_plotter.aimodel_plotdata), use_container_width=True, theme="streamlit"
+        plot_aimodel_varimps(sim_plotter.aimodel_plotdata),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     canvas["aimodel_response"].plotly_chart(
-        plot_aimodel_response(sim_plotter.aimodel_plotdata), use_container_width=True, theme="streamlit"
+        plot_aimodel_response(sim_plotter.aimodel_plotdata),
+        use_container_width=True,
+        theme="streamlit",
     )
 
     last_ts = new_ts

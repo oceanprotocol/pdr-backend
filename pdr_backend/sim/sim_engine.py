@@ -308,8 +308,6 @@ class SimEngine:
         if self.ppss.sim_ss.is_final_iter(i):
             return True, True
 
-        # TODO: remove do_plot in sim_ss -> if the user wants to plot, they start the streamlit app
-
         # don't save first 5 iters -> not interesting
         # then save the next 5 -> "stuff's happening!"
         # then save every 5th iter, to balance "stuff's happening" w/ speed
