@@ -29,7 +29,8 @@ install_requirements = [
     "pyarrow==15.0.2",
     "pylint==3.1.0",
     "pytest",
-    "pytest-asyncio==0.23.6",
+    # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
+    "pytest-asyncio==0.21.1",
     "pytest-env",
     "pyyaml",
     "requests==2.31.0",
