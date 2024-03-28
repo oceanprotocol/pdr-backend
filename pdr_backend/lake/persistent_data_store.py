@@ -86,11 +86,13 @@ class PersistentDataStore(BaseDataStore):
         # Check if the table exists
         table_names = self.get_table_names()
 
-        print(f"insert_to_table table_name = {table_name}")
-        print(f"insert_to_table DF = {df}")
         if table_name in table_names:
+            print(f"insert_to_table table_name = {table_name}")
+            print(f"insert_to_table DF = {df}")
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
+            print(f"create_and_fill_table = {table_name}")
+            print(f"create_and_fill_table DF = {df}")
             self._create_and_fill_table(df, table_name)
 
     @enforce_types

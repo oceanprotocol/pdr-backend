@@ -33,9 +33,9 @@ def get_bronze_pdr_predictions_data_with_SQL(
     @description
         Get the bronze pdr predictions data
     """
-    pdr_predictions_table_name = get_table_name("pdr_predictions", TableType.TEMP)
-    pdr_truevals_table_name = get_table_name("pdr_truevals", TableType.TEMP)
-    pdr_payouts_table_name = get_table_name("pdr_payouts", TableType.TEMP)
+    pdr_predictions_table_name = get_table_name("pdr_predictions")
+    pdr_truevals_table_name = get_table_name("pdr_truevals")
+    pdr_payouts_table_name = get_table_name("pdr_payouts")
 
     return PersistentDataStore(path).query_data(
         f"""

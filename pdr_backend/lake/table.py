@@ -39,10 +39,7 @@ class Table:
         csvds = CSVDataStore(self.base_path)
         print(f" csvds = {csvds}")
         csvds.write(self.table_name, data, schema=self.df_schema)
-        n_new = data.shape[0]
-        print(
-            f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
-        )
+        print(f"  Saved {data.shape[0]} rows to csv files: {self.table_name}")
 
     @enforce_types
     def _append_to_db(
@@ -57,5 +54,4 @@ class Table:
         """
         table_name = get_table_name(self.table_name, table_type)
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
-        n_new = data.shape[0]
-        print(f"  Just saved df with {n_new} df rows to the database of {table_name}")
+        print(f"  Appended {data.shape[0]} rows to db table: {table_name}")
