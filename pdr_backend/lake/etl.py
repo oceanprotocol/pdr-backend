@@ -217,10 +217,6 @@ class ETL:
             fin_ms=UnixTimeMs.from_dt(fin_timestamp),
         )
 
-        print(f">>>>> st_timestamp is {st_timestamp}")
-        print(f">>>>> fin_timestamp is {fin_timestamp}")
-        print(f">>>>> data is {data}")
-
         print(f"update_bronze_pdr_predictions - data: {data}")
         TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(
             data,

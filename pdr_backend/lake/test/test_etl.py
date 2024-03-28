@@ -142,32 +142,30 @@ def test_etl_do_bronze_step(
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
-    gql_tables["pdr_truevals"].append_to_storage(truevals, TableType.TEMP)
-    gql_tables["pdr_payouts"].append_to_storage(payouts, TableType.TEMP)
+    gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].append_to_storage(payouts)
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
 
     pds = _get_test_PDS(tmpdir)
-    temp_table_name = get_table_name(predictions_table_name, TableType.TEMP)
-    pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(temp_table_name))
+    table_name = get_table_name(predictions_table_name)
+    pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(table_name))
     assert len(pdr_predictions_records) == 6
 
     # Work 3: Do bronze
     etl.do_bronze_step()
 
-    # assert bronze_pdr_predictions_df is created
+    # assert _temp_bronze_pdr_predictions_df is created
     temp_table_name = get_table_name("bronze_pdr_predictions", TableType.TEMP)
     bronze_pdr_predictions_records = pds.query_data(
         "SELECT * FROM {}".format(temp_table_name)
     )
     assert len(bronze_pdr_predictions_records) == 6
 
-    # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
-    bronze_pdr_predictions_df = bronze_pdr_predictions_records
-
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
+    bronze_pdr_predictions_df = bronze_pdr_predictions_records
     assert (
         bronze_pdr_predictions_df["contract"][0]
         == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
@@ -389,46 +387,60 @@ def test_get_max_timestamp_values_from(tmpdir):
 
 @enforce_types
 def test_calc_bronze_start_end_ts(tmpdir):
+    """
+    @description
+        Verify that the start and end timestamps for the bronze tables are calculated correctly
+        1. ETL step starts from bronze_table max timestamp
+        2. raw_tables can have different max timestamps
+        3. bronze_tables should have the same max timestamp
+    """
     _clean_up_persistent_data_store(tmpdir)
     pds = PersistentDataStore(str(tmpdir))
 
+    # mock bronze + raw tables
     pds.duckdb_conn.execute(
         """
-        CREATE TABLE test_bronze_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE test_bronze_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE test_bronze_table_3 (timestamp TIMESTAMP);
+        CREATE TABLE raw_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE raw_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE raw_table_3 (timestamp TIMESTAMP);
         """
     )
 
     pds.duckdb_conn.execute(
         """
-        CREATE TABLE _temp_dummy_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE _temp_dummy_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE _temp_dummy_table_3 (timestamp TIMESTAMP);
+        CREATE TABLE bronze_table_1 (timestamp TIMESTAMP);
+        CREATE TABLE bronze_table_2 (timestamp TIMESTAMP);
+        CREATE TABLE bronze_table_3 (timestamp TIMESTAMP);
         """
     )
 
+    # all bronze tables should have the same max timestamp
+    # etl should start from the bronze table max_timestamp => 2023-11-02
     pds.duckdb_conn.execute(
         """
-        INSERT INTO test_bronze_table_1 VALUES ('2023-11-04 00:00:00');
-        INSERT INTO test_bronze_table_2 VALUES ('2023-11-05 00:00:00');
-        INSERT INTO test_bronze_table_2 VALUES ('2023-11-01 00:00:00');
-        INSERT INTO test_bronze_table_3 VALUES ('2023-11-02 00:00:00');
+        INSERT INTO bronze_table_1 VALUES ('2023-11-02 00:00:00');
+        INSERT INTO bronze_table_2 VALUES ('2023-11-01 00:00:00');
+        INSERT INTO bronze_table_2 VALUES ('2023-11-02 00:00:00');
+        INSERT INTO bronze_table_3 VALUES ('2023-11-02 00:00:00');
         """
     )
 
+    # raw tables can have different max timestamps
+    # etl should process all raw_tables up to min_timestamp => 2023-11-21
     pds.duckdb_conn.execute(
         """
-        INSERT INTO _temp_dummy_table_1 VALUES ('2023-11-21 00:00:00');
-        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-23 00:00:00');
-        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-22 00:00:00');
-        INSERT INTO _temp_dummy_table_3 VALUES ('2023-11-25 00:00:00');
+        INSERT INTO raw_table_1 VALUES ('2023-11-21 00:00:00');
+        INSERT INTO raw_table_2 VALUES ('2023-11-23 00:00:00');
+        INSERT INTO raw_table_2 VALUES ('2023-11-22 00:00:00');
+        INSERT INTO raw_table_3 VALUES ('2023-11-25 00:00:00');
         """
     )
 
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
+    # we can set whatever we want here, the ETL pipeline should update as best as possible
+    st_timestr = "2023-11-01_0:00"
+    fin_timestr = "2023-11-30_0:00"
 
+    # Setup GQL Data Factory and mock tables for ETL 
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus ETH/USDT h 5m",
@@ -437,13 +449,21 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
 
     etl = ETL(ppss, gql_data_factory)
-    etl.bronze_table_names = [
-        "test_bronze_table_1",
-        "test_bronze_table_2",
-        "test_bronze_table_3",
+    etl.raw_table_names = [
+        "raw_table_1",
+        "raw_table_2",
+        "raw_table_3"
     ]
-    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+    ]
+
+    # Calculate from + to timestamps
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+    # Assert ETL starts from bronze tables max timestamp
+    # Assert ETL processes raw tables up-to the common min_timestamp between them
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"

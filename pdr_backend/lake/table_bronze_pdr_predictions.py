@@ -37,6 +37,8 @@ def get_bronze_pdr_predictions_data_with_SQL(
     pdr_truevals_table_name = get_table_name("pdr_truevals")
     pdr_payouts_table_name = get_table_name("pdr_payouts")
 
+    print(f">>>>> bronze check: {PersistentDataStore(path).get_table_names()}")
+
     return PersistentDataStore(path).query_data(
         f"""
         SELECT 
