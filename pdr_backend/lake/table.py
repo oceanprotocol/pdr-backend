@@ -6,6 +6,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.plutil import has_data, newest_ut
 from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
@@ -28,7 +29,14 @@ class Table:
         Read the data from the Parquet file into a DataFrame object
         """
         filename = self._parquet_filename()
-        st_ut = self.ppss.lake_ss.st_timestamp
+
+        # set simestamp for subscriptions 1 day earlier
+        st_ut = (
+            (self.ppss.lake_ss.st_timestamp - 86400000)
+            if (self.table_name == subscriptions_table_name)
+            else self.ppss.lake_ss.st_timestamp
+        )
+
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
         # load all data from file
@@ -64,13 +72,13 @@ class Table:
             )
 
         filename = self._parquet_filename()
-
         if os.path.exists(filename):  # "append" existing file
             cur_df = pl.read_parquet(filename)
-            self.df = pl.concat([cur_df, self.df])
+            cur_df_ID_columns = cur_df["ID"].to_list()
 
             # drop duplicates
-            self.df = self.df.filter(pl.struct("ID").is_unique())
+            self.df = self.df.filter(pl.col("ID").is_in(cur_df_ID_columns).not_())
+            self.df = pl.concat([cur_df, self.df])
             self.df.write_parquet(filename)
             n_new = self.df.shape[0] - cur_df.shape[0]
             print(f"  Just appended {n_new} df rows to file {filename}")
@@ -136,7 +144,7 @@ class Table:
             ) and len(final_df) > 0:
                 assert df.schema == self.df_schema
                 # save to parquet
-                self.df = final_df
+                self.df = final_df.select(df.schema)
                 self.save()
                 print(f"Saved {len(final_df)} records to file while fetching")
                 final_df = pl.DataFrame()
