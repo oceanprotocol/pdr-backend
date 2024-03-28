@@ -9,6 +9,11 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_table,
 )
+from pdr_backend.lake.table_bronze_pdr_slots import (
+    bronze_pdr_slots_table_name,
+    bronze_pdr_slots_schema,
+    get_bronze_pdr_slots_table,
+)
 
 
 class ETL:
@@ -52,7 +57,7 @@ class ETL:
         """
         @description
             Call data factory to fetch data and update lake
-            The sync will try 3 times to fetch from data_factory, and update the local gql_dfs
+            The sync will try 3 times to fetch from data_factory, and update the local gql_tables
         """
         gql_tables = self.gql_data_factory.get_gql_tables()
 
@@ -74,6 +79,7 @@ class ETL:
         st_ts = time.time_ns() / 1e9
 
         self.update_bronze_pdr_predictions()
+        self.update_bronze_pdr_slots()
 
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
@@ -93,4 +99,21 @@ class ETL:
             self.tables[bronze_pdr_predictions_table_name] = table
 
         table = get_bronze_pdr_predictions_table(self.tables, self.ppss)
+        table.save()
+
+    def update_bronze_pdr_slots(self):
+        """
+        @description
+            Update bronze_pdr_slots table
+        """
+        if bronze_pdr_slots_table_name not in self.tables:
+            # Load existing bronze tables
+            table = Table(
+                bronze_pdr_slots_table_name,
+                bronze_pdr_slots_schema,
+                self.ppss,
+            )
+            self.tables[bronze_pdr_slots_table_name] = table
+
+        table = get_bronze_pdr_slots_table(self.tables, self.ppss)
         table.save()

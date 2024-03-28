@@ -77,6 +77,9 @@ def _process_predictions(
 def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     """
     Perform post-fetch processing on the data
+    1. Find truevalse within the update
+    2. Update predictions with trueval values
+    3. Update tables
     """
     # get truevals within the update
     truevals_df, _ = pick_df_and_ids_on_period(
@@ -117,6 +120,8 @@ def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
     @description
         Perform post-fetch processing on the data
         1. Find payouts within the update
+        2. Update predictions with payout values
+        3. Update tables
 
     """
     # get payouts within the update

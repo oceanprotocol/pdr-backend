@@ -116,14 +116,13 @@ class Table:
                 network,
             )
 
-            print(f"Fetched {len(data)} from subgraph")
+            print(f"Fetched {len(data)} from subgraph for {self.table_name}")
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(data, self.df_schema)
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
                 "timestamp"
             )
-
             if len(final_df) == 0:
                 final_df = df
             else:

@@ -22,6 +22,10 @@ from pdr_backend.lake.table_pdr_payouts import (
     payouts_schema,
     payouts_table_name,
 )
+from pdr_backend.lake.table_pdr_slots import (
+    slots_schema,
+    slots_table_name,
+)
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.subgraph.subgraph_subscriptions import (
     fetch_filtered_subscriptions,
@@ -30,6 +34,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
+from pdr_backend.subgraph.subgraph_slot import fetch_slots
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("gql_data_factory")
@@ -39,8 +44,8 @@ logger = logging.getLogger("gql_data_factory")
 class GQLDataFactory:
     """
     Roles:
-    - From each GQL API, fill >=1 gql_dfs -> parquet files data lake
-    - From gql_dfs, calculate other dfs and stats
+    - From each GQL API, fill >=1 gql_tables -> parquet files data lake
+    - From gql_tables, calculate other dfs and stats
     - All timestamps, after fetching, are transformed into milliseconds wherever appropriate
 
     Finally:
@@ -74,12 +79,14 @@ class GQLDataFactory:
                 ),
                 "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
                 "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+                "pdr_slots": Table(slots_table_name, slots_schema, ppss),
             },
             "fetch_functions": {
                 "pdr_predictions": fetch_filtered_predictions,
                 "pdr_subscriptions": fetch_filtered_subscriptions,
                 "pdr_truevals": fetch_truevals,
                 "pdr_payouts": fetch_payouts,
+                "pdr_slots": fetch_slots,
             },
             "config": {
                 "contract_list": contract_list,

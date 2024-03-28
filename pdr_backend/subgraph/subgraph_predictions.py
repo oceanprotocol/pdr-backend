@@ -124,6 +124,7 @@ def fetch_filtered_predictions(
         return []
 
     data = result["data"].get("predictPredictions", [])
+    print(len(data))
     if len(data) == 0:
         return []
 
