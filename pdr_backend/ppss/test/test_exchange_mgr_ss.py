@@ -88,22 +88,27 @@ def test_exchange_mgr_ss_timeout():
 def test_exchange_mgr_ss_ccxt_params():
     _test_exchange_mtr_dict_params("ccxt_params")
 
-    
+
 @enforce_types
 def test_exchange_mgr_ss_dydx_params():
     _test_exchange_mtr_dict_params("dydx_params")
 
-    
+
 @enforce_types
 def _test_exchange_mtr_dict_params(params_name: str):
     # good: dict of str:any
     d = exchange_mgr_ss_test_dict()
-    d[params_name] = {"foo":7, "bar":"baz", "bah":None}        
+    d[params_name] = {"foo": 7, "bar": "baz", "bah": None}
     ss = ExchangeMgrSS(d)
-    assert getattr(ss, params_name) == {"foo": 7, "bar":"baz", "bah":None}
-        
+    assert getattr(ss, params_name) == {"foo": 7, "bar": "baz", "bah": None}
+
     # bad: non-dict
-    for non_dict in ["foo", 3, None]:
+    bads = ["foo", 3]
+    if params_name == "ccxt_params":
+        # dydx_params can be None, will be replaced with {}
+        bads.append(None)
+
+    for non_dict in bads:
         d = exchange_mgr_ss_test_dict()
         d[params_name] = non_dict
         with pytest.raises(TypeError):

@@ -7,7 +7,7 @@ from pdr_backend.ppss.base_ss import SingleFeedMixin
 class SingleFeedMixinTest(SingleFeedMixin):
     FEED_KEY = "feed"
 
-    
+
 class CCXTExchangeMixinTest(SingleFeedMixinTest, CCXTExchangeMixin):
     pass
 

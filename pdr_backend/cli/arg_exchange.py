@@ -1,10 +1,8 @@
 from typing import List, Union
 
 import ccxt
-from enforce_typing import enforce_types
 
 
-@enforce_types
 class ArgExchange:
     def __init__(self, exchange: str):
         if not exchange:
@@ -12,6 +10,8 @@ class ArgExchange:
 
         if not hasattr(ccxt, exchange):
             raise ValueError(exchange)
+
+        self.exchange = exchange
 
     def __str__(self):
         return self.exchange
@@ -23,7 +23,6 @@ class ArgExchange:
         return hash(self.exchange)
 
 
-@enforce_types
 class ArgExchanges(List[ArgExchange]):
     def __init__(self, exchanges: Union[List[str], List[ArgExchange]]):
         if not isinstance(exchanges, list):

@@ -38,7 +38,9 @@ class TraderAgent1(BaseTraderAgent):
         super().__init__(ppss)
 
         # Generic exchange class
-        self.exchange: ccxt.Exchange = self.ppss.trader_ss.ccxt_exchange()
+        self.exchange: ccxt.Exchange = self.ppss.exchange_mgr.exchange(
+            self.ppss.trader_ss.exchange_type
+        )
 
         # Market and order data
         self.order: Optional[Dict[str, Any]] = None

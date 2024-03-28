@@ -43,9 +43,9 @@ class SimEngine:
 
         self.logfile = ""
 
-        self.exchange = self.ppss.predictoor_ss.feed.ccxt_exchange(
-            mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
-            exchange_params=self.ppss.sim_ss.exchange_params,
+        mock = self.ppss.sim_ss.tradetype in ["histmock"]
+        self.exchange = self.ppss.exchange_mgr.exchange(
+            "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 
     @property

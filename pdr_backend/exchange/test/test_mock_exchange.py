@@ -2,6 +2,7 @@ import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.exchange.mock_exchange import MockExchange
+from pdr_backend.exchange.mock_order import MockOrder
 
 
 @enforce_types

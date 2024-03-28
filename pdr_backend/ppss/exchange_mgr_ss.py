@@ -29,7 +29,7 @@ class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
             raise TypeError(timeout)
         if timeout < 0 or np.isinf(timeout):
             raise ValueError(timeout)
-        
+
         # check ccxt_params
         ccxt_params = d["ccxt_params"]
         if not isinstance(ccxt_params, dict):
@@ -37,15 +37,14 @@ class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
         for key in ccxt_params.keys():
             if not isinstance(key, str):
                 raise TypeError(ccxt_params)
-        
+
         # check dydx_params
-        dydx_params = d["dydx_params"]
+        dydx_params = d["dydx_params"] or {}
         if not isinstance(dydx_params, dict):
             raise TypeError(dydx_params)
         for key in dydx_params.keys():
             if not isinstance(key, str):
                 raise TypeError(dydx_params)
-
 
     # --------------------------------
     # yaml properties

@@ -89,6 +89,13 @@ class TraderSS(SingleFeedMixin, StrMixin):
             d[coin] = Eth(amt)
         return d
 
+    @property
+    def exchange_type(self) -> str:
+        if self.tradetype == "livemock":
+            return "mock"
+
+        return str(self.feed.exchange)
+
 
 # =========================================================================
 # utilities for testing
