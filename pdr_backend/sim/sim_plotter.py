@@ -1,20 +1,15 @@
-from typing import List, Optional
+import glob
+import os
+import pickle
+import time
+from datetime import datetime
 
-from enforce_typing import enforce_types
-from matplotlib import gridspec
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import savefig
+import altair as alt
 import numpy as np
-from numpy.random import random
+import pandas as pd
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.aimodel_plotter import (
-    plot_aimodel_response,
-    plot_aimodel_varimps,
-)
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_state import SimState
-from pdr_backend.util.constants import FONTSIZE
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
@@ -25,277 +20,235 @@ class SimPlotter:
     @enforce_types
     def __init__(
         self,
-        ppss: PPSS,
-        st: SimState,
     ):
-        # engine state, ss
-        self.st = st
-        self.ppss = ppss
+        self.st = None
+        self.aimodel_plotdata = None
 
-        # so labels are above lines. Must be before figure()
-        plt.rcParams["axes.axisbelow"] = False
+    def load_state(self):
+        if not os.path.exists("sim_state"):
+            raise Exception(
+                "sim_state folder does not exist. Please run the simulation first."
+            )
 
-        # figure, subplots
-        fig = plt.figure()
-        self.fig = fig
+        all_state_files = glob.glob("sim_state/st_*.pkl")
+        if not all_state_files:
+            raise Exception("No state files found. Please run the simulation first.")
 
-        gs = gridspec.GridSpec(2, 6, width_ratios=[5, 1, 2, 0.6, 2, 3])
+        if not os.path.exists("sim_state/st_final.pkl"):
+            # plot previous state to avoid using a pickle that hasn't finished
+            all_state_files = glob.glob("sim_state/st_*.pkl")
+            all_state_files.sort()
+            latest_file = all_state_files[-1]
+            with open(latest_file, "rb") as f:
+                self.st = pickle.load(f)
 
-        self.ax_pdr_profit_vs_time = fig.add_subplot(gs[0, 0])
-        self.ax_trader_profit_vs_time = fig.add_subplot(gs[1, 0])
+            with open(latest_file.replace("st_", "aimodel_plotdata_"), "rb") as f:
+                self.aimodel_plotdata = pickle.load(f)
 
-        self.ax_pdr_profit_vs_ptrue = fig.add_subplot(gs[0, 1])
-        self.ax_trader_profit_vs_ptrue = fig.add_subplot(gs[1, 1])
+            return self.st, latest_file.replace("sim_state/st_", "").replace(".pkl", "")
 
-        self.ax_accuracy_vs_time = fig.add_subplot(gs[0, 2])
-        self.ax_f1_precision_recall_vs_time = fig.add_subplot(gs[1, 2])
+        # make sure the final state is written to disk before unpickling
+        # avoid race conditions with the pickling itself
+        if file_age_in_seconds("sim_state/st_final.pkl") < 3:
+            time.sleep(3)
 
-        # col 3 is empty, for overflow of aimodel_varimps's y-axis labels
-        self.ax_aimodel_varimps = fig.add_subplot(gs[:, 4])
+        with open("sim_state/st_final.pkl", "rb") as f:
+            self.st = pickle.load(f)
 
-        self.ax_aimodel_response = fig.add_subplot(gs[:, 5])
+        with open("sim_state/aimodel_plotdata_final.pkl", "rb") as f:
+            self.aimodel_plotdata = pickle.load(f)
 
-        # attributes to help update plots' state quickly
-        self.N: int = 0
-        self.N_done: int = 0
-        self.x: List[float] = []
+        return self.st, "final"
 
-        self.shown_plot_before: bool = False
-        self.computed_plot_before: bool = False
+    def init_state(self):
+        files = glob.glob("sim_state/*")
+        for f in files:
+            os.remove(f)
 
-    # pylint: disable=too-many-statements
-    @enforce_types
-    def compute_plot(
-        self,
-        aimodel_plotdata: AimodelPlotdata,
-        do_show_plot: bool,
-        do_save_plot: bool,
-    ) -> Optional[str]:
-        """
-        @description
-          Create / update whole plot, with many subplots
+    def save_state(
+        self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False
+    ):
+        ts = (
+            datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3]
+            if not is_final
+            else "final"
+        )
+        with open(f"sim_state/st_{ts}.pkl", "wb") as f:
+            pickle.dump(sim_state, f)
 
-        @arguments
-          aimodel_plotdata -- has model, X_train, etc
-          do_show_plot -- render on-screen in a window?
-          do_save_plot -- export as png?
-
-        @return
-          img_filename - filename of saved plot (None if not done)
-        """
-        if not self.shown_plot_before:
-            plt.ion()
-            if do_show_plot:
-                plt.show()
-            self.shown_plot_before = True
-
-        # update N, N_done, x. **Update x only after updating N, N_done!**
-        self.N = len(self.st.pdr_profits_OCEAN)
-        self.N_done = len(self.x)  # what # points have been plotted previously
-        self.x = list(range(0, self.N))
-
-        # main work: create/update subplots
-        self._plot_pdr_profit_vs_time()
-        self._plot_trader_profit_vs_time()
-
-        self._plot_accuracy_vs_time()
-        self._plot_f1_precision_recall_vs_time()
-        self._plot_pdr_profit_vs_ptrue()
-        self._plot_trader_profit_vs_ptrue()
-
-        self._plot_aimodel_varimps(aimodel_plotdata)
-        self._plot_aimodel_response(aimodel_plotdata)
-
-        # final pieces of making plot
-        self.fig.set_size_inches(WIDTH, HEIGHT)
-        self.fig.tight_layout(pad=0.5, h_pad=1.0, w_pad=1.0)
-        plt.subplots_adjust(wspace=0.3)
-
-        # save to png?
-        img_filename = None
-        if do_save_plot:
-            img_filename = self.ppss.sim_ss.unique_final_img_filename()
-            savefig(img_filename)
-
-        # wrapup for reloop
-        if do_show_plot:
-            plt.pause(0.001)
-        self.computed_plot_before = True
-
-        return img_filename
-
-    @property
-    def next_x(self) -> List[float]:
-        return _slice(self.x, self.N_done, self.N)
-
-    @property
-    def next_hx(self) -> List[float]:
-        """horizontal x"""
-        return [self.next_x[0], self.next_x[-1]]
+        with open(f"sim_state/aimodel_plotdata_{ts}.pkl", "wb") as f:
+            pickle.dump(aimodel_plotdata, f)
 
     @enforce_types
-    def _plot_pdr_profit_vs_time(self):
-        ax = self.ax_pdr_profit_vs_time
+    def plot_pdr_profit_vs_time(self):
         y00 = list(np.cumsum(self.st.pdr_profits_OCEAN))
-        next_y00 = _slice(y00, self.N_done, self.N)
-        ax.plot(self.next_x, next_y00, c="g")
-        ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
-        s = f"Predictoor profit vs time. Current:{y00[-1]:.2f} OCEAN"
-        _set_title(ax, s)
-        if not self.computed_plot_before:
-            ax.set_ylabel("predictoor profit (OCEAN)", fontsize=FONTSIZE)
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
-            ax.margins(0.005, 0.05)
+        s = f"Predictoor profit vs time. Current: {y00[-1]:.2f} OCEAN"
+
+        y = "predictoor profit (OCEAN)"
+        df = pd.DataFrame(y00, columns=[y])
+        df["time"] = range(len(y00))
+
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(
+                x="time",
+                y=y,
+            )
+            .interactive()
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        return chart + ref_line
 
     @enforce_types
-    def _plot_trader_profit_vs_time(self):
-        ax = self.ax_trader_profit_vs_time
+    def plot_trader_profit_vs_time(self):
         y10 = list(np.cumsum(self.st.trader_profits_USD))
-        next_y10 = _slice(y10, self.N_done, self.N)
-        ax.plot(self.next_x, next_y10, c="b")
-        ax.plot(self.next_hx, [0, 0], c="0.2", ls="--", lw=1)
-        _set_title(ax, f"Trader profit vs time. Current: ${y10[-1]:.2f}")
-        if not self.computed_plot_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("trader profit (USD)", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
-            ax.margins(0.005, 0.05)
+
+        s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
+        y = "trader profit (USD)"
+        df = pd.DataFrame(y10, columns=[y])
+        df["time"] = range(len(y10))
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(
+                x="time",
+                y=y,
+            )
+            .interactive()
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        return chart + ref_line
 
     @enforce_types
-    def _plot_accuracy_vs_time(self):
-        ax = self.ax_accuracy_vs_time
+    def plot_accuracy_vs_time(self):
         clm = self.st.clm
-        next_acc_ests = _slice(clm.acc_ests, self.N_done, self.N, mult=100.0)
-        next_acc_ls = _slice(clm.acc_ls, self.N_done, self.N, mult=100.0)
-        next_acc_us = _slice(clm.acc_us, self.N_done, self.N, mult=100.0)
-
-        ax.plot(self.next_x, next_acc_ests, "green")
-        ax.fill_between(self.next_x, next_acc_ls, next_acc_us, color="0.9")
-        ax.plot(self.next_hx, [0.5 * 100.0, 0.5 * 100.0], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=0.4 * 100.0, top=0.6 * 100.0)
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
-        _set_title(ax, s)
-        if not self.computed_plot_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("% correct [lower, upper bound]", fontsize=FONTSIZE)
-            _ylabel_on_right(ax)
-            ax.margins(0.01, 0.01)
+
+        y = "% correct (lower, upper bound)"
+        acc_ests = [100 * a for a in clm.acc_ests]
+        df = pd.DataFrame(acc_ests, columns=[y])
+        df["acc_ls"] = [100 * a for a in clm.acc_ls]
+        df["acc_us"] = [100 * a for a in clm.acc_us]
+        df["time"] = range(len(clm.acc_ests))
+
+        chart = (
+            alt.Chart(df, title=s)
+            .mark_line()
+            .encode(x="time", y=y, color=alt.value("darkblue"))
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [50]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        area_chart = (
+            alt.Chart(df)
+            .mark_area()
+            .encode(
+                x="time",
+                y=alt.Y("acc_ls", title=y),
+                y2="acc_us",
+                color=alt.value("lightblue"),
+            )
+        )
+
+        return area_chart + ref_line + chart
 
     @enforce_types
-    def _plot_f1_precision_recall_vs_time(self):
-        ax = self.ax_f1_precision_recall_vs_time
+    def plot_f1_precision_recall_vs_time(self):
         clm = self.st.clm
-        next_f1s = _slice(clm.f1s, self.N_done, self.N)
-        next_precisions = _slice(clm.precisions, self.N_done, self.N)
-        next_recalls = _slice(clm.recalls, self.N_done, self.N)
-
-        ax.plot(self.next_x, next_precisions, "darkred", label="precision")  # top
-        ax.plot(self.next_x, next_f1s, "indianred", label="f1")  # mid
-        ax.plot(self.next_x, next_recalls, "lightcoral", label="recall")  # bot
-        ax.fill_between(self.next_x, next_recalls, next_precisions, color="0.9")
-        ax.plot(self.next_hx, [0.5, 0.5], c="0.2", ls="--", lw=1)
-        ax.set_ylim(bottom=0.25, top=0.75)
         s = f"f1={clm.f1s[-1]:.4f}"
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
-        _set_title(ax, s)
-        if not self.computed_plot_before:
-            ax.set_xlabel("time", fontsize=FONTSIZE)
-            ax.set_ylabel("f1 [recall, precision]", fontsize=FONTSIZE)
-            ax.legend(loc="lower left")
-            _ylabel_on_right(ax)
-            ax.margins(0.01, 0.01)
+
+        y = "% correct (lower, upper bound)"
+        df = pd.DataFrame(clm.f1s, columns=["f1"])
+        df["precisions"] = clm.precisions
+        df["recalls"] = clm.recalls
+        df["time"] = range(len(clm.f1s))
+
+        data_long = pd.melt(
+            df,
+            id_vars=["time"],
+            value_vars=["f1", "precisions", "recalls"],
+            var_name="var",
+            value_name="f1,precisions,recalls",
+        )
+
+        chart = (
+            alt.Chart(data_long)
+            .mark_line()
+            .encode(
+                x="time",
+                y=alt.Y("f1,precisions,recalls", title=y),
+                color="var:N",  # Use the category field for color encoding
+            )
+            .properties(title=s)
+        )
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0.5]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        return chart + ref_line
 
     @enforce_types
-    def _plot_pdr_profit_vs_ptrue(self):
-        ax = self.ax_pdr_profit_vs_ptrue
-        stake_amt = self.ppss.predictoor_ss.stake_amount.amt_eth
-        mnp, mxp = -stake_amt, stake_amt
+    def plot_pdr_profit_vs_ptrue(self):
         avg = np.average(self.st.pdr_profits_OCEAN)
-        next_profits = _slice(self.st.pdr_profits_OCEAN, self.N_done, self.N)
-        next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-
-        c = (random(), random(), random())  # random RGB color
-        ax.scatter(next_probs_up, next_profits, color=c, s=1)
-
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
-        _set_title(ax, s)
-        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
-        if not self.computed_plot_before:
-            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-            _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, "pdr profit (OCEAN)")
-            _ylabel_on_right(ax)
-            ax.margins(0.05, 0.05)
+
+        y = "pdr profit (OCEAN)"
+        df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
+        df["prob(up)"] = self.st.probs_up
+
+        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
+
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        return chart + ref_line
 
     @enforce_types
-    def _plot_trader_profit_vs_ptrue(self):
-        ax = self.ax_trader_profit_vs_ptrue
-        mnp = min(self.st.trader_profits_USD)
-        mxp = max(self.st.trader_profits_USD)
+    def plot_trader_profit_vs_ptrue(self):
         avg = np.average(self.st.trader_profits_USD)
-        next_profits = _slice(self.st.trader_profits_USD, self.N_done, self.N)
-        next_probs_up = _slice(self.st.probs_up, self.N_done, self.N)
-
-        c = (random(), random(), random())  # random RGB color
-        ax.scatter(next_probs_up, next_profits, color=c, s=1)
-
         s = f"trader profit dist. avg={avg:.2f} USD"
 
-        _set_title(ax, s)
-        ax.plot([0.5, 0.5], [mnp, mxp], c="0.2", ls="-", lw=1)
-        if not self.computed_plot_before:
-            ax.plot([0.0, 1.0], [0, 0], c="0.2", ls="--", lw=1)
-            _set_xlabel(ax, "prob(up)")
-            _set_ylabel(ax, "trader profit (USD)")
-            _ylabel_on_right(ax)
-            ax.margins(0.05, 0.05)
+        y = "trader profit (USD)"
+        df = pd.DataFrame(self.st.trader_profits_USD, columns=[y])
+        df["prob(up)"] = self.st.probs_up
 
-    @enforce_types
-    def _plot_aimodel_varimps(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_varimps
-        imps_tups = d.model.importance_per_var(include_stddev=True)
-        plot_aimodel_varimps(d.colnames, imps_tups, (self.fig, ax))
-        if not self.computed_plot_before:
-            ax.margins(0.01, 0.01)
+        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
 
-    @enforce_types
-    def _plot_aimodel_response(self, d: AimodelPlotdata):
-        ax = self.ax_aimodel_response
-        plot_aimodel_response(d, (self.fig, ax))
-        if not self.computed_plot_before:
-            ax.margins(0.01, 0.01)
+        ref_line = (
+            alt.Chart(pd.DataFrame({y: [0]}))
+            .mark_rule(color="grey", strokeDash=[10, 10])
+            .encode(y=y)
+        )
+
+        return chart + ref_line
 
 
-@enforce_types
-def _slice(a: list, N_done: int, N: int, mult: float = 1.0) -> list:
-    return [a[i] * mult for i in range(max(0, N_done - 1), N)]
-
-
-@enforce_types
-def _set_xlabel(ax, s: str):
-    ax.set_xlabel(s, fontsize=FONTSIZE)
-
-
-@enforce_types
-def _set_ylabel(ax, s: str):
-    ax.set_ylabel(s, fontsize=FONTSIZE)
-
-
-@enforce_types
-def _set_title(ax, s: str):
-    ax.set_title(s, fontsize=FONTSIZE, fontweight="bold")
-
-
-@enforce_types
-def _ylabel_on_right(ax):
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-
-
-@enforce_types
-def _del_lines(ax):
-    for l in ax.lines:
-        l.remove()
+def file_age_in_seconds(pathname):
+    stat_result = os.stat(pathname)
+    return time.time() - stat_result.st_mtime
