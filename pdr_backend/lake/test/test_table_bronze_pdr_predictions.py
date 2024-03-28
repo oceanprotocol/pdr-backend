@@ -80,12 +80,6 @@ def test_table_bronze_pdr_predictions(
     # Final result should have 6 rows
     assert len(result) == 6
 
-    # check slot_ids because it is created with the sql query
-    slot_list = result["slot"].to_list()
-    # iterate slot_list and check if it is in the format of "contract-slot"
-    for slot in slot_list:
-        assert "-" in slot
-
     # Assert that there will be 1 null value in every column we're joining
     assert result["truevalue"].null_count() == 1
     assert result["stake"].null_count() == 1

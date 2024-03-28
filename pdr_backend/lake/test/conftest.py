@@ -393,6 +393,7 @@ def _gql_datafactory_etl_slots_df():
     _slots = mock_etl_slots()
     slots_df = _object_list_to_df(_slots, slots_schema)
     slots_df = slots_df.with_columns([pl.col("timestamp").mul(1000).alias("timestamp")])
+    print("_gql_datafactory_etl_slots_df", slots_df)
     return slots_df
 
 

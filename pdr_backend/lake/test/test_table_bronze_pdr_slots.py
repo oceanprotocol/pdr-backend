@@ -86,7 +86,7 @@ def test_table_bronze_pdr_slots(
         """
     )
 
-    assert pdr_slots_df["trueval"][0] is None
+    assert pdr_slots_df["truevalue"][0] is None
     assert pdr_slots_df["roundSumStakesUp"][0] is None
     assert pdr_slots_df["roundSumStakes"][0] is None
 
