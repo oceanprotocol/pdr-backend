@@ -29,6 +29,9 @@ silver_pdr_predictions_schema = {
     "truevalue": Boolean,
     "stake": Float64,
     "payout": Float64,
+    "revenue_df": Float64,
+    "revenue_user": Float64,
+    "revenue_stake": Float64,
     "sum_stake": Float64,
     "sum_revenue": Float64,
     "sum_revenue_df": Float64,
@@ -121,6 +124,16 @@ def update_fields(
             )
             else previous_df["sum_revenue"]
         )
+    )
+    current_df["revenue_df"] = df_revenue
+    current_df["revenue_user"] = user_revenue
+    current_df["revenue_stake"] = (
+        ((current_df["payout"] - (df_revenue + user_revenue + current_df["stake"])))
+        if (
+            (current_df["predvalue"] == current_df["truevalue"])
+            and (current_df["predvalue"] is not None)
+        )
+        else 0
     )
     current_df["sum_revenue_df"] = previous_df["sum_revenue_df"][0] + df_revenue
     current_df["sum_revenue_user"] = previous_df["sum_revenue_user"][0] + user_revenue
@@ -270,6 +283,16 @@ def _process_predictions(
                     and (row["predvalue"] is not None)
                 )
                 else (-row["stake"] if row["stake"] else 0)
+            )
+            row["revenue_df"] = df_revenue
+            row["revenue_user"] = user_revenue
+            row["revenue_stake"] = (
+                (row["payout"] - (df_revenue + user_revenue + row["stake"]))
+                if (
+                    (row["predvalue"] == row["truevalue"])
+                    and (row["predvalue"] is not None)
+                )
+                else 0
             )
             row["sum_revenue_df"] = df_revenue
             row["sum_revenue_user"] = user_revenue

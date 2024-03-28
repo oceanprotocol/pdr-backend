@@ -38,6 +38,9 @@ def process_data(df: DataFrame, user_addrs, contract_addrs):
 
     fileds_to_plot_df = user_contract_predictions_df.select(
         "slot",
+        "revenue_df",
+        "revenue_user",
+        "revenue_stake",
         "sum_revenue",
         "sum_revenue_df",
         "sum_revenue_user",
@@ -49,9 +52,12 @@ def process_data(df: DataFrame, user_addrs, contract_addrs):
     # sum values per slot
     fileds_to_plot_df = fileds_to_plot_df.group_by("slot").agg(
         pl.col("sum_revenue").sum().alias("revenue"),
-        pl.col("sum_revenue_df").sum().alias("revenue_df"),
-        pl.col("sum_revenue_user").sum().alias("revenue_user"),
-        pl.col("sum_revenue_stake").sum().alias("revenue_stake"),
+        pl.col("revenue_df").sum().alias("revenue_df"),
+        pl.col("revenue_user").sum().alias("revenue_user"),
+        pl.col("revenue_stake").sum().alias("revenue_stake"),
+        pl.col("sum_revenue_df").sum().alias("revenue_df_sum"),
+        pl.col("sum_revenue_user").sum().alias("revenue_user_sum"),
+        pl.col("sum_revenue_stake").sum().alias("revenue_stake_sum"),
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("payout").sum().alias("sum_payout"),
     )
@@ -66,7 +72,9 @@ def plot_income_data(df: DataFrame, fig):
     df = df.with_columns(
         [
             (
-                pl.col("revenue_df") + pl.col("revenue_user") + pl.col("revenue_stake")
+                pl.col("revenue_df_sum")
+                + pl.col("revenue_user_sum")
+                + pl.col("revenue_stake_sum")
             ).alias("gross_income")
         ]
     )
@@ -96,19 +104,9 @@ def plot_income_data(df: DataFrame, fig):
 def plot_revenue_data(df: DataFrame, fig):
     df = df.to_pandas()
     # Plot each income component
-    fig.add_trace(
-        go.Scatter(x=df["slot"], y=df["revenue_df"], mode="lines", name="DF sales")
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df["slot"], y=df["revenue_user"], mode="lines", name="Non-df income"
-        )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df["slot"], y=df["revenue_stake"], mode="lines", name="Stake income"
-        )
-    )
+    fig.add_trace(go.Bar(x=df["slot"], y=df["revenue_df"], name="DF sales"))
+    fig.add_trace(go.Bar(x=df["slot"], y=df["revenue_user"], name="Non-DF sales"))
+    fig.add_trace(go.Bar(x=df["slot"], y=df["revenue_stake"], name="Stake sales"))
 
     # Update layout
     fig.update_layout(
@@ -125,9 +123,7 @@ def plot_revenue_data(df: DataFrame, fig):
 def plot_costs_data(df: DataFrame, fig):
     df = df.to_pandas()
     # Plot each income component
-    fig.add_trace(
-        go.Scatter(x=df["slot"], y=df["sum_stake"], mode="lines", name="DF sales")
-    )
+    fig.add_trace(go.Bar(x=df["slot"], y=df["sum_stake"], name="Stake"))
 
     # Update layout
     fig.update_layout(
@@ -144,7 +140,21 @@ def plot_costs_data(df: DataFrame, fig):
 def main():
     # Set Streamlit app width to page width
     st.set_page_config(layout="wide")
-    st.title("Revenue Over Time")
+
+    # Split the window into two rows, each with two columns
+    row = st.container()
+    # title_left_column, title_right_column = st.columns([1, 2])
+    top_left_column, top_right_column = st.columns(2)
+    bottom_left_column, bottom_right_column = st.columns(2)
+
+    with row:
+        st.title("Revenue Over Time")
+
+        # Load data button
+        button_clicked = st.button("Feth new data")
+
+    if button_clicked:
+        initial_df = load_data()
 
     initial_df = st.cache_data(load_data)()
 
@@ -156,9 +166,17 @@ def main():
         session_state["user_addresses"] = (
             initial_df.select("user").unique()["user"].to_list()
         )
-    selected_user_addresses = st.multiselect(
-        "User Address", session_state["user_addresses"], [], key="user_address"
-    )
+    with top_left_column:
+        selected_user_addresses = st.multiselect(
+            "User Address",
+            session_state["user_addresses"],
+            (
+                session_state["user_addresses"][0]
+                if (len(session_state["user_addresses"]) > 0)
+                else []
+            ),
+            key="user_address",
+        )
     contract_addresses_list = (
         initial_df.select("contract", "user")
         .unique()
@@ -170,27 +188,30 @@ def main():
         len(session_state["contract_addresses_list"]) != len(contract_addresses_list)
     ):
         session_state["contract_addresses_list"] = contract_addresses_list
-    selected_contract_addresses = st.multiselect(
-        "Contract Address",
-        session_state["contract_addresses_list"],
-        [],
-        key="contract_address",
-    )
-
-    # Load data button
-    if st.button("Load Data"):
-        initial_df = load_data()
+    with top_right_column:
+        selected_contract_addresses = st.multiselect(
+            "Contract Address",
+            session_state["contract_addresses_list"],
+            (
+                session_state["contract_addresses_list"][0]
+                if (len(session_state["contract_addresses_list"]) > 0)
+                else []
+            ),
+            key="contract_address",
+        )
 
     df = process_data(initial_df, selected_user_addresses, selected_contract_addresses)
 
-    fig1 = go.Figure()
-    plot_income_data(df, fig1)
+    with bottom_left_column:
+        fig1 = go.Figure()
+        plot_income_data(df, fig1)
 
-    fig2 = go.Figure()
-    plot_revenue_data(df, fig2)
+    with bottom_right_column:
+        fig2 = go.Figure()
+        plot_revenue_data(df, fig2)
 
-    fig3 = go.Figure()
-    plot_costs_data(df, fig3)
+        fig3 = go.Figure()
+        plot_costs_data(df, fig3)
 
 
 if __name__ == "__main__":
