@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from enforce_typing import enforce_types
 
@@ -11,8 +11,9 @@ from pdr_backend.util.time_types import UnixTimeS
 @dataclass
 class PredictSlot:
     ID: str
-    slot: str
-    trueValues: List[Dict[str, Any]]
+    timestamp: int
+    slot: int
+    truevalue: bool
     roundSumStakesUp: float
     roundSumStakes: float
 
@@ -56,6 +57,7 @@ def get_predict_slots_query(
             slot
             trueValues {
                 id
+                timestamp
                 trueValue
             }
             roundSumStakesUp
@@ -76,6 +78,7 @@ def get_slots(
     addresses: List[str],
     end_ts_param: UnixTimeS,
     start_ts_param: UnixTimeS,
+    first: int,
     skip: int,
     slots: List[PredictSlot],
     network: str = "mainnet",
@@ -97,13 +100,11 @@ def get_slots(
 
     slots = slots or []
 
-    records_per_page = 1000
-
     query = get_predict_slots_query(
         addresses,
         end_ts_param,
         start_ts_param,
-        records_per_page,
+        first,
         skip,
     )
 
@@ -122,8 +123,15 @@ def get_slots(
         PredictSlot(
             **{
                 "ID": slot["id"],
+                "timestamp": slot["slot"],
                 "slot": slot["slot"],
-                "trueValues": slot["trueValues"],
+                "truevalue": (
+                    slot["trueValues"][0]["trueValue"]
+                    if "trueValues" in slot
+                    and slot["trueValues"] is not None
+                    and len(slot["trueValues"]) > 0
+                    else None
+                ),
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
             }
@@ -132,30 +140,23 @@ def get_slots(
     ]
 
     slots.extend(new_slots)
-    if len(new_slots) == records_per_page:
-        return get_slots(
-            addresses,
-            end_ts_param,
-            start_ts_param,
-            skip + records_per_page,
-            slots,
-            network,
-        )
     return slots
 
 
 @enforce_types
-def fetch_slots_for_all_assets(
-    asset_ids: List[str],
+def fetch_slots(
     start_ts_param: UnixTimeS,
     end_ts_param: UnixTimeS,
+    contracts: List[str],
+    first: int,
+    skip: int,
     network: str = "mainnet",
 ) -> Dict[str, List[PredictSlot]]:
     """
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
 
     Args:
-        asset_ids: A list of asset identifiers for which slots will be fetched.
+        contracts: A list of asset identifiers for which slots will be fetched.
         start_ts_param: The Unix timestamp marking the beginning of the desired time range.
         end_ts_param: The Unix timestamp marking the end of the desired time range.
         network: The blockchain network to query ('mainnet' or 'testnet').
@@ -165,16 +166,7 @@ def fetch_slots_for_all_assets(
         containing slot information.
     """
 
-    all_slots = get_slots(asset_ids, end_ts_param, start_ts_param, 0, [], network)
-
-    slots_by_asset: Dict[str, List[PredictSlot]] = {}
-    for slot in all_slots:
-        slot_id = slot.ID
-        # split the id to get the asset id
-        asset_id = slot_id.split("-")[0]
-        if asset_id not in slots_by_asset:
-            slots_by_asset[asset_id] = []
-
-        slots_by_asset[asset_id].append(slot)
-
-    return slots_by_asset
+    all_slots = get_slots(
+        contracts, end_ts_param, start_ts_param, first, skip, [], network
+    )
+    return all_slots

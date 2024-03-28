@@ -16,8 +16,9 @@ from pdr_backend.util.time_types import UnixTimeS
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
-    slot="12345",
-    trueValues=[{"ID": "1", "trueValue": True}],
+    timestamp=12345,
+    slot=12345,
+    truevalue=True,
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
 )
@@ -70,7 +71,7 @@ def test_aggregate_statistics():
 
 
 @enforce_types
-@patch("pdr_backend.accuracy.app.fetch_slots_for_all_assets")
+@patch("pdr_backend.accuracy.app.fetch_slots")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Mocks
     mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
@@ -91,5 +92,5 @@ def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Verify
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
     mock_fetch_slots.assert_called_once_with(
-        ["0xAsset"], UnixTimeS(91000), UnixTimeS(92000), "mainnet"
+        UnixTimeS(91000), UnixTimeS(92000), ["0xAsset"], 1000, 0, "mainnet"
     )

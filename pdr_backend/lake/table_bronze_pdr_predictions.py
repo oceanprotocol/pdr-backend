@@ -41,8 +41,8 @@ def get_bronze_pdr_predictions_data_with_SQL(
         f"""
         SELECT 
             {pdr_predictions_table_name}.ID as ID,
-            string_split({pdr_predictions_table_name}.ID, '-')[0] 
-                || '-' || string_split({pdr_predictions_table_name}.ID, '-')[1] AS slot_id,
+            SPLIT_PART({pdr_predictions_table_name}.ID, '-', 1)
+                || '-' || SPLIT_PART({pdr_predictions_table_name}.ID, '-', 2) AS slot_id,
             {pdr_predictions_table_name}.contract as contract,
             {pdr_predictions_table_name}.slot as slot,
             {pdr_predictions_table_name}.user as user,

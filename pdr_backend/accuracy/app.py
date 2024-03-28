@@ -12,7 +12,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots_for_all_assets, PredictSlot
+from pdr_backend.subgraph.subgraph_slot import fetch_slots, PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
 
 app = Flask(__name__)
@@ -98,13 +98,12 @@ def process_single_slot(
             slots_evaluated,
         )
 
-    true_values: List[Dict[str, Any]] = slot.trueValues or []
-    true_value: Optional[bool] = true_values[0]["trueValue"] if true_values else None
+    true_value = slot.truevalue
 
-    if len(true_values) > 0 and prediction_result == true_value:
+    if prediction_result == true_value:
         correct_predictions_count += 1
 
-    if len(true_values) > 0 and true_value is not None:
+    if true_value is not None:
         slots_evaluated += 1
 
     return staked_yesterday, staked_today, correct_predictions_count, slots_evaluated
@@ -174,8 +173,8 @@ def calculate_statistics_for_all_assets(
         calculated statistics such as average accuracy and total staked amounts.
     """
 
-    slots_by_asset = fetch_slots_for_all_assets(
-        asset_ids, start_ts_param, end_ts_param, network
+    slots_by_asset = fetch_slots(
+        start_ts_param, end_ts_param, asset_ids, 1000, 0, network
     )
 
     overall_stats = {}

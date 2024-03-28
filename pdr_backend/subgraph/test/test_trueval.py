@@ -4,7 +4,7 @@ from pdr_backend.subgraph.trueval import Trueval, mock_truevals
 
 
 @enforce_types
-def test_subscriptions():
+def test_truevals():
     truevals = mock_truevals()
 
     assert len(truevals) == 6
