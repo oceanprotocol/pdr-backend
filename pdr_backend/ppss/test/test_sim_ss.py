@@ -26,7 +26,7 @@ def test_sim_ss_defaults(tmpdir):
 
 
 @enforce_types
-def test_sim_ss_give_values(tmpdir):
+def test_sim_ss_specify_values(tmpdir):
     d = sim_ss_test_dict(
         log_dir=os.path.join(tmpdir, "mylogs"),
         test_n=13,

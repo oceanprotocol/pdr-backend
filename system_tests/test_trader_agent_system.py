@@ -28,6 +28,7 @@ def setup_mock_objects(mock_web3_pp, mock_feed_contract, feeds):
     mock_trader_ss = Mock()
     mock_trader_ss.min_buffer = 1
     mock_trader_ss.get_feed_from_candidates.return_value = feeds["0x1"]
+    mock_trader_ss.exchange_type = "mock"
 
     mock_web3_pp.get_contracts.return_value = {"0x1": mock_feed_contract}
 

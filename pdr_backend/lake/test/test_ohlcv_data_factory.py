@@ -88,7 +88,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     # work 1: new rawohlcv file
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
 
-    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+    with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
 
@@ -111,7 +111,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
         ss.fin_timestamp + 2 * MS_PER_5M_EPOCH
     ).to_timestr()
 
-    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+    with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts2 = _uts_in_rawohlcv_file(filename)
@@ -123,7 +123,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
         ss.fin_timestamp + 4 * MS_PER_5M_EPOCH
     ).to_timestr()
 
-    with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
+    with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
     uts3 = _uts_in_rawohlcv_file(filename)

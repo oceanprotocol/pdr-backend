@@ -2,15 +2,13 @@ import logging
 import os
 from typing import Dict
 
+import ccxt
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.lake.constants import (
-    TOHLCV_SCHEMA_PL,
-    TOHLCV_COLS,
-)
+from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
@@ -24,7 +22,6 @@ from pdr_backend.lake.plutil import (
 )
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.time_types import UnixTimeMs
-
 
 logger = logging.getLogger("ohlcv_data_factory")
 
@@ -126,7 +123,7 @@ class OhlcvDataFactory:
         while True:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
-            exch = feed.ccxt_exchange()
+            exch = getattr(ccxt, str(feed.exchange))()
             raw_tohlcv_data = safe_fetch_ohlcv_ccxt(
                 exch,
                 symbol=str(pair_str).replace("-", "/"),

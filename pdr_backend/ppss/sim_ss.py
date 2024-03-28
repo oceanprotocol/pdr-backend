@@ -5,7 +5,6 @@ from typing import Optional
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 logger = logging.getLogger("sim_ss")
@@ -14,7 +13,7 @@ TRADETYPE_OPTIONS = ["livemock", "livereal", "histmock"]
 
 
 @enforce_types
-class SimSS(StrMixin, CCXTExchangeMixin):
+class SimSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
@@ -82,12 +81,5 @@ def sim_ss_test_dict(
         "log_dir": log_dir,
         "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",
-        "exchange_only": {
-            "timeout": 30000,
-            "options": {
-                "createMarketBuyOrderRequiresPrice": False,
-                "defaultType": "spot",
-            },
-        },
     }
     return d

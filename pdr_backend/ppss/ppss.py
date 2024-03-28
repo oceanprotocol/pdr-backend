@@ -16,6 +16,8 @@ from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
+from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
@@ -64,6 +66,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self.payout_ss = PayoutSS(d["payout_ss"])
         self.web3_pp = Web3PP(d["web3_pp"], network)
         self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
+        self.exchange_mgr = ExchangeMgr(ExchangeMgrSS(d["exchange_mgr_ss"]))
 
         # postconditions
         self.verify_feed_dependencies()

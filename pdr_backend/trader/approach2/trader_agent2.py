@@ -34,7 +34,9 @@ class TraderAgent2(BaseTraderAgent):
             self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
-        self.exchange: ccxt.Exchange = self.ppss.trader_ss.ccxt_exchange()
+        self.exchange: ccxt.Exchange = self.ppss.exchange_mgr.exchange(
+            self.ppss.trader_ss.exchange_type
+        )
 
         self.update_positions([self.feed.address])
 
