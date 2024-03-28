@@ -22,6 +22,7 @@ from pdr_backend.lake.table_pdr_payouts import (
     payouts_schema,
     payouts_table_name,
 )
+from pdr_backend.lake.table_pdr_slots import slots_table_name, slots_schema
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.subgraph.subgraph_subscriptions import (
     fetch_filtered_subscriptions,
@@ -30,6 +31,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
+from pdr_backend.subgraph.subgraph_slot import fetch_slots
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df, get_table_name, TableType
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
@@ -71,6 +73,7 @@ class GQLDataFactory:
                 subscriptions_table_name: fetch_filtered_subscriptions,
                 truevals_table_name: fetch_truevals,
                 payouts_table_name: fetch_payouts,
+                slots_table_name: fetch_slots,
             },
             "config": {
                 "contract_list": contract_list,
@@ -80,6 +83,7 @@ class GQLDataFactory:
                 subscriptions_table_name,
                 truevals_table_name,
                 payouts_table_name,
+                slots_table_name,
             ],
         }
 
@@ -97,6 +101,7 @@ class GQLDataFactory:
                 ),
                 truevals_table_name: (truevals_table_name, truevals_schema, self.ppss),
                 payouts_table_name: (payouts_table_name, payouts_schema, self.ppss),
+                slots_table_name: (slots_table_name, slots_schema, self.ppss),
             }
         )
 

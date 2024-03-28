@@ -9,6 +9,11 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_data_with_SQL,
 )
+from pdr_backend.lake.table_bronze_pdr_slots import (
+    bronze_pdr_slots_table_name,
+    bronze_pdr_slots_schema,
+    get_bronze_pdr_slots_data_with_SQL,
+)
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
@@ -35,13 +40,19 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_table(
-            bronze_pdr_predictions_table_name,
-            (
-                bronze_pdr_predictions_table_name,
-                bronze_pdr_predictions_schema,
-                self.ppss,
-            ),
+        TableRegistry().register_tables(
+            {
+                bronze_pdr_predictions_table_name: (
+                    bronze_pdr_predictions_table_name,
+                    bronze_pdr_predictions_schema,
+                    self.ppss,
+                ),
+                bronze_pdr_slots_table_name: (
+                    bronze_pdr_slots_table_name,
+                    bronze_pdr_slots_schema,
+                    self.ppss,
+                ),
+            }
         )
 
         self.raw_table_names = [
@@ -51,9 +62,12 @@ class ETL:
             truevals_table_name,
         ]
 
-        self.bronze_table_names = [
-            bronze_pdr_predictions_table_name,
-        ]
+        self.bronze_table_getters = {
+            bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
+            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
+        }
+
+        self.bronze_table_names = list(self.bronze_table_getters.keys())
 
         self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
 
@@ -126,7 +140,7 @@ class ETL:
         # let's keep track of time passed so we can log how long it takes for this step to complete
         st_ts = time.time_ns() / 1e9
 
-        self.update_bronze_pdr_predictions()
+        self.update_bronze_pdr()
 
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
@@ -203,22 +217,22 @@ class ETL:
 
         return from_timestamp, to_timestamp
 
-    def update_bronze_pdr_predictions(self):
+    def update_bronze_pdr(self):
         """
         @description
-            Update bronze_pdr_predictions table
+            Update bronze tables
         """
-        print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
+        print("update_bronze_pdr - Update bronze tables.")
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
-        data = get_bronze_pdr_predictions_data_with_SQL(
-            path=self.ppss.lake_ss.lake_dir,
-            st_ms=UnixTimeMs.from_dt(st_timestamp),
-            fin_ms=UnixTimeMs.from_dt(fin_timestamp),
-        )
+        for table_name, get_data_func in self.bronze_table_getters.items():
+            data = get_data_func(
+                path=self.ppss.lake_ss.lake_dir,
+                st_ms=UnixTimeMs.from_dt(st_timestamp),
+                fin_ms=UnixTimeMs.from_dt(fin_timestamp),
+            )
 
-        print(f"update_bronze_pdr_predictions - data: {data}")
-        TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(
-            data,
-            table_type=TableType.TEMP,
-        )
+            TableRegistry().get_table(table_name)._append_to_db(
+                data,
+                table_type=TableType.TEMP,
+            )
