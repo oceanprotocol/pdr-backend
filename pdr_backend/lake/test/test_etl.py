@@ -153,6 +153,8 @@ def test_etl_do_bronze_step(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
 
+    print("slots----1", slots)
+
     gql_tables = {
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
