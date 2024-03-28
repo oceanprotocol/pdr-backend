@@ -21,6 +21,7 @@ from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
 @pytest.fixture()
@@ -49,6 +50,14 @@ def _get_test_PDS():
         return PersistentDataStore(str(tmpdir))
 
     return create_persistent_datastore
+
+
+@pytest.fixture()
+def _get_test_CSVDS():
+    def create_csv_datastore(tmpdir):
+        return CSVDataStore(str(tmpdir))
+
+    return create_csv_datastore
 
 
 # pylint: disable=line-too-long
@@ -315,7 +324,7 @@ def _mock_fetch_gql():
         print(
             f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
         )
-        return mock_first_predictions()
+        return mock_daily_predictions()
 
     return fetch_function
 

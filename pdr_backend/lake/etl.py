@@ -150,7 +150,7 @@ class ETL:
         queries = [
             max_timestamp_query.format(
                 get_table_name(table_name, table_type),
-                get_table_name(table_name, table_type),
+                get_table_name(table_name, table_type)
             )
             for table_name in table_names
         ]
@@ -193,7 +193,7 @@ class ETL:
         )
 
         to_values = self._get_max_timestamp_values_from(
-            self.raw_table_names, TableType.TEMP
+            self.raw_table_names
         ).values()
         to_timestamp = (
             min(to_values)
@@ -216,6 +216,10 @@ class ETL:
             st_ms=UnixTimeMs.from_dt(st_timestamp),
             fin_ms=UnixTimeMs.from_dt(fin_timestamp),
         )
+
+        print(f">>>>> st_timestamp is {st_timestamp}")
+        print(f">>>>> fin_timestamp is {fin_timestamp}")
+        print(f">>>>> data is {data}")
 
         print(f"update_bronze_pdr_predictions - data: {data}")
         TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(

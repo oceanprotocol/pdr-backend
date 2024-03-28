@@ -34,6 +34,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.plutil import _object_list_to_df, get_table_name, TableType
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
@@ -124,6 +125,57 @@ class GQLDataFactory:
 
         return TableRegistry().get_tables(self.record_config["gql_tables"])
 
+    def _prepare_temp_table(self, table_name, st_ut, fin_ut):
+        """
+        @description
+            # 1. get last timestamp from database
+            # 2. get last timestamp from csv
+            # 3. if csv timestamp is greater than db timestamp, move those records into gql temp table
+        """
+        table = TableRegistry().get_table(table_name)
+        csv_last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
+            table_name
+        )
+        db_last_timestamp = PersistentDataStore(table.base_path).query_data(
+            f"SELECT MAX(timestamp) FROM {table_name}"
+        )
+
+        if csv_last_timestamp is not None :
+            if db_last_timestamp is None:
+                print(f"  Table not yet created. Insert all {table_name} csv data")
+                data = CSVDataStore(table.base_path).read_all(table_name)
+                table._append_to_db(data, TableType.TEMP)
+            elif csv_last_timestamp > db_last_timestamp:
+                print(f"  Table exists. Insert pending {table_name} csv data")
+                data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
+                table._append_to_db(data, TableType.TEMP)
+
+    @enforce_types
+    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
+        """
+        @description
+            Calculate start timestamp, reconciling whether file exists and where
+            its data starts. If file exists, you can only append to end.
+
+        @arguments
+            table -- Table object
+
+        @return
+            start_ut - timestamp (ut) to start grabbing data for (in ms)
+        """
+
+        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
+            table.table_name
+        )
+
+        start_ut = (
+            last_timestamp
+            if last_timestamp is not None
+            else self.ppss.lake_ss.st_timestamp
+        )
+
+        return UnixTimeMs(start_ut + 1000)
+
     @enforce_types
     def _do_subgraph_fetch(
         self,
@@ -183,7 +235,7 @@ class GQLDataFactory:
             ) and len(buffer_df) > 0:
                 assert df.schema == table.df_schema
                 table.append_to_storage(buffer_df, TableType.TEMP)
-                print(f"Saved {len(buffer_df)} records to file while fetching")
+                print(f"Saved {len(buffer_df)} records to storage while fetching")
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
                 save_backoff_count = 0
@@ -195,34 +247,27 @@ class GQLDataFactory:
 
         if len(buffer_df) > 0:
             table.append_to_storage(buffer_df, TableType.TEMP)
-            print(f"Saved {len(buffer_df)} records to file while fetching")
+            print(f"Saved {len(buffer_df)} records to storage while fetching")
+
 
     @enforce_types
-    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
-        """
+    def _move_from_temp_tables_to_live(self):
+        """ 
         @description
-            Calculate start timestamp, reconciling whether file exists and where
-            its data starts. If file exists, you can only append to end.
-
-        @arguments
-            table -- Table object
-
-        @return
-            start_ut - timestamp (ut) to start grabbing data for (in ms)
+            Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
-            table.table_name
-        )
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        for table_name in self.record_config["gql_tables"]:
+            pds.move_table_data(
+                get_table_name(table_name, TableType.TEMP),
+                table_name,
+            )
 
-        start_ut = (
-            last_timestamp
-            if last_timestamp is not None
-            else self.ppss.lake_ss.st_timestamp
-        )
+            pds.drop_table(get_table_name(table_name, TableType.TEMP))
 
-        return UnixTimeMs(start_ut + 1000)
 
+    @enforce_types
     def _update(self):
         """
         @description
@@ -238,16 +283,22 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
-
+        
         for _, table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).items()
         ):
+            
+            # calculate start and end timestamps             
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 print("      Given start time, no data to gather. Exit.")
 
+            # make sure that unwritten csv records are pre-loaded into the temp table
+            self._prepare_temp_table(table.table_name, st_ut, fin_ut)
+
+            # fetch from subgraph and add to temp table
             print(f"Updating table {get_table_name(table.table_name)}")
             self._do_subgraph_fetch(
                 table,
@@ -257,5 +308,7 @@ class GQLDataFactory:
                 fin_ut,
                 self.record_config["config"],
             )
-
+        
+        # move data from temp tables to live tables
+        self._move_from_temp_tables_to_live()
         print("GQLDataFactory - Update done.")
