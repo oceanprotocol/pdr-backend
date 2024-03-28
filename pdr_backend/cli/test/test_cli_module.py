@@ -212,8 +212,7 @@ def test_do_sim(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    with patch("pdr_backend.sim.sim_plotter.plt.show"):
-        do_sim(MockArgParser_PPSS().parse_args())
+    do_sim(MockArgParser_PPSS().parse_args())
 
     mock_f.assert_called()
 
@@ -425,8 +424,7 @@ def test_do_main(monkeypatch, capfd):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    with patch("pdr_backend.sim.sim_plotter.plt.show"):
-        with patch("sys.argv", ["pdr", "sim", "ppss.yaml"]):
-            _do_main()
+    with patch("sys.argv", ["streamlit_entrypoint.py", "sim", "ppss.yaml"]):
+        _do_main()
 
     assert mock_f.called

@@ -23,6 +23,7 @@ install_requirements = [
     "numpy==1.26.4",
     "pandas==2.2.1",
     "pathlib",
+    "plotly==5.20.0",
     "polars==0.20.16",
     "polars[timezone]",
     "pyarrow==15.0.2",
@@ -40,6 +41,7 @@ install_requirements = [
     "types-requests==2.31.0.20240311",
     "web3==6.15.1",
     "sapphire.py==0.2.2",
+    "streamlit==1.32.1",
     "ocean-contracts==2.0.4",  # install this last
 ]
 
