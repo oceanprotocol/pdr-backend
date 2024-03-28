@@ -74,4 +74,6 @@ def get_bronze_pdr_slots_data_with_SQL(
                 AND {pdr_slots_table_name}.timestamp <= {fin_ms}
         """
 
+    print("table_bronze_slot_query", query)
+
     return PersistentDataStore(path).query_data(query)
