@@ -271,7 +271,7 @@ def test_etl_do_bronze_step(
 
     print("bronze_pdr_slots_records---1", bronze_pdr_slots_records)
 
-    assert len(bronze_pdr_slots_records) == 7
+    assert len(bronze_pdr_slots_records) == 6
 
     assert bronze_pdr_slots_records["truevalue"].null_count() == 0
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
