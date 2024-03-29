@@ -35,11 +35,11 @@ def test_exchange_mgr_ss():
 
 
 @enforce_types
-def test_exchange_mgr_binance():
+def test_exchange_mgr_binanceus():
     d = exchange_mgr_ss_test_dict()
     mgr = ExchangeMgr(ExchangeMgrSS(d))
 
-    exchange = mgr.exchange("binance")
+    exchange = mgr.exchange("binanceus")
 
     # basic test of api: just grab current price
     # - full docs at https://docs.ccxt.com/#/?id=price-tickers
