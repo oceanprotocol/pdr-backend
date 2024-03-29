@@ -1,10 +1,11 @@
 import copy
 import logging
 import os
+from typing import Optional
 
-from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
+from enforce_typing import enforce_types
 from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
@@ -13,8 +14,8 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -23,7 +24,7 @@ logger = logging.getLogger("sim_engine")
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
     @enforce_types
-    def __init__(self, ppss: PPSS):
+    def __init__(self, ppss: PPSS, multi_id: Optional[str] = None):
         # preconditions
         predict_feed = ppss.predictoor_ss.feed
 
@@ -39,7 +40,7 @@ class SimEngine:
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
 
-        self.sim_plotter = SimPlotter(self.ppss, self.st)
+        self.sim_plotter = SimPlotter()
 
         self.logfile = ""
 
@@ -47,6 +48,8 @@ class SimEngine:
         self.exchange = self.ppss.exchange_mgr.exchange(
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
+
+        self.multi_id = multi_id
 
     @property
     def tokcoin(self) -> str:
@@ -73,6 +76,8 @@ class SimEngine:
     def run(self):
         self._init_loop_attributes()
         logger.info("Start run")
+
+        self.sim_plotter.init_state()
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
@@ -211,8 +216,10 @@ class SimEngine:
         s += f" (cumul. ${sum(st.trader_profits_USD):9.4f})"
         logger.info(s)
 
-        # plot
-        if self.compute_plot(test_i, self.ppss.sim_ss.test_n):
+        save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
+
+        # temporarily we don't allow streamlit supervision of multisim runs
+        if save_state and not self.multi_id:
             colnames = [_shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
@@ -223,11 +230,8 @@ class SimEngine:
                 colnames,
                 slicing_x,
             )
-            do_show = self.ppss.sim_ss.do_plot
-            do_save = self.ppss.sim_ss.is_final_iter(test_i)
-            img_filename = self.sim_plotter.compute_plot(d, do_show, do_save)
-            if img_filename is not None:
-                logger.info("Just saved plot as file: %s", img_filename)
+            self.st.iter_number = test_i
+            self.sim_plotter.save_state(self.st, d, is_final_state)
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
@@ -303,22 +307,19 @@ class SimEngine:
         return usdcoin_amt_recd
 
     @enforce_types
-    def compute_plot(self, i: int, N: int):
-        "Plot on this iteration Y/N?"
+    def save_state(self, i: int, N: int):
+        "Save state on this iteration Y/N?"
         if self.ppss.sim_ss.is_final_iter(i):
-            return True
+            return True, True
 
-        if not self.ppss.sim_ss.do_plot:
-            return False
-
-        # don't plot first 5 iters -> not interesting
-        # then plot the next 5 -> "stuff's happening!"
-        # then plot every 5th iter, to balance "stuff's happening" w/ speed
+        # don't save first 5 iters -> not interesting
+        # then save the next 5 -> "stuff's happening!"
+        # then save every 5th iter, to balance "stuff's happening" w/ speed
         do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
         if not do_update:
-            return False
+            return False, False
 
-        return True
+        return True, False
 
 
 @enforce_types

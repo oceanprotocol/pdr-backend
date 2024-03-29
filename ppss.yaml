@@ -54,9 +54,7 @@ trader_ss:
     position_size: 3 # buy/sell this amount in each epoch
 
 sim_ss: # sim only
-  do_plot: True
   log_dir: logs
-  final_img_filebase: final # for name log_dir/{final_img_filebase}_{NR}.png
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal
 
@@ -64,7 +62,7 @@ multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
   sweep_params:
   - trader_ss.buy_amt: 1000 USD, 2000 USD
-  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500 
+  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
   - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
   - predictoor_ss.aimodel_ss.input_feeds:
     -
@@ -75,7 +73,7 @@ multisim_ss:
 #      - binance BTC/USDT c 5m
 #      - kraken BTC/USDT c 5m
 
-  
+
 
 # ------------------------------------------------------------------
 # Bots run by OPF
