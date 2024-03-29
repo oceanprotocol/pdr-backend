@@ -61,7 +61,7 @@ class ETL:
             predictions_table_name,
             subscriptions_table_name,
             truevals_table_name,
-            slots_table_name
+            slots_table_name,
         ]
 
         self.bronze_table_getters = {
@@ -238,15 +238,19 @@ class ETL:
             # If st_timestamp is an instance of datetime, convert it to UnixTimeMs with from_dt
             # If st_timestamp is None, it will be passed as None
             # If st_timestamp is an int, Convert it to UnixTimeMs by passing it as is
-            st_ms = UnixTimeMs.from_dt(st_timestamp) if isinstance(
-                st_timestamp, datetime) else UnixTimeMs(st_timestamp)
-            fin_ms = UnixTimeMs.from_dt(fin_timestamp) if isinstance(
-                fin_timestamp, datetime) else UnixTimeMs(fin_timestamp)
+            st_ms = (
+                UnixTimeMs.from_dt(st_timestamp)
+                if isinstance(st_timestamp, datetime)
+                else UnixTimeMs(st_timestamp)
+            )
+            fin_ms = (
+                UnixTimeMs.from_dt(fin_timestamp)
+                if isinstance(fin_timestamp, datetime)
+                else UnixTimeMs(fin_timestamp)
+            )
 
             data = get_data_func(
-                path=self.ppss.lake_ss.lake_dir,
-                st_ms=st_ms,
-                fin_ms=fin_ms
+                path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
             )
 
             TableRegistry().get_table(table_name)._append_to_db(

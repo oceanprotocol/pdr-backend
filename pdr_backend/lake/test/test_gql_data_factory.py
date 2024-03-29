@@ -53,7 +53,7 @@ def test_update(_mock_fetch_gql, tmpdir):
         "pdr_subscriptions": _mock_fetch_gql,
         "pdr_truevals": _mock_fetch_gql,
         "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql
+        "pdr_slots": _mock_fetch_gql,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -91,7 +91,7 @@ def test_update_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
         "pdr_subscriptions": _mock_fetch_gql,
         "pdr_truevals": _mock_fetch_gql,
         "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql
+        "pdr_slots": _mock_fetch_gql,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -133,7 +133,7 @@ def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
         "pdr_subscriptions": _mock_fetch_gql,
         "pdr_truevals": _mock_fetch_gql,
         "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql
+        "pdr_slots": _mock_fetch_gql,
     }
 
     gql_data_factory = GQLDataFactory(ppss)

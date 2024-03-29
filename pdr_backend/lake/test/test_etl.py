@@ -17,11 +17,15 @@ from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name, subscriptions_schema
+from pdr_backend.lake.table_pdr_subscriptions import (
+    subscriptions_table_name,
+    subscriptions_schema,
+)
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
+
 
 @enforce_types
 def get_filtered_timestamps_df(
@@ -117,6 +121,7 @@ def test_setup_etl(
     assert len(TableRegistry().get_tables()) == 7
 
 
+# pylint: disable=too-many-statements
 @enforce_types
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
@@ -152,7 +157,8 @@ def test_etl_do_bronze_step(
     slots = get_filtered_timestamps_df(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
-    subscriptions = pl.DataFrame([
+    subscriptions = pl.DataFrame(
+        [
             {
                 "ID": "testID",
                 "pair": "testPair",
@@ -161,10 +167,12 @@ def test_etl_do_bronze_step(
                 "tx_id": "tx_id",
                 "last_price_value": 0,
                 "timestamp": 1699300801000,
-                "user": "0xuser"
+                "user": "0xuser",
             }
-        ], schema=subscriptions_schema)
-    
+        ],
+        schema=subscriptions_schema,
+    )
+
     print("subscriptions----1", subscriptions)
 
     gql_tables = {
@@ -172,7 +180,9 @@ def test_etl_do_bronze_step(
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
         "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-        "pdr_subscriptions": Table(subscriptions_table_name, subscriptions_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
