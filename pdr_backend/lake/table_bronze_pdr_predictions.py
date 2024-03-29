@@ -2,7 +2,7 @@ import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
+from pdr_backend.lake.table import get_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
@@ -36,8 +36,6 @@ def get_bronze_pdr_predictions_data_with_SQL(
     pdr_predictions_table_name = get_table_name("pdr_predictions")
     pdr_truevals_table_name = get_table_name("pdr_truevals")
     pdr_payouts_table_name = get_table_name("pdr_payouts")
-
-    print(f">>>>> bronze check: {PersistentDataStore(path).get_table_names()}")
 
     return PersistentDataStore(path).query_data(
         f"""

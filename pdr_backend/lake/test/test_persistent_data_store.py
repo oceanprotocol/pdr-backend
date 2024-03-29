@@ -2,10 +2,10 @@ import os
 import polars as pl
 import duckdb
 
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 # Initialize the PersistentDataStore instance for testing

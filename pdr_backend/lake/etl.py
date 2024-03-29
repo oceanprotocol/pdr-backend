@@ -9,13 +9,13 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_data_with_SQL,
 )
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
-from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -150,7 +150,7 @@ class ETL:
         queries = [
             max_timestamp_query.format(
                 get_table_name(table_name, table_type),
-                get_table_name(table_name, table_type)
+                get_table_name(table_name, table_type),
             )
             for table_name in table_names
         ]
@@ -192,9 +192,7 @@ class ETL:
             else datetime.strptime(self.ppss.lake_ss.st_timestr, "%Y-%m-%d_%H:%M")
         )
 
-        to_values = self._get_max_timestamp_values_from(
-            self.raw_table_names
-        ).values()
+        to_values = self._get_max_timestamp_values_from(self.raw_table_names).values()
         to_timestamp = (
             min(to_values)
             if None not in to_values

@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 import polars as pl
 from polars.type_aliases import SchemaDict
@@ -6,9 +7,26 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
 
 logger = logging.getLogger("table")
+
+
+class TableType(Enum):
+    NORMAL = "NORMAL"
+    TEMP = "TEMP"
+    ETL = "ETL"
+
+
+@enforce_types
+def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) -> str:
+    """
+    Get the table name with the build mode prefix
+    """
+    if table_type == TableType.TEMP:
+        return f"_temp_{table_name}"
+    if table_type == TableType.ETL:
+        return f"_etl_{table_name}"
+    return table_name
 
 
 @enforce_types

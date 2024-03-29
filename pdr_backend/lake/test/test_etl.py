@@ -4,7 +4,7 @@ import polars as pl
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import Table, TableType, get_table_name
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
@@ -15,7 +15,6 @@ from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 @enforce_types
@@ -440,7 +439,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-30_0:00"
 
-    # Setup GQL Data Factory and mock tables for ETL 
+    # Setup GQL Data Factory and mock tables for ETL
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus ETH/USDT h 5m",
@@ -449,11 +448,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
 
     etl = ETL(ppss, gql_data_factory)
-    etl.raw_table_names = [
-        "raw_table_1",
-        "raw_table_2",
-        "raw_table_3"
-    ]
+    etl.raw_table_names = ["raw_table_1", "raw_table_2", "raw_table_3"]
     etl.bronze_table_names = [
         "bronze_table_1",
         "bronze_table_2",

@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import Table, TableType, get_table_name
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -31,7 +31,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.plutil import _object_list_to_df, get_table_name, TableType
+from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -130,7 +130,7 @@ class GQLDataFactory:
         @description
             # 1. get last timestamp from database
             # 2. get last timestamp from csv
-            # 3. if csv timestamp is greater than db timestamp, move those records into gql temp table
+            # 3. check conditions and move to temp tables
         """
         table = TableRegistry().get_table(table_name)
         csv_last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
@@ -140,7 +140,7 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-        if csv_last_timestamp is not None :
+        if csv_last_timestamp is not None:
             if db_last_timestamp is None:
                 print(f"  Table not yet created. Insert all {table_name} csv data")
                 data = CSVDataStore(table.base_path).read_all(table_name)
@@ -249,10 +249,9 @@ class GQLDataFactory:
             table.append_to_storage(buffer_df, TableType.TEMP)
             print(f"Saved {len(buffer_df)} records to storage while fetching")
 
-
     @enforce_types
     def _move_from_temp_tables_to_live(self):
-        """ 
+        """
         @description
             Move the records from our ETL temporary build tables to live, in-production tables
         """
@@ -265,7 +264,6 @@ class GQLDataFactory:
             )
 
             pds.drop_table(get_table_name(table_name, TableType.TEMP))
-
 
     @enforce_types
     def _update(self):
@@ -283,12 +281,12 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
-        
+
         for _, table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).items()
         ):
-            
-            # calculate start and end timestamps             
+
+            # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
             print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
@@ -308,7 +306,7 @@ class GQLDataFactory:
                 fin_ut,
                 self.record_config["config"],
             )
-        
+
         # move data from temp tables to live tables
         self._move_from_temp_tables_to_live()
         print("GQLDataFactory - Update done.")
