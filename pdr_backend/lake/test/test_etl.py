@@ -16,6 +16,15 @@ from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import get_table_name, TableType
+from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table_pdr_subscriptions import (
+    subscriptions_table_name,
+    subscriptions_schema,
+)
+from pdr_backend.lake.table_bronze_pdr_predictions import (
+    bronze_pdr_predictions_table_name,
+)
+from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
 
 
 @enforce_types
@@ -33,6 +42,7 @@ def test_setup_etl(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
     _get_test_PDS,
     tmpdir,
 ):
@@ -53,6 +63,9 @@ def test_setup_etl(
     payouts = get_filtered_timestamps_df(
         _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
     )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
 
     # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
@@ -66,11 +79,13 @@ def test_setup_etl(
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
+    gql_tables["pdr_slots"].append_to_storage(slots)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
@@ -97,18 +112,22 @@ def test_setup_etl(
 
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
+    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
+    assert len(pdr_slots_df) == 6
     # Assert len of all 3 dfs
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 5
+    assert len(TableRegistry().get_tables()) == 7
 
 
+# pylint: disable=too-many-statements
 @enforce_types
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
     _get_test_PDS,
     tmpdir,
 ):
@@ -135,16 +154,42 @@ def test_etl_do_bronze_step(
     payouts = get_filtered_timestamps_df(
         _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
     )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+    subscriptions = pl.DataFrame(
+        [
+            {
+                "ID": "testID",
+                "pair": "testPair",
+                "timeframe": "5m",
+                "source": "binance",
+                "tx_id": "tx_id",
+                "last_price_value": 0,
+                "timestamp": 1699300801000,
+                "user": "0xuser",
+            }
+        ],
+        schema=subscriptions_schema,
+    )
+
+    print("subscriptions----1", subscriptions)
 
     gql_tables = {
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
     gql_tables["pdr_truevals"].append_to_storage(truevals, TableType.TEMP)
     gql_tables["pdr_payouts"].append_to_storage(payouts, TableType.TEMP)
+    gql_tables["pdr_slots"].append_to_storage(slots, TableType.TEMP)
+    gql_tables["pdr_subscriptions"].append_to_storage(subscriptions, TableType.TEMP)
 
     # Work 1: Initialize ETL
     etl = ETL(ppss, gql_data_factory)
@@ -158,7 +203,7 @@ def test_etl_do_bronze_step(
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    temp_table_name = get_table_name("bronze_pdr_predictions", TableType.TEMP)
+    temp_table_name = get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
     bronze_pdr_predictions_records = pds.query_data(
         "SELECT * FROM {}".format(temp_table_name)
     )
@@ -239,6 +284,22 @@ def test_etl_do_bronze_step(
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
+
+    temp_bronze_pdr_slots_table_name = get_table_name(
+        bronze_pdr_slots_table_name, TableType.TEMP
+    )
+
+    bronze_pdr_slots_records = pds.query_data(
+        "SELECT * FROM {}".format(temp_bronze_pdr_slots_table_name)
+    )
+
+    print("bronze_pdr_slots_records---1", bronze_pdr_slots_records)
+
+    assert len(bronze_pdr_slots_records) == 5
+
+    assert bronze_pdr_slots_records["truevalue"].null_count() == 0
+    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
+    assert bronze_pdr_slots_records["source"].null_count() == 1
 
 
 @enforce_types
