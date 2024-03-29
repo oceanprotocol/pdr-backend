@@ -82,20 +82,18 @@ def test_setup_etl(
 
     pds = _get_test_PDS(tmpdir)
 
-    # Assert original gql has 6 predictions, but we only got 5 due to date
+    # Assert original gql has 6 predictions, but we only got 5 due to ppss daterange
     pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
     assert len(pdr_predictions_df) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
     # Assert all 3 dfs are not the same because we filtered Nov 01 out
     pdr_payouts_df = pds.query_data("SELECT * FROM pdr_payouts")
-    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
-    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
-
     pdr_truevals_df = pds.query_data("SELECT * FROM pdr_truevals")
-
+    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
+    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
-
+    
     # Assert len of all 3 dfs
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
