@@ -93,7 +93,7 @@ def test_setup_etl(
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
-    
+
     # Assert len of all 3 dfs
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
