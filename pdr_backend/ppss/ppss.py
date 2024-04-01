@@ -181,7 +181,12 @@ def mock_feed_ppss(
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
     ppss = mock_ppss(
-        [{"train_on": f"{exchange} {pair} c {timeframe}", "predict": f"{exchange} {pair} c {timeframe}"}],
+        [
+            {
+                "train_on": f"{exchange} {pair} c {timeframe}",
+                "predict": f"{exchange} {pair} c {timeframe}",
+            }
+        ],
         network,
         tmpdir,
     )

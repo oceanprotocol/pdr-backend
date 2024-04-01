@@ -138,8 +138,9 @@ class PredictoorAgent:
 
         logger.info(self.status_str())
 
-
-        stakes_up, stakes_down, feed_addrs, target_slot = self.prepare_stakes(self.feeds)
+        stakes_up, stakes_down, feed_addrs, target_slot = self.prepare_stakes(
+            self.feeds
+        )
         required_OCEAN = sum(stakes_up) + sum(stakes_down)
         if not self.check_balances(required_OCEAN):
             logger.error("Not enough balance, cancel prediction")
