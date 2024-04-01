@@ -1,16 +1,19 @@
 from typing import List, Union
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from enforce_typing import enforce_types
 
 
+@enforce_types
 class PredictFeed:
-    def __init__(self, predict: ArgFeeds, train_on: ArgFeeds):
+    def __init__(self, predict: List[ArgFeed], train_on: List[ArgFeed]):
         self.predict: ArgFeeds = predict
         self.train_on: ArgFeeds = train_on
 
     @classmethod
     def from_feed_objs(cls, predict: Union[str, list], train_on: Union[str, list]):
-        parsed_predict = cls.parse_feed_obj(predict)
-        parsed_train_on = cls.parse_feed_obj(train_on)
+        parsed_predict: ArgFeeds = cls.parse_feed_obj(predict)
+        parsed_train_on: ArgFeeds = cls.parse_feed_obj(train_on)
         return cls(parsed_predict, parsed_train_on)
 
     @staticmethod
@@ -41,6 +44,7 @@ class PredictFeed:
         return PredictFeed(d["predict"], d["train_on"])
 
 
+@enforce_types
 class PredictFeeds(List[PredictFeed]):
     def __init__(self, feeds: List[PredictFeed]):
         super().__init__(feeds)
@@ -60,12 +64,12 @@ class PredictFeeds(List[PredictFeed]):
         for feed in self:
             for pairs in [feed.predict, feed.train_on]:
                 for pair in pairs:
-                    if pair not in set_pairs:
-                        set_pairs.append(pair)
+                    if str(pair) not in set_pairs:
+                        set_pairs.append(str(pair))
         return set_pairs
 
     @property
-    def feeds(self) -> List[str]:
+    def feeds(self) -> List[ArgFeed]:
         set_pairs = []
         for feed in self:
             for pairs in [feed.predict, feed.train_on]:
