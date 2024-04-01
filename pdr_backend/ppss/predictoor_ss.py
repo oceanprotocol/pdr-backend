@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from enforce_typing import enforce_types
 from pdr_backend.cli.predict_feeds import PredictFeeds
@@ -120,7 +120,7 @@ def example_predict_feeds() -> list:
 @enforce_types
 def predictoor_ss_test_dict(
     predict_feeds: Optional[PredictFeeds] = None,
-    input_feeds: Optional[PredictFeeds] = None,
+    input_feeds: List[str] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     predict_feeds = predict_feeds or PredictFeeds.from_array(example_predict_feeds())
