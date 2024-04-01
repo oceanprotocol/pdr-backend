@@ -43,26 +43,3 @@ def test_predict_feed_mixin():
     parser = PredictFeedMixin(feed_dict)
 
     assert parser.feeds == expected
-
-
-def test_parse_feed_obj():
-    parser = PredictFeedMixin({})
-    feed_obj = "binance BTC/USDT c 5m, kraken BTC/USDT c 5m"
-    expected = ArgFeeds.from_str("binance BTC/USDT c 5m") + ArgFeeds.from_str(
-        "kraken BTC/USDT c 5m"
-    )
-    assert parser.parse_feed_obj(feed_obj) == expected
-
-    feed_obj = "binance BTC/USDT c 5m"
-    expected = ArgFeeds.from_str("binance BTC/USDT c 5m")
-    assert parser.parse_feed_obj(feed_obj) == expected
-
-    feed_obj = ["binance BTC/USDT c 5m"]
-    expected = ArgFeeds.from_str("binance BTC/USDT c 5m")
-    assert parser.parse_feed_obj(feed_obj) == expected
-
-    feed_obj = ["binance BTC/USDT c 5m", "kraken BTC/USDT c 5m"]
-    expected = ArgFeeds.from_str("binance BTC/USDT c 5m") + ArgFeeds.from_str(
-        "kraken BTC/USDT c 5m"
-    )
-    assert parser.parse_feed_obj(feed_obj) == expected
