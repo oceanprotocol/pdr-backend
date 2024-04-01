@@ -222,6 +222,7 @@ def mock_ppss(
     assert hasattr(ppss, "predictoor_ss")
     d = predictoor_ss_test_dict()
     d["feeds"] = feeds
+    d["pred_submitter_mgr"] = "0x1"
     d["aimodel_ss"]["input_feeds"] = predict_feeds.feeds_str
     ppss.predictoor_ss = PredictoorSS(d)
 
