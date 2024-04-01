@@ -104,19 +104,17 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
 # utilities for testing
 
 
-def example_predict_feeds() -> PredictFeeds:
-    return PredictFeeds.from_array(
-        [
-            {
-                "predict": "binance BTC/USDT c 5m",
-                "train_on": "binance BTC/USDT c 5m",
-            },
-            {
-                "predict": "kraken ETH/USDT c 5m",
-                "train_on": "kraken ETH/USDT c 5m",
-            },
-        ]
-    )
+def example_predict_feeds() -> list:
+    return [
+        {
+            "predict": "binance BTC/USDT c 5m",
+            "train_on": "binance BTC/USDT c 5m",
+        },
+        {
+            "predict": "kraken ETH/USDT c 5m",
+            "train_on": "kraken ETH/USDT c 5m",
+        },
+    ]
 
 
 @enforce_types
@@ -125,7 +123,7 @@ def predictoor_ss_test_dict(
     input_feeds: Optional[PredictFeeds] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or example_predict_feeds()
+    predict_feeds = predict_feeds or PredictFeeds.from_array(example_predict_feeds())
     input_feeds = input_feeds or predict_feeds.feeds_str
     print(predict_feeds, input_feeds)
     d = {
