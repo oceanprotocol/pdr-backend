@@ -112,7 +112,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # enforce that all predict feeds have the same timeframe
         timeframe = ""
-        for predict_f in predict_fs.feeds_str:
+        for predict_f in predict_fs.feeds:
             if timeframe == "":
                 timeframe = predict_f.timeframe
                 continue
@@ -123,7 +123,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
                 raise ValueError(s)
 
         # do all aimodel_ss input feeds conform to predict feed timeframe?
-        for predict_f in predict_fs.feeds_str:
+        for predict_f in predict_fs.feeds:
             for aimodel_f in aimodel_fs:
                 if aimodel_f.timeframe != predict_f.timeframe:
                     s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
@@ -181,7 +181,7 @@ def mock_feed_ppss(
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
     ppss = mock_ppss(
-        [f"{exchange} {pair} c {timeframe}"],
+        [{"train_on": f"{exchange} {pair} c {timeframe}", "predict": f"{exchange} {pair} c {timeframe}"}],
         network,
         tmpdir,
     )
@@ -190,7 +190,7 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    feeds: PredictFeeds,
+    feeds: list,
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -200,14 +200,14 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
 
     ppss = PPSS(yaml_str=yaml_str, network=network)
-
+    predict_feeds = PredictFeeds.from_array(feeds)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
 
     assert hasattr(ppss, "lake_ss")
     ppss.lake_ss = LakeSS(
         {
-            "feeds": feeds.feeds_str,
+            "feeds": predict_feeds.feeds_str,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
@@ -216,17 +216,14 @@ def mock_ppss(
 
     assert hasattr(ppss, "predictoor_ss")
     d = predictoor_ss_test_dict()
-    d["feeds"] = feeds.feeds_str
-    d["aimodel_ss"]["input_feeds"] = feeds.feeds_str
-    import pdb
-
-    pdb.set_trace()
+    d["feeds"] = feeds
+    d["aimodel_ss"]["input_feeds"] = predict_feeds.feeds_str
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(
         {
-            "feed": feeds.feeds_str,
+            "feed": predict_feeds.feeds_str[0],
             "sim_only": {
                 "buy_amt": "10 USD",
             },
@@ -243,12 +240,12 @@ def mock_ppss(
 
     assert hasattr(ppss, "trueval_ss")
     assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
-    ppss.trueval_ss.d["feeds"] = feeds  # type: ignore[attr-defined]
+    ppss.trueval_ss.d["feeds"] = predict_feeds.feeds_str  # type: ignore[attr-defined]
 
     assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(
         {
-            "feeds": feeds,
+            "feeds": predict_feeds.feeds_str,
             "batch_size": 20,
             "consume_interval_seconds": 86400,
             "weekly_spending_limit": 37000,
