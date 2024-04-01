@@ -4,6 +4,7 @@ import os
 
 from enforce_typing import enforce_types
 import numpy as np
+from pdr_backend.cli.predict_feeds import PredictFeeds
 import polars as pl
 from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
@@ -25,13 +26,14 @@ class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
-        predict_feed = ppss.predictoor_ss.feed
+        predict_feeds = PredictFeeds.from_array(ppss.predictoor_ss.feeds)
 
         # timeframe doesn't need to match
-        assert (
-            str(predict_feed.exchange),
-            str(predict_feed.pair),
-        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+        for predict_feed in predict_feeds.feeds:
+            assert (
+                str(predict_feed.exchange),
+                str(predict_feed.pair),
+            ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
 
         self.ppss = ppss
 
@@ -43,10 +45,13 @@ class SimEngine:
 
         self.logfile = ""
 
-        self.exchange = self.ppss.predictoor_ss.feed.ccxt_exchange(
-            mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
-            exchange_params=self.ppss.sim_ss.exchange_params,
-        )
+        self.exchanges = [
+            feed.ccxt_exchange(
+                mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
+                exchange_params=self.ppss.sim_ss.exchange_params,
+            )
+            for feed in predict_feeds.feeds
+        ]
 
     @property
     def tokcoin(self) -> str:
