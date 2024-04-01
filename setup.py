@@ -41,7 +41,7 @@ install_requirements = [
     "types-requests==2.31.0.20240311",
     "web3==6.15.1",
     "sapphire.py==0.2.2",
-    "streamlit==1.32.1",
+    "streamlit==1.32.2",
     "ocean-contracts==2.0.4",  # install this last
 ]
 
