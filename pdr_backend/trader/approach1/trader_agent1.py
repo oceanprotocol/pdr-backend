@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.base_trader_agent import BaseTraderAgent, Prediction
@@ -38,7 +39,8 @@ class TraderAgent1(BaseTraderAgent):
         super().__init__(ppss)
 
         # Generic exchange class
-        self.exchange: ccxt.Exchange = self.ppss.exchange_mgr.exchange(
+        exchange_manager = ExchangeMgr(self.ppss.exchange_mgr_ss)
+        self.exchange: ccxt.Exchange = exchange_manager.exchange(
             self.ppss.trader_ss.exchange_type
         )
 
