@@ -16,7 +16,9 @@ def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
-    predict_feeds = [{"predict": "binanceus BTC/USDT c 5m", "train_on": "binanceus BTC/USDT c 5m"}]
+    predict_feeds = [
+        {"predict": "binanceus BTC/USDT c 5m", "train_on": "binanceus BTC/USDT c 5m"}
+    ]
     predict_feeds_obj = PredictFeeds.from_array(predict_feeds)
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
