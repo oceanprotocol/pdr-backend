@@ -233,7 +233,7 @@ class ETL:
         temp_table_name = get_table_name(table_name, TableType.TEMP)
         etl_view_name = get_table_name(table_name, TableType.ETL)
         assert pds.table_exists(temp_table_name), f"{temp_table_name} must already exist"
-        assert not pds.view_exists(get_table_name(table_name, TableType.ETL)), f"{etl_view_name} must not exist"
+        assert pds.view_exists(etl_view_name) is False, f"{etl_view_name} must not exist"
 
         view_query = """
         CREATE VIEW {} AS
@@ -246,6 +246,8 @@ class ETL:
             get_table_name(table_name),
             etl_view_name,
         )
+
+        print(f"  Created {table_name} view")
         pds.query_data(view_query)
 
     def update_bronze_pdr(self):
@@ -271,9 +273,13 @@ class ETL:
                 else UnixTimeMs(fin_timestamp)
             )
 
+            # TODO - data query is not returning a valid blob
             data = get_data_func(
                 path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
             )
+
+            # TODO - bronze slots table is returning null
+            print(f"update_bronze_pdr - {table_name} data: {data}")
 
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
