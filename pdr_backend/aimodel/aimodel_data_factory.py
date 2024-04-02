@@ -4,6 +4,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+from pdr_backend.cli.arg_feed import ArgFeed
 import polars as pl
 from enforce_typing import enforce_types
 
@@ -65,6 +66,7 @@ class AimodelDataFactory:
         self,
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
+        feed: ArgFeed,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -137,8 +139,7 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        ref_ss = self.ss
-        hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
+        hist_col = f"{feed.exchange}:{feed.pair}:{feed.signal}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
