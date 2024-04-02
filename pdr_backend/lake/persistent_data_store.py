@@ -66,6 +66,16 @@ class PersistentDataStore(BaseDataStore):
         views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
 
         return [views]
+    
+    @enforce_types
+    def table_exists(self, table_name: str):
+        table_names = self.get_table_names()
+        return [table_name in table_names, table_name]
+
+    @enforce_types
+    def view_exists(self, view_name: str):
+        view_names = self.get_view_names()
+        return [view_name in view_names, view_name]
 
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):

@@ -17,24 +17,13 @@ def _get_persistent_data_store(tmpdir):
 
     return [PersistentDataStore(str(tmpdir)), example_df, table_name]
 
-
-def _table_exists(persistent_data_store, table_name):
-    table_names = persistent_data_store.get_table_names()
-    return [table_name in table_names, table_name]
-
-
-def _view_exists(persistent_data_store, view_name):
-    view_names = persistent_data_store.get_view_names()
-    return [view_name in view_names, view_name]
-
-
 def test_create_and_fill_table(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
 
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    assert _table_exists(persistent_data_store, table_name)
+    assert persistent_data_store.table_exists(persistent_data_store, table_name)
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -44,7 +33,7 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    check_result, table_name = persistent_data_store.table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Insert new data to the table
@@ -54,7 +43,7 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    check_result, table_name = persistent_data_store.table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Check if the new data is inserted
@@ -78,7 +67,7 @@ def test_insert_to_new_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    check_result, table_name = persistent_data_store.table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Check if the new data is inserted
@@ -100,7 +89,7 @@ def test_query(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, _ = _table_exists(persistent_data_store, table_name)
+    check_result, _ = persistent_data_store.table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Execute the provided SQL query
@@ -117,7 +106,7 @@ def test_drop_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    check_result, table_name = persistent_data_store.table_exists(persistent_data_store, table_name)
     assert check_result
 
     # Drop the table
@@ -138,7 +127,7 @@ def test_fill_from_csv_destination(tmpdir):
     persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    check_result, table_name = persistent_data_store.table_exists(persistent_data_store, table_name)
 
     assert check_result
 
@@ -243,7 +232,7 @@ def test_move_table_data(tmpdir):
     )
 
     # Check if the table is registered
-    check_result = _table_exists(
+    check_result = persistent_data_store.table_exists(
         persistent_data_store, get_table_name(table_name, TableType.TEMP)
     )
 
@@ -258,7 +247,7 @@ def test_move_table_data(tmpdir):
     table_names = persistent_data_store.get_table_names()
     assert get_table_name(table_name, TableType.TEMP) in table_names
 
-    # Drop interim ETL table
+    # Drop interim TEMP table
     persistent_data_store.drop_table(get_table_name(table_name, TableType.TEMP))
 
     # Assert temp table is dropped
@@ -308,7 +297,7 @@ def test_etl_view(tmpdir):
     assert len(view_names) == 1
 
     # Assert view is registered
-    check_result = _view_exists(persistent_data_store, view_name)
+    check_result = persistent_data_store.view_exists(persistent_data_store, view_name)
     assert check_result
 
     # Assert view returns the correct, min(timestamp)

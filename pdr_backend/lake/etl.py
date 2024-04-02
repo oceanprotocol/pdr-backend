@@ -1,20 +1,27 @@
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table_bronze_pdr_slots import (
+    bronze_pdr_slots_table_name,
+    bronze_pdr_slots_schema,
+    get_bronze_pdr_slots_data_with_SQL,
+)
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
+from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -35,13 +42,19 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_table(
-            bronze_pdr_predictions_table_name,
-            (
-                bronze_pdr_predictions_table_name,
-                bronze_pdr_predictions_schema,
-                self.ppss,
-            ),
+        TableRegistry().register_tables(
+            {
+                bronze_pdr_predictions_table_name: (
+                    bronze_pdr_predictions_table_name,
+                    bronze_pdr_predictions_schema,
+                    self.ppss,
+                ),
+                bronze_pdr_slots_table_name: (
+                    bronze_pdr_slots_table_name,
+                    bronze_pdr_slots_schema,
+                    self.ppss,
+                ),
+            }
         )
 
         self.raw_table_names = [
@@ -49,11 +62,15 @@ class ETL:
             predictions_table_name,
             subscriptions_table_name,
             truevals_table_name,
+            slots_table_name,
         ]
 
-        self.bronze_table_names = [
-            bronze_pdr_predictions_table_name,
-        ]
+        self.bronze_table_getters = {
+            bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
+            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
+        }
+
+        self.bronze_table_names = list(self.bronze_table_getters.keys())
 
         self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
 
@@ -126,7 +143,7 @@ class ETL:
         # let's keep track of time passed so we can log how long it takes for this step to complete
         st_ts = time.time_ns() / 1e9
 
-        self.update_bronze_pdr_predictions()
+        self.update_bronze_pdr()
 
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
@@ -147,6 +164,7 @@ class ETL:
         max_timestamp_query = (
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
+
         queries = [
             max_timestamp_query.format(
                 get_table_name(table_name, table_type),
@@ -155,8 +173,12 @@ class ETL:
             for table_name in table_names
         ]
         final_query = " UNION ALL ".join(queries)
+
+        print(f"_get_max_timestamp_values_from - final_query: {final_query}")
+
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
+        print(f"_get_max_timestamp_values_from - result: {result}")
         values: Any = {}
 
         if result is None:
@@ -186,6 +208,7 @@ class ETL:
         from_values = self._get_max_timestamp_values_from(
             self.bronze_table_names
         ).values()
+
         from_timestamp = (
             min(from_values)
             if None not in from_values
@@ -201,22 +224,67 @@ class ETL:
 
         return from_timestamp, to_timestamp
 
-    def update_bronze_pdr_predictions(self):
+    @enforce_types
+    def create_etl_view(self, table_name: str):
+        # Assemble view query and create the view
+        assert table_name in self.bronze_table_names, f"{table_name} must be a bronze table"
+        
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        temp_table_name = get_table_name(table_name, TableType.TEMP)
+        etl_view_name = get_table_name(table_name, TableType.ETL)
+        assert pds.table_exists(temp_table_name), f"{temp_table_name} must already exist"
+        assert not pds.view_exists(get_table_name(table_name, TableType.ETL)), f"{etl_view_name} must not exist"
+
+        view_query = """
+        CREATE VIEW {} AS
+        ( 
+            SELECT * FROM {}
+            UNION ALL
+            SELECT * FROM {}
+        )""".format(
+            temp_table_name,
+            get_table_name(table_name),
+            etl_view_name,
+        )
+        pds.query_data(view_query)
+
+    def update_bronze_pdr(self):
         """
         @description
-            Update bronze_pdr_predictions table
+            Update bronze tables
         """
-        print("update_bronze_pdr_predictions - Update bronze_pdr_predictions table.")
+        print("update_bronze_pdr - Update bronze tables.")
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
-        data = get_bronze_pdr_predictions_data_with_SQL(
-            path=self.ppss.lake_ss.lake_dir,
-            st_ms=UnixTimeMs.from_dt(st_timestamp),
-            fin_ms=UnixTimeMs.from_dt(fin_timestamp),
-        )
+        for table_name, get_data_func in self.bronze_table_getters.items():
+            # If st_timestamp is an instance of datetime, convert it to UnixTimeMs with from_dt
+            # If st_timestamp is None, it will be passed as None
+            # If st_timestamp is an int, Convert it to UnixTimeMs by passing it as is
+            st_ms = (
+                UnixTimeMs.from_dt(st_timestamp)
+                if isinstance(st_timestamp, datetime)
+                else UnixTimeMs(st_timestamp)
+            )
+            fin_ms = (
+                UnixTimeMs.from_dt(fin_timestamp)
+                if isinstance(fin_timestamp, datetime)
+                else UnixTimeMs(fin_timestamp)
+            )
 
-        print(f"update_bronze_pdr_predictions - data: {data}")
-        TableRegistry().get_table(bronze_pdr_predictions_table_name)._append_to_db(
-            data,
-            table_type=TableType.TEMP,
-        )
+            data = get_data_func(
+                path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
+            )
+
+            TableRegistry().get_table(table_name)._append_to_db(
+                data,
+                table_type=TableType.TEMP,
+            )
+
+            # For each bronze table that we process, that data will be entered into the TEMP table
+            # However, we need to create a view so downstream queries can access both production and TEMP data
+            self.create_etl_view(table_name)
+
+        # At the end of the ETL pipeline, we want to
+        # 1. move from TEMP tables to production tables
+        # 2. drop TEMP tables and ETL views
+        self._move_from_temp_tables_to_live()
