@@ -11,12 +11,11 @@ class PredictFeedMixin:
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
         assert self.__class__.FEEDS_KEY
         self.d = d
-        feeds = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, [])).feeds
-
+        self.feeds = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
         if assert_feed_attributes:
             missing_attributes = []
             for attr in assert_feed_attributes:
-                for feed in feeds:
+                for feed in self.feeds.feeds:
                     if not getattr(feed, attr):
                         missing_attributes.append(attr)
 
@@ -24,13 +23,3 @@ class PredictFeedMixin:
                 raise AssertionError(
                     f"Missing attributes {missing_attributes} for some feeds."
                 )
-
-    @property
-    def feeds(self) -> PredictFeeds:
-        feeds_list = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
-        return feeds_list
-
-    @property
-    def feeds_list(self) -> List[Dict[str, ArgFeeds]]:
-        feeds_list = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
-        return feeds_list.to_list()
