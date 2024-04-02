@@ -95,7 +95,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
         lake_fs = self.lake_ss.feeds
-        predict_fs = PredictFeeds.from_array(self.predictoor_ss.feeds)
+        predict_fs = self.predictoor_ss.feeds
         aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
 
         # is predictoor_ss.predict_feed in lake feeds?
@@ -220,10 +220,7 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "predictoor_ss")
-    d = predictoor_ss_test_dict()
-    d["feeds"] = feeds
-    d["pred_submitter_mgr"] = "0x1"
-    d["aimodel_ss"]["input_feeds"] = predict_feeds.feeds_str
+    d = predictoor_ss_test_dict(feeds)
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")

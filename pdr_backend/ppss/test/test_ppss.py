@@ -65,7 +65,7 @@ def test_mock_feed_ppss():
     assert feed.source == "binance"
     assert feed.pair == "BTC/USDT"
 
-    assert str(ppss.predictoor_ss.feeds[0]["predict"][0]) == "binance BTC/USDT c 5m"
+    assert str(ppss.predictoor_ss.feeds[0].predict) == "binance BTC/USDT c 5m"
     assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
