@@ -32,10 +32,8 @@ last_ts = None
 sim_plotter = SimPlotter()
 
 
-def load_canvas_on_state(sim_plotter, new_ts):
-    titletext = (
-        f"Iter #{st.iter_number} ({new_ts})" if new_ts != "final" else "Final sim state"
-    )
+def load_canvas_on_state(ts):
+    titletext = f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state"
     title.title(titletext)
 
     canvas["pdr_profit_vs_time"].altair_chart(
@@ -105,12 +103,12 @@ while True:
         time.sleep(1)
         continue
 
-    load_canvas_on_state(sim_plotter, new_ts)
+    load_canvas_on_state(new_ts)
     last_ts = new_ts
 
     if last_ts == "final":
         snapshots = SimPlotter.available_snapshots()
-        timestamp = inputs.select_slider("Go to snapshot", snapshots)
+        timestamp = inputs.select_slider("Go to snapshot", snapshots, value="final")
         st, new_ts = sim_plotter.load_state(timestamp)
-        load_canvas_on_state(sim_plotter, timestamp)
+        load_canvas_on_state(timestamp)
         break

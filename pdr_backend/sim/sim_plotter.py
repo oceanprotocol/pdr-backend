@@ -3,12 +3,12 @@ import os
 import pickle
 import time
 from datetime import datetime
+from typing import Optional
 
 import altair as alt
 import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
-from typing import Optional
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
