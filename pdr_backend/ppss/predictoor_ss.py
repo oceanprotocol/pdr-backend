@@ -119,15 +119,15 @@ def example_predict_feeds() -> list:
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds: Optional[PredictFeeds] = None,
+    predict_feeds: Optional[List] = None,
     input_feeds: List[str] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or PredictFeeds.from_array(example_predict_feeds())
-    input_feeds = input_feeds or predict_feeds.feeds_str
+    predict_feeds = predict_feeds or example_predict_feeds()
+    input_feeds = input_feeds or PredictFeeds.from_array(example_predict_feeds()).feeds_str
     print(predict_feeds, input_feeds)
     d = {
-        "feeds": predict_feeds.to_list(),
+        "feeds": predict_feeds,
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
