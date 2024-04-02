@@ -8,6 +8,7 @@ import altair as alt
 import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
+from typing import Optional
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -24,7 +25,20 @@ class SimPlotter:
         self.st = None
         self.aimodel_plotdata = None
 
-    def load_state(self):
+    @staticmethod
+    def available_snapshots():
+        all_state_files = glob.glob("sim_state/st_*.pkl")
+
+        all_timestamps = [
+            f.replace("sim_state/st_", "").replace(".pkl", "")
+            for f in all_state_files
+            if "final" not in f
+        ]
+        all_timestamps.sort()
+
+        return all_timestamps + ["final"]
+
+    def load_state(self, timestamp: Optional[str] = None):
         if not os.path.exists("sim_state"):
             raise Exception(
                 "sim_state folder does not exist. Please run the simulation first."
@@ -33,6 +47,15 @@ class SimPlotter:
         all_state_files = glob.glob("sim_state/st_*.pkl")
         if not all_state_files:
             raise Exception("No state files found. Please run the simulation first.")
+
+        if timestamp:
+            with open(f"sim_state/st_{timestamp}.pkl", "rb") as f:
+                self.st = pickle.load(f)
+
+            with open(f"sim_state/aimodel_plotdata_{timestamp}.pkl", "rb") as f:
+                self.aimodel_plotdata = pickle.load(f)
+
+            return self.st, "final"
 
         if not os.path.exists("sim_state/st_final.pkl"):
             # plot previous state to avoid using a pickle that hasn't finished

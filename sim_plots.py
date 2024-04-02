@@ -11,6 +11,7 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 streamlit.set_page_config(layout="wide")
 
 title = streamlit.empty()
+inputs = streamlit.empty()
 c1, c2, c3 = streamlit.columns((1, 1, 2))
 c4, c5 = streamlit.columns((1, 1))
 c6, c7 = streamlit.columns((1, 1))
@@ -30,27 +31,12 @@ canvas = {
 last_ts = None
 sim_plotter = SimPlotter()
 
-while True:
-    try:
-        sim_plotter.load_state()
-        break
-    except Exception as e:
-        time.sleep(3)
-        title.title(f"Waiting for sim state... {e}")
-        continue
 
-while True:
-    try:
-        st, new_ts = sim_plotter.load_state()
-    except EOFError:
-        time.sleep(1)
-        continue
-
-    title.title(f"Iter #{st.iter_number} ({new_ts})")
-
-    if new_ts == last_ts:
-        time.sleep(1)
-        continue
+def load_canvas_on_state(sim_plotter, new_ts):
+    titletext = (
+        f"Iter #{st.iter_number} ({new_ts})" if new_ts != "final" else "Final sim state"
+    )
+    title.title(titletext)
 
     canvas["pdr_profit_vs_time"].altair_chart(
         sim_plotter.plot_pdr_profit_vs_time(),
@@ -98,8 +84,33 @@ while True:
         theme="streamlit",
     )
 
+
+while True:
+    try:
+        sim_plotter.load_state()
+        break
+    except Exception as e:
+        time.sleep(3)
+        title.title(f"Waiting for sim state... {e}")
+        continue
+
+while True:
+    try:
+        st, new_ts = sim_plotter.load_state()
+    except EOFError:
+        time.sleep(1)
+        continue
+
+    if new_ts == last_ts:
+        time.sleep(1)
+        continue
+
+    load_canvas_on_state(sim_plotter, new_ts)
     last_ts = new_ts
 
     if last_ts == "final":
-        title.title("Final sim state")
+        snapshots = SimPlotter.available_snapshots()
+        timestamp = inputs.select_slider("Go to snapshot", snapshots)
+        st, new_ts = sim_plotter.load_state(timestamp)
+        load_canvas_on_state(sim_plotter, timestamp)
         break
