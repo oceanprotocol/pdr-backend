@@ -3,6 +3,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
     # If feed_obj is a string, convert to list
