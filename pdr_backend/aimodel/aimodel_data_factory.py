@@ -108,7 +108,6 @@ class AimodelDataFactory:
         target_hist_cols = [
             f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
         ]
-
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
