@@ -51,4 +51,4 @@ def test_predict_feed_mixin():
     ]
     parser = PredictFeedMixin(feed_dict)
 
-    assert parser.feeds_list == expected
+    assert parser.feeds.to_list() == expected
