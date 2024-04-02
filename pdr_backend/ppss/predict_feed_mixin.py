@@ -29,3 +29,8 @@ class PredictFeedMixin:
     def feeds(self) -> PredictFeeds:
         feeds_list = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
         return feeds_list
+
+    @property
+    def feeds_list(self) -> List[Dict[str, ArgFeeds]]:
+        feeds_list = PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
+        return feeds_list.to_list()
