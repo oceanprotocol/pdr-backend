@@ -26,7 +26,7 @@ class SimEngine:
     @enforce_types
     def __init__(self, ppss: PPSS):
         # preconditions
-        predict_feeds = PredictFeeds.from_array(ppss.predictoor_ss.feeds)
+        predict_feeds = ppss.predictoor_ss.feeds
 
         # timeframe doesn't need to match
         for predict_feed in predict_feeds.feeds:
