@@ -17,16 +17,16 @@ def test_sim_engine(tmpdir):
     ppss = PPSS(yaml_str=s, network="development")
 
     predict_feeds = [{"predict": "binanceus BTC/USDT c 5m", "train_on": "binanceus BTC/USDT c 5m"}]
-
+    predict_feeds_obj = PredictFeeds.from_array(predict_feeds)
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
-    d = lake_ss_test_dict(parquet_dir, predict_feeds.feeds_str)
+    d = lake_ss_test_dict(parquet_dir, predict_feeds_obj.feeds_str)
     d["st_timestr"] = "2023-06-18"
     d["fin_timestr"] = "2023-06-19"
     ppss.lake_ss = LakeSS(d)
 
     # predictoor ss
-    d = predictoor_ss_test_dict(predict_feeds, predict_feeds.feeds_str)
+    d = predictoor_ss_test_dict(predict_feeds, predict_feeds_obj.feeds_str)
     d["aimodel_ss"]["approach"] = "LinearLogistic"
     d["aimodel_ss"]["max_n_train"] = 20
     d["aimodel_ss"]["autoregressive_n"] = 1
