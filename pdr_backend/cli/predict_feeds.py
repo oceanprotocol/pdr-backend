@@ -4,38 +4,38 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from enforce_typing import enforce_types
 
 
+def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
+    # If feed_obj is a string, convert to list
+    if isinstance(feed_obj, str):
+        # If comma separated string, split
+        # If not comma separated, convert to list
+        if "," in feed_obj:
+            feed_obj = feed_obj.split(",")
+        else:
+            feed_obj = [feed_obj]
+
+    if not isinstance(feed_obj, list):
+        raise ValueError(f"feed_obj must be a list, got {feed_obj}")
+
+    parsed_objs = []
+    for feed in feed_obj:
+        # Convert each feed_obj string to ArgFeeds
+        feed_obj = ArgFeeds.from_str(str(feed))
+        parsed_objs.extend(feed_obj)
+    return parsed_objs
+
+
 @enforce_types
 class PredictFeed:
-    def __init__(self, predict: List[ArgFeed], train_on: List[ArgFeed]):
+    def __init__(self, predict: ArgFeed, train_on: List[ArgFeed]):
         self.predict: ArgFeeds = predict
         self.train_on: ArgFeeds = train_on
 
     @classmethod
-    def from_feed_objs(cls, predict: Union[str, list], train_on: Union[str, list]):
-        parsed_predict: ArgFeeds = cls.parse_feed_obj(predict)
-        parsed_train_on: ArgFeeds = cls.parse_feed_obj(train_on)
+    def from_feed_objs(cls, predict: str, train_on: Union[str, list]):
+        parsed_predict: ArgFeeds = ArgFeed.from_str(predict)
+        parsed_train_on: ArgFeeds = parse_feed_obj(train_on)
         return cls(parsed_predict, parsed_train_on)
-
-    @staticmethod
-    def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
-        # If feed_obj is a string, convert to list
-        if isinstance(feed_obj, str):
-            # If comma separated string, split
-            # If not comma separated, convert to list
-            if "," in feed_obj:
-                feed_obj = feed_obj.split(",")
-            else:
-                feed_obj = [feed_obj]
-
-        if not isinstance(feed_obj, list):
-            raise ValueError(f"feed_obj must be a list, got {feed_obj}")
-
-        parsed_objs = []
-        for feed in feed_obj:
-            # Convert each feed_obj string to ArgFeeds
-            feed_obj = ArgFeeds.from_str(str(feed))
-            parsed_objs.extend(feed_obj)
-        return parsed_objs
 
     def to_dict(self):
         return {"predict": self.predict, "train_on": self.train_on}
@@ -51,12 +51,14 @@ class PredictFeeds(List[PredictFeed]):
 
     @classmethod
     def from_array(cls, feeds: List[dict]):
-        return cls(
-            [
-                PredictFeed.from_feed_objs(feeds["predict"], feeds["train_on"])
-                for feeds in feeds
-            ]
-        )
+        fin = []
+        for pairs in feeds:
+            predict = pairs.get("predict")
+            train_on = pairs.get("train_on")
+            predict = parse_feed_obj(predict)
+            for p in predict:
+                fin.append(PredictFeed.from_feed_objs(p, train_on))
+        return cls(fin)
 
     @property
     def feeds_str(self) -> List[str]:
