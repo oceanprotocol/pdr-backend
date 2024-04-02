@@ -75,7 +75,7 @@ def test_table_initialization():
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -98,7 +98,7 @@ def test_load_table():
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -118,7 +118,7 @@ def test_save_table():
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -147,7 +147,7 @@ def test_all():
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -171,7 +171,7 @@ def test_get_pdr_df():
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -204,7 +204,7 @@ def test_get_pdr_df_multiple_fetches():
     st_timestr = "2023-12-03_00:00"
     fin_timestr = "2023-12-03_16:00"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
