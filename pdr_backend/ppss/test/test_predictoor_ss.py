@@ -1,5 +1,4 @@
 from enforce_typing import enforce_types
-from pdr_backend.cli.predict_feeds import PredictFeeds
 import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed

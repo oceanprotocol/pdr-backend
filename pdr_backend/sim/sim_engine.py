@@ -1,11 +1,10 @@
 import copy
 import logging
 import os
+import numpy as np
+import polars as pl
 
 from enforce_typing import enforce_types
-import numpy as np
-from pdr_backend.cli.predict_feeds import PredictFeeds
-import polars as pl
 from sklearn.metrics import precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 

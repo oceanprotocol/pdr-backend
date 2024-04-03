@@ -1,7 +1,7 @@
 from typing import List, Union
+from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from enforce_typing import enforce_types
 
 
 @enforce_types

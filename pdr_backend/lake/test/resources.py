@@ -1,6 +1,5 @@
 import copy
 from typing import Dict
-from pdr_backend.cli.predict_feeds import PredictFeeds
 
 import polars as pl
 from enforce_typing import enforce_types
