@@ -1,6 +1,8 @@
 import copy
 import logging
 import os
+from typing import Optional
+
 import numpy as np
 import polars as pl
 
