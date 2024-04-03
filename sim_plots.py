@@ -52,19 +52,19 @@ while True:
         time.sleep(1)
         continue
 
-    canvas["pdr_profit_vs_time"].altair_chart(
+    canvas["pdr_profit_vs_time"].plotly_chart(
         sim_plotter.plot_pdr_profit_vs_time(),
         use_container_width=True,
         theme="streamlit",
     )
 
-    canvas["trader_profit_vs_time"].altair_chart(
+    canvas["trader_profit_vs_time"].plotly_chart(
         sim_plotter.plot_trader_profit_vs_time(),
         use_container_width=True,
         theme="streamlit",
     )
 
-    canvas["accuracy_vs_time"].altair_chart(
+    canvas["accuracy_vs_time"].plotly_chart(
         sim_plotter.plot_accuracy_vs_time(), use_container_width=True, theme="streamlit"
     )
 
