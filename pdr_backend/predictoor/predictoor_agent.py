@@ -7,6 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.cli.predict_feeds import PredictFeed
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.token import NativeToken, Token
@@ -99,7 +100,6 @@ class PredictoorAgent:
     @enforce_types
     def run(self):
         logger.info("Starting main loop.")
-        logger.info(self.status_str())
         logger.info("Waiting...")
         while True:
             self.take_step()
@@ -107,20 +107,17 @@ class PredictoorAgent:
                 break
 
     @enforce_types
-    def prepare_stakes(self, feeds: List[SubgraphFeed]):
-        stakes_up = []
-        stakes_down = []
-        feed_addrs = []
+    def prepare_stakes(self, feeds: List[SubgraphFeed]) -> PredictionSlotsData:
+        slot_data = PredictionSlotsData()
 
         seconds_per_epoch = None
         cur_epoch = None
 
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
-            if seconds_per_epoch is None:
-                # this is same for all feeds
-                seconds_per_epoch = feed.seconds_per_epoch
-                cur_epoch = contract.get_current_epoch()
+            predict_pair = self.ppss.predictoor_ss.get_predict_feed(feed.pair, feed.timeframe, feed.source)
+            seconds_per_epoch = feed.seconds_per_epoch
+            cur_epoch = contract.get_current_epoch()
             next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
@@ -133,16 +130,11 @@ class PredictoorAgent:
             # get the target slot
 
             # get the stakes
-            stake_up, stake_down = self.calc_stakes(feed)
+            stake_up, stake_down = self.calc_stakes(predict_pair)
+            target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
+            slot_data.add_prediction(target_slot, feed, stake_up, stake_down)
 
-            # add to lists
-            stakes_up.append(stake_up)
-            stakes_down.append(stake_down)
-            feed_addrs.append(feed.address)
-
-        target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
-
-        return stakes_up, stakes_down, feed_addrs, target_slot
+        return slot_data
 
     @enforce_types
     def take_step(self):
@@ -161,33 +153,37 @@ class PredictoorAgent:
 
         # get payouts
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
-        self.get_payout()
+        # self.get_payout()
 
-        logger.info(self.status_str())
+        # logger.info(self.status_str())
 
-        stakes_up, stakes_down, feed_addrs, target_slot = self.prepare_stakes(
-            self.feeds
+        slot_data = self.prepare_stakes(
+            list(self.feeds.values())
         )
-        required_OCEAN = sum(stakes_up) + sum(stakes_down)
-        if not self.check_balances(required_OCEAN):
-            logger.error("Not enough balance, cancel prediction")
-            return
 
-        s = f"-> Predict result: {stakes_up} up, {stakes_down} down, feeds={feed_addrs}"
-        logger.info(s)
-        if required_OCEAN == 0:
-            logger.warning("Done: no stakes to submit")
-            return
+        for target_slot in slot_data.slots:
+            stakes_up, stakes_down, feed_addrs = slot_data.get_predictions_arr(target_slot)
 
-        # submit prediction to chaineds]
-        self.submit_prediction_txs(stakes_up, stakes_down, target_slot, feed_addrs)
-        self.prev_submit_epochs.append(target_slot)
+            required_OCEAN = sum(stakes_up) + sum(stakes_down)
+            if not self.check_balances(required_OCEAN):
+                logger.error("Not enough balance, cancel prediction")
+                return
 
-        # start printing for next round
-        if logging_has_stdout():
-            print("" + "=" * 180)
-        logger.info(self.status_str())
-        logger.info("Waiting...")
+            s = f"-> Predict result: {stakes_up} up, {stakes_down} down, feeds={feed_addrs}"
+            logger.info(s)
+            if required_OCEAN == 0:
+                logger.warning("Done: no stakes to submit")
+                return
+
+            # submit prediction to chaineds]
+            self.submit_prediction_txs(stakes_up, stakes_down, target_slot, feed_addrs)
+            self.prev_submit_epochs.append(target_slot)
+
+            # start printing for next round
+            if logging_has_stdout():
+                print("" + "=" * 180)
+            logger.info(self.status_str())
+            logger.info("Waiting...")
 
     @property
     def cur_block(self):
@@ -278,7 +274,7 @@ class PredictoorAgent:
             logger.warning(s)
 
     @enforce_types
-    def calc_stakes(self, feed: SubgraphFeed) -> Tuple[Eth, Eth]:
+    def calc_stakes(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
         """
         @return
           stake_up -- amt to stake up, in units of Eth
@@ -308,7 +304,7 @@ class PredictoorAgent:
         return (stake_up, stake_down)
 
     @enforce_types
-    def calc_stakes2(self) -> Tuple[Eth, Eth]:
+    def calc_stakes2(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
@@ -323,7 +319,7 @@ class PredictoorAgent:
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, ycont, _, xrecent = data_f.create_xy(mergedohlcv_df, testshift=0)
+        X, ycont, _, xrecent = data_f.create_xy(mergedohlcv_df, testshift=0, feed=feed.predict, feeds=feed.train_on)
 
         curprice = ycont[-1]
         y_thr = curprice
@@ -369,7 +365,7 @@ class PredictoorAgent:
             return False
 
         # check ROSE balance
-        ROSE_bal = self.ROSE.get_balance()
+        ROSE_bal = self.ROSE.balanceOf(self.ppss.web3_pp.web3_config.owner)
         if ROSE_bal < min_ROSE_bal:
             logger.error("ROSE balance too low: %s < %s", ROSE_bal, min_ROSE_bal)
             return False
