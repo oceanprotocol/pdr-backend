@@ -51,6 +51,7 @@ class SimState:
             tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
         }
         self.init_loop_attributes()
+        self.iter_number = 0
 
     def init_loop_attributes(self):
         # 'i' is iteration number i
