@@ -86,7 +86,7 @@ while True:
         theme="streamlit",
     )
 
-    canvas["aimodel_varimps"].altair_chart(
+    canvas["aimodel_varimps"].plotly_chart(
         plot_aimodel_varimps(sim_plotter.aimodel_plotdata),
         use_container_width=True,
         theme="streamlit",
