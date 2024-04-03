@@ -74,13 +74,13 @@ while True:
         theme="streamlit",
     )
 
-    canvas["pdr_profit_vs_ptrue"].altair_chart(
+    canvas["pdr_profit_vs_ptrue"].plotly_chart(
         sim_plotter.plot_pdr_profit_vs_ptrue(),
         use_container_width=True,
         theme="streamlit",
     )
 
-    canvas["trader_profit_vs_ptrue"].altair_chart(
+    canvas["trader_profit_vs_ptrue"].plotly_chart(
         sim_plotter.plot_trader_profit_vs_ptrue(),
         use_container_width=True,
         theme="streamlit",

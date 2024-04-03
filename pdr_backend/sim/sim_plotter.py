@@ -212,15 +212,16 @@ class SimPlotter:
         df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
         df["prob(up)"] = self.st.probs_up
 
-        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
-
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
+        fig = go.Figure(
+            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="pdr profit")
         )
 
-        return chart + ref_line
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="prob(up)")
+        fig.update_yaxes(title=y)
+
+        return fig
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
@@ -231,15 +232,16 @@ class SimPlotter:
         df = pd.DataFrame(self.st.trader_profits_USD, columns=[y])
         df["prob(up)"] = self.st.probs_up
 
-        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
-
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
+        fig = go.Figure(
+            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="trader profit")
         )
 
-        return chart + ref_line
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="prob(up)")
+        fig.update_yaxes(title=y)
+
+        return fig
 
 
 def file_age_in_seconds(pathname):
