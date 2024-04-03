@@ -176,32 +176,25 @@ class SimPlotter:
         df["recalls"] = clm.recalls
         df["time"] = range(len(clm.f1s))
 
-        data_long = pd.melt(
-            df,
-            id_vars=["time"],
-            value_vars=["f1", "precisions", "recalls"],
-            var_name="var",
-            value_name="f1,precisions,recalls",
+        fig = go.Figure(
+            go.Scatter(x=df["time"], y=df["f1"], mode="lines", name="f1"),
         )
 
-        chart = (
-            alt.Chart(data_long)
-            .mark_line()
-            .encode(
-                x="time",
-                y=alt.Y("f1,precisions,recalls", title=y),
-                color="var:N",  # Use the category field for color encoding
-            )
-            .properties(title=s)
+        fig.add_traces(
+            [
+                go.Scatter(
+                    x=df["time"], y=df["precisions"], mode="lines", name="precision"
+                ),
+                go.Scatter(x=df["time"], y=df["recalls"], mode="lines", name="recall"),
+            ]
         )
 
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0.5]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
-        )
+        fig.add_hline(y=0.5, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
 
-        return chart + ref_line
+        return fig
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):

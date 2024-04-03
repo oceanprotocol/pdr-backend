@@ -68,7 +68,7 @@ while True:
         sim_plotter.plot_accuracy_vs_time(), use_container_width=True, theme="streamlit"
     )
 
-    canvas["f1_precision_recall_vs_time"].altair_chart(
+    canvas["f1_precision_recall_vs_time"].plotly_chart(
         sim_plotter.plot_f1_precision_recall_vs_time(),
         use_container_width=True,
         theme="streamlit",
