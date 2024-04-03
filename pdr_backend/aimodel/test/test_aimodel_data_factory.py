@@ -1,11 +1,12 @@
-import numpy as np
-from numpy.testing import assert_array_equal
 import pandas as pd
-from pdr_backend.cli.predict_feeds import PredictFeeds
 import polars as pl
 import pytest
+import numpy as np
+
+from numpy.testing import assert_array_equal
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (

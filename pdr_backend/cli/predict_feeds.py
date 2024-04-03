@@ -40,8 +40,9 @@ class PredictFeed:
     def to_dict(self):
         return {"predict": self.predict, "train_on": self.train_on}
 
-    def from_dict(d):
-        return PredictFeed(d["predict"], d["train_on"])
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d["predict"], d["train_on"])
 
 
 @enforce_types
