@@ -64,8 +64,7 @@ class PersistentDataStore(BaseDataStore):
         """
 
         views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
-
-        return [views]
+        return [view [0] for view in views]
     
     @enforce_types
     def table_exists(self, table_name: str):

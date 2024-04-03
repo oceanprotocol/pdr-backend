@@ -1,3 +1,4 @@
+import pytest
 from enforce_typing import enforce_types
 
 import polars as pl
@@ -36,24 +37,21 @@ def get_filtered_timestamps_df(
         & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
 
-
-@enforce_types
-def test_setup_etl(
+@pytest.fixture
+def setup_data(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
     _get_test_PDS,
     tmpdir,
-):
+    request):
     _clean_up_persistent_data_store(tmpdir)
     _clean_up_table_registry()
 
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
+    st_timestr = request.param[0]
+    fin_timestr = request.param[1]
 
-    # Mock dfs based on configured st/fin timestamps
     preds = get_filtered_timestamps_df(
         _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
     )
@@ -67,7 +65,6 @@ def test_setup_etl(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
 
-    # Setup PPSS + Data Factory
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
         "binanceus ETH/USDT h 5m",
@@ -80,124 +77,69 @@ def test_setup_etl(
         "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
         "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
         "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(subscriptions_table_name, subscriptions_schema, ppss),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
     gql_tables["pdr_slots"].append_to_storage(slots)
+    gql_tables["pdr_subscriptions"].append_to_storage(slots)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
-    # Work 1: Initialize ETL - Assert 0 gql_dfs
+    # provide the setup data to the test
     etl = ETL(ppss, gql_data_factory)
-
+    pds = _get_test_PDS(tmpdir)
+    
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
 
-    pds = _get_test_PDS(tmpdir)
+    table_name = get_table_name("pdr_predictions")
+    _records = pds.query_data("SELECT * FROM {}".format(table_name))
+    assert len(_records) == 5
 
-    # Assert original gql has 6 predictions, but we only got 5 due to ppss daterange
+    yield etl, pds, gql_tables
+
+@enforce_types
+@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+def test_etl_tables(
+    _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_payouts_df,
+    _gql_datafactory_etl_truevals_df,
+    setup_data):
+    etl, pds, gql_tables = setup_data
+
+    # Assert all dfs are not the same size as mock data
     pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
-    assert len(pdr_predictions_df) == 5
-    assert len(_gql_datafactory_etl_predictions_df) == 6
-
-    # Assert all 3 dfs are not the same because we filtered Nov 01 out
     pdr_payouts_df = pds.query_data("SELECT * FROM pdr_payouts")
     pdr_truevals_df = pds.query_data("SELECT * FROM pdr_truevals")
+    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
-
-    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
+    
+    # Assert len of all dfs
     assert len(pdr_slots_df) == 6
-    # Assert len of all 3 dfs
+    assert len(pdr_predictions_df) == 5
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
     assert len(TableRegistry().get_tables()) == 7
 
-
 # pylint: disable=too-many-statements
 @enforce_types
+@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
-    _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
-    tmpdir,
+    setup_data
 ):
-    _clean_up_persistent_data_store(tmpdir)
-    _clean_up_table_registry()
-
-    # please note date, including Nov 1st
-    st_timestr = "2023-11-01_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
-    )
-    subscriptions = pl.DataFrame(
-        [
-            {
-                "ID": "testID",
-                "pair": "testPair",
-                "timeframe": "5m",
-                "source": "binance",
-                "tx_id": "tx_id",
-                "last_price_value": 0,
-                "timestamp": 1699300801000,
-                "user": "0xuser",
-            }
-        ],
-        schema=subscriptions_schema,
-    )
-
-    print("subscriptions----1", subscriptions)
-
-    gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-        "pdr_subscriptions": Table(
-            subscriptions_table_name, subscriptions_schema, ppss
-        ),
-    }
-
-    gql_tables["pdr_predictions"].append_to_storage(preds)
-    gql_tables["pdr_truevals"].append_to_storage(truevals)
-    gql_tables["pdr_payouts"].append_to_storage(payouts)
-    gql_tables["pdr_slots"].append_to_storage(slots)
-    gql_tables["pdr_subscriptions"].append_to_storage(subscriptions)
-
-    # Work 1: Initialize ETL
-    etl = ETL(ppss, gql_data_factory)
-
-    pds = _get_test_PDS(tmpdir)
-    table_name = get_table_name(predictions_table_name)
-    pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(table_name))
-    assert len(pdr_predictions_records) == 6
-
-    # Work 3: Do bronze
+    etl, pds, gql_tables = setup_data
+    
+    # Work 1: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
@@ -281,39 +223,44 @@ def test_etl_do_bronze_step(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
 
+    # Assert bronze slots table is building correctly
     temp_bronze_pdr_slots_table_name = get_table_name(
         bronze_pdr_slots_table_name, TableType.TEMP
     )
-
     bronze_pdr_slots_records = pds.query_data(
         "SELECT * FROM {}".format(temp_bronze_pdr_slots_table_name)
     )
-
     print("bronze_pdr_slots_records---1", bronze_pdr_slots_records)
 
     assert len(bronze_pdr_slots_records) == 5
-
     assert bronze_pdr_slots_records["truevalue"].null_count() == 0
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
     assert bronze_pdr_slots_records["source"].null_count() == 1
 
+@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+def test_etl_views(setup_data):
+    etl, pds, gql_tables = setup_data
+    etl.do_bronze_step()
+
+    # assert views are working
+    etl.create_etl_view("pdr_predictions")
+    df = pds.query_data("SELECT * FROM _etl_pdr_predictions").pl()
+    assert len(df) == 5
+    
+    # Assert number of views is equal to 1
+    view_names = pds.get_view_names()
+    assert len(view_names) == 1
+    print(f"view_names are {view_names}")
+
+    # Assert view is registered
+    check_result = pds.view_exists("_etl_pdr_predictions")
+    print(f"check_result is {check_result}")
+    assert check_result == True
 
 @enforce_types
-def test_drop_temp_sql_tables(tmpdir):
-
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    pds = PersistentDataStore(str(tmpdir))
+@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+def test_drop_temp_sql_tables(setup_data):
+    etl, pds, gql_tables = setup_data
 
     # SELECT ALL TABLES FROM DB
     table_names = pds.get_table_names()
@@ -341,28 +288,9 @@ def test_drop_temp_sql_tables(tmpdir):
 
 
 @enforce_types
-def test_move_from_temp_tables_to_live(tmpdir):
-
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    pds = PersistentDataStore(str(tmpdir))
-
-    # SELECT ALL TABLES FROM DB
-    table_names = pds.get_table_names()
-
-    # DROP ALL TABLES
-    for table_name in table_names:
-        pds.duckdb_conn.execute(f"DROP TABLE {table_name}")
+@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+def test_move_from_temp_tables_to_live(setup_data):
+    etl, pds, gql_tables = setup_data
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")

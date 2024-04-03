@@ -49,11 +49,11 @@ class ETL:
                     bronze_pdr_predictions_schema,
                     self.ppss,
                 ),
-                bronze_pdr_slots_table_name: (
-                    bronze_pdr_slots_table_name,
-                    bronze_pdr_slots_schema,
-                    self.ppss,
-                ),
+                # bronze_pdr_slots_table_name: (
+                #     bronze_pdr_slots_table_name,
+                #     bronze_pdr_slots_schema,
+                #     self.ppss,
+                # ),
             }
         )
 
@@ -67,12 +67,12 @@ class ETL:
 
         self.bronze_table_getters = {
             bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
-            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
+            # bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
-        self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
+        self.temp_table_names = [*self.bronze_table_names]
 
     def _drop_temp_sql_tables(self):
         """
@@ -94,6 +94,7 @@ class ETL:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
+            print(f"move table {table_name} to live")
             pds.move_table_data(
                 get_table_name(table_name, TableType.TEMP),
                 table_name,
