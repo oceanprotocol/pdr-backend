@@ -16,7 +16,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -76,6 +76,8 @@ class PredictoorAgent:
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
+        checksummed_addresses = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in cand_feeds.keys()]
+        self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
         feeds: SubgraphFeed = ppss.predictoor_ss.filter_feeds_from_candidates(
@@ -163,8 +165,11 @@ class PredictoorAgent:
 
         for target_slot in slot_data.slots:
             stakes_up, stakes_down, feed_addrs = slot_data.get_predictions_arr(target_slot)
-
-            required_OCEAN = sum(stakes_up) + sum(stakes_down)
+            feed_addrs = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in feed_addrs]
+            
+            required_OCEAN = Eth(0)
+            for stake in stakes_up + stakes_down:
+                required_OCEAN += stake
             if not self.check_balances(required_OCEAN):
                 logger.error("Not enough balance, cancel prediction")
                 return
@@ -182,7 +187,7 @@ class PredictoorAgent:
             # start printing for next round
             if logging_has_stdout():
                 print("" + "=" * 180)
-            logger.info(self.status_str())
+            # logger.info(self.status_str())
             logger.info("Waiting...")
 
     @property
@@ -256,8 +261,8 @@ class PredictoorAgent:
         self,
         stakes_up: List[Eth],
         stakes_down: List[Eth],
-        feeds: List[str],
         target_slot: UnixTimeS,  # a timestamp
+        feeds: List[str],
     ):
         logger.info("Submitting predictions to the chain...")
         tx = self.pred_submitter_mgr.submit_prediction(
@@ -269,8 +274,8 @@ class PredictoorAgent:
 
         # handle errors
         if _tx_failed(tx):
-            s = "Tx failed So, resubmit both with zero stake."
-            s += f"\ntx1={tx}"
+            s = "Tx failed"
+            s += f"\ntx1={tx.transactionHash.hex()}"
             logger.warning(s)
 
     @enforce_types
@@ -355,12 +360,12 @@ class PredictoorAgent:
         return mergedohlcv_df
 
     @enforce_types
-    def check_balances(self, required_OCEAN: int) -> bool:
+    def check_balances(self, required_OCEAN: Eth) -> bool:
         min_ROSE_bal = Eth(1).to_wei()
 
         # check OCEAN balance
         OCEAN_bal = self.OCEAN.balanceOf(self.pred_submitter_mgr.contract_address)
-        if OCEAN_bal < required_OCEAN:
+        if OCEAN_bal < required_OCEAN.to_wei():
             logger.error("OCEAN balance too low: %s < %s", OCEAN_bal, required_OCEAN)
             return False
 
