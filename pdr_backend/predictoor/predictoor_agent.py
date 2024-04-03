@@ -19,6 +19,33 @@ from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("predictoor_agent")
 
+class PredictionSlotsData:
+    def __init__(self):
+        self.target_slots = {}
+
+    def add_prediction(self, slot, feed, stake_up, stake_down):
+        if slot not in self.target_slots:
+            self.target_slots[slot] = []
+        self.target_slots[slot].append((feed, stake_up, stake_down))
+
+    def get_predictions(self, slot):
+        return self.target_slots.get(slot, [])
+
+    def get_predictions_arr(self, slot):
+        stakes_up = []
+        stakes_down = []
+        feed_addrs = []
+
+        for feed, stake_up, stake_down in self.get_predictions(slot):
+            stakes_up.append(stake_up)
+            stakes_down.append(stake_down)
+            feed_addrs.append(feed.address)
+
+        return stakes_up, stakes_down, feed_addrs
+
+    @property
+    def slots(self):
+        return list(self.target_slots.keys())
 
 # pylint: disable=too-many-public-methods
 class PredictoorAgent:
