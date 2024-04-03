@@ -28,7 +28,6 @@ class PredictFeedMixin:
     def feeds(self) -> PredictFeeds:
         return PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
 
-
     @enforce_types
     def filter_feeds_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
