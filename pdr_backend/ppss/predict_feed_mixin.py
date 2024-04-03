@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.predict_feeds import PredictFeeds
+from pdr_backend.cli.predict_feeds import PredictFeed, PredictFeeds
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
@@ -27,6 +27,13 @@ class PredictFeedMixin:
     @property
     def feeds(self) -> PredictFeeds:
         return PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
+    
+    def get_predict_feed(self, pair, timeframe, exchange) -> PredictFeed:
+        for predict_feed in self.feeds:
+            p = predict_feed.predict
+            if p.pair == pair and p.timeframe == timeframe and p.exchange == exchange:
+                return predict_feed
+        return None
 
     @enforce_types
     def filter_feeds_from_candidates(
