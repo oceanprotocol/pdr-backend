@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,7 @@ class AimodelDataFactory:
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
         feed: ArgFeed,
-        feeds: ArgFeeds,
+        feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -102,7 +102,8 @@ class AimodelDataFactory:
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
         ss = self.ss.aimodel_ss
-
+        if not feeds:
+            feeds = ss.feeds
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""
