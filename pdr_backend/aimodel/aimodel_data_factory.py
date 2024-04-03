@@ -5,6 +5,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 import polars as pl
 from enforce_typing import enforce_types
 
@@ -67,6 +68,7 @@ class AimodelDataFactory:
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
         feed: ArgFeed,
+        feeds: ArgFeeds,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -106,7 +108,7 @@ class AimodelDataFactory:
         xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in feeds
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
