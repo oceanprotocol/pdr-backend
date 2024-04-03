@@ -37,13 +37,16 @@ def get_feed_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
     )
 
+    df = df.with_columns(
+        pl.col("prediction").eq(pl.col("trueval")).cast(pl.UInt8).alias("is_correct")
+    )
     # Group by pair
     df = df.group_by(["pair", "timeframe"]).agg(
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+        (pl.col("is_correct").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     return df
@@ -56,13 +59,16 @@ def get_predictoor_summary_stats(predictions_df: pl.DataFrame) -> pl.DataFrame:
         ~((pl.col("trueval").is_null()) | (pl.col("payout").is_null()))
     )
 
+    df = df.with_columns(
+        pl.col("prediction").eq(pl.col("trueval")).cast(pl.UInt8).alias("is_correct")
+    )
     # Group by pair
     df = df.group_by(["user", "pair", "timeframe"]).agg(
         pl.col("source").first().alias("source"),
         pl.col("payout").sum().alias("sum_payout"),
         pl.col("stake").sum().alias("sum_stake"),
         pl.col("prediction").count().alias("num_predictions"),
-        (pl.col("prediction").sum() / pl.col("pair").count() * 100).alias("accuracy"),
+        (pl.col("is_correct").sum() / pl.col("pair").count() * 100).alias("accuracy"),
     )
 
     return df

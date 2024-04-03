@@ -39,7 +39,6 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert ppss.predictoor_ss.aimodel_ss.approach == "LinearLogistic"
     assert ppss.payout_ss.batch_size >= 0
     assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
-    assert isinstance(ppss.sim_ss.do_plot, bool)
     assert 0.0 <= ppss.trader_ss.fee_percent <= 0.99
     assert "USD" in ppss.trader_ss.buy_amt_str
     assert ppss.trueval_ss.batch_size >= 0

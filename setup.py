@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.2.75",
+    "ccxt==4.2.87",
     "coverage",
     "enforce_typing",
     "eth-account==0.11.0",
@@ -23,22 +23,25 @@ install_requirements = [
     "numpy==1.26.4",
     "pandas==2.2.1",
     "pathlib",
-    "polars==0.20.15",
+    "plotly==5.20.0",
+    "polars==0.20.17",
     "polars[timezone]",
-    "pyarrow==15.0.1",
+    "pyarrow==15.0.2",
     "pylint==3.1.0",
     "pytest",
-    "pytest-asyncio==0.23.5.post1",
+    # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
+    "pytest-asyncio==0.21.1",
     "pytest-env",
     "pyyaml",
     "requests==2.31.0",
-    "requests-mock==1.11.0",
+    "requests-mock==1.12.1",
     "scikit-learn==1.4.1.post1",
     "statsmodels==0.14.1",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.31.0.20240311",
-    "web3==6.15.1",
+    "web3==6.16.0",
     "sapphire.py==0.2.2",
+    "streamlit==1.32.2",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

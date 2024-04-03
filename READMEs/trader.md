@@ -73,7 +73,6 @@ What it does:
    - Build a model
    - Predict
    - Trade
-   - Plot profit versus time, more
    - Log to console and `logs/out_<time>.txt`
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
@@ -85,6 +84,8 @@ Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy 
 To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
+
+Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
 
 ## Run Trader Bot on Sapphire Testnet
 
