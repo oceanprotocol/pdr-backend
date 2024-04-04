@@ -108,6 +108,14 @@ class PredictoorAgent:
             self.take_step()
             if os.getenv("TEST") == "true":
                 break
+    
+    @enforce_types
+    def get_min_epoch_s_left(self):
+        min_tf_seconds = self.ppss.predictoor_ss.min_tf_seconds
+        current_ts = self.cur_timestamp
+
+        seconds_left = current_ts % min_tf_seconds
+        return seconds_left
 
     @enforce_types
     def prepare_stakes(self, feeds: List[SubgraphFeed]) -> PredictionSlotsData:
@@ -366,12 +374,12 @@ class PredictoorAgent:
     def get_payout(self):
         """Claims payouts"""
         # TODO Find a way to determine the current epoch
-        # if (
-        #     self.s_start_payouts == 0
-        #     or self.cur_epoch_s_left >= self.s_start_payouts
-        #     or self.cur_epoch in self.prev_submit_payouts
-        # ):
-        #     return
+        if (
+            self.s_start_payouts == 0
+            or self.get_min_epoch_s_left() >= self.s_start_payouts
+            or self.cur_epoch in self.prev_submit_payouts
+        ):
+            return
 
         logger.info("Running payouts")
 
