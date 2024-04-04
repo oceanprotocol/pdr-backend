@@ -2,6 +2,7 @@ from typing import List, Union
 from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.cli.arg_pair import ArgPair
 
 
 @enforce_types
@@ -43,6 +44,19 @@ class PredictFeed:
     @classmethod
     def from_dict(cls, d):
         return cls(d["predict"], d["train_on"])
+    
+    @property
+    def timeframe_ms(self) -> int:
+        """Returns timeframe, in ms"""
+        return self.predict.timeframe.ms if self.predict.timeframe else 0
+    
+    @property
+    def quote_str(self) -> str:
+        return ArgPair(self.predict.pair).quote_str
+
+    @property
+    def base_str(self) -> str:
+        return ArgPair(self.predict.pair).base_str
 
 
 @enforce_types
