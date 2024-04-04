@@ -175,7 +175,7 @@ parquet_data/
 pdr_predictions.parquet 
 
 # sim state
-sim_state/*.pkl
+sim_state
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json

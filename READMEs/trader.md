@@ -87,6 +87,10 @@ Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) f
 
 Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
 
+By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+You can run many instances of streamlit at once, with different URLs.
+
 ## Run Trader Bot on Sapphire Testnet
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
