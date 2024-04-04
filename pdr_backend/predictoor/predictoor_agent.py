@@ -14,6 +14,7 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
+from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Eth, Wei
@@ -155,7 +156,7 @@ class PredictoorAgent:
 
         # get payouts
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
-        # self.get_payout()
+        self.get_payout()
 
         # logger.info(self.status_str())
 
@@ -220,22 +221,6 @@ class PredictoorAgent:
         return self.ppss.predictoor_ss.s_cutoff
 
     @property
-    def s_per_epoch(self) -> int:
-        return self.feeds[0].seconds_per_epoch
-
-    @property
-    def next_slot(self) -> UnixTimeS:  # a timestamp
-        return UnixTimeS((self.cur_epoch + 1) * self.s_per_epoch)
-
-    @property
-    def target_slot(self) -> UnixTimeS:  # a timestamp
-        return UnixTimeS((self.cur_epoch + 2) * self.s_per_epoch)
-
-    @property
-    def cur_epoch_s_left(self) -> int:
-        return self.next_slot - self.cur_timestamp
-
-    @property
     def OCEAN(self) -> Token:
         return self.ppss.web3_pp.OCEAN_Token
 
@@ -244,6 +229,7 @@ class PredictoorAgent:
         return self.ppss.web3_pp.NativeToken
 
     def status_str(self) -> str:
+        # TODO remove deprecated values and enable this back
         s = ""
         s += f"cur_epoch={self.cur_epoch}"
         s += f", cur_block_number={self.cur_block_number}"
@@ -379,19 +365,30 @@ class PredictoorAgent:
 
     def get_payout(self):
         """Claims payouts"""
-        if (
-            self.s_start_payouts == 0
-            or self.cur_epoch_s_left >= self.s_start_payouts
-            or self.cur_epoch in self.prev_submit_payouts
-        ):
-            return
+        # TODO Find a way to determine the current epoch
+        # if (
+        #     self.s_start_payouts == 0
+        #     or self.cur_epoch_s_left >= self.s_start_payouts
+        #     or self.cur_epoch in self.prev_submit_payouts
+        # ):
+        #     return
 
         logger.info("Running payouts")
 
         # TODO Implement manager payout here.
+        up_pred_addr = self.pred_submitter_mgr.predictoor_up_address()
+        pending_slots = query_pending_payouts(self.ppss.web3_pp.subgraph_url, up_pred_addr)
+        contracts = list(pending_slots.keys())
+        contracts_checksummed = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in contracts]
+        slots = list(pending_slots.values())
+        slots_flat = [item for sublist in slots for item in sublist]
+        slots_unique_flat = list(set(slots_flat))
+        print(contracts_checksummed, "---", slots_unique_flat)
+        tx = self.pred_submitter_mgr.get_payout(slots_unique_flat, contracts_checksummed)
+        print("Payout tx:", tx["transactionHash"].hex())
 
         # Update previous payouts history to avoid claiming for this epoch again
-        self.prev_submit_payouts.append(self.cur_epoch)
+        # self.prev_submit_payouts.append(self.cur_epoch)
 
 
 @enforce_types
