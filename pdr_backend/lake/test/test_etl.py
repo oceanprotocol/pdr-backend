@@ -126,7 +126,7 @@ def test_etl_tables(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 7
+    assert len(TableRegistry().get_tables()) == 6
 
 # pylint: disable=too-many-statements
 @enforce_types
@@ -291,6 +291,7 @@ def test_drop_temp_sql_tables(setup_data):
 @pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
 def test_move_from_temp_tables_to_live(setup_data):
     etl, pds, gql_tables = setup_data
+    assert len(table_names) == 5
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
@@ -299,23 +300,18 @@ def test_move_from_temp_tables_to_live(setup_data):
 
     # check if tables are created
     table_names = pds.get_table_names()
-
-    assert len(table_names) == 3
-
     etl.temp_table_names = ["a", "b", "c"]
     etl._move_from_temp_tables_to_live()
 
-    table_names = pds.get_table_names()
-
-    assert len(table_names) == 3
     # check "c" exists in permanent tables
+    table_names = pds.get_table_names()
+    assert len(table_names) == 8
     assert "c" in table_names
     assert "a" in table_names
     assert "b" in table_names
 
     # Verify no build tables exist
     table_names = pds.get_table_names()
-
     for table_name in table_names:
         assert "_temp_" not in table_name
 
