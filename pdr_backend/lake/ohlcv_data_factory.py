@@ -24,7 +24,7 @@ from pdr_backend.lake.plutil import (
 )
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.time_types import UnixTimeMs
-
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 logger = logging.getLogger("ohlcv_data_factory")
 
@@ -111,11 +111,11 @@ class OhlcvDataFactory:
             "Update rawohlcv file at exchange=%s, pair=%s: begin", exch_str, pair_str
         )
 
-        filename = self._rawohlcv_filename(feed)
-        logger.info("filename=%s", filename)
+        dataset_identifier = self.get_dataset_identifier(feed)
+        logger.info("dataset_identifier=%s", dataset_identifier)
 
         assert feed.timeframe
-        st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, filename)
+        st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, dataset_identifier)
         logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
         if st_ut > min(UnixTimeMs.now(), fin_ut):
             logger.info("Given start time, no data to gather. Exit.")
@@ -150,7 +150,9 @@ class OhlcvDataFactory:
             st_ut = UnixTimeMs(newest_ut_value + feed.timeframe.ms)
 
         # output to file
-        save_rawohlcv_file(filename, df)
+        CSVDataStore(self.ss.lake_dir).write(
+            dataset_identifier=dataset_identifier, data=df, schema=TOHLCV_SCHEMA_PL
+        )
 
         # done
         logger.info(
@@ -158,7 +160,7 @@ class OhlcvDataFactory:
         )
 
     def _calc_start_ut_maybe_delete(
-        self, timeframe: ArgTimeframe, filename: str
+        self, timeframe: ArgTimeframe, dataset_identifier: str
     ) -> UnixTimeMs:
         """
         @description
@@ -167,22 +169,26 @@ class OhlcvDataFactory:
 
         @arguments
           timeframe - Timeframe
-          filename - csv file with data. May or may not exist.
+          dataset_identifier - csv file with data. May or may not exist.
 
         @return
           start_ut - timestamp (ut) to start grabbing data for
         """
-        if not os.path.exists(filename):
+        cds = CSVDataStore(self.ss.lake_dir)
+        if not cds.get_folder_exists(dataset_identifier):
             logger.info("No file exists yet, so will fetch all data")
             return UnixTimeMs(self.ss.st_timestamp)
 
         logger.info("File already exists")
-        if not has_data(filename):
+        if not cds.has_data(dataset_identifier):
             logger.info("File has no data, so delete it")
-            os.remove(filename)
+            cds.truncate(dataset_identifier)
             return UnixTimeMs(self.ss.st_timestamp)
 
-        file_ut0, file_utN = oldest_ut(filename), newest_ut(filename)
+        file_ut0, file_utN = cds.get_first_timestamp(
+            dataset_identifier
+        ), cds.get_last_timestamp(dataset_identifier)
+
         logger.info("File starts at: %s", file_ut0.pretty_timestr())
         logger.info("File finishes at: %s", file_utN.pretty_timestr())
 
@@ -191,7 +197,7 @@ class OhlcvDataFactory:
             return UnixTimeMs(file_utN + timeframe.ms)
 
         logger.info("User-specified start < file start, so delete file")
-        os.remove(filename)
+        cds.truncate(dataset_identifier)
         return UnixTimeMs(self.ss.st_timestamp)
 
     def _load_rawohlcv_files(self, fin_ut: int) -> Dict[str, Dict[str, pl.DataFrame]]:
@@ -215,9 +221,10 @@ class OhlcvDataFactory:
             pair_str = str(feed.pair)
             exch_str = str(feed.exchange)
             assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-            filename = self._rawohlcv_filename(feed)
-            cols = TOHLCV_COLS
-            rawohlcv_df = load_rawohlcv_file(filename, cols, st_ut, fin_ut)
+            dataset_identifier = self.get_dataset_identifier(feed)
+            rawohlcv_df = CSVDataStore(self.ss.lake_dir).read(
+                dataset_identifier, st_ut, fin_ut, TOHLCV_SCHEMA_PL
+            )
 
             assert "timestamp" in rawohlcv_df.columns
             assert "datetime" not in rawohlcv_df.columns
@@ -248,3 +255,17 @@ class OhlcvDataFactory:
         basename = f"{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
+
+    def get_dataset_identifier(self, feed: ArgFeed) -> str:
+        """
+        @description
+          Get a unique identifier for the dataset that this factory is working with.
+          This is useful for identifying the dataset in the database.
+
+        @return
+          dataset_identifier -- str
+        """
+        pair_str = str(feed.pair)
+        assert "/" in str(pair_str) or "-" in pair_str, pair_str
+        pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
+        return f"{feed.exchange}_{pair_str}_{feed.timeframe}"

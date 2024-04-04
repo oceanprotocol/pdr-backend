@@ -5,6 +5,7 @@ from polars.type_aliases import SchemaDict
 
 from enforce_typing import enforce_types
 from pdr_backend.lake.base_data_store import BaseDataStore
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 class CSVDataStore(BaseDataStore):
@@ -124,6 +125,11 @@ class CSVDataStore(BaseDataStore):
                 os.rename(last_file_path, new_file_path)
 
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
+
+        # check if the folder exists
+        if not self.get_folder_exists(dataset_identifier):
+            folder_path = self._get_folder_path(dataset_identifier)
+            os.makedirs(folder_path, exist_ok=True)
 
         chunks = [
             data.slice(i, min(max_row_count, len(data) - i))
@@ -384,11 +390,11 @@ class CSVDataStore(BaseDataStore):
         if len(file_path):
             to_value = self._get_to_value(file_path)
             if to_value is not None and to_value > 0:
-                return to_value
+                return UnixTimeMs(to_value)
 
             # read the last record from the file
             last_file = pl.read_csv(file_path)
-            return int(last_file["timestamp"][-1])
+            return UnixTimeMs(int(last_file["timestamp"][-1]))
         return None
 
     def _get_last_file_row_count(self, dataset_identifier: str) -> Optional[int]:
@@ -415,3 +421,41 @@ class CSVDataStore(BaseDataStore):
         row_count = last_file.shape[0]
 
         return row_count
+
+    def get_first_timestamp(self, dataset_identifier: str) -> Optional[int]:
+        """
+        Returns the first timestamp from the first csv file in the folder
+        corresponding to the given dataset_identifier.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        @returns:
+            Optional[int] - first timestamp from the csv files
+        """
+        folder_path = self._get_folder_path(dataset_identifier)
+        file_names = os.listdir(folder_path)
+        if len(file_names) == 0:
+            return None
+
+        file_path = os.path.join(folder_path, file_names[0])
+        return UnixTimeMs(self._get_from_value(file_path))
+
+    def get_folder_exists(self, dataset_identifier: str) -> bool:
+        """
+        Returns True if the folder corresponding to the given dataset_identifier exists.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        @returns:
+            bool - True if the folder exists
+        """
+        return os.path.exists(self._get_folder_path(dataset_identifier))
+
+    def truncate(self, dataset_identifier: str):
+        """
+        Deletes all the csv files in the folder corresponding
+        to the given dataset_identifier.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        """
+        folder_path = self._get_folder_path(dataset_identifier)
+        for file_name in os.listdir(folder_path):
+            os.remove(os.path.join(folder_path, file_name))

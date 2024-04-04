@@ -14,15 +14,13 @@ from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import (
     concat_next_df,
-    initialize_rawohlcv_df,
-    load_rawohlcv_file,
-    save_rawohlcv_file,
+    initialize_rawohlcv_df
 )
 from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan
 from pdr_backend.util.time_types import UnixTimeMs
-
+from pdr_backend.lake.csv_data_store import CSVDataStore
 
 MS_PER_5M_EPOCH = 300000
 
@@ -79,11 +77,11 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     #   it's ok for input pair_str to have '/' or '-', it handles it
     #   but the output filename should not have '/' its pairstr part
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
-    filename = factory._rawohlcv_filename(feed)
+    identifier = factory.get_dataset_identifier(feed)
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
-    filename2 = factory._rawohlcv_filename(feed)
-    assert filename == filename2
-    assert "ETH-USDT" in filename and "ETH/USDT" not in filename
+    identifier2 = factory.get_dataset_identifier(feed)
+    assert identifier == identifier2
+    assert "ETH-USDT" in identifier and "ETH/USDT" not in identifier2
 
     # work 1: new rawohlcv file
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
@@ -92,11 +90,11 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
 
-    def _uts_in_rawohlcv_file(filename: str) -> List[int]:
-        df = load_rawohlcv_file(filename)
+    def _uts_in_rawohlcv_file(identifier: str) -> List[int]:
+        df = CSVDataStore(ss.lake_dir).read_all(identifier)
         return df["timestamp"].to_list()
 
-    uts: List[int] = _uts_in_rawohlcv_file(filename)
+    uts: List[int] = _uts_in_rawohlcv_file(identifier)
     if isinstance(n_uts, int):
         assert len(uts) == n_uts
     elif n_uts == ">1K":
@@ -114,7 +112,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
-    uts2 = _uts_in_rawohlcv_file(filename)
+    uts2 = _uts_in_rawohlcv_file(identifier)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
     # work 3: two more epochs at beginning *and* end --> it'll create new file
@@ -126,7 +124,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
     with patch("pdr_backend.cli.arg_exchange.ArgExchange.exchange_class") as mock:
         mock.return_value = FakeExchange()
         factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
-    uts3 = _uts_in_rawohlcv_file(filename)
+    uts3 = _uts_in_rawohlcv_file(identifier)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
 
@@ -206,7 +204,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
 
     # setup
     _, factory = _lake_ss_1feed(tmpdir, "binanceus BTC/USDT h 5m")
-    filename = factory._rawohlcv_filename(
+    dataset_identifier = factory.get_dataset_identifier(
         ArgFeed("binanceus", "high", "BTC/USDT", "5m")
     )
     st_ut = factory.ss.st_timestamp
@@ -223,16 +221,20 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         df = initialize_rawohlcv_df()
         next_df = pl.DataFrame(raw_tohlcv_data, schema=TOHLCV_SCHEMA_PL)
         df = concat_next_df(df, next_df)
-        save_rawohlcv_file(filename, df)
+        CSVDataStore(factory.ss.lake_dir).write(dataset_identifier, df)
 
     factory._update_rawohlcv_files_at_feed = mock_update
 
     # test 1: get mergedohlcv_df via several low-level instrs, as get_mergedohlcv_df() does
     factory._update_rawohlcv_files(fin_ut)
-    assert os.path.getsize(filename) > 500
+    folder_path = CSVDataStore(factory.ss.lake_dir)._get_folder_path(dataset_identifier)
+    sum_file_sizes = sum(
+        [os.path.getsize(f"{folder_path}/{f}") for f in os.listdir(folder_path)]
+    )
+    assert sum_file_sizes > 500
 
-    df0 = pl.read_parquet(filename, columns=["high"])
-    df1 = load_rawohlcv_file(filename, ["high"], st_ut, fin_ut)
+    df0 = CSVDataStore(factory.ss.lake_dir).read_all(dataset_identifier)
+    df1 = CSVDataStore(factory.ss.lake_dir).read(dataset_identifier, st_ut, fin_ut)
     rawohlcv_dfs = (  # pylint: disable=assignment-from-no-return
         factory._load_rawohlcv_files(fin_ut)
     )
@@ -240,7 +242,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
 
     assert len(df0) == len(df1) == len(df1["high"]) == len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
-        assert all_nan(df0)
+        assert all_nan(df0["high"])
         assert all_nan(df1["high"])
         assert all_nan(mergedohlcv_df["binanceus:BTC/USDT:high"])
     else:
@@ -249,11 +251,15 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
         assert not has_nan(mergedohlcv_df["binanceus:BTC/USDT:high"])
 
     # cleanup for test 2
-    os.remove(filename)
+    CSVDataStore(factory.ss.lake_dir).truncate(dataset_identifier)
 
     # test 2: get mergedohlcv_df via a single high-level instr
     mergedohlcv_df = factory.get_mergedohlcv_df()
-    assert os.path.getsize(filename) > 500
+    folder_path = CSVDataStore(factory.ss.lake_dir)._get_folder_path(dataset_identifier)
+    sum_file_sizes = sum(
+        [os.path.getsize(f"{folder_path}/{f}") for f in os.listdir(folder_path)]
+    )
+    assert sum_file_sizes > 500
     assert len(mergedohlcv_df) == n_pts
     if np.isnan(ohlcv_val):
         assert all_nan(mergedohlcv_df["binanceus:BTC/USDT:high"])
