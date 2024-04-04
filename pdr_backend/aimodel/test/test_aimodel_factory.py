@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import numpy as np
-from altair import LayerChart
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
@@ -248,8 +247,7 @@ def _test_aimodel_factory_nvars_varimps(n: int):
     plot_data = Mock(spec=AimodelPlotdata)
     plot_data.model = Mock()
     plot_data.model.importance_per_var.return_value = (imps_avg, imps_stddev)
-    plot_data.colnames = Mock()
-    plot_data.colnames.return_value = varnames
+    plot_data.colnames = varnames
 
     figure = plot_aimodel_varimps(plot_data)
-    assert isinstance(figure, LayerChart)
+    assert isinstance(figure, Figure)
