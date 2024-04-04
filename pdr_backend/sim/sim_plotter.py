@@ -4,9 +4,9 @@ import pickle
 import time
 from datetime import datetime
 
-import altair as alt
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
@@ -88,23 +88,16 @@ class SimPlotter:
         df = pd.DataFrame(y00, columns=[y])
         df["time"] = range(len(y00))
 
-        chart = (
-            alt.Chart(df, title=s)
-            .mark_line()
-            .encode(
-                x="time",
-                y=y,
-            )
-            .interactive()
+        fig = go.Figure(
+            go.Scatter(x=df["time"], y=df[y], mode="lines", name="predictoor profit")
         )
 
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
-        )
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
 
-        return chart + ref_line
+        return fig
 
     @enforce_types
     def plot_trader_profit_vs_time(self):
@@ -114,23 +107,17 @@ class SimPlotter:
         y = "trader profit (USD)"
         df = pd.DataFrame(y10, columns=[y])
         df["time"] = range(len(y10))
-        chart = (
-            alt.Chart(df, title=s)
-            .mark_line()
-            .encode(
-                x="time",
-                y=y,
-            )
-            .interactive()
+
+        fig = go.Figure(
+            go.Scatter(x=df["time"], y=df[y], mode="lines", name="trader profit")
         )
 
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
-        )
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
 
-        return chart + ref_line
+        return fig
 
     @enforce_types
     def plot_accuracy_vs_time(self):
@@ -145,30 +132,35 @@ class SimPlotter:
         df["acc_us"] = [100 * a for a in clm.acc_us]
         df["time"] = range(len(clm.acc_ests))
 
-        chart = (
-            alt.Chart(df, title=s)
-            .mark_line()
-            .encode(x="time", y=y, color=alt.value("darkblue"))
+        fig = go.Figure(
+            [
+                go.Scatter(
+                    x=df["time"],
+                    y=df["acc_us"],
+                    mode="lines",
+                    fill=None,
+                    name="accuracy upper bound",
+                ),
+                go.Scatter(
+                    x=df["time"],
+                    y=df["acc_ls"],
+                    mode="lines",
+                    fill="tonexty",
+                    name="accuracy lower bound",
+                ),
+            ]
         )
 
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [50]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
-        )
+        fig.update_layout(showlegend=False)
 
-        area_chart = (
-            alt.Chart(df)
-            .mark_area()
-            .encode(
-                x="time",
-                y=alt.Y("acc_ls", title=y),
-                y2="acc_us",
-                color=alt.value("lightblue"),
-            )
-        )
+        fig.add_trace(go.Scatter(x=df["time"], y=df[y], mode="lines", name="accuracy"))
 
-        return area_chart + ref_line + chart
+        fig.add_hline(y=50, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
+
+        return fig
 
     @enforce_types
     def plot_f1_precision_recall_vs_time(self):
@@ -183,32 +175,25 @@ class SimPlotter:
         df["recalls"] = clm.recalls
         df["time"] = range(len(clm.f1s))
 
-        data_long = pd.melt(
-            df,
-            id_vars=["time"],
-            value_vars=["f1", "precisions", "recalls"],
-            var_name="var",
-            value_name="f1,precisions,recalls",
+        fig = go.Figure(
+            go.Scatter(x=df["time"], y=df["f1"], mode="lines", name="f1"),
         )
 
-        chart = (
-            alt.Chart(data_long)
-            .mark_line()
-            .encode(
-                x="time",
-                y=alt.Y("f1,precisions,recalls", title=y),
-                color="var:N",  # Use the category field for color encoding
-            )
-            .properties(title=s)
+        fig.add_traces(
+            [
+                go.Scatter(
+                    x=df["time"], y=df["precisions"], mode="lines", name="precision"
+                ),
+                go.Scatter(x=df["time"], y=df["recalls"], mode="lines", name="recall"),
+            ]
         )
 
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0.5]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
-        )
+        fig.add_hline(y=0.5, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
 
-        return chart + ref_line
+        return fig
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
@@ -219,15 +204,16 @@ class SimPlotter:
         df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
         df["prob(up)"] = self.st.probs_up
 
-        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
-
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
+        fig = go.Figure(
+            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="pdr profit")
         )
 
-        return chart + ref_line
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="prob(up)")
+        fig.update_yaxes(title=y)
+
+        return fig
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
@@ -238,15 +224,16 @@ class SimPlotter:
         df = pd.DataFrame(self.st.trader_profits_USD, columns=[y])
         df["prob(up)"] = self.st.probs_up
 
-        chart = alt.Chart(df, title=s).mark_circle().encode(x="prob(up)", y=y)
-
-        ref_line = (
-            alt.Chart(pd.DataFrame({y: [0]}))
-            .mark_rule(color="grey", strokeDash=[10, 10])
-            .encode(y=y)
+        fig = go.Figure(
+            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="trader profit")
         )
 
-        return chart + ref_line
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="prob(up)")
+        fig.update_yaxes(title=y)
+
+        return fig
 
 
 def file_age_in_seconds(pathname):
