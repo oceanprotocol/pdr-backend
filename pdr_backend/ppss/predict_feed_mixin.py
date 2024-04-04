@@ -28,6 +28,10 @@ class PredictFeedMixin:
     def feeds(self) -> PredictFeeds:
         return PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
     
+    @property
+    def minimum_timeframe_seconds(self) -> int:
+        return min([feed.predict.timeframe.s for feed in self.feeds])
+
     def get_predict_feed(self, pair, timeframe, exchange) -> PredictFeed:
         for predict_feed in self.feeds:
             p = predict_feed.predict
