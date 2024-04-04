@@ -12,10 +12,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.lake.plutil import (
-    concat_next_df,
-    initialize_rawohlcv_df
-)
+from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df
 from pdr_backend.lake.test.resources import _lake_ss_1feed, _lake_ss
 from pdr_backend.util.constants import S_PER_MIN
 from pdr_backend.util.mathutil import all_nan, has_nan

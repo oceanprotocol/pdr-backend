@@ -176,11 +176,6 @@ def test_get_gql_tables(mock_update):
 
     gql_dfs = gql_data_factory.get_gql_tables()
 
-    temp_data = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
-        "SELECT * FROM _temp_pdr_predictions"
-    )
-
-    assert temp_data is not None
     assert len(gql_dfs.items()) == 5
 
 

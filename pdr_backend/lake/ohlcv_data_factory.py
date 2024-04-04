@@ -12,10 +12,7 @@ from pdr_backend.lake.constants import (
 )
 from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
-from pdr_backend.lake.plutil import (
-    concat_next_df,
-    initialize_rawohlcv_df
-)
+from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.csv_data_store import CSVDataStore
