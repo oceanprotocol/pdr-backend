@@ -2,10 +2,7 @@ import time
 
 import streamlit
 
-from pdr_backend.aimodel.aimodel_plotter import (
-    plot_aimodel_response,
-    plot_aimodel_varimps,
-)
+from pdr_backend.aimodel import aimodel_plotter
 from pdr_backend.sim.sim_plotter import SimPlotter
 
 streamlit.set_page_config(layout="wide")
@@ -36,51 +33,14 @@ def load_canvas_on_state(ts):
     titletext = f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state"
     title.title(titletext)
 
-    canvas["pdr_profit_vs_time"].altair_chart(
-        sim_plotter.plot_pdr_profit_vs_time(),
-        use_container_width=True,
-        theme="streamlit",
-    )
+    for key in canvas:
+        if not key.startswith("aimodel"):
+            fig = getattr(sim_plotter, f"plot_{key}")()
+        else:
+            func_name = getattr(aimodel_plotter, f"plot_{key}")
+            fig = func_name(sim_plotter.aimodel_plotdata)
 
-    canvas["trader_profit_vs_time"].altair_chart(
-        sim_plotter.plot_trader_profit_vs_time(),
-        use_container_width=True,
-        theme="streamlit",
-    )
-
-    canvas["accuracy_vs_time"].altair_chart(
-        sim_plotter.plot_accuracy_vs_time(), use_container_width=True, theme="streamlit"
-    )
-
-    canvas["f1_precision_recall_vs_time"].altair_chart(
-        sim_plotter.plot_f1_precision_recall_vs_time(),
-        use_container_width=True,
-        theme="streamlit",
-    )
-
-    canvas["pdr_profit_vs_ptrue"].altair_chart(
-        sim_plotter.plot_pdr_profit_vs_ptrue(),
-        use_container_width=True,
-        theme="streamlit",
-    )
-
-    canvas["trader_profit_vs_ptrue"].altair_chart(
-        sim_plotter.plot_trader_profit_vs_ptrue(),
-        use_container_width=True,
-        theme="streamlit",
-    )
-
-    canvas["aimodel_varimps"].altair_chart(
-        plot_aimodel_varimps(sim_plotter.aimodel_plotdata),
-        use_container_width=True,
-        theme="streamlit",
-    )
-
-    canvas["aimodel_response"].plotly_chart(
-        plot_aimodel_response(sim_plotter.aimodel_plotdata),
-        use_container_width=True,
-        theme="streamlit",
-    )
+        canvas[key].plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
 while True:
