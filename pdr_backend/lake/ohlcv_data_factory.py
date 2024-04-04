@@ -9,18 +9,12 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.lake.constants import (
     TOHLCV_SCHEMA_PL,
-    TOHLCV_COLS,
 )
 from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
-    has_data,
-    initialize_rawohlcv_df,
-    load_rawohlcv_file,
-    newest_ut,
-    oldest_ut,
-    save_rawohlcv_file,
+    initialize_rawohlcv_df
 )
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.util.time_types import UnixTimeMs
