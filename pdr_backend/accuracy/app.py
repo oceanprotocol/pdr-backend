@@ -1,7 +1,12 @@
 import json
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.etl import ETL
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 import logging
 import threading
 from datetime import datetime, timedelta
+from pdr_backend.lake.table_pdr_slots import slots_table_name
 from typing import Any, Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
@@ -12,7 +17,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots, PredictSlot
+from pdr_backend.subgraph.subgraph_slot import PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
 
 app = Flask(__name__)
@@ -152,11 +157,9 @@ def aggregate_statistics(
 
 @enforce_types
 def calculate_statistics_for_all_assets(
-    asset_ids: List[str],
+    all_slots: List[PredictSlot],
     contracts_list: List[ContractIdAndSPE],
-    start_ts_param: UnixTimeS,
     end_ts_param: UnixTimeS,
-    network: str = "mainnet",
 ) -> Dict[str, Dict[str, Any]]:
     """
     Calculates statistics for all provided assets based on
@@ -172,10 +175,13 @@ def calculate_statistics_for_all_assets(
         A dictionary mapping asset IDs to another dictionary with
         calculated statistics such as average accuracy and total staked amounts.
     """
+    slots_by_asset = {}
 
-    slots_by_asset = fetch_slots(
-        start_ts_param, end_ts_param, asset_ids, 1000, 0, network
-    )
+    for slot in all_slots:
+        slot_id = slot.ID.split("-")[0]
+        if slot_id not in slots_by_asset:
+            slots_by_asset[slot_id] = []
+        slots_by_asset[slot_id].append(slot)
 
     overall_stats = {}
     for asset_id, slots in slots_by_asset.items():
@@ -190,6 +196,7 @@ def calculate_statistics_for_all_assets(
             if correct_predictions_count == 0
             else (correct_predictions_count / slots_evaluated) * 100
         )
+        print('herrre last')
 
         # filter contracts to get the contract with the current asset id
         contract_item = next(
@@ -207,6 +214,9 @@ def calculate_statistics_for_all_assets(
             "total_staked_yesterday": staked_yesterday,
             "total_staked_today": staked_today,
         }
+
+        print('herrre last')
+        print(overall_stats)
 
     return overall_stats
 
@@ -239,12 +249,27 @@ def calculate_timeframe_timestamps(
         # else timedelta(days=1)
     )
     start_ts = UnixTimeS(int((datetime.utcnow() - time_delta).timestamp()))
+    print(start_ts, end_ts)
 
     return start_ts, end_ts
 
+@enforce_types
+def load_data(etl: ETL):
+    ppss = PPSS(
+        yaml_filename='./ppss.yaml',
+        network='sapphire-mainnet',
+        nested_override_args=None,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    while True:
+        etl.do_etl()
+        threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
+
 
 @enforce_types
-def save_statistics_to_file():
+def transform_slots_to_statistics(all_slots: List[PredictSlot]):
     """
     Periodically fetches and saves statistical data to a JSON file.
 
@@ -272,7 +297,7 @@ def save_statistics_to_file():
             "seconds_per_epoch": 3600,
         },
     ]
-
+    
     contract_addresses = get_all_contract_ids_by_owner(
         "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
     )
@@ -282,56 +307,38 @@ def save_statistics_to_file():
         network_param,
     )
 
-    while True:
-        try:
-            output = []
-
-            for statistic_type in statistic_types:
-                seconds_per_epoch = statistic_type["seconds_per_epoch"]
-                contracts_list = list(
-                    filter(
-                        lambda item, spe=seconds_per_epoch: int(
-                            item["seconds_per_epoch"]
-                        )
-                        == spe,
-                        contracts_list_unfiltered,
-                    )
+    for statistic_type in statistic_types:
+        seconds_per_epoch = statistic_type["seconds_per_epoch"]
+        contracts_list = list(
+            filter(
+                lambda item, spe=seconds_per_epoch: int(
+                    item["seconds_per_epoch"]
                 )
+                == spe,
+                contracts_list_unfiltered,
+            )
+        )
+        start_ts_param, end_ts_param = calculate_timeframe_timestamps(
+            statistic_type["alias"]
+        )
+        #contract_ids = [contract_item["ID"] for contract_item in contracts_list]
 
-                start_ts_param, end_ts_param = calculate_timeframe_timestamps(
-                    statistic_type["alias"]
-                )
+        print("hhhhhhh")
 
-                contract_ids = [contract_item["ID"] for contract_item in contracts_list]
+        statistics = calculate_statistics_for_all_assets(
+            all_slots,
+            contracts_list,
+            end_ts_param,
+        )
 
-                statistics = calculate_statistics_for_all_assets(
-                    contract_ids,
-                    contracts_list,
-                    start_ts_param,
-                    end_ts_param,
-                    network_param,
-                )
+        return statistics
+        print('statistics', statistics)
 
-                output.append(
-                    {
-                        "alias": statistic_type["alias"],
-                        "statistics": statistics,
-                    }
-                )
-
-            with open(JSON_FILE_PATH, "w") as f:
-                json.dump(output, f)
-
-            logger.info("Data saved to JSON")
-        except Exception as e:
-            logger.error("Error: %s", e)
-
-        threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
-
+        
 
 @enforce_types
 @app.route("/statistics", methods=["GET"])
-def serve_statistics_from_file():
+def serve_statistics_from_ETL():
     """
     Serves statistical data from a JSON file via a GET request.
 
@@ -341,22 +348,34 @@ def serve_statistics_from_file():
 
     If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
     """
+    print('herre')
+    while True:
+        try:
+            slots_table = PersistentDataStore("./lake_data").query_data(
+        f"""
+        SELECT * FROM {slots_table_name}""")
+            print('slots table', slots_table)
+            all_slots:List[PredictSlot] = []
 
-    try:
-        with open(JSON_FILE_PATH, "r") as f:
-            data = json.load(f)
+            # Iterate over rows and create objects
+            for row in slots_table.rows(named=True):
+                slot = PredictSlot(row['ID'], row['timestamp'], row['slot'], row['truevalue'], row['roundSumStakesUp'], row['roundSumStakes'])
+                all_slots.append(slot)
+
+            data = transform_slots_to_statistics(all_slots)
+            print('response data', data)
             response = jsonify(data)
             response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
             return response
-    except Exception as e:
-        response = jsonify({"error": "Internal Server Error", "message": str(e)})
-        response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
-        return response, 500
+        except Exception as e:
+            response = jsonify({"error": "Internal Server Error", "message": str(e)})
+            response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
+            return response, 500
 
 
 if __name__ == "__main__":
     # Start the thread to save predictions data to a file every 5 minutes
-    thread = threading.Thread(target=save_statistics_to_file)
+    thread = threading.Thread(target=load_data)
     thread.start()
 
     app.run(debug=False)

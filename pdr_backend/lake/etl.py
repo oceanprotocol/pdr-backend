@@ -59,7 +59,6 @@ class ETL:
         self.raw_table_names = [
             payouts_table_name,
             predictions_table_name,
-            subscriptions_table_name,
             truevals_table_name,
             slots_table_name,
         ]
@@ -218,10 +217,12 @@ class ETL:
             self.raw_table_names, TableType.TEMP
         ).values()
 
+        fin_timestamp = datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M") if self.ppss.lake_ss.fin_timestr != "now" else datetime.now().strftime("%Y-%m-%d_%H:%M")
+
         to_timestamp = (
             min(to_values)
             if None not in to_values
-            else datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
+            else datetime.strptime(fin_timestamp, "%Y-%m-%d_%H:%M")
         )
 
         return from_timestamp, to_timestamp

@@ -220,6 +220,8 @@ class GQLDataFactory:
             table.table_name
         )
 
+        print(self.ppss.lake_ss.st_timestamp)
+
         start_ut = (
             last_timestamp
             if last_timestamp is not None
