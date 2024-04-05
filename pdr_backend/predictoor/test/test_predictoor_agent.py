@@ -275,10 +275,10 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
     ],
 )
 def test_balance_check(
-    tmpdir, monkeypatch, OCEAN, ROSE, expected
+    tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitter_mgr
 ):
     mock_model = MockModel()
-    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
     mock_model.aimodel_ss = aimodel_ss
