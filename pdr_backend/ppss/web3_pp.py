@@ -329,7 +329,10 @@ class _MockEthWithTracking:
         return Mock()
     
     def wait_for_transaction_receipt(self, tx_hash):
-        return Mock()
+        m = {}
+        m["status"] = 1
+        m["transactionHash"] = tx_hash
+        return m
     
     def chain_id(self):
         return 8996
