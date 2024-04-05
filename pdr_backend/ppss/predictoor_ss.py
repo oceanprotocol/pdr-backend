@@ -121,6 +121,7 @@ def example_predict_feeds() -> list:
 def predictoor_ss_test_dict(
     predict_feeds: Optional[List] = None,
     input_feeds: List[str] = None,
+    pred_submitter_mgr: Optional[str] = "",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     predict_feeds = predict_feeds or example_predict_feeds()
@@ -130,6 +131,7 @@ def predictoor_ss_test_dict(
         "feeds": predict_feeds,
         "approach": 1,
         "stake_amount": 1,
+        "pred_submitter_mgr": pred_submitter_mgr,
         "sim_only": {
             "others_stake": 2313,
             "others_accuracy": 0.50001,
