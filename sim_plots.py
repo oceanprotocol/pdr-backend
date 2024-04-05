@@ -1,4 +1,7 @@
+import os
+import sys
 import time
+from pathlib import Path
 
 import streamlit
 
@@ -8,6 +11,7 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 streamlit.set_page_config(layout="wide")
 
 title = streamlit.empty()
+subtitle = streamlit.empty()
 inputs = streamlit.empty()
 c1, c2, c3 = streamlit.columns((1, 1, 2))
 c4, c5 = streamlit.columns((1, 1))
@@ -29,6 +33,15 @@ last_ts = None
 sim_plotter = SimPlotter()
 
 
+def get_latest_state_id():
+    path = sorted(Path("sim_state").iterdir(), key=os.path.getmtime)[-1]
+    return str(path).replace("sim_state/", "")
+
+
+state_id = sys.argv[1] if len(sys.argv) > 1 else get_latest_state_id()
+subtitle.markdown(f"Simulation ID: {state_id}")
+
+
 def load_canvas_on_state(ts):
     titletext = f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state"
     title.title(titletext)
@@ -45,7 +58,7 @@ def load_canvas_on_state(ts):
 
 while True:
     try:
-        sim_plotter.load_state()
+        sim_plotter.load_state(state_id)
         break
     except Exception as e:
         time.sleep(3)
@@ -54,7 +67,7 @@ while True:
 
 while True:
     try:
-        st, new_ts = sim_plotter.load_state()
+        st, new_ts = sim_plotter.load_state(state_id)
     except EOFError:
         time.sleep(1)
         continue
@@ -69,6 +82,6 @@ while True:
     if last_ts == "final":
         snapshots = SimPlotter.available_snapshots()
         timestamp = inputs.select_slider("Go to snapshot", snapshots, value="final")
-        st, new_ts = sim_plotter.load_state(timestamp)
+        st, new_ts = sim_plotter.load_state(state_id, timestamp)
         load_canvas_on_state(timestamp)
         break
