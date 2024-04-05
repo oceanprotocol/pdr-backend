@@ -178,6 +178,7 @@ def mock_feed_ppss(
     pair,
     network: Optional[str] = None,
     tmpdir=None,
+    pred_submitter_mgr: Optional[str] = None,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
     ppss = mock_ppss(
@@ -189,6 +190,7 @@ def mock_feed_ppss(
         ],
         network,
         tmpdir,
+        pred_submitter_mgr=pred_submitter_mgr
     )
     return (feed, ppss)
 
@@ -200,6 +202,7 @@ def mock_ppss(
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
     fin_timestr: Optional[str] = "2023-06-21",
+    pred_submitter_mgr: Optional[str] = None,
 ) -> PPSS:
     network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -220,7 +223,7 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "predictoor_ss")
-    d = predictoor_ss_test_dict(feeds)
+    d = predictoor_ss_test_dict(predict_feeds=feeds, pred_submitter_mgr=pred_submitter_mgr)
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")
