@@ -20,7 +20,7 @@ INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
-def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
+def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr=None):
     """
     @description
       Initialize the agent, and return it along with related info
@@ -56,7 +56,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr)
 
 
 @enforce_types
-def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
+def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr=None):
     """
     @description
       Initialize the agent, and return it along with related info
