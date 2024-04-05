@@ -158,7 +158,7 @@ class MockModel:
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter_mgr):
     """
     @description
       Test calc_stakes2() on 1 feed.
@@ -181,14 +181,15 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
     ):
 
         # initialize agent
-        _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch)
+        _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
         assert aimodel_ss.n_feeds == 1
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes2()
+        feed = ppss.predictoor_ss.feeds[0]
+        agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3
