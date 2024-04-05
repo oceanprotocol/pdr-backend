@@ -1,3 +1,4 @@
+from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -24,17 +25,17 @@ from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
-def test_predictoor_agent_main1(tmpdir, monkeypatch):
-    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
+def test_predictoor_agent_main1(tmpdir, monkeypatch, pred_submitter_mgr):
+    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
 
 @enforce_types
-def test_predictoor_agent_main2(tmpdir, monkeypatch):
-    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch)
+def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
+    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
 
 @enforce_types
-def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
+def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
     """
     @description
         Run the agent for a while, and then do some basic sanity checks.
@@ -49,8 +50,9 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
     ):
-        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
+        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch, pred_submitter_mgr=pred_submitter_mgr.contract_address)
         assert ppss.predictoor_ss.approach == approach
+        ppss.predictoor_ss.d["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
         # now we're done the mocking, time for the real work!!
 
         # real work: main iterations
@@ -88,15 +90,17 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
 
 
 @enforce_types
-def test_predictoor_agent_init_empty():
+def test_predictoor_agent_init_empty(pred_submitter_mgr):
     """
     @description
       Basic test: when there's no feeds, does it complain?
     """
     # test with no feeds
+    pred_submitter_mgr_addr = pred_submitter_mgr.contract_address
     mock_ppss_empty = MagicMock(spec=PPSS)
     mock_ppss_empty.predictoor_ss = MagicMock(spec=PredictoorSS)
-    mock_ppss_empty.predictoor_ss.get_feed_from_candidates.return_value = None
+    mock_ppss_empty.predictoor_ss.filter_feeds_from_candidates.return_value = []
+    mock_ppss_empty.predictoor_ss.pred_submitter_mgr = pred_submitter_mgr_addr
     mock_ppss_empty.web3_pp = MagicMock(spec=Web3PP)
     mock_ppss_empty.web3_pp.query_feed_contracts.return_value = {}
 
