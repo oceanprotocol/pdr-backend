@@ -204,7 +204,7 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitter_mgr):
     """
     @description
       Test calc_stakes2(), when X has >1 input feed
@@ -220,7 +220,7 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
     ):
 
         # initialize agent
-        feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+        feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
         assert ppss.predictoor_ss.approach == 2
 
         assert len(feeds) == 2
@@ -230,7 +230,8 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes2()
+        feed = ppss.predictoor_ss.feeds[0]
+        agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3
