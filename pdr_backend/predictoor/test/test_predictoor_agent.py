@@ -244,63 +244,47 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 
 @enforce_types
 @pytest.mark.parametrize(
-    "up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected",
+    "OCEAN, ROSE, expected",
     [
         (
             Eth(100).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(2).to_wei(),
             True,
         ),  # All balances are sufficient
         (
             Eth(0).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(2).to_wei(),
             False,
-        ),  # Up OCEAN balance too low
+        ),  # OCEAN balance too low
         (
             Eth(100).to_wei(),
             Eth(0).to_wei(),
-            Eth(2).to_wei(),
-            Eth(2).to_wei(),
             False,
-        ),  # Down OCEAN balance too low
+        ),  # ROSE balance too low
         (
-            Eth(100).to_wei(),
-            Eth(100).to_wei(),
             Eth(0).to_wei(),
-            Eth(2).to_wei(),
-            False,
-        ),  # Up ROSE balance too low
-        (
-            Eth(100).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(0).to_wei(),
             False,
-        ),  # Down ROSE balance too low
+        ),  # Both balances too low
     ],
 )
 def test_balance_check(
-    tmpdir, monkeypatch, up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected
+    tmpdir, monkeypatch, OCEAN, ROSE, expected
 ):
     mock_model = MockModel()
     _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
-    # do prediction
     mock_model.aimodel_ss = aimodel_ss
     agent = PredictoorAgent(ppss)
 
     mock_OCEAN = Mock()
-    mock_OCEAN.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
+    mock_OCEAN.balanceOf.return_value = OCEAN
     mock_ROSE = Mock()
-    mock_ROSE.balanceOf.side_effect = [up_ROSE, down_ROSE]
+    mock_ROSE.balanceOf.return_value = ROSE
 
     agent.ppss.web3_pp = Mock(spec=Web3PP)
     agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
     agent.ppss.web3_pp.NativeToken = mock_ROSE
 
-    assert agent.check_balances() == expected
+    assert agent.check_balances(Eth(100)) == expected
