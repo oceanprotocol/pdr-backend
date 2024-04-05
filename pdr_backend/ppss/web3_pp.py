@@ -330,6 +330,9 @@ class _MockEthWithTracking:
     
     def wait_for_transaction_receipt(self, tx_hash):
         return Mock()
+    
+    def chain_id(self):
+        return 8996
 
 @enforce_types
 class _MockFeedContractWithTracking:
