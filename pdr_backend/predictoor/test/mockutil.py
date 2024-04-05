@@ -20,7 +20,7 @@ INIT_BLOCK_NUMBER = 13
 
 
 @enforce_types
-def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
+def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
     """
     @description
       Initialize the agent, and return it along with related info
@@ -35,7 +35,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
     feed, ppss = mock_feed_ppss(
-        "5m", "binanceus", "BTC/USDT", network="development", tmpdir=tmpdir
+        "5m", "binanceus", "BTC/USDT", network="development", tmpdir=tmpdir, pred_submitter_mgr=pred_submitter_mgr
     )
     ppss.predictoor_ss.set_approach(approach)
 
@@ -56,7 +56,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
 
 
 @enforce_types
-def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
+def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
     """
     @description
       Initialize the agent, and return it along with related info
@@ -79,12 +79,13 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
         [
             {
                 "predict": f"{exchange} {c}/{quote} c {timescale}",
-                "train_on": f"{exchange} {c}/{quote} c {timescale}",
+                "train_on": [f"{exchange} {c}/{quote} c {timescale}" for c in coins],
             }
             for c in coins
         ],
         network="development",
         tmpdir=tmpdir,
+        pred_submitter_mgr=pred_submitter_mgr
     )
     ppss.predictoor_ss.set_approach(approach)
 
