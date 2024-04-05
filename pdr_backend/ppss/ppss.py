@@ -190,7 +190,7 @@ def mock_feed_ppss(
         ],
         network,
         tmpdir,
-        pred_submitter_mgr=pred_submitter_mgr
+        pred_submitter_mgr=pred_submitter_mgr,
     )
     return (feed, ppss)
 
@@ -223,7 +223,9 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "predictoor_ss")
-    d = predictoor_ss_test_dict(predict_feeds=feeds, pred_submitter_mgr=pred_submitter_mgr)
+    d = predictoor_ss_test_dict(
+        predict_feeds=feeds, pred_submitter_mgr=pred_submitter_mgr
+    )
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")

@@ -21,6 +21,7 @@ from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("predictoor_agent")
 
+
 class PredictionSlotsData:
     def __init__(self):
         self.target_slots = {}
@@ -48,6 +49,7 @@ class PredictionSlotsData:
     @property
     def slots(self):
         return list(self.target_slots.keys())
+
 
 # pylint: disable=too-many-public-methods
 class PredictoorAgent:
@@ -77,7 +79,10 @@ class PredictoorAgent:
 
         # set self.feed
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
-        checksummed_addresses = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in cand_feeds.keys()]
+        checksummed_addresses = [
+            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
+            for addr in cand_feeds.keys()
+        ]
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
@@ -108,7 +113,7 @@ class PredictoorAgent:
             self.take_step()
             if os.getenv("TEST") == "true":
                 break
-    
+
     @enforce_types
     def get_min_epoch_s_left(self):
         min_tf_seconds = self.ppss.predictoor_ss.min_tf_seconds
@@ -126,7 +131,9 @@ class PredictoorAgent:
 
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
-            predict_pair = self.ppss.predictoor_ss.get_predict_feed(feed.pair, feed.timeframe, feed.source)
+            predict_pair = self.ppss.predictoor_ss.get_predict_feed(
+                feed.pair, feed.timeframe, feed.source
+            )
             seconds_per_epoch = feed.seconds_per_epoch
             cur_epoch = contract.get_current_epoch()
             next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
@@ -168,14 +175,17 @@ class PredictoorAgent:
 
         # logger.info(self.status_str())
 
-        slot_data = self.prepare_stakes(
-            list(self.feeds.values())
-        )
+        slot_data = self.prepare_stakes(list(self.feeds.values()))
 
         for target_slot in slot_data.slots:
-            stakes_up, stakes_down, feed_addrs = slot_data.get_predictions_arr(target_slot)
-            feed_addrs = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in feed_addrs]
-            
+            stakes_up, stakes_down, feed_addrs = slot_data.get_predictions_arr(
+                target_slot
+            )
+            feed_addrs = [
+                self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
+                for addr in feed_addrs
+            ]
+
             required_OCEAN = Eth(0)
             for stake in stakes_up + stakes_down:
                 required_OCEAN += stake
@@ -318,7 +328,9 @@ class PredictoorAgent:
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, ycont, _, xrecent = data_f.create_xy(mergedohlcv_df, testshift=0, feed=feed.predict, feeds=feed.train_on)
+        X, ycont, _, xrecent = data_f.create_xy(
+            mergedohlcv_df, testshift=0, feed=feed.predict, feeds=feed.train_on
+        )
 
         curprice = ycont[-1]
         y_thr = curprice
@@ -385,14 +397,21 @@ class PredictoorAgent:
 
         # TODO Implement manager payout here.
         up_pred_addr = self.pred_submitter_mgr.predictoor_up_address()
-        pending_slots = query_pending_payouts(self.ppss.web3_pp.subgraph_url, up_pred_addr)
+        pending_slots = query_pending_payouts(
+            self.ppss.web3_pp.subgraph_url, up_pred_addr
+        )
         contracts = list(pending_slots.keys())
-        contracts_checksummed = [self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in contracts]
+        contracts_checksummed = [
+            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
+            for addr in contracts
+        ]
         slots = list(pending_slots.values())
         slots_flat = [item for sublist in slots for item in sublist]
         slots_unique_flat = list(set(slots_flat))
         print(contracts_checksummed, "---", slots_unique_flat)
-        tx = self.pred_submitter_mgr.get_payout(slots_unique_flat, contracts_checksummed)
+        tx = self.pred_submitter_mgr.get_payout(
+            slots_unique_flat, contracts_checksummed
+        )
         print("Payout tx:", tx["transactionHash"].hex())
 
         # Update previous payouts history to avoid claiming for this epoch again

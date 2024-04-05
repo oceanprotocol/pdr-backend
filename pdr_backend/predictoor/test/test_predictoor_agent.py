@@ -35,7 +35,9 @@ def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
 
 
 @enforce_types
-def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
+def _test_predictoor_agent_main(
+    approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
+):
     """
     @description
         Run the agent for a while, and then do some basic sanity checks.
@@ -50,7 +52,12 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch, pred_su
     with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
     ):
-        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch, pred_submitter_mgr=pred_submitter_mgr.contract_address)
+        _, ppss, _mock_pdr_contract = mock_ppss_1feed(
+            approach,
+            tmpdir,
+            monkeypatch,
+            pred_submitter_mgr=pred_submitter_mgr.contract_address,
+        )
         assert ppss.predictoor_ss.approach == approach
         ppss.predictoor_ss.d["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
         # now we're done the mocking, time for the real work!!
@@ -182,7 +189,9 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
     ):
 
         # initialize agent
-        _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
+        _, ppss, _ = mock_ppss_1feed(
+            2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+        )
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
         assert aimodel_ss.n_feeds == 1
 
@@ -221,7 +230,9 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
     ):
 
         # initialize agent
-        feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
+        feeds, ppss = mock_ppss_2feeds(
+            2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+        )
         assert ppss.predictoor_ss.approach == 2
 
         assert len(feeds) == 2
@@ -275,11 +286,11 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
         ),  # Both balances too low
     ],
 )
-def test_balance_check(
-    tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitter_mgr
-):
+def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitter_mgr):
     mock_model = MockModel()
-    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address)
+    _, ppss = mock_ppss_2feeds(
+        2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+    )
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
     mock_model.aimodel_ss = aimodel_ss

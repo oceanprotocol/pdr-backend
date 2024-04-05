@@ -44,12 +44,12 @@ class PredictFeed:
     @classmethod
     def from_dict(cls, d):
         return cls(d["predict"], d["train_on"])
-    
+
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
         return self.predict.timeframe.ms if self.predict.timeframe else 0
-    
+
     @property
     def quote_str(self) -> str:
         return ArgPair(self.predict.pair).quote_str

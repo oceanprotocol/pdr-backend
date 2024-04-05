@@ -35,7 +35,12 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr=
     monkeypatch.setenv("PRIVATE_KEY", PRIV_KEY)
     monkeypatch.setenv("PRIVATE_KEY2", PRIV_KEY2)
     feed, ppss = mock_feed_ppss(
-        "5m", "binanceus", "BTC/USDT", network="development", tmpdir=tmpdir, pred_submitter_mgr=pred_submitter_mgr
+        "5m",
+        "binanceus",
+        "BTC/USDT",
+        network="development",
+        tmpdir=tmpdir,
+        pred_submitter_mgr=pred_submitter_mgr,
     )
     ppss.predictoor_ss.set_approach(approach)
 
@@ -85,7 +90,7 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
         ],
         network="development",
         tmpdir=tmpdir,
-        pred_submitter_mgr=pred_submitter_mgr
+        pred_submitter_mgr=pred_submitter_mgr,
     )
     ppss.predictoor_ss.set_approach(approach)
 

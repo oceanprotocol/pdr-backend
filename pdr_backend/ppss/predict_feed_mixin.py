@@ -27,7 +27,7 @@ class PredictFeedMixin:
     @property
     def feeds(self) -> PredictFeeds:
         return PredictFeeds.from_array(self.d.get(self.__class__.FEEDS_KEY, []))
-    
+
     @property
     def minimum_timeframe_seconds(self) -> int:
         return min([feed.predict.timeframe.s for feed in self.feeds])
