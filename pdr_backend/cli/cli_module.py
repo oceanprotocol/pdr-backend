@@ -73,8 +73,8 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-
-    sim_engine = SimEngine(ppss)
+    feed = ppss.predictoor_ss.feeds[0]
+    sim_engine = SimEngine(ppss, feed)
     sim_engine.run()
 
 
