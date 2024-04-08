@@ -102,6 +102,14 @@ class PredictFeeds(List[PredictFeed]):
             if feed.predict not in set_pairs:
                 set_pairs.append(feed.predict)
         return set_pairs
+    
+    @property
+    def min_epoch_seconds(self) -> int:
+        epoch = 1e9
+        for feed in self:
+            if feed.predict.timeframe.s < epoch:
+                epoch = feed.predict.timeframe.s
+        return epoch
 
     def to_list(self) -> List[dict]:
         return [feed.to_dict() for feed in self]
