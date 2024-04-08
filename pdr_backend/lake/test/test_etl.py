@@ -25,7 +25,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
-
+from datetime import datetime
 
 @enforce_types
 def get_filtered_timestamps_df(
@@ -447,10 +447,7 @@ def test_get_max_timestamp_values_from(tmpdir):
         == "2023-11-04 00:00:00"
     )
 
-
-@enforce_types
-def test_calc_bronze_start_end_ts(tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
+def _fill_dummy_tables(tmpdir):
     pds = PersistentDataStore(str(tmpdir))
 
     pds.duckdb_conn.execute(
@@ -487,6 +484,11 @@ def test_calc_bronze_start_end_ts(tmpdir):
         """
     )
 
+@enforce_types
+def test_calc_bronze_start_end_ts(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    _fill_dummy_tables(tmpdir)
+
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
 
@@ -507,4 +509,103 @@ def test_calc_bronze_start_end_ts(tmpdir):
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-07_0:00"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "test_bronze_table_1",
+        "test_bronze_table_2",
+        "test_bronze_table_3",
+        "test_bronze_table_4",
+        "test_bronze_table_5",
+
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5"
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-07 00:00:00"
+    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "test_bronze_table_1",
+        "test_bronze_table_2",
+        "test_bronze_table_3",
+    ]
+    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "test_bronze_table_1",
+        "test_bronze_table_2",
+        "test_bronze_table_3",
+        "test_bronze_table_4",
+        "test_bronze_table_5",
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5"
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M") == datetime.now().strftime("%Y-%m-%d %H:%M")
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"

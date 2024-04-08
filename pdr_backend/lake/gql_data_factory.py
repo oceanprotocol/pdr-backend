@@ -37,7 +37,7 @@ from pdr_backend.lake.plutil import _object_list_to_df, get_table_name, TableTyp
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.csv_data_store import CSVDataStore
-
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -155,6 +155,10 @@ class GQLDataFactory:
         pagination_offset = 0
 
         buffer_df = pl.DataFrame([], schema=table.df_schema)
+
+        PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
+            get_table_name(table.table_name, TableType.TEMP), table.df_schema
+        )
 
         while True:
             # call the function

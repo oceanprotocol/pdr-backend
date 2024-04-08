@@ -164,13 +164,31 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        queries = [
-            max_timestamp_query.format(
-                get_table_name(table_name, table_type),
-                get_table_name(table_name, table_type),
+        all_db_tables = PersistentDataStore(self.ppss.lake_ss.lake_dir).get_table_names()
+
+        queries = []
+
+        for table_name in table_names:
+            table_name_with_type = get_table_name(table_name, table_type)
+            if table_name_with_type not in all_db_tables:
+                print(
+                    f"_get_max_timestamp_values_from - Table {table_name} does not exist."
+                )
+                continue
+
+            queries.append(
+                max_timestamp_query.format(
+                    table_name_with_type, table_name_with_type
+                )
             )
-            for table_name in table_names
-        ]
+
+        none_values: Dict[str, Optional[datetime]] = {
+            table_name: None for table_name in table_names
+        }
+
+        if len(queries) == 0:
+            return none_values
+
         final_query = " UNION ALL ".join(queries)
 
         print(f"_get_max_timestamp_values_from - final_query: {final_query}")
@@ -178,15 +196,13 @@ class ETL:
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
         print(f"_get_max_timestamp_values_from - result: {result}")
-        values: Any = {}
 
         if result is None:
-            for table_name in table_names:
-                values[table_name] = None
-
-            return values
+            return none_values
 
         # print(f"_get_max_timestamp_values_from - result: {result}")
+
+        values = {}
 
         for row in result.rows(named=True):
             table_name = row["table_name"]
@@ -195,7 +211,7 @@ class ETL:
 
         return values
 
-    def _calc_bronze_start_end_ts(self):
+    def _calc_bronze_start_end_ts(self, tabletype: TableType = TableType.TEMP):
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -218,10 +234,14 @@ class ETL:
             self.raw_table_names, TableType.TEMP
         ).values()
 
+        fin_timestamp = self.ppss.lake_ss.fin_timestr if self.ppss.lake_ss.fin_timestr != "now" else datetime.now().strftime(
+                "%Y-%m-%d_%H:%M"
+            )
+
         to_timestamp = (
             min(to_values)
             if None not in to_values
-            else datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
+            else datetime.strptime(fin_timestamp, "%Y-%m-%d_%H:%M")
         )
 
         return from_timestamp, to_timestamp

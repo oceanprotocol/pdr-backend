@@ -322,3 +322,21 @@ def test_etl_view(tmpdir):
         f"SELECT max(timestamp) FROM {view_name}"
     ).fetchall()
     assert result[0][0] == "2022-06-01"
+
+def test_create_table_if_not_exists(tmpdir):
+    """
+    Test create table if not exists.
+    """
+    _clean_up_persistent_data_store(tmpdir)
+
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+
+    example_df_schema = example_df.schema
+    # Create table
+    persistent_data_store.create_table_if_not_exists(table_name, example_df_schema)
+
+    # Check if the table is registered
+    check_result, table_name = _table_exists(persistent_data_store, table_name)
+    assert check_result
+
+    _clean_up_persistent_data_store(tmpdir)

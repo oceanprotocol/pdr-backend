@@ -4,6 +4,7 @@ import glob
 from typing import Optional
 import duckdb
 
+from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
 
@@ -26,6 +27,28 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn = duckdb.connect(
             database=f"{self.base_path}/duckdb.db"
         )  # Keep a persistent connection
+
+    @enforce_types
+    def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):
+        """
+        Create a table if it does not exist.
+        @arguments:
+            table_name - The name of the table.
+            schema - The schema of the table.
+        @example:
+            create_table_if_not_exists("people", {
+                "id": pl.Int64,
+                "name": pl.Utf8,
+                "age": pl.Int64
+            })
+        """
+        # check if the table exists
+        table_names = self.get_table_names()
+
+        if table_name not in table_names:
+            # Create an empty DataFrame with the schema
+            empty_df = pl.DataFrame([], schema=schema)
+            self._create_and_fill_table(empty_df, table_name)
 
     @enforce_types
     def _create_and_fill_table(

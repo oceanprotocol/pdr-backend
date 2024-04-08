@@ -410,6 +410,18 @@ def _mock_fetch_gql():
 
     return fetch_function
 
+@pytest.fixture()
+def _mock_fetch_empty_gql():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_first_predictions(0)
+
+    return fetch_function
 
 @pytest.fixture()
 def _gql_datafactory_first_predictions_df():
