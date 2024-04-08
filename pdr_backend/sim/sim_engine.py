@@ -102,9 +102,7 @@ class SimEngine:
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         X, ycont, x_df, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            feed=self.feed.predict
+            mergedohlcv_df, testshift, feed=self.feed.predict
         )
         colnames = list(x_df.columns)
 
@@ -257,9 +255,7 @@ class SimEngine:
         tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
-        self.exchange.create_market_buy_order(
-            self.feed.pair_str, tokcoin_amt_recd
-        )
+        self.exchange.create_market_buy_order(self.feed.pair_str, tokcoin_amt_recd)
 
         logger.info(
             "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
@@ -294,9 +290,7 @@ class SimEngine:
         usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
-        self.exchange.create_market_sell_order(
-            self.feed.pair_str, tokcoin_amt_send
-        )
+        self.exchange.create_market_sell_order(self.feed.pair_str, tokcoin_amt_send)
 
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
