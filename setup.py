@@ -15,7 +15,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.0",
-    "flask==3.0.2",
+    "flask==3.0.3",
     "freezegun==1.4.0",
     "imblearn",
     "matplotlib==3.8.3",
