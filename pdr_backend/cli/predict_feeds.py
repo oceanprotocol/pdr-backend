@@ -58,6 +58,10 @@ class PredictFeed:
     def base_str(self) -> str:
         return ArgPair(self.predict.pair).base_str
 
+    @property
+    def pair_str(self) -> str:
+        return ArgPair(self.predict.pair).pair_str
+
 
 @enforce_types
 class PredictFeeds(List[PredictFeed]):
