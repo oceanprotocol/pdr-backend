@@ -29,15 +29,13 @@ class SimEngine:
     # TODO Update simengine so that it takes a feed as argument in the constructor
     # And uses that feed for all the operations, instead of using the ppss object
     def __init__(self, ppss: PPSS, feed: PredictFeed, multi_id: Optional[str] = None):
-        # preconditions
-        predict_feeds = ppss.predictoor_ss.feeds
+        self.feed = feed
 
         # timeframe doesn't need to match
-        for predict_feed in predict_feeds.feeds:
-            assert (
-                str(predict_feed.exchange),
-                str(predict_feed.pair),
-            ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+        assert (
+            str(feed.predict.exchange),
+            str(feed.predict.pair),
+        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
 
         self.ppss = ppss
 
@@ -49,25 +47,22 @@ class SimEngine:
 
         self.logfile = ""
 
-        self.exchanges = [
-            feed.ccxt_exchange(
-                mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
-                exchange_params=self.ppss.sim_ss.exchange_params,
-            )
-            for feed in predict_feeds.feeds
-        ]
+        self.exchange = feed.predict.ccxt_exchange(
+            mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
+            exchange_params=self.ppss.sim_ss.exchange_params,
+        )
 
         self.multi_id = multi_id
 
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.ppss.predictoor_ss.base_str
+        return self.feed.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.ppss.predictoor_ss.quote_str
+        return self.feed.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -109,6 +104,7 @@ class SimEngine:
         X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
+            feed=self.feed.predict
         )
         colnames = list(x_df.columns)
 
@@ -128,7 +124,7 @@ class SimEngine:
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
+        ut = UnixTimeMs(recent_ut - testshift * self.feed.timeframe_ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
@@ -262,7 +258,7 @@ class SimEngine:
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
-            self.ppss.predictoor_ss.pair_str, tokcoin_amt_recd
+            self.feed.pair_str, tokcoin_amt_recd
         )
 
         logger.info(
@@ -299,7 +295,7 @@ class SimEngine:
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
-            self.ppss.predictoor_ss.pair_str, tokcoin_amt_send
+            self.feed.pair_str, tokcoin_amt_send
         )
 
         logger.info(
