@@ -26,8 +26,6 @@ logger = logging.getLogger("sim_engine")
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
     @enforce_types
-    # TODO Update simengine so that it takes a feed as argument in the constructor
-    # And uses that feed for all the operations, instead of using the ppss object
     def __init__(self, ppss: PPSS, feed: PredictFeed, multi_id: Optional[str] = None):
         self.feed = feed
 

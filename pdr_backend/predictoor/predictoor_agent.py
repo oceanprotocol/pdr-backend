@@ -395,7 +395,6 @@ class PredictoorAgent:
 
         logger.info("Running payouts")
 
-        # TODO Implement manager payout here.
         up_pred_addr = self.pred_submitter_mgr.predictoor_up_address()
         pending_slots = query_pending_payouts(
             self.ppss.web3_pp.subgraph_url, up_pred_addr
