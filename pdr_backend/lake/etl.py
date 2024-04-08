@@ -164,7 +164,9 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        all_db_tables = PersistentDataStore(self.ppss.lake_ss.lake_dir).get_table_names()
+        all_db_tables = PersistentDataStore(
+            self.ppss.lake_ss.lake_dir
+        ).get_table_names()
 
         queries = []
 
@@ -177,9 +179,7 @@ class ETL:
                 continue
 
             queries.append(
-                max_timestamp_query.format(
-                    table_name_with_type, table_name_with_type
-                )
+                max_timestamp_query.format(table_name_with_type, table_name_with_type)
             )
 
         none_values: Dict[str, Optional[datetime]] = {
@@ -234,9 +234,11 @@ class ETL:
             self.raw_table_names, TableType.TEMP
         ).values()
 
-        fin_timestamp = self.ppss.lake_ss.fin_timestr if self.ppss.lake_ss.fin_timestr != "now" else datetime.now().strftime(
-                "%Y-%m-%d_%H:%M"
-            )
+        fin_timestamp = (
+            self.ppss.lake_ss.fin_timestr
+            if self.ppss.lake_ss.fin_timestr != "now"
+            else datetime.now().strftime("%Y-%m-%d_%H:%M")
+        )
 
         to_timestamp = (
             min(to_values)

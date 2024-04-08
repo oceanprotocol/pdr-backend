@@ -323,6 +323,7 @@ def test_etl_view(tmpdir):
     ).fetchall()
     assert result[0][0] == "2022-06-01"
 
+
 def test_create_table_if_not_exists(tmpdir):
     """
     Test create table if not exists.

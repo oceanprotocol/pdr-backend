@@ -410,6 +410,7 @@ def _mock_fetch_gql():
 
     return fetch_function
 
+
 @pytest.fixture()
 def _mock_fetch_empty_gql():
     # return a callable that returns a list of objects
@@ -422,6 +423,7 @@ def _mock_fetch_empty_gql():
         return mock_first_predictions(0)
 
     return fetch_function
+
 
 @pytest.fixture()
 def _gql_datafactory_first_predictions_df():

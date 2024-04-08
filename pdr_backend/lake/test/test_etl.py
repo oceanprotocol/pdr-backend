@@ -27,6 +27,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
 from datetime import datetime
 
+
 @enforce_types
 def get_filtered_timestamps_df(
     df: pl.DataFrame, st_timestr: str, fin_timestr: str
@@ -447,6 +448,7 @@ def test_get_max_timestamp_values_from(tmpdir):
         == "2023-11-04 00:00:00"
     )
 
+
 def _fill_dummy_tables(tmpdir):
     pds = PersistentDataStore(str(tmpdir))
 
@@ -484,6 +486,7 @@ def _fill_dummy_tables(tmpdir):
         """
     )
 
+
 @enforce_types
 def test_calc_bronze_start_end_ts(tmpdir):
     _clean_up_persistent_data_store(tmpdir)
@@ -511,6 +514,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
 
+
 @enforce_types
 def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
     _clean_up_persistent_data_store(tmpdir)
@@ -533,14 +537,13 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
         "test_bronze_table_3",
         "test_bronze_table_4",
         "test_bronze_table_5",
-
     ]
     etl.raw_table_names = [
         "dummy_table_1",
         "dummy_table_2",
         "dummy_table_3",
         "dummy_table_4",
-        "dummy_table_5"
+        "dummy_table_5",
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
@@ -575,6 +578,7 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
     assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
 
+
 @enforce_types
 def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
     _clean_up_persistent_data_store(tmpdir)
@@ -603,9 +607,11 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         "dummy_table_2",
         "dummy_table_3",
         "dummy_table_4",
-        "dummy_table_5"
+        "dummy_table_5",
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert to_timestamp.strftime("%Y-%m-%d %H:%M") == datetime.now().strftime("%Y-%m-%d %H:%M")
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M") == datetime.now().strftime(
+        "%Y-%m-%d %H:%M"
+    )
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"

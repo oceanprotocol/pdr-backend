@@ -239,6 +239,7 @@ def test_do_subgraph_fetch(
     count_fetches = printed_text.count("Fetched")
     assert count_fetches == 1
 
+
 def test_do_fetch_with_empty_data(
     _mock_fetch_empty_gql,
     _clean_up_test_folder,
@@ -276,12 +277,17 @@ def test_do_fetch_with_empty_data(
     count_fetches = printed_text.count("Fetched")
     assert count_fetches == 1
 
-    #check if the db table is created
+    # check if the db table is created
 
     temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
     all_tables = PersistentDataStore(ppss.lake_ss.lake_dir).get_table_names()
 
     assert temp_table_name in all_tables
-    assert len(PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
-        "SELECT * FROM {}".format(temp_table_name)
-    )) == 0
+    assert (
+        len(
+            PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
+                "SELECT * FROM {}".format(temp_table_name)
+            )
+        )
+        == 0
+    )
