@@ -114,14 +114,6 @@ class PredictoorAgent:
                 break
 
     @enforce_types
-    def get_min_epoch_s_left(self):
-        min_tf_seconds = self.ppss.predictoor_ss.min_tf_seconds
-        current_ts = self.cur_timestamp
-
-        seconds_left = current_ts % min_tf_seconds
-        return seconds_left
-
-    @enforce_types
     def prepare_stakes(self, feeds: List[SubgraphFeed]) -> PredictionSlotsData:
         slot_data = PredictionSlotsData()
 
@@ -172,7 +164,7 @@ class PredictoorAgent:
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
         self.get_payout()
 
-        # logger.info(self.status_str())
+        logger.info(self.status_str())
 
         slot_data = self.prepare_stakes(list(self.feeds.values()))
 
@@ -205,7 +197,7 @@ class PredictoorAgent:
             # start printing for next round
             if logging_has_stdout():
                 print("" + "=" * 180)
-            # logger.info(self.status_str())
+            logger.info(self.status_str())
             logger.info("Waiting...")
 
     @property
@@ -221,6 +213,26 @@ class PredictoorAgent:
     @property
     def cur_timestamp(self) -> UnixTimeS:
         return UnixTimeS(self.cur_block["timestamp"])
+
+    @property
+    def min_epoch_s_left(self):
+        """
+        Returns the closest epoch time left in seconds
+        """
+        min_tf_seconds = self.ppss.predictoor_ss.min_tf_seconds
+        current_ts = self.cur_timestamp
+
+        seconds_left = current_ts % min_tf_seconds
+        return seconds_left
+    
+    @property
+    def cur_unique_epoch(self):
+        """
+        Returns the unique epoch number for the current timestamp
+        """
+        t = self.cur_timestamp
+        min_tf_seconds = self.ppss.predictoor_ss.min_tf_seconds
+        return t // min_tf_seconds
 
     @property
     def s_start_payouts(self) -> int:
@@ -248,12 +260,12 @@ class PredictoorAgent:
     def status_str(self) -> str:
         # TODO remove deprecated values and enable this back
         s = ""
-        s += f"cur_epoch={self.cur_epoch}"
+        s += f"cur_epoch={self.cur_unique_epoch}"
         s += f", cur_block_number={self.cur_block_number}"
         s += f", cur_timestamp={self.cur_timestamp}"
         s += f", next_slot={self.next_slot}"
         s += f", target_slot={self.target_slot}"
-        s += f". {self.cur_epoch_s_left} s left in epoch"
+        s += f". {self.min_epoch_s_left} s left in closest epoch"
         s += f" (predict if <= {self.epoch_s_thr} s left)"
         s += f" (stop predictions if <= {self.s_cutoff} s left)"
         s += f". s_per_epoch={self.s_per_epoch}"
@@ -384,11 +396,10 @@ class PredictoorAgent:
 
     def get_payout(self):
         """Claims payouts"""
-        # TODO Find a way to determine the current epoch
         if (
             self.s_start_payouts == 0
-            or self.get_min_epoch_s_left() >= self.s_start_payouts
-            or self.cur_epoch in self.prev_submit_payouts
+            or self.min_epoch_s_left >= self.s_start_payouts
+            or self.cur_unique_epoch in self.prev_submit_payouts
         ):
             return
 
@@ -413,7 +424,7 @@ class PredictoorAgent:
         print("Payout tx:", tx["transactionHash"].hex())
 
         # Update previous payouts history to avoid claiming for this epoch again
-        # self.prev_submit_payouts.append(self.cur_epoch)
+        self.prev_submit_payouts.append(self.cur_unique_epoch)
 
 
 @enforce_types
