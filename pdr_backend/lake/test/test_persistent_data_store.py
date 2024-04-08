@@ -17,13 +17,15 @@ def _get_persistent_data_store(tmpdir):
 
     return [PersistentDataStore(str(tmpdir)), example_df, table_name]
 
+
 def test_create_and_fill_table(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
 
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    assert persistent_data_store.table_exists(table_name)
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -33,8 +35,8 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = persistent_data_store.table_exists(table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Insert new data to the table
     example_df = pl.DataFrame(
@@ -43,8 +45,8 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = persistent_data_store.table_exists(table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
@@ -67,8 +69,8 @@ def test_insert_to_new_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = persistent_data_store.table_exists(table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
@@ -89,8 +91,8 @@ def test_query(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, _ = persistent_data_store.table_exists(table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Execute the provided SQL query
     result_df = persistent_data_store.query_data(
@@ -106,8 +108,8 @@ def test_drop_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = persistent_data_store.table_exists(table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Drop the table
     persistent_data_store.drop_table(table_name)
@@ -127,9 +129,8 @@ def test_fill_from_csv_destination(tmpdir):
     persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
 
     # Check if the table is registered
-    check_result, table_name = persistent_data_store.table_exists(table_name)
-
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
@@ -232,11 +233,10 @@ def test_move_table_data(tmpdir):
     )
 
     # Check if the table is registered
-    check_result = persistent_data_store.table_exists(
+    table_exists = persistent_data_store.table_exists(
         get_table_name(table_name, TableType.TEMP)
     )
-
-    assert check_result
+    assert table_exists
 
     # Move the table
     persistent_data_store.move_table_data(

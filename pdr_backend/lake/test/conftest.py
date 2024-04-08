@@ -115,9 +115,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-1699124400-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699124400,  # slot # Nov 04 2023 19:00:00 GMT
-        "BNB/USDT",
         1699124402,  # timestamp
+        "BNB/USDT",
+        1699124400,  # slot # Nov 04 2023 19:00:00 GMT
         7.160056238874628619,  # payout
         True,  # predictedValue
         # True,  # trueValue
@@ -129,9 +129,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699300800,  # slot # Nov 06 2023 19:00:00 GMT
-        "ETH/USDT",  # token
         1699300802,  # timestamp
+        "ETH/USDT",  # token
+        1699300800,  # slot # Nov 06 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
         # False,  # trueValue

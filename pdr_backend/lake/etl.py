@@ -49,11 +49,11 @@ class ETL:
                     bronze_pdr_predictions_schema,
                     self.ppss,
                 ),
-                # bronze_pdr_slots_table_name: (
-                #     bronze_pdr_slots_table_name,
-                #     bronze_pdr_slots_schema,
-                #     self.ppss,
-                # ),
+                bronze_pdr_slots_table_name: (
+                    bronze_pdr_slots_table_name,
+                    bronze_pdr_slots_schema,
+                    self.ppss,
+                ),
             }
         )
 
@@ -67,8 +67,10 @@ class ETL:
 
         self.bronze_table_getters = {
             bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
-            # bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
+            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
+
+        print(f"self.bronze_table_getters: {self.bronze_table_getters}")
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
@@ -233,23 +235,32 @@ class ETL:
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         temp_table_name = get_table_name(table_name, TableType.TEMP)
         etl_view_name = get_table_name(table_name, TableType.ETL)
-        assert pds.table_exists(temp_table_name), f"{temp_table_name} must already exist"
-        assert pds.view_exists(etl_view_name) is False, f"{etl_view_name} must not exist"
+        
+        table_exists = pds.table_exists(table_name)
+        temp_table_exists = pds.table_exists(temp_table_name)
+        etl_view_exists = pds.view_exists(etl_view_name)
+        assert temp_table_exists, f"{temp_table_name} must already exist"
+        assert not etl_view_exists, f"{etl_view_name} must not exist"
 
-        view_query = """
-        CREATE VIEW {} AS
-        ( 
-            SELECT * FROM {}
-            UNION ALL
-            SELECT * FROM {}
-        )""".format(
-            temp_table_name,
-            get_table_name(table_name),
-            etl_view_name,
-        )
-
-        print(f"  Created {table_name} view")
+        view_query = None
+        
+        if table_exists and temp_table_exists:
+            view_query = """
+                CREATE VIEW {} AS
+                ( 
+                    SELECT * FROM {}
+                    UNION ALL
+                    SELECT * FROM {}
+                )""".format(
+                    etl_view_name,
+                    get_table_name(table_name),
+                    temp_table_name,
+                )
+        else:
+            view_query = f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
+        
         pds.query_data(view_query)
+        print(f"  Created {table_name} view")
 
     def update_bronze_pdr(self):
         """

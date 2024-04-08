@@ -1,3 +1,4 @@
+from unittest.mock import Mock, patch
 import pytest
 from enforce_typing import enforce_types
 
@@ -16,7 +17,6 @@ from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import get_table_name, TableType
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
 from pdr_backend.lake.table_pdr_subscriptions import (
     subscriptions_table_name,
@@ -109,7 +109,7 @@ def test_etl_tables(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_truevals_df,
     setup_data):
-    etl, pds, gql_tables = setup_data
+    _, pds, _ = setup_data
 
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
@@ -126,7 +126,7 @@ def test_etl_tables(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 6
+    assert len(TableRegistry().get_tables()) == 7
 
 # pylint: disable=too-many-statements
 @enforce_types
@@ -137,64 +137,66 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     setup_data
 ):
-    etl, pds, gql_tables = setup_data
+    etl, pds, _ = setup_data
     
     # Work 1: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    temp_table_name = get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+    table_name = get_table_name(bronze_pdr_predictions_table_name)
     bronze_pdr_predictions_records = pds.query_data(
-        "SELECT * FROM {}".format(temp_table_name)
+        "SELECT * FROM {}".format(table_name)
     )
-    assert len(bronze_pdr_predictions_records) == 6
+    assert len(bronze_pdr_predictions_records) == 5
+
+    print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     bronze_pdr_predictions_df = bronze_pdr_predictions_records
     assert (
         bronze_pdr_predictions_df["contract"][0]
-        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
-    )
-    assert (
-        bronze_pdr_predictions_df["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][1]
     )
     assert (
-        bronze_pdr_predictions_df["contract"][2]
+        bronze_pdr_predictions_df["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][2]
+    )
+    assert (
+        bronze_pdr_predictions_df["contract"][2]
+        == _gql_datafactory_etl_predictions_df["contract"][3]
     )
 
     # Assert timestamp == predictions timestamp
     assert (
         bronze_pdr_predictions_df["timestamp"][1]
-        == _gql_datafactory_etl_predictions_df["timestamp"][1]
+        == _gql_datafactory_etl_predictions_df["timestamp"][2]
     )
     assert (
         bronze_pdr_predictions_df["timestamp"][2]
-        == _gql_datafactory_etl_predictions_df["timestamp"][2]
+        == _gql_datafactory_etl_predictions_df["timestamp"][3]
     )
 
     # Assert last_event_timestamp == payout.timestamp
     assert (
         bronze_pdr_predictions_df["last_event_timestamp"][1]
-        == _gql_datafactory_etl_payouts_df["timestamp"][1]
+        == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
     assert (
         bronze_pdr_predictions_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_payouts_df["timestamp"][2]
+        == _gql_datafactory_etl_payouts_df["timestamp"][3]
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][1] is True
-    assert bronze_pdr_predictions_df["truevalue"][2] is False
+    assert bronze_pdr_predictions_df["truevalue"][2] is True
+    assert bronze_pdr_predictions_df["truevalue"][3] is False
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
-        == _gql_datafactory_etl_truevals_df["truevalue"][1]
+        == _gql_datafactory_etl_truevals_df["truevalue"][2]
     )
     assert (
         bronze_pdr_predictions_df["truevalue"][2]
-        == _gql_datafactory_etl_truevals_df["truevalue"][2]
+        == _gql_datafactory_etl_truevals_df["truevalue"][3]
     )
 
     # Assert payout ts > prediction ts
@@ -209,30 +211,29 @@ def test_etl_do_bronze_step(
 
     # Assert payout came from payouts
     assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][1], 3
+        _gql_datafactory_etl_payouts_df["payout"][2], 3
     )
     assert round(bronze_pdr_predictions_df["payout"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][2], 3
+        _gql_datafactory_etl_payouts_df["payout"][3], 3
     )
 
     # Assert stake in the bronze_table came from payouts
     assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][1], 3
+        _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][2], 3
+        _gql_datafactory_etl_payouts_df["stake"][3], 3
     )
 
     # Assert bronze slots table is building correctly
-    temp_bronze_pdr_slots_table_name = get_table_name(
-        bronze_pdr_slots_table_name, TableType.TEMP
+    table_name = get_table_name(
+        bronze_pdr_slots_table_name
     )
     bronze_pdr_slots_records = pds.query_data(
-        "SELECT * FROM {}".format(temp_bronze_pdr_slots_table_name)
+        "SELECT * FROM {}".format(table_name)
     )
-    print("bronze_pdr_slots_records---1", bronze_pdr_slots_records)
-
-    assert len(bronze_pdr_slots_records) == 5
+    
+    assert len(bronze_pdr_slots_records) == 4
     assert bronze_pdr_slots_records["truevalue"].null_count() == 0
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
     assert bronze_pdr_slots_records["source"].null_count() == 1
@@ -240,23 +241,25 @@ def test_etl_do_bronze_step(
 @pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
 def test_etl_views(setup_data):
     etl, pds, gql_tables = setup_data
-    etl.do_bronze_step()
-
-    # assert views are working
-    etl.create_etl_view("pdr_predictions")
-    df = pds.query_data("SELECT * FROM _etl_pdr_predictions").pl()
-    assert len(df) == 5
     
-    # Assert number of views is equal to 1
-    view_names = pds.get_view_names()
-    assert len(view_names) == 1
-    print(f"view_names are {view_names}")
+    # Work 1: First Run
+    with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
+        etl.do_bronze_step()
+        assert mock.called
 
-    # Assert view is registered
-    check_result = pds.view_exists("_etl_pdr_predictions")
-    print(f"check_result is {check_result}")
-    assert check_result == True
-
+    # live table shouldn't exist
+    # temp table should be created
+    # etl view shouldn't exist
+    assert not bronze_pdr_predictions_table_name in pds.get_table_names()
+    records = pds.query_data(
+        "SELECT * FROM {}".format(get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP))
+    )
+    assert len(records) == 5
+    assert get_table_name(bronze_pdr_predictions_table_name, TableType.ETL) in pds.get_view_names()
+    
+    # move from temp to live
+    etl._move_from_temp_tables_to_live()
+    
 @enforce_types
 @pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
 def test_drop_temp_sql_tables(setup_data):
@@ -291,7 +294,7 @@ def test_drop_temp_sql_tables(setup_data):
 @pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
 def test_move_from_temp_tables_to_live(setup_data):
     etl, pds, gql_tables = setup_data
-    assert len(table_names) == 5
+    assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
