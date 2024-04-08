@@ -1,12 +1,14 @@
-from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
+# pylint: disable=redefined-outer-name
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from enforce_typing import enforce_types
 import numpy as np
-from numpy.testing import assert_array_equal
 import polars as pl
 
+from enforce_typing import enforce_types
+from numpy.testing import assert_array_equal
+
+from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.web3_pp import Web3PP

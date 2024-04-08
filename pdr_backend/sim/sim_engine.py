@@ -4,7 +4,6 @@ import os
 from typing import Optional
 
 import numpy as np
-from pdr_backend.cli.predict_feeds import PredictFeed
 import polars as pl
 
 from enforce_typing import enforce_types
@@ -15,6 +14,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.cli.predict_feeds import PredictFeed
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState

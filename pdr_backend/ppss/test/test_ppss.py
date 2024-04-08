@@ -1,7 +1,8 @@
 import os
+from copy import deepcopy
+
 import pytest
 
-from copy import deepcopy
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.predict_feeds import PredictFeeds

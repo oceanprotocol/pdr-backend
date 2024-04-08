@@ -1,11 +1,11 @@
 import logging
 import sys
-import polars as pl
+from typing import Optional, Tuple
 
+import polars as pl
 import numpy as np
 import pandas as pd
 
-from typing import Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed

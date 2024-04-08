@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
-from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.predict_feeds import PredictFeed, PredictFeeds
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
