@@ -263,12 +263,9 @@ class PredictoorAgent:
         s += f"cur_epoch={self.cur_unique_epoch}"
         s += f", cur_block_number={self.cur_block_number}"
         s += f", cur_timestamp={self.cur_timestamp}"
-        s += f", next_slot={self.next_slot}"
-        s += f", target_slot={self.target_slot}"
         s += f". {self.min_epoch_s_left} s left in closest epoch"
         s += f" (predict if <= {self.epoch_s_thr} s left)"
         s += f" (stop predictions if <= {self.s_cutoff} s left)"
-        s += f". s_per_epoch={self.s_per_epoch}"
         return s
 
     @enforce_types
