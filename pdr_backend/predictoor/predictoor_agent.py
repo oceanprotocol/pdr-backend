@@ -16,7 +16,7 @@ from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -82,6 +82,7 @@ class PredictoorAgent:
             self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
             for addr in cand_feeds.keys()
         ]
+        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, Wei(2**256-1))
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
