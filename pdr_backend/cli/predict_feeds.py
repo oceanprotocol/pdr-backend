@@ -107,8 +107,7 @@ class PredictFeeds(List[PredictFeed]):
     def min_epoch_seconds(self) -> int:
         epoch = 1e9
         for feed in self:
-            if feed.predict.timeframe.s < epoch:
-                epoch = feed.predict.timeframe.s
+            epoch = min(epoch, feed.predict.timeframe.s)
         return epoch
 
     def to_list(self) -> List[dict]:

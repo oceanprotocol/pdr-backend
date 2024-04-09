@@ -258,7 +258,6 @@ class PredictoorAgent:
         return self.ppss.web3_pp.NativeToken
 
     def status_str(self) -> str:
-        # TODO remove deprecated values and enable this back
         s = ""
         s += f"cur_epoch={self.cur_unique_epoch}"
         s += f", cur_block_number={self.cur_block_number}"
