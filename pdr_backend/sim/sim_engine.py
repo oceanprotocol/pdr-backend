@@ -259,7 +259,9 @@ class SimEngine:
         tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
-        self.exchange.create_market_buy_order(self.feed.predict_pair_str, tokcoin_amt_recd)
+        self.exchange.create_market_buy_order(
+            self.feed.predict_pair_str, tokcoin_amt_recd
+        )
 
         logger.info(
             "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
@@ -294,7 +296,9 @@ class SimEngine:
         usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
-        self.exchange.create_market_sell_order(self.feed.predict_pair_str, tokcoin_amt_send)
+        self.exchange.create_market_sell_order(
+            self.feed.predict_pair_str, tokcoin_amt_send
+        )
 
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",

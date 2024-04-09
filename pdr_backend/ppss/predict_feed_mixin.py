@@ -31,7 +31,9 @@ class PredictFeedMixin:
     def minimum_timeframe_seconds(self) -> int:
         min_tf_seconds = int(1e9)
         for feed in self.feeds:
-            assert feed.predict.timeframe is not None, f"Feed: {feed} is missing timeframe"
+            assert (
+                feed.predict.timeframe is not None
+            ), f"Feed: {feed} is missing timeframe"
             min_tf_seconds = min(min_tf_seconds, feed.predict.timeframe.s)
         return min_tf_seconds
 

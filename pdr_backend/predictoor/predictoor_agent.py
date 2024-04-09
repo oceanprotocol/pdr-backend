@@ -82,11 +82,13 @@ class PredictoorAgent:
             self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
             for addr in cand_feeds.keys()
         ]
-        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, Wei(2**256-1))
+        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, Wei(2**256 - 1))
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
+        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
+            cand_feeds
+        )
         if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 

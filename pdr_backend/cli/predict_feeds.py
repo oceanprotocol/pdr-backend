@@ -111,7 +111,9 @@ class PredictFeeds(List[PredictFeed]):
     def min_epoch_seconds(self) -> int:
         epoch = 1e9
         for feed in self:
-            assert feed.predict.timeframe is not None, f"Feed: {feed} is is missing timeframe"
+            assert (
+                feed.predict.timeframe is not None
+            ), f"Feed: {feed} is is missing timeframe"
             epoch = min(epoch, feed.predict.timeframe.s)
         return int(epoch)
 
