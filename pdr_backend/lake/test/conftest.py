@@ -18,14 +18,23 @@ from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
 from pdr_backend.subgraph.slot import Slot, mock_slots, mock_slot
 
 from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_slots import slots_schema
-
-from pdr_backend.lake.table_pdr_payouts import payouts_schema
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
-from pdr_backend.lake.table_pdr_truevals import truevals_schema
+from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table_pdr_subscriptions import subscriptions_schema, subscriptions_table_name
+from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table_pdr_predictions import predictions_schema, predictions_table_name
+from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
+from pdr_backend.lake.etl import ETL
+from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table import Table, get_table_name
+from pdr_backend.lake.test.resources import (
+    _clean_up_table_registry,
+    _clean_up_persistent_data_store,
+    _gql_data_factory,
+    get_filtered_timestamps_df
+)
 
 @pytest.fixture()
 def sample_payouts():
@@ -466,18 +475,70 @@ def _clean_up_test_folder():
 
     return _clean_up
 
+@pytest.fixture
+def setup_data(
+    _gql_datafactory_etl_payouts_df,
+    _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
+    _get_test_PDS,
+    tmpdir,
+    request,
+):
+    _clean_up_persistent_data_store(tmpdir)
+    _clean_up_table_registry()
 
-def _clean_up_persistent_data_store(tmpdir, table_name=None):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
+    st_timestr = request.param[0]
+    fin_timestr = request.param[1]
 
-    # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
 
-    # Drop the tables
-    if table_name in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
 
-    if table_name is None:
-        for table in table_names:
-            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
+    }
+
+    gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].append_to_storage(payouts)
+    gql_tables["pdr_slots"].append_to_storage(slots)
+    gql_tables["pdr_subscriptions"].append_to_storage(slots)
+
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # provide the setup data to the test
+    etl = ETL(ppss, gql_data_factory)
+    pds = _get_test_PDS(tmpdir)
+
+    assert etl is not None
+    assert etl.gql_data_factory == gql_data_factory
+
+    table_name = get_table_name("pdr_predictions")
+    _records = pds.query_data("SELECT * FROM {}".format(table_name))
+    assert len(_records) == 5
+
+    yield etl, pds, gql_tables

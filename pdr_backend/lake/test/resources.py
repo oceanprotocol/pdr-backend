@@ -16,6 +16,8 @@ from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.lake.table_registry import TableRegistry
 
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.util.time_types import UnixTimeMs
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT():
@@ -70,6 +72,32 @@ def _lake_ss(lake_dir, feeds, st_timestr=None, fin_timestr=None):
             "timeframe": "5m",
         }
     )
+
+
+@enforce_types
+def get_filtered_timestamps_df(
+    df: pl.DataFrame, st_timestr: str, fin_timestr: str
+) -> pl.DataFrame:
+    return df.filter(
+        (pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
+
+def _clean_up_persistent_data_store(tmpdir, table_name=None):
+    # Clean up PDS
+    persistent_data_store = PersistentDataStore(str(tmpdir))
+
+    # Select tables from duckdb
+    table_names = persistent_data_store.get_table_names()
+
+    # Drop the tables
+    if table_name in table_names:
+        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
+
+    if table_name is None:
+        for table in table_names:
+            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
 
 
 # ==================================================================

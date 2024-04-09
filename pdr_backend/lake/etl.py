@@ -230,12 +230,14 @@ class ETL:
     @enforce_types
     def create_etl_view(self, table_name: str):
         # Assemble view query and create the view
-        assert table_name in self.bronze_table_names, f"{table_name} must be a bronze table"
-        
+        assert (
+            table_name in self.bronze_table_names
+        ), f"{table_name} must be a bronze table"
+
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         temp_table_name = get_table_name(table_name, TableType.TEMP)
         etl_view_name = get_table_name(table_name, TableType.ETL)
-        
+
         table_exists = pds.table_exists(table_name)
         temp_table_exists = pds.table_exists(temp_table_name)
         etl_view_exists = pds.view_exists(etl_view_name)
@@ -243,7 +245,7 @@ class ETL:
         assert not etl_view_exists, f"{etl_view_name} must not exist"
 
         view_query = None
-        
+
         if table_exists and temp_table_exists:
             view_query = """
                 CREATE VIEW {} AS
@@ -252,13 +254,15 @@ class ETL:
                     UNION ALL
                     SELECT * FROM {}
                 )""".format(
-                    etl_view_name,
-                    get_table_name(table_name),
-                    temp_table_name,
-                )
+                etl_view_name,
+                get_table_name(table_name),
+                temp_table_name,
+            )
         else:
-            view_query = f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
-        
+            view_query = (
+                f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
+            )
+
         pds.query_data(view_query)
         print(f"  Created {table_name} view")
 

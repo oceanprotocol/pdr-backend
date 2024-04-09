@@ -1,27 +1,14 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import pytest
 from enforce_typing import enforce_types
 
 import polars as pl
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import Table, TableType, get_table_name
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
-from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
-from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table_pdr_subscriptions import (
-    subscriptions_table_name,
-    subscriptions_schema,
-)
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
@@ -29,86 +16,15 @@ from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
 
 
 @enforce_types
-def get_filtered_timestamps_df(
-    df: pl.DataFrame, st_timestr: str, fin_timestr: str
-) -> pl.DataFrame:
-    return df.filter(
-        (pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-@pytest.fixture
-def setup_data(
-    _gql_datafactory_etl_payouts_df,
-    _gql_datafactory_etl_predictions_df,
-    _gql_datafactory_etl_truevals_df,
-    _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
-    tmpdir,
-    request):
-    _clean_up_persistent_data_store(tmpdir)
-    _clean_up_table_registry()
-
-    st_timestr = request.param[0]
-    fin_timestr = request.param[1]
-
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
-    )
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-        "pdr_subscriptions": Table(subscriptions_table_name, subscriptions_schema, ppss),
-    }
-
-    gql_tables["pdr_predictions"].append_to_storage(preds)
-    gql_tables["pdr_truevals"].append_to_storage(truevals)
-    gql_tables["pdr_payouts"].append_to_storage(payouts)
-    gql_tables["pdr_slots"].append_to_storage(slots)
-    gql_tables["pdr_subscriptions"].append_to_storage(slots)
-
-    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
-    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
-
-    # provide the setup data to the test
-    etl = ETL(ppss, gql_data_factory)
-    pds = _get_test_PDS(tmpdir)
-    
-    assert etl is not None
-    assert etl.gql_data_factory == gql_data_factory
-
-    table_name = get_table_name("pdr_predictions")
-    _records = pds.query_data("SELECT * FROM {}".format(table_name))
-    assert len(_records) == 5
-
-    yield etl, pds, gql_tables
-
-@enforce_types
-@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_etl_tables(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_truevals_df,
-    setup_data):
+    setup_data,
+):
     _, pds, _ = setup_data
 
     # Assert all dfs are not the same size as mock data
@@ -119,7 +35,7 @@ def test_etl_tables(
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
-    
+
     # Assert len of all dfs
     assert len(pdr_slots_df) == 6
     assert len(pdr_predictions_df) == 5
@@ -128,17 +44,20 @@ def test_etl_tables(
     assert len(pdr_truevals_df) == 5
     assert len(TableRegistry().get_tables()) == 7
 
+
 # pylint: disable=too-many-statements
 @enforce_types
-@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
-    setup_data
+    setup_data,
 ):
     etl, pds, _ = setup_data
-    
+
     # Work 1: Do bronze
     etl.do_bronze_step()
 
@@ -226,22 +145,21 @@ def test_etl_do_bronze_step(
     )
 
     # Assert bronze slots table is building correctly
-    table_name = get_table_name(
-        bronze_pdr_slots_table_name
-    )
-    bronze_pdr_slots_records = pds.query_data(
-        "SELECT * FROM {}".format(table_name)
-    )
-    
+    table_name = get_table_name(bronze_pdr_slots_table_name)
+    bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
+
     assert len(bronze_pdr_slots_records) == 4
     assert bronze_pdr_slots_records["truevalue"].null_count() == 0
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
     assert bronze_pdr_slots_records["source"].null_count() == 1
 
-@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_etl_views(setup_data):
-    etl, pds, gql_tables = setup_data
-    
+    etl, pds, _ = setup_data
+
     # Work 1: First Run
     with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
         etl.do_bronze_step()
@@ -252,18 +170,26 @@ def test_etl_views(setup_data):
     # etl view shouldn't exist
     assert not bronze_pdr_predictions_table_name in pds.get_table_names()
     records = pds.query_data(
-        "SELECT * FROM {}".format(get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP))
+        "SELECT * FROM {}".format(
+            get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+        )
     )
     assert len(records) == 5
-    assert get_table_name(bronze_pdr_predictions_table_name, TableType.ETL) in pds.get_view_names()
-    
+    assert (
+        get_table_name(bronze_pdr_predictions_table_name, TableType.ETL)
+        in pds.get_view_names()
+    )
+
     # move from temp to live
     etl._move_from_temp_tables_to_live()
-    
+
+
 @enforce_types
-@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_drop_temp_sql_tables(setup_data):
-    etl, pds, gql_tables = setup_data
+    etl, pds, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
     table_names = pds.get_table_names()
@@ -291,7 +217,9 @@ def test_drop_temp_sql_tables(setup_data):
 
 
 @enforce_types
-@pytest.mark.parametrize('setup_data', [("2023-11-02_0:00", '2023-11-07_0:00')], indirect=True)
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_move_from_temp_tables_to_live(setup_data):
     etl, pds, gql_tables = setup_data
     assert len(gql_tables) == 5

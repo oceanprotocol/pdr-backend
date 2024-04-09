@@ -146,6 +146,7 @@ def test_update_partial_then_resume(
         1699300800000,
     ]
 
+
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
 def test_get_gql_tables(mock_update):
     """

@@ -38,7 +38,9 @@ def get_bronze_pdr_slots_data_with_SQL(
     pdr_slots_table_name = get_table_name(slots_table_name)
     pdr_truevals_table_name = get_table_name(truevals_table_name)
     pdr_payouts_table_name = get_table_name(payouts_table_name)
-    etl_bronze_pdr_predictions_table_name = get_table_name(bronze_pdr_predictions_table_name, TableType.ETL)
+    etl_bronze_pdr_predictions_table_name = get_table_name(
+        bronze_pdr_predictions_table_name, TableType.ETL
+    )
 
     query = f"""
             SELECT 
