@@ -164,7 +164,6 @@ class PredictoorAgent:
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
         self.get_payout()
 
-        logger.info(self.status_str())
 
         slot_data = self.prepare_stakes(list(self.feeds.values()))
 
@@ -184,10 +183,11 @@ class PredictoorAgent:
                 logger.error("Not enough balance, cancel prediction")
                 return
 
+            logger.info(self.status_str())
             s = f"-> Predict result: {stakes_up} up, {stakes_down} down, feeds={feed_addrs}"
             logger.info(s)
             if required_OCEAN == 0:
-                logger.warning("Done: no stakes to submit")
+                logger.warning("Done: no predictions to submit")
                 return
 
             # submit prediction to chaineds]
@@ -221,8 +221,7 @@ class PredictoorAgent:
         """
         min_tf_seconds = self.ppss.predictoor_ss.feeds.min_epoch_seconds
         current_ts = self.cur_timestamp
-
-        seconds_left = current_ts % min_tf_seconds
+        seconds_left = min_tf_seconds - current_ts % min_tf_seconds
         return seconds_left
 
     @property
@@ -399,7 +398,10 @@ class PredictoorAgent:
         ):
             return
 
+        logger.info(self.status_str())
         logger.info("Running payouts")
+        # Update previous payouts history to avoid claiming for this epoch again
+        self.prev_submit_payouts.append(self.cur_unique_epoch)
 
         up_pred_addr = self.pred_submitter_mgr.predictoor_up_address()
         pending_slots = query_pending_payouts(
@@ -413,15 +415,14 @@ class PredictoorAgent:
         slots = list(pending_slots.values())
         slots_flat = [item for sublist in slots for item in sublist]
         slots_unique_flat = list(set(slots_flat))
-        print(contracts_checksummed, "---", slots_unique_flat)
+        if len(slots_unique_flat) == 0:
+            logger.info("No payouts available")
+            return
+
         tx = self.pred_submitter_mgr.get_payout(
             slots_unique_flat, contracts_checksummed
         )
         print("Payout tx:", tx["transactionHash"].hex())
-
-        # Update previous payouts history to avoid claiming for this epoch again
-        self.prev_submit_payouts.append(self.cur_unique_epoch)
-
 
 @enforce_types
 def _tx_failed(tx) -> bool:
