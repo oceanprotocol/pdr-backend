@@ -85,9 +85,7 @@ class PredictoorAgent:
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feeds: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(
-            cand_feeds
-        )
+        feeds: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
         if len(feeds) == 0:
             raise ValueError("No feeds found.")
 
@@ -163,7 +161,6 @@ class PredictoorAgent:
         # get payouts
         # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
         self.get_payout()
-
 
         slot_data = self.prepare_stakes(list(self.feeds.values()))
 
@@ -423,6 +420,7 @@ class PredictoorAgent:
             slots_unique_flat, contracts_checksummed
         )
         print("Payout tx:", tx["transactionHash"].hex())
+
 
 @enforce_types
 def _tx_failed(tx) -> bool:
