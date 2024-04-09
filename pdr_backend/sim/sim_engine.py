@@ -55,12 +55,18 @@ class SimEngine:
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.feed.base_str
+        base_str = self.feed.predict_base_str
+        if base_str is None:
+            raise ValueError("base_str is None")
+        return base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.feed.quote_str
+        quote_str = self.feed.predict_quote_str
+        if quote_str is None:
+            raise ValueError("quote_str is None")
+        return quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -253,7 +259,7 @@ class SimEngine:
         tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
-        self.exchange.create_market_buy_order(self.feed.pair_str, tokcoin_amt_recd)
+        self.exchange.create_market_buy_order(self.feed.predict_pair_str, tokcoin_amt_recd)
 
         logger.info(
             "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
@@ -288,7 +294,7 @@ class SimEngine:
         usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
-        self.exchange.create_market_sell_order(self.feed.pair_str, tokcoin_amt_send)
+        self.exchange.create_market_sell_order(self.feed.predict_pair_str, tokcoin_amt_send)
 
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",

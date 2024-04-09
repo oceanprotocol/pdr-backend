@@ -85,12 +85,11 @@ class PredictoorAgent:
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feeds: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
-        if len(feeds) == 0:
+        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
+        if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 
-        print_feeds(feeds, "filtered feed")
-        self.feeds: SubgraphFeed = feeds
+        print_feeds(self.feeds, "filtered feed")
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():
@@ -123,6 +122,8 @@ class PredictoorAgent:
             predict_pair = self.ppss.predictoor_ss.get_predict_feed(
                 feed.pair, feed.timeframe, feed.source
             )
+            if predict_pair is None:
+                logger.error("No predict pair found for feed %s", feed)
             seconds_per_epoch = feed.seconds_per_epoch
             cur_epoch = contract.get_current_epoch()
             next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
@@ -272,9 +273,11 @@ class PredictoorAgent:
         feeds: List[str],
     ):
         logger.info("Submitting predictions to the chain...")
+        stakes_up_wei = [i.to_wei() for i in stakes_up]
+        stakes_down_wei = [i.to_wei() for i in stakes_down]
         tx = self.pred_submitter_mgr.submit_prediction(
-            stakes_up=stakes_up,
-            stakes_down=stakes_down,
+            stakes_up=stakes_up_wei,
+            stakes_down=stakes_down_wei,
             feeds=feeds,
             epoch=target_slot,
         )

@@ -29,9 +29,13 @@ class PredictFeedMixin:
 
     @property
     def minimum_timeframe_seconds(self) -> int:
-        return min([feed.predict.timeframe.s for feed in self.feeds])
+        min_tf_seconds = int(1e9)
+        for feed in self.feeds:
+            assert feed.predict.timeframe is not None, f"Feed: {feed} is missing timeframe"
+            min_tf_seconds = min(min_tf_seconds, feed.predict.timeframe.s)
+        return min_tf_seconds
 
-    def get_predict_feed(self, pair, timeframe, exchange) -> PredictFeed:
+    def get_predict_feed(self, pair, timeframe, exchange) -> Optional[PredictFeed]:
         for predict_feed in self.feeds:
             p = predict_feed.predict
             if p.pair == pair and p.timeframe == timeframe and p.exchange == exchange:
