@@ -39,7 +39,7 @@ class PredictFeedMixin:
         return None
 
     @enforce_types
-    def filter_feeds_from_candidates(
+    def get_feed_from_candidates(
         self, cand_feeds: Dict[str, SubgraphFeed]
     ) -> Dict[str, SubgraphFeed]:
         result: Dict[str, SubgraphFeed] = {}

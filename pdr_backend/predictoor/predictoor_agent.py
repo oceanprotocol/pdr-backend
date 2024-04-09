@@ -85,7 +85,7 @@ class PredictoorAgent:
         self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feeds: SubgraphFeed = ppss.predictoor_ss.filter_feeds_from_candidates(
+        feeds: SubgraphFeed = ppss.predictoor_ss.get_feed_from_candidates(
             cand_feeds
         )
         if len(feeds) == 0:
