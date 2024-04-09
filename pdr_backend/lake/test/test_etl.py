@@ -611,5 +611,5 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert to_timestamp.strftime("%Y-%m-%d %H:%M") == '2023-11-21 00:00'
+    assert to_timestamp.strftime("%Y-%m-%d %H:%M") == "2023-11-21 00:00"
     assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
