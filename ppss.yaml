@@ -33,6 +33,13 @@ predictoor_ss:
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_5x # CalibratedClassifierCV_5x | None
 
+exchange_mgr_ss: # used by trader and sim
+  timeout: 30000
+  ccxt_params:
+    createMarketBuyOrderRequiresPrice: False
+    defaultType: spot
+  dydx_params:
+
 trader_ss:
   feed: binance BTC/USDT c 5m
   sim_only:
@@ -45,21 +52,11 @@ trader_ss:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
     position_size: 3 # buy/sell this amount in each epoch
-  exchange_only:
-    timeout: 30000
-    options:
-      createMarketBuyOrderRequiresPrice": False
-      defaultType: spot
 
 sim_ss: # sim only
   log_dir: logs
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal
-  exchange_only:
-    timeout: 30000
-    options:
-      createMarketBuyOrderRequiresPrice": False
-      defaultType: spot
 
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
