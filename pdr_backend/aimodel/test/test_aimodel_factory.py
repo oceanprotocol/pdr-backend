@@ -20,6 +20,12 @@ SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types
+def test_SHOW_PLOT():
+    """SHOW_PLOT should only be set to True temporarily in local testing."""
+    assert not SHOW_PLOT
+
+
+@enforce_types
 def test_aimodel_factory_2vars_LinearLogistic():
     _test_aimodel_factory_2vars_main(approach="LinearLogistic")
 
