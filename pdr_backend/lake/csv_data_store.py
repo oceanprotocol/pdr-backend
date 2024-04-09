@@ -381,6 +381,7 @@ class CSVDataStore(BaseDataStore):
             Optional[int] - last timestamp from the csv files
         """
         file_path = self._get_last_file_path(self._get_folder_path(dataset_identifier))
+        print(file_path)
         if len(file_path):
             to_value = self._get_to_value(file_path)
             if to_value is not None and to_value > 0:

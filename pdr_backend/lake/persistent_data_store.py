@@ -40,6 +40,7 @@ class PersistentDataStore(BaseDataStore):
 
         # Create the table
         self.duckdb_conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
+        self.close_open_connections()
 
     @enforce_types
     def get_table_names(self):
@@ -52,6 +53,7 @@ class PersistentDataStore(BaseDataStore):
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
         ).fetchall()
+        self.close_open_connections()
 
         return [table[0] for table in tables]
 
@@ -64,6 +66,7 @@ class PersistentDataStore(BaseDataStore):
         """
 
         views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
+        self.close_open_connections()
 
         return [views]
 
@@ -92,6 +95,7 @@ class PersistentDataStore(BaseDataStore):
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
             self._create_and_fill_table(df, table_name)
+        self.close_open_connections()
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:
@@ -108,6 +112,7 @@ class PersistentDataStore(BaseDataStore):
 
         try:
             result_df = self.duckdb_conn.execute(query).pl()
+            self.close_open_connections()
             return result_df
         except duckdb.CatalogException as e:
             if "Table" in str(e) and "not exist" in str(e):
@@ -125,6 +130,7 @@ class PersistentDataStore(BaseDataStore):
         """
         # Drop the table if it exists
         self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        self.close_open_connections()
 
     @enforce_types
     def drop_view(self, view_name: str):
@@ -137,6 +143,7 @@ class PersistentDataStore(BaseDataStore):
         """
         # Drop the table if it exists
         self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
+        self.close_open_connections()
 
     @enforce_types
     def move_table_data(self, temp_table_name: str, permanent_table_name: str):
@@ -166,6 +173,7 @@ class PersistentDataStore(BaseDataStore):
                 )
         else:
             raise Exception(f"Table {temp_table_name} does not exist")
+        self.close_open_connections()
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):
@@ -184,6 +192,8 @@ class PersistentDataStore(BaseDataStore):
         for csv_file in csv_files:
             df = pl.read_csv(csv_file)
             self.insert_to_table(df, table_name)
+
+        self.close_open_connections()
 
     @enforce_types
     def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
@@ -210,3 +220,14 @@ class PersistentDataStore(BaseDataStore):
             SET {update_columns} 
             WHERE {column_name} = {df[column_name]}"""
         )
+        self.close_open_connections()
+
+    @enforce_types
+    def close_open_connections(self):
+        """
+        Close the open connections.
+        """
+        self.duckdb_conn.close()
+        self.duckdb_conn = duckdb.connect(
+            database=f"{self.base_path}/duckdb.db"
+        )  # Keep a persistent connection

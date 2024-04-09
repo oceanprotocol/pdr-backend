@@ -61,6 +61,7 @@ class ETL:
             predictions_table_name,
             truevals_table_name,
             slots_table_name,
+            subscriptions_table_name,
         ]
 
         self.bronze_table_getters = {
@@ -217,7 +218,11 @@ class ETL:
             self.raw_table_names, TableType.TEMP
         ).values()
 
-        fin_timestamp = datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M") if self.ppss.lake_ss.fin_timestr != "now" else datetime.now().strftime("%Y-%m-%d_%H:%M")
+        fin_timestamp = (
+            datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
+            if self.ppss.lake_ss.fin_timestr != "now"
+            else datetime.now().strftime("%Y-%m-%d_%H:%M")
+        )
 
         to_timestamp = (
             min(to_values)
