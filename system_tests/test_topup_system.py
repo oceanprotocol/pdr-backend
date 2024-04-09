@@ -7,6 +7,7 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.util.currency_types import Wei, Eth
 
 
 def test_topup(caplog):
@@ -22,13 +23,13 @@ def test_topup(caplog):
     mock_web3_pp.web3_config.owner = "0xowner"
 
     mock_token = MagicMock(spec=Token)
-    balances_arr = [int(5000 * 1e18)] + [int(5 * 1e18)] * 100
+    balances_arr = [Wei(int(5000 * 1e18))] + [Wei(int(5 * 1e18))] * 100
     mock_token.balanceOf.side_effect = balances_arr
     mock_token.transfer.return_value = True
     mock_token.name = "OCEAN"
 
     mock_token_rose = MagicMock(spec=NativeToken)
-    balances_arr = [int(5000 * 1e18)] + [int(5 * 1e18)] * 100
+    balances_arr = [Wei(int(5000 * 1e18))] + [Wei(int(5 * 1e18))] * 100
     mock_token_rose.balanceOf.side_effect = balances_arr
     mock_token_rose.transfer.return_value = True
     mock_token_rose.name = "ROSE"
@@ -42,8 +43,8 @@ def test_topup(caplog):
     }
     topup_ss = MagicMock(spec=TopupSS)
     topup_ss.all_topup_addresses.return_value = opf_addresses
-    topup_ss.get_min_bal.side_effect = [20, 30, 20, 30]
-    topup_ss.get_topup_bal.side_effect = [20, 30, 20, 30]
+    topup_ss.get_min_bal.side_effect = [Eth(20), Eth(30), Eth(20), Eth(30)]
+    topup_ss.get_topup_bal.side_effect = [Eth(20), Eth(30), Eth(20), Eth(30)]
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.ppss.ppss.TopupSS", return_value=topup_ss

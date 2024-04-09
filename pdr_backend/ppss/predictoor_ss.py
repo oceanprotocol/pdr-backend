@@ -3,8 +3,9 @@ from typing import Optional
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import SingleFeedMixin
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.strutil import StrMixin
+from pdr_backend.util.currency_types import Eth
 
 # Approaches:
 #  1: Allocate up-vs-down stake equally (50-50). Baseline.
@@ -34,21 +35,21 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         return self.d["approach"]
 
     @property
-    def stake_amount(self) -> int:
+    def stake_amount(self) -> Eth:
         """
         @description
           Total bot stake amount, per epoch, per feed. In OCEAN.
         """
-        return self.d["stake_amount"]
+        return Eth(self.d["stake_amount"])
 
     @property
-    def others_stake(self) -> int:
+    def others_stake(self) -> Eth:
         """
         @description
           How much all others' bots stake. Per epoch, per feed. In OCEAN.
           Simulation only.
         """
-        return self.d["sim_only"]["others_stake"]
+        return Eth(self.d["sim_only"]["others_stake"])
 
     @property
     def others_accuracy(self) -> float:
@@ -60,17 +61,29 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
         return self.d["sim_only"]["others_accuracy"]
 
     @property
-    def revenue(self) -> float:
+    def revenue(self) -> Eth:
         """
         @description
           Sales revenue going towards predictoors. Per epoch, per feed. OCEAN.
           Simulation only.
         """
-        return self.d["sim_only"]["revenue"]
+        return Eth(self.d["sim_only"]["revenue"])
+
+    @property
+    def s_start_payouts(self) -> int:
+        if "s_start_payouts" not in self.d["bot_only"]:
+            return 0
+        return self.d["bot_only"]["s_start_payouts"]
 
     @property
     def s_until_epoch_end(self) -> int:
         return self.d["bot_only"]["s_until_epoch_end"]
+
+    @property
+    def s_cutoff(self) -> int:
+        if "s_cutoff" not in self.d["bot_only"]:
+            return 10
+        return self.d["bot_only"]["s_cutoff"]
 
     # --------------------------------
     # setters (add as needed)
@@ -87,10 +100,13 @@ class PredictoorSS(SingleFeedMixin, StrMixin):
 
 
 @enforce_types
-def predictoor_ss_test_dict(predict_feed: Optional[str] = None) -> dict:
+def predictoor_ss_test_dict(
+    predict_feed: Optional[str] = None,
+    input_feeds: Optional[list] = None,
+) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     predict_feed = predict_feed or "binance BTC/USDT c 5m"
-    input_feeds = [predict_feed]
+    input_feeds = input_feeds or [predict_feed]
     d = {
         "predict_feed": predict_feed,
         "approach": 1,
@@ -103,11 +119,6 @@ def predictoor_ss_test_dict(predict_feed: Optional[str] = None) -> dict:
         "bot_only": {
             "s_until_epoch_end": 60,
         },
-        "aimodel_ss": {
-            "input_feeds": input_feeds,
-            "approach": "LinearLogistic",
-            "max_n_train": 7,
-            "autoregressive_n": 3,
-        },
+        "aimodel_ss": aimodel_ss_test_dict(input_feeds),
     }
     return d

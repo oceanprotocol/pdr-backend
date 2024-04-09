@@ -34,7 +34,17 @@ pip install -r requirements.txt
 export PATH=$PATH:.
 ```
 
+You need a local copy of Ocean contract addresses [`address.json`](https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json). In console:
+```console
+# make directory if needed
+mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
+
+# copy from github to local directory. Or, use wget if Linux. Or, download via browser.
+curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+```
+
 If you're running MacOS, then in console:
+
 ```console
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 ```
@@ -44,34 +54,42 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+
 ```console
 cp ppss.yaml my_ppss.yaml
 ```
 
 Let's simulate! In console:
+
 ```console
 pdr sim my_ppss.yaml
 ```
 
 What it does:
+
 1. Set simulation parameters.
 1. Grab historical price data from exchanges and stores in `parquet_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
    - Build a model
    - Predict
    - Trade
-   - Plot profit versus time, more
    - Log to console and `logs/out_<time>.txt`
-   
+
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
 By default, simulation uses a linear model inputting prices of the previous 2-10 epochs as inputs (autoregressive_n), just BTC close price as input, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
 
-To see simulation CLI options: `pdr sim -h`. 
+To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
+
+Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
+
+By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+You can run many instances of streamlit at once, with different URLs.
 
 ## Run Trader Bot on Sapphire Testnet
 
@@ -82,13 +100,13 @@ Let's get our bot running on testnet first.
 First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn. [Get them here](testnet-faucet.md).
 
 Then, copy & paste your private key as an envvar. In console:
+
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `my_ppss.yaml` as desired.
-
 Then, run a simple trading bot. In console:
+
 ```console
 pdr trader 2 my_ppss.yaml sapphire-testnet
 ```
@@ -108,6 +126,7 @@ Time to make it real: let's get our bot running on Sapphire _mainnet_.
 First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).
 
 Then, copy & paste your private key as an envvar. (You can skip this if it's same as testnet.) In console:
+
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
@@ -115,6 +134,7 @@ export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
+
 ```console
 pdr trader 2 my_ppss.yaml sapphire-mainnet
 ```
@@ -132,6 +152,7 @@ The next sections describe how to go beyond, by optimizing the trading strategy 
 ## Optimize Trading Strategy
 
 Once you're familiar with the above, you can set your own trading strategy and optimize it for $. Here's how:
+
 1. Fork `pdr-backend` repo.
 1. Change trader bot code as you wish, while iterating with simulation.
 1. Bring your trader bot to testnet then mainnet.

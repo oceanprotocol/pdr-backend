@@ -4,7 +4,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.dfrewards import DFRewards
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.payout.payout import (
     batchify,
@@ -13,6 +13,7 @@ from pdr_backend.payout.payout import (
     request_payout_batches,
 )
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
@@ -27,7 +28,7 @@ def test_batchify():
 
 @enforce_types
 def test_request_payout_batches():
-    mock_contract = Mock(spec=PredictoorContract)
+    mock_contract = Mock(spec=FeedContract)
     mock_contract.payout_multiple = Mock()
 
     timestamps = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -56,15 +57,13 @@ def test_do_ocean_payout(tmpdir):
         "address_2": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     }
 
-    mock_contract = Mock(spec=PredictoorContract)
+    mock_contract = Mock(spec=FeedContract)
     mock_contract.payout_multiple = Mock()
 
     with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), patch(
         "pdr_backend.payout.payout.query_pending_payouts",
         return_value=mock_pending_payouts,
-    ), patch(
-        "pdr_backend.payout.payout.PredictoorContract", return_value=mock_contract
-    ):
+    ), patch("pdr_backend.payout.payout.FeedContract", return_value=mock_contract):
         do_ocean_payout(ppss, check_network=False)
         print(mock_contract.payout_multiple.call_args_list)
         call_args = mock_contract.payout_multiple.call_args_list
@@ -82,12 +81,12 @@ def test_do_rose_payout(tmpdir):
 
     mock_contract = Mock(spec=DFRewards)
     mock_contract.get_claimable_rewards = Mock()
-    mock_contract.get_claimable_rewards.return_value = 100
+    mock_contract.get_claimable_rewards.return_value = Eth(100)
     mock_contract.claim_rewards = Mock()
 
     mock_wrose = Mock(spec=WrappedToken)
     mock_wrose.balanceOf = Mock()
-    mock_wrose.balanceOf.return_value = 100
+    mock_wrose.balanceOf.return_value = Eth(100).to_wei()
     mock_wrose.withdraw = Mock()
 
     with patch("pdr_backend.payout.payout.time"), patch(
@@ -98,7 +97,7 @@ def test_do_rose_payout(tmpdir):
             web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
         )
         mock_wrose.balanceOf.assert_called()
-        mock_wrose.withdraw.assert_called_with(100)
+        mock_wrose.withdraw.assert_called_with(Eth(100).to_wei())
 
 
 @enforce_types

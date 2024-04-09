@@ -7,14 +7,14 @@ from typing import Dict, List, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.subgraph.subgraph_feed import print_feeds
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import MAX_UINT
-from pdr_backend.util.mathutil import from_wei
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.currency_types import Eth
 
 WEEK = 7 * 86400
 logger = logging.getLogger("dfbuyer_agent")
@@ -86,7 +86,7 @@ class DFBuyerAgent:
         logger.info("Missing consume amounts: %s", missing_consumes_amt)
 
         # get price for contracts with missing consume
-        prices: Dict[str, float] = self._get_prices(list(missing_consumes_amt.keys()))
+        prices: Dict[str, Eth] = self._get_prices(list(missing_consumes_amt.keys()))
         missing_consumes_times = self._get_missing_consume_times(
             missing_consumes_amt, prices
         )
@@ -129,14 +129,14 @@ class DFBuyerAgent:
         time.sleep(seconds_left)
 
     def _get_missing_consume_times(
-        self, missing_consumes: Dict[str, float], prices: Dict[str, float]
+        self, missing_consumes: Dict[str, Eth], prices: Dict[str, Eth]
     ) -> Dict[str, UnixTimeS]:
         return {
             address: UnixTimeS(math.ceil(missing_consumes[address] / prices[address]))
             for address in missing_consumes
         }
 
-    def _get_missing_consumes(self, ts: UnixTimeS) -> Dict[str, float]:
+    def _get_missing_consumes(self, ts: UnixTimeS) -> Dict[str, Eth]:
         actual_consumes = self._get_consume_so_far(ts)
         expected_consume_per_feed = self._get_expected_amount_per_feed(ts)
 
@@ -257,11 +257,9 @@ class DFBuyerAgent:
 
         return bool(failures)
 
-    def _get_prices(self, contract_addresses: List[str]) -> Dict[str, float]:
+    def _get_prices(self, contract_addresses: List[str]) -> Dict[str, Eth]:
         return {
-            address: from_wei(
-                PredictoorContract(self.ppss.web3_pp, address).get_price()
-            )
+            address: FeedContract(self.ppss.web3_pp, address).get_price().to_eth()
             for address in contract_addresses
         }
 

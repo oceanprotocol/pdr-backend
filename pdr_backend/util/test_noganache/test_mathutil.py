@@ -7,13 +7,10 @@ from enforce_typing import enforce_types
 from pdr_backend.util.mathutil import (
     all_nan,
     fill_nans,
-    from_wei,
     has_nan,
     classif_acc,
     round_sig,
-    str_with_wei,
     string_to_bytes32,
-    to_wei,
 )
 
 
@@ -182,19 +179,6 @@ def test_classif_acc():
 
     ybool_hat = np.array([True, False, False, True])
     assert classif_acc(ybool_hat, ybool) == 0.75
-
-
-@enforce_types
-def test_wei():
-    assert from_wei(int(1234 * 1e18)) == 1234
-    assert from_wei(int(12.34 * 1e18)) == 12.34
-    assert from_wei(int(0.1234 * 1e18)) == 0.1234
-
-    assert to_wei(1234) == 1234 * 1e18 and type(to_wei(1234)) == int
-    assert to_wei(12.34) == 12.34 * 1e18 and type(to_wei(12.34)) == int
-    assert to_wei(0.1234) == 0.1234 * 1e18 and type(to_wei(0.1234)) == int
-
-    assert str_with_wei(int(12.34 * 1e18)) == "12.34 (12340000000000000000 wei)"
 
 
 @enforce_types

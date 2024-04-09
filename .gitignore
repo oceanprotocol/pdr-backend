@@ -169,9 +169,13 @@ dir/
 out*.txt
 my_ppss.yaml
 my_logging.yaml
+logs/
 csvs/
 parquet_data/
 pdr_predictions.parquet 
+
+# sim state
+sim_state
 
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json

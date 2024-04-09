@@ -1,11 +1,11 @@
 import logging
 import sys
-from typing import Dict
+from typing import Dict, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.mathutil import from_wei, to_wei
+from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("topup")
 
@@ -22,8 +22,8 @@ def topup_main(ppss: PPSS):
     OCEAN = web3_pp.OCEAN_Token
     ROSE = web3_pp.NativeToken
 
-    owner_OCEAN_bal = from_wei(OCEAN.balanceOf(owner))
-    owner_ROSE_bal = from_wei(ROSE.balanceOf(owner))
+    owner_OCEAN_bal = OCEAN.balanceOf(owner).to_eth()
+    owner_ROSE_bal = ROSE.balanceOf(owner).to_eth()
     logger.info(
         "Topup address %s has %.2f OCEAN and %.2f ROSE",
         owner,
@@ -34,8 +34,8 @@ def topup_main(ppss: PPSS):
     addresses: Dict[str, str] = ppss.topup_ss.all_topup_addresses(web3_pp.network)
 
     for addr_label, address in addresses.items():
-        OCEAN_bal = from_wei(OCEAN.balanceOf(address))
-        ROSE_bal = from_wei(ROSE.balanceOf(address))
+        OCEAN_bal = OCEAN.balanceOf(address).to_eth()
+        ROSE_bal = ROSE.balanceOf(address).to_eth()
 
         logger.info("%s: %.2f OCEAN, %.2f ROSE", addr_label, OCEAN_bal, ROSE_bal)
 
@@ -66,20 +66,22 @@ def topup_main(ppss: PPSS):
     sys.exit(0)
 
 
-def do_transfer(token, address, owner, owner_bal, min_bal, topup_bal):
-    bal = from_wei(token.balanceOf(address))
+def do_transfer(
+    token, address, owner, owner_bal, min_bal: Eth, topup_bal: Eth
+) -> Tuple[Eth, bool]:
+    bal = token.balanceOf(address).to_eth()
 
     symbol = "ROSE" if token.name == "ROSE" else "OCEAN"
 
     failed = False
-    transfered_amount = 0
+    transfered_amount = Eth(0)
 
-    if min_bal > 0 and bal < min_bal:
-        logger.info("Transferring %s %s to %s...", topup_bal, symbol, address)
+    if min_bal > Eth(0) and bal < min_bal:
+        logger.info("Transferring %s %s to %s...", topup_bal.amt_eth, symbol, address)
         if owner_bal > topup_bal:
             token.transfer(
                 address,
-                to_wei(topup_bal),
+                topup_bal.to_wei(),
                 owner,
                 True,
             )

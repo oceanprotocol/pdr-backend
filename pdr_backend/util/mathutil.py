@@ -23,12 +23,23 @@ def all_nan(
         return np.isnan(x).all()
 
     if isinstance(x, pd.Series):
-        x = x.fillna(value=np.nan, inplace=False)
-        return x.isnull().all()
+        for val in x:
+            if val is None:
+                continue
+            if np.isnan(val):
+                continue
+            return False
+        return True
 
     if isinstance(x, pd.DataFrame):
-        x = x.fillna(value=np.nan)
-        return x.isnull().all().all()
+        for _, row in x.iterrows():
+            for val in row:
+                if val is None:
+                    continue
+                if np.isnan(val):
+                    continue
+                return False
+        return True
 
     # pl.Series or pl.DataFrame
     return all_nan(x.to_numpy())  # type: ignore[union-attr]
@@ -94,21 +105,6 @@ def classif_acc(ytrue_hat, ytrue) -> float:
     n_correct = sum(ytrue_hat == ytrue)
     acc = n_correct / len(ytrue)
     return acc
-
-
-@enforce_types
-def from_wei(amt_wei: int) -> Union[int, float]:
-    return float(amt_wei / 1e18)
-
-
-@enforce_types
-def to_wei(amt_eth: Union[int, float]) -> int:
-    return int(amt_eth * 1e18)
-
-
-@enforce_types
-def str_with_wei(amt_wei: int) -> str:
-    return f"{from_wei(amt_wei)} ({amt_wei} wei)"
 
 
 @enforce_types

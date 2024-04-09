@@ -12,6 +12,7 @@ from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import MAX_UINT, ZERO_ADDRESS
 from pdr_backend.util.web3_config import Web3Config
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.currency_types import Eth, Wei
 
 PATH = "pdr_backend.dfbuyer.dfbuyer_agent"
 
@@ -101,14 +102,14 @@ def test_dfbuyer_agent_get_consume_so_far(mock_get_consume_so_far, mock_dfbuyer_
 
 
 @enforce_types
-@patch(f"{PATH}.PredictoorContract")
+@patch(f"{PATH}.FeedContract")
 def test_dfbuyer_agent_get_prices(mock_contract, mock_dfbuyer_agent):
     mock_contract_instance = MagicMock()
     mock_contract.return_value = mock_contract_instance
-    mock_contract_instance.get_price.return_value = 10000
+    mock_contract_instance.get_price.return_value = Wei(10000)
     result = mock_dfbuyer_agent._get_prices(["0x1", "0x2"])
-    assert result["0x1"] == 10000 / 1e18
-    assert result["0x2"] == 10000 / 1e18
+    assert result["0x1"] == Wei(10000).to_eth()
+    assert result["0x2"] == Wei(10000).to_eth()
 
 
 @enforce_types
@@ -171,8 +172,8 @@ def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
 
 @enforce_types
 def test_dfbuyer_agent_get_missing_consume_times(mock_dfbuyer_agent):
-    missing_consumes = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
-    prices = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
+    missing_consumes = {"0x1": Eth(10.5), "0x2": Eth(20.3), "0x3": Eth(30.7)}
+    prices = {"0x1": Eth(2.5), "0x2": Eth(3.3), "0x3": Eth(4.7)}
     result = mock_dfbuyer_agent._get_missing_consume_times(missing_consumes, prices)
     expected_result = {"0x1": 5, "0x2": 7, "0x3": 7}
     assert result == expected_result
@@ -197,8 +198,12 @@ def test_dfbuyer_agent_take_step(
     mock_dfbuyer_agent,
 ):
     ts = 0
-    mock_get_missing_consumes.return_value = {"0x1": 10.5, "0x2": 20.3, "0x3": 30.7}
-    mock_get_prices.return_value = {"0x1": 2.5, "0x2": 3.3, "0x3": 4.7}
+    mock_get_missing_consumes.return_value = {
+        "0x1": Eth(10.5),
+        "0x2": Eth(20.3),
+        "0x3": Eth(30.7),
+    }
+    mock_get_prices.return_value = {"0x1": Eth(2.5), "0x2": Eth(3.3), "0x3": Eth(4.7)}
     mock_get_missing_consume_times.return_value = {"0x1": 5, "0x2": 7, "0x3": 7}
     mock_get_block.return_value = {"timestamp": 120}
     mock_batch_txs.return_value = False

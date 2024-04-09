@@ -18,16 +18,16 @@ def test_trueval_agent_constructor(mock_ppss):
 
 
 @enforce_types
-def test_get_contract_info_caching(agent, predictoor_contract_mock):
+def test_get_contract_info_caching(agent, feed_contract_mock):
     agent.get_contract_info("0x1")
     agent.get_contract_info("0x1")
-    assert predictoor_contract_mock.call_count == 1
-    predictoor_contract_mock.assert_called_once_with(agent.ppss.web3_pp, "0x1")
+    assert feed_contract_mock.call_count == 1
+    feed_contract_mock.assert_called_once_with(agent.ppss.web3_pp, "0x1")
 
 
 @enforce_types
 def test_get_trueval_slot(
-    agent, slot, predictoor_contract_mock
+    agent, slot, feed_contract_mock
 ):  # pylint: disable=unused-argument
     for trueval, cancel in [
         (True, True),  # up
@@ -41,7 +41,7 @@ def test_get_trueval_slot(
 
 @enforce_types
 def test_get_trueval_slot_too_many_requests_retry(
-    agent, slot, predictoor_contract_mock
+    agent, slot, feed_contract_mock
 ):  # pylint: disable=unused-argument
     mock_get_trueval = MagicMock(
         side_effect=[Exception("Too many requests"), (True, True)]
@@ -76,7 +76,7 @@ def test_trueval_agent_get_init_and_ts(agent):
 
 @enforce_types
 def test_process_trueval_slot(
-    agent, slot, predictoor_contract_mock
+    agent, slot, feed_contract_mock
 ):  # pylint: disable=unused-argument
     for trueval, cancel in [
         (True, True),  # up
