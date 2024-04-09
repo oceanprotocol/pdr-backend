@@ -157,6 +157,9 @@ def test_aimodel_factory_1var_main():
     figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
+    if SHOW_PLOT:
+        figure.show()
+
 
 @enforce_types
 def test_aimodel_factory_4vars_response():
@@ -192,6 +195,9 @@ def test_aimodel_factory_4vars_response():
 
     figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
+
+    if SHOW_PLOT:
+        figure.show()
 
 
 @enforce_types
@@ -251,3 +257,6 @@ def _test_aimodel_factory_nvars_varimps(n: int):
 
     figure = plot_aimodel_varimps(plot_data)
     assert isinstance(figure, Figure)
+
+    if SHOW_PLOT:
+        figure.show()
