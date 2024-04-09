@@ -1,11 +1,9 @@
 import ccxt
+from enforce_typing import enforce_types
+from pdr_backend.exchange.mock_order import MockOrder
 
 
-class MockOrder(dict):
-    def __str__(self):
-        return f"mocked order: {self.get('amount')} {self['pair_str']}"
-
-
+@enforce_types
 class MockExchange(ccxt.Exchange):
     # pylint: disable=unused-argument
     def create_market_buy_order(self, symbol, amount, params={}):

@@ -13,6 +13,7 @@ from statsmodels.stats.proportion import proportion_confint
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_plotter import SimPlotter
@@ -45,9 +46,10 @@ class SimEngine:
 
         self.logfile = ""
 
-        self.exchange = self.ppss.predictoor_ss.feed.ccxt_exchange(
-            mock=self.ppss.sim_ss.tradetype in ["histmock", "histmock"],
-            exchange_params=self.ppss.sim_ss.exchange_params,
+        mock = self.ppss.sim_ss.tradetype in ["histmock"]
+        exchange_manager = ExchangeMgr(self.ppss.exchange_mgr_ss)
+        self.exchange = exchange_manager.exchange(
+            "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 
         if multi_id:
