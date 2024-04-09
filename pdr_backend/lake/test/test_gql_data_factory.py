@@ -7,7 +7,6 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _clean_up_table_registry
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
 def test_gql_data_factory():

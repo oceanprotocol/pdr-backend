@@ -289,21 +289,17 @@ class ETL:
                 else UnixTimeMs(fin_timestamp)
             )
 
-            # TODO - data query is not returning a valid blob
             data = get_data_func(
                 path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
             )
-
-            # TODO - bronze slots table is returning null
-            print(f"update_bronze_pdr - {table_name} data: {data}")
 
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
                 table_type=TableType.TEMP,
             )
 
-            # For each bronze table that we process, that data will be entered into the TEMP table
-            # However, we need to create a view so downstream queries can access both production and TEMP data
+            # For each bronze table that we process, that data will be entered into TEMP
+            # Create view so downstream queries can access production + TEMP data
             self.create_etl_view(table_name)
 
         # At the end of the ETL pipeline, we want to

@@ -19,9 +19,15 @@ from pdr_backend.subgraph.slot import Slot, mock_slots, mock_slot
 
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table_pdr_subscriptions import subscriptions_schema, subscriptions_table_name
+from pdr_backend.lake.table_pdr_subscriptions import (
+    subscriptions_schema,
+    subscriptions_table_name,
+)
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
-from pdr_backend.lake.table_pdr_predictions import predictions_schema, predictions_table_name
+from pdr_backend.lake.table_pdr_predictions import (
+    predictions_schema,
+    predictions_table_name,
+)
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
@@ -33,8 +39,9 @@ from pdr_backend.lake.test.resources import (
     _clean_up_table_registry,
     _clean_up_persistent_data_store,
     _gql_data_factory,
-    get_filtered_timestamps_df
+    get_filtered_timestamps_df,
 )
+
 
 @pytest.fixture()
 def sample_payouts():
@@ -474,6 +481,7 @@ def _clean_up_test_folder():
                 os.rmdir(os.path.join(root, directory))
 
     return _clean_up
+
 
 @pytest.fixture
 def setup_data(

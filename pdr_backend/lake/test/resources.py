@@ -19,6 +19,7 @@ from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 
+
 @enforce_types
 def _mergedohlcv_df_ETHUSDT():
     d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
