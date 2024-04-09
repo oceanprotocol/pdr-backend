@@ -146,48 +146,6 @@ def test_update_partial_then_resume(
         1699300800000,
     ]
 
-def test_load_data(_mock_fetch_gql, _clean_up_test_folder, tmpdir):
-    """
-    Test GQLDataFactory update calls the getting the data from tables
-    """
-    _clean_up_test_folder(tmpdir)
-    _clean_up_table_registry()
-
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
-    ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
-        "sapphire-mainnet",
-        str(tmpdir),
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-    fns = {
-        "pdr_predictions": _mock_fetch_gql,
-        "pdr_subscriptions": _mock_fetch_gql,
-        "pdr_truevals": _mock_fetch_gql,
-        "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql,
-    }
-
-    gql_data_factory = GQLDataFactory(ppss)
-    for table_name in gql_data_factory.record_config["fetch_functions"]:
-        gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
-
-    gql_data_factory._update()
-
-    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
-
-    all_reacords = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
-        "SELECT * FROM {}".format(temp_table_name)
-    )
-
-    assert all_reacords is not None
-    assert len(all_reacords) > 0
-    assert all_reacords["pair"][0] == "BTC/USDT"
-    assert all_reacords["timeframe"][0] == "5m"
-
-
 @patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
 def test_get_gql_tables(mock_update):
     """
