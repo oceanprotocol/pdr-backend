@@ -18,7 +18,7 @@ install_requirements = [
     "flask==3.0.2",
     "freezegun==1.4.0",
     "imblearn",
-    "matplotlib==3.8.3",
+    "matplotlib==3.8.4",
     "mypy==1.9.0",
     "numpy==1.26.4",
     "pandas==2.2.1",
