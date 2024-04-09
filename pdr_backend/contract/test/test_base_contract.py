@@ -75,7 +75,7 @@ def test_send_encrypted_tx(
         rpc_url,
         value,
         gasLimit,
-        OCEAN.contract_instance.encodeABI(fn_name=function_name, args=args),
+        OCEAN.contract_instance.encode_abi(fn_name=function_name, args=args),
         gasCost,
         nonce,
     )
