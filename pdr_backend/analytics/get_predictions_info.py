@@ -48,7 +48,7 @@ class PredFilter:
         predictions_df = self.predictions_df
         predictions_df = predictions_df.filter(
             predictions_df["ID"]
-            .map_elements(lambda x: x.split("-")[0].lower())
+            .map_elements(lambda x: x.split("-")[0].lower(), return_dtype=str)
             .is_in(feed_addrs)
         )
         self.predictions_df = predictions_df

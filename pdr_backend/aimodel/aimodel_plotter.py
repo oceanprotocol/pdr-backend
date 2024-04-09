@@ -1,8 +1,6 @@
 from enforce_typing import enforce_types
 import numpy as np
 import plotly.graph_objects as go
-import pandas as pd
-import altair as alt
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -249,39 +247,63 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     @arguments
       d -- AimodelPlotdata
     """
-    var_imps, errors = d.model.importance_per_var(include_stddev=True)
-    labels = d.colnames
+    imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+    varnames = d.colnames
+    n = len(varnames)
 
-    var_imps = [100 * a for a in var_imps]
-    errors = [100 * a for a in errors]
+    # if >40 vars, truncate to top 40+1
+    if n > 40:
+        rest_avg = sum(imps_avg[40:])
+        rest_stddev = np.average(imps_stddev[40:])
+        imps_avg = np.append(imps_avg[:40], rest_avg)
+        imps_stddev = np.append(imps_stddev[:40], rest_stddev)
+        varnames = varnames[:40] + ["rest"]
+        n = 40 + 1
 
-    df = pd.DataFrame(var_imps, columns=["importance"])
-    df["label"] = labels
-    df["erorrs"] = errors
-    df["low"] = df["importance"] - df["erorrs"] * 2
-    df["high"] = df["importance"] + df["erorrs"] * 2
-    df.sort_values(by=["importance"], inplace=True, ascending=True)
+    # if <10 vars, make it like 10
+    if n < 10:
+        n_extra = 10 - n
+        imps_avg = np.append(imps_avg, [0.0] * n_extra)
+        imps_stddev = np.append(imps_stddev, [0.0] * n_extra)
+        varnames = varnames + [""] * n_extra
+        n = 10
 
-    chart = (
-        alt.Chart(df)
-        .mark_bar()
-        .encode(
-            x=alt.X("importance", title="Relative importance (%)"),
-            y=alt.Y("label", title=None, sort="-x", axis=alt.Axis(labelLimit=200)),
+    # put in percent scales
+    imps_avg = imps_avg * 100.0
+    imps_stddev = imps_stddev * 100.0
+
+    labelalias = {}
+
+    for i in range(n):
+        # avoid overlap in figure by giving different labels,
+        # but alias them to "" for the legend
+        if varnames[i] == "":
+            varnames[i] = f"var{i}"
+            labelalias[varnames[i]] = ""
+
+    fig_bars = go.Figure(
+        data=go.Bar(
+            x=imps_avg,
+            y=varnames,
+            error_x={"type": "data", "array": imps_stddev * 2},
+            orientation="h",
         )
-        .properties(title="Variable importances")
     )
 
-    error_bars = (
-        alt.Chart(df)
-        .mark_rule()
-        .encode(
-            y=alt.Y("label:N", title=None, sort="-x"),
-            x=alt.X("low:Q"),
-            x2=alt.X2("high:Q"),
-            color=alt.value("white"),
-            size=alt.value(4),
-        )
+    fig_bars.update_layout(xaxis_title="Relative importance (%)")
+    fig_bars.update_layout(title="Variable importances")
+    fig_bars.update_layout(yaxis={"categoryorder": "total ascending"})
+
+    bar_lw = 0.2 if n < 15 else 0.3
+    err_lw = 3 if n < 15 else 1
+
+    fig_bars.update_traces(
+        marker_line_width=bar_lw,
+        error_x_width=err_lw,
     )
 
-    return chart + error_bars
+    fig_bars.update_layout(
+        yaxis={"labelalias": labelalias},
+    )
+
+    return fig_bars

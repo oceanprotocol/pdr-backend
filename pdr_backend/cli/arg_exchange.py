@@ -13,10 +13,6 @@ class ArgExchange:
 
         self.exchange = exchange
 
-    @property
-    def exchange_class(self):
-        return getattr(ccxt, self.exchange)
-
     def __str__(self):
         return self.exchange
 

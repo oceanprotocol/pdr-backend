@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Union
 import ccxt
 from enforce_typing import enforce_types
 
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.trader.approach2.portfolio import Order, Portfolio, create_order
@@ -34,7 +35,10 @@ class TraderAgent2(BaseTraderAgent):
             self.portfolio = Portfolio([self.feed.address])
 
         # Generic exchange clss
-        self.exchange: ccxt.Exchange = self.ppss.trader_ss.ccxt_exchange()
+        exchange_manager = ExchangeMgr(self.ppss.exchange_mgr_ss)
+        self.exchange: ccxt.Exchange = exchange_manager.exchange(
+            self.ppss.trader_ss.exchange_type
+        )
 
         self.update_positions([self.feed.address])
 
