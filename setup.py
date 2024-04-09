@@ -13,7 +13,7 @@ install_requirements = [
     "ccxt==4.2.87",
     "coverage",
     "enforce_typing",
-    "eth-account==0.11.0",
+    "eth-account==0.12.1",
     "eth-keys==0.5.0",
     "flask==3.0.2",
     "freezegun==1.4.0",
