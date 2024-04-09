@@ -29,7 +29,7 @@ class ArgFeeds(List[ArgFeed]):
 
         feeds = []
         for feeds_str in feeds_strs:
-            feeds += _unpack_feeds_str(str(feeds_str))
+            feeds += _unpack_feeds_str(feeds_str)
 
         return ArgFeeds(feeds)
 

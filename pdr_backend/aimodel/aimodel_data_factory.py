@@ -1,15 +1,12 @@
 import logging
 import sys
-import polars as pl
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
-
-from typing import Optional, Tuple
+import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -68,8 +65,6 @@ class AimodelDataFactory:
         self,
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
-        feed: ArgFeed,
-        feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -103,15 +98,15 @@ class AimodelDataFactory:
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
         ss = self.ss.aimodel_ss
-        if not feeds:
-            feeds = ss.feeds
+
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in feeds
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
         ]
+
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
@@ -142,7 +137,8 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{feed.exchange}:{feed.pair}:{feed.signal}"
+        ref_ss = self.ss
+        hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 

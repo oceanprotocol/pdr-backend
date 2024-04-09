@@ -1,10 +1,9 @@
-from typing import List, Optional
+from typing import Optional
 
 from enforce_typing import enforce_types
-from pdr_backend.cli.predict_feeds import PredictFeeds
 
+from pdr_backend.ppss.base_ss import SingleFeedMixin
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
-from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.currency_types import Eth
 
@@ -14,9 +13,9 @@ from pdr_backend.util.currency_types import Eth
 CAND_APPROACHES = [1, 2]
 
 
-class PredictoorSS(PredictFeedMixin, StrMixin):
+class PredictoorSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEEDS_KEY = "feeds"
+    FEED_KEY = "predict_feed"
 
     @enforce_types
     def __init__(self, d: dict):
@@ -29,7 +28,7 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
     # --------------------------------
     # yaml properties
 
-    # (predict_feeds defined in base)
+    # (predict_feed defined in base)
 
     @property
     def approach(self) -> int:
@@ -81,10 +80,6 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
         return self.d["bot_only"]["s_until_epoch_end"]
 
     @property
-    def pred_submitter_mgr(self) -> str:
-        return self.d["pred_submitter_mgr"]
-
-    @property
     def s_cutoff(self) -> int:
         if "s_cutoff" not in self.d["bot_only"]:
             return 10
@@ -104,30 +99,16 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
 # utilities for testing
 
 
-def example_predict_feeds() -> list:
-    return [
-        {
-            "predict": "binance BTC/USDT c 5m",
-            "train_on": "binance BTC/USDT c 5m",
-        },
-        {
-            "predict": "kraken ETH/USDT c 5m",
-            "train_on": "kraken ETH/USDT c 5m",
-        },
-    ]
-
-
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds: Optional[List] = None,
-    input_feeds: List[str] = None,
+    predict_feed: Optional[str] = None,
+    input_feeds: Optional[list] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or example_predict_feeds()
-    input_feeds = input_feeds or PredictFeeds.from_array(predict_feeds).feeds_str
-    print(predict_feeds, input_feeds)
+    predict_feed = predict_feed or "binance BTC/USDT c 5m"
+    input_feeds = input_feeds or [predict_feed]
     d = {
-        "feeds": predict_feeds,
+        "predict_feed": predict_feed,
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {

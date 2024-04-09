@@ -49,9 +49,7 @@ def _constructor_d_with_fast_runtime(tmpdir):
     constructor_d["lake_ss"] = d
 
     # predictoor ss
-    d = predictoor_ss_test_dict(
-        [{"train_on": predict_feed, "predict": predict_feed}], input_feeds
-    )
+    d = predictoor_ss_test_dict(predict_feed, input_feeds)
     d["aimodel_ss"]["max_n_train"] = 100
     constructor_d["predictoor_ss"] = d
 
