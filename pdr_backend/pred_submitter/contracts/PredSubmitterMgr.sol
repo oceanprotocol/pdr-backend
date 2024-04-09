@@ -29,9 +29,9 @@ contract PredSubmitterMgr {
     ///@notice send ocean tokens to the instances managed by the master
     function _sendTokensToInstance(uint256 amtUp, uint256 amtDown) internal {
         IERC20 tokenInstance = IERC20(oceanTokenAddr);
-        if (amtUp != 0) tokenInstance.transfer(address(instanceUp), amtUp);
+        if (amtUp != 0) tokenInstance.transferFrom(msg.sender, address(instanceUp), amtUp);
         if (amtDown != 0)
-            tokenInstance.transfer(address(instanceDown), amtDown);
+            tokenInstance.transferFrom(msg.sender, address(instanceDown), amtDown);
     }
 
     ///@notice claims DF rewards from the DFRewards contract
@@ -75,6 +75,7 @@ contract PredSubmitterMgr {
         address[] calldata feeds,
         uint256 epoch
     ) external onlyOwner {
+        IERC20 ocean = IERC20(oceanTokenAddr);
         uint256 upInstanceFunding = 0;
         uint256 downInstanceFunding = 0;
 
@@ -105,6 +106,8 @@ contract PredSubmitterMgr {
         uint256 balDown = ocean.balanceOf(address(instanceDown));
 
         _getTokensFromInstance(oceanTokenAddr, balUp, balDown);
+
+        ocean.transfer(msg.sender, ocean.balanceOf(address(this)));
     }
 
     /// @notice transfer any ERC20 tokens in this contract to another address

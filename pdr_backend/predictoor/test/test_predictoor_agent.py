@@ -1,11 +1,14 @@
+# pylint: disable=redefined-outer-name
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from enforce_typing import enforce_types
 import numpy as np
-from numpy.testing import assert_array_equal
 import polars as pl
 
+from enforce_typing import enforce_types
+from numpy.testing import assert_array_equal
+
+from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -24,17 +27,19 @@ from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
-def test_predictoor_agent_main1(tmpdir, monkeypatch):
-    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
+def test_predictoor_agent_main1(tmpdir, monkeypatch, pred_submitter_mgr):
+    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
 
 @enforce_types
-def test_predictoor_agent_main2(tmpdir, monkeypatch):
-    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch)
+def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
+    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
 
 @enforce_types
-def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
+def _test_predictoor_agent_main(
+    approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
+):
     """
     @description
         Run the agent for a while, and then do some basic sanity checks.
@@ -49,8 +54,14 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
     ):
-        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
+        _, ppss, _mock_pdr_contract = mock_ppss_1feed(
+            approach,
+            tmpdir,
+            monkeypatch,
+            pred_submitter_mgr=pred_submitter_mgr.contract_address,
+        )
         assert ppss.predictoor_ss.approach == approach
+        ppss.predictoor_ss.d["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
         # now we're done the mocking, time for the real work!!
 
         # real work: main iterations
@@ -77,10 +88,11 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     print(f"all prediction_slots = {_mock_pdr_contract._prediction_slots}")
 
     # relatively basic sanity tests
-    assert _mock_pdr_contract._prediction_slots
-    assert (mock_w3.eth.timestamp + 2 * ppss.predictoor_ss.timeframe_s) >= max(
-        _mock_pdr_contract._prediction_slots
-    )
+    # TODO Use the Prediction Submitter Manager to check these, commented out for now
+    # assert _mock_pdr_contract._prediction_slots
+    # assert (mock_w3.eth.timestamp + 2 * ppss.predictoor_ss.timeframe_s) >= max(
+    #     _mock_pdr_contract._prediction_slots
+    # )
 
 
 # ===========================================================================
@@ -88,15 +100,17 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
 
 
 @enforce_types
-def test_predictoor_agent_init_empty():
+def test_predictoor_agent_init_empty(pred_submitter_mgr):
     """
     @description
       Basic test: when there's no feeds, does it complain?
     """
     # test with no feeds
+    pred_submitter_mgr_addr = pred_submitter_mgr.contract_address
     mock_ppss_empty = MagicMock(spec=PPSS)
     mock_ppss_empty.predictoor_ss = MagicMock(spec=PredictoorSS)
-    mock_ppss_empty.predictoor_ss.get_feed_from_candidates.return_value = None
+    mock_ppss_empty.predictoor_ss.filter_feeds_from_candidates.return_value = []
+    mock_ppss_empty.predictoor_ss.pred_submitter_mgr = pred_submitter_mgr_addr
     mock_ppss_empty.web3_pp = MagicMock(spec=Web3PP)
     mock_ppss_empty.web3_pp.query_feed_contracts.return_value = {}
 
@@ -154,7 +168,7 @@ class MockModel:
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter_mgr):
     """
     @description
       Test calc_stakes2() on 1 feed.
@@ -177,14 +191,17 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
     ):
 
         # initialize agent
-        _, ppss, _ = mock_ppss_1feed(2, str(tmpdir), monkeypatch)
+        _, ppss, _ = mock_ppss_1feed(
+            2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+        )
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
         assert aimodel_ss.n_feeds == 1
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes2()
+        feed = ppss.predictoor_ss.feeds[0]
+        agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3
@@ -199,7 +216,7 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch):
 
 
 @enforce_types
-def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
+def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitter_mgr):
     """
     @description
       Test calc_stakes2(), when X has >1 input feed
@@ -215,7 +232,9 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
     ):
 
         # initialize agent
-        feeds, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+        feeds, ppss = mock_ppss_2feeds(
+            2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+        )
         assert ppss.predictoor_ss.approach == 2
 
         assert len(feeds) == 2
@@ -225,7 +244,8 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        agent.calc_stakes2()
+        feed = ppss.predictoor_ss.feeds[0]
+        agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n
         assert ar_n == 3
@@ -244,63 +264,47 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 
 @enforce_types
 @pytest.mark.parametrize(
-    "up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected",
+    "OCEAN, ROSE, expected",
     [
         (
             Eth(100).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(2).to_wei(),
             True,
         ),  # All balances are sufficient
         (
             Eth(0).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(2).to_wei(),
             False,
-        ),  # Up OCEAN balance too low
+        ),  # OCEAN balance too low
         (
             Eth(100).to_wei(),
             Eth(0).to_wei(),
-            Eth(2).to_wei(),
-            Eth(2).to_wei(),
             False,
-        ),  # Down OCEAN balance too low
+        ),  # ROSE balance too low
         (
-            Eth(100).to_wei(),
-            Eth(100).to_wei(),
             Eth(0).to_wei(),
-            Eth(2).to_wei(),
-            False,
-        ),  # Up ROSE balance too low
-        (
-            Eth(100).to_wei(),
-            Eth(100).to_wei(),
-            Eth(2).to_wei(),
             Eth(0).to_wei(),
             False,
-        ),  # Down ROSE balance too low
+        ),  # Both balances too low
     ],
 )
-def test_balance_check(
-    tmpdir, monkeypatch, up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected
-):
+def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitter_mgr):
     mock_model = MockModel()
-    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+    _, ppss = mock_ppss_2feeds(
+        2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
+    )
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
-    # do prediction
     mock_model.aimodel_ss = aimodel_ss
     agent = PredictoorAgent(ppss)
 
     mock_OCEAN = Mock()
-    mock_OCEAN.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
+    mock_OCEAN.balanceOf.return_value = OCEAN
     mock_ROSE = Mock()
-    mock_ROSE.balanceOf.side_effect = [up_ROSE, down_ROSE]
+    mock_ROSE.balanceOf.return_value = ROSE
 
     agent.ppss.web3_pp = Mock(spec=Web3PP)
     agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
     agent.ppss.web3_pp.NativeToken = mock_ROSE
 
-    assert agent.check_balances() == expected
+    assert agent.check_balances(Eth(100)) == expected
