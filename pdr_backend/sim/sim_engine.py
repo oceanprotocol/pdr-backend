@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 from typing import Optional
+import uuid
 
 import numpy as np
 import polars as pl
@@ -51,7 +52,10 @@ class SimEngine:
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 
-        self.multi_id = multi_id
+        if multi_id:
+            self.multi_id = multi_id
+        else:
+            self.multi_id = str(uuid.uuid4())
 
     @property
     def tokcoin(self) -> str:
@@ -79,7 +83,7 @@ class SimEngine:
         self._init_loop_attributes()
         logger.info("Start run")
 
-        self.sim_plotter.init_state()
+        self.sim_plotter.init_state(self.multi_id)
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
@@ -220,8 +224,7 @@ class SimEngine:
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
-        # temporarily we don't allow streamlit supervision of multisim runs
-        if save_state and not self.multi_id:
+        if save_state:
             colnames = [_shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
