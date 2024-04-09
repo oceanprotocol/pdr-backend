@@ -1,8 +1,10 @@
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
@@ -21,7 +23,6 @@ from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
-from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -69,9 +70,11 @@ class ETL:
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
+        print(f"self.bronze_table_getters: {self.bronze_table_getters}")
+
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
-        self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
+        self.temp_table_names = [*self.bronze_table_names]
 
     def _drop_temp_sql_tables(self):
         """
@@ -93,6 +96,7 @@ class ETL:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
+            print(f"move table {table_name} to live")
             pds.move_table_data(
                 get_table_name(table_name, TableType.TEMP),
                 table_name,
@@ -214,10 +218,7 @@ class ETL:
             else datetime.strptime(self.ppss.lake_ss.st_timestr, "%Y-%m-%d_%H:%M")
         )
 
-        to_values = self._get_max_timestamp_values_from(
-            self.raw_table_names, TableType.TEMP
-        ).values()
-
+        to_values = self._get_max_timestamp_values_from(self.raw_table_names).values()
         to_timestamp = (
             min(to_values)
             if None not in to_values
@@ -225,6 +226,45 @@ class ETL:
         )
 
         return from_timestamp, to_timestamp
+
+    @enforce_types
+    def create_etl_view(self, table_name: str):
+        # Assemble view query and create the view
+        assert (
+            table_name in self.bronze_table_names
+        ), f"{table_name} must be a bronze table"
+
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        temp_table_name = get_table_name(table_name, TableType.TEMP)
+        etl_view_name = get_table_name(table_name, TableType.ETL)
+
+        table_exists = pds.table_exists(table_name)
+        temp_table_exists = pds.table_exists(temp_table_name)
+        etl_view_exists = pds.view_exists(etl_view_name)
+        assert temp_table_exists, f"{temp_table_name} must already exist"
+        assert not etl_view_exists, f"{etl_view_name} must not exist"
+
+        view_query = None
+
+        if table_exists and temp_table_exists:
+            view_query = """
+                CREATE VIEW {} AS
+                ( 
+                    SELECT * FROM {}
+                    UNION ALL
+                    SELECT * FROM {}
+                )""".format(
+                etl_view_name,
+                get_table_name(table_name),
+                temp_table_name,
+            )
+        else:
+            view_query = (
+                f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
+            )
+
+        pds.query_data(view_query)
+        print(f"  Created {table_name} view")
 
     def update_bronze_pdr(self):
         """
@@ -257,3 +297,12 @@ class ETL:
                 data,
                 table_type=TableType.TEMP,
             )
+
+            # For each bronze table that we process, that data will be entered into TEMP
+            # Create view so downstream queries can access production + TEMP data
+            self.create_etl_view(table_name)
+
+        # At the end of the ETL pipeline, we want to
+        # 1. move from TEMP tables to production tables
+        # 2. drop TEMP tables and ETL views
+        self._move_from_temp_tables_to_live()
