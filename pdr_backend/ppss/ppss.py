@@ -6,6 +6,7 @@ import yaml
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.multisim_ss import MultisimSS
@@ -94,28 +95,42 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
         lake_fs = self.lake_ss.feeds
-        predict_f = self.predictoor_ss.feed
+        predict_fs = self.predictoor_ss.feeds
         aimodel_fs = self.predictoor_ss.aimodel_ss.feeds
 
         # is predictoor_ss.predict_feed in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
         #   because lake holds all signals o,h,l,c,v
-        if not lake_fs.contains_combination(
-            predict_f.exchange, predict_f.pair, predict_f.timeframe
-        ):
-            s = "predictoor_ss.predict_feed not in lake_ss.feeds"
-            s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
-            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
-            raise ValueError(s)
+        for predict_f in predict_fs.feeds:
+            if not lake_fs.contains_combination(
+                predict_f.exchange, predict_f.pair, predict_f.timeframe
+            ):
+                s = "predictoor_ss.predict_feed not in lake_ss.feeds"
+                s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
+
+        # enforce that all predict feeds have the same timeframe
+        timeframe = ""
+        for predict_f in predict_fs.feeds:
+            if timeframe == "":
+                timeframe = predict_f.timeframe
+                continue
+            if predict_f.timeframe != timeframe:
+                s = "predictoor_ss.predict_feed not in lake_ss.feeds"
+                s += f"\n  lake_ss.feeds = {lake_fs} (ohlcv)"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
 
         # do all aimodel_ss input feeds conform to predict feed timeframe?
-        for aimodel_f in aimodel_fs:
-            if aimodel_f.timeframe != predict_f.timeframe:
-                s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
-                s += f"\n  target={predict_f.timeframe}, in predictoor_ss.feed"
-                s += f"\n  found={aimodel_f.timeframe}, in this aimodel feed:"
-                s += f" {aimodel_f}"
-                raise ValueError(s)
+        for predict_f in predict_fs.feeds:
+            for aimodel_f in aimodel_fs:
+                if aimodel_f.timeframe != predict_f.timeframe:
+                    s = "at least one ai_model_ss.input_feeds' timeframe incorrect"
+                    s += f"\n  target={predict_f.timeframe}, in predictoor_ss.feed"
+                    s += f"\n  found={aimodel_f.timeframe}, in this aimodel feed:"
+                    s += f" {aimodel_f}"
+                    raise ValueError(s)
 
         # is each predictoor_ss.aimodel_ss.input_feeds in lake feeds?
         # - check for matching {exchange, pair, timeframe} but not {signal}
@@ -131,12 +146,13 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
         # - check for matching {exchange, pair, timeframe AND signal}
-        if predict_f not in aimodel_fs:
-            s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
-            s += " (accounting for signal too)"
-            s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
-            s += f"\n  predictoor_ss.predict_feed = {predict_f}"
-            raise ValueError(s)
+        for predict_f in predict_fs.feeds:
+            if predict_f not in aimodel_fs:
+                s = "predictoor_ss.predict_feed not in aimodel_ss.input_feeds"
+                s += " (accounting for signal too)"
+                s += f"\n  predictoor_ss.ai_model.input_feeds = {aimodel_fs}"
+                s += f"\n  predictoor_ss.predict_feed = {predict_f}"
+                raise ValueError(s)
 
     def __str__(self):
         s = ""
@@ -165,7 +181,12 @@ def mock_feed_ppss(
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
     ppss = mock_ppss(
-        [f"{exchange} {pair} c {timeframe}"],
+        [
+            {
+                "train_on": f"{exchange} {pair} c {timeframe}",
+                "predict": f"{exchange} {pair} c {timeframe}",
+            }
+        ],
         network,
         tmpdir,
     )
@@ -174,7 +195,7 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    feeds: List[str],  # eg ["binance BTC/USDT ETH/USDT c 5m", "kraken ..."]
+    feeds: list,
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -184,17 +205,14 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
 
     ppss = PPSS(yaml_str=yaml_str, network=network)
-
+    predict_feeds = PredictFeeds.from_array(feeds)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
-
-    arg_feeds: ArgFeeds = ArgFeeds.from_strs(feeds)
-    onefeed = str(arg_feeds[0])  # eg "binance BTC/USDT c 5m"
 
     assert hasattr(ppss, "lake_ss")
     ppss.lake_ss = LakeSS(
         {
-            "feeds": feeds,
+            "feeds": predict_feeds.feeds_str,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
@@ -202,15 +220,13 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "predictoor_ss")
-    d = predictoor_ss_test_dict()
-    d["predict_feed"] = onefeed
-    d["aimodel_ss"]["input_feeds"] = feeds
+    d = predictoor_ss_test_dict(feeds)
     ppss.predictoor_ss = PredictoorSS(d)
 
     assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(
         {
-            "feed": onefeed,
+            "feed": predict_feeds.feeds_str[0],
             "sim_only": {
                 "buy_amt": "10 USD",
             },
@@ -227,12 +243,12 @@ def mock_ppss(
 
     assert hasattr(ppss, "trueval_ss")
     assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
-    ppss.trueval_ss.d["feeds"] = feeds  # type: ignore[attr-defined]
+    ppss.trueval_ss.d["feeds"] = predict_feeds.feeds_str  # type: ignore[attr-defined]
 
     assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(
         {
-            "feeds": feeds,
+            "feeds": predict_feeds.feeds_str,
             "batch_size": 20,
             "consume_interval_seconds": 86400,
             "weekly_spending_limit": 37000,
