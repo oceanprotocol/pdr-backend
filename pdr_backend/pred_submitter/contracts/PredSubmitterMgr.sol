@@ -75,6 +75,7 @@ contract PredSubmitterMgr {
         address[] calldata feeds,
         uint256 epoch
     ) external onlyOwner {
+        IERC20 ocean = IERC20(oceanTokenAddr);
         uint256 upInstanceFunding = 0;
         uint256 downInstanceFunding = 0;
 
@@ -85,6 +86,8 @@ contract PredSubmitterMgr {
         for (uint256 i = 0; i < stakesDown.length; i++) {
             downInstanceFunding += stakesDown[i];
         }
+
+        ocean.transferFrom(msg.sender, address(this), upInstanceFunding + downInstanceFunding);
 
         _sendTokensToInstance(upInstanceFunding, downInstanceFunding);
 
@@ -105,6 +108,8 @@ contract PredSubmitterMgr {
         uint256 balDown = ocean.balanceOf(address(instanceDown));
 
         _getTokensFromInstance(oceanTokenAddr, balUp, balDown);
+
+        ocean.transfer(msg.sender, ocean.balanceOf(address(this)));
     }
 
     /// @notice transfer any ERC20 tokens in this contract to another address
