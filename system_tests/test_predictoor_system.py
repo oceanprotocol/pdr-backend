@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.web3_config import Web3Config
 
 
@@ -37,9 +38,11 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
 
     merged_ohlcv_df = Mock()
 
+    mock_predictoor_ss.get_feed_from_candidates.return_value = {"0x1": SubgraphFeed("BTC/USDT", "0x1", "BTC", 300, 300, "0x1", "BTC", "5m", "binance")}
+
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.ppss.ppss.PredictoorSS", return_value=mock_predictoor_ss
-    ), patch(
+    ), patch("pdr_backend.predictoor.predictoor_agent.PredSubmitterMgr", return_value=Mock()), patch(
         "pdr_backend.lake.ohlcv_data_factory.OhlcvDataFactory.get_mergedohlcv_df",
         return_value=merged_ohlcv_df,
     ):
