@@ -325,7 +325,7 @@ class _MockEthWithTracking:
     def get_balance(self, account):  # pylint: disable=unused-argument
         return 100e18
 
-    def contract(self, address, abi): # pylint: disable=unused-argument
+    def contract(self, address, abi):  # pylint: disable=unused-argument
         return Mock()
 
     def wait_for_transaction_receipt(self, tx_hash):

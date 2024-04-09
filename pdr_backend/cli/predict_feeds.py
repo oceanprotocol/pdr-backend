@@ -102,7 +102,7 @@ class PredictFeeds(List[PredictFeed]):
             if feed.predict not in set_pairs:
                 set_pairs.append(feed.predict)
         return set_pairs
-    
+
     @property
     def min_epoch_seconds(self) -> int:
         epoch = 1e9

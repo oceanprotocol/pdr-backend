@@ -224,7 +224,7 @@ class PredictoorAgent:
 
         seconds_left = current_ts % min_tf_seconds
         return seconds_left
-    
+
     @property
     def cur_unique_epoch(self):
         """
