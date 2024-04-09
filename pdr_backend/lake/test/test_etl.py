@@ -25,7 +25,6 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
-from datetime import datetime
 
 
 @enforce_types

@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
