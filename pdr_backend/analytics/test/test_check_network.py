@@ -89,11 +89,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        str(tmpdir),
-    )
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
@@ -124,11 +120,7 @@ def test_check_network_others(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        str(tmpdir),
-    )
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
     mock_query_subgraph = Mock()
 
     # test if predictoor contracts are found, iterates through them
@@ -166,11 +158,7 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     monkeypatch,
 ):
     mock_token.balanceOf.return_value = Wei(1000e18)
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        str(tmpdir),
-    )
+    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
 
     check_network_main(ppss, lookback_hours=1)
     assert mock_check_dfbuyer.call_count == 1

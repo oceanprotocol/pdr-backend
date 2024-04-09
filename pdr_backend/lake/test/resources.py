@@ -18,13 +18,7 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT():
-    predict_feeds = [
-        {
-            "predict": "binanceus ETH/USDT h 5m",
-            "train_on": "binanceus ETH/USDT h 5m",
-        }
-    ]
-    d = predictoor_ss_test_dict(predict_feeds)
+    d = predictoor_ss_test_dict("binanceus ETH/USDT h 5m")
     predictoor_ss = PredictoorSS(d)
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
@@ -42,13 +36,7 @@ def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
 @enforce_types
 def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
     network = "sapphire-mainnet"
-    ppss = mock_ppss(
-        [{"predict": feed, "train_on": feed}],
-        network,
-        str(tmpdir),
-        st_timestr,
-        fin_timestr,
-    )
+    ppss = mock_ppss([feed], network, str(tmpdir), st_timestr, fin_timestr)
     ppss.web3_pp = mock_web3_pp(network)
 
     # setup lake

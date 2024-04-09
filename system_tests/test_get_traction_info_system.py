@@ -40,7 +40,7 @@ def test_traction_info_system(mock_get_gql_tables, mock_plot_stats, caplog):
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
+        ["binance BTC/USDT c 5m"],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,

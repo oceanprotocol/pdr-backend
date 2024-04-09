@@ -47,7 +47,7 @@ def mock_ppss_1feed(approach: int, tmpdir: str, monkeypatch):
         ppss.web3_pp,
         INIT_TIMESTAMP,
         INIT_BLOCK_NUMBER,
-        feed.seconds_per_epoch,
+        ppss.predictoor_ss.timeframe_s,
         feed.address,
         monkeypatch,
     )
@@ -76,13 +76,7 @@ def mock_ppss_2feeds(approach: int, tmpdir: str, monkeypatch):
         mock_feed(timescale, exchange, f"{c}/{quote}") for c in coins
     ]
     ppss = mock_ppss(
-        [
-            {
-                "predict": f"{exchange} {c}/{quote} c {timescale}",
-                "train_on": f"{exchange} {c}/{quote} c {timescale}",
-            }
-            for c in coins
-        ],
+        [f"{exchange} {c}/{quote} c {timescale}" for c in coins],
         network="development",
         tmpdir=tmpdir,
     )
