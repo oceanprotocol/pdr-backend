@@ -284,6 +284,7 @@ class PredictoorAgent:
             feeds=feeds,
             epoch=target_slot,
         )
+        logger.info("Tx submitted %s", tx["transactionHash"].hex())
 
         # handle errors
         if _tx_failed(tx):
@@ -379,7 +380,7 @@ class PredictoorAgent:
         min_ROSE_bal = Eth(1).to_wei()
 
         # check OCEAN balance
-        OCEAN_bal = self.OCEAN.balanceOf(self.pred_submitter_mgr.contract_address)
+        OCEAN_bal = self.OCEAN.balanceOf(self.ppss.web3_pp.web3_config.owner)
         if OCEAN_bal < required_OCEAN.to_wei():
             logger.error("OCEAN balance too low: %s < %s", OCEAN_bal, required_OCEAN)
             return False
