@@ -57,15 +57,6 @@ def test_clean_raw_ohlcv():
     assert clean_raw_ohlcv(RAW5678v, feed, UnixTimeMs(T8), UnixTimeMs(T8)) == [RAW8]
 
 
-@enforce_types
-def assert_raw_tohlc_data_ok(raw_tohlc_data):
-    assert raw_tohlc_data, raw_tohlc_data
-    assert isinstance(raw_tohlc_data, list)
-    for item in raw_tohlc_data:
-        assert len(item) == (6)
-        assert isinstance(item[0], int)
-        for val in item[1:]:
-            assert isinstance(val, float)
 
 @enforce_types
 def test_schema_interpreter_float_as_integer():
