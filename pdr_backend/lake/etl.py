@@ -211,7 +211,7 @@ class ETL:
 
         return values
 
-    def _calc_bronze_start_end_ts(self, tabletype: TableType = TableType.TEMP):
+    def _calc_bronze_start_end_ts(self):
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -234,17 +234,7 @@ class ETL:
             self.raw_table_names, TableType.TEMP
         ).values()
 
-        fin_timestamp = (
-            self.ppss.lake_ss.fin_timestr
-            if self.ppss.lake_ss.fin_timestr != "now"
-            else datetime.now().strftime("%Y-%m-%d_%H:%M")
-        )
-
-        to_timestamp = (
-            min(to_values)
-            if None not in to_values
-            else datetime.strptime(fin_timestamp, "%Y-%m-%d_%H:%M")
-        )
+        to_timestamp = min(to_values)
 
         return from_timestamp, to_timestamp
 
