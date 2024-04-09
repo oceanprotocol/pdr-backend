@@ -172,10 +172,48 @@ The next sections describe how to go beyond, by optimizing the model and more.
 
 # Optimize model
 
-The idea: make your own model, tuned for accuracy, which in turn will optimize it for $. Here's how:
+You can tune your data & model for accuracy, which in turn will optimize it for $. And you can write your own code too, to push performance further. This section covers both.
 
+## Optimize model: Tuning
+Top-level tuning flow:
+1. Use `multisim` tool to find optimal parameters, via simulation runs
+1. Bring your model as a Predictoor bot to testnet then mainnet.
+
+**Detailed tuning flow.** First, specify your sweep parameters & respective values in `my_ppss.yaml`, section `multisim_ss`. Here's an example.
+```yaml
+multisim_ss:
+  approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
+  sweep_params:
+  - trader_ss.buy_amt: 1000 USD, 2000 USD
+  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
+  - predictoor_ss.aimodel_ss.input_feeds:
+    -
+      - binance BTC/USDT c 5m
+    -
+      - binance BTC/USDT ETH/USDT c 5m
+      - kraken BTC/USDT c 5m
+```
+
+In the example, three parameters are being swept: 
+1. `trader_ss.buy_amt`, with two possible values: (i) `1000 USD` or (ii) `2000 USD`
+1. `predictoor_ss.aimodel_ss.max_n_train`, with three possible values: (i) `500`, (ii) `1000`, or (iii) `1500`
+1. `predictoor_ss.aimodel_ss.input_feeds`, with two possible values: (i) just binance BTC/USDT close price, or (ii) binance BTC/USDT & ETH/USDT close price, and kraken BTC/USDT close price.
+
+The total number of combinations is 2 x 3 x 2 = 12. 
+
+Then, run `pdr multisim PPSS_FILE`.
+
+The multisim tool will run a separate simulation for each of the 12 combinations. 
+
+As it runs, it will update a csv file summarizing results, as follows.
+- name is `multisim_metrics_UNIX-TIME-MS.csv`, where UNIX-TIME-MS is the unix time at the start of the multisim run, in milliseconds. 
+- The columns of the csv are: run_number, performance metric 1, performance metric 2, ..., ppss setup parameter 1, setup parameter 2, ... .
+  - Performance metrics are currently: "acc_est" (model prediction accuracy at end), "acc_l" (lower-bound accuracy), "acc_u" (upper-bound accuracy), "f1", "precision", "recall".
+- The first row of the csv is the header. Each subsequent row is the results for a given run. For the example above, there will be 1+12 rows.
+
+**Go further: write code.** You can go beyond tuning parameters, by developing your own data or modeling. Here's how:
 1. Fork `pdr-backend` repo.
-1. Change predictoor approach 2 modeling code as you wish, while iterating with simulation.
+1. Change code for data, modeling, or otherwise as you wish. Run multisim to tune further
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
 # Right-size staking
