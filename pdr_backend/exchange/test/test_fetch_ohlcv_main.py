@@ -17,15 +17,15 @@ LIMIT = 500
 
 @enforce_types
 def test_safe_fetch_ohlcv_1_dydx():
-    with patch("pdr_backend.lake.fetch_ohlcv.safe_fetch_ohlcv_dydx") as mock:
+    with patch("pdr_backend.exchange.fetch_ohlcv.safe_fetch_ohlcv_dydx") as mock:
         tohlcv = [FAKE_UT] + [1.0] * 5
         mock.return_value = [tohlcv for _ in range(LIMIT)]
-
-        exch = "dydx"
-        raw_tohlcv_data = safe_fetch_ohlcv(exch, SYMBOL, TIMEFRAME, SINCE, LIMIT)
+        raw_tohlcv_data = safe_fetch_ohlcv(
+            "dydx", SYMBOL, TIMEFRAME, SINCE, LIMIT,
+        )
         assert len(raw_tohlcv_data) == LIMIT
         assert raw_tohlcv_data[0][0] == FAKE_UT
-        assert raw_tohlcv_data[0][1] == 61000.0
+        assert raw_tohlcv_data[0][1] == 1.0
 
 
 @enforce_types
@@ -39,20 +39,19 @@ def test_safe_fetch_ohlcv_2_ccxt():
 
     with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
-        exch = ccxt.binanceus()
-        raw_tohlcv_data = safe_fetch_ohlcv(exch, SYMBOL, TIMEFRAME, SINCE, LIMIT)
+        raw_tohlcv_data = safe_fetch_ohlcv(
+            "binanceus", SYMBOL, TIMEFRAME, SINCE, LIMIT,
+        )
         assert len(raw_tohlcv_data) == LIMIT
         assert raw_tohlcv_data[0][0] == FAKE_UT
 
 
 @enforce_types
 def test_safe_fetch_ohlcv_3_bad_paths():
-    # bad path: exch = str, but not "dydx"
-    with pytest.raises(ValueError):
-        exch = "not_dydx"
-        _ = safe_fetch_ohlcv(exch, SYMBOL, TIMEFRAME, SINCE, LIMIT)
-
-    # bad path: exch is not str, but not a ccxt exchange either
-    exch = 3
-    raw_tohlcv_data = safe_fetch_ohlcv(exch, SYMBOL, TIMEFRAME, SINCE, LIMIT)
-    assert raw_tohlcv_data is None
+    for bad_str in [None, 3, 3.1]:
+        with pytest.raises(TypeError):
+            _ = safe_fetch_ohlcv(bad_str, SYMBOL, TIMEFRAME, SINCE, LIMIT)
+            
+    for bad_str in ["", "  ", "not_dydx", "   dydx"]:
+        with pytest.raises(ValueError):
+            _ = safe_fetch_ohlcv(bad_str, SYMBOL, TIMEFRAME, SINCE, LIMIT)
