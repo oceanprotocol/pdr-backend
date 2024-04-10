@@ -1,4 +1,3 @@
-
 import ccxt
 from enforce_typing import enforce_types
 import pytest
@@ -6,18 +5,19 @@ import pytest
 from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_ccxt
 from pdr_backend.util.time_types import UnixTimeMs
 
+
 @enforce_types
 def test_safe_fetch_ohlcv_ccxt_binance():
     exch = ccxt.binanceus()
     _test_safe_fetch_ohlcv_ccxt(exch)
 
-    
+
 @enforce_types
 def test_safe_fetch_ohlcv_ccxt_kraken():
     exch = ccxt.kraken()
-    _test_safe_fetch_ohlcv_ccxt(exch)    
+    _test_safe_fetch_ohlcv_ccxt(exch)
 
-    
+
 @enforce_types
 def _test_safe_fetch_ohlcv_ccxt(exch):
     since = UnixTimeMs.from_timestr("2023-06-18")
@@ -51,7 +51,6 @@ def _test_safe_fetch_ohlcv_ccxt(exch):
     # ensure a None is returned when warning
     v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
     assert v is None
-
 
 
 @enforce_types

@@ -21,7 +21,6 @@ RAW7 = [T7, 0.5, 10, 0.10, 3.3, 7.0]
 RAW8 = [T8, 0.5, 9, 0.09, 4.4, 7.0]
 
 
-
 @enforce_types
 def test_clean_raw_ohlcv():
     feed = ArgFeed("binanceus", None, "ETH/USDT", "5m")
@@ -55,7 +54,6 @@ def test_clean_raw_ohlcv():
         RAW8,
     ]
     assert clean_raw_ohlcv(RAW5678v, feed, UnixTimeMs(T8), UnixTimeMs(T8)) == [RAW8]
-
 
 
 @enforce_types
@@ -94,7 +92,7 @@ def test_schema_interpreter_float_as_integer():
         # Timestamp written as a float "1624003200000.00" raises error
         assert str(e) == "'float' object cannot be interpreted as an integer"
 
-        
+
 @enforce_types
 def test_fix_schema_interpreter_float_as_integer():
     # Use clean_raw_ohlcv to affix timestamp as int
