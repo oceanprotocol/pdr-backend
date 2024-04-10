@@ -93,9 +93,9 @@ def test_safe_fetch_ohlcv_dydx__real_response():
     assert len(tohlcv) == 6
 
     # dydx api doesn't properly address fromISO. We must fix this, see #879
-    #t, ohlcv = tohlcv[0], tohlcv[1:]
-    #assert t in [1709139000000, 1709135400000]  # [CI machine, Trent's machine]
-    #assert ohlcv == "FIX ME"
+    # t, ohlcv = tohlcv[0], tohlcv[1:]
+    # assert t in [1709139000000, 1709135400000]  # [CI machine, Trent's machine]
+    # assert ohlcv == "FIX ME"
 
 
 @enforce_types

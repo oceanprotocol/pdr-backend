@@ -27,30 +27,25 @@ def _test_safe_fetch_ohlcv_ccxt(exch):
     raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, limit)
     assert_raw_tohlc_data_ok(raw_tohlc_data)
 
-    # catch bad (but almost good) symbol
-    with pytest.raises(ValueError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(
-            exch, "ETH-USDT", timeframe, since, limit
-        )
-
     # it will catch type errors, except for exch. Test an example of this.
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, 11, timeframe, since, limit)
+        _ = safe_fetch_ohlcv_ccxt(exch, 11, timeframe, since, limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, 11, since, limit)
+        _ = safe_fetch_ohlcv_ccxt(exch, symbol, 11, since, limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, "f", limit)
+        _ = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, "f", limit)
     with pytest.raises(TypeError):
-        raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, "f")
+        _ = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, "f")
 
-    # should not crash, just give warning
-    safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
-    safe_fetch_ohlcv_ccxt(exch, "bad symbol", timeframe, since, limit)
-    safe_fetch_ohlcv_ccxt(exch, symbol, "bad timeframe", since, limit)
+    # it will catch some basic value errors
+    with pytest.raises(ValueError):
+        safe_fetch_ohlcv_ccxt(exch, "bad-symbol", timeframe, since, limit)
+    with pytest.raises(ValueError):
+        safe_fetch_ohlcv_ccxt(exch, symbol, "bad timeframe", since, limit)
 
-    # ensure a None is returned when warning
-    v = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
-    assert v is None
+    # should not crash, just give warning. Should return a None
+    r = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
+    assert r is None
 
 
 @enforce_types
