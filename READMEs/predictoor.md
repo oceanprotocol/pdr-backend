@@ -94,6 +94,12 @@ To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
+Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
+
+By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+You can run many instances of streamlit at once, with different URLs.
+
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
@@ -194,19 +200,19 @@ multisim_ss:
       - kraken BTC/USDT c 5m
 ```
 
-In the example, three parameters are being swept: 
+In the example, three parameters are being swept:
 1. `trader_ss.buy_amt`, with two possible values: (i) `1000 USD` or (ii) `2000 USD`
 1. `predictoor_ss.aimodel_ss.max_n_train`, with three possible values: (i) `500`, (ii) `1000`, or (iii) `1500`
 1. `predictoor_ss.aimodel_ss.input_feeds`, with two possible values: (i) just binance BTC/USDT close price, or (ii) binance BTC/USDT & ETH/USDT close price, and kraken BTC/USDT close price.
 
-The total number of combinations is 2 x 3 x 2 = 12. 
+The total number of combinations is 2 x 3 x 2 = 12.
 
 Then, run `pdr multisim PPSS_FILE`.
 
-The multisim tool will run a separate simulation for each of the 12 combinations. 
+The multisim tool will run a separate simulation for each of the 12 combinations.
 
 As it runs, it will update a csv file summarizing results, as follows.
-- name is `multisim_metrics_UNIX-TIME-MS.csv`, where UNIX-TIME-MS is the unix time at the start of the multisim run, in milliseconds. 
+- name is `multisim_metrics_UNIX-TIME-MS.csv`, where UNIX-TIME-MS is the unix time at the start of the multisim run, in milliseconds.
 - The columns of the csv are: run_number, performance metric 1, performance metric 2, ..., ppss setup parameter 1, setup parameter 2, ... .
   - Performance metrics are currently: "acc_est" (model prediction accuracy at end), "acc_l" (lower-bound accuracy), "acc_u" (upper-bound accuracy), "f1", "precision", "recall".
 - The first row of the csv is the header. Each subsequent row is the results for a given run. For the example above, there will be 1+12 rows.

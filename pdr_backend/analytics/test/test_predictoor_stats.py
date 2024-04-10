@@ -40,7 +40,7 @@ def test_get_predictoor_statistics(_sample_first_predictions):
 
 
 @enforce_types
-@patch("matplotlib.pyplot.savefig")
+@patch("plotly.graph_objects.Figure.write_image")
 def test_get_traction_statistics(
     mock_savefig, _sample_first_predictions, _sample_second_predictions
 ):
@@ -94,7 +94,7 @@ def test_get_slot_statistics(_sample_first_predictions, _sample_second_predictio
 
 
 @enforce_types
-@patch("matplotlib.pyplot.savefig")
+@patch("plotly.graph_objects.Figure.write_image")
 def test_plot_slot_statistics(
     mock_savefig, _sample_first_predictions, _sample_second_predictions
 ):
