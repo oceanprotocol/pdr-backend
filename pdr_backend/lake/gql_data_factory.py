@@ -38,7 +38,6 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 logger = logging.getLogger("gql_data_factory")
 

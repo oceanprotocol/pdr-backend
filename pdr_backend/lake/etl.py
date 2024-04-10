@@ -1,6 +1,5 @@
 import time
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional, Any
+from typing import List, Tuple, Union
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
@@ -153,7 +152,7 @@ class ETL:
 
     def _get_max_timestamp_values_from(
         self, table_names: List[str], table_type: TableType = TableType.NORMAL
-    ) -> Tuple[str, UnixTimeMs]:
+    ) -> Union[List[Tuple[str, UnixTimeMs]], List[None]]:
         """
         @description
             Get the max timestamp values from the tables
@@ -194,7 +193,7 @@ class ETL:
 
         if result is None:
             return []
-        
+
         values = []
         for row in result.rows(named=True):
             table_name = row["table_name"]
@@ -213,19 +212,29 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        from_values = [values[1] for values in self._get_max_timestamp_values_from(
+        max_timestamp_values = self._get_max_timestamp_values_from(
             self.bronze_table_names
-        )]
+        )
+        from_values = []
+        if len(max_timestamp_values) > 0:
+            from_values = [
+                values[1] for values in max_timestamp_values if values is not None
+            ]
         from_timestamp = (
-            min(from_values) if len(from_values) > 0
+            min(from_values)
+            if len(from_values) > 0
             else UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr)
         )
 
-        to_values = [values[1] for values in self._get_max_timestamp_values_from(
-            self.raw_table_names
-        )]
+        max_timestamp_values = self._get_max_timestamp_values_from(self.raw_table_names)
+        to_values = []
+        if len(max_timestamp_values) > 0:
+            to_values = [
+                values[1] for values in max_timestamp_values if values is not None
+            ]
         to_timestamp = (
-            min(to_values) if len(to_values) > 0
+            min(to_values)
+            if len(to_values) > 0
             else UnixTimeMs.from_timestr(self.ppss.lake_ss.fin_timestr)
         )
 
@@ -281,13 +290,15 @@ class ETL:
             Update bronze tables
         """
         print("update_bronze_pdr - Update bronze tables.")
-        
+
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
             data = get_data_func(
-                path=self.ppss.lake_ss.lake_dir, st_ms=st_timestamp, fin_ms=fin_timestamp
+                path=self.ppss.lake_ss.lake_dir,
+                st_ms=st_timestamp,
+                fin_ms=fin_timestamp,
             )
 
             TableRegistry().get_table(table_name)._append_to_db(

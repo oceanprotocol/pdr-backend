@@ -271,7 +271,9 @@ def test_get_max_timestamp_values_from(tmpdir):
         INSERT INTO test_table_2 VALUES (INT64 '{1}');
         INSERT INTO test_table_2 VALUES (INT64 '{2}');
         INSERT INTO test_table_3 VALUES (INT64 '{3}');
-        """.format(ts1, ts2, ts3, ts4)
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
     st_timestr = "2023-11-02_0:00"
@@ -290,19 +292,16 @@ def test_get_max_timestamp_values_from(tmpdir):
         ["test_table_1", "test_table_2", "test_table_3"]
     )
     assert (
-        UnixTimeMs(max_timestamp_values[0][1]).to_dt().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ) == "2023-11-02 00:00:00"
+        UnixTimeMs(max_timestamp_values[0][1]).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
     )
     assert (
-        UnixTimeMs(max_timestamp_values[1][1]).to_dt().strftime(
-                "%Y-%m-%d %H:%M:%S"
-        )== "2023-11-04 00:00:00"
+        UnixTimeMs(max_timestamp_values[1][1]).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-04 00:00:00"
     )
     assert (
-        UnixTimeMs(max_timestamp_values[2][1]).to_dt().strftime(
-                "%Y-%m-%d %H:%M:%S"
-        )== "2023-11-09 00:00:00"
+        UnixTimeMs(max_timestamp_values[2][1]).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-09 00:00:00"
     )
 
 
@@ -338,7 +337,9 @@ def _fill_dummy_tables(tmpdir):
         INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
         INSERT INTO bronze_table_2 VALUES (INT64 '{1}');
         INSERT INTO bronze_table_3 VALUES (INT64 '{1}');
-        """.format(ts1, ts2)
+        """.format(
+            ts1, ts2
+        )
     )
 
     # raw tables can have different max timestamps
@@ -353,7 +354,9 @@ def _fill_dummy_tables(tmpdir):
         INSERT INTO raw_table_2 VALUES (INT64 '{1}');
         INSERT INTO raw_table_2 VALUES (INT64 '{2}');
         INSERT INTO raw_table_3 VALUES (INT64 '{3}');
-        """.format(ts1, ts2, ts3, ts4)
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
 
@@ -390,9 +393,15 @@ def test_calc_bronze_start_end_ts(tmpdir):
 
     # Calculate from + to timestamps
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
-    
-    assert UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
-    assert UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-21 00:00:00"
+    )
 
 
 @enforce_types
@@ -426,8 +435,14 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
-    assert UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-07 00:00:00"
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-07 00:00:00"
+    )
 
 
 @enforce_types
@@ -454,8 +469,12 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     ts_now = UnixTimeMs.now()
-    assert UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
     assert abs(ts_now - to_timestamp) < 100
+
 
 @enforce_types
 def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
@@ -489,5 +508,8 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     ts_now = UnixTimeMs.now()
-    assert UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
     assert abs(ts_now - to_timestamp) < 100

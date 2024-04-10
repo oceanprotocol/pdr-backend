@@ -277,11 +277,4 @@ def test_do_fetch_with_empty_data(
     all_tables = pds.get_table_names()
 
     assert temp_table_name in all_tables
-    assert (
-        len(
-            pds.query_data(
-                "SELECT * FROM {}".format(temp_table_name)
-            )
-        )
-        == 0
-    )
+    assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 0
