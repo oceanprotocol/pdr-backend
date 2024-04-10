@@ -6,8 +6,8 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
-def test_safe_fetch_ohlcv_ccxt_binance():
-    _test_safe_fetch_ohlcv_ccxt("binance")
+def test_safe_fetch_ohlcv_ccxt_binanceus():
+    _test_safe_fetch_ohlcv_ccxt("binanceus")
 
 
 @enforce_types
