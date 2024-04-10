@@ -18,12 +18,29 @@ from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
 from pdr_backend.subgraph.slot import Slot, mock_slots, mock_slot
 
 from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_slots import slots_schema
-
-from pdr_backend.lake.table_pdr_payouts import payouts_schema
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
-from pdr_backend.lake.table_pdr_truevals import truevals_schema
+from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
+from pdr_backend.lake.table_pdr_subscriptions import (
+    subscriptions_schema,
+    subscriptions_table_name,
+)
+from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table_pdr_predictions import (
+    predictions_schema,
+    predictions_table_name,
+)
+from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.csv_data_store import CSVDataStore
+
+from pdr_backend.lake.etl import ETL
+from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table import Table, get_table_name
+from pdr_backend.lake.test.resources import (
+    _clean_up_table_registry,
+    _clean_up_persistent_data_store,
+    _gql_data_factory,
+    get_filtered_timestamps_df,
+)
 
 
 @pytest.fixture()
@@ -57,6 +74,14 @@ def _get_test_PDS():
         return PersistentDataStore(str(tmpdir))
 
     return create_persistent_datastore
+
+
+@pytest.fixture()
+def _get_test_CSVDS():
+    def create_csv_datastore(tmpdir):
+        return CSVDataStore(str(tmpdir))
+
+    return create_csv_datastore
 
 
 # pylint: disable=line-too-long
@@ -106,9 +131,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-1699124400-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699124400,  # slot # Nov 04 2023 19:00:00 GMT
-        "BNB/USDT",
         1699124402,  # timestamp
+        "BNB/USDT",
+        1699124400,  # slot # Nov 04 2023 19:00:00 GMT
         7.160056238874628619,  # payout
         True,  # predictedValue
         # True,  # trueValue
@@ -120,9 +145,9 @@ _ETL_PAYOUT_TUPS = [
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800-0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
         "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",  # user
-        1699300800,  # slot # Nov 06 2023 19:00:00 GMT
-        "ETH/USDT",  # token
         1699300802,  # timestamp
+        "ETH/USDT",  # token
+        1699300800,  # slot # Nov 06 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
         # False,  # trueValue
@@ -406,7 +431,7 @@ def _mock_fetch_gql():
         print(
             f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
         )
-        return mock_first_predictions()
+        return mock_daily_predictions()
 
     return fetch_function
 
@@ -472,17 +497,70 @@ def _clean_up_test_folder():
     return _clean_up
 
 
-def _clean_up_persistent_data_store(tmpdir, table_name=None):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
+@pytest.fixture
+def setup_data(
+    _gql_datafactory_etl_payouts_df,
+    _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
+    _get_test_PDS,
+    tmpdir,
+    request,
+):
+    _clean_up_persistent_data_store(tmpdir)
+    _clean_up_table_registry()
 
-    # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
+    st_timestr = request.param[0]
+    fin_timestr = request.param[1]
 
-    # Drop the tables
-    if table_name in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
 
-    if table_name is None:
-        for table in table_names:
-            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    gql_tables = {
+        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
+        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
+        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
+        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
+        "pdr_subscriptions": Table(
+            subscriptions_table_name, subscriptions_schema, ppss
+        ),
+    }
+
+    gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].append_to_storage(payouts)
+    gql_tables["pdr_slots"].append_to_storage(slots)
+    gql_tables["pdr_subscriptions"].append_to_storage(slots)
+
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # provide the setup data to the test
+    etl = ETL(ppss, gql_data_factory)
+    pds = _get_test_PDS(tmpdir)
+
+    assert etl is not None
+    assert etl.gql_data_factory == gql_data_factory
+
+    table_name = get_table_name("pdr_predictions")
+    _records = pds.query_data("SELECT * FROM {}".format(table_name))
+    assert len(_records) == 5
+
+    yield etl, pds, gql_tables
