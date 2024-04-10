@@ -16,7 +16,7 @@ from pdr_backend.cli.arg_timeframe import (
 class ArgFeed:
     def __init__(
         self,
-        exchange,
+        exchange: Union[ArgExchange, str],
         signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
@@ -27,7 +27,9 @@ class ArgFeed:
         if pair is None:
             raise ValueError("pair cannot be None")
 
-        self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
+        self.exchange: ArgExchange = (
+            ArgExchange(exchange) if isinstance(exchange, str) else exchange
+        )
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
 

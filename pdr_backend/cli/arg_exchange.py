@@ -14,16 +14,16 @@ class ArgExchange:
         if not (exchange_str == "dydx" or hasattr(ccxt, exchange_str)):
             raise ValueError(exchange_str)
 
-        self.exchange = exchange_str
+        self.exchange_str = exchange_str
 
     def __str__(self):
-        return self.exchange
+        return self.exchange_str
 
     def __eq__(self, other):
-        return self.exchange == str(other)
+        return self.exchange_str == str(other)
 
     def __hash__(self):
-        return hash(self.exchange)
+        return hash(self.exchange_str)
 
 
 # Subscripted generics cannot be used with class and instance checks

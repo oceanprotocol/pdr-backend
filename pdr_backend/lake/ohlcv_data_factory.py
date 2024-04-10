@@ -100,13 +100,12 @@ class OhlcvDataFactory:
           feed -- ArgFeed
           fin_ut -- a timestamp, in ms, in UTC
         """
-        pair_str = str(feed.pair)
-        exch_str = str(feed.exchange)
+        exch_str: str = str(feed.exchange)
+        pair_str: str = str(feed.pair)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
 
-        logger.info(
-            "Update rawohlcv file at exchange=%s, pair=%s: begin", exch_str, pair_str
-        )
+        update_s = f"Update rawohlcv file at exch={exch_str}, pair={pair_str}"
+        logger.info("%s: begin", update_s)
 
         filename = self._rawohlcv_filename(feed)
         logger.info("filename=%s", filename)
@@ -123,9 +122,8 @@ class OhlcvDataFactory:
         while True:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
-            exchange_str: str = feed.exchange
             raw_tohlcv_data = safe_fetch_ohlcv(
-                exchange_str=exchange_str,
+                exchange_str=exch_str,
                 pair_str=pair_str,
                 timeframe=str(feed.timeframe),
                 since=st_ut,
@@ -154,9 +152,7 @@ class OhlcvDataFactory:
         save_rawohlcv_file(filename, df)
 
         # done
-        logger.info(
-            "Update rawohlcv file at exchange=%s, pair=%s: done", exch_str, pair_str
-        )
+        logger.info("%s: done", update_s)
 
     def _calc_start_ut_maybe_delete(
         self, timeframe: ArgTimeframe, filename: str

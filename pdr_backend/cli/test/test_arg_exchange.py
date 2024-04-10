@@ -11,7 +11,7 @@ from pdr_backend.cli.arg_exchange import (
 @enforce_types
 def test_arg_exchange__happy_path():
     arg_exchange1 = ArgExchange("binance")
-    assert arg_exchange1.exchange == "binance"
+    assert arg_exchange1.exchange_str == "binance"
     assert str(arg_exchange1) == "binance"
 
     arg_exchange2 = ArgExchange("binance")
