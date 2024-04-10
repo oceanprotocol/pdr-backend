@@ -289,18 +289,20 @@ def test_get_max_timestamp_values_from(tmpdir):
     max_timestamp_values = etl._get_max_timestamp_values_from(
         ["test_table_1", "test_table_2", "test_table_3"]
     )
-
     assert (
-        max_timestamp_values["test_table_1"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
+        UnixTimeMs(max_timestamp_values[0][1]).to_dt().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ) == "2023-11-02 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_2"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-09 00:00:00"
+        UnixTimeMs(max_timestamp_values[1][1]).to_dt().strftime(
+                "%Y-%m-%d %H:%M:%S"
+        )== "2023-11-04 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_3"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-04 00:00:00"
+        UnixTimeMs(max_timestamp_values[2][1]).to_dt().strftime(
+                "%Y-%m-%d %H:%M:%S"
+        )== "2023-11-09 00:00:00"
     )
 
 
