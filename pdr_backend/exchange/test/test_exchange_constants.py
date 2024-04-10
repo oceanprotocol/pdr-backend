@@ -9,7 +9,6 @@ from pdr_backend.exchange.constants import (
 @enforce_types
 def test_exchange_constants():
     assert "https" in BASE_URL_DYDX
-    
+
     assert isinstance(TIMEFRAME_TO_DYDX_RESOLUTION, dict)
     assert "5m" in TIMEFRAME_TO_DYDX_RESOLUTION
-    

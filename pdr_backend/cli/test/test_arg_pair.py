@@ -68,7 +68,7 @@ def test_arg_pairs__construct_from_list():
     pair_from_base_and_quote = ArgPair(base_str="BTC", quote_str="USDT")
     assert str(ArgPair(pair_from_base_and_quote)) == "BTC/USDT"
 
-    
+
 @enforce_types
 def test_arg_pairs__construct_from_str():
     with pytest.raises(ValueError):
@@ -177,8 +177,8 @@ def test_good_vs_bad_inputs_for_arg_pair_and_arg_pairs():
             ArgPairs.from_str(pairs_str)
         with pytest.raises(ValueError):
             verify_pairs_str(pairs_str)
-            
-        
+
+
 @enforce_types
 def test_verify_base_str():
     # ok

@@ -1,4 +1,3 @@
-import ccxt
 from enforce_typing import enforce_types
 import pytest
 
@@ -17,7 +16,7 @@ def test_safe_fetch_ohlcv_ccxt_kraken():
 
 
 @enforce_types
-def _test_safe_fetch_ohlcv_ccxt(exchange_str:str):
+def _test_safe_fetch_ohlcv_ccxt(exchange_str: str):
     since = UnixTimeMs.from_timestr("2023-06-18")
     pair_str, timeframe, limit = "ETH/USDT", "5m", 1000
 

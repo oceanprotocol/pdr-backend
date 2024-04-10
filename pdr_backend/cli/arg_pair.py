@@ -52,6 +52,7 @@ class ArgPair:
     def __hash__(self):
         return hash(self.pair_str)
 
+
 # don't use @enforce_types, causes problems
 class ArgPairs(List[ArgPair]):
     def __init__(self, pairs: Union[List[str], List[ArgPair]]):
@@ -107,6 +108,7 @@ def _unpack_pairs_str(pairs_str: str) -> List[str]:
 
     return pair_str_list
 
+
 @enforce_types
 def _unpack_pair_str(pair_str: str) -> Tuple[str, str]:
     """
@@ -134,13 +136,13 @@ def verify_pair_str(pair_str: str):
     """Raise an error if the input string is invalid"""
     _ = ArgPair(pair_str=pair_str)
 
-    
+
 @enforce_types
 def verify_pairs_str(pairs_str: str):
     """Raise an error if the input string is invalid"""
     _ = ArgPairs.from_str(pairs_str=pairs_str)
 
-    
+
 @enforce_types
 def verify_base_str(base_str: str):
     """

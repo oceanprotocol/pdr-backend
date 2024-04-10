@@ -81,8 +81,7 @@ def test_exchange_str_ok__bad_path():
     for bad_val in ["", " ", "foo"]:
         with pytest.raises(ValueError):
             verify_exchange_str(bad_val)
-            
+
     for bad_val in [None, 3, 3.2]:
         with pytest.raises(TypeError):
             verify_exchange_str(bad_val)
-    

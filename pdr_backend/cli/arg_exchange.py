@@ -7,10 +7,10 @@ from enforce_typing import enforce_types
 @enforce_types
 class ArgExchange:
     def __init__(self, exchange_str: str):
-        
+
         if not exchange_str:
             raise ValueError(exchange_str)
-        
+
         if not (exchange_str == "dydx" or hasattr(ccxt, exchange_str)):
             raise ValueError(exchange_str)
 
@@ -25,7 +25,7 @@ class ArgExchange:
     def __hash__(self):
         return hash(self.exchange)
 
-    
+
 # Subscripted generics cannot be used with class and instance checks
 # Therefore don't have @enforce_types here
 class ArgExchanges(List[ArgExchange]):
@@ -33,7 +33,9 @@ class ArgExchanges(List[ArgExchange]):
         if not isinstance(exchange_str_list, list):
             raise TypeError("exchange_str_list must be a list")
 
-        arg_exchange_list = [ArgExchange(str(exchange)) for exchange in exchange_str_list if exchange]
+        arg_exchange_list = [
+            ArgExchange(str(exchange)) for exchange in exchange_str_list if exchange
+        ]
 
         if not arg_exchange_list:
             raise ValueError(exchange_str_list)

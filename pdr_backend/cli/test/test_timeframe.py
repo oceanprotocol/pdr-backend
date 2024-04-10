@@ -99,7 +99,7 @@ def test_s_to_timeframe_str():
     with pytest.raises(TypeError):
         s_to_timeframe_str("300")
 
-        
+
 @enforce_types
 def test_verify_timeframe_str():
     verify_timeframe_str("5m")
@@ -112,7 +112,7 @@ def test_verify_timeframe_str():
     for bad_val in [None, 1, 1.1, [], ["5m"]]:
         with pytest.raises(TypeError):
             verify_timeframe_str(bad_val)
-        
+
 
 @enforce_types
 def test_verify_timeframes_str():
@@ -127,7 +127,8 @@ def test_verify_timeframes_str():
     for bad_val in [None, 1, 1.1, [], ["5m"]]:
         with pytest.raises(TypeError):
             verify_timeframes_str(bad_val)
-        
+
+
 @enforce_types
 def test_timeframes_str_ok():
     assert timeframes_str_ok("5m")
@@ -139,4 +140,3 @@ def test_timeframes_str_ok():
     for bad_val in [None, 1, 1.1, [], ["5m"]]:
         with pytest.raises(TypeError):
             timeframes_str_ok(bad_val)
-

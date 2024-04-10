@@ -2,7 +2,6 @@ import logging
 import os
 from typing import Dict
 
-import ccxt
 import polars as pl
 from enforce_typing import enforce_types
 

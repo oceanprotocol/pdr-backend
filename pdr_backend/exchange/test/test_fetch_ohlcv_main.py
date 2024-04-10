@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-import ccxt
 from enforce_typing import enforce_types
 import pytest
 
@@ -21,7 +20,11 @@ def test_safe_fetch_ohlcv_1_dydx():
         tohlcv = [FAKE_UT] + [1.0] * 5
         mock.return_value = [tohlcv for _ in range(LIMIT)]
         raw_tohlcv_data = safe_fetch_ohlcv(
-            "dydx", SYMBOL, TIMEFRAME, SINCE, LIMIT,
+            "dydx",
+            SYMBOL,
+            TIMEFRAME,
+            SINCE,
+            LIMIT,
         )
         assert len(raw_tohlcv_data) == LIMIT
         assert raw_tohlcv_data[0][0] == FAKE_UT
@@ -40,7 +43,11 @@ def test_safe_fetch_ohlcv_2_ccxt():
     with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
         raw_tohlcv_data = safe_fetch_ohlcv(
-            "binanceus", SYMBOL, TIMEFRAME, SINCE, LIMIT,
+            "binanceus",
+            SYMBOL,
+            TIMEFRAME,
+            SINCE,
+            LIMIT,
         )
         assert len(raw_tohlcv_data) == LIMIT
         assert raw_tohlcv_data[0][0] == FAKE_UT
@@ -51,7 +58,7 @@ def test_safe_fetch_ohlcv_3_bad_paths():
     for bad_str in [None, 3, 3.1]:
         with pytest.raises(TypeError):
             _ = safe_fetch_ohlcv(bad_str, SYMBOL, TIMEFRAME, SINCE, LIMIT)
-            
+
     for bad_str in ["", "  ", "not_dydx", "   dydx"]:
         with pytest.raises(ValueError):
             _ = safe_fetch_ohlcv(bad_str, SYMBOL, TIMEFRAME, SINCE, LIMIT)

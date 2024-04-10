@@ -91,7 +91,7 @@ def safe_fetch_ohlcv_ccxt(
     ss = ExchangeMgrSS(d)
     exchange_mgr = ExchangeMgr(ss)
     exchange = exchange_mgr.exchange(exchange_str)
-    
+
     try:
         return exchange.fetch_ohlcv(
             symbol=pair_str,
@@ -135,7 +135,7 @@ def safe_fetch_ohlcv_dydx(
     if "-" in pair_str:
         raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
     verify_timeframe_str(timeframe)
-    
+
     ticker = _dydx_ticker(pair_str)
     resolution = _dydx_resolution(timeframe)
     fromISO = since.to_iso_timestr()

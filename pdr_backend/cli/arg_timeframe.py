@@ -43,7 +43,7 @@ class ArgTimeframe:
     def __str__(self):
         return self.timeframe_str
 
-    
+
 # don't use @enforce_types, causes problems
 class ArgTimeframes(List[ArgTimeframe]):
     def __init__(self, timeframes: Union[List[str], List[ArgTimeframe]]):
@@ -91,7 +91,7 @@ def verify_timeframe_str(timeframe_str: str):
     """Raise an error if input string is invalid."""
     _ = ArgTimeframe(timeframe_str)
 
-    
+
 @enforce_types
 def verify_timeframes_str(timeframes_str: str):
     """Raise an error if input string is invalid."""
