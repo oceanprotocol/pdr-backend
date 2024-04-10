@@ -11,24 +11,6 @@ from pdr_backend.exchange.fetch_ohlcv import (
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
-mock_dydx_response = {
-    "candles": [
-        {
-            "startedAt": "2024-02-28T16:50:00.000Z",
-            "ticker": "BTC-USD",
-            "resolution": "5MINS",
-            "open": "61840",
-            "high": "61848",
-            "low": "61687",
-            "close": "61800",
-            "baseTokenVolume": "23.6064",
-            "usdVolume": "1458183.4133",
-            "trades": 284,
-            "startingOpenInterest": "504.4262",
-        }
-    ]
-}
-
 
 @enforce_types
 def test_safe_fetch_ohlcv_dydx__mocked_response():
