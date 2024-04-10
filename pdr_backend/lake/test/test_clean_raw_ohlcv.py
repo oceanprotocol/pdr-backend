@@ -3,7 +3,7 @@ import polars as pl
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
-from pdr_backend.lake.fetch_ohlcv import (
+from pdr_backend.lake.clean_raw_ohlcv import (
     _cast_uts_to_int,
     _filter_within_timerange,
     _ohlcv_to_uts,

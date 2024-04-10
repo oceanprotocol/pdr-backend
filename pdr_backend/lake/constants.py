@@ -3,7 +3,12 @@ import polars as pl
 
 OHLCV_COLS = ["open", "high", "low", "close", "volume"]
 OHLCV_DTYPES = [np.float64] * len(OHLCV_COLS)
-BASE_URL_DYDX = "https://indexer.dydx.trade/v4/candles/perpetualMarkets"
+
+BASE_URL_DYDX = "https://indexer.dydx.trade/v4"
+
+# all possible resolution values are listed at:
+# https://docs.dydx.exchange/developers/indexer/indexer_api#enumerated-values
+TIMEFRAME_TO_DYDX_RESOLUTION = {"5m": "5MINS", "1h": "1HOUR"}
 
 TOHLCV_COLS = ["timestamp"] + OHLCV_COLS
 TOHLCV_DTYPES = [np.int64] + OHLCV_DTYPES
