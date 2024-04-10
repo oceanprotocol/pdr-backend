@@ -3,6 +3,7 @@ from io import StringIO
 import sys
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
@@ -272,12 +273,13 @@ def test_do_fetch_with_empty_data(
     # check if the db table is created
 
     temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
-    all_tables = PersistentDataStore(ppss.lake_ss.lake_dir).get_table_names()
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    all_tables = pds.get_table_names()
 
     assert temp_table_name in all_tables
     assert (
         len(
-            PersistentDataStore(ppss.lake_ss.lake_dir).query_data(
+            pds.query_data(
                 "SELECT * FROM {}".format(temp_table_name)
             )
         )
