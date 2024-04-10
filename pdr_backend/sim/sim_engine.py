@@ -47,8 +47,8 @@ class SimEngine:
         self.logfile = ""
 
         mock = self.ppss.sim_ss.tradetype in ["histmock"]
-        exchange_manager = ExchangeMgr(self.ppss.exchange_mgr_ss)
-        self.exchange = exchange_manager.exchange(
+        exchange_mgr = ExchangeMgr(self.ppss.exchange_mgr_ss)
+        self.exchange = exchange_mgr.exchange(
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 

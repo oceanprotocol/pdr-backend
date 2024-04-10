@@ -44,6 +44,7 @@ class ArgTimeframe:
         return self.timeframe_str
 
 
+# don't use @enforce_types, causes problems
 class ArgTimeframes(List[ArgTimeframe]):
     def __init__(self, timeframes: Union[List[str], List[ArgTimeframe]]):
         if not isinstance(timeframes, list):
@@ -86,16 +87,22 @@ def s_to_timeframe_str(seconds: int) -> str:
 
 
 @enforce_types
-def verify_timeframes_str(signal_str: str):
-    """
-    @description
-      Raise an error if signal is invalid.
+def verify_timeframe_str(timeframe_str: str):
+    """Raise an error if input string is invalid."""
+    _ = ArgTimeframe(timeframe_str)
 
-    @argument
-      signal_str -- e.g. "close"
-    """
+
+@enforce_types
+def verify_timeframes_str(timeframes_str: str):
+    """Raise an error if input string is invalid."""
+    _ = ArgTimeframes.from_str(timeframes_str)
+
+
+@enforce_types
+def timeframes_str_ok(timeframes_str: str) -> bool:
+    """Return True if input string is valid"""
     try:
-        ArgTimeframes.from_str(signal_str)
+        ArgTimeframes.from_str(timeframes_str)
         return True
     except ValueError:
         return False
