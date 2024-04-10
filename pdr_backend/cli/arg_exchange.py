@@ -1,17 +1,20 @@
 from typing import List, Union
 
 import ccxt
+from enforce_typing import enforce_types
 
 
+@enforce_types
 class ArgExchange:
-    def __init__(self, exchange: str):
-        if not exchange:
-            raise ValueError(exchange)
+    def __init__(self, exchange_str: str):
+        
+        if not exchange_str:
+            raise ValueError(exchange_str)
+        
+        if not (exchange_str == "dydx" or hasattr(ccxt, exchange_str)):
+            raise ValueError(exchange_str)
 
-        if not hasattr(ccxt, exchange):
-            raise ValueError(exchange)
-
-        self.exchange = exchange
+        self.exchange = exchange_str
 
     def __str__(self):
         return self.exchange
@@ -22,18 +25,26 @@ class ArgExchange:
     def __hash__(self):
         return hash(self.exchange)
 
-
+    
+# Subscripted generics cannot be used with class and instance checks
+# Therefore don't have @enforce_types here
 class ArgExchanges(List[ArgExchange]):
-    def __init__(self, exchanges: Union[List[str], List[ArgExchange]]):
-        if not isinstance(exchanges, list):
-            raise TypeError("exchanges must be a list")
+    def __init__(self, exchange_str_list: Union[List[str], List[ArgExchange]]):
+        if not isinstance(exchange_str_list, list):
+            raise TypeError("exchange_str_list must be a list")
 
-        converted = [ArgExchange(str(exchange)) for exchange in exchanges if exchange]
+        arg_exchange_list = [ArgExchange(str(exchange)) for exchange in exchange_str_list if exchange]
 
-        if not converted:
-            raise ValueError(exchanges)
+        if not arg_exchange_list:
+            raise ValueError(exchange_str_list)
 
-        super().__init__(converted)
+        super().__init__(arg_exchange_list)
 
     def __str__(self):
         return ",".join([str(exchange) for exchange in self])
+
+
+@enforce_types
+def verify_exchange_str(exchange_str: str):
+    """Raises an error if exchange_str not ok"""
+    _ = ArgExchange(exchange_str)

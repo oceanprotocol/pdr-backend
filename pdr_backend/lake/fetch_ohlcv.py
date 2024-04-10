@@ -5,10 +5,15 @@ from typing import List, Optional, Union
 from enforce_typing import enforce_types
 import requests
 
+from pdr_backend.cli.arg_exchange import verify_exchange_str
+from pdr_backend.cli.arg_pair import verify_pair_str
+from pdr_backend.cli.arg_timeframe import verify_timeframe_str
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.constants import (
     BASE_URL_DYDX,
     TIMEFRAME_TO_DYDX_RESOLUTION,
 )
+from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -17,8 +22,8 @@ logger = logging.getLogger("fetch_ohlcv")
 
 @enforce_types
 def safe_fetch_ohlcv(
-    exch,
-    symbol: str,
+    exchange_str: str,
+    pair_str: str,
     timeframe: str,
     since: UnixTimeMs,
     limit: int,
@@ -30,8 +35,8 @@ def safe_fetch_ohlcv(
       vs crashing everything
 
     @arguments
-      exch -- eg "dydx", ccxt.binanceus(), or ccxt.kraken()
-      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      exchange_str -- eg "dydx", "binance", "kraken"
+      pair_str -- eg "BTC/USDT". NOT "BTC-USDT"
       timeframe -- eg "1h", "1m"
       since -- timestamp of first candle. In unix time (in ms)
       limit -- max # candles to retrieve
@@ -41,17 +46,15 @@ def safe_fetch_ohlcv(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    if isinstance(exch, str):
-        if exch == "dydx":
-            return safe_fetch_ohlcv_dydx(symbol, timeframe, since, limit)
-        raise ValueError(exch)
-    return safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, limit)
+    if exchange_str == "dydx":
+        return safe_fetch_ohlcv_dydx(pair_str, timeframe, since, limit)
+    return safe_fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
 
 
 @enforce_types
 def safe_fetch_ohlcv_ccxt(
-    exch,
-    symbol: str,
+    exchange_str: str,
+    pair_str: str,
     timeframe: str,
     since: UnixTimeMs,
     limit: int,
@@ -62,8 +65,8 @@ def safe_fetch_ohlcv_ccxt(
       emits a warning and returns None, vs crashing everything
 
     @arguments
-      exch -- eg ccxt.binanceus()
-      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      exchange_str -- eg "binance", "kraken"
+      pair_str -- eg "BTC/USDT". NOT "BTC-USDT"
       timeframe -- eg "1h", "1m"
       since -- timestamp of first candle. In unix time (in ms)
       limit -- max # candles to retrieve
@@ -73,14 +76,25 @@ def safe_fetch_ohlcv_ccxt(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    if "-" in symbol:
-        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
-    if timeframe not in CAND_TIMEFRAMES:
-        raise ValueError(f"Got timeframe={timeframe}. Should be 1m, 5m, ...")
+    verify_exchange_str(exchange_str)
+    if exchange_str == "dydx":
+        raise ValueError(exchange_str)
+    verify_pair_str(pair_str)
+    if "-" in pair_str:
+        raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
+    verify_timeframe_str(timeframe)
 
+    # Soon, we'll move fetch_ohlcv* into a proper Exchange class,
+    # which will have a proper ss. And then the following lines will
+    # be deprecated or replaced
+    d = {"timeout": 30, "ccxt_params": {}, "dydx_params": {}}
+    ss = ExchangeMgrSS(d)
+    exchange_mgr = ExchangeMgr(ss)
+    exchange = exchange_mgr.exchange(exchange_str)
+    
     try:
-        return exch.fetch_ohlcv(
-            symbol=symbol,
+        return exchange.fetch_ohlcv(
+            symbol=pair_str,
             timeframe=timeframe,
             since=since,
             limit=limit,
@@ -92,7 +106,7 @@ def safe_fetch_ohlcv_ccxt(
 
 @enforce_types
 def safe_fetch_ohlcv_dydx(
-    symbol: str,
+    pair_str: str,
     timeframe: str,
     since: UnixTimeMs,
     limit: int,
@@ -103,7 +117,7 @@ def safe_fetch_ohlcv_dydx(
       it emits a warning and returns None, vs crashing everything.
 
     @arguments
-      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      pair_str -- eg "BTC/USDT". NOT "BTC-USDT"
       timeframe -- eg "1h", "5m". NOT eg "5MINS"
       since -- timestamp of first candle. In unix time (in ms)
       limit -- max is 100 candles to retrieve,
@@ -117,7 +131,12 @@ def safe_fetch_ohlcv_dydx(
       Dydx candles API docs:
       https://docs.dydx.exchange/developers/indexer/indexer_api#getcandles
     """
-    ticker = _dydx_ticker(symbol)
+    verify_pair_str(pair_str)
+    if "-" in pair_str:
+        raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
+    verify_timeframe_str(timeframe)
+    
+    ticker = _dydx_ticker(pair_str)
     resolution = _dydx_resolution(timeframe)
     fromISO = since.to_iso_timestr()
     headers = {"Accept": "application/json"}
@@ -165,14 +184,15 @@ def safe_fetch_ohlcv_dydx(
 
 
 @enforce_types
-def _dydx_ticker(symbol: str):
+def _dydx_ticker(pair_str: str):
     """
-    Compute a symbol friendly for dydx.
+    Compute a pair_str friendly for dydx.
     Eg given 'BTC/USDT', returns 'BTC-USDT'
     """
-    if "-" in symbol:
-        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
-    return symbol.replace("/", "-")
+    verify_pair_str(pair_str)
+    if "-" in pair_str:
+        raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
+    return pair_str.replace("/", "-")
 
 
 @enforce_types

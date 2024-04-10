@@ -8,44 +8,46 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 @enforce_types
 def test_safe_fetch_ohlcv_ccxt_binance():
-    exch = ccxt.binanceus()
-    _test_safe_fetch_ohlcv_ccxt(exch)
+    _test_safe_fetch_ohlcv_ccxt("binance")
 
 
 @enforce_types
 def test_safe_fetch_ohlcv_ccxt_kraken():
-    exch = ccxt.kraken()
-    _test_safe_fetch_ohlcv_ccxt(exch)
+    _test_safe_fetch_ohlcv_ccxt("kraken")
 
 
 @enforce_types
-def _test_safe_fetch_ohlcv_ccxt(exch):
+def _test_safe_fetch_ohlcv_ccxt(exchange_str:str):
     since = UnixTimeMs.from_timestr("2023-06-18")
-    symbol, timeframe, limit = "ETH/USDT", "5m", 1000
+    pair_str, timeframe, limit = "ETH/USDT", "5m", 1000
 
     # happy path ccxt
-    raw_tohlc_data = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, limit)
-    assert_raw_tohlc_data_ok(raw_tohlc_data)
+    r = safe_fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
+    assert_raw_tohlc_data_ok(r)
 
-    # it will catch type errors, except for exch. Test an example of this.
+    # catch type errors
     with pytest.raises(TypeError):
-        _ = safe_fetch_ohlcv_ccxt(exch, 11, timeframe, since, limit)
+        safe_fetch_ohlcv_ccxt(32, pair_str, timeframe, since, limit)
     with pytest.raises(TypeError):
-        _ = safe_fetch_ohlcv_ccxt(exch, symbol, 11, since, limit)
+        safe_fetch_ohlcv_ccxt(exchange_str, 11, timeframe, since, limit)
     with pytest.raises(TypeError):
-        _ = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, "f", limit)
+        safe_fetch_ohlcv_ccxt(exchange_str, pair_str, 11, since, limit)
     with pytest.raises(TypeError):
-        _ = safe_fetch_ohlcv_ccxt(exch, symbol, timeframe, since, "f")
+        safe_fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, "f", limit)
+    with pytest.raises(TypeError):
+        safe_fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, "f")
 
-    # it will catch some basic value errors
+    # catch value errors
     with pytest.raises(ValueError):
-        safe_fetch_ohlcv_ccxt(exch, "bad-symbol", timeframe, since, limit)
+        safe_fetch_ohlcv_ccxt("dydx", pair_str, timeframe, since, limit)
     with pytest.raises(ValueError):
-        safe_fetch_ohlcv_ccxt(exch, symbol, "bad timeframe", since, limit)
-
-    # should not crash, just give warning. Should return a None
-    r = safe_fetch_ohlcv_ccxt("bad exch", symbol, timeframe, since, limit)
-    assert r is None
+        safe_fetch_ohlcv_ccxt("bad exchange_str", pair_str, timeframe, since, limit)
+    with pytest.raises(ValueError):
+        safe_fetch_ohlcv_ccxt(exchange_str, "bad-pair_str", timeframe, since, limit)
+    with pytest.raises(ValueError):
+        safe_fetch_ohlcv_ccxt(exchange_str, "bad pair_str", timeframe, since, limit)
+    with pytest.raises(ValueError):
+        safe_fetch_ohlcv_ccxt(exchange_str, pair_str, "bad timeframe", since, limit)
 
 
 @enforce_types
