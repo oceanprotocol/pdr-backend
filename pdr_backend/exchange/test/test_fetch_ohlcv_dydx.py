@@ -2,8 +2,8 @@ from enforce_typing import enforce_types
 import pytest
 import requests_mock
 
-from pdr_backend.lake.constants import BASE_URL_DYDX
-from pdr_backend.lake.fetch_ohlcv import (
+from pdr_backend.exchange.constants import BASE_URL_DYDX
+from pdr_backend.exchange.fetch_ohlcv import (
     safe_fetch_ohlcv_dydx,
     _dydx_ticker,
     _dydx_resolution,

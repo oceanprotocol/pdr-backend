@@ -8,9 +8,9 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.exchange.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -124,10 +124,10 @@ class OhlcvDataFactory:
         while True:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
-            exch = getattr(ccxt, str(feed.exchange))()
-            raw_tohlcv_data = safe_fetch_ohlcv_ccxt(
-                exch,
-                symbol=str(pair_str).replace("-", "/"),
+            exchange_str: str = feed.exchange
+            raw_tohlcv_data = safe_fetch_ohlcv(
+                exchange_str=exchange_str,
+                pair_str=pair_str,
                 timeframe=str(feed.timeframe),
                 since=st_ut,
                 limit=limit,

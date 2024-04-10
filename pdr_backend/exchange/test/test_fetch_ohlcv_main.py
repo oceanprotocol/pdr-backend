@@ -4,7 +4,7 @@ import ccxt
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.lake.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.exchange.fetch_ohlcv import safe_fetch_ohlcv
 from pdr_backend.util.time_types import UnixTimeMs
 
 

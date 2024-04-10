@@ -8,11 +8,11 @@ import requests
 from pdr_backend.cli.arg_exchange import verify_exchange_str
 from pdr_backend.cli.arg_pair import verify_pair_str
 from pdr_backend.cli.arg_timeframe import verify_timeframe_str
-from pdr_backend.exchange.exchange_mgr import ExchangeMgr
-from pdr_backend.lake.constants import (
+from pdr_backend.exchange.constants import (
     BASE_URL_DYDX,
     TIMEFRAME_TO_DYDX_RESOLUTION,
 )
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.util.constants import CAND_TIMEFRAMES
 from pdr_backend.util.time_types import UnixTimeMs
