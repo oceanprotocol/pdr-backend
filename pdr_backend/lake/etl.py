@@ -164,13 +164,31 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        queries = [
-            max_timestamp_query.format(
-                get_table_name(table_name, table_type),
-                get_table_name(table_name, table_type),
+        all_db_tables = PersistentDataStore(
+            self.ppss.lake_ss.lake_dir
+        ).get_table_names()
+
+        queries = []
+
+        for table_name in table_names:
+            table_name_with_type = get_table_name(table_name, table_type)
+            if table_name_with_type not in all_db_tables:
+                print(
+                    f"_get_max_timestamp_values_from - Table {table_name} does not exist."
+                )
+                continue
+
+            queries.append(
+                max_timestamp_query.format(table_name_with_type, table_name_with_type)
             )
-            for table_name in table_names
-        ]
+
+        none_values: Dict[str, Optional[datetime]] = {
+            table_name: None for table_name in table_names
+        }
+
+        if len(queries) == 0:
+            return none_values
+
         final_query = " UNION ALL ".join(queries)
 
         print(f"_get_max_timestamp_values_from - final_query: {final_query}")
@@ -178,15 +196,13 @@ class ETL:
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
         print(f"_get_max_timestamp_values_from - result: {result}")
-        values: Any = {}
 
         if result is None:
-            for table_name in table_names:
-                values[table_name] = None
-
-            return values
+            return none_values
 
         # print(f"_get_max_timestamp_values_from - result: {result}")
+
+        values = {}
 
         for row in result.rows(named=True):
             table_name = row["table_name"]
@@ -259,6 +275,7 @@ class ETL:
                 path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
             )
 
+            print(f"update_bronze_pdr - Inserting data into {table_name}")
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
                 table_type=TableType.TEMP,

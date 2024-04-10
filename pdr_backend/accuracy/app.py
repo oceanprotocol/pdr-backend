@@ -351,10 +351,10 @@ def serve_statistics_from_ETL():
 
     If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
     """
-    
+
     start_ts = UnixTimeS(int((datetime.utcnow() - timedelta(weeks=4)).timestamp()))
     try:
-        slots_table = PersistentDataStore("./lake_data").query_data(
+        slots_table = PersistentDataStore("./lake_data", read_only=True).query_data(
             f"""
         SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}"""
         )
@@ -373,6 +373,7 @@ def serve_statistics_from_ETL():
             )
             all_slots.append(slot)
 
+        print("all slots", all_slots)
         data = transform_slots_to_statistics(all_slots)
         response = jsonify(data)
         response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin

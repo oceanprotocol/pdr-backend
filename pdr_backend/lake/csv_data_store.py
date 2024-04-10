@@ -95,6 +95,8 @@ class CSVDataStore(BaseDataStore):
 
         max_row_count = 1000
         last_file_row_count = self._get_last_file_row_count(dataset_identifier)
+        data = data.sort("timestamp")
+
         if last_file_row_count is not None:
             if last_file_row_count < max_row_count:
                 remaining_rows = max_row_count - last_file_row_count
@@ -124,6 +126,7 @@ class CSVDataStore(BaseDataStore):
                 os.rename(last_file_path, new_file_path)
 
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
+
 
         chunks = [
             data.slice(i, min(max_row_count, len(data) - i))
