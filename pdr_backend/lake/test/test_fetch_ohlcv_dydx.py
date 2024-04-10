@@ -80,7 +80,7 @@ mock_bad_limit_dydx_response = {
     [
         (
             "BTC-USD",
-            "5MINS",
+            "5m",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
             1709139000000,
@@ -90,7 +90,7 @@ mock_bad_limit_dydx_response = {
         ),
         (
             "BTC-ETH",
-            "5MINS",
+            "5m",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
             None,
@@ -100,7 +100,7 @@ mock_bad_limit_dydx_response = {
         ),
         (
             "RANDOMTOKEN-USD",
-            "5MINS",
+            "5m",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
             None,
@@ -110,7 +110,7 @@ mock_bad_limit_dydx_response = {
         ),
         (
             "BTC-USD",
-            "5m",
+            "5MINS",
             UnixTimeMs.from_timestr("2024-02-27"),
             1,
             None,

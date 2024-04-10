@@ -8,7 +8,12 @@ import requests
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.lake.constants import OHLCV_MULT_MAX, OHLCV_MULT_MIN, BASE_URL_DYDX
+from pdr_backend.lake.constants import (
+    BASE_URL_DYDX,
+    CAND_TIMEFRAMES,
+    OHLCV_MULT_MAX,
+    OHLCV_MULT_MIN,
+)
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv")
@@ -74,6 +79,8 @@ def safe_fetch_ohlcv_ccxt(
     """
     if "-" in symbol:
         raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
+    if timeframe not in CAND_TIMEFRAMES:
+        raise ValueError(f"Got timeframe={timeframe}. Should be 1m, 5m, ...")
 
     try:
         return exch.fetch_ohlcv(
@@ -100,8 +107,8 @@ def safe_fetch_ohlcv_dydx(
       it emits a warning and returns None, vs crashing everything.
 
     @arguments
-      symbol -- eg "BTC-USD"
-      timeframe -- eg "1HOUR", "5MINS"
+      symbol -- eg "BTC/USDT". NOT "BTC-USDT"
+      timeframe -- eg "1h", "5m". NOT eg "5MINS"
       since -- timestamp of first candle. In unix time (in ms)
       limit -- max is 100 candles to retrieve,
 
@@ -110,6 +117,11 @@ def safe_fetch_ohlcv_dydx(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
+    if "-" in symbol:
+        raise ValueError(f"Got symbol={symbol}. It must have '/' not '-'")
+    if timeframe not in CAND_TIMEFRAMES:
+        raise ValueError(f"Got timeframe={timeframe}. Should be 1m, 5m, ...")
+
     headers = {"Accept": "application/json"}
 
     try:
