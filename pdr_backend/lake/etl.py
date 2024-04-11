@@ -200,19 +200,17 @@ class ETL:
 
         return values
 
-    def get_timestamp_values(self, table_names: str, default_timestr: str) -> UnixTimeMs:
+    def get_timestamp_values(
+        self, table_names: List[str], default_timestr: str
+    ) -> UnixTimeMs:
         max_timestamp_values = self._get_max_timestamp_values_from(
             [NamedTable(tb, TableType.NORMAL) for tb in table_names]
         )
         values = []
         if len(max_timestamp_values) > 0:
-            values = [
-                value[1] for value in max_timestamp_values if value is not None
-            ]
+            values = [value[1] for value in max_timestamp_values if value is not None]
         timestamp = (
-            min(values)
-            if len(values) > 0
-            else UnixTimeMs.from_timestr(default_timestr)
+            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
         return timestamp
 

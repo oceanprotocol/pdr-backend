@@ -293,7 +293,6 @@ class GQLDataFactory:
         for _, table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).items()
         ):
-
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
