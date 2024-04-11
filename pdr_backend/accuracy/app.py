@@ -252,13 +252,13 @@ def calculate_timeframe_timestamps(
 
 
 @enforce_types
-def save_statistics_to_file():
+def fetch_statistics_using_ETL():
     # return
     ppss = PPSS(
-            yaml_filename="./ppss.yaml",
-            network="sapphire-mainnet",
-            nested_override_args=None,
-        )
+        yaml_filename="./ppss.yaml",
+        network="sapphire-mainnet",
+        nested_override_args=None,
+    )
 
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
@@ -341,7 +341,7 @@ def transform_slots_to_statistics(all_slots: List[PredictSlot]):
 
 @enforce_types
 @app.route("/statistics", methods=["GET"])
-def serve_statistics_from_ETL():
+def calculate_statistics_from_DuckDB_tables():
     """
     Serves statistical data from a JSON file via a GET request.
 
@@ -354,10 +354,12 @@ def serve_statistics_from_ETL():
 
     start_ts = UnixTimeS(int((datetime.utcnow() - timedelta(weeks=4)).timestamp()))
     try:
-        slots_table = PersistentDataStore("./lake_data", read_only=True).query_data(
+        db_conn = PersistentDataStore("./lake_data", read_only=True)
+        slots_table = db_conn.query_data(
             f"""
         SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}"""
         )
+        db_conn.duckdb_conn.close()
         print("slots table", slots_table)
         all_slots: List[PredictSlot] = []
 
@@ -373,7 +375,6 @@ def serve_statistics_from_ETL():
             )
             all_slots.append(slot)
 
-        print("all slots", all_slots)
         data = transform_slots_to_statistics(all_slots)
         response = jsonify(data)
         response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
@@ -386,7 +387,7 @@ def serve_statistics_from_ETL():
 
 if __name__ == "__main__":
     # Start the thread to save predictions data to a file every 5 minutes
-    thread = threading.Thread(target=save_statistics_to_file)
+    thread = threading.Thread(target=fetch_statistics_using_ETL)
     thread.start()
 
     app.run(debug=False)

@@ -127,7 +127,6 @@ class CSVDataStore(BaseDataStore):
 
                 data = data.slice(remaining_rows, len(data) - remaining_rows)
 
-
         chunks = [
             data.slice(i, min(max_row_count, len(data) - i))
             for i in range(0, len(data), max_row_count)

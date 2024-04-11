@@ -8,7 +8,7 @@ class BaseDataStore:
     def __new__(cls, base_path: str, read_only: bool = False):
         read_only_key = "0" if read_only is False else "1"
         pattern_key = f"{base_path}_{read_only_key}"
-        
+
         if not hasattr(cls, "_instances"):
             cls._instances: Dict[str, "BaseDataStore"] = {}
 

@@ -24,8 +24,7 @@ class PersistentDataStore(BaseDataStore):
         """
         super().__init__(base_path, read_only)
         self.duckdb_conn = duckdb.connect(
-            database=f"{self.base_path}/duckdb.db",
-            read_only=read_only
+            database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
 
     @enforce_types
@@ -225,5 +224,6 @@ class PersistentDataStore(BaseDataStore):
 
         # if self.duckdb_conn is None:
         #     raise Exception("DuckDB connection is not established")
+        self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
-        # self._close()
+        self.duckdb_conn.execute("COMMIT")
