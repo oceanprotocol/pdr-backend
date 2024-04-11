@@ -2,7 +2,7 @@ import os
 import polars as pl
 import duckdb
 
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, get_table_name, TempTable
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
@@ -239,9 +239,7 @@ def test_move_table_data(tmpdir):
     assert table_exists
 
     # Move the table
-    persistent_data_store.move_table_data(
-        get_table_name(table_name, TableType.TEMP), table_name
-    )
+    persistent_data_store.move_table_data(TempTable(table_name), table_name)
 
     # Assert table hasn't dropped
     table_names = persistent_data_store.get_table_names()
@@ -281,7 +279,7 @@ def test_etl_view(tmpdir):
     view_name = get_table_name(table_name, TableType.ETL)
     view_query = """
     CREATE VIEW {} AS
-    ( 
+    (
         SELECT * FROM {}
         UNION ALL
         SELECT * FROM {}

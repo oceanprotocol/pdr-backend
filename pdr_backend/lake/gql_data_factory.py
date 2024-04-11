@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table, TableType, get_table_name
+from pdr_backend.lake.table import Table, TableType, get_table_name, TempTable
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -267,7 +267,7 @@ class GQLDataFactory:
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
             pds.move_table_data(
-                get_table_name(table_name, TableType.TEMP),
+                TempTable(table_name),
                 table_name,
             )
 

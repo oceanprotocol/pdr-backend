@@ -3,7 +3,7 @@ from typing import List, Tuple, Union
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable, TempTable
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
@@ -97,7 +97,7 @@ class ETL:
         for table_name in self.temp_table_names:
             print(f"move table {table_name} to live")
             pds.move_table_data(
-                get_table_name(table_name, TableType.TEMP),
+                TempTable(table_name),
                 table_name,
             )
 
@@ -151,7 +151,7 @@ class ETL:
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
-        self, table_names: List[str], table_type: TableType = TableType.NORMAL
+        self, tables: List[NamedTable]
     ) -> Union[List[Tuple[str, UnixTimeMs]], List[None]]:
         """
         @description
@@ -173,17 +173,14 @@ class ETL:
 
         queries = []
 
-        for table_name in table_names:
-            table_name_with_type = get_table_name(table_name, table_type)
-            if table_name_with_type not in all_db_tables:
+        for table in tables:
+            if table.fullname not in all_db_tables:
                 print(
-                    f"_get_max_timestamp_values_from - Table {table_name} does not exist."
+                    f"_get_max_timestamp_values_from - Table {table.table_name} does not exist."
                 )
                 continue
 
-            queries.append(
-                max_timestamp_query.format(table_name_with_type, table_name_with_type)
-            )
+            queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
         if len(queries) == 0:
             return []
@@ -213,7 +210,7 @@ class ETL:
             min(max(source_tables_max_timestamp)).
         """
         max_timestamp_values = self._get_max_timestamp_values_from(
-            self.bronze_table_names
+            [NamedTable(tb, TableType.NORMAL) for tb in self.bronze_table_names]
         )
         from_values = []
         if len(max_timestamp_values) > 0:
@@ -226,7 +223,9 @@ class ETL:
             else UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr)
         )
 
-        max_timestamp_values = self._get_max_timestamp_values_from(self.raw_table_names)
+        max_timestamp_values = self._get_max_timestamp_values_from(
+            [NamedTable(tb, TableType.NORMAL) for tb in self.raw_table_names]
+        )
         to_values = []
         if len(max_timestamp_values) > 0:
             to_values = [
@@ -267,7 +266,7 @@ class ETL:
         if table_exists and temp_table_exists:
             view_query = """
                 CREATE VIEW {} AS
-                ( 
+                (
                     SELECT * FROM {}
                     UNION ALL
                     SELECT * FROM {}

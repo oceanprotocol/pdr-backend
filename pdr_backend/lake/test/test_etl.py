@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -289,7 +289,11 @@ def test_get_max_timestamp_values_from(tmpdir):
     etl = ETL(ppss, gql_data_factory)
 
     max_timestamp_values = etl._get_max_timestamp_values_from(
-        ["test_table_1", "test_table_2", "test_table_3"]
+        [
+            NamedTable("test_table_1"),
+            NamedTable("test_table_2"),
+            NamedTable("test_table_3"),
+        ]
     )
     assert (
         UnixTimeMs(max_timestamp_values[0][1]).to_dt().strftime("%Y-%m-%d %H:%M:%S")

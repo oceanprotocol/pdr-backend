@@ -8,6 +8,7 @@ from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
 
+
 from pdr_backend.lake.base_data_store import BaseDataStore
 
 
@@ -174,11 +175,11 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
-    def move_table_data(self, temp_table_name: str, permanent_table_name: str):
+    def move_table_data(self, temp_table, permanent_table_name: str):
         """
         Move the table data from the temporary storage to the permanent storage.
         @arguments:
-            temp_table_name - The name of the temporary table.
+            temp_table - The temporary table object
             permanent_table_name - The name of the permanent table.
         @example:
             move_table_data("temp_people", "people")
@@ -187,20 +188,22 @@ class PersistentDataStore(BaseDataStore):
         # Check if the table exists
         table_names = self.get_table_names()
 
-        if temp_table_name in table_names:
-            # check if the permanent table exists
-            if permanent_table_name not in table_names:
-                # create table if it does not exist
-                self.duckdb_conn.execute(
-                    f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}"
-                )
-            else:
-                # Move the data from the temporary table to the permanent table
-                self.duckdb_conn.execute(
-                    f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table_name}"
-                )
-        else:
-            raise Exception(f"Table {temp_table_name} does not exist")
+        if temp_table.fullname not in table_names:
+            raise Exception(f"Table {temp_table.fullname} does not exist")
+
+        # check if the permanent table exists
+        if permanent_table_name not in table_names:
+            # create table if it does not exist
+            self.duckdb_conn.execute(
+                f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
+            )
+
+            return
+
+        # Move the data from the temporary table to the permanent table
+        self.duckdb_conn.execute(
+            f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
+        )
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):
@@ -241,7 +244,7 @@ class PersistentDataStore(BaseDataStore):
             [f"{column} = {df[column]}" for column in df.columns]
         )
         self.duckdb_conn.execute(
-            f"""UPDATE {table_name} 
-            SET {update_columns} 
+            f"""UPDATE {table_name}
+            SET {update_columns}
             WHERE {column_name} = {df[column_name]}"""
         )
