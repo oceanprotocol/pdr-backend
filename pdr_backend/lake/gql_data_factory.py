@@ -144,14 +144,14 @@ class GQLDataFactory:
         )
         db_last_timestamp = PersistentDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
-        )['max("timestamp")'][0]
+        )
 
         if csv_last_timestamp is not None:
             if db_last_timestamp is None:
                 print(f"  Table not yet created. Insert all {table_name} csv data")
                 data = CSVDataStore(table.base_path).read_all(table_name)
                 table._append_to_db(data, TableType.TEMP)
-            elif csv_last_timestamp > db_last_timestamp:
+            elif csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
                 print(f"  Table exists. Insert pending {table_name} csv data")
                 data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
                 table._append_to_db(data, TableType.TEMP)
