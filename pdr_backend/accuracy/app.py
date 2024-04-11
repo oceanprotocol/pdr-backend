@@ -1,7 +1,7 @@
 import logging
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Callable
 from enforce_typing import enforce_types
 from flask import Flask, jsonify
 from pdr_backend.lake.table_pdr_slots import slots_table_name
@@ -79,18 +79,13 @@ def process_single_slot(
         int(slot.ID.split("-")[1])
     )  # Using dot notation for attribute access
 
-    today = 0
-    yesterday = 0
-
     if (
         end_of_previous_day_timestamp - SECONDS_IN_A_DAY
         < timestamp
         < end_of_previous_day_timestamp
     ):
-        yesterday += 1
         staked_yesterday += float(slot.roundSumStakes)
     elif timestamp > end_of_previous_day_timestamp:
-        today += 1
         staked_today += float(slot.roundSumStakes)
 
     prediction_result = calculate_prediction_result(
@@ -267,8 +262,10 @@ def fetch_statistics_using_ETL():
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
 
-def filter_func(spe):
-    return lambda item: int(item.get("seconds_per_epoch", 0)) == spe
+@enforce_types
+def filter_func(seconds_per_epoch: int) -> Callable[[Any], bool]:
+    # filter out all the items that have seconds_per_epoch different that the specified parameter
+    return lambda item: int(item.get("seconds_per_epoch", 0)) == seconds_per_epoch
 
 
 @enforce_types
@@ -305,7 +302,7 @@ def transform_slots_to_statistics(all_slots: List[PredictSlot]):
         "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
     )
 
-    contracts_list_unfiltered = fetch_contract_id_and_spe(
+    contracts_list_unfiltered: List[ContractIdAndSPE] = fetch_contract_id_and_spe(
         contract_addresses,
         network_param,
     )
@@ -313,7 +310,7 @@ def transform_slots_to_statistics(all_slots: List[PredictSlot]):
 
     for statistic_type in statistic_types:
         seconds_per_epoch = statistic_type["seconds_per_epoch"]
-        contracts_list = list(
+        contracts_list: List[ContractIdAndSPE] = list(
             filter(filter_func(seconds_per_epoch), contracts_list_unfiltered)
         )
         contract_ids = [contract_item["ID"] for contract_item in contracts_list]
@@ -352,7 +349,8 @@ def calculate_statistics_from_DuckDB_tables():
     If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
     """
 
-    start_ts = UnixTimeS(int((datetime.utcnow() - timedelta(weeks=4)).timestamp()))
+    four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+    start_ts = UnixTimeS(int(four_weeks_ago.timestamp()))
     end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
     try:
         db_conn = PersistentDataStore("./lake_data", read_only=True)

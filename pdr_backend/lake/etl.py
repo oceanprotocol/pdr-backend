@@ -1,4 +1,5 @@
 import time
+import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
@@ -24,6 +25,8 @@ from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.util.time_types import UnixTimeMs
+
+logger = logging.getLogger("check_network")
 
 
 class ETL:
@@ -70,7 +73,7 @@ class ETL:
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
-        print(f"self.bronze_table_getters: {self.bronze_table_getters}")
+        logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
@@ -237,15 +240,11 @@ class ETL:
         fin_timestamp = (
             datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
             if self.ppss.lake_ss.fin_timestr != "now"
-            else datetime.now().strftime("%Y-%m-%d_%H:%M")
+            else datetime.now()
         )
 
         to_values = self._get_max_timestamp_values_from(self.raw_table_names).values()
-        to_timestamp = (
-            min(to_values)
-            if None not in to_values
-            else datetime.strptime(fin_timestamp, "%Y-%m-%d_%H:%M")
-        )
+        to_timestamp = min(to_values) if None not in to_values else fin_timestamp
 
         return from_timestamp, to_timestamp
 
