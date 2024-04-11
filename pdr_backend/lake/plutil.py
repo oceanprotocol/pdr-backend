@@ -9,7 +9,6 @@ import shutil
 from io import StringIO
 from tempfile import mkdtemp
 from typing import List, Dict, Iterable, Union, Tuple
-from enum import Enum
 
 import numpy as np
 import polars as pl
@@ -266,21 +265,3 @@ def filter_and_drop_columns(
         Modified dataframe
     """
     return df.filter(pl.col(target_column).is_in(ids)).drop(columns_to_drop)
-
-
-class TableType(Enum):
-    NORMAL = "NORMAL"
-    TEMP = "TEMP"
-    ETL = "ETL"
-
-
-@enforce_types
-def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) -> str:
-    """
-    Get the table name with the build mode prefix
-    """
-    if table_type == TableType.TEMP:
-        return f"_temp_{table_name}"
-    if table_type == TableType.ETL:
-        return f"_etl_{table_name}"
-    return table_name

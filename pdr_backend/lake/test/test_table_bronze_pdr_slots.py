@@ -19,11 +19,10 @@ from pdr_backend.lake.table_pdr_predictions import (
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import Table, get_table_name, TableType
 from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 
@@ -64,25 +63,17 @@ def test_table_bronze_pdr_slots(
     }
 
     # Work 1: Append all data onto tables
-    gql_tables["pdr_predictions"].append_to_storage(
-        _gql_datafactory_etl_predictions_df, TableType.TEMP
-    )
-    gql_tables["pdr_truevals"].append_to_storage(
-        _gql_datafactory_etl_truevals_df, TableType.TEMP
-    )
-    gql_tables["pdr_payouts"].append_to_storage(
-        _gql_datafactory_etl_payouts_df, TableType.TEMP
-    )
-    gql_tables["pdr_slots"].append_to_storage(
-        _gql_datafactory_etl_slots_df, TableType.TEMP
-    )
+    gql_tables["pdr_predictions"].append_to_storage(_gql_datafactory_etl_predictions_df)
+    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df)
+    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df)
+    gql_tables["pdr_slots"].append_to_storage(_gql_datafactory_etl_slots_df)
 
     # Check that the data is appended correctly
     pds = PersistentDataStore(ppss.lake_ss.lake_dir)
 
     pdr_slots_df = pds.query_data(
         f"""
-        SELECT * FROM {get_table_name(slots_table_name, TableType.TEMP)}
+        SELECT * FROM {get_table_name(slots_table_name)}
         """
     )
 
@@ -97,7 +88,7 @@ def test_table_bronze_pdr_slots(
     )
 
     gql_tables["bronze_pdr_predictions"].append_to_storage(
-        bronze_pdr_predictions_df, TableType.TEMP
+        bronze_pdr_predictions_df, TableType.ETL
     )
 
     bronze_pdr_slots = get_bronze_pdr_slots_data_with_SQL(
