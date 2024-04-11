@@ -200,6 +200,22 @@ class ETL:
 
         return values
 
+    def get_timestamp_values(self, table_names: str, default_timestr: str) -> UnixTimeMs:
+        max_timestamp_values = self._get_max_timestamp_values_from(
+            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
+        )
+        values = []
+        if len(max_timestamp_values) > 0:
+            values = [
+                value[1] for value in max_timestamp_values if value is not None
+            ]
+        timestamp = (
+            min(values)
+            if len(values) > 0
+            else UnixTimeMs.from_timestr(default_timestr)
+        )
+        return timestamp
+
     def _calc_bronze_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
         """
         @description
@@ -209,32 +225,12 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb, TableType.NORMAL) for tb in self.bronze_table_names]
-        )
-        from_values = []
-        if len(max_timestamp_values) > 0:
-            from_values = [
-                values[1] for values in max_timestamp_values if values is not None
-            ]
-        from_timestamp = (
-            min(from_values)
-            if len(from_values) > 0
-            else UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr)
+        from_timestamp = self.get_timestamp_values(
+            self.bronze_table_names, self.ppss.lake_ss.st_timestr
         )
 
-        max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb, TableType.NORMAL) for tb in self.raw_table_names]
-        )
-        to_values = []
-        if len(max_timestamp_values) > 0:
-            to_values = [
-                values[1] for values in max_timestamp_values if values is not None
-            ]
-        to_timestamp = (
-            min(to_values)
-            if len(to_values) > 0
-            else UnixTimeMs.from_timestr(self.ppss.lake_ss.fin_timestr)
+        to_timestamp = self.get_timestamp_values(
+            self.raw_table_names, self.ppss.lake_ss.fin_timestr
         )
 
         assert from_timestamp <= to_timestamp, (
