@@ -1,4 +1,5 @@
 import os
+import threading
 import polars as pl
 import duckdb
 
@@ -53,7 +54,6 @@ def test_insert_to_exist_table(tmpdir):
         f"SELECT * FROM {table_name}"
     ).fetchall()
     assert len(result) == 6
-    print(result)
     assert result[3][0] == "2022-04-01"
     assert result[3][1] == 40
     assert result[4][0] == "2022-05-01"
@@ -264,3 +264,95 @@ def test_move_table_data(tmpdir):
 
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
+
+
+def test_etl_view(tmpdir):
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+    persistent_data_store.insert_to_table(example_df, get_table_name(table_name))
+
+    other_df = pl.DataFrame(
+        {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
+    )
+    persistent_data_store.insert_to_table(
+        other_df, get_table_name(table_name, TableType.TEMP)
+    )
+
+    # Assemble view query and create the view
+    view_name = get_table_name(table_name, TableType.ETL)
+    view_query = """
+    CREATE VIEW {} AS
+    ( 
+        SELECT * FROM {}
+        UNION ALL
+        SELECT * FROM {}
+    )""".format(
+        get_table_name(table_name, TableType.ETL),
+        get_table_name(table_name),
+        get_table_name(table_name, TableType.TEMP),
+    )
+    persistent_data_store.query_data(view_query)
+
+    # Assert number of views is equal to 1
+    view_names = persistent_data_store.get_view_names()
+    assert len(view_names) == 1
+
+    # Assert view returns the correct, min(timestamp)
+    result = persistent_data_store.duckdb_conn.execute(
+        f"SELECT min(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-01-01"
+
+    # Assert view returns the correct, max(timestamp)
+    result = persistent_data_store.duckdb_conn.execute(
+        f"SELECT max(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-06-01"
+
+
+def test_multiple_thread_table_updates(tmpdir):
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+    csv_folder_path = os.path.join(str(tmpdir), "csv_folder")
+    os.makedirs(csv_folder_path, exist_ok=True)
+    example_df.write_csv(os.path.join(str(csv_folder_path), "data.csv"))
+
+    # Check that table is empty by default
+    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    assert result is None
+
+    thread1 = threading.Thread(
+        target=thread_function_write_to_db, args=(csv_folder_path, tmpdir)
+    )
+    thread2 = threading.Thread(
+        target=thread_function_read_from_db, args=(csv_folder_path, tmpdir)
+    )
+    thread1.start()
+    thread2.start()
+
+
+def thread_function_write_to_db(csv_folder_path, tmpdir):
+    persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
+    persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
+
+
+def thread_function_read_from_db(csv_folder_path, tmpdir):
+    persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
+
+    # Check if the new data is inserted
+    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    assert len(result) == 3
+    assert result["timestamp"][0] == "2022-01-01"
+    assert result["value"][0] == 10
+    assert result["timestamp"][1] == "2022-02-01"
+    assert result["value"][1] == 20
+    assert result["timestamp"][2] == "2022-03-01"
+    assert result["value"][2] == 30
+
+    _clean_up_persistent_data_store(tmpdir, table_name)
+    # clean csv folder
+    # delete files in the folder
+    for file in os.listdir(csv_folder_path):
+        file_path = os.path.join(csv_folder_path, file)
+        os.remove(file_path)
+
+    # delete the folder
+    os.rmdir(csv_folder_path)

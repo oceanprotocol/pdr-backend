@@ -144,7 +144,7 @@ class GQLDataFactory:
         )
         db_last_timestamp = PersistentDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
-        )
+        )['max("timestamp")'][0]
 
         if csv_last_timestamp is not None:
             if db_last_timestamp is None:
@@ -268,7 +268,6 @@ class GQLDataFactory:
                 get_table_name(table_name, TableType.TEMP),
                 table_name,
             )
-
 
             pds.drop_table(get_table_name(table_name, TableType.TEMP))
 

@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
@@ -323,6 +324,7 @@ def transform_slots_to_statistics(all_slots: List[PredictSlot]):
         ]
 
         # contract_ids = [contract_item["ID"] for contract_item in contracts_list]
+        print(end_ts_param)
         statistics = calculate_statistics_for_all_assets(
             filtered_slots_by_timeframe,
             contracts_list,
@@ -353,13 +355,19 @@ def calculate_statistics_from_DuckDB_tables():
     """
 
     start_ts = UnixTimeS(int((datetime.utcnow() - timedelta(weeks=4)).timestamp()))
+    end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
+    print(start_ts, end_ts)
     try:
         db_conn = PersistentDataStore("./lake_data", read_only=True)
         slots_table = db_conn.query_data(
             f"""
-        SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}"""
+        SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts} AND SLOT < {end_ts}"""
         )
         db_conn.duckdb_conn.close()
+
+        slots_table = slots_table.group_by("ID").first()
+        slots_table = slots_table.sort("slot")
+
         print("slots table", slots_table)
         all_slots: List[PredictSlot] = []
 
