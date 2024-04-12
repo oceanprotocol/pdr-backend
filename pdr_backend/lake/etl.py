@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.table import TableType, get_table_name, NamedTable, TempTable
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
@@ -15,6 +15,11 @@ from pdr_backend.lake.table_bronze_pdr_slots import (
     bronze_pdr_slots_table_name,
     bronze_pdr_slots_schema,
     get_bronze_pdr_slots_data_with_SQL,
+)
+from pdr_backend.lake.table_silver_pdr_predictions import (
+    silver_pdr_predictions_table_name,
+    silver_pdr_predictions_schema,
+    get_silver_pdr_predictions_data_with_SQL
 )
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -56,6 +61,11 @@ class ETL:
                     bronze_pdr_slots_schema,
                     self.ppss,
                 ),
+                silver_pdr_predictions_table_name: (
+                    silver_pdr_predictions_table_name,
+                    silver_pdr_predictions_schema,
+                    self.ppss
+                )
             }
         )
 
@@ -71,13 +81,19 @@ class ETL:
             bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
-
         logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
-
         self.bronze_table_names = list(self.bronze_table_getters.keys())
+
+        self.silver_table_getters = {
+            silver_pdr_predictions_table_name: get_silver_pdr_predictions_data_with_SQL,
+        }
+        logger.info("self.silver_table_getters: %s", self.silver_table_getters)
+        self.silver_table_names = list(self.silver_table_getters.keys())
 
         self.temp_table_names = []
         for table_name in self.bronze_table_names:
+            self.temp_table_names.append(get_table_name(table_name, TableType.TEMP))
+        for table_name in self.silver_table_names:
             self.temp_table_names.append(get_table_name(table_name, TableType.TEMP))
 
     def _drop_temp_sql_tables(self):
@@ -102,7 +118,7 @@ class ETL:
         for table_name in self.temp_table_names:
             print(f"move table {table_name} to live")
             pds.move_table_data(
-                TempTable(table_name),
+                NamedTable(table_name),
                 table_name,
             )
 
@@ -132,6 +148,11 @@ class ETL:
             end_ts = time.time_ns() / 1e9
             print(f"do_etl - Completed bronze_step in {end_ts - st_ts} sec.")
 
+            self.do_silver_step()
+
+            end_ts = time.time_ns() / 1e9
+            print(f"do_etl - Completed silver_step in {end_ts - st_ts} sec.")
+
             self._move_from_temp_tables_to_live()
             print("do_etl - Moved build tables to permanent tables. ETL Complete.")
         except Exception as e:
@@ -154,6 +175,24 @@ class ETL:
 
         end_ts = time.time_ns() / 1e9
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
+
+    def do_silver_step(self):
+        """
+        @description
+            We have updated our lake's raw data
+            Now, let's build the silver tables
+            key tables: [silver_pdr_predictions]
+        """
+        print("do_silver_step - Build silver tables.")
+
+        # Update silver tables
+        # let's keep track of time passed so we can log how long it takes for this step to complete
+        st_ts = time.time_ns() / 1e9
+
+        self.update_silver_pdr()
+
+        end_ts = time.time_ns() / 1e9
+        print(f"do_silver_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
         self, tables: List[NamedTable]
@@ -252,6 +291,30 @@ class ETL:
         )
 
         return from_timestamp, to_timestamp
+    
+    def _calc_silver_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
+        """
+        @description
+            Calculate the start and end timestamps for the bronze tables
+            ETL updates should use from_timestamp by calculating
+            max(etl_tables_max_timestamp).
+            ETL updates should use to_timestamp by calculating
+            min(max(source_tables_max_timestamp)).
+        """
+        from_timestamp = self.get_timestamp_values(
+            self.silver_table_names, self.ppss.lake_ss.st_timestr
+        )
+
+        to_timestamp = self.get_timestamp_values(
+            self.raw_table_names, self.ppss.lake_ss.fin_timestr
+        )
+
+        assert from_timestamp <= to_timestamp, (
+            f"from_timestamp ({from_timestamp}) must be less than or equal to "
+            f"to_timestamp ({to_timestamp})"
+        )
+
+        return from_timestamp, to_timestamp
 
     @enforce_types
     def create_etl_view(self, table_name: str):
@@ -268,6 +331,9 @@ class ETL:
         temp_table_exists = pds.table_exists(temp_table_name)
         etl_view_exists = pds.view_exists(etl_view_name)
         assert temp_table_exists, f"{temp_table_name} must already exist"
+        if etl_view_exists:
+            logger.info("%s exists", etl_view_name)
+            return
         assert not etl_view_exists, f"{etl_view_name} must not exist"
 
         view_query = None
@@ -322,4 +388,37 @@ class ETL:
         # At the end of the ETL pipeline, we want to
         # 1. move from TEMP tables to production tables
         # 2. drop TEMP tables and ETL views
-        self._move_from_temp_tables_to_live()
+        #self._move_from_temp_tables_to_live()
+
+    def update_silver_pdr(self):
+        """
+        @description
+            Update silver tables
+        """
+        logger.info("update_silver_pdr - Update silver tables.")
+
+        # st_timestamp and fin_timestamp should be valid UnixTimeMS
+        st_timestamp, fin_timestamp = self._calc_silver_start_end_ts()
+        print(self.silver_table_getters.items())
+
+        for table_name, get_data_func in self.silver_table_getters.items():
+            data = get_data_func(
+                path=self.ppss.lake_ss.lake_dir,
+                st_ms=st_timestamp,
+                fin_ms=fin_timestamp,
+            )
+
+            print(f"update_silver_pdr - Inserting data into {table_name}")
+            TableRegistry().get_table(table_name)._append_to_db(
+                data,
+                table_type=TableType.TEMP,
+            )
+
+            # For each bronze table that we process, that data will be entered into TEMP
+            # Create view so downstream queries can access production + TEMP data
+            self.create_etl_view(table_name)
+
+        # At the end of the ETL pipeline, we want to
+        # 1. move from TEMP tables to production tables
+        # 2. drop TEMP tables and ETL views
+        #self._move_from_temp_tables_to_live()

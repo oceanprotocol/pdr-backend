@@ -48,6 +48,10 @@ def get_revenues(
     df_slots: DataFrame,
 ) -> Tuple[int, int]:
     SECONDS_IN_24h = 86400
+    df_revenue = 0
+    user_revenue = 0
+    if(not current_df["truevalue"]):
+        return df_revenue, user_revenue
     slot_revenue_from_df = df_subscriptions.filter(
         (pl.col("timestamp") < (current_df["slot"] * 1000))
         & (
@@ -66,8 +70,7 @@ def get_revenues(
         & (pl.col("pair") == current_df["pair"])
         & (pl.col("timeframe") == current_df["timeframe"])
     ).with_columns(pl.col("last_price_value").sum().alias("sum_revenue"))
-    df_revenue = 0
-    user_revenue = 0
+    print(current_df["truevalue"])
     if ((len(slot_revenue_from_df) > 0) or (len(slot_revenue_from_user) > 0)) and (
         current_df["predvalue"] == current_df["truevalue"]
     ):
@@ -76,7 +79,7 @@ def get_revenues(
         )
         df_revenue, user_revenue = get_df_revenue_for_slot(
             current_df,
-            slot_revenue_from_df[0]["sum_revenue"][0]
+            (slot_revenue_from_df[0]["sum_revenue"][0] if len(slot_revenue_from_df)>0 else 0)
             / (SECONDS_IN_24h / timeframe_to_seconds[current_df["timeframe"]]),
             slot_revenue_from_user[0]["sum_revenue"][0]
             / (SECONDS_IN_24h / timeframe_to_seconds[current_df["timeframe"]]),
@@ -317,7 +320,7 @@ def add_or_update_silver_pdr_predictions_row(
 
 
 @enforce_types
-def get_silver_pdr_predictions_table_with_SQL(
+def get_silver_pdr_predictions_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
 ):
     collision_sql = f"""
@@ -338,12 +341,18 @@ def get_silver_pdr_predictions_table_with_SQL(
     df_subscription_addresses.append(get_opf_addresses("sapphire-mainnet")["dfbuyer"])
     df_subscription_addresses.append(get_opf_addresses("sapphire-mainnet")["websocket"])
 
+    keys = list(map(str, collision_obj.keys()))
+    if keys:
+        not_in_keys = ", ".join(keys)
+    else:
+        not_in_keys = "''"  # default to an impossible value
+
     bronze_pdr_predictions_sql = f"""
         SELECT *
         FROM bronze_pdr_predictions
         WHERE timestamp >= {st_ms}
         AND timestamp <= {fin_ms}
-        AND ID NOT IN ({", ".join(map(str, collision_obj.keys()))}
+        AND ID NOT IN ({not_in_keys})
     """
 
     bronze_pdr_predictions_df = PersistentDataStore(path).query_data(
@@ -380,12 +389,13 @@ def get_silver_pdr_predictions_table_with_SQL(
         return None
    
     for row in bronze_pdr_predictions_df.rows(named=True):
+        print(row)
         result_df = PersistentDataStore(path).query_data(
             f"""
             SELECT *
             FROM {silver_pdr_predictions_table_name}
-            WHERE user = {row["user"]}
-            AND contract = {row["contract"]}
+            WHERE user = '{row["user"]}'
+            AND contract = '{row["contract"]}'
             AND slot < {row["slot"]}
             ORDER BY slot DESC
             LIMIT 1
@@ -395,6 +405,8 @@ def get_silver_pdr_predictions_table_with_SQL(
         df_revenue, user_revenue = get_revenues(
             row, data_farming_subscriptions_df, subscriptions_df, slots_df
         )
+
+        print("herrreeeee")
 
         if len(result_df) > 0:
             row = update_fields(
@@ -415,7 +427,6 @@ def get_silver_pdr_predictions_table_with_SQL(
             row["count_wins"] = 1 if row["predvalue"] == row["truevalue"] else 0
             row["count_losses"] = 0 if row["predvalue"] == row["truevalue"] else 1
             row["win"] = row["sum_revenue"] > row["sum_stake"]
-
 
         new_row_df = pl.DataFrame(row, silver_pdr_predictions_schema)
 
