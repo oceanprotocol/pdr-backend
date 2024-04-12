@@ -75,7 +75,6 @@ contract PredSubmitterMgr {
         address[] calldata feeds,
         uint256 epoch
     ) external onlyOwner {
-        IERC20 ocean = IERC20(oceanTokenAddr);
         uint256 upInstanceFunding = 0;
         uint256 downInstanceFunding = 0;
 
