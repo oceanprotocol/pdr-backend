@@ -59,6 +59,9 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 ## 2. Simulate Modeling and Trading
 
+> [!WARNING]  
+> Simulation has been temporarily disabled as of version v0.3.3
+
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
@@ -114,10 +117,18 @@ Then, copy & paste your private keys as envvars. In console:
 
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 ```
 
-Next, update `my_ppss.yaml` as desired.
+### Deploy the Prediction Submitter Manager
+
+Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
+
+```
+pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
+```
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr` and update the rest as desired.
+
+### Running the bot
 
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
@@ -151,10 +162,9 @@ Then, copy & paste your private keys as envvars. (You can skip this if keys are 
 
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 ```
 
-Update `my_ppss.yaml` as desired.
+Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-prediction-submitter-manager) and make sure to update `pred_submitter_mgr` in the `my_ppss.yaml` config, update the rest of it as desired.
 
 Then, run the bot. In console:
 
