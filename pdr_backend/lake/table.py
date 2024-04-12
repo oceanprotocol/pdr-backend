@@ -73,3 +73,19 @@ class Table:
         table_name = get_table_name(self.table_name, table_type)
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
         print(f"  Appended {data.shape[0]} rows to db table: {table_name}")
+
+
+@enforce_types
+class NamedTable:
+    def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
+        self.table_name = table_name
+        self.table_type = table_type
+
+    @property
+    def fullname(self) -> str:
+        return get_table_name(self.table_name, self.table_type)
+
+
+class TempTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.TEMP)

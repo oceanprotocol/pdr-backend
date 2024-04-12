@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table, TableType, get_table_name
+from pdr_backend.lake.table import Table, TableType, get_table_name, TempTable
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -38,7 +38,6 @@ from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
-
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -209,6 +208,10 @@ class GQLDataFactory:
 
         buffer_df = pl.DataFrame([], schema=table.df_schema)
 
+        PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
+            get_table_name(table.table_name, TableType.TEMP), table.df_schema
+        )
+
         while True:
             # call the function
             data = fetch_function(
@@ -265,7 +268,7 @@ class GQLDataFactory:
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
             pds.move_table_data(
-                get_table_name(table_name, TableType.TEMP),
+                TempTable(table_name),
                 table_name,
             )
 
@@ -291,7 +294,6 @@ class GQLDataFactory:
         for _, table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).items()
         ):
-
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp

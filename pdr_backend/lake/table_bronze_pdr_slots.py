@@ -34,7 +34,6 @@ bronze_pdr_slots_schema = {
 def get_bronze_pdr_slots_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
 ) -> pl.DataFrame:
-
     pdr_slots_table_name = get_table_name(slots_table_name)
     pdr_truevals_table_name = get_table_name(truevals_table_name)
     pdr_payouts_table_name = get_table_name(payouts_table_name)

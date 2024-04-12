@@ -1,11 +1,11 @@
 import logging
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable, TempTable
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
@@ -101,7 +101,7 @@ class ETL:
         for table_name in self.temp_table_names:
             print(f"move table {table_name} to live")
             pds.move_table_data(
-                get_table_name(table_name, TableType.TEMP),
+                TempTable(table_name),
                 table_name,
             )
 
@@ -155,8 +155,8 @@ class ETL:
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
-        self, table_names: List[str], table_type: TableType = TableType.NORMAL
-    ) -> Dict[str, Optional[datetime]]:
+        self, tables: List[NamedTable]
+    ) -> Dict[str, Optional[UnixTimeMs]]:
         """
         @description
             Get the max timestamp values from the tables
@@ -177,19 +177,16 @@ class ETL:
 
         queries = []
 
-        for table_name in table_names:
-            table_name_with_type = get_table_name(table_name, table_type)
-            if table_name_with_type not in all_db_tables:
-                logger.info(
-                    "_get_max_timestamp_values_from - Table %s does not exist.",
-                    table_name,
+        for table in tables:
+            if table.fullname not in all_db_tables:
+                print(
+                    f"_get_max_timestamp_values_from - Table {table.table_name} does not exist."
                 )
                 continue
 
-            queries.append(
-                max_timestamp_query.format(table_name_with_type, table_name_with_type)
-            )
+            queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
+        table_names = [table.fullname for table in tables]
         none_values: Dict[str, Optional[datetime]] = {
             table_name: None for table_name in table_names
         }
@@ -198,12 +195,9 @@ class ETL:
             return none_values
 
         final_query = " UNION ALL ".join(queries)
-
-        print(f"_get_max_timestamp_values_from - final_query: {final_query}")
-
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        print(f"_get_max_timestamp_values_from - result: {result}")
+        logger.info(f"_get_max_timestamp_values_from - result: {result}")
 
         if result is None:
             return none_values
@@ -213,11 +207,28 @@ class ETL:
         for row in result.rows(named=True):
             table_name = row["table_name"]
             max_timestamp = row["max_timestamp"]
-            values[table_name] = max_timestamp
+
+            values[table_name] = UnixTimeMs(max_timestamp)
 
         return values
 
-    def _calc_bronze_start_end_ts(self):
+    def get_timestamp_values(
+        self, table_names: List[str], default_timestr: str
+    ) -> UnixTimeMs:
+        max_timestamp_values = self._get_max_timestamp_values_from(
+            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
+        )
+        values = []
+        if len(max_timestamp_values) > 0:
+            values = [
+                value for value in max_timestamp_values.values() if value is not None
+            ]
+        timestamp = (
+            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+        )
+        return timestamp
+
+    def _calc_bronze_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -226,24 +237,18 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        from_values = self._get_max_timestamp_values_from(
-            self.bronze_table_names
-        ).values()
-
-        from_timestamp = (
-            min(from_values)
-            if None not in from_values
-            else datetime.strptime(self.ppss.lake_ss.st_timestr, "%Y-%m-%d_%H:%M")
+        from_timestamp = self.get_timestamp_values(
+            self.bronze_table_names, self.ppss.lake_ss.st_timestr
         )
 
-        fin_timestamp = (
-            datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
-            if self.ppss.lake_ss.fin_timestr != "now"
-            else datetime.now()
+        to_timestamp = self.get_timestamp_values(
+            self.raw_table_names, self.ppss.lake_ss.fin_timestr
         )
 
-        to_values = self._get_max_timestamp_values_from(self.raw_table_names).values()
-        to_timestamp = min(to_values) if None not in to_values else fin_timestamp
+        assert from_timestamp <= to_timestamp, (
+            f"from_timestamp ({from_timestamp}) must be less than or equal to "
+            f"to_timestamp ({to_timestamp})"
+        )
 
         return from_timestamp, to_timestamp
 
@@ -292,25 +297,15 @@ class ETL:
             Update bronze tables
         """
         logger.info("update_bronze_pdr - Update bronze tables.")
+
+        # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
-            # If st_timestamp is an instance of datetime, convert it to UnixTimeMs with from_dt
-            # If st_timestamp is None, it will be passed as None
-            # If st_timestamp is an int, Convert it to UnixTimeMs by passing it as is
-            st_ms = (
-                UnixTimeMs.from_dt(st_timestamp)
-                if isinstance(st_timestamp, datetime)
-                else UnixTimeMs(st_timestamp)
-            )
-            fin_ms = (
-                UnixTimeMs.from_dt(fin_timestamp)
-                if isinstance(fin_timestamp, datetime)
-                else UnixTimeMs(fin_timestamp)
-            )
-
             data = get_data_func(
-                path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
+                path=self.ppss.lake_ss.lake_dir,
+                st_ms=st_timestamp,
+                fin_ms=fin_timestamp,
             )
 
             print(f"update_bronze_pdr - Inserting data into {table_name}")

@@ -8,7 +8,6 @@ from pdr_backend.lake.base_data_store import BaseDataStore
 
 
 class CSVDataStore(BaseDataStore):
-
     @enforce_types
     def _get_folder_path(self, dataset_identifier: str) -> str:
         """

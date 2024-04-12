@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -13,6 +13,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
@@ -254,19 +255,25 @@ def test_get_max_timestamp_values_from(tmpdir):
 
     pds.duckdb_conn.execute(
         """
-        CREATE TABLE test_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE test_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE test_table_3 (timestamp TIMESTAMP);
+        CREATE TABLE test_table_1 (timestamp INT64);
+        CREATE TABLE test_table_2 (timestamp INT64);
+        CREATE TABLE test_table_3 (timestamp INT64);
         """
     )
 
+    ts1 = UnixTimeMs.from_timestr("2023-11-02_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-03_0:00")
+    ts3 = UnixTimeMs.from_timestr("2023-11-04_0:00")
+    ts4 = UnixTimeMs.from_timestr("2023-11-09_0:00")
     pds.duckdb_conn.execute(
         """
-        INSERT INTO test_table_1 VALUES ('2023-11-02 00:00:00');
-        INSERT INTO test_table_2 VALUES ('2023-11-03 00:00:00');
-        INSERT INTO test_table_2 VALUES ('2023-11-09 00:00:00');
-        INSERT INTO test_table_3 VALUES ('2023-11-04 00:00:00');
-        """
+        INSERT INTO test_table_1 VALUES (INT64 '{0}');
+        INSERT INTO test_table_2 VALUES (INT64 '{1}');
+        INSERT INTO test_table_2 VALUES (INT64 '{2}');
+        INSERT INTO test_table_3 VALUES (INT64 '{3}');
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
     st_timestr = "2023-11-02_0:00"
@@ -282,20 +289,84 @@ def test_get_max_timestamp_values_from(tmpdir):
     etl = ETL(ppss, gql_data_factory)
 
     max_timestamp_values = etl._get_max_timestamp_values_from(
-        ["test_table_1", "test_table_2", "test_table_3"]
+        [
+            NamedTable("test_table_1"),
+            NamedTable("test_table_2"),
+            NamedTable("test_table_3"),
+        ]
     )
-
     assert (
-        max_timestamp_values["test_table_1"].strftime("%Y-%m-%d %H:%M:%S")
+        UnixTimeMs(max_timestamp_values["test_table_1"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
         == "2023-11-02 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_2"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-09 00:00:00"
+        UnixTimeMs(max_timestamp_values["test_table_2"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-04 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_3"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-04 00:00:00"
+        UnixTimeMs(max_timestamp_values["test_table_3"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-09 00:00:00"
+    )
+
+
+@enforce_types
+def _fill_dummy_tables(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    pds = PersistentDataStore(str(tmpdir))
+
+    # mock bronze + raw tables
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE raw_table_1 (timestamp INT64);
+        CREATE TABLE raw_table_2 (timestamp INT64);
+        CREATE TABLE raw_table_3 (timestamp INT64);
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE bronze_table_1 (timestamp INT64);
+        CREATE TABLE bronze_table_2 (timestamp INT64);
+        CREATE TABLE bronze_table_3 (timestamp INT64);
+        """
+    )
+
+    # all bronze tables should have the same max timestamp
+    # etl should start from the bronze table max_timestamp => 2023-11-02
+    ts1 = UnixTimeMs.from_timestr("2023-11-01_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-02_0:00")
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO bronze_table_1 VALUES (INT64 '{1}');
+        INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
+        INSERT INTO bronze_table_2 VALUES (INT64 '{1}');
+        INSERT INTO bronze_table_3 VALUES (INT64 '{1}');
+        """.format(
+            ts1, ts2
+        )
+    )
+
+    # raw tables can have different max timestamps
+    # etl should process all raw_tables up to min_timestamp => 2023-11-21
+    ts1 = UnixTimeMs.from_timestr("2023-11-21_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-22_0:00")
+    ts3 = UnixTimeMs.from_timestr("2023-11-23_0:00")
+    ts4 = UnixTimeMs.from_timestr("2023-11-25_0:00")
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO raw_table_1 VALUES (INT64 '{0}');
+        INSERT INTO raw_table_2 VALUES (INT64 '{1}');
+        INSERT INTO raw_table_2 VALUES (INT64 '{2}');
+        INSERT INTO raw_table_3 VALUES (INT64 '{3}');
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
 
@@ -308,47 +379,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
         2. raw_tables can have different max timestamps
         3. bronze_tables should have the same max timestamp
     """
-    _clean_up_persistent_data_store(tmpdir)
-    pds = PersistentDataStore(str(tmpdir))
-
-    # mock bronze + raw tables
-    pds.duckdb_conn.execute(
-        """
-        CREATE TABLE raw_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE raw_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE raw_table_3 (timestamp TIMESTAMP);
-        """
-    )
-
-    pds.duckdb_conn.execute(
-        """
-        CREATE TABLE bronze_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE bronze_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE bronze_table_3 (timestamp TIMESTAMP);
-        """
-    )
-
-    # all bronze tables should have the same max timestamp
-    # etl should start from the bronze table max_timestamp => 2023-11-02
-    pds.duckdb_conn.execute(
-        """
-        INSERT INTO bronze_table_1 VALUES ('2023-11-02 00:00:00');
-        INSERT INTO bronze_table_2 VALUES ('2023-11-01 00:00:00');
-        INSERT INTO bronze_table_2 VALUES ('2023-11-02 00:00:00');
-        INSERT INTO bronze_table_3 VALUES ('2023-11-02 00:00:00');
-        """
-    )
-
-    # raw tables can have different max timestamps
-    # etl should process all raw_tables up to min_timestamp => 2023-11-21
-    pds.duckdb_conn.execute(
-        """
-        INSERT INTO raw_table_1 VALUES ('2023-11-21 00:00:00');
-        INSERT INTO raw_table_2 VALUES ('2023-11-23 00:00:00');
-        INSERT INTO raw_table_2 VALUES ('2023-11-22 00:00:00');
-        INSERT INTO raw_table_3 VALUES ('2023-11-25 00:00:00');
-        """
-    )
+    _fill_dummy_tables(tmpdir)
 
     # we can set whatever we want here, the ETL pipeline should update as best as possible
     st_timestr = "2023-11-01_0:00"
@@ -373,7 +404,122 @@ def test_calc_bronze_start_end_ts(tmpdir):
     # Calculate from + to timestamps
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    # Assert ETL starts from bronze tables max timestamp
-    # Assert ETL processes raw tables up-to the common min_timestamp between them
-    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
-    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-21 00:00:00"
+    )
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-07_0:00"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+        "bronze_table_4",
+        "bronze_table_5",
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5",
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-07 00:00:00"
+    )
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+    ]
+    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    ts_now = UnixTimeMs.now()
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert abs(ts_now - to_timestamp) < 100
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+        "bronze_table_4",
+        "bronze_table_5",
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5",
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    ts_now = UnixTimeMs.now()
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert abs(ts_now - to_timestamp) < 100
