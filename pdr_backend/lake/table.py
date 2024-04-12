@@ -55,9 +55,9 @@ class Table:
             data - The Polars DataFrame to save.
         """
         csvds = CSVDataStore(self.base_path)
-        print(f" csvds = {csvds}")
+        logger.info(" csvds = %s", csvds)
         csvds.write(self.table_name, data, schema=self.df_schema)
-        print(f"  Saved {data.shape[0]} rows to csv files: {self.table_name}")
+        logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
 
     @enforce_types
     def _append_to_db(
@@ -72,7 +72,7 @@ class Table:
         """
         table_name = get_table_name(self.table_name, table_type)
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
-        print(f"  Appended {data.shape[0]} rows to db table: {table_name}")
+        logger.info("  Appended %s rows to db table: %s", data.shape[0], table_name)
 
 
 @enforce_types

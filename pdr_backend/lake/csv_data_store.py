@@ -348,7 +348,6 @@ class CSVDataStore(BaseDataStore):
         file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
         file_paths.sort()
 
-        # print("read_all_file_paths", file_paths)
         if file_paths:
             # Read the first file to create the DataFrame
             data = pl.read_csv(file_paths[0], schema=schema)

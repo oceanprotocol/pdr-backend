@@ -100,7 +100,7 @@ class ETL:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
-            print(f"move table {table_name} to live")
+            logger.info("move table %s to live", table_name)
             pds.move_table_data(
                 TempTable(table_name),
                 table_name,
@@ -116,26 +116,28 @@ class ETL:
         """
 
         st_ts = time.time_ns() / 1e9
-        print("do_etl - Start ETL.")
+        logger.info("do_etl - Start ETL.")
 
         try:
             # Drop any build tables if they already exist
             self._drop_temp_sql_tables()
-            print("do_etl - Drop build tables.")
+            logger.info("do_etl - Drop build tables.")
 
             # Sync data
             self.gql_data_factory.get_gql_tables()
-            print("do_etl - Synced data. Start bronze_step.")
+            logger.info("do_etl - Synced data. Start bronze_step.")
 
             self.do_bronze_step()
 
             end_ts = time.time_ns() / 1e9
-            print(f"do_etl - Completed bronze_step in {end_ts - st_ts} sec.")
+            logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
 
             self._move_from_temp_tables_to_live()
-            print("do_etl - Moved build tables to permanent tables. ETL Complete.")
+            logger.info(
+                "do_etl - Moved build tables to permanent tables. ETL Complete."
+            )
         except Exception as e:
-            print(f"Error when executing ETL: {e}")
+            logger.info("Error when executing ETL: %s", e)
 
     def do_bronze_step(self):
         """
@@ -144,7 +146,7 @@ class ETL:
             Now, let's build the bronze tables
             key tables: [bronze_pdr_predictions and bronze_pdr_slots]
         """
-        print("do_bronze_step - Build bronze tables.")
+        logger.info("do_bronze_step - Build bronze tables.")
 
         # Update bronze tables
         # let's keep track of time passed so we can log how long it takes for this step to complete
@@ -153,7 +155,7 @@ class ETL:
         self.update_bronze_pdr()
 
         end_ts = time.time_ns() / 1e9
-        print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
+        logger.info("do_bronze_step - Completed in %s sec.", end_ts - st_ts)
 
     def _get_max_timestamp_values_from(
         self, tables: List[NamedTable]
@@ -180,8 +182,9 @@ class ETL:
 
         for table in tables:
             if table.fullname not in all_db_tables:
-                print(
-                    f"_get_max_timestamp_values_from - Table {table.table_name} does not exist."
+                logger.info(
+                    "_get_max_timestamp_values_from - Table %s does not exist.",
+                    table.fullname,
                 )
                 continue
 
@@ -290,7 +293,7 @@ class ETL:
             )
 
         pds.query_data(view_query)
-        print(f"  Created {table_name} view")
+        logger.info("  Created %s view", table_name)
 
     def update_bronze_pdr(self):
         """
@@ -309,7 +312,7 @@ class ETL:
                 fin_ms=fin_timestamp,
             )
 
-            print(f"update_bronze_pdr - Inserting data into {table_name}")
+            logger.info("update_bronze_pdr - Inserting data into %s", table_name)
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
                 table_type=TableType.TEMP,

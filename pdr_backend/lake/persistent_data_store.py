@@ -123,12 +123,12 @@ class PersistentDataStore(BaseDataStore):
         table_names = self.get_table_names()
 
         if table_name in table_names:
-            print(f"insert_to_table table_name = {table_name}")
-            print(f"insert_to_table DF = {df}")
+            logger.info("insert_to_table table_name = %s", table_name)
+            logger.info("insert_to_table DF = %s", df)
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
-            print(f"create_and_fill_table = {table_name}")
-            print(f"create_and_fill_table DF = {df}")
+            logger.info("create_and_fill_table = %s", table_name)
+            logger.info("create_and_fill_table DF = %s", df)
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
@@ -221,7 +221,7 @@ class PersistentDataStore(BaseDataStore):
 
         csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
 
-        print("csv_files", csv_files)
+        logger.info("csv_files %s", csv_files)
         for csv_file in csv_files:
             df = pl.read_csv(csv_file)
             self.insert_to_table(df, table_name)
