@@ -126,6 +126,7 @@ def _filename(tmpdir) -> str:
     return os.path.join(tmpdir, "foo.csv")
 
 
+# TODO - Do diff. Bring back the original test coverage now that this is working.
 @enforce_types
 def test_load_basic(tmpdir):
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
