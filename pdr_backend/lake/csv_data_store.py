@@ -324,7 +324,7 @@ class CSVDataStore(BaseDataStore):
             pl.DataFrame - data read from the csv file
         """
         data = self.read_all(dataset_identifier, schema=schema, cols=cols)
-        
+
         # if the data is empty, return
         if len(data) == 0:
             return data
@@ -364,11 +364,13 @@ class CSVDataStore(BaseDataStore):
         # print("read_all_file_paths", file_paths)
         if file_paths:
             # Read the first file to create the DataFrame
-            data = None 
+            data = None
             if schema is not None:
                 data = pl.read_csv(file_paths[0], schema=schema)
             elif cols is not None:
                 data = pl.read_csv(file_paths[0], columns=cols)
+            else:
+                data = pl.read_csv(file_paths[0])
 
             # Read the remaining files and append them to the DataFrame
             for file_path in file_paths[1:]:

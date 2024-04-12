@@ -73,15 +73,17 @@ class OhlcvDataFactory:
 
         # fetch new data and write to csv files
         self._update_rawohlcv_files(fin_ut)
-        
+
         # load from rawohlcv csv files into raw ohlcv_dfs
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
-        
+
         # Merge all DataFrames into a single DataFrame
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
         # postconditions
-        assert isinstance(mergedohlcv_df, pl.DataFrame), "mergedohlcv_df is not a pl.DataFrame"
+        assert isinstance(
+            mergedohlcv_df, pl.DataFrame
+        ), "mergedohlcv_df is not a pl.DataFrame"
 
         logger.info("Get historical data, across many exchanges & pairs: done.")
         return mergedohlcv_df

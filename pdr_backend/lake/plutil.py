@@ -11,7 +11,6 @@ from tempfile import mkdtemp
 from typing import List, Dict, Iterable, Union, Tuple
 from enum import Enum
 
-import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
 
@@ -70,56 +69,6 @@ def save_rawohlcv_file(filename: str, df: pl.DataFrame):
     else:  # write new file
         df.write_parquet(filename)
         logger.info("Just saved df with %s rows to new file %s", df.shape[0], filename)
-
-
-@enforce_types
-def load_rawohlcv_file(filename: str, cols=None, st=None, fin=None) -> pl.DataFrame:
-    """Load parquet file as a dataframe.
-
-    Features:
-    - Ensure that all dtypes are correct
-    - Filter to just the input columns
-    - Filter to just the specified start & end times
-    - Memory stays reasonable
-
-    @arguments
-      cols -- what columns to use, eg ["open","high"]. Set to None for all cols.
-      st -- starting timestamp, in ut. Set to 0 or None for very beginning
-      fin -- ending timestamp, in ut. Set to inf or None for very end
-
-    @return
-      df -- dataframe
-
-    @notes
-      Polars does not have an index. "timestamp" is a regular col
-    """
-    # handle cols
-    if cols is None:
-        cols = TOHLCV_COLS
-    if "timestamp" not in cols:
-        cols = ["timestamp"] + cols
-    assert "datetime" not in cols
-
-    # set st, fin
-    st = st if st is not None else 0
-    fin = fin if fin is not None else np.inf
-
-    # load tohlcv
-    df = pl.read_parquet(
-        filename,
-        columns=cols,
-    )
-    df = df.filter((pl.col("timestamp") >= st) & (pl.col("timestamp") <= fin))
-
-    # initialize df and enforce schema
-    df0 = initialize_rawohlcv_df(cols)
-    df = concat_next_df(df0, df)
-
-    # postconditions, return
-    assert "timestamp" in df.columns and df["timestamp"].dtype == pl.Int64
-    assert "datetime" not in df.columns
-
-    return df
 
 
 @enforce_types
