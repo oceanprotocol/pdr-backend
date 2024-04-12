@@ -426,7 +426,7 @@ class PredictoorAgent:
         tx = self.pred_submitter_mgr.get_payout(
             slots_unique_flat, contracts_checksummed
         )
-        print("Payout tx:", tx["transactionHash"].hex())
+        logger.info("Payout tx: %s", tx["transactionHash"].hex())
 
 
 @enforce_types
