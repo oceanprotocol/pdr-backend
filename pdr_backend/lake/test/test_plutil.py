@@ -173,19 +173,23 @@ def test_load_basic(tmpdir):
 @enforce_types
 def test_load_append(tmpdir):
     # save 4-row parquet to new file
-    filename = _filename(tmpdir)
+    filename = "foo.csv"
     df_4_rows = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_rawohlcv_file(filename, df_4_rows)
+    CSVDataStore(str(tmpdir)).write(
+        filename, data=df_4_rows
+    )
 
     # append 1 row to existing file
     df_1_row = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
-    save_rawohlcv_file(filename, df_1_row)
+    CSVDataStore(str(tmpdir)).write(
+        filename, data=df_1_row
+    )
 
     # verify: doing a manual concat is the same as the load
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     df_1_row = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
     df_5_rows = concat_next_df(df_4_rows, df_1_row)
-    df_5_rows_loaded = load_rawohlcv_file(filename)
+    df_5_rows_loaded = CSVDataStore(str(tmpdir)).read(filename)
 
     _assert_TOHLCVd_cols_and_types(df_5_rows_loaded)
 
