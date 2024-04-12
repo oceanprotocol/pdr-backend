@@ -1,13 +1,18 @@
 # The PersistentDataStore class is a subclass of the Base
+import logging
 import os
 import glob
 from typing import Optional
 import duckdb
 
+from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
 
+
 from pdr_backend.lake.base_data_store import BaseDataStore
+
+logger = logging.getLogger("pds")
 
 
 class PersistentDataStore(BaseDataStore):
@@ -16,16 +21,38 @@ class PersistentDataStore(BaseDataStore):
     """
 
     @enforce_types
-    def __init__(self, base_path: str):
+    def __init__(self, base_path: str, read_only: bool = False):
         """
         Initialize a PersistentDataStore instance.
         @arguments:
             base_path - The base directory to store the persistent data.
         """
-        super().__init__(base_path)
+        super().__init__(base_path, read_only)
         self.duckdb_conn = duckdb.connect(
-            database=f"{self.base_path}/duckdb.db"
+            database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
+
+    @enforce_types
+    def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):
+        """
+        Create a table if it does not exist.
+        @arguments:
+            table_name - The name of the table.
+            schema - The schema of the table.
+        @example:
+            create_table_if_not_exists("people", {
+                "id": pl.Int64,
+                "name": pl.Utf8,
+                "age": pl.Int64
+            })
+        """
+        # check if the table exists
+        table_names = self.get_table_names()
+
+        if table_name not in table_names:
+            # Create an empty DataFrame with the schema
+            empty_df = pl.DataFrame([], schema=schema)
+            self._create_and_fill_table(empty_df, table_name)
 
     @enforce_types
     def _create_and_fill_table(
@@ -39,7 +66,7 @@ class PersistentDataStore(BaseDataStore):
         """
 
         # Create the table
-        self.duckdb_conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
+        self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
     def get_table_names(self):
@@ -48,7 +75,6 @@ class PersistentDataStore(BaseDataStore):
         @returns:
             list - The names of the tables in the dataset.
         """
-
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
         ).fetchall()
@@ -64,8 +90,18 @@ class PersistentDataStore(BaseDataStore):
         """
 
         views = self.duckdb_conn.execute("SELECT * FROM duckdb_views;").fetchall()
+        view_names = [view[4] for view in views]
+        return view_names
 
-        return [views]
+    @enforce_types
+    def table_exists(self, table_name: str):
+        table_names = self.get_table_names()
+        return table_name in table_names
+
+    @enforce_types
+    def view_exists(self, view_name: str):
+        view_names = self.get_view_names()
+        return view_name in view_names
 
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
@@ -86,11 +122,13 @@ class PersistentDataStore(BaseDataStore):
         # Check if the table exists
         table_names = self.get_table_names()
 
-        print(f"insert_to_table table_name = {table_name}")
-        print(f"insert_to_table DF = {df}")
         if table_name in table_names:
+            print(f"insert_to_table table_name = {table_name}")
+            print(f"insert_to_table DF = {df}")
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
         else:
+            print(f"create_and_fill_table = {table_name}")
+            print(f"create_and_fill_table DF = {df}")
             self._create_and_fill_table(df, table_name)
 
     @enforce_types
@@ -124,7 +162,7 @@ class PersistentDataStore(BaseDataStore):
             drop_table("pdr_predictions")
         """
         # Drop the table if it exists
-        self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        self.execute_sql(f"DROP TABLE IF EXISTS {table_name}")
 
     @enforce_types
     def drop_view(self, view_name: str):
@@ -136,14 +174,14 @@ class PersistentDataStore(BaseDataStore):
             drop_view("_etl_pdr_predictions")
         """
         # Drop the table if it exists
-        self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
+        self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
-    def move_table_data(self, temp_table_name: str, permanent_table_name: str):
+    def move_table_data(self, temp_table, permanent_table_name: str):
         """
         Move the table data from the temporary storage to the permanent storage.
         @arguments:
-            temp_table_name - The name of the temporary table.
+            temp_table - The temporary table object
             permanent_table_name - The name of the permanent table.
         @example:
             move_table_data("temp_people", "people")
@@ -152,20 +190,23 @@ class PersistentDataStore(BaseDataStore):
         # Check if the table exists
         table_names = self.get_table_names()
 
-        if temp_table_name in table_names:
-            # check if the permanent table exists
-            if permanent_table_name not in table_names:
-                # create table if it does not exist
-                self.duckdb_conn.execute(
-                    f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table_name}"
-                )
-            else:
-                # Move the data from the temporary table to the permanent table
-                self.duckdb_conn.execute(
-                    f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table_name}"
-                )
-        else:
-            raise Exception(f"Table {temp_table_name} does not exist")
+        if temp_table.fullname not in table_names:
+            logger.info(
+                "move_table_data - Table %s does not exist", temp_table.fullname
+            )
+
+        # check if the permanent table exists
+        if permanent_table_name not in table_names:
+            # create table if it does not exist
+            self.execute_sql(
+                f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
+            )
+            return
+
+        # Move the data from the temporary table to the permanent table
+        self.execute_sql(
+            f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
+        )
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):
@@ -205,8 +246,26 @@ class PersistentDataStore(BaseDataStore):
         update_columns = ", ".join(
             [f"{column} = {df[column]}" for column in df.columns]
         )
-        self.duckdb_conn.execute(
-            f"""UPDATE {table_name} 
-            SET {update_columns} 
+        self.execute_sql(
+            f"""UPDATE {table_name}
+            SET {update_columns}
             WHERE {column_name} = {df[column_name]}"""
         )
+
+    @enforce_types
+    def execute_sql(self, query: str):
+        """
+        Execute a SQL query across the persistent dataset using DuckDB.
+        @arguments:
+            query - The SQL query to execute.
+        @example:
+            execute_sql("SELECT * FROM table_name")
+        """
+
+        # self._connect()
+
+        # if self.duckdb_conn is None:
+        #     raise Exception("DuckDB connection is not established")
+        self.duckdb_conn.execute("BEGIN TRANSACTION")
+        self.duckdb_conn.execute(query)
+        self.duckdb_conn.execute("COMMIT")

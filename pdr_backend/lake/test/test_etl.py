@@ -1,120 +1,45 @@
+from unittest.mock import patch
+import pytest
 from enforce_typing import enforce_types
 
 import polars as pl
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import Table
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
-from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
-from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
-from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table_pdr_subscriptions import (
-    subscriptions_table_name,
-    subscriptions_schema,
-)
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
-def get_filtered_timestamps_df(
-    df: pl.DataFrame, st_timestr: str, fin_timestr: str
-) -> pl.DataFrame:
-    return df.filter(
-        (pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-
-@enforce_types
-def test_setup_etl(
-    _gql_datafactory_etl_payouts_df,
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
+def test_etl_tables(
     _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_truevals_df,
-    _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
-    tmpdir,
+    setup_data,
 ):
-    _clean_up_persistent_data_store(tmpdir)
-    _clean_up_table_registry()
+    _, pds, _ = setup_data
 
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    # Mock dfs based on configured st/fin timestamps
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
-    )
-
-    # Setup PPSS + Data Factory
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-    }
-
-    gql_tables["pdr_predictions"].append_to_storage(preds)
-    gql_tables["pdr_truevals"].append_to_storage(truevals)
-    gql_tables["pdr_payouts"].append_to_storage(payouts)
-    gql_tables["pdr_slots"].append_to_storage(slots)
-
-    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
-    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
-
-    # Work 1: Initialize ETL - Assert 0 gql_dfs
-    etl = ETL(ppss, gql_data_factory)
-
-    assert etl is not None
-    assert etl.gql_data_factory == gql_data_factory
-
-    pds = _get_test_PDS(tmpdir)
-
-    # Assert original gql has 6 predictions, but we only got 5 due to date
+    # Assert all dfs are not the same size as mock data
     pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
-    assert len(pdr_predictions_df) == 5
-    assert len(_gql_datafactory_etl_predictions_df) == 6
-
-    # Assert all 3 dfs are not the same because we filtered Nov 01 out
     pdr_payouts_df = pds.query_data("SELECT * FROM pdr_payouts")
-    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
-    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
-
     pdr_truevals_df = pds.query_data("SELECT * FROM pdr_truevals")
-
+    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
+    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
+    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
-    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
+    # Assert len of all dfs
     assert len(pdr_slots_df) == 6
-    # Assert len of all 3 dfs
+    assert len(pdr_predictions_df) == 5
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
@@ -123,140 +48,75 @@ def test_setup_etl(
 
 # pylint: disable=too-many-statements
 @enforce_types
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
-    _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
-    tmpdir,
+    setup_data,
 ):
-    _clean_up_persistent_data_store(tmpdir)
-    _clean_up_table_registry()
+    etl, pds, _ = setup_data
 
-    # please note date, including Nov 1st
-    st_timestr = "2023-11-01_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
-    )
-    subscriptions = pl.DataFrame(
-        [
-            {
-                "ID": "testID",
-                "pair": "testPair",
-                "timeframe": "5m",
-                "source": "binance",
-                "tx_id": "tx_id",
-                "last_price_value": 0,
-                "timestamp": 1699300801000,
-                "user": "0xuser",
-            }
-        ],
-        schema=subscriptions_schema,
-    )
-
-    print("subscriptions----1", subscriptions)
-
-    gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-        "pdr_subscriptions": Table(
-            subscriptions_table_name, subscriptions_schema, ppss
-        ),
-    }
-
-    gql_tables["pdr_predictions"].append_to_storage(preds, TableType.TEMP)
-    gql_tables["pdr_truevals"].append_to_storage(truevals, TableType.TEMP)
-    gql_tables["pdr_payouts"].append_to_storage(payouts, TableType.TEMP)
-    gql_tables["pdr_slots"].append_to_storage(slots, TableType.TEMP)
-    gql_tables["pdr_subscriptions"].append_to_storage(subscriptions, TableType.TEMP)
-
-    # Work 1: Initialize ETL
-    etl = ETL(ppss, gql_data_factory)
-
-    pds = _get_test_PDS(tmpdir)
-    temp_table_name = get_table_name(predictions_table_name, TableType.TEMP)
-    pdr_predictions_records = pds.query_data("SELECT * FROM {}".format(temp_table_name))
-    assert len(pdr_predictions_records) == 6
-
-    # Work 3: Do bronze
+    # Work 1: Do bronze
     etl.do_bronze_step()
 
     # assert bronze_pdr_predictions_df is created
-    temp_table_name = get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+    table_name = get_table_name(bronze_pdr_predictions_table_name)
     bronze_pdr_predictions_records = pds.query_data(
-        "SELECT * FROM {}".format(temp_table_name)
+        "SELECT * FROM {}".format(table_name)
     )
-    assert len(bronze_pdr_predictions_records) == 6
+    assert len(bronze_pdr_predictions_records) == 5
 
-    # bronze_pdr_predictions_df = etl.tables["bronze_pdr_predictions"].df
-    bronze_pdr_predictions_df = bronze_pdr_predictions_records
+    print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
+    bronze_pdr_predictions_df = bronze_pdr_predictions_records
     assert (
         bronze_pdr_predictions_df["contract"][0]
-        == "0x30f1c55e72fe105e4a1fbecdff3145fc14177695"
-    )
-    assert (
-        bronze_pdr_predictions_df["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][1]
     )
     assert (
-        bronze_pdr_predictions_df["contract"][2]
+        bronze_pdr_predictions_df["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][2]
+    )
+    assert (
+        bronze_pdr_predictions_df["contract"][2]
+        == _gql_datafactory_etl_predictions_df["contract"][3]
     )
 
     # Assert timestamp == predictions timestamp
     assert (
         bronze_pdr_predictions_df["timestamp"][1]
-        == _gql_datafactory_etl_predictions_df["timestamp"][1]
+        == _gql_datafactory_etl_predictions_df["timestamp"][2]
     )
     assert (
         bronze_pdr_predictions_df["timestamp"][2]
-        == _gql_datafactory_etl_predictions_df["timestamp"][2]
+        == _gql_datafactory_etl_predictions_df["timestamp"][3]
     )
 
     # Assert last_event_timestamp == payout.timestamp
     assert (
         bronze_pdr_predictions_df["last_event_timestamp"][1]
-        == _gql_datafactory_etl_payouts_df["timestamp"][1]
+        == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
     assert (
         bronze_pdr_predictions_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_payouts_df["timestamp"][2]
+        == _gql_datafactory_etl_payouts_df["timestamp"][3]
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][1] is True
-    assert bronze_pdr_predictions_df["truevalue"][2] is False
+    assert bronze_pdr_predictions_df["truevalue"][2] is True
+    assert bronze_pdr_predictions_df["truevalue"][3] is False
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
-        == _gql_datafactory_etl_truevals_df["truevalue"][1]
+        == _gql_datafactory_etl_truevals_df["truevalue"][2]
     )
     assert (
         bronze_pdr_predictions_df["truevalue"][2]
-        == _gql_datafactory_etl_truevals_df["truevalue"][2]
+        == _gql_datafactory_etl_truevals_df["truevalue"][3]
     )
 
     # Assert payout ts > prediction ts
@@ -271,53 +131,66 @@ def test_etl_do_bronze_step(
 
     # Assert payout came from payouts
     assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][1], 3
+        _gql_datafactory_etl_payouts_df["payout"][2], 3
     )
     assert round(bronze_pdr_predictions_df["payout"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][2], 3
+        _gql_datafactory_etl_payouts_df["payout"][3], 3
     )
 
     # Assert stake in the bronze_table came from payouts
     assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][1], 3
-    )
-    assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
         _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
-
-    temp_bronze_pdr_slots_table_name = get_table_name(
-        bronze_pdr_slots_table_name, TableType.TEMP
+    assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
+        _gql_datafactory_etl_payouts_df["stake"][3], 3
     )
 
-    bronze_pdr_slots_records = pds.query_data(
-        "SELECT * FROM {}".format(temp_bronze_pdr_slots_table_name)
-    )
+    # Assert bronze slots table is building correctly
+    table_name = get_table_name(bronze_pdr_slots_table_name)
+    bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
-    print("bronze_pdr_slots_records---1", bronze_pdr_slots_records)
-
-    assert len(bronze_pdr_slots_records) == 5
-
+    assert len(bronze_pdr_slots_records) == 4
     assert bronze_pdr_slots_records["truevalue"].null_count() == 0
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
     assert bronze_pdr_slots_records["source"].null_count() == 1
 
 
-@enforce_types
-def test_drop_temp_sql_tables(tmpdir):
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
+def test_etl_views(setup_data):
+    etl, pds, _ = setup_data
 
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
+    # Work 1: First Run
+    with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
+        etl.do_bronze_step()
+        assert mock.called
 
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
+    # live table shouldn't exist
+    # temp table should be created
+    # etl view shouldn't exist
+    assert not bronze_pdr_predictions_table_name in pds.get_table_names()
+    records = pds.query_data(
+        "SELECT * FROM {}".format(
+            get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+        )
+    )
+    assert len(records) == 5
+    assert (
+        get_table_name(bronze_pdr_predictions_table_name, TableType.ETL)
+        in pds.get_view_names()
     )
 
-    etl = ETL(ppss, gql_data_factory)
-    pds = PersistentDataStore(str(tmpdir))
+    # move from temp to live
+    etl._move_from_temp_tables_to_live()
+
+
+@enforce_types
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
+def test_drop_temp_sql_tables(setup_data):
+    etl, pds, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
     table_names = pds.get_table_names()
@@ -345,28 +218,12 @@ def test_drop_temp_sql_tables(tmpdir):
 
 
 @enforce_types
-def test_move_from_temp_tables_to_live(tmpdir):
-
-    # setup test start-end date
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    pds = PersistentDataStore(str(tmpdir))
-
-    # SELECT ALL TABLES FROM DB
-    table_names = pds.get_table_names()
-
-    # DROP ALL TABLES
-    for table_name in table_names:
-        pds.duckdb_conn.execute(f"DROP TABLE {table_name}")
+@pytest.mark.parametrize(
+    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+)
+def test_move_from_temp_tables_to_live(setup_data):
+    etl, pds, gql_tables = setup_data
+    assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}
     pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
@@ -375,23 +232,18 @@ def test_move_from_temp_tables_to_live(tmpdir):
 
     # check if tables are created
     table_names = pds.get_table_names()
-
-    assert len(table_names) == 3
-
     etl.temp_table_names = ["a", "b", "c"]
     etl._move_from_temp_tables_to_live()
 
-    table_names = pds.get_table_names()
-
-    assert len(table_names) == 3
     # check "c" exists in permanent tables
+    table_names = pds.get_table_names()
+    assert len(table_names) == 8
     assert "c" in table_names
     assert "a" in table_names
     assert "b" in table_names
 
     # Verify no build tables exist
     table_names = pds.get_table_names()
-
     for table_name in table_names:
         assert "_temp_" not in table_name
 
@@ -403,19 +255,25 @@ def test_get_max_timestamp_values_from(tmpdir):
 
     pds.duckdb_conn.execute(
         """
-        CREATE TABLE test_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE test_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE test_table_3 (timestamp TIMESTAMP);
+        CREATE TABLE test_table_1 (timestamp INT64);
+        CREATE TABLE test_table_2 (timestamp INT64);
+        CREATE TABLE test_table_3 (timestamp INT64);
         """
     )
 
+    ts1 = UnixTimeMs.from_timestr("2023-11-02_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-03_0:00")
+    ts3 = UnixTimeMs.from_timestr("2023-11-04_0:00")
+    ts4 = UnixTimeMs.from_timestr("2023-11-09_0:00")
     pds.duckdb_conn.execute(
         """
-        INSERT INTO test_table_1 VALUES ('2023-11-02 00:00:00');
-        INSERT INTO test_table_2 VALUES ('2023-11-03 00:00:00');
-        INSERT INTO test_table_2 VALUES ('2023-11-09 00:00:00');
-        INSERT INTO test_table_3 VALUES ('2023-11-04 00:00:00');
-        """
+        INSERT INTO test_table_1 VALUES (INT64 '{0}');
+        INSERT INTO test_table_2 VALUES (INT64 '{1}');
+        INSERT INTO test_table_2 VALUES (INT64 '{2}');
+        INSERT INTO test_table_3 VALUES (INT64 '{3}');
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
     st_timestr = "2023-11-02_0:00"
@@ -431,61 +289,134 @@ def test_get_max_timestamp_values_from(tmpdir):
     etl = ETL(ppss, gql_data_factory)
 
     max_timestamp_values = etl._get_max_timestamp_values_from(
-        ["test_table_1", "test_table_2", "test_table_3"]
+        [
+            NamedTable("test_table_1"),
+            NamedTable("test_table_2"),
+            NamedTable("test_table_3"),
+        ]
     )
-
     assert (
-        max_timestamp_values["test_table_1"].strftime("%Y-%m-%d %H:%M:%S")
+        UnixTimeMs(max_timestamp_values["test_table_1"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
         == "2023-11-02 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_2"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-09 00:00:00"
+        UnixTimeMs(max_timestamp_values["test_table_2"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-04 00:00:00"
     )
     assert (
-        max_timestamp_values["test_table_3"].strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-04 00:00:00"
+        UnixTimeMs(max_timestamp_values["test_table_3"])
+        .to_dt()
+        .strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-09 00:00:00"
+    )
+
+
+@enforce_types
+def _fill_dummy_tables(tmpdir):
+    _clean_up_persistent_data_store(tmpdir)
+    pds = PersistentDataStore(str(tmpdir))
+
+    # mock bronze + raw tables
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE raw_table_1 (timestamp INT64);
+        CREATE TABLE raw_table_2 (timestamp INT64);
+        CREATE TABLE raw_table_3 (timestamp INT64);
+        """
+    )
+
+    pds.duckdb_conn.execute(
+        """
+        CREATE TABLE bronze_table_1 (timestamp INT64);
+        CREATE TABLE bronze_table_2 (timestamp INT64);
+        CREATE TABLE bronze_table_3 (timestamp INT64);
+        """
+    )
+
+    # all bronze tables should have the same max timestamp
+    # etl should start from the bronze table max_timestamp => 2023-11-02
+    ts1 = UnixTimeMs.from_timestr("2023-11-01_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-02_0:00")
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO bronze_table_1 VALUES (INT64 '{1}');
+        INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
+        INSERT INTO bronze_table_2 VALUES (INT64 '{1}');
+        INSERT INTO bronze_table_3 VALUES (INT64 '{1}');
+        """.format(
+            ts1, ts2
+        )
+    )
+
+    # raw tables can have different max timestamps
+    # etl should process all raw_tables up to min_timestamp => 2023-11-21
+    ts1 = UnixTimeMs.from_timestr("2023-11-21_0:00")
+    ts2 = UnixTimeMs.from_timestr("2023-11-22_0:00")
+    ts3 = UnixTimeMs.from_timestr("2023-11-23_0:00")
+    ts4 = UnixTimeMs.from_timestr("2023-11-25_0:00")
+    pds.duckdb_conn.execute(
+        """
+        INSERT INTO raw_table_1 VALUES (INT64 '{0}');
+        INSERT INTO raw_table_2 VALUES (INT64 '{1}');
+        INSERT INTO raw_table_2 VALUES (INT64 '{2}');
+        INSERT INTO raw_table_3 VALUES (INT64 '{3}');
+        """.format(
+            ts1, ts2, ts3, ts4
+        )
     )
 
 
 @enforce_types
 def test_calc_bronze_start_end_ts(tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
-    pds = PersistentDataStore(str(tmpdir))
+    """
+    @description
+        Verify that the start and end timestamps for the bronze tables are calculated correctly
+        1. ETL step starts from bronze_table max timestamp
+        2. raw_tables can have different max timestamps
+        3. bronze_tables should have the same max timestamp
+    """
+    _fill_dummy_tables(tmpdir)
 
-    pds.duckdb_conn.execute(
-        """
-        CREATE TABLE test_bronze_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE test_bronze_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE test_bronze_table_3 (timestamp TIMESTAMP);
-        """
+    # we can set whatever we want here, the ETL pipeline should update as best as possible
+    st_timestr = "2023-11-01_0:00"
+    fin_timestr = "2023-11-30_0:00"
+
+    # Setup GQL Data Factory and mock tables for ETL
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
     )
 
-    pds.duckdb_conn.execute(
-        """
-        CREATE TABLE _temp_dummy_table_1 (timestamp TIMESTAMP);
-        CREATE TABLE _temp_dummy_table_2 (timestamp TIMESTAMP);
-        CREATE TABLE _temp_dummy_table_3 (timestamp TIMESTAMP);
-        """
+    etl = ETL(ppss, gql_data_factory)
+    etl.raw_table_names = ["raw_table_1", "raw_table_2", "raw_table_3"]
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+    ]
+
+    # Calculate from + to timestamps
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-21 00:00:00"
     )
 
-    pds.duckdb_conn.execute(
-        """
-        INSERT INTO test_bronze_table_1 VALUES ('2023-11-04 00:00:00');
-        INSERT INTO test_bronze_table_2 VALUES ('2023-11-05 00:00:00');
-        INSERT INTO test_bronze_table_2 VALUES ('2023-11-01 00:00:00');
-        INSERT INTO test_bronze_table_3 VALUES ('2023-11-02 00:00:00');
-        """
-    )
 
-    pds.duckdb_conn.execute(
-        """
-        INSERT INTO _temp_dummy_table_1 VALUES ('2023-11-21 00:00:00');
-        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-23 00:00:00');
-        INSERT INTO _temp_dummy_table_2 VALUES ('2023-11-22 00:00:00');
-        INSERT INTO _temp_dummy_table_3 VALUES ('2023-11-25 00:00:00');
-        """
-    )
+@enforce_types
+def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
+    _fill_dummy_tables(tmpdir)
 
     st_timestr = "2023-11-02_0:00"
     fin_timestr = "2023-11-07_0:00"
@@ -499,12 +430,96 @@ def test_calc_bronze_start_end_ts(tmpdir):
 
     etl = ETL(ppss, gql_data_factory)
     etl.bronze_table_names = [
-        "test_bronze_table_1",
-        "test_bronze_table_2",
-        "test_bronze_table_3",
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+        "bronze_table_4",
+        "bronze_table_5",
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5",
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert (
+        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-07 00:00:00"
+    )
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
     ]
     etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert to_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-21 00:00:00"
-    assert from_timestamp.strftime("%Y-%m-%d %H:%M:%S") == "2023-11-02 00:00:00"
+    ts_now = UnixTimeMs.now()
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert abs(ts_now - to_timestamp) < 100
+
+
+@enforce_types
+def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
+    _fill_dummy_tables(tmpdir)
+
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "now"
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    etl = ETL(ppss, gql_data_factory)
+    etl.bronze_table_names = [
+        "bronze_table_1",
+        "bronze_table_2",
+        "bronze_table_3",
+        "bronze_table_4",
+        "bronze_table_5",
+    ]
+    etl.raw_table_names = [
+        "dummy_table_1",
+        "dummy_table_2",
+        "dummy_table_3",
+        "dummy_table_4",
+        "dummy_table_5",
+    ]
+    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+
+    ts_now = UnixTimeMs.now()
+    assert (
+        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+        == "2023-11-02 00:00:00"
+    )
+    assert abs(ts_now - to_timestamp) < 100

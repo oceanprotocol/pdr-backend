@@ -22,9 +22,8 @@ from pdr_backend.lake.plutil import (
     save_rawohlcv_file,
     set_col_values,
     text_to_df,
-    get_table_name,
-    TableType,
 )
+from pdr_backend.lake.table import TableType, get_table_name
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
     [1686806100000, 1648.58, 1648.58, 1646.27, 1646.64, 7.4045],

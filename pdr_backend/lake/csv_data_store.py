@@ -8,7 +8,6 @@ from pdr_backend.lake.base_data_store import BaseDataStore
 
 
 class CSVDataStore(BaseDataStore):
-
     @enforce_types
     def _get_folder_path(self, dataset_identifier: str) -> str:
         """
@@ -95,6 +94,8 @@ class CSVDataStore(BaseDataStore):
 
         max_row_count = 1000
         last_file_row_count = self._get_last_file_row_count(dataset_identifier)
+        data = data.sort("timestamp")
+
         if last_file_row_count is not None:
             if last_file_row_count < max_row_count:
                 remaining_rows = max_row_count - last_file_row_count

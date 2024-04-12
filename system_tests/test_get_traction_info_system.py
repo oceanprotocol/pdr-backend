@@ -17,7 +17,6 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
 def test_traction_info_system(mock_plot_stats, caplog):
-
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
     mock_predictions = [

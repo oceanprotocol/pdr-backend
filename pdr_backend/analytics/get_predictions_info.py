@@ -13,7 +13,7 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_daily_statistics,
 )
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.plutil import get_table_name, TableType
+from pdr_backend.lake.table import get_table_name, TableType
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
 logger = logging.getLogger("get_predictions_info")

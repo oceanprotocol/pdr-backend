@@ -1,5 +1,4 @@
 from typing import List
-from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
@@ -71,26 +70,20 @@ def test_aggregate_statistics():
 
 
 @enforce_types
-@patch("pdr_backend.accuracy.app.fetch_slots")
-def test_calculate_statistics_for_all_assets(mock_fetch_slots):
+def test_calculate_statistics_for_all_assets():
     # Mocks
-    mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
+    all_slots = [SAMPLE_PREDICT_SLOT] * 1000
     contracts_list: List[ContractIdAndSPE] = [
         {"ID": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
     ]
 
     # Main work
     statistics = calculate_statistics_for_all_assets(
-        asset_ids=["0xAsset"],
         contracts_list=contracts_list,
-        start_ts_param=UnixTimeS(91000),
+        all_slots=all_slots,
         end_ts_param=UnixTimeS(92000),
-        network="mainnet",
     )
 
     print("test_calculate_statistics_for_all_assets", statistics)
     # Verify
     assert statistics["0xAsset"]["average_accuracy"] == 100.0
-    mock_fetch_slots.assert_called_once_with(
-        UnixTimeS(91000), UnixTimeS(92000), ["0xAsset"], 1000, 0, "mainnet"
-    )

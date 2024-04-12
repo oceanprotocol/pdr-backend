@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 import polars as pl
 from polars.type_aliases import SchemaDict
@@ -6,9 +7,26 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
 
 logger = logging.getLogger("table")
+
+
+class TableType(Enum):
+    NORMAL = "NORMAL"
+    TEMP = "TEMP"
+    ETL = "ETL"
+
+
+@enforce_types
+def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) -> str:
+    """
+    Get the table name with the build mode prefix
+    """
+    if table_type == TableType.TEMP:
+        return f"_temp_{table_name}"
+    if table_type == TableType.ETL:
+        return f"_etl_{table_name}"
+    return table_name
 
 
 @enforce_types
@@ -39,10 +57,7 @@ class Table:
         csvds = CSVDataStore(self.base_path)
         print(f" csvds = {csvds}")
         csvds.write(self.table_name, data, schema=self.df_schema)
-        n_new = data.shape[0]
-        print(
-            f"  Just saved df with {n_new} df rows to the csv files of {self.table_name}"
-        )
+        print(f"  Saved {data.shape[0]} rows to csv files: {self.table_name}")
 
     @enforce_types
     def _append_to_db(
@@ -57,5 +72,20 @@ class Table:
         """
         table_name = get_table_name(self.table_name, table_type)
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
-        n_new = data.shape[0]
-        print(f"  Just saved df with {n_new} df rows to the database of {table_name}")
+        print(f"  Appended {data.shape[0]} rows to db table: {table_name}")
+
+
+@enforce_types
+class NamedTable:
+    def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
+        self.table_name = table_name
+        self.table_type = table_type
+
+    @property
+    def fullname(self) -> str:
+        return get_table_name(self.table_name, self.table_type)
+
+
+class TempTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.TEMP)

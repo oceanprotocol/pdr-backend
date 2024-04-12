@@ -1,11 +1,12 @@
 import os
+import threading
 import polars as pl
 import duckdb
 
+from pdr_backend.lake.table import TableType, get_table_name, TempTable
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.plutil import get_table_name, TableType
 
 
 # Initialize the PersistentDataStore instance for testing
@@ -18,23 +19,14 @@ def _get_persistent_data_store(tmpdir):
     return [PersistentDataStore(str(tmpdir)), example_df, table_name]
 
 
-def _table_exists(persistent_data_store, table_name):
-    table_names = persistent_data_store.get_table_names()
-    return [table_name in table_names, table_name]
-
-
-def _view_exists(persistent_data_store, view_name):
-    view_names = persistent_data_store.get_view_names()
-    return [view_name in view_names, view_name]
-
-
 def test_create_and_fill_table(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
 
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    assert _table_exists(persistent_data_store, table_name)
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
     _clean_up_persistent_data_store(tmpdir, table_name)
 
 
@@ -44,8 +36,8 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store._create_and_fill_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Insert new data to the table
     example_df = pl.DataFrame(
@@ -54,15 +46,14 @@ def test_insert_to_exist_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
         f"SELECT * FROM {table_name}"
     ).fetchall()
     assert len(result) == 6
-    print(result)
     assert result[3][0] == "2022-04-01"
     assert result[3][1] == 40
     assert result[4][0] == "2022-05-01"
@@ -78,8 +69,8 @@ def test_insert_to_new_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
@@ -100,8 +91,8 @@ def test_query(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, _ = _table_exists(persistent_data_store, table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Execute the provided SQL query
     result_df = persistent_data_store.query_data(
@@ -117,8 +108,8 @@ def test_drop_table(tmpdir):
     persistent_data_store.insert_to_table(example_df, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Drop the table
     persistent_data_store.drop_table(table_name)
@@ -138,9 +129,8 @@ def test_fill_from_csv_destination(tmpdir):
     persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
 
     # Check if the table is registered
-    check_result, table_name = _table_exists(persistent_data_store, table_name)
-
-    assert check_result
+    table_exists = persistent_data_store.table_exists(table_name)
+    assert table_exists
 
     # Check if the new data is inserted
     result = persistent_data_store.duckdb_conn.execute(
@@ -243,22 +233,19 @@ def test_move_table_data(tmpdir):
     )
 
     # Check if the table is registered
-    check_result = _table_exists(
-        persistent_data_store, get_table_name(table_name, TableType.TEMP)
+    table_exists = persistent_data_store.table_exists(
+        get_table_name(table_name, TableType.TEMP)
     )
-
-    assert check_result
+    assert table_exists
 
     # Move the table
-    persistent_data_store.move_table_data(
-        get_table_name(table_name, TableType.TEMP), table_name
-    )
+    persistent_data_store.move_table_data(TempTable(table_name), table_name)
 
     # Assert table hasn't dropped
     table_names = persistent_data_store.get_table_names()
     assert get_table_name(table_name, TableType.TEMP) in table_names
 
-    # Drop interim ETL table
+    # Drop interim TEMP table
     persistent_data_store.drop_table(get_table_name(table_name, TableType.TEMP))
 
     # Assert temp table is dropped
@@ -292,7 +279,7 @@ def test_etl_view(tmpdir):
     view_name = get_table_name(table_name, TableType.ETL)
     view_query = """
     CREATE VIEW {} AS
-    ( 
+    (
         SELECT * FROM {}
         UNION ALL
         SELECT * FROM {}
@@ -308,7 +295,7 @@ def test_etl_view(tmpdir):
     assert len(view_names) == 1
 
     # Assert view is registered
-    check_result = _view_exists(persistent_data_store, view_name)
+    check_result = persistent_data_store.view_exists(view_name)
     assert check_result
 
     # Assert view returns the correct, min(timestamp)
@@ -322,3 +309,71 @@ def test_etl_view(tmpdir):
         f"SELECT max(timestamp) FROM {view_name}"
     ).fetchall()
     assert result[0][0] == "2022-06-01"
+
+
+def test_multiple_thread_table_updates(tmpdir):
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+    csv_folder_path = os.path.join(str(tmpdir), "csv_folder")
+    os.makedirs(csv_folder_path, exist_ok=True)
+    example_df.write_csv(os.path.join(str(csv_folder_path), "data.csv"))
+
+    # Check that table is empty by default
+    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    assert result is None
+
+    thread1 = threading.Thread(
+        target=thread_function_write_to_db, args=(csv_folder_path, tmpdir)
+    )
+    thread2 = threading.Thread(
+        target=thread_function_read_from_db, args=(csv_folder_path, tmpdir)
+    )
+    thread1.start()
+    thread2.start()
+
+
+def thread_function_write_to_db(csv_folder_path, tmpdir):
+    persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
+    persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
+
+
+def thread_function_read_from_db(csv_folder_path, tmpdir):
+    persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
+
+    # Check if the new data is inserted
+    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    assert len(result) == 3
+    assert result["timestamp"][0] == "2022-01-01"
+    assert result["value"][0] == 10
+    assert result["timestamp"][1] == "2022-02-01"
+    assert result["value"][1] == 20
+    assert result["timestamp"][2] == "2022-03-01"
+    assert result["value"][2] == 30
+
+    _clean_up_persistent_data_store(tmpdir, table_name)
+    # clean csv folder
+    # delete files in the folder
+    for file in os.listdir(csv_folder_path):
+        file_path = os.path.join(csv_folder_path, file)
+        os.remove(file_path)
+
+    # delete the folder
+    os.rmdir(csv_folder_path)
+
+
+def test_create_table_if_not_exists(tmpdir):
+    """
+    Test create table if not exists.
+    """
+    _clean_up_persistent_data_store(tmpdir)
+
+    persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
+
+    example_df_schema = example_df.schema
+    # Create table
+    persistent_data_store.create_table_if_not_exists(table_name, example_df_schema)
+
+    # Check if the table is registered
+    check_result = persistent_data_store.table_exists(table_name)
+    assert check_result
+
+    _clean_up_persistent_data_store(tmpdir)

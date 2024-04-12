@@ -1,8 +1,10 @@
+import logging
 import time
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Tuple
+from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.table import TableType, get_table_name, NamedTable, TempTable
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
@@ -21,8 +23,9 @@ from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
-from pdr_backend.lake.plutil import get_table_name, TableType
 from pdr_backend.util.time_types import UnixTimeMs
+
+logger = logging.getLogger("etl")
 
 
 class ETL:
@@ -59,9 +62,9 @@ class ETL:
         self.raw_table_names = [
             payouts_table_name,
             predictions_table_name,
-            subscriptions_table_name,
             truevals_table_name,
             slots_table_name,
+            subscriptions_table_name,
         ]
 
         self.bronze_table_getters = {
@@ -69,9 +72,13 @@ class ETL:
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
+        logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
+
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
-        self.temp_table_names = [*self.bronze_table_names, *self.raw_table_names]
+        self.temp_table_names = []
+        for table_name in self.bronze_table_names:
+            self.temp_table_names.append(get_table_name(table_name, TableType.TEMP))
 
     def _drop_temp_sql_tables(self):
         """
@@ -93,8 +100,9 @@ class ETL:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
+            print(f"move table {table_name} to live")
             pds.move_table_data(
-                get_table_name(table_name, TableType.TEMP),
+                TempTable(table_name),
                 table_name,
             )
 
@@ -148,8 +156,8 @@ class ETL:
         print(f"do_bronze_step - Completed in {end_ts - st_ts} sec.")
 
     def _get_max_timestamp_values_from(
-        self, table_names: List[str], table_type: TableType = TableType.NORMAL
-    ) -> Dict[str, Optional[datetime]]:
+        self, tables: List[NamedTable]
+    ) -> Dict[str, Optional[UnixTimeMs]]:
         """
         @description
             Get the max timestamp values from the tables
@@ -164,38 +172,64 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        queries = [
-            max_timestamp_query.format(
-                get_table_name(table_name, table_type),
-                get_table_name(table_name, table_type),
-            )
-            for table_name in table_names
-        ]
+        all_db_tables = PersistentDataStore(
+            self.ppss.lake_ss.lake_dir
+        ).get_table_names()
+
+        queries = []
+
+        for table in tables:
+            if table.fullname not in all_db_tables:
+                print(
+                    f"_get_max_timestamp_values_from - Table {table.table_name} does not exist."
+                )
+                continue
+
+            queries.append(max_timestamp_query.format(table.fullname, table.fullname))
+
+        table_names = [table.fullname for table in tables]
+        none_values: Dict[str, Optional[UnixTimeMs]] = {
+            table_name: None for table_name in table_names
+        }
+
+        if len(queries) == 0:
+            return none_values
+
         final_query = " UNION ALL ".join(queries)
-
-        print(f"_get_max_timestamp_values_from - final_query: {final_query}")
-
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        print(f"_get_max_timestamp_values_from - result: {result}")
-        values: Any = {}
+        logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
-            for table_name in table_names:
-                values[table_name] = None
+            return none_values
 
-            return values
-
-        # print(f"_get_max_timestamp_values_from - result: {result}")
+        values: Dict[str, Optional[UnixTimeMs]] = {}
 
         for row in result.rows(named=True):
             table_name = row["table_name"]
             max_timestamp = row["max_timestamp"]
-            values[table_name] = max_timestamp
+
+            values[table_name] = UnixTimeMs(max_timestamp)
 
         return values
 
-    def _calc_bronze_start_end_ts(self):
+    def get_timestamp_values(
+        self, table_names: List[str], default_timestr: str
+    ) -> UnixTimeMs:
+        max_timestamp_values = self._get_max_timestamp_values_from(
+            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
+        )
+        values = []
+        if len(max_timestamp_values) > 0:
+            values = [
+                value for value in max_timestamp_values.values() if value is not None
+            ]
+        timestamp = (
+            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+        )
+        return timestamp
+
+    def _calc_bronze_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -204,56 +238,88 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        from_values = self._get_max_timestamp_values_from(
-            self.bronze_table_names
-        ).values()
-
-        from_timestamp = (
-            min(from_values)
-            if None not in from_values
-            else datetime.strptime(self.ppss.lake_ss.st_timestr, "%Y-%m-%d_%H:%M")
+        from_timestamp = self.get_timestamp_values(
+            self.bronze_table_names, self.ppss.lake_ss.st_timestr
         )
 
-        to_values = self._get_max_timestamp_values_from(
-            self.raw_table_names, TableType.TEMP
-        ).values()
+        to_timestamp = self.get_timestamp_values(
+            self.raw_table_names, self.ppss.lake_ss.fin_timestr
+        )
 
-        to_timestamp = (
-            min(to_values)
-            if None not in to_values
-            else datetime.strptime(self.ppss.lake_ss.fin_timestr, "%Y-%m-%d_%H:%M")
+        assert from_timestamp <= to_timestamp, (
+            f"from_timestamp ({from_timestamp}) must be less than or equal to "
+            f"to_timestamp ({to_timestamp})"
         )
 
         return from_timestamp, to_timestamp
+
+    @enforce_types
+    def create_etl_view(self, table_name: str):
+        # Assemble view query and create the view
+        assert (
+            table_name in self.bronze_table_names
+        ), f"{table_name} must be a bronze table"
+
+        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        temp_table_name = get_table_name(table_name, TableType.TEMP)
+        etl_view_name = get_table_name(table_name, TableType.ETL)
+
+        table_exists = pds.table_exists(table_name)
+        temp_table_exists = pds.table_exists(temp_table_name)
+        etl_view_exists = pds.view_exists(etl_view_name)
+        assert temp_table_exists, f"{temp_table_name} must already exist"
+        assert not etl_view_exists, f"{etl_view_name} must not exist"
+
+        view_query = None
+
+        if table_exists and temp_table_exists:
+            view_query = """
+                CREATE VIEW {} AS
+                (
+                    SELECT * FROM {}
+                    UNION ALL
+                    SELECT * FROM {}
+                )""".format(
+                etl_view_name,
+                get_table_name(table_name),
+                temp_table_name,
+            )
+        else:
+            view_query = (
+                f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
+            )
+
+        pds.query_data(view_query)
+        print(f"  Created {table_name} view")
 
     def update_bronze_pdr(self):
         """
         @description
             Update bronze tables
         """
-        print("update_bronze_pdr - Update bronze tables.")
+        logger.info("update_bronze_pdr - Update bronze tables.")
+
+        # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
-            # If st_timestamp is an instance of datetime, convert it to UnixTimeMs with from_dt
-            # If st_timestamp is None, it will be passed as None
-            # If st_timestamp is an int, Convert it to UnixTimeMs by passing it as is
-            st_ms = (
-                UnixTimeMs.from_dt(st_timestamp)
-                if isinstance(st_timestamp, datetime)
-                else UnixTimeMs(st_timestamp)
-            )
-            fin_ms = (
-                UnixTimeMs.from_dt(fin_timestamp)
-                if isinstance(fin_timestamp, datetime)
-                else UnixTimeMs(fin_timestamp)
-            )
-
             data = get_data_func(
-                path=self.ppss.lake_ss.lake_dir, st_ms=st_ms, fin_ms=fin_ms
+                path=self.ppss.lake_ss.lake_dir,
+                st_ms=st_timestamp,
+                fin_ms=fin_timestamp,
             )
 
+            print(f"update_bronze_pdr - Inserting data into {table_name}")
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
                 table_type=TableType.TEMP,
             )
+
+            # For each bronze table that we process, that data will be entered into TEMP
+            # Create view so downstream queries can access production + TEMP data
+            self.create_etl_view(table_name)
+
+        # At the end of the ETL pipeline, we want to
+        # 1. move from TEMP tables to production tables
+        # 2. drop TEMP tables and ETL views
+        self._move_from_temp_tables_to_live()
