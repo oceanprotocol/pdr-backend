@@ -221,17 +221,22 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
 
 @enforce_types
 def test_has_data(tmpdir):
-    filename0 = os.path.join(tmpdir, "f0.parquet")
-    save_rawohlcv_file(filename0, _df_from_raw_data([]))
-    assert not has_data(filename0)
+    csvds = CSVDataStore(str(tmpdir))
+    
+    filename0 = "foo0.csv"
+    df = _df_from_raw_data([])
+    csvds.write(filename0, data=df)
+    assert not csvds.has_data(filename0)
 
-    filename1 = os.path.join(tmpdir, "f1.parquet")
-    save_rawohlcv_file(filename1, _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA))
-    assert has_data(filename1)
+    filename1 = "foo1.csv"
+    df = _df_from_raw_data(ONE_ROW_RAW_TOHLCV_DATA)
+    csvds.write(filename1, data=df)
+    assert csvds.has_data(filename1)
 
-    filename4 = os.path.join(tmpdir, "f4.parquet")
-    save_rawohlcv_file(filename4, _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA))
-    assert has_data(filename4)
+    filename4 = "foo4.csv"
+    df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
+    csvds.write(filename4, data=df)
+    assert csvds.has_data(filename4)
 
 
 @enforce_types
