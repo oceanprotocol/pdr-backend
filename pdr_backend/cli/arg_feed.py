@@ -9,14 +9,14 @@ from pdr_backend.cli.arg_signal import ArgSignal, ArgSignals, verify_signalchar_
 from pdr_backend.cli.arg_timeframe import (
     ArgTimeframe,
     ArgTimeframes,
-    verify_timeframes_str,
+    timeframes_str_ok,
 )
 
 
 class ArgFeed:
     def __init__(
         self,
-        exchange,
+        exchange: Union[ArgExchange, str],
         signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
@@ -27,7 +27,9 @@ class ArgFeed:
         if pair is None:
             raise ValueError("pair cannot be None")
 
-        self.exchange = ArgExchange(exchange) if isinstance(exchange, str) else exchange
+        self.exchange: ArgExchange = (
+            ArgExchange(exchange) if isinstance(exchange, str) else exchange
+        )
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
 
@@ -117,7 +119,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     timeframe_str = feeds_str_split[-1]
     offset_end = None
 
-    if verify_timeframes_str(timeframe_str):
+    if timeframes_str_ok(timeframe_str):
         timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
 
         # last part is a valid timeframe, and we might have a signal before it

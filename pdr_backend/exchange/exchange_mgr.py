@@ -20,13 +20,13 @@ class ExchangeMgr:
     def __init__(self, ss: ExchangeMgrSS):
         self.ss = ss
 
-    def exchange(self, name: str):
+    def exchange(self, exchange_str: str):
         """
         @description
           Return an exchange object, determined by its name and whether mocking
 
         @arguments
-          name -- eg "mock", "binance", "binanceus", "kraken", "dydx"
+          exchange_str -- eg "mock", "binance", "binanceus", "kraken", "dydx"
 
         @return
           <one of: MockExchange, ccxt.binance.binance, ..>
@@ -41,14 +41,14 @@ class ExchangeMgr:
           example usage:
             https://blog.adnansiddiqi.me/getting-started-with-ccxt-crypto-exchange-library-and-python/
         """
-        if name == "mock":
+        if exchange_str == "mock":
             # ccxt has a "sandbox mode" but that requires more API keys.
             # It's easier to just have our own simple mock.
             return MockExchange()
 
-        if name == "dydx":
+        if exchange_str == "dydx":
             raise NotImplementedError()
 
-        exchange_class = getattr(ccxt, name)  # eg ccxt.binance
+        exchange_class = getattr(ccxt, exchange_str)  # eg ccxt.binance
         exchange = exchange_class(self.ss.ccxt_params)  # eg ccxt.binance(params)
         return exchange
