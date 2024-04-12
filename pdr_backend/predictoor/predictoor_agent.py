@@ -257,7 +257,6 @@ class PredictoorAgent:
         s += f", cur_timestamp={self.cur_timestamp}"
         s += f". {self.min_epoch_s_left} s left in closest epoch"
         s += f" (predict if <= {self.epoch_s_thr} s left)"
-        s += f" (stop predictions if <= {self.s_cutoff} s left)"
         return s
 
     @enforce_types
