@@ -109,7 +109,7 @@ Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire
 
 Let's get our predictoor bot running on testnet first.
 
-The bot does two-sided predictions, like in simulation. This also means it needs two Ethereum accounts, with keys PRIVATE_KEY and PRIVATE_KEY2.
+The bot does two-sided predictions, like in simulation.
 
 First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn, for both accounts. [Get them here](testnet-faucet.md).
 
