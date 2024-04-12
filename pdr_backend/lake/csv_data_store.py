@@ -309,6 +309,7 @@ class CSVDataStore(BaseDataStore):
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
         schema: Optional[SchemaDict] = None,
+        cols: Optional[List[str]] = None,
         filter_args: Optional[bool] = True,
     ) -> pl.DataFrame:
         """
@@ -322,7 +323,8 @@ class CSVDataStore(BaseDataStore):
         @returns:
             pl.DataFrame - data read from the csv file
         """
-        data = self.read_all(dataset_identifier, schema=schema)
+        data = self.read_all(dataset_identifier, schema=schema, cols=cols)
+        
         # if the data is empty, return
         if len(data) == 0:
             return data
@@ -334,13 +336,16 @@ class CSVDataStore(BaseDataStore):
 
         if start_time is None or end_time is None:
             return data
-            
-        return data.filter(data["timestamp"] >= start_time).filter(
-            data["timestamp"] <= end_time
-        )
+
+        # apply filter and return results
+        mask = (data["timestamp"] >= start_time) & (data["timestamp"] <= end_time)
+        return data.filter(mask)
 
     def read_all(
-        self, dataset_identifier: str, schema: Optional[SchemaDict] = None
+        self,
+        dataset_identifier: str,
+        schema: Optional[SchemaDict] = None,
+        cols: Optional[List[str]] = None,
     ) -> pl.DataFrame:
         """
         Reads all the data from the csv files in the folder
@@ -359,7 +364,12 @@ class CSVDataStore(BaseDataStore):
         # print("read_all_file_paths", file_paths)
         if file_paths:
             # Read the first file to create the DataFrame
-            data = pl.read_csv(file_paths[0], schema=schema)
+            data = None 
+            if schema is not None:
+                data = pl.read_csv(file_paths[0], schema=schema)
+            elif cols is not None:
+                data = pl.read_csv(file_paths[0], columns=cols)
+
             # Read the remaining files and append them to the DataFrame
             for file_path in file_paths[1:]:
                 data = data.vstack(pl.read_csv(file_path, schema=schema))

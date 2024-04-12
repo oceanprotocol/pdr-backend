@@ -200,17 +200,25 @@ def test_load_append(tmpdir):
 @enforce_types
 def test_load_filtered(tmpdir):
     # save
-    filename = _filename(tmpdir)
+    filename = "foo.csv"
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     save_rawohlcv_file(filename, df)
+    CSVDataStore(str(tmpdir)).write(filename, data=df)
 
     # load with filters on rows & columns
-    cols = OHLCV_COLS[:2]  # ["open", "high"]
     timestamps = [row[0] for row in FOUR_ROWS_RAW_TOHLCV_DATA]
+    cols = TOHLCV_COLS[:3]  # ["open", "high"]
     st = timestamps[1]  # 1686806400000
     fin = timestamps[2]  # 1686806700000
-    df2 = load_rawohlcv_file(filename, cols, st, fin)
 
+    # added functionality to filter by column
+    df2 = CSVDataStore(str(tmpdir)).read(
+        filename,
+        start_time=st,
+        end_time=fin,
+        cols=cols
+    )
+    
     # test entries
     assert len(df2) == 2
     assert "timestamp" in df2.columns
