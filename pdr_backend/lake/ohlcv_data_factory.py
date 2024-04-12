@@ -2,14 +2,14 @@ import logging
 import os
 from typing import Dict
 
-import ccxt
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.exchange.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
-from pdr_backend.lake.fetch_ohlcv import clean_raw_ohlcv, safe_fetch_ohlcv_ccxt
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.plutil import (
     concat_next_df,
@@ -100,13 +100,12 @@ class OhlcvDataFactory:
           feed -- ArgFeed
           fin_ut -- a timestamp, in ms, in UTC
         """
-        pair_str = str(feed.pair)
-        exch_str = str(feed.exchange)
+        exch_str: str = str(feed.exchange)
+        pair_str: str = str(feed.pair)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
 
-        logger.info(
-            "Update rawohlcv file at exchange=%s, pair=%s: begin", exch_str, pair_str
-        )
+        update_s = f"Update rawohlcv file at exch={exch_str}, pair={pair_str}"
+        logger.info("%s: begin", update_s)
 
         filename = self._rawohlcv_filename(feed)
         logger.info("filename=%s", filename)
@@ -123,10 +122,9 @@ class OhlcvDataFactory:
         while True:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
-            exch = getattr(ccxt, str(feed.exchange))()
-            raw_tohlcv_data = safe_fetch_ohlcv_ccxt(
-                exch,
-                symbol=str(pair_str).replace("-", "/"),
+            raw_tohlcv_data = safe_fetch_ohlcv(
+                exchange_str=exch_str,
+                pair_str=pair_str,
                 timeframe=str(feed.timeframe),
                 since=st_ut,
                 limit=limit,
@@ -154,9 +152,7 @@ class OhlcvDataFactory:
         save_rawohlcv_file(filename, df)
 
         # done
-        logger.info(
-            "Update rawohlcv file at exchange=%s, pair=%s: done", exch_str, pair_str
-        )
+        logger.info("%s: done", update_s)
 
     def _calc_start_ut_maybe_delete(
         self, timeframe: ArgTimeframe, filename: str
