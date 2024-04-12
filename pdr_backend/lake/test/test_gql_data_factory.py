@@ -5,15 +5,12 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
 def test_gql_data_factory():
     """
     Test GQLDataFactory initialization
     """
-    _clean_up_table_registry()
-
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -35,8 +32,6 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
-    _clean_up_table_registry()
-
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -73,8 +68,6 @@ def test_update_partial_then_resume(
     Work 2: Update and verify new records (11-05 -> 11-07) + table has all records (11-03 -> 11-07)
     """
     _clean_up_test_folder(tmpdir)
-    _clean_up_table_registry()
-
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -147,8 +140,6 @@ def test_get_gql_tables(mock_update):
     Test GQLDataFactory's get_gql_tablesreturns all the tables
     """
     mock_update.return_value = None
-    _clean_up_table_registry()
-
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -170,8 +161,6 @@ def test_calc_start_ut(tmpdir):
     """
     Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
     """
-    _clean_up_table_registry()
-
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
@@ -195,8 +184,6 @@ def test_do_subgraph_fetch(
     tmpdir,
     caplog,
 ):
-    _clean_up_table_registry()
-
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -231,8 +218,6 @@ def test_do_fetch_with_empty_data(
     tmpdir,
     caplog,
 ):
-    _clean_up_table_registry()
-
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(

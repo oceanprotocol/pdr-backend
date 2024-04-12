@@ -36,14 +36,19 @@ from pdr_backend.lake.etl import ETL
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import Table, get_table_name
 from pdr_backend.lake.test.resources import (
-    _clean_up_table_registry,
     _gql_data_factory,
     get_filtered_timestamps_df,
 )
+from pdr_backend.lake.table_registry import TableRegistry
 
 
 @pytest.fixture(autouse=True)
-def _clean_up_persistent_data_store(tmpdir, table_name=None):
+def clean_up_table_registry():
+    TableRegistry()._tables = {}
+
+
+@pytest.fixture(autouse=True)
+def clean_up_persistent_data_store(tmpdir):
     # Clean up PDS
     persistent_data_store = PersistentDataStore(str(tmpdir))
 
@@ -51,12 +56,8 @@ def _clean_up_persistent_data_store(tmpdir, table_name=None):
     table_names = persistent_data_store.get_table_names()
 
     # Drop the tables
-    if table_name in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
-
-    if table_name is None:
-        for table in table_names:
-            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
+    for table in table_names:
+        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
 
 
 @pytest.fixture()
@@ -500,7 +501,7 @@ def _gql_datafactory_second_predictions_df():
 
 
 @pytest.fixture()
-def _clean_up_test_folder():
+def clean_up_test_folder():
     def _clean_up(tmpdir):
         for root, dirs, files in os.walk(tmpdir):
             for file in files:
@@ -523,9 +524,6 @@ def setup_data(
     tmpdir,
     request,
 ):
-    # _clean_up_persistent_data_store(tmpdir)
-    _clean_up_table_registry()
-
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
 

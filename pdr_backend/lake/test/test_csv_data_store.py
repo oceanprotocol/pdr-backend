@@ -29,7 +29,7 @@ def test_create_file_path_without_endtime(_get_test_CSVDS, tmpdir):
     assert file_path == f"{tmpdir}/test/test_from_0000000001_to_.csv"
 
 
-def test_read(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
+def test_read(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
     file_path = csv_data_store._create_file_path("test", 1, 2)
 
@@ -39,10 +39,8 @@ def test_read(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
     data = csv_data_store.read("test", 1, 2)
     assert data.equals(pl.DataFrame({"a": [1, 4], "b": [2, 5], "c": [3, 6]}))
 
-    _clean_up_test_folder(tmpdir)
 
-
-def test_read_all(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
+def test_read_all(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
 
     file_path_1 = csv_data_store._create_file_path("test", 0, 20)
@@ -59,10 +57,8 @@ def test_read_all(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
     assert data["b"].to_list() == [2, 5, 8, 11]
     assert data["c"].to_list() == [3, 6, 9, 12]
 
-    _clean_up_test_folder(tmpdir)
 
-
-def test_get_last_file_path(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
+def test_get_last_file_path(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
     file_path_1 = csv_data_store._create_file_path("test", 0, 20)
     file_path_2 = csv_data_store._create_file_path("test", 21, 41)
@@ -85,10 +81,8 @@ def test_get_last_file_path(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
         folder_path, file_path_4
     )
 
-    _clean_up_test_folder(tmpdir)
 
-
-def test_write(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
+def test_write(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
     data = pl.DataFrame({"a": [1, 4], "b": [2, 5], "timestamp": [3, 6]})
     csv_data_store.write("test", data)
@@ -100,12 +94,8 @@ def test_write(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
     assert data["b"].to_list() == [2, 5]
     assert data["timestamp"].to_list() == [3, 6]
 
-    _clean_up_test_folder(tmpdir)
 
-
-def test_write_1000_rows(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
-    _clean_up_test_folder(tmpdir)
-
+def test_write_1000_rows(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
     data = pl.DataFrame(
         {
@@ -131,10 +121,8 @@ def test_write_1000_rows(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
     assert data["b"].to_list() == list(range(1000))
     assert data["timestamp"].to_list() == list(range(1000))
 
-    _clean_up_test_folder(tmpdir)
 
-
-def test_write_append(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
+def test_write_append(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     csv_data_store = _get_test_CSVDS(tmpdir)
     data = pl.DataFrame({"a": [1, 4], "b": [2, 5], "timestamp": [3, 6]})
     csv_data_store.write("test", data)
@@ -150,8 +138,6 @@ def test_write_append(_get_test_CSVDS, tmpdir, _clean_up_test_folder):
     assert data["a"].to_list() == [1, 4, 11, 41]
     assert data["b"].to_list() == [2, 5, 21, 51]
     assert data["timestamp"].to_list() == [3, 6, 31, 61]
-
-    _clean_up_test_folder(tmpdir)
 
 
 def test_fill_with_zero():

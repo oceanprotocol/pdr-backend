@@ -329,7 +329,6 @@ def thread_function_read_from_db(csv_folder_path, tmpdir):
     assert result["timestamp"][2] == "2022-03-01"
     assert result["value"][2] == 30
 
-    _clean_up_persistent_data_store(tmpdir, table_name)
     # clean csv folder
     # delete files in the folder
     for file in os.listdir(csv_folder_path):

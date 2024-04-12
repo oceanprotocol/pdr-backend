@@ -1,6 +1,5 @@
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.test.resources import _clean_up_table_registry
 
 
 def _get_mock_ppss():
@@ -14,8 +13,6 @@ def _get_mock_ppss():
 
 
 def test_table_registry():
-    _clean_up_table_registry()
-
     TableRegistry().register_table(
         "test_table", ("test_table", {"test": "test"}, _get_mock_ppss())
     )
@@ -24,8 +21,6 @@ def test_table_registry():
 
 
 def test_register_tables():
-    _clean_up_table_registry()
-
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
@@ -38,8 +33,6 @@ def test_register_tables():
 
 
 def test_get_table():
-    _clean_up_table_registry()
-
     TableRegistry().register_table(
         "test_table", ("test_table", {"test": "test"}, _get_mock_ppss())
     )
@@ -47,8 +40,6 @@ def test_get_table():
 
 
 def test_get_tables():
-    _clean_up_table_registry()
-
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),
@@ -67,8 +58,6 @@ def test_get_tables():
 
 
 def test_clear_tables():
-    _clean_up_table_registry()
-
     test_tables = {
         "test_table": ("test_table", {"test": "test"}, _get_mock_ppss()),
         "test_table2": ("test_table2", {"test": "test"}, _get_mock_ppss()),

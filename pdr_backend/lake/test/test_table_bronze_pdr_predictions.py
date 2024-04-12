@@ -14,7 +14,6 @@ from pdr_backend.lake.table import Table, get_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.test.resources import _clean_up_table_registry
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -25,8 +24,6 @@ def test_table_bronze_pdr_predictions(
     _gql_datafactory_etl_truevals_df,
     tmpdir,
 ):
-    _clean_up_table_registry()
-
     # please note date, including Nov 1st
     st_timestr = "2023-11-01_0:00"
     fin_timestr = "2023-11-07_0:00"

@@ -14,9 +14,7 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.lake.table_registry import TableRegistry
 
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -35,11 +33,6 @@ def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     ss = _lake_ss(lake_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(ss)
     return ss, ohlcv_data_factory
-
-
-@enforce_types
-def _clean_up_table_registry():
-    TableRegistry()._tables = {}
 
 
 @enforce_types
