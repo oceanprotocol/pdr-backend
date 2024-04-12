@@ -1,6 +1,4 @@
 from unittest.mock import patch
-from io import StringIO
-import sys
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -33,7 +31,7 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-def test_update_end_to_end(_mock_fetch_gql, tmpdir):
+def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
@@ -60,14 +58,10 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir):
     for table_name in gql_data_factory.record_config["fetch_functions"]:
         gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
 
-    captured_output = StringIO()
-    sys.stdout = captured_output
     gql_data_factory._update()
 
-    printed_text = captured_output.getvalue().strip()
-    count_updates = printed_text.count("Updating table")
     tables = TableRegistry().get_tables().items()
-    assert count_updates == len(tables)
+    assert caplog.text.count("Updating table") == len(tables)
 
 
 def test_update_partial_then_resume(
@@ -199,6 +193,7 @@ def test_do_subgraph_fetch(
     _mock_fetch_gql,
     _clean_up_test_folder,
     tmpdir,
+    caplog,
 ):
     _clean_up_table_registry()
 
@@ -218,8 +213,6 @@ def test_do_subgraph_fetch(
 
     table = TableRegistry().get_table("pdr_predictions")
 
-    captured_output = StringIO()
-    sys.stdout = captured_output
     gql_data_factory._do_subgraph_fetch(
         table,
         _mock_fetch_gql,
@@ -228,15 +221,15 @@ def test_do_subgraph_fetch(
         UnixTimeMs(1701634500000),
         {"contract_list": ["0x123"]},
     )
-    printed_text = captured_output.getvalue().strip()
-    count_fetches = printed_text.count("Fetched")
-    assert count_fetches == 1
+
+    assert "Fetched" in caplog.text
 
 
 def test_do_fetch_with_empty_data(
     _mock_fetch_empty_gql,
     _clean_up_test_folder,
     tmpdir,
+    caplog,
 ):
     _clean_up_table_registry()
 
@@ -256,8 +249,6 @@ def test_do_fetch_with_empty_data(
 
     table = TableRegistry().get_table("pdr_predictions")
 
-    captured_output = StringIO()
-    sys.stdout = captured_output
     gql_data_factory._do_subgraph_fetch(
         table,
         _mock_fetch_empty_gql,
@@ -266,9 +257,8 @@ def test_do_fetch_with_empty_data(
         UnixTimeMs(1701634500000),
         {"contract_list": ["0x123"]},
     )
-    printed_text = captured_output.getvalue().strip()
-    count_fetches = printed_text.count("Fetched")
-    assert count_fetches == 1
+
+    assert "Fetched" in caplog.text
 
     # check if the db table is created
 

@@ -6,7 +6,6 @@ import polars as pl
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.table import TableType, get_table_name, NamedTable
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_bronze_pdr_predictions import (
@@ -250,7 +249,6 @@ def test_move_from_temp_tables_to_live(setup_data):
 
 @enforce_types
 def test_get_max_timestamp_values_from(tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
     pds = PersistentDataStore(str(tmpdir))
 
     pds.duckdb_conn.execute(
@@ -317,7 +315,6 @@ def test_get_max_timestamp_values_from(tmpdir):
 
 @enforce_types
 def _fill_dummy_tables(tmpdir):
-    _clean_up_persistent_data_store(tmpdir)
     pds = PersistentDataStore(str(tmpdir))
 
     # mock bronze + raw tables

@@ -5,7 +5,6 @@ import polars as pl
 from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 table_name = "pdr_predictions"
 
@@ -21,8 +20,6 @@ def test_get_predictions_info_main_mainnet(
     @description
         assert everything works as expected under normal conditions
     """
-    _clean_up_persistent_data_store(tmpdir)
-
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -85,8 +82,6 @@ def test_get_predictions_info_bad_date_range(
     @description
         assert date range filter asserts it has records before calculating stats
     """
-    _clean_up_persistent_data_store(tmpdir)
-
     st_timestr = "2023-12-20"
     fin_timestr = "2023-12-21"
     ppss = mock_ppss(
@@ -140,8 +135,6 @@ def test_get_predictions_info_bad_feed(
     @description
         assert feeds filter ends up with records before calculating stats
     """
-    _clean_up_persistent_data_store(tmpdir)
-
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
@@ -183,8 +176,6 @@ def test_get_predictions_info_empty(_gql_datafactory_first_predictions_df, tmpdi
     @description
         assert data factory returns valid records before calculating stats
     """
-    _clean_up_persistent_data_store(tmpdir)
-
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(

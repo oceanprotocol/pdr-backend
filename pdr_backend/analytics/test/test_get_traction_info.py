@@ -8,7 +8,6 @@ from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 
 table_name = "pdr_predictions"
 
@@ -28,7 +27,6 @@ def test_get_traction_info_main_mainnet(
     _gql_datafactory_daily_predictions_df,
     tmpdir,
 ):
-    _clean_up_persistent_data_store(tmpdir)
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-07"
     ppss = mock_ppss(
@@ -70,8 +68,6 @@ def test_get_traction_info_main_mainnet(
 def test_get_traction_info_empty_data(
     tmpdir,
 ):
-    _clean_up_persistent_data_store(tmpdir)
-
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(

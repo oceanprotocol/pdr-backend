@@ -5,7 +5,6 @@ import duckdb
 
 from pdr_backend.lake.table import TableType, get_table_name, TempTable
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
 
@@ -27,7 +26,6 @@ def test_create_and_fill_table(tmpdir):
     # Check if the table is registered
     table_exists = persistent_data_store.table_exists(table_name)
     assert table_exists
-    _clean_up_persistent_data_store(tmpdir, table_name)
 
 
 def test_insert_to_exist_table(tmpdir):
@@ -60,7 +58,6 @@ def test_insert_to_exist_table(tmpdir):
     assert result[4][1] == 50
     assert result[5][0] == "2022-06-01"
     assert result[5][1] == 60
-    _clean_up_persistent_data_store(tmpdir, table_name)
 
 
 def test_insert_to_new_table(tmpdir):
@@ -83,7 +80,6 @@ def test_insert_to_new_table(tmpdir):
     assert result[1][1] == 20
     assert result[2][0] == "2022-03-01"
     assert result[2][1] == 30
-    _clean_up_persistent_data_store(tmpdir, table_name)
 
 
 def test_query(tmpdir):
@@ -99,7 +95,6 @@ def test_query(tmpdir):
         f"SELECT * FROM {table_name} WHERE value > 15"
     )
     assert len(result_df) == 2, "Query did not return the expected number of rows."
-    _clean_up_persistent_data_store(tmpdir, table_name)
 
 
 def test_drop_table(tmpdir):
@@ -117,7 +112,6 @@ def test_drop_table(tmpdir):
     # Check if the table is dropped
     table_names = persistent_data_store.get_table_names()
     assert table_name not in table_names
-    _clean_up_persistent_data_store(tmpdir, table_name)
 
 
 def test_fill_from_csv_destination(tmpdir):
@@ -144,7 +138,6 @@ def test_fill_from_csv_destination(tmpdir):
     assert result[2][0] == "2022-03-01"
     assert result[2][1] == 30
 
-    _clean_up_persistent_data_store(tmpdir, table_name)
     # clean csv folder
     # delete files in the folder
     for file in os.listdir(csv_folder_path):
@@ -161,8 +154,6 @@ def test_multiton_instances(tmpdir):
 
     assert id(persistent_data_store_1) == id(persistent_data_store_2)
 
-    _clean_up_persistent_data_store(tmpdir)
-
 
 def test_clear_instances(tmpdir):
     persistent_data_store_1 = PersistentDataStore(str(tmpdir))
@@ -170,8 +161,6 @@ def test_clear_instances(tmpdir):
     persistent_data_store_2 = PersistentDataStore(str(tmpdir))
 
     assert id(persistent_data_store_1) != id(persistent_data_store_2)
-
-    _clean_up_persistent_data_store(tmpdir)
 
 
 def test_clear_instances_with_multiple_instances(tmpdir):
@@ -187,8 +176,6 @@ def test_clear_instances_with_multiple_instances(tmpdir):
     assert id(persistent_data_store_2) != id(persistent_data_store_4)
     assert id(persistent_data_store_3) == id(persistent_data_store_4)
 
-    _clean_up_persistent_data_store(tmpdir)
-
 
 def test_multiton_instances_with_different_base_paths(tmpdir):
     persistent_data_store_1 = PersistentDataStore(str(tmpdir))
@@ -198,9 +185,6 @@ def test_multiton_instances_with_different_base_paths(tmpdir):
     persistent_data_store_2 = PersistentDataStore(different_path)
 
     assert id(persistent_data_store_1) != id(persistent_data_store_2)
-
-    _clean_up_persistent_data_store(tmpdir)
-    _clean_up_persistent_data_store(different_path)
 
 
 def test_multiton_with_CSVDataStore(tmpdir):
@@ -212,8 +196,6 @@ def test_multiton_with_CSVDataStore(tmpdir):
     # test cls._instances so that it is not the same
     assert persistent_data_store_1._instances != csv_data_store_1._instances
 
-    _clean_up_persistent_data_store(tmpdir)
-
 
 def test__duckdb_connection(tmpdir):
     """
@@ -222,8 +204,6 @@ def test__duckdb_connection(tmpdir):
     assert isinstance(
         PersistentDataStore(str(tmpdir)).duckdb_conn, duckdb.DuckDBPyConnection
     ), "The connection is not a DuckDBPyConnection"
-
-    _clean_up_persistent_data_store(tmpdir)
 
 
 def test_move_table_data(tmpdir):
@@ -364,8 +344,6 @@ def test_create_table_if_not_exists(tmpdir):
     """
     Test create table if not exists.
     """
-    _clean_up_persistent_data_store(tmpdir)
-
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
 
     example_df_schema = example_df.schema
@@ -375,5 +353,3 @@ def test_create_table_if_not_exists(tmpdir):
     # Check if the table is registered
     check_result = persistent_data_store.table_exists(table_name)
     assert check_result
-
-    _clean_up_persistent_data_store(tmpdir)

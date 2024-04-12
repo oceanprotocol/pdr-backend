@@ -21,7 +21,6 @@ from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_nam
 from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
 from pdr_backend.lake.table import Table, get_table_name, TableType
 from pdr_backend.lake.test.resources import _clean_up_table_registry
-from pdr_backend.lake.test.conftest import _clean_up_persistent_data_store
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 
@@ -46,8 +45,6 @@ def test_table_bronze_pdr_slots(
         st_timestr,
         fin_timestr,
     )
-
-    _clean_up_persistent_data_store(ppss.lake_ss.lake_dir)
 
     gql_tables = {
         "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),

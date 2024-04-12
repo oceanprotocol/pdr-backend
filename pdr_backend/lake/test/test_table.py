@@ -15,18 +15,6 @@ def _table_exists(persistent_data_store, table_name):
     return [table_name in table_names, table_name]
 
 
-def _clean_up_persistent_data_store(tmpdir, table_name):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
-
-    # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
-
-    # Drop the table
-    if table_name in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
-
-
 def test_table_initialization(tmpdir):
     """
     Test that show Table initializing correctly

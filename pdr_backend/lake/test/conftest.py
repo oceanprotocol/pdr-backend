@@ -37,10 +37,26 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import Table, get_table_name
 from pdr_backend.lake.test.resources import (
     _clean_up_table_registry,
-    _clean_up_persistent_data_store,
     _gql_data_factory,
     get_filtered_timestamps_df,
 )
+
+
+@pytest.fixture(autouse=True)
+def _clean_up_persistent_data_store(tmpdir, table_name=None):
+    # Clean up PDS
+    persistent_data_store = PersistentDataStore(str(tmpdir))
+
+    # Select tables from duckdb
+    table_names = persistent_data_store.get_table_names()
+
+    # Drop the tables
+    if table_name in table_names:
+        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
+
+    if table_name is None:
+        for table in table_names:
+            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
 
 
 @pytest.fixture()
@@ -507,7 +523,7 @@ def setup_data(
     tmpdir,
     request,
 ):
-    _clean_up_persistent_data_store(tmpdir)
+    # _clean_up_persistent_data_store(tmpdir)
     _clean_up_table_registry()
 
     st_timestr = request.param[0]

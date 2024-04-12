@@ -85,22 +85,6 @@ def get_filtered_timestamps_df(
     )
 
 
-def _clean_up_persistent_data_store(tmpdir, table_name=None):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
-
-    # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
-
-    # Drop the tables
-    if table_name in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table_name}")
-
-    if table_name is None:
-        for table in table_names:
-            persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
-
-
 # ==================================================================
 
 
