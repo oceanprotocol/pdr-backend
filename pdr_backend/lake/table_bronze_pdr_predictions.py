@@ -1,3 +1,4 @@
+import logging
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
@@ -5,6 +6,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import get_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 
+logger = logging.getLogger("lake")
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
 
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
@@ -38,11 +40,11 @@ def get_bronze_pdr_predictions_data_with_SQL(
     pdr_payouts_table_name = get_table_name("pdr_payouts")
 
     pds = PersistentDataStore(path)
-    print(f"pds tables {pds.get_table_names()}")
+    logger.info("pds tables %s", pds.get_table_names())
 
     return pds.query_data(
         f"""
-        SELECT 
+        SELECT
             {pdr_predictions_table_name}.ID as ID,
             SPLIT_PART({pdr_predictions_table_name}.ID, '-', 1)
                 || '-' || SPLIT_PART({pdr_predictions_table_name}.ID, '-', 2) AS slot_id,
@@ -58,12 +60,12 @@ def get_bronze_pdr_predictions_data_with_SQL(
             {pdr_payouts_table_name}.payout as payout,
             {pdr_predictions_table_name}.timestamp as timestamp,
             GREATEST({pdr_predictions_table_name}.timestamp,
-                {pdr_truevals_table_name}.timestamp, {pdr_payouts_table_name}.timestamp) 
+                {pdr_truevals_table_name}.timestamp, {pdr_payouts_table_name}.timestamp)
                 as last_event_timestamp,
-        FROM 
+        FROM
             {pdr_predictions_table_name}
         LEFT JOIN {pdr_truevals_table_name}
-            ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot                                
+            ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot
         LEFT JOIN {pdr_payouts_table_name}
             ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
         WHERE {pdr_predictions_table_name}.timestamp >= {st_ms}

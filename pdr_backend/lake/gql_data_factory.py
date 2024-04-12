@@ -122,8 +122,8 @@ class GQLDataFactory:
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
 
-        print(f"  Data start: {self.ppss.lake_ss.st_timestamp.pretty_timestr()}")
-        print(f"  Data fin: {self.ppss.lake_ss.st_timestamp.pretty_timestr()}")
+        logger.info("  Data start: ", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: ", self.ppss.lake_ss.st_timestamp.pretty_timestr())
 
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
@@ -147,11 +147,11 @@ class GQLDataFactory:
 
         if csv_last_timestamp is not None:
             if db_last_timestamp is None:
-                print(f"  Table not yet created. Insert all {table_name} csv data")
+                logger.info("  Table not yet created. Insert all %s csv data", table_name)
                 data = CSVDataStore(table.base_path).read_all(table_name)
                 table._append_to_db(data, TableType.TEMP)
             elif csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
-                print(f"  Table exists. Insert pending {table_name} csv data")
+                logger.info("  Table exists. Insert pending %s csv data", table_name)
                 data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
                 table._append_to_db(data, TableType.TEMP)
 
@@ -199,7 +199,7 @@ class GQLDataFactory:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
-        print(f"Fetching data for {table.table_name}")
+        logger.info("Fetching data for ", table.table_name)
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -223,7 +223,7 @@ class GQLDataFactory:
                 network,
             )
 
-            print(f"Fetched {len(data)} from subgraph")
+            logger.info("Fetched %s from subgraph", len(data))
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(data, table.df_schema)
             df = _transform_timestamp_to_ms(df)
@@ -244,7 +244,7 @@ class GQLDataFactory:
             ) and len(buffer_df) > 0:
                 assert df.schema == table.df_schema
                 table.append_to_storage(buffer_df, TableType.TEMP)
-                print(f"Saved {len(buffer_df)} records to storage while fetching")
+                logger.info("Saved %s records to storage while fetching", len(buffer_df))
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
                 save_backoff_count = 0
@@ -256,7 +256,7 @@ class GQLDataFactory:
 
         if len(buffer_df) > 0:
             table.append_to_storage(buffer_df, TableType.TEMP)
-            print(f"Saved {len(buffer_df)} records to storage while fetching")
+            logger.info("Saved %s records to storage while fetching", len(buffer_df))
 
     @enforce_types
     def _move_from_temp_tables_to_live(self):
@@ -297,15 +297,15 @@ class GQLDataFactory:
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
-            print(f"      Aim to fetch data from start time: {st_ut.pretty_timestr()}")
+            logger.info("      Aim to fetch data from start time: ", st_ut.pretty_timestr())
             if st_ut > min(UnixTimeMs.now(), fin_ut):
-                print("      Given start time, no data to gather. Exit.")
+                logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
             self._prepare_temp_table(table.table_name, st_ut, fin_ut)
 
             # fetch from subgraph and add to temp table
-            print(f"Updating table {get_table_name(table.table_name)}")
+            logger.info("Updating table ", get_table_name(table.table_name))
             self._do_subgraph_fetch(
                 table,
                 self.record_config["fetch_functions"][table.table_name],
@@ -317,4 +317,4 @@ class GQLDataFactory:
 
         # move data from temp tables to live tables
         self._move_from_temp_tables_to_live()
-        print("GQLDataFactory - Update done.")
+        logger.info("GQLDataFactory - Update done.")
