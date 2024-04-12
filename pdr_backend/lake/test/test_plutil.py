@@ -10,6 +10,7 @@ from pdr_backend.lake.constants import (
     OHLCV_DTYPES_PL,
     TOHLCV_COLS,
     TOHLCV_DTYPES_PL,
+    TOHLCV_SCHEMA_PL
 )
 from pdr_backend.lake.plutil import (
     _get_tail_df,
@@ -25,6 +26,8 @@ from pdr_backend.lake.plutil import (
     get_table_name,
     TableType,
 )
+from pdr_backend.lake.csv_data_store import CSVDataStore
+
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
     [1686806100000, 1648.58, 1648.58, 1646.27, 1646.64, 7.4045],
@@ -125,26 +128,17 @@ def _filename(tmpdir) -> str:
 
 @enforce_types
 def test_load_basic(tmpdir):
-    filename = _filename(tmpdir)
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_rawohlcv_file(filename, df)
-
-    # simplest specification. Don't specify cols, st or fin
-    df2 = load_rawohlcv_file(filename)
-    _assert_TOHLCVd_cols_and_types(df2)
-    assert len(df2) == 4 and str(df) == str(df2)
-
-    # explicitly specify cols, but not st or fin
-    df2 = load_rawohlcv_file(filename, OHLCV_COLS)
-    _assert_TOHLCVd_cols_and_types(df2)
-    assert len(df2) == 4 and str(df) == str(df2)
-
-    # explicitly specify cols, st, fin
-    df2 = load_rawohlcv_file(filename, OHLCV_COLS, st=None, fin=None)
-    _assert_TOHLCVd_cols_and_types(df2)
-    assert len(df2) == 4 and str(df) == str(df2)
-
-    df2 = load_rawohlcv_file(filename, OHLCV_COLS, st=0, fin=np.inf)
+    
+    file_id = "foo"
+    # output to file
+    CSVDataStore(str(tmpdir)).write(
+        file_id, data=df, schema=TOHLCV_SCHEMA_PL
+    )
+    
+    df2 = CSVDataStore(str(tmpdir)).read(
+        file_id, start_time=0, end_time=np.inf, schema=TOHLCV_SCHEMA_PL
+    )
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)
 
