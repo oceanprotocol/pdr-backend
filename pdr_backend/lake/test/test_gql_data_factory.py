@@ -60,7 +60,7 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
 
 
 def test_update_partial_then_resume(
-    _mock_fetch_gql, _get_test_PDS, clean_up_test_folder, tmpdir
+    _mock_fetch_gql, _get_test_PDS, tmpdir
 ):
     """
     Test GQLDataFactory should update end-to-end, but fail in the middle
@@ -179,7 +179,6 @@ def test_calc_start_ut(tmpdir):
 
 def test_do_subgraph_fetch(
     _mock_fetch_gql,
-    clean_up_test_folder,
     tmpdir,
     caplog,
 ):
@@ -211,7 +210,6 @@ def test_do_subgraph_fetch(
 
 def test_do_fetch_with_empty_data(
     _mock_fetch_empty_gql,
-    clean_up_test_folder,
     tmpdir,
     caplog,
 ):

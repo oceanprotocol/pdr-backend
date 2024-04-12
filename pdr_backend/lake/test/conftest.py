@@ -500,7 +500,7 @@ def _gql_datafactory_second_predictions_df():
     return predictions_df
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def clean_up_test_folder():
     def _clean_up(tmpdir):
         for root, dirs, files in os.walk(tmpdir):
