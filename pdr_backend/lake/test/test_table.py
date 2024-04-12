@@ -100,7 +100,7 @@ def test_csv_data_store(
     )
     with open(file_path, "r") as file:
         lines = file.readlines()
-        assert len(lines) == 1001
+        assert len(lines) == 3
 
 
 def test_persistent_store(

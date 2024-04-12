@@ -1,5 +1,6 @@
+import logging
 import time
-from typing import List, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
@@ -23,6 +24,8 @@ from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
 from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.util.time_types import UnixTimeMs
+
+logger = logging.getLogger("etl")
 
 
 class ETL:
@@ -59,9 +62,9 @@ class ETL:
         self.raw_table_names = [
             payouts_table_name,
             predictions_table_name,
-            subscriptions_table_name,
             truevals_table_name,
             slots_table_name,
+            subscriptions_table_name,
         ]
 
         self.bronze_table_getters = {
@@ -69,7 +72,7 @@ class ETL:
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
-        print(f"self.bronze_table_getters: {self.bronze_table_getters}")
+        logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
@@ -152,7 +155,7 @@ class ETL:
 
     def _get_max_timestamp_values_from(
         self, tables: List[NamedTable]
-    ) -> Union[List[Tuple[str, UnixTimeMs]], List[None]]:
+    ) -> Dict[str, Optional[UnixTimeMs]]:
         """
         @description
             Get the max timestamp values from the tables
@@ -182,21 +185,29 @@ class ETL:
 
             queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
+        table_names = [table.fullname for table in tables]
+        none_values: Dict[str, Optional[UnixTimeMs]] = {
+            table_name: None for table_name in table_names
+        }
+
         if len(queries) == 0:
-            return []
+            return none_values
 
         final_query = " UNION ALL ".join(queries)
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        if result is None:
-            return []
+        logger.info("_get_max_timestamp_values_from - result: %s", result)
 
-        values = []
+        if result is None:
+            return none_values
+
+        values: Dict[str, Optional[UnixTimeMs]] = {}
+
         for row in result.rows(named=True):
             table_name = row["table_name"]
             max_timestamp = row["max_timestamp"]
 
-            values.append((table_name, UnixTimeMs(max_timestamp)))
+            values[table_name] = UnixTimeMs(max_timestamp)
 
         return values
 
@@ -208,7 +219,9 @@ class ETL:
         )
         values = []
         if len(max_timestamp_values) > 0:
-            values = [value[1] for value in max_timestamp_values if value is not None]
+            values = [
+                value for value in max_timestamp_values.values() if value is not None
+            ]
         timestamp = (
             min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
@@ -282,7 +295,7 @@ class ETL:
         @description
             Update bronze tables
         """
-        print("update_bronze_pdr - Update bronze tables.")
+        logger.info("update_bronze_pdr - Update bronze tables.")
 
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
@@ -294,6 +307,7 @@ class ETL:
                 fin_ms=fin_timestamp,
             )
 
+            print(f"update_bronze_pdr - Inserting data into {table_name}")
             TableRegistry().get_table(table_name)._append_to_db(
                 data,
                 table_type=TableType.TEMP,

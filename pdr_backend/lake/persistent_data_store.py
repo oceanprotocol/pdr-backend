@@ -1,4 +1,5 @@
 # The PersistentDataStore class is a subclass of the Base
+import logging
 import os
 import glob
 from typing import Optional
@@ -11,6 +12,8 @@ import polars as pl
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
+logger = logging.getLogger("pds")
+
 
 class PersistentDataStore(BaseDataStore):
     """
@@ -18,15 +21,15 @@ class PersistentDataStore(BaseDataStore):
     """
 
     @enforce_types
-    def __init__(self, base_path: str):
+    def __init__(self, base_path: str, read_only: bool = False):
         """
         Initialize a PersistentDataStore instance.
         @arguments:
             base_path - The base directory to store the persistent data.
         """
-        super().__init__(base_path)
+        super().__init__(base_path, read_only)
         self.duckdb_conn = duckdb.connect(
-            database=f"{self.base_path}/duckdb.db"
+            database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
 
     @enforce_types
@@ -63,7 +66,7 @@ class PersistentDataStore(BaseDataStore):
         """
 
         # Create the table
-        self.duckdb_conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM df")
+        self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
     def get_table_names(self):
@@ -72,7 +75,6 @@ class PersistentDataStore(BaseDataStore):
         @returns:
             list - The names of the tables in the dataset.
         """
-
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
         ).fetchall()
@@ -160,7 +162,7 @@ class PersistentDataStore(BaseDataStore):
             drop_table("pdr_predictions")
         """
         # Drop the table if it exists
-        self.duckdb_conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        self.execute_sql(f"DROP TABLE IF EXISTS {table_name}")
 
     @enforce_types
     def drop_view(self, view_name: str):
@@ -172,7 +174,7 @@ class PersistentDataStore(BaseDataStore):
             drop_view("_etl_pdr_predictions")
         """
         # Drop the table if it exists
-        self.duckdb_conn.execute(f"DROP VIEW IF EXISTS {view_name}")
+        self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
     def move_table_data(self, temp_table, permanent_table_name: str):
@@ -189,19 +191,20 @@ class PersistentDataStore(BaseDataStore):
         table_names = self.get_table_names()
 
         if temp_table.fullname not in table_names:
-            raise Exception(f"Table {temp_table.fullname} does not exist")
+            logger.info(
+                "move_table_data - Table %s does not exist", temp_table.fullname
+            )
 
         # check if the permanent table exists
         if permanent_table_name not in table_names:
             # create table if it does not exist
-            self.duckdb_conn.execute(
+            self.execute_sql(
                 f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
             )
-
             return
 
         # Move the data from the temporary table to the permanent table
-        self.duckdb_conn.execute(
+        self.execute_sql(
             f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
         )
 
@@ -243,8 +246,26 @@ class PersistentDataStore(BaseDataStore):
         update_columns = ", ".join(
             [f"{column} = {df[column]}" for column in df.columns]
         )
-        self.duckdb_conn.execute(
+        self.execute_sql(
             f"""UPDATE {table_name}
             SET {update_columns}
             WHERE {column_name} = {df[column_name]}"""
         )
+
+    @enforce_types
+    def execute_sql(self, query: str):
+        """
+        Execute a SQL query across the persistent dataset using DuckDB.
+        @arguments:
+            query - The SQL query to execute.
+        @example:
+            execute_sql("SELECT * FROM table_name")
+        """
+
+        # self._connect()
+
+        # if self.duckdb_conn is None:
+        #     raise Exception("DuckDB connection is not established")
+        self.duckdb_conn.execute("BEGIN TRANSACTION")
+        self.duckdb_conn.execute(query)
+        self.duckdb_conn.execute("COMMIT")
