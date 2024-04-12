@@ -126,6 +126,13 @@ Prediction submitter manager is a smart contract that can submit predictions for
 ```
 pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
 ```
+
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
+
+```console
+cp ppss.yaml my_ppss.yaml
+```
+
 Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr` and update the rest as desired.
 
 ### Running the bot
