@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.constants import (
     OHLCV_COLS,
     OHLCV_DTYPES_PL,
+    OHLCV_SCHEMA_PL,
     TOHLCV_COLS,
     TOHLCV_DTYPES_PL,
     TOHLCV_SCHEMA_PL
@@ -126,19 +127,44 @@ def _filename(tmpdir) -> str:
     return os.path.join(tmpdir, "foo.csv")
 
 
-# TODO - Do diff. Bring back the original test coverage now that this is working.
 @enforce_types
 def test_load_basic(tmpdir):
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    
     file_id = "foo"
+    
     # output to file
     CSVDataStore(str(tmpdir)).write(
         file_id, data=df, schema=TOHLCV_SCHEMA_PL
     )
     
+    # simplest specification. Don't specify cols, st or fin
+    df2 = CSVDataStore(str(tmpdir)).read(file_id)
+    _assert_TOHLCVd_cols_and_types(df2)
+    assert len(df2) == 4 and str(df) == str(df2)
+
+    # explicitly specify cols, but not st or fin
     df2 = CSVDataStore(str(tmpdir)).read(
-        file_id, start_time=0, end_time=np.inf, schema=TOHLCV_SCHEMA_PL
+        file_id,
+        schema=TOHLCV_SCHEMA_PL
+    )
+    _assert_TOHLCVd_cols_and_types(df2)
+    assert len(df2) == 4 and str(df) == str(df2)
+
+    # explicitly specify cols, st, fin
+    df2 = CSVDataStore(str(tmpdir)).read(
+        file_id,
+        start_time=None,
+        end_time=None,
+        schema=TOHLCV_SCHEMA_PL
+    )
+    _assert_TOHLCVd_cols_and_types(df2)
+    assert len(df2) == 4 and str(df) == str(df2)
+
+    df2 = CSVDataStore(str(tmpdir)).read(
+        file_id,
+        start_time=0,
+        end_time=np.inf,
+        schema=TOHLCV_SCHEMA_PL
     )
     _assert_TOHLCVd_cols_and_types(df2)
     assert len(df2) == 4 and str(df) == str(df2)

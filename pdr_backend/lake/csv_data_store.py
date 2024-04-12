@@ -306,8 +306,8 @@ class CSVDataStore(BaseDataStore):
     def read(
         self,
         dataset_identifier: str,
-        start_time: int,
-        end_time: int,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
         schema: Optional[SchemaDict] = None,
         filter_args: Optional[bool] = True,
     ) -> pl.DataFrame:
@@ -332,6 +332,9 @@ class CSVDataStore(BaseDataStore):
         if "timestamp" not in data.columns or filter_args is False:
             return data
 
+        if start_time is None or end_time is None:
+            return data
+            
         return data.filter(data["timestamp"] >= start_time).filter(
             data["timestamp"] <= end_time
         )
