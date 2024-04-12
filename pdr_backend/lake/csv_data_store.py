@@ -29,8 +29,7 @@ class CSVDataStore(BaseDataStore):
             number: int - number to fill with zeros
         """
         number_str = str(number)
-        number_str.rjust(length, "0")
-        return number_str
+        return number_str.rjust(length, "0")
 
     @enforce_types
     def _create_file_name(

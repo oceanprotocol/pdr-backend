@@ -5,6 +5,9 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframe,
     ArgTimeframes,
     s_to_timeframe_str,
+    verify_timeframe_str,
+    verify_timeframes_str,
+    timeframes_str_ok,
 )
 
 
@@ -85,15 +88,6 @@ def test_pack_timeframe_str_list():
 
 
 @enforce_types
-def test_verify_timeframe_str():
-    ArgTimeframe("1h")
-    ArgTimeframe("1m")
-
-    with pytest.raises(ValueError):
-        ArgTimeframe("foo")
-
-
-@enforce_types
 def test_s_to_timeframe_str():
     assert s_to_timeframe_str(300) == "5m"
     assert s_to_timeframe_str(3600) == "1h"
@@ -104,3 +98,45 @@ def test_s_to_timeframe_str():
 
     with pytest.raises(TypeError):
         s_to_timeframe_str("300")
+
+
+@enforce_types
+def test_verify_timeframe_str():
+    verify_timeframe_str("5m")
+    verify_timeframe_str("1h")
+
+    for bad_val in ["", " ", "foo", "0.1min", "12min"]:
+        with pytest.raises(ValueError):
+            verify_timeframe_str(bad_val)
+
+    for bad_val in [None, 1, 1.1, [], ["5m"]]:
+        with pytest.raises(TypeError):
+            verify_timeframe_str(bad_val)
+
+
+@enforce_types
+def test_verify_timeframes_str():
+    verify_timeframes_str("5m")
+    verify_timeframes_str("1h")
+    verify_timeframes_str("5m,1h")
+
+    for bad_val in ["", " ", "foo", "0.1min", "12min", "5m,"]:
+        with pytest.raises(ValueError):
+            verify_timeframes_str(bad_val)
+
+    for bad_val in [None, 1, 1.1, [], ["5m"]]:
+        with pytest.raises(TypeError):
+            verify_timeframes_str(bad_val)
+
+
+@enforce_types
+def test_timeframes_str_ok():
+    assert timeframes_str_ok("5m")
+    timeframes_str_ok("5m,1h")
+
+    for bad_val in ["", " ", "foo", "0.1min", "12min", "5m,"]:
+        assert not timeframes_str_ok(bad_val)
+
+    for bad_val in [None, 1, 1.1, [], ["5m"]]:
+        with pytest.raises(TypeError):
+            timeframes_str_ok(bad_val)

@@ -1,44 +1,47 @@
 import logging
 import os
-from typing import List
+from typing import Optional
 
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 
 logger = logging.getLogger("sim_ss")
 
+TRADETYPE_OPTIONS = ["livemock", "livereal", "histmock"]
+
 
 @enforce_types
-class SimSS(StrMixin, CCXTExchangeMixin):
+class SimSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
 
     def __init__(self, d: dict):
         self.d = d  # yaml_dict["sim_ss"]
 
-        # handle log_dir
+        # handle log_dir; self.log_dir is supposed to be path-expanded version
         assert self.log_dir == os.path.abspath(self.log_dir)
         if not os.path.exists(self.log_dir):
-            logger.warning("Could not find log dir, creating one at: %s", self.log_dir)
             os.makedirs(self.log_dir)
+            s = f"Couldn't find log dir, so created one at: {self.log_dir}"
+            logger.warning(s)
 
-        if not (0 < int(self.test_n) < np.inf):  # pylint: disable=superfluous-parens
-            raise ValueError(f"test_n={self.test_n}, must be an int >0 and <inf")
+        # check test_n
+        test_n = d["test_n"]
+        if not isinstance(test_n, int):
+            raise TypeError(test_n)
+        if not 0 < test_n < np.inf:
+            raise ValueError(test_n)
 
-        if self.tradetype not in self.allowed_tradetypes:
-            raise ValueError(
-                f"{self.tradetype} not in allowed tradetypes "
-                f"{', '.join(self.allowed_tradetypes)}"
-            )
+        # check tradetype
+        tradetype = d["tradetype"]
+        if not isinstance(tradetype, str):
+            raise TypeError(tradetype)
+        if tradetype not in TRADETYPE_OPTIONS:
+            raise ValueError(tradetype)
 
     # --------------------------------
     # properties direct from yaml dict
-    @property
-    def do_plot(self) -> bool:
-        return self.d["do_plot"]
-
     @property
     def log_dir(self) -> str:
         s = self.d["log_dir"]
@@ -55,6 +58,28 @@ class SimSS(StrMixin, CCXTExchangeMixin):
     def tradetype(self) -> str:
         return self.d.get("tradetype", "histmock")
 
-    @property
-    def allowed_tradetypes(self) -> List[str]:
-        return ["livemock", "livereal", "histmock"]
+    # --------------------------------
+    # derived methods
+    def is_final_iter(self, iter_i: int) -> bool:
+        """Is 'iter_i' the final iteration?"""
+        if iter_i < 0 or iter_i >= self.test_n:
+            raise ValueError(iter_i)
+        return (iter_i + 1) == self.test_n
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def sim_ss_test_dict(
+    log_dir: str,
+    test_n: Optional[int] = None,
+    tradetype: Optional[str] = None,
+) -> dict:
+    d = {
+        "log_dir": log_dir,
+        "test_n": test_n or 10,
+        "tradetype": tradetype or "histmock",
+    }
+    return d

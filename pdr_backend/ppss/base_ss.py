@@ -72,7 +72,7 @@ class MultiFeedMixin:
     @property
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
-        return set((feed.exchange, str(feed.pair)) for feed in self.feeds)
+        return set((str(feed.exchange), str(feed.pair)) for feed in self.feeds)
 
     @enforce_types
     def filter_feeds_from_candidates(
@@ -171,7 +171,7 @@ class SingleFeedMixin:
     ) -> Union[None, SubgraphFeed]:
         allowed_tup = (
             self.timeframe_str,
-            self.feed.exchange,
+            str(self.feed.exchange),
             self.feed.pair,
         )
 

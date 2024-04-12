@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Optional
 
 import numpy as np
 from enforce_typing import enforce_types
@@ -87,3 +88,21 @@ class LakeSS(MultiFeedMixin):
         s += f"lake_dir={self.lake_dir}\n"
         s += "-" * 10 + "\n"
         return s
+
+
+# =========================================================================
+# utilities for testing
+
+
+@enforce_types
+def lake_ss_test_dict(lake_dir: str, feeds: Optional[list] = None):
+    """Use this function's return dict 'd' to construct LakeSS(d)"""
+    feeds = feeds or ["binance BTC/USDT c 5m"]
+    d = {
+        "feeds": feeds,
+        "lake_dir": lake_dir,
+        "st_timestr": "2023-06-18",
+        "fin_timestr": "2023-06-30",
+        "timeframe": "5m",
+    }
+    return d

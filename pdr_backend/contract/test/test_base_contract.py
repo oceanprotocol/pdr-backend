@@ -30,7 +30,7 @@ def test_base_contract(web3_pp, web3_config):
 @enforce_types
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
-    ocean_token,
+    OCEAN,
     web3_pp,
 ):
     OCEAN_address = web3_pp.OCEAN_address
@@ -75,7 +75,7 @@ def test_send_encrypted_tx(
         rpc_url,
         value,
         gasLimit,
-        ocean_token.contract_instance.encodeABI(fn_name=function_name, args=args),
+        OCEAN.contract_instance.encode_abi(fn_name=function_name, args=args),
         gasCost,
         nonce,
     )

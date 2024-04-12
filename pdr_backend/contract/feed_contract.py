@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Dict, List, Tuple
 from unittest.mock import Mock
 
@@ -12,15 +13,17 @@ from pdr_backend.util.mathutil import string_to_bytes32
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.currency_types import Wei, Eth
 
-logger = logging.getLogger("predictoor_contract")
+logger = logging.getLogger("feed_contract")
 
 
 @enforce_types
-class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-methods
+class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
     def __init__(self, web3_pp, address: str):
         super().__init__(web3_pp, address, "ERC20Template3")
         self.set_token(web3_pp)
-        self.last_allowance: Dict[str, Wei] = {}
+
+        # return Wei(0) for unknown keys
+        self.last_allowance: Dict[str, Wei] = defaultdict(lambda: Wei(0))
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
@@ -274,14 +277,15 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
           If False, returns the tx hash immediately after sending.
           If an exception occurs during the  process, returns None.
         """
-        stake_amt_wei = stake_amt.to_wei()
+        stake_amt_wei: Wei = stake_amt.to_wei()
 
         # Check allowance first, only approve if needed
-        allowance = self.last_allowance.get(self.config.owner, Wei(0))
-        if allowance <= Wei(0):
-            self.last_allowance[self.config.owner] = self.token.allowance(
+        allowance: Wei = self.last_allowance[self.config.owner]
+        if allowance == Wei(0):
+            allowance_wei = self.token.allowance(
                 self.config.owner, self.contract_address
             )
+            self.last_allowance[self.config.owner] = allowance_wei
         if allowance < stake_amt_wei:
             try:
                 self.token.approve(self.contract_address, Wei(MAX_UINT))
@@ -306,7 +310,7 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
                     predicted_value, stake_amt_wei.amt_wei, prediction_ts
                 ).transact(call_params)
                 txhash = tx.hex()
-            self.last_allowance[self.config.owner] -= stake_amt_wei
+            self.last_allowance[self.config.owner] -= stake_amt_wei  # type: ignore
             logger.info("Submitted prediction, txhash: %s", txhash)
 
             if not wait_for_receipt:
@@ -373,11 +377,11 @@ class PredictoorContract(BaseContract):  # pylint: disable=too-many-public-metho
 
 
 @enforce_types
-def mock_predictoor_contract(
+def mock_feed_contract(
     contract_address: str,
     agg_predval: tuple = (1, 2),
-) -> PredictoorContract:
-    c = Mock(spec=PredictoorContract)
+) -> FeedContract:
+    c = Mock(spec=FeedContract)
     c.contract_address = contract_address
     c.get_agg_predval.return_value = agg_predval
     return c

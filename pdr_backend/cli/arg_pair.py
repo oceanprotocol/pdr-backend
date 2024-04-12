@@ -36,8 +36,8 @@ class ArgPair:
 
             base_str, quote_str = _unpack_pair_str(pair_str)
 
-        _verify_base_str(base_str)
-        _verify_quote_str(quote_str)
+        verify_base_str(base_str)
+        verify_quote_str(quote_str)
 
         self.pair_str = pair_str
         self.base_str = base_str
@@ -53,6 +53,7 @@ class ArgPair:
         return hash(self.pair_str)
 
 
+# don't use @enforce_types, causes problems
 class ArgPairs(List[ArgPair]):
     def __init__(self, pairs: Union[List[str], List[ArgPair]]):
         if not isinstance(pairs, list):
@@ -108,6 +109,7 @@ def _unpack_pairs_str(pairs_str: str) -> List[str]:
     return pair_str_list
 
 
+@enforce_types
 def _unpack_pair_str(pair_str: str) -> Tuple[str, str]:
     """
     @description
@@ -130,7 +132,19 @@ def _unpack_pair_str(pair_str: str) -> Tuple[str, str]:
 
 
 @enforce_types
-def _verify_base_str(base_str: str):
+def verify_pair_str(pair_str: str):
+    """Raise an error if the input string is invalid"""
+    _ = ArgPair(pair_str=pair_str)
+
+
+@enforce_types
+def verify_pairs_str(pairs_str: str):
+    """Raise an error if the input string is invalid"""
+    _ = ArgPairs.from_str(pairs_str=pairs_str)
+
+
+@enforce_types
+def verify_base_str(base_str: str):
     """
     @description
       Raise an error if base_str is invalid
@@ -144,7 +158,7 @@ def _verify_base_str(base_str: str):
 
 
 @enforce_types
-def _verify_quote_str(quote_str: str):
+def verify_quote_str(quote_str: str):
     """
     @description
       Raise an error if quote_str is invalid

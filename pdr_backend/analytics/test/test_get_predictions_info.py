@@ -44,7 +44,9 @@ def test_get_predictions_info_main_mainnet(
 
     # manualy filter predictions for latter check Predictions
     predictions_df = predictions_df.filter(
-        predictions_df["ID"].map_elements(lambda x: x.split("-")[0]).is_in([feed_addr])
+        predictions_df["ID"]
+        .map_elements(lambda x: x.split("-")[0], return_dtype=str)
+        .is_in([feed_addr])
     )
 
     assert len(predictions_df) == 1
@@ -109,7 +111,9 @@ def test_get_predictions_info_bad_date_range(
 
     # Work 1: Internal filter returns 0 rows due to date mismatch
     predictions_df = predictions_df.filter(
-        predictions_df["ID"].map_elements(lambda x: x.split("-")[0]).is_in([feed_addr])
+        predictions_df["ID"]
+        .map_elements(lambda x: x.split("-")[0], return_dtype=str)
+        .is_in([feed_addr])
     )
 
     assert len(predictions_df) == 1
@@ -162,7 +166,9 @@ def test_get_predictions_info_bad_feed(
 
     # show that feed address can't be found
     predictions_df = predictions_df.filter(
-        predictions_df["ID"].map_elements(lambda x: x.split("-")[0]).is_in([feed_addr])
+        predictions_df["ID"]
+        .map_elements(lambda x: x.split("-")[0], return_dtype=str)
+        .is_in([feed_addr])
     )
 
     assert len(predictions_df) == 0

@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 This README shows how to earn $ by running a predictoor bot on mainnet.
 
 **Main flow:**
+
 1. **[Install](#1-install-pdr-backend-repo)**
 1. **[Simulate modeling & trading](#2-simulate-modeling-and-trading)**
 1. **[Run bot on testnet](#3-run-predictoor-bot-on-sapphire-testnet)**
@@ -15,11 +16,11 @@ This README shows how to earn $ by running a predictoor bot on mainnet.
 1. **[Claim payout](#5-claim-payout)**
 
 Once you're done the main flow, you can go beyond, with any of:
+
 - [Optimize model](#optimize-model)
 - [Right-size staking](#right-size-staking)
 - [Run local network](#run-local-network)
 - [Run many bots](#run-many-bots). Steps: [give keys](#many-bots-give-keys), [templates](#many-bots-generate-templates), [deploy agents](#many-bots-deploy-agents), [monitor agents](#many-bots-monitor-agents), [destroy agents](#many-bots-destroy-agents)
-
 
 ## 1. Install pdr-backend Repo
 
@@ -41,7 +42,17 @@ pip install -r requirements.txt
 export PATH=$PATH:.
 ```
 
+You need a local copy of Ocean contract addresses [`address.json`](https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json). In console:
+```console
+# make directory if needed
+mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
+
+# copy from github to local directory. Or, use wget if Linux. Or, download via browser.
+curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+```
+
 If you're running MacOS, then in console:
+
 ```console
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 ```
@@ -51,16 +62,19 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
+
 ```console
 cp ppss.yaml my_ppss.yaml
 ```
 
 Let's simulate! In console:
+
 ```console
 pdr sim my_ppss.yaml
 ```
 
 What it does:
+
 1. Set simulation parameters.
 1. Grab historical price data from exchanges and stores in `lake_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
@@ -69,20 +83,26 @@ What it does:
    - Trade
    - Plot profit versus time, more
    - Log to console and `logs/out_<time>.txt`
-   
+
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
 By default, simulation uses a linear model inputting prices of the previous 2-10 epochs as inputs (autoregressive_n), just BTC close price as input, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
 
-To see simulation CLI options: `pdr sim -h`. 
+To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
+Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
+
+By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+You can run many instances of streamlit at once, with different URLs.
+
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
-Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain. 
+Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
 
 Let's get our predictoor bot running on testnet first.
 
@@ -91,14 +111,16 @@ The bot does two-sided predictions, like in simulation. This also means it needs
 First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn, for both accounts. [Get them here](testnet-faucet.md).
 
 Then, copy & paste your private keys as envvars. In console:
+
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
 export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 ```
 
-Update `my_ppss.yaml` as desired.
+Next, update `my_ppss.yaml` as desired.
 
 Then, run a bot with modeling-on-the fly (approach 2). In console:
+
 ```console
 pdr predictoor 2 my_ppss.yaml sapphire-testnet
 ```
@@ -112,12 +134,12 @@ It logs to console, and to `logs/out_<time>.txt`. Like simulation, it uses Pytho
 To see predictoor CLI options: `pdr predictoor -h`
 
 The CLI has support tools too. Learn about each via:
+
 - `pdr get_predictoor_info -h`
 - `pdr get_predictions_info -h`
 - and more yet; type `pdr -h` to see
 
 You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/predictoor_agent.py), or [querying Predictoor subgraph](subgraph.md).
-
 
 ## 4. Run Predictoor Bot on Sapphire Mainnet
 
@@ -126,6 +148,7 @@ Time to make it real: let's get our bot running on Sapphire _mainnet_.
 First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md), for each of your two accounts.
 
 Then, copy & paste your private keys as envvars. (You can skip this if keys are same as testnet.) In console:
+
 ```console
 export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
 export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
@@ -134,6 +157,7 @@ export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
 Update `my_ppss.yaml` as desired.
 
 Then, run the bot. In console:
+
 ```console
 pdr predictoor 2 my_ppss.yaml sapphire-mainnet
 ```
@@ -154,9 +178,48 @@ The next sections describe how to go beyond, by optimizing the model and more.
 
 # Optimize model
 
-The idea: make your own model, tuned for accuracy, which in turn will optimize it for $. Here's how:
+You can tune your data & model for accuracy, which in turn will optimize it for $. And you can write your own code too, to push performance further. This section covers both.
+
+## Optimize model: Tuning
+Top-level tuning flow:
+1. Use `multisim` tool to find optimal parameters, via simulation runs
+1. Bring your model as a Predictoor bot to testnet then mainnet.
+
+**Detailed tuning flow.** First, specify your sweep parameters & respective values in `my_ppss.yaml`, section `multisim_ss`. Here's an example.
+```yaml
+multisim_ss:
+  approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
+  sweep_params:
+  - trader_ss.buy_amt: 1000 USD, 2000 USD
+  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
+  - predictoor_ss.aimodel_ss.input_feeds:
+    -
+      - binance BTC/USDT c 5m
+    -
+      - binance BTC/USDT ETH/USDT c 5m
+      - kraken BTC/USDT c 5m
+```
+
+In the example, three parameters are being swept:
+1. `trader_ss.buy_amt`, with two possible values: (i) `1000 USD` or (ii) `2000 USD`
+1. `predictoor_ss.aimodel_ss.max_n_train`, with three possible values: (i) `500`, (ii) `1000`, or (iii) `1500`
+1. `predictoor_ss.aimodel_ss.input_feeds`, with two possible values: (i) just binance BTC/USDT close price, or (ii) binance BTC/USDT & ETH/USDT close price, and kraken BTC/USDT close price.
+
+The total number of combinations is 2 x 3 x 2 = 12.
+
+Then, run `pdr multisim PPSS_FILE`.
+
+The multisim tool will run a separate simulation for each of the 12 combinations.
+
+As it runs, it will update a csv file summarizing results, as follows.
+- name is `multisim_metrics_UNIX-TIME-MS.csv`, where UNIX-TIME-MS is the unix time at the start of the multisim run, in milliseconds.
+- The columns of the csv are: run_number, performance metric 1, performance metric 2, ..., ppss setup parameter 1, setup parameter 2, ... .
+  - Performance metrics are currently: "acc_est" (model prediction accuracy at end), "acc_l" (lower-bound accuracy), "acc_u" (upper-bound accuracy), "f1", "precision", "recall".
+- The first row of the csv is the header. Each subsequent row is the results for a given run. For the example above, there will be 1+12 rows.
+
+**Go further: write code.** You can go beyond tuning parameters, by developing your own data or modeling. Here's how:
 1. Fork `pdr-backend` repo.
-1. Change predictoor approach 2 modeling code as you wish, while iterating with simulation.
+1. Change code for data, modeling, or otherwise as you wish. Run multisim to tune further
 1. Bring your model as a Predictoor bot to testnet then mainnet.
 
 # Right-size staking
@@ -184,11 +247,12 @@ This section shows how to use `deployer` to deploy bots on testnet.
 The config that will be deployed can be found in `ppss.yaml` under `deployment_configs` section. You can create your own config by copying the existing one and modifying it as you wish. For the sake of this example, the existing config will be used.
 
 `ppss.yaml`:
+
 ```yaml
 deployment_configs:
   testnet_predictoor_deployment:
-    cpu: '1'
-    memory: '512Mi'
+    cpu: "1"
+    memory: "512Mi"
     source: "binance"
     type: "predictoor"
     approach: 2
@@ -196,33 +260,35 @@ deployment_configs:
     s_until_epoch_end: 20
     pdr_backend_image_source: "oceanprotocol/pdr-backend:latest"
     agents:
-      - pair: 'BTC/USDT'
+      - pair: "BTC/USDT"
         stake_amt: 0.1
         timeframe: 5m
         approach: 1
-      - pair: 'ETH/USDT'
+      - pair: "ETH/USDT"
         stake_amt: 1
         timeframe: 1h
         s_until_epoch_end: 100
 ```
 
 ## Many bots: give keys
+
 Create a `.keys.json` file and add the following:
-```
+
+```json
 {
-    "testnet_predictoor_deployment": ["pk1", "pk2"]
+  "testnet_predictoor_deployment": ["pk1", "pk2"]
 }
 ```
 
 Each agent requires a private key. If you have fewer private keys than number of agents, the tool will create new wallets and update the `.keys.json` file. Make sure the wallets have enough ROSE and OCEAN to pay for gas and stake.
-
 
 ## Many bots: generate templates
 
 The `generate` command is used to create deployment template files based on a configuration file.
 
 Execute the following command to generate the deployment templates:
-```
+
+```console
 pdr deployer generate ppss.yaml testnet_predictoor_deployment k8s testnet_deployments
 ```
 
@@ -235,13 +301,15 @@ Available deployment methods are `k8s`.
 The `deploy` command is used to deploy agents that follow the generated templates.
 
 Execute the following command to deploy the generated config:
-```
+
+```console
 pdr deployer deploy testnet_predictoor_deployment -p gcp -r europe-west2 --project-id
 ```
 
 Where `testnet_predictoor_deployment` is the config name.
 
 Since k8s is used as the deployment method, the following additional parameters are required:
+
 - `-p` or `--provider`: The cloud provider to use. Available options are `gcp`, `aws`, and `azure`.
 - `-r` or `--region`: The region to deploy to.
 - `--project-id`: The cloud provider project id. Only required for GCP.
@@ -253,7 +321,8 @@ Since k8s is used as the deployment method, the following additional parameters 
 The `logs` command is used to retrieve logs from deployed agents.
 
 Execute the following command to retrieve logs from the deployed agents:
-```
+
+```console
 pdr deployer logs testnet_predictoor_deployment
 ```
 
@@ -264,12 +333,12 @@ Where `testnet_predictoor_deployment` is the config name.
 The `destroy` command is used to destroy agents deployed based on a specified configuration.
 
 Execute the following command to destroy the deployed agents:
-```
+
+```console
 pdr deployer destroy testnet_predictoor_deployment
 ```
 
 Where `testnet_predictoor_deployment` is the config name.
-
 
 ## Warning
 

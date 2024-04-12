@@ -10,12 +10,12 @@ SPDX-License-Identifier: Apache-2.0
 - **[Run predictoor bot](READMEs/predictoor.md)** - make predictions, make $
 - **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
 
-
 (If you're a predictoor or trader, you can safely ignore the rest of this README.)
 
 ## Settings: PPSS
 
 A "ppss" yaml file, like [`ppss.yaml`](ppss.yaml), holds parameters for all bots and simulation flows.
+
 - We follow the idiom "pp" = problem setup (what to solve), "ss" = solution strategy (how to solve).
 - `PRIVATE_KEY` is an exception; it's set as an envvar.
 
@@ -33,11 +33,13 @@ cp logging.yaml my_logging.yaml
 (First, [install pdr-backend](READMEs/predictoor.md#install-pdr-backend-repo) first.)
 
 To see CLI options, in console:
+
 ```console
 pdr
 ```
 
 This will output something like:
+
 ```text
 Usage: pdr sim|predictoor|trader|..
 
@@ -71,28 +73,32 @@ Main tools:
 This repo implements all bots in Predictoor ecosystem. Here are each of the sub-directories in the repo.
 
 Main bots & user tools:
+
 - `predictoor` - submit individual predictions
 - `trader` - buy aggregated predictions, then trade
 - `sim` - experiments / simulation flow
+- `payout` - OCEAN & ROSE payout
 
 OPF-run bots & higher-level tools:
+
 - `trueval` - report true values to contract
 - `dfbuyer` - buy feeds on behalf of Predictoor DF
 - `publisher` - publish pdr data feeds
 - `analytics` - analytics tools
-- `payout` - OCEAN & ROSE payout
 - `deployer` - deployer tool
 - `accuracy` - calculates % correct, for display in predictoor.ai webapp
 
 Mid-level building blocks:
+
 - `cli` - implementation of CLI
 - `ppss` - implements settings
-- `aimodel` - AI/ML modeling engine
 - `lake` - data lake and data pipeline
 - `subgraph` - blockchain queries, complements lake
+- `aimodel` - AI/ML modeling engine
+- `accuracy` - to report % correct in webapp
+- `pred_submitter` - for predictoor bots to submit >>1 predictions in 1 tx
 
 Lower-level utilities:
-- `contract` - classes to wrap blockchain contracts
-- `models` - simple widely-used data structures
-- `util` - function-based tools
 
+- `contract` - classes to wrap blockchain contracts; some simple data structures
+- `util` - function-based tools

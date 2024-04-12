@@ -7,7 +7,7 @@ from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
 
 
-def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):
+def setup_mock_objects(mock_web3_pp, mock_feed_contract, feeds):
     mock_web3_pp.network = "sapphire-mainnet"
     mock_web3_pp.subgraph_url = (
         "http://localhost:8000/subgraphs/name/oceanprotocol/ocean-subgraph"
@@ -28,26 +28,27 @@ def setup_mock_objects(mock_web3_pp, mock_predictoor_contract, feeds):
     mock_trader_ss = Mock()
     mock_trader_ss.min_buffer = 1
     mock_trader_ss.get_feed_from_candidates.return_value = feeds["0x1"]
+    mock_trader_ss.exchange_type = "mock"
 
-    mock_web3_pp.get_contracts.return_value = {"0x1": mock_predictoor_contract}
+    mock_web3_pp.get_contracts.return_value = {"0x1": mock_feed_contract}
 
     return mock_web3_pp, mock_token, mock_trader_ss
 
 
 def _test_trader(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, approach, caplog
+    mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, approach, caplog
 ):
     mock_web3_pp = MagicMock(spec=Web3PP)
 
     mock_web3_pp, mock_token, mock_trader_ss = setup_mock_objects(
-        mock_web3_pp, mock_predictoor_contract, mock_feeds
+        mock_web3_pp, mock_feed_contract, mock_feeds
     )
 
     with patch("pdr_backend.ppss.ppss.Web3PP", return_value=mock_web3_pp), patch(
         "pdr_backend.contract.token.Token", return_value=mock_token
     ), patch("pdr_backend.payout.payout.WrappedToken", return_value=mock_token), patch(
-        "pdr_backend.payout.payout.PredictoorContract",
-        return_value=mock_predictoor_contract,
+        "pdr_backend.payout.payout.FeedContract",
+        return_value=mock_feed_contract,
     ), patch(
         "pdr_backend.ppss.ppss.TraderSS",
         return_value=mock_trader_ss,
@@ -75,18 +76,14 @@ def _test_trader(
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
 @patch("pdr_backend.trader.base_trader_agent.time.sleep")
 def test_trader_approach_1(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, caplog
+    mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, caplog
 ):
-    _test_trader(
-        mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 1, caplog
-    )
+    _test_trader(mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 1, caplog)
 
 
 @patch("pdr_backend.trader.base_trader_agent.BaseTraderAgent.run")
 @patch("pdr_backend.trader.base_trader_agent.time.sleep")
 def test_trader_approach_2(
-    mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, caplog
+    mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, caplog
 ):
-    _test_trader(
-        mock_time_sleep, mock_run, mock_predictoor_contract, mock_feeds, 2, caplog
-    )
+    _test_trader(mock_time_sleep, mock_run, mock_feed_contract, mock_feeds, 2, caplog)

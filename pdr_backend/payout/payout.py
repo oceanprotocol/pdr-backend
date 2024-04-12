@@ -5,12 +5,13 @@ from typing import Any, List
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.dfrewards import DFRewards
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
+from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("payout")
 
@@ -22,7 +23,7 @@ def batchify(data: List[Any], batch_size: int):
 
 @enforce_types
 def request_payout_batches(
-    predictoor_contract: PredictoorContract, batch_size: int, timestamps: List[int]
+    feed_contract: FeedContract, batch_size: int, timestamps: List[int]
 ):
     batches = batchify(timestamps, batch_size)
     for batch in batches:
@@ -34,7 +35,7 @@ def request_payout_batches(
         while retries < 5 and not success:
             try:
                 wait_for_receipt = True
-                predictoor_contract.payout_multiple(batch, wait_for_receipt)
+                feed_contract.payout_multiple(batch, wait_for_receipt)
                 success = True
             except Exception as e:
                 retries += 1
@@ -65,7 +66,7 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
 
     for pdr_contract_addr in pending_payouts:
         logger.info("Claiming payouts for %s", pdr_contract_addr)
-        pdr_contract = PredictoorContract(ppss.web3_pp, pdr_contract_addr)
+        pdr_contract = FeedContract(ppss.web3_pp, pdr_contract_addr)
         request_payout_batches(
             pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
         )
@@ -90,7 +91,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     )
     logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
 
-    if claimable_rewards > 0:
+    if claimable_rewards > Eth(0):
         logger.info("Claiming wROSE rewards...")
         dfrewards_contract.claim_rewards(web3_config.owner, wROSE_addr)
     else:
@@ -100,7 +101,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     time.sleep(10)
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
-    if wROSE_bal == 0:
+    if wROSE_bal == Wei(0):
         logger.warning("wROSE balance is 0")
     else:
         logger.info("Found %s wROSE, converting to ROSE...", wROSE_bal.to_eth().amt_eth)

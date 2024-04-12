@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from enforce_typing import enforce_types
@@ -16,6 +16,7 @@ from pdr_backend.predictoor.test.mockutil import (
     mock_ppss_1feed,
     mock_ppss_2feeds,
 )
+from pdr_backend.util.currency_types import Eth
 
 
 # ===========================================================================
@@ -41,14 +42,21 @@ def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     """
     assert approach in [1, 2]
 
-    _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
-    assert ppss.predictoor_ss.approach == approach
-    # now we're done the mocking, time for the real work!!
+    # mock tokens
+    mock_token = Mock()
+    mock_token.balanceOf.return_value = Eth(1000).to_wei()
 
-    # real work: main iterations
-    agent = PredictoorAgent(ppss)
-    for _ in range(500):
-        agent.take_step()
+    with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
+        "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
+    ):
+        _, ppss, _mock_pdr_contract = mock_ppss_1feed(approach, tmpdir, monkeypatch)
+        assert ppss.predictoor_ss.approach == approach
+        # now we're done the mocking, time for the real work!!
+
+        # real work: main iterations
+        agent = PredictoorAgent(ppss)
+        for _ in range(500):
+            agent.take_step()
 
     # log some final results for debubbing / inspection
     mock_w3 = ppss.web3_pp.web3_config.w3
@@ -230,3 +238,67 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch):
 
         assert_array_equal(expected_X, mock_model.last_X)
         assert_array_equal(expected_yptrue, mock_model.last_yptrue)
+
+
+@enforce_types
+@pytest.mark.parametrize(
+    "up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected",
+    [
+        (
+            Eth(100).to_wei(),
+            Eth(100).to_wei(),
+            Eth(2).to_wei(),
+            Eth(2).to_wei(),
+            True,
+        ),  # All balances are sufficient
+        (
+            Eth(0).to_wei(),
+            Eth(100).to_wei(),
+            Eth(2).to_wei(),
+            Eth(2).to_wei(),
+            False,
+        ),  # Up OCEAN balance too low
+        (
+            Eth(100).to_wei(),
+            Eth(0).to_wei(),
+            Eth(2).to_wei(),
+            Eth(2).to_wei(),
+            False,
+        ),  # Down OCEAN balance too low
+        (
+            Eth(100).to_wei(),
+            Eth(100).to_wei(),
+            Eth(0).to_wei(),
+            Eth(2).to_wei(),
+            False,
+        ),  # Up ROSE balance too low
+        (
+            Eth(100).to_wei(),
+            Eth(100).to_wei(),
+            Eth(2).to_wei(),
+            Eth(0).to_wei(),
+            False,
+        ),  # Down ROSE balance too low
+    ],
+)
+def test_balance_check(
+    tmpdir, monkeypatch, up_OCEAN, down_OCEAN, up_ROSE, down_ROSE, expected
+):
+    mock_model = MockModel()
+    _, ppss = mock_ppss_2feeds(2, str(tmpdir), monkeypatch)
+    aimodel_ss = ppss.predictoor_ss.aimodel_ss
+
+    # do prediction
+    mock_model.aimodel_ss = aimodel_ss
+    agent = PredictoorAgent(ppss)
+
+    mock_OCEAN = Mock()
+    mock_OCEAN.balanceOf.side_effect = [up_OCEAN, down_OCEAN]
+    mock_ROSE = Mock()
+    mock_ROSE.balanceOf.side_effect = [up_ROSE, down_ROSE]
+
+    agent.ppss.web3_pp = Mock(spec=Web3PP)
+    agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
+    agent.ppss.web3_pp.NativeToken = mock_ROSE
+
+    assert agent.check_balances() == expected

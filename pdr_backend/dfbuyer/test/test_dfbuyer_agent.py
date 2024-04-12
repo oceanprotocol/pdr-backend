@@ -102,14 +102,14 @@ def test_dfbuyer_agent_get_consume_so_far(mock_get_consume_so_far, mock_dfbuyer_
 
 
 @enforce_types
-@patch(f"{PATH}.PredictoorContract")
+@patch(f"{PATH}.FeedContract")
 def test_dfbuyer_agent_get_prices(mock_contract, mock_dfbuyer_agent):
     mock_contract_instance = MagicMock()
     mock_contract.return_value = mock_contract_instance
     mock_contract_instance.get_price.return_value = Wei(10000)
     result = mock_dfbuyer_agent._get_prices(["0x1", "0x2"])
-    assert result["0x1"] == 10000 / 1e18
-    assert result["0x2"] == 10000 / 1e18
+    assert result["0x1"] == Wei(10000).to_eth()
+    assert result["0x2"] == Wei(10000).to_eth()
 
 
 @enforce_types

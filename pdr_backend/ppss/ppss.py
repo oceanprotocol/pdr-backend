@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
 from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.multisim_ss import MultisimSS
 from pdr_backend.ppss.payout_ss import PayoutSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.publisher_ss import PublisherSS
@@ -15,6 +16,7 @@ from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
+from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
@@ -22,13 +24,58 @@ from pdr_backend.util.dictutil import recursive_update
 
 @enforce_types
 class PPSS:  # pylint: disable=too-many-instance-attributes
+
     def __init__(
         self,
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
         network: Optional[str] = None,  # eg "development", "sapphire-testnet"
         nested_override_args: Optional[dict] = None,
+        d: Optional[dict] = None,
     ):
+        """
+        @description
+          Construct PPSS.
+
+          The goal is to get a constructor dict 'd'; then fill the rest from d.
+
+          Direct way:
+          - pass in 'd'
+
+          Or, indirect ways:
+          - pass in 'yaml_filename' to load from a yaml file, or
+          - pass in 'yaml_str' for contents like a yaml file
+            (And optionally override some params with nested_override args)
+
+          Whether direct or indirect, 'network' can be input (or default used).
+        """
+        # get constructor dict 'd'
+        if d is None:
+            d = self.constructor_dict(yaml_filename, yaml_str, nested_override_args)
+
+        # fill from constructor dict 'd'
+        self.lake_ss = LakeSS(d["lake_ss"])
+        self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
+        self.trader_ss = TraderSS(d["trader_ss"])
+        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
+        self.multisim_ss = MultisimSS(d["multisim_ss"])
+        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
+        self.trueval_ss = TruevalSS(d["trueval_ss"])
+        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
+        self.payout_ss = PayoutSS(d["payout_ss"])
+        self.web3_pp = Web3PP(d["web3_pp"], network)
+        self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
+        self.exchange_mgr_ss = ExchangeMgrSS(d["exchange_mgr_ss"])
+
+        # postconditions
+        self.verify_feed_dependencies()
+
+    @staticmethod
+    def constructor_dict(
+        yaml_filename: Optional[str] = None,
+        yaml_str: Optional[str] = None,
+        nested_override_args: Optional[dict] = None,
+    ) -> dict:
         # preconditions
         assert (
             yaml_filename or yaml_str and not (yaml_filename and yaml_str)
@@ -44,19 +91,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         if nested_override_args is not None:
             recursive_update(d, nested_override_args)
 
-        # fill attributes from d. Same order as ppss.yaml, to help reading
-        self.lake_ss = LakeSS(d["lake_ss"])
-        self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
-        self.trader_ss = TraderSS(d["trader_ss"])
-        self.sim_ss = SimSS(d["sim_ss"])
-        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
-        self.trueval_ss = TruevalSS(d["trueval_ss"])
-        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
-        self.payout_ss = PayoutSS(d["payout_ss"])
-        self.web3_pp = Web3PP(d["web3_pp"], network)
-        self.topup_ss = TopupSS(d["topup_ss"])
-
-        self.verify_feed_dependencies()
+        return d
 
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""
@@ -193,8 +228,8 @@ def mock_ppss(
     )
 
     assert hasattr(ppss, "trueval_ss")
-    assert "feeds" in ppss.trueval_ss.d
-    ppss.trueval_ss.d["feeds"] = feeds
+    assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
+    ppss.trueval_ss.d["feeds"] = feeds  # type: ignore[attr-defined]
 
     assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(

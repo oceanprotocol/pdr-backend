@@ -125,14 +125,14 @@ class Web3PP(StrMixin):
           feed_addrs -- which feeds we want
 
         @return
-          contracts -- dict of [feed_addr] : PredictoorContract
+          contracts -- dict of [feed_addr] : FeedContract
         """
         # pylint: disable=import-outside-toplevel
-        from pdr_backend.contract.predictoor_contract import PredictoorContract
+        from pdr_backend.contract.feed_contract import FeedContract
 
         contracts = {}
         for addr in feed_addrs:
-            contracts[addr] = PredictoorContract(self, addr)
+            contracts[addr] = FeedContract(self, addr)
         return contracts
 
     @enforce_types
@@ -249,6 +249,11 @@ class Web3PP(StrMixin):
         """
         Returns the ABI for the specified contract
         """
+        if contract_name == "PredSubmitterMgr":
+            with open(
+                "pdr_backend/pred_submitter/compiled_contracts/PredSubmitterMgr_abi.json"
+            ) as f:
+                return json.load(f)
         path = get_contract_filename(contract_name, self.address_file)
 
         if not path.exists():
@@ -280,11 +285,11 @@ def mock_web3_pp(network: str) -> Web3PP:
 @enforce_types
 def inplace_mock_feedgetters(web3_pp, feed: SubgraphFeed):
     # pylint: disable=import-outside-toplevel
-    from pdr_backend.contract.predictoor_contract import mock_predictoor_contract
+    from pdr_backend.contract.feed_contract import mock_feed_contract
 
     inplace_mock_query_feed_contracts(web3_pp, feed)
 
-    c = mock_predictoor_contract(feed.address)
+    c = mock_feed_contract(feed.address)
     inplace_mock_get_contracts(web3_pp, feed, c)
 
 
@@ -295,15 +300,13 @@ def inplace_mock_query_feed_contracts(web3_pp: Web3PP, feed: SubgraphFeed):
 
 
 @enforce_types
-def inplace_mock_get_contracts(
-    web3_pp: Web3PP, feed: SubgraphFeed, predictoor_contract
-):
+def inplace_mock_get_contracts(web3_pp: Web3PP, feed: SubgraphFeed, feed_contract):
     # pylint: disable=import-outside-toplevel
-    from pdr_backend.contract.predictoor_contract import PredictoorContract
+    from pdr_backend.contract.feed_contract import FeedContract
 
-    assert isinstance(predictoor_contract, PredictoorContract)
+    assert isinstance(feed_contract, FeedContract)
     web3_pp.get_contracts = Mock()
-    web3_pp.get_contracts.return_value = {feed.address: predictoor_contract}
+    web3_pp.get_contracts.return_value = {feed.address: feed_contract}
 
 
 @enforce_types
@@ -319,9 +322,12 @@ class _MockEthWithTracking:
         mock_block = {"timestamp": self.timestamp}
         return mock_block
 
+    def get_balance(self, account):  # pylint: disable=unused-argument
+        return 100e18
+
 
 @enforce_types
-class _MockPredictoorContractWithTracking:
+class _MockFeedContractWithTracking:
     def __init__(self, web3_pp, w3, s_per_epoch: int, contract_address: str):
         self.web3_pp = web3_pp
         self._w3 = w3
@@ -350,7 +356,7 @@ class _MockPredictoorContractWithTracking:
         prediction_ts: UnixTimeS,
         wait_for_receipt: bool = True,
     ):  # pylint: disable=unused-argument
-        assert stake_amt <= 3
+        assert stake_amt <= Eth(3)
         if prediction_ts in self._prediction_slots:
             logger.debug("(Replace prev pred at time slot {%s})", prediction_ts)
         self._prediction_slots.append(prediction_ts)
@@ -368,11 +374,11 @@ def inplace_mock_w3_and_contract_with_tracking(
     """
     Updates web3_pp.web3_config.w3 with a mock.
     Includes a mock of time.sleep(), which advances the (mock) blockchain
-    Includes a mock of web3_pp.PredictoorContract(); returns it for convenience
+    Includes a mock of web3_pp.FeedContract(); returns it for convenience
     """
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth = _MockEthWithTracking(init_timestamp, init_block_number)
-    _mock_pdr_contract = _MockPredictoorContractWithTracking(
+    _mock_pdr_contract = _MockFeedContractWithTracking(
         web3_pp,
         mock_w3,
         timeframe_s,
@@ -382,7 +388,7 @@ def inplace_mock_w3_and_contract_with_tracking(
     mock_contract_func = Mock()
     mock_contract_func.return_value = _mock_pdr_contract
     monkeypatch.setattr(
-        "pdr_backend.contract.predictoor_contract.PredictoorContract",
+        "pdr_backend.contract.feed_contract.FeedContract",
         mock_contract_func,
     )
 

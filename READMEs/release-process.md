@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-**Contents**
+# Contents
 
 - [Release Process (main)](#release-process-including-docker)
 - [About PyPi](#about-pypi)
@@ -29,31 +29,33 @@ To create a new release for pdr-backend, follow these steps:
 1. Click "Publish release."
 
 What happens then:
+
 - The pdr-backend Github Releases Page will now include this release
 - CI/CD will automatically build and publish a **new Docker image** with the release tag, making it available for installation and use.
 
 # About PyPi
 
 The release process does not include publishing to pypi.
+
 - This is because we have explicitly _not_ put pdr-backend into pypi yet. It's not meant to be used as a library yet. In time, it likely will. Just not yet.
 
 # About Docker
 
-### Docker releases from main
+## Docker releases from main
 
 > CI/CD will automatically build and publish a **new Docker image**
 
 To elaborate: we have an automated docker build for pdr-backend `main` branch and for all releases. Github is already connected to dockerhub.
 
-![](./images/dockerbuild.png)
+![dockerbuild](./images/dockerbuild.png)
 
 ### Adding Docker branches
 
-If you want to add Docker branches, go to https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit
+If you want to add Docker branches, go to [oceanprotocol/pdr-backend](https://hub.docker.com/repository/docker/oceanprotocol/pdr-backend/builds/edit).
 
 Then: on "Build rules", add your branch. Below is an example, where Alex is building "pdr-backend: alex" from branch "feature/alex".
 
-![](./images/dockerbranch.png)
+![dockerbranch](./images/dockerbranch.png)
 
 In the last line: you should be able to log in with your username (eg trentmc).
 
@@ -69,6 +71,7 @@ docker build . -t 'oceanprotocol/pdr-backend:yaml-cli2' .
 ```
 
 Then, start barge, using the custom label:
+
 ```console
 cd ~/code/barge
 export PDR_BACKEND_VERSION=yaml-cli2
@@ -89,4 +92,3 @@ Pros of local testing:
 - [barge.md](barge.md): the main Barge README
 - [barge-calls.md](barge-calls.md): order of execution from Barge and pdr-backend code
 - [release-process.md](release-process.md): pdr-backend Dockerhub images get published with each push to `main`, and sometimes other branches. In turn these are used by Barge.
-

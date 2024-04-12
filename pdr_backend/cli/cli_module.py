@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import sys
 
 from enforce_typing import enforce_types
@@ -12,26 +12,29 @@ from pdr_backend.analytics.get_predictions_info import (
 )
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
+    do_help_short,
     get_arg_parser,
     print_args,
 )
+from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
+from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
-from pdr_backend.util.topup import topup_main
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.currency_types import Eth
-from pdr_backend.util.web3_accounts import create_accounts, view_accounts, fund_accounts
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.etl import ETL
-from pdr_backend.deployer.deployer import main as deployer_main
+from pdr_backend.util.topup import topup_main
+from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
 
 logger = logging.getLogger("cli")
 
@@ -39,6 +42,8 @@ logger = logging.getLogger("cli")
 @enforce_types
 def _do_main():
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
+        do_help_short(0)
+    if sys.argv[1] == "help_long":
         do_help_long(0)
 
     func_name = f"do_{sys.argv[1]}"
@@ -55,7 +60,10 @@ def _do_main():
 
 
 # ========================================================================
-# actual cli implementations. In order of help text.
+# actual cli implementations. Given in same order as HELP_LONG
+
+
+# do_help() is implemented in cli_arguments and imported, so nothing needed here
 
 
 @enforce_types
@@ -65,6 +73,7 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
+
     sim_engine = SimEngine(ppss)
     sim_engine.run()
 
@@ -97,6 +106,58 @@ def do_trader(args, nested_args=None):
         raise ValueError(f"Unknown trader approach {approach}")
 
     agent.run()
+
+
+@enforce_types
+def do_claim_OCEAN(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
+    do_ocean_payout(ppss)
+
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_ocean_payout(ppss)
+
+
+@enforce_types
+def do_claim_ROSE(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
+    do_rose_payout(ppss)
+
+    # check if there's a second pk
+    pk2 = os.getenv("PRIVATE_KEY2")
+    if pk2 is None:
+        return
+    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
+    ppss.web3_pp.set_web3_config(web3_config)
+    do_rose_payout(ppss)
+
+
+@enforce_types
+def do_multisim(args, nested_args=None):
+    d = PPSS.constructor_dict(
+        yaml_filename=args.PPSS_FILE,
+        nested_override_args=nested_args,
+    )
+    multisim_engine = MultisimEngine(d=d)
+    multisim_engine.run()
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_deployer(args, nested_args=None):
+    deployer_main(args)
 
 
 @enforce_types
@@ -134,45 +195,6 @@ def do_analytics(args, nested_args=None):
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()
-
-
-# do_help() is implemented in cli_arguments and imported, so nothing needed here
-
-
-@enforce_types
-def do_claim_OCEAN(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network="sapphire-mainnet",
-        nested_override_args=nested_args,
-    )
-    do_ocean_payout(ppss)
-
-    # check if there's a second pk
-    pk2 = os.getenv("PRIVATE_KEY2")
-    if pk2 is None:
-        return
-    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
-    ppss.web3_pp.set_web3_config(web3_config)
-    do_ocean_payout(ppss)
-
-
-@enforce_types
-def do_claim_ROSE(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network="sapphire-mainnet",
-        nested_override_args=nested_args,
-    )
-    do_rose_payout(ppss)
-
-    # check if there's a second pk
-    pk2 = os.getenv("PRIVATE_KEY2")
-    if pk2 is None:
-        return
-    web3_config = ppss.web3_pp.web3_config.copy_with_pk(pk2)
-    ppss.web3_pp.set_web3_config(web3_config)
-    do_rose_payout(ppss)
 
 
 @enforce_types
@@ -316,6 +338,13 @@ def do_fund_accounts(args, nested_args=None):
 
 
 @enforce_types
-# pylint: disable=unused-argument
-def do_deployer(args, nested_args=None):
-    deployer_main(args)
+def do_deploy_pred_submitter_mgr(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+    contract_address = deploy_pred_submitter_mgr_contract(ppss.web3_pp)
+    logger.info(
+        "Prediction Submitter Manager Contract deployed at %s", contract_address
+    )

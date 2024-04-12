@@ -15,5 +15,3 @@ TOHLCV_SCHEMA_PL = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
 # warn if OHLCV_MULT_MIN * timeframe < time-between-data < OHLCV_MULT_MAX * t
 OHLCV_MULT_MIN = 0.5
 OHLCV_MULT_MAX = 2.5
-
-DEFAULT_YAML_FILE = "ppss.yaml"

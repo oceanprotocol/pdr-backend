@@ -1,6 +1,7 @@
 # Get fake tokens on Oasis Sapphire testnet
 
 This README describes how to:
+
 - [Get fake ROSE on Sapphire testnet](#get-fake-rose-on-sapphire-testnet)
 - [Get fake OCEAN on Sapphire testnet](#get-fake-ocean-on-sapphire-testnet)
 
@@ -19,17 +20,19 @@ If you need, [create a new EVM account](#create-new-evm-account) first.
 2. Fill in your address and click `Get 1000 OCEAN`.
 3. (Optional) In your wallet, add the OCEAN token. If needed, specify the OCEAN address as: 0x973e69303259B0c2543a38665122b773D28405fB
 4. (Optional) Confirm receipt via [Sapphire testnet explorer](https://testnet.explorer.sapphire.oasis.dev/)
-   
+
 ## Create new EVM account
 
 Oasis Sapphire testnet is an EVM-based chain. An EVM account is singularly defined by its private key. Its address is a function of that key. Let's generate an account!
 
 First, run Python. In a console:
+
 ```console
 python
 ```
 
 In the Python console:
+
 ```python
 from eth_account.account import Account
 account = Account.create()
@@ -44,6 +47,7 @@ These accounts will work on Sapphire testnet, Sapphire mainnet, Eth mainnet, or 
 ## Get address from private key
 
 In the Python console:
+
 ```python
 from eth_account.account import Account
 private_key = <your private key>

@@ -22,10 +22,8 @@ class Token(BaseContract):
         tx = self.contract_instance.functions.transfer(
             to, int(amount.amt_wei)
         ).transact(call_params)
-
         if not wait_for_receipt:
             return tx
-
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def approve(self, spender, amount: Wei, wait_for_receipt=True):

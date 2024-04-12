@@ -21,6 +21,9 @@ S_PER_WEEK = S_PER_DAY * 7
 SUBGRAPH_MAX_TRIES = 5
 WEB3_MAX_TRIES = 5
 
-CAND_USDCOINS = ["USDT", "USDC", "DAI", "RAI"]  # add more if needed
+CAND_USDCOINS = ["USDT", "USDC", "DAI", "RAI", "USD"]  # add more if needed
 CAND_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
 CHAR_TO_SIGNAL = {"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}
+
+# font size for plots
+FONTSIZE = 9

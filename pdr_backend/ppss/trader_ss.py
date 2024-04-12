@@ -1,15 +1,13 @@
 from typing import Dict, List, Union
 
-import ccxt
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.base_ss import SingleFeedMixin
-from pdr_backend.util.ccxtutil import CCXTExchangeMixin
 from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.currency_types import Eth
 
 
-class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
+class TraderSS(SingleFeedMixin, StrMixin):
     __STR_OBJDIR__ = ["d"]
     FEED_KEY = "feed"
 
@@ -91,16 +89,12 @@ class TraderSS(SingleFeedMixin, StrMixin, CCXTExchangeMixin):
             d[coin] = Eth(amt)
         return d
 
-    @enforce_types
-    def ccxt_exchange(self) -> ccxt.Exchange:
-        assert hasattr(self, "exchange_params")
+    @property
+    def exchange_type(self) -> str:
+        if self.tradetype == "livemock":
+            return "mock"
 
-        mock = not hasattr(self, "tradetype") or self.tradetype != "livemock"
-
-        return self.feed.ccxt_exchange(
-            self.exchange_params,
-            mock=mock,
-        )
+        return str(self.feed.exchange)
 
 
 # =========================================================================

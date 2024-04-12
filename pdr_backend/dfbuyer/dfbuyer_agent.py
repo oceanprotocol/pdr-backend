@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
-from pdr_backend.contract.predictoor_contract import PredictoorContract
+from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.subgraph.subgraph_feed import print_feeds
@@ -259,7 +259,7 @@ class DFBuyerAgent:
 
     def _get_prices(self, contract_addresses: List[str]) -> Dict[str, Eth]:
         return {
-            address: PredictoorContract(self.ppss.web3_pp, address).get_price().to_eth()
+            address: FeedContract(self.ppss.web3_pp, address).get_price().to_eth()
             for address in contract_addresses
         }
 

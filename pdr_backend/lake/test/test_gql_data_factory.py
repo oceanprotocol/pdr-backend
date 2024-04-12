@@ -60,14 +60,13 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
 
 
 def test_update_partial_then_resume(
-    _mock_fetch_gql, _get_test_PDS, _clean_up_test_folder, tmpdir
+    _mock_fetch_gql, _get_test_PDS, clean_up_test_folder, tmpdir
 ):
     """
     Test GQLDataFactory should update end-to-end, but fail in the middle
     Work 1: Update csv data (11-03 -> 11-05) and then fail inserting to db
     Work 2: Update and verify new records (11-05 -> 11-07) + table has all records (11-03 -> 11-07)
     """
-    _clean_up_test_folder(tmpdir)
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
@@ -180,7 +179,7 @@ def test_calc_start_ut(tmpdir):
 
 def test_do_subgraph_fetch(
     _mock_fetch_gql,
-    _clean_up_test_folder,
+    clean_up_test_folder,
     tmpdir,
     caplog,
 ):
@@ -193,8 +192,6 @@ def test_do_subgraph_fetch(
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-
-    _clean_up_test_folder(ppss.lake_ss.lake_dir)
 
     gql_data_factory = GQLDataFactory(ppss)
 
@@ -214,7 +211,7 @@ def test_do_subgraph_fetch(
 
 def test_do_fetch_with_empty_data(
     _mock_fetch_empty_gql,
-    _clean_up_test_folder,
+    clean_up_test_folder,
     tmpdir,
     caplog,
 ):
@@ -227,8 +224,6 @@ def test_do_fetch_with_empty_data(
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
-
-    _clean_up_test_folder(ppss.lake_ss.lake_dir)
 
     gql_data_factory = GQLDataFactory(ppss)
 
