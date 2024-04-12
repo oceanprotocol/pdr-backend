@@ -356,7 +356,8 @@ def calculate_statistics_from_DuckDB_tables():
         db_conn = PersistentDataStore("./lake_data", read_only=True)
         slots_table = db_conn.query_data(
             f"""
-        SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts} AND SLOT < {end_ts}"""
+            SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts} AND SLOT < {end_ts}
+            """
         )
         db_conn.duckdb_conn.close()
 

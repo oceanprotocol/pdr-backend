@@ -1,4 +1,5 @@
 # The PersistentDataStore class is a subclass of the Base
+import logging
 import os
 import glob
 from typing import Optional
@@ -8,6 +9,8 @@ from enforce_typing import enforce_types
 import polars as pl
 
 from pdr_backend.lake.base_data_store import BaseDataStore
+
+logger = logging.getLogger("pds")
 
 
 class PersistentDataStore(BaseDataStore):
@@ -176,7 +179,7 @@ class PersistentDataStore(BaseDataStore):
                     f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table_name}"
                 )
         else:
-            print(f"move_table_data - Table {temp_table_name} does not exist")
+            logger.info("move_table_data - Table %s does not exist", temp_table_name)
 
     @enforce_types
     def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):
@@ -217,8 +220,8 @@ class PersistentDataStore(BaseDataStore):
             [f"{column} = {df[column]}" for column in df.columns]
         )
         self.execute_sql(
-            f"""UPDATE {table_name} 
-            SET {update_columns} 
+            f"""UPDATE {table_name}
+            SET {update_columns}
             WHERE {column_name} = {df[column_name]}"""
         )
 

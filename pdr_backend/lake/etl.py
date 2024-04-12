@@ -1,5 +1,5 @@
-import time
 import logging
+import time
 from datetime import datetime
 from typing import Dict, List, Optional
 from enforce_typing import enforce_types
@@ -26,7 +26,7 @@ from pdr_backend.lake.table_pdr_slots import slots_table_name
 from pdr_backend.lake.table_pdr_truevals import truevals_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 
-logger = logging.getLogger("check_network")
+logger = logging.getLogger("etl")
 
 
 class ETL:
@@ -180,8 +180,9 @@ class ETL:
         for table_name in table_names:
             table_name_with_type = get_table_name(table_name, table_type)
             if table_name_with_type not in all_db_tables:
-                print(
-                    f"_get_max_timestamp_values_from - Table {table_name} does not exist."
+                logger.info(
+                    "_get_max_timestamp_values_from - Table %s does not exist.",
+                    table_name,
                 )
                 continue
 
@@ -206,8 +207,6 @@ class ETL:
 
         if result is None:
             return none_values
-
-        # print(f"_get_max_timestamp_values_from - result: {result}")
 
         values = {}
 
@@ -270,7 +269,7 @@ class ETL:
         if table_exists and temp_table_exists:
             view_query = """
                 CREATE VIEW {} AS
-                ( 
+                (
                     SELECT * FROM {}
                     UNION ALL
                     SELECT * FROM {}
@@ -292,7 +291,7 @@ class ETL:
         @description
             Update bronze tables
         """
-        print("update_bronze_pdr - Update bronze tables.")
+        logger.info("update_bronze_pdr - Update bronze tables.")
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
