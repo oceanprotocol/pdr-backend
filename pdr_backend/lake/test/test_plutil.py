@@ -128,9 +128,7 @@ def _filename(tmpdir) -> str:
 @enforce_types
 def test_load_basic(tmpdir):
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    # TODO - fix foo.csv as filename
-    file_id = "foo"
-
+    file_id = "foo.csv"
     # output to file
     CSVDataStore(str(tmpdir)).write(file_id, data=df, schema=TOHLCV_SCHEMA_PL)
 
@@ -161,7 +159,6 @@ def test_load_basic(tmpdir):
 @enforce_types
 def test_load_append(tmpdir):
     # save 4-row parquet to new file
-    # TODO - fix foo.csv as filename
     filename = "foo.csv"
     df_4_rows = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     CSVDataStore(str(tmpdir)).write(filename, data=df_4_rows)
@@ -184,7 +181,6 @@ def test_load_append(tmpdir):
 
 @enforce_types
 def test_load_filtered(tmpdir):
-    # TODO - fix foo.csv as filename
     filename = "foo.csv"
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
     CSVDataStore(str(tmpdir)).write(filename, data=df)
