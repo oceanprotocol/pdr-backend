@@ -2,9 +2,9 @@ import logging
 import sys
 from typing import Optional, Tuple
 
-import polars as pl
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from enforce_typing import enforce_types
 
