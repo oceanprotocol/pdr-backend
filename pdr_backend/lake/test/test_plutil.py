@@ -187,7 +187,6 @@ def test_load_filtered(tmpdir):
     # TODO - fix foo.csv as filename
     filename = "foo.csv"
     df = _df_from_raw_data(FOUR_ROWS_RAW_TOHLCV_DATA)
-    save_rawohlcv_file(filename, df)
     CSVDataStore(str(tmpdir)).write(filename, data=df)
 
     # load with filters on rows & columns
