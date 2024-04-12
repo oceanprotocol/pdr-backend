@@ -54,6 +54,7 @@ Utilities:
   pdr create_accounts NUM PPSS_FILE NETWORK
   pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
+  pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
