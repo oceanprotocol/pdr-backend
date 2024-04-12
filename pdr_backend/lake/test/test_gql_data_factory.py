@@ -3,6 +3,7 @@ from io import StringIO
 import sys
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
@@ -230,3 +231,50 @@ def test_do_subgraph_fetch(
     printed_text = captured_output.getvalue().strip()
     count_fetches = printed_text.count("Fetched")
     assert count_fetches == 1
+
+
+def test_do_fetch_with_empty_data(
+    _mock_fetch_empty_gql,
+    _clean_up_test_folder,
+    tmpdir,
+):
+    _clean_up_table_registry()
+
+    st_timestr = "2023-12-03"
+    fin_timestr = "2023-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    _clean_up_test_folder(ppss.lake_ss.lake_dir)
+
+    gql_data_factory = GQLDataFactory(ppss)
+
+    table = TableRegistry().get_table("pdr_predictions")
+
+    captured_output = StringIO()
+    sys.stdout = captured_output
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        _mock_fetch_empty_gql,
+        "sapphire-mainnet",
+        UnixTimeMs(1701634300000),
+        UnixTimeMs(1701634500000),
+        {"contract_list": ["0x123"]},
+    )
+    printed_text = captured_output.getvalue().strip()
+    count_fetches = printed_text.count("Fetched")
+    assert count_fetches == 1
+
+    # check if the db table is created
+
+    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    all_tables = pds.get_table_names()
+
+    assert temp_table_name in all_tables
+    assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 0
