@@ -34,9 +34,11 @@ def _checks_for_empty_df(df, table_name: str):
 def get_predictions_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, feed_addrs: List[str]
 ):
-    logger.info("get_predictions_info_main_ppss.lake_ss.lake_dir---", ppss.lake_ss.lake_dir)
-    logger.info("get_predictions_info_main start_timestr", start_timestr)
-    logger.info("get_predictions_info_main end_timestr", end_timestr)
+    logger.info(
+        "get_predictions_info_main_ppss.lake_ss.lake_dir--- %s", ppss.lake_ss.lake_dir
+    )
+    logger.info("get_predictions_info_main start_timestr %s", start_timestr)
+    logger.info("get_predictions_info_main end_timestr %s", end_timestr)
 
     table_name = get_table_name("pdr_predictions", TableType.NORMAL)
 
@@ -64,7 +66,9 @@ def get_predictions_info_main(
 def get_predictoors_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, pdr_addrs: List[str]
 ):
-    logger.info("get_predictoors_info_main_ppss.lake_ss.lake_dir---", ppss.lake_ss.lake_dir)
+    logger.info(
+        "get_predictoors_info_main_ppss.lake_ss.lake_dir--- %s", ppss.lake_ss.lake_dir
+    )
     table_name = get_table_name("pdr_predictions", TableType.NORMAL)
 
     # convert feed addresses to string for SQL query

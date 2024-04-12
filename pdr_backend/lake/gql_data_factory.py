@@ -122,8 +122,8 @@ class GQLDataFactory:
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
 
-        logger.info("  Data start: ", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: ", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
 
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
@@ -147,7 +147,9 @@ class GQLDataFactory:
 
         if csv_last_timestamp is not None:
             if db_last_timestamp is None:
-                logger.info("  Table not yet created. Insert all %s csv data", table_name)
+                logger.info(
+                    "  Table not yet created. Insert all %s csv data", table_name
+                )
                 data = CSVDataStore(table.base_path).read_all(table_name)
                 table._append_to_db(data, TableType.TEMP)
             elif csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
@@ -199,7 +201,7 @@ class GQLDataFactory:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
-        logger.info("Fetching data for ", table.table_name)
+        logger.info("Fetching data for %s", table.table_name)
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -244,7 +246,9 @@ class GQLDataFactory:
             ) and len(buffer_df) > 0:
                 assert df.schema == table.df_schema
                 table.append_to_storage(buffer_df, TableType.TEMP)
-                logger.info("Saved %s records to storage while fetching", len(buffer_df))
+                logger.info(
+                    "Saved %s records to storage while fetching", len(buffer_df)
+                )
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
                 save_backoff_count = 0
@@ -297,7 +301,9 @@ class GQLDataFactory:
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             fin_ut = self.ppss.lake_ss.fin_timestamp
-            logger.info("      Aim to fetch data from start time: ", st_ut.pretty_timestr())
+            logger.info(
+                "      Aim to fetch data from start time: %s", st_ut.pretty_timestr()
+            )
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 logger.info("      Given start time, no data to gather. Exit.")
 
@@ -305,7 +311,7 @@ class GQLDataFactory:
             self._prepare_temp_table(table.table_name, st_ut, fin_ut)
 
             # fetch from subgraph and add to temp table
-            logger.info("Updating table ", get_table_name(table.table_name))
+            logger.info("Updating table %s", get_table_name(table.table_name))
             self._do_subgraph_fetch(
                 table,
                 self.record_config["fetch_functions"][table.table_name],

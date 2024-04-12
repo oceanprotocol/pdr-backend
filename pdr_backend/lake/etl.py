@@ -133,7 +133,9 @@ class ETL:
             logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
 
             self._move_from_temp_tables_to_live()
-            logger.info("do_etl - Moved build tables to permanent tables. ETL Complete.")
+            logger.info(
+                "do_etl - Moved build tables to permanent tables. ETL Complete."
+            )
         except Exception as e:
             logger.info("Error when executing ETL: %s", e)
 
@@ -182,7 +184,7 @@ class ETL:
             if table.fullname not in all_db_tables:
                 logger.info(
                     "_get_max_timestamp_values_from - Table %s does not exist.",
-                    table.fullname
+                    table.fullname,
                 )
                 continue
 
