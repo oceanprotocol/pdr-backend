@@ -24,7 +24,6 @@ predictoor_ss:
   bot_only:
     s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
     s_start_payouts: 220 # in s. Run payout when there's this seconds left, set to 0 to disable
-    s_cutoff: 20 # in s. Stop predicting if there's < this time left
 
   aimodel_ss:
     input_feeds:

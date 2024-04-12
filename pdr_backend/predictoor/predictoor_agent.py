@@ -135,8 +135,6 @@ class PredictoorAgent:
             # within the time window to predict?
             if cur_epoch_s_left > self.epoch_s_thr:
                 continue
-            if cur_epoch_s_left < self.s_cutoff:
-                break
 
             # get the target slot
 
@@ -243,11 +241,6 @@ class PredictoorAgent:
     def epoch_s_thr(self):
         """Start predicting if there's > this time left"""
         return self.ppss.predictoor_ss.s_until_epoch_end
-
-    @property
-    def s_cutoff(self):
-        """Stop predicting if there's < this time left"""
-        return self.ppss.predictoor_ss.s_cutoff
 
     @property
     def OCEAN(self) -> Token:

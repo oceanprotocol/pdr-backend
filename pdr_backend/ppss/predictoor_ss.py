@@ -84,12 +84,6 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
     def pred_submitter_mgr(self) -> str:
         return self.d["pred_submitter_mgr"]
 
-    @property
-    def s_cutoff(self) -> int:
-        if "s_cutoff" not in self.d["bot_only"]:
-            return 10
-        return self.d["bot_only"]["s_cutoff"]
-
     # --------------------------------
     # setters (add as needed)
     @enforce_types
