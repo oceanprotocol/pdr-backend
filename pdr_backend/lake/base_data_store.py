@@ -15,6 +15,7 @@ class BaseDataStore:
         if pattern_key not in cls._instances:
             instance = super(BaseDataStore, cls).__new__(cls)
             cls._instances[pattern_key] = instance
+
         return cls._instances[pattern_key]
 
     @enforce_types

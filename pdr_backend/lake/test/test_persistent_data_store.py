@@ -114,13 +114,13 @@ def test_drop_table(tmpdir):
     assert table_name not in table_names
 
 
-def test_fill_from_csv_destination(tmpdir):
+def test_fill_table_from_csv(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
     csv_folder_path = os.path.join(str(tmpdir), "csv_folder")
     os.makedirs(csv_folder_path, exist_ok=True)
     example_df.write_csv(os.path.join(str(csv_folder_path), "data.csv"))
 
-    persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
+    persistent_data_store.fill_table_from_csv(table_name, csv_folder_path)
 
     # Check if the table is registered
     table_exists = persistent_data_store.table_exists(table_name)
@@ -313,7 +313,7 @@ def test_multiple_thread_table_updates(tmpdir):
 
 def thread_function_write_to_db(csv_folder_path, tmpdir):
     persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
-    persistent_data_store.fill_from_csv_destination(csv_folder_path, table_name)
+    persistent_data_store.fill_table_from_csv(table_name, csv_folder_path)
 
 
 def thread_function_read_from_db(csv_folder_path, tmpdir):

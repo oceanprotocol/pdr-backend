@@ -145,17 +145,19 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-        if csv_last_timestamp is not None:
-            if db_last_timestamp is None:
-                logger.info(
-                    "  Table not yet created. Insert all %s csv data", table_name
-                )
-                data = CSVDataStore(table.base_path).read_all(table_name)
-                table._append_to_db(data, TableType.TEMP)
-            elif csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
-                logger.info("  Table exists. Insert pending %s csv data", table_name)
-                data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
-                table._append_to_db(data, TableType.TEMP)
+        if csv_last_timestamp is None:
+            return
+
+        if db_last_timestamp is None:
+            logger.info("  Table not yet created. Insert all %s csv data", table_name)
+            data = CSVDataStore(table.base_path).read_all(table_name)
+            table._append_to_db(data, TableType.TEMP)
+            return
+
+        if csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
+            logger.info("  Table exists. Insert pending %s csv data", table_name)
+            data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
+            table._append_to_db(data, TableType.TEMP)
 
     @enforce_types
     def _calc_start_ut(self, table: Table) -> UnixTimeMs:
@@ -240,7 +242,7 @@ class GQLDataFactory:
 
             save_backoff_count += len(df)
 
-            # save to file if requred number of data has been fetched
+            # save to file if required number of data has been fetched
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
@@ -295,8 +297,8 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
-        for _, table in (
-            TableRegistry().get_tables(self.record_config["gql_tables"]).items()
+        for table in (
+            TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)

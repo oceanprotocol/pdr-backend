@@ -18,17 +18,19 @@ class CSVDataStore(BaseDataStore):
         """
         folder_path = os.path.join(self.base_path, dataset_identifier)
         os.makedirs(folder_path, exist_ok=True)
+
         return folder_path
 
     @enforce_types
-    def _fill_with_zero(self, number: int, length: int = 10) -> str:
+    def _pad_with_zeroes(self, number: int, length: int = 10) -> str:
         """
-        Fills the given number with zeros to make it 10 digits long.
+        Pads the given number with zeros to make it 10 digits long.
         @args:
             number: int - number to fill with zeros
         """
         number_str = str(number)
-        return f"{(length - len(number_str)) * '0'}{number_str}"
+        number_str.rjust(length, "0")
+        return number_str
 
     @enforce_types
     def _create_file_name(
@@ -42,13 +44,10 @@ class CSVDataStore(BaseDataStore):
             start_time: int - start time of the data TIMESTAMP
             end_time: int - end time of the data TIMESTAMP
         """
-        start_time_str = self._fill_with_zero(start_time)
+        start_time_str = self._pad_with_zeroes(start_time)
+        end_time_str = self._pad_with_zeroes(end_time) if end_time else ""
 
-        start_phrase = f"_from_{start_time_str}"
-
-        end_phrase = f"_to_{self._fill_with_zero(end_time)}" if end_time else "_to_"
-
-        return f"{dataset_identifier}{start_phrase}{end_phrase}.csv"
+        return f"{dataset_identifier}_from_{start_time_str}_to_{end_time_str}.csv"
 
     @enforce_types
     def _create_file_path(
@@ -252,36 +251,6 @@ class CSVDataStore(BaseDataStore):
         raise ValueError(f"File {file_path} does not contain a 'from' value")
 
     @enforce_types
-    def _get_file_paths(
-        self, folder_path: str, start_time: int, end_time: int
-    ) -> List[str]:
-        """
-        Returns a list of file paths in the given folder_path
-        that contain the given start_time and end_time.
-        @args:
-            folder_path: str - path of the folder
-            start_time: int - start time of the data
-            end_time: int end time of the data
-        @returns:
-            List[str] - list of file paths
-        """
-
-        file_names = os.listdir(folder_path)
-        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
-
-        valid_paths = []
-        for file_path in file_paths:
-            _from_value = self._get_from_value(file_path)
-            _to_value = self._get_to_value(file_path)
-
-            if start_time <= _from_value <= end_time:
-                valid_paths.append(file_path)
-            elif _to_value is not None and start_time <= _to_value <= end_time:
-                valid_paths.append(file_path)
-
-        return valid_paths
-
-    @enforce_types
     def has_data(self, dataset_identifier: str) -> bool:
         """
         Returns True if the csv files in the folder
@@ -348,15 +317,16 @@ class CSVDataStore(BaseDataStore):
         file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
         file_paths.sort()
 
-        if file_paths:
-            # Read the first file to create the DataFrame
-            data = pl.read_csv(file_paths[0], schema=schema)
-            # Read the remaining files and append them to the DataFrame
-            for file_path in file_paths[1:]:
-                data = data.vstack(pl.read_csv(file_path, schema=schema))
-            return data
+        if not file_paths:
+            return pl.DataFrame([], schema=schema)
 
-        return pl.DataFrame([], schema=schema)
+        # Read the first file to create the DataFrame
+        data = pl.read_csv(file_paths[0], schema=schema)
+        # Read the remaining files and append them to the DataFrame
+        for file_path in file_paths[1:]:
+            data = data.vstack(pl.read_csv(file_path, schema=schema))
+
+        return data
 
     def _get_last_file_path(self, folder_path: str) -> str:
         """

@@ -140,11 +140,11 @@ def test_write_append(_get_test_CSVDS, tmpdir, clean_up_test_folder):
     assert data["timestamp"].to_list() == [3, 6, 31, 61]
 
 
-def test_fill_with_zero():
+def test_pad_with_zeroes():
     csv_data_store = CSVDataStore("test")
-    assert csv_data_store._fill_with_zero(1, 10) == "0000000001"
-    assert csv_data_store._fill_with_zero(100) == "0000000100"
-    assert csv_data_store._fill_with_zero(1000) == "0000001000"
+    assert csv_data_store._pad_with_zeroes(1, 10) == "0000000001"
+    assert csv_data_store._pad_with_zeroes(100) == "0000000100"
+    assert csv_data_store._pad_with_zeroes(1000) == "0000001000"
 
 
 def test_get_to_value():

@@ -94,14 +94,12 @@ class PersistentDataStore(BaseDataStore):
         return view_names
 
     @enforce_types
-    def table_exists(self, table_name: str):
-        table_names = self.get_table_names()
-        return table_name in table_names
+    def table_exists(self, table_name: str) -> bool:
+        return table_name in self.get_table_names()
 
     @enforce_types
-    def view_exists(self, view_name: str):
-        view_names = self.get_view_names()
-        return view_name in view_names
+    def view_exists(self, view_name: str) -> bool:
+        return view_name in self.get_view_names()
 
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
@@ -118,7 +116,6 @@ class PersistentDataStore(BaseDataStore):
             })
             insert_to_table(df, "people")
         """
-
         # Check if the table exists
         table_names = self.get_table_names()
 
@@ -126,10 +123,11 @@ class PersistentDataStore(BaseDataStore):
             logger.info("insert_to_table table_name = %s", table_name)
             logger.info("insert_to_table DF = %s", df)
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
-        else:
-            logger.info("create_and_fill_table = %s", table_name)
-            logger.info("create_and_fill_table DF = %s", df)
-            self._create_and_fill_table(df, table_name)
+            return
+
+        logger.info("create_and_fill_table = %s", table_name)
+        logger.info("create_and_fill_table DF = %s", df)
+        self._create_and_fill_table(df, table_name)
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:
@@ -209,14 +207,14 @@ class PersistentDataStore(BaseDataStore):
         )
 
     @enforce_types
-    def fill_from_csv_destination(self, csv_folder_path: str, table_name: str):
+    def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
         """
         Fill the persistent dataset from CSV files.
         @arguments:
-            csv_folder_path - The path to the folder containing the CSV files.
             table_name - A unique name for the table.
+            csv_folder_path - The path to the folder containing the CSV files.
         @example:
-            fill_from_csv_destination("data/csv", "people")
+            fill_table_from_csv("data/csv", "people")
         """
 
         csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
