@@ -1,7 +1,6 @@
 import logging
 import time
-from datetime import datetime
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.ppss import PPSS
@@ -187,7 +186,7 @@ class ETL:
             queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
         table_names = [table.fullname for table in tables]
-        none_values: Dict[str, Optional[datetime]] = {
+        none_values: Dict[str, Optional[UnixTimeMs]] = {
             table_name: None for table_name in table_names
         }
 
@@ -197,12 +196,12 @@ class ETL:
         final_query = " UNION ALL ".join(queries)
         result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        logger.info(f"_get_max_timestamp_values_from - result: {result}")
+        logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values
 
-        values = {}
+        values: Dict[str, Optional[UnixTimeMs]] = {}
 
         for row in result.rows(named=True):
             table_name = row["table_name"]
