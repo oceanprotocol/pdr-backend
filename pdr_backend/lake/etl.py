@@ -76,7 +76,9 @@ class ETL:
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
 
-        self.temp_table_names = [*self.bronze_table_names]
+        self.temp_table_names = []
+        for table_name in self.bronze_table_names:
+            self.temp_table_names.append(get_table_name(table_name, TableType.TEMP))
 
     def _drop_temp_sql_tables(self):
         """
