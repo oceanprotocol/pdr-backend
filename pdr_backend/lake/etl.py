@@ -78,7 +78,7 @@ class ETL:
 
         self.temp_table_names = []
         for table_name in self.bronze_table_names:
-            self.temp_table_names.append(get_table_name(table_name, TableType.TEMP))
+            self.temp_table_names.append(get_table_name(table_name, TableType.NORMAL))
 
     def _drop_temp_sql_tables(self):
         """
@@ -271,7 +271,9 @@ class ETL:
         temp_table_exists = pds.table_exists(temp_table_name)
         etl_view_exists = pds.view_exists(etl_view_name)
         assert temp_table_exists, f"{temp_table_name} must already exist"
-        assert not etl_view_exists, f"{etl_view_name} must not exist"
+        if etl_view_exists:
+            logger.error("%s must not exist", etl_view_name)
+            return
 
         view_query = None
 

@@ -59,9 +59,7 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
     assert caplog.text.count("Updating table") == len(tables)
 
 
-def test_update_partial_then_resume(
-    _mock_fetch_gql, _get_test_PDS, tmpdir
-):
+def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
     """
     Test GQLDataFactory should update end-to-end, but fail in the middle
     Work 1: Update csv data (11-03 -> 11-05) and then fail inserting to db
