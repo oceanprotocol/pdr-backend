@@ -38,8 +38,11 @@ def test_predictoor_ss():
     # test str
     assert "PredictoorSS" in str(ss)
 
-    # test setters
+    # test setters; test approach 2 & 3
     ss.set_approach(2)
+    assert ss.approach == 2
+    
+    ss.set_approach(3)
     assert ss.approach == 2
 
 
@@ -77,14 +80,14 @@ def test_predictoor_ss_test_dict():
 @enforce_types
 def test_predictoor_ss_bad_approach():
     # catch bad approach in __init__()
-    for bad_approach in [0, 3]:
+    for bad_approach in [0, 4]:
         d = predictoor_ss_test_dict()
         d["approach"] = bad_approach
         with pytest.raises(ValueError):
             PredictoorSS(d)
 
     # catch bad approach in set_approach()
-    for bad_approach in [0, 3]:
+    for bad_approach in [0, 4]:
         d = predictoor_ss_test_dict()
         ss = PredictoorSS(d)
         with pytest.raises(ValueError):
