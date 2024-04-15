@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from enforce_typing import enforce_types
 from pdr_backend.cli.predict_feeds import PredictFeeds
@@ -114,7 +114,7 @@ def example_predict_feeds() -> list:
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds: Optional[List] = None,
+    predict_feeds: Optional[List[Dict]] = None,
     input_feeds: Optional[List[str]] = None,
     pred_submitter_mgr: Optional[str] = "",
 ) -> dict:
