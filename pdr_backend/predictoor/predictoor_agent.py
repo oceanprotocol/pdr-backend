@@ -389,13 +389,13 @@ class PredictoorAgent:
         """
         (stake_up2, stake_down2) = self.calc_stakes2()
         if stake_up2 == stake_down2:
-            return 0
+            return (Eth(0), Eth(0))
 
         if stake_up2 > stake_down2:
-            return (stake_up2 - stake_down2, 0)
+            return (stake_up2 - stake_down2, Eth(0))
 
         # stake_up2 < stake_down2
-        return (0, stake_down2 - stake_up2)
+        return (Eth(0), stake_down2 - stake_up2)
 
     @enforce_types
     def use_ohlcv_data(self) -> bool:
