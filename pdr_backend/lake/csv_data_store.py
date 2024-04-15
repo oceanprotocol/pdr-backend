@@ -295,8 +295,8 @@ class CSVDataStore(BaseDataStore):
         if "timestamp" not in data.columns or filter_args is False:
             return data
 
-        return data.filter(data["timestamp"] >= start_time).filter(
-            data["timestamp"] <= end_time
+        return data.filter(
+            (data["timestamp"] >= start_time) & (data["timestamp"] <= end_time)
         )
 
     def read_all(
