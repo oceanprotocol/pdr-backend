@@ -38,12 +38,15 @@ def test_predictoor_agent_main1(tmpdir, monkeypatch, pred_submitter_mgr):
 def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
     _test_predictoor_agent_main(2, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
-    
+
 def test_predictoor_agent_main3(tmpdir, monkeypatch, pred_submitter_mgr):
     _test_predictoor_agent_main(3, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
+
 @enforce_types
-def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr):
+def _test_predictoor_agent_main(
+    approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
+):
     """
     @description
         Run the agent for a while, and then do some basic sanity checks.

@@ -283,7 +283,6 @@ class PredictoorAgent:
             s += f"\ntx1={tx.transactionHash.hex()}"
             logger.warning(s)
 
-
     @enforce_types
     def calc_stakes(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
         """
@@ -298,7 +297,6 @@ class PredictoorAgent:
             return self.calc_stakes2(feed)
         if approach == 3:
             return self.calc_stakes3(feed)
-
 
     @enforce_types
     def calc_stakes1(self) -> Tuple[Eth, Eth]:
