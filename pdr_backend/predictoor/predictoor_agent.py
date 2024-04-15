@@ -13,10 +13,10 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
+from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -243,21 +243,43 @@ class PredictoorAgent:
         stake_down: Eth,
         target_slot: UnixTimeS,  # a timestamp
     ):
-        logger.info("Submit 'up' prediction tx to chain...")
+        assert stake_up >= 0 and stake_down >= 0, (stake_up, stake_down)
+
+        # case: no stake
+        if stake_up == 0 and stake_down == 0:
+            logger.info("Both 'up' and 'down' have 0 stake. So, no txs.")
+            return
+
+        # case: 1-sided staking up (eg approach 3)
+        if stake_up > 0:
+            logger.info("Submit prediction tx 1/1 just 'up' to chain...")
+            tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
+            # note: we don't need special error-handling when just 1 tx
+            return
+
+        # case: 1-sided staking down (eg approach 3)
+        if stake_down > 0:
+            logger.info("Submit prediction tx 1/1 just 'down' to chain...")
+            tx1 = self.submit_1prediction_tx(False, stake_down, target_slot)
+            # note: we don't need special error-handling when just 1 tx
+            return
+
+        # case: 2-sided staking (eg approach 1, 2)
+        logger.info("Submit prediction tx 1/2 'up' to chain...")
         tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
 
-        logger.info("Submit 'down' prediction tx to chain...")
+        logger.info("Submit prediction tx 2/2 'down' to chain...")
         tx2 = self.submit_1prediction_tx(False, stake_down, target_slot)
 
-        # handle errors
+        # special error-handling when 2 txs, to avert danger when 1 of 2 fail
         if _tx_failed(tx1) or _tx_failed(tx2):
             s = "One or both txs failed. So, resubmit both with zero stake."
             s += f"\ntx1={tx1}\ntx2={tx2}"
             logger.warning(s)
 
-            logger.info("Re-submit 'up' prediction tx to chain... (stake=0)")
+            logger.info("Re-submit prediction tx 1/2 'up' to chain... (stake=0)")
             self.submit_1prediction_tx(True, Eth(1e-10), target_slot)
-            logger.info("Re-submit 'down' prediction tx to chain... (stake=0)")
+            logger.info("Re-submit prediction tx 2/2 'down' to chain... (stake=0)")
             self.submit_1prediction_tx(False, Eth(1e-10), target_slot)
 
     @enforce_types
@@ -298,6 +320,8 @@ class PredictoorAgent:
             return self.calc_stakes1()
         if approach == 2:
             return self.calc_stakes2()
+        if approach == 3:
+            return self.calc_stakes3()
         raise ValueError(approach)
 
     @enforce_types
@@ -321,14 +345,48 @@ class PredictoorAgent:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
-          How: use classifier model's confidence
+          How: use classifier model's confidence, two-sided
 
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        return (stake_up, stake_down)
 
+    def calc_stakes3(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Calculate up-vs-down stake according to approach 3.
+          How: Like approach 2, but one-sided difference of (larger - smaller)
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
+        assert self.ppss.predictoor_ss.approach == 3
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        if stake_up == stake_down:
+            return (Eth(0), Eth(0))
+
+        if stake_up > stake_down:
+            return (stake_up - stake_down, Eth(0))
+
+        # stake_up < stake_down
+        return (Eth(0), stake_down - stake_up)
+
+    @enforce_types
+    def calc_stakes_2ss_model(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Model-based calculate up-vs-down stake.
+          How: use classifier model's confidence
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
@@ -356,7 +414,7 @@ class PredictoorAgent:
     @enforce_types
     def use_ohlcv_data(self) -> bool:
         """Do we use ohlcv data?"""
-        return self.ppss.predictoor_ss.approach == 2
+        return self.ppss.predictoor_ss.approach in [2, 3]
 
     @enforce_types
     def get_ohlcv_data(self):

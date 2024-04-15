@@ -20,7 +20,10 @@ from pdr_backend.util.currency_types import Eth
 
 
 # ===========================================================================
-# test approach 1 & 2 - main loop
+# test approach {1, 2, 3} - main loop
+
+# do _not_ parameterize these. It's much easier to test them individually
+#  and debug when they're separate
 
 
 @enforce_types
@@ -34,13 +37,18 @@ def test_predictoor_agent_main2(tmpdir, monkeypatch):
 
 
 @enforce_types
+def test_predictoor_agent_main3(tmpdir, monkeypatch):
+    _test_predictoor_agent_main(3, str(tmpdir), monkeypatch)
+
+
+@enforce_types
 def _test_predictoor_agent_main(approach: int, tmpdir: str, monkeypatch):
     """
     @description
         Run the agent for a while, and then do some basic sanity checks.
         Uses get_agent_1feed, *not* 2feeds.
     """
-    assert approach in [1, 2]
+    assert approach in [1, 2, 3]
 
     # mock tokens
     mock_token = Mock()
