@@ -9,9 +9,10 @@ from pdr_backend.util.strutil import StrMixin
 from pdr_backend.util.currency_types import Eth
 
 # Approaches:
-#  1: Allocate up-vs-down stake equally (50-50). Baseline.
-#  2: Allocate up-vs-down stake on model prediction confidence.
-CAND_APPROACHES = [1, 2]
+#  1: Two-sided: Allocate up-vs-down stake equally (50-50). Baseline.
+#  2: Two-sided: Allocate up-vs-down stake on model prediction confidence.
+#  3: One sided: If up, allocate 2's up-minus-down stake. If down, vice versa.
+CAND_APPROACHES = [1, 2, 3]
 
 
 class PredictoorSS(PredictFeedMixin, StrMixin):

@@ -13,10 +13,9 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
-from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
+from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("predictoor_agent")
 
@@ -284,6 +283,7 @@ class PredictoorAgent:
             s += f"\ntx1={tx.transactionHash.hex()}"
             logger.warning(s)
 
+
     @enforce_types
     def calc_stakes(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
         """
@@ -296,7 +296,9 @@ class PredictoorAgent:
             return self.calc_stakes1()
         if approach == 2:
             return self.calc_stakes2(feed)
-        raise ValueError(approach)
+        if approach == 3:
+            return self.calc_stakes3(feed)
+
 
     @enforce_types
     def calc_stakes1(self) -> Tuple[Eth, Eth]:
@@ -319,14 +321,48 @@ class PredictoorAgent:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
-          How: use classifier model's confidence
+          How: use classifier model's confidence, two-sided
 
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        return (stake_up, stake_down)
 
+    def calc_stakes3(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Calculate up-vs-down stake according to approach 3.
+          How: Like approach 2, but one-sided difference of (larger - smaller)
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
+        assert self.ppss.predictoor_ss.approach == 3
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        if stake_up == stake_down:
+            return (Eth(0), Eth(0))
+
+        if stake_up > stake_down:
+            return (stake_up - stake_down, Eth(0))
+
+        # stake_up < stake_down
+        return (Eth(0), stake_down - stake_up)
+
+    @enforce_types
+    def calc_stakes_2ss_model(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Model-based calculate up-vs-down stake.
+          How: use classifier model's confidence
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
@@ -356,7 +392,7 @@ class PredictoorAgent:
     @enforce_types
     def use_ohlcv_data(self) -> bool:
         """Do we use ohlcv data?"""
-        return self.ppss.predictoor_ss.approach == 2
+        return self.ppss.predictoor_ss.approach in [2, 3]
 
     @enforce_types
     def get_ohlcv_data(self):
