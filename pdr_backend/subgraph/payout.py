@@ -19,6 +19,7 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         roundSumStakesUp: float,
         roundSumStakes: float,
         stake: float,
+        pdr_slot_slot_id: str,
     ) -> None:
         self.ID = ID
         self.user = user
@@ -31,6 +32,7 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.stake = stake
+        self.pdr_slot_slot_id = pdr_slot_slot_id
 
 
 @enforce_types

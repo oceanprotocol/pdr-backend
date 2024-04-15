@@ -46,7 +46,7 @@ def get_bronze_pdr_slots_data_with_SQL(
     query = f"""
             SELECT
                 {pdr_slots_table_name}.ID as ID,
-                SPLIT_PART({pdr_slots_table_name}.ID, '-', 1) as contract,
+                {pdr_slots_table_name}.contract as contract,
                 {etl_bronze_pdr_predictions_table_name}.pair as pair,
                 {etl_bronze_pdr_predictions_table_name}.timeframe as timeframe,
                 {etl_bronze_pdr_predictions_table_name}.source as source,
@@ -64,8 +64,7 @@ def get_bronze_pdr_slots_data_with_SQL(
             FROM
                 {pdr_slots_table_name}
             LEFT JOIN {pdr_payouts_table_name}
-            ON {pdr_slots_table_name}.ID = SPLIT_PART({pdr_payouts_table_name}.ID, '-', 1)
-                || '-' || SPLIT_PART({pdr_payouts_table_name}.ID, '-', 2)
+            ON {pdr_slots_table_name}.ID = {pdr_payouts_table_name}.pdr_slot_slot_id
             LEFT JOIN {pdr_truevals_table_name}
             ON {pdr_slots_table_name}.ID = {pdr_truevals_table_name}.ID
             LEFT JOIN {etl_bronze_pdr_predictions_table_name}

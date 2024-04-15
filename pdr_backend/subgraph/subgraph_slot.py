@@ -16,6 +16,7 @@ class PredictSlot:
     truevalue: bool
     roundSumStakesUp: float
     roundSumStakes: float
+    contract: str
 
 
 @enforce_types
@@ -123,6 +124,7 @@ def get_slots(
         PredictSlot(
             **{
                 "ID": slot["id"],
+                "contract": slot["id"].split("-")[0],
                 "timestamp": slot["slot"],
                 "slot": slot["slot"],
                 "truevalue": (

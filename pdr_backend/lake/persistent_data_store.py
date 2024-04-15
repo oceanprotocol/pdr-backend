@@ -31,6 +31,11 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn = duckdb.connect(
             database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
+        self.duckdb_conn.execute(
+            """
+                SET memory_limit = '1GB';
+                SET max_memory = '1GB';
+            """)
 
     @enforce_types
     def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):

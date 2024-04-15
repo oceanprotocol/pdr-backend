@@ -15,4 +15,5 @@ payouts_schema = {
     "roundSumStakesUp": Float64,
     "roundSumStakes": Float64,
     "stake": Float64,
+    "pdr_slot_slot_id": Utf8,
 }
