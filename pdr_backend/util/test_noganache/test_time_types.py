@@ -134,5 +134,5 @@ def test_timezones():
 
     # test UnixTimeMs
     # - if it's off by 7200*1000, that's 3600 * 2 * 1000 --> 2 timezones fr UTC
-    ut_ms = UnixTimeMs().now()
+    ut_ms = UnixTimeMs.now()
     assert ut_ms == pytest.approx(ut_ms_target, abs=tol_ms)
