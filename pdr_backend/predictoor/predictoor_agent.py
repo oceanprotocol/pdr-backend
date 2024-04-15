@@ -345,14 +345,48 @@ class PredictoorAgent:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
-          How: use classifier model's confidence
+          How: use classifier model's confidence, two-sided
 
         @return
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        return (stake_up, stake_down)
 
+    def calc_stakes3(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Calculate up-vs-down stake according to approach 3.
+          How: Like approach 2, but one-sided difference of (larger - smaller)
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
+        assert self.ppss.predictoor_ss.approach == 3
+        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        if stake_up == stake_down:
+            return (Eth(0), Eth(0))
+
+        if stake_up > stake_down:
+            return (stake_up - stake_down, Eth(0))
+
+        # stake_up < stake_down
+        return (Eth(0), stake_down - stake_up)
+
+    @enforce_types
+    def calc_stakes_2ss_model(self) -> Tuple[Eth, Eth]:
+        """
+        @description
+          Model-based calculate up-vs-down stake.
+          How: use classifier model's confidence
+
+        @return
+          stake_up -- amt to stake up, in units of Eth
+          stake_down -- amt to stake down, ""
+        """
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
@@ -377,30 +411,10 @@ class PredictoorAgent:
 
         return (stake_up, stake_down)
 
-    def calc_stakes3(self) -> Tuple[Eth, Eth]:
-        """
-        @description
-          Calculate up-vs-down stake according to approach 3.
-          How: Like approach 2, but one-sided difference of (larger - smaller)
-
-        @return
-          stake_up -- amt to stake up, in units of Eth
-          stake_down -- amt to stake down, ""
-        """
-        (stake_up2, stake_down2) = self.calc_stakes2()
-        if stake_up2 == stake_down2:
-            return (Eth(0), Eth(0))
-
-        if stake_up2 > stake_down2:
-            return (stake_up2 - stake_down2, Eth(0))
-
-        # stake_up2 < stake_down2
-        return (Eth(0), stake_down2 - stake_up2)
-
     @enforce_types
     def use_ohlcv_data(self) -> bool:
         """Do we use ohlcv data?"""
-        return self.ppss.predictoor_ss.approach == 2
+        return self.ppss.predictoor_ss.approach in [2, 3]
 
     @enforce_types
     def get_ohlcv_data(self):

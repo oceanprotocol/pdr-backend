@@ -43,7 +43,7 @@ def test_predictoor_ss():
     assert ss.approach == 2
 
     ss.set_approach(3)
-    assert ss.approach == 2
+    assert ss.approach == 3
 
 
 @enforce_types
