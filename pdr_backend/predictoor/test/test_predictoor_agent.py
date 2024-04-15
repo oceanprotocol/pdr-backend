@@ -109,7 +109,7 @@ def test_predictoor_agent_init_empty(pred_submitter_mgr):
     pred_submitter_mgr_addr = pred_submitter_mgr.contract_address
     mock_ppss_empty = MagicMock(spec=PPSS)
     mock_ppss_empty.predictoor_ss = MagicMock(spec=PredictoorSS)
-    mock_ppss_empty.predictoor_ss.filter_feeds_from_candidates.return_value = []
+    mock_ppss_empty.predictoor_ss.get_feed_from_candidates.return_value = []
     mock_ppss_empty.predictoor_ss.pred_submitter_mgr = pred_submitter_mgr_addr
     mock_ppss_empty.web3_pp = MagicMock(spec=Web3PP)
     mock_ppss_empty.web3_pp.query_feed_contracts.return_value = {}
