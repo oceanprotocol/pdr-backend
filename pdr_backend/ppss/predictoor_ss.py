@@ -114,9 +114,9 @@ def example_predict_feeds() -> list:
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds: Optional[List[Dict]] = None,
-    input_feeds: Optional[List[str]] = None,
-    pred_submitter_mgr: Optional[str] = "",
+    predict_feeds=None,
+    input_feeds=None,
+    pred_submitter_mgr="",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     predict_feeds = predict_feeds or example_predict_feeds()
