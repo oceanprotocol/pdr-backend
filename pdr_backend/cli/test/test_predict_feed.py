@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed

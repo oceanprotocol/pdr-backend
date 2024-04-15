@@ -13,7 +13,8 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
+from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 
@@ -297,6 +298,7 @@ class PredictoorAgent:
             return self.calc_stakes2(feed)
         if approach == 3:
             return self.calc_stakes3(feed)
+        raise ValueError("Approach not supported")
 
     @enforce_types
     def calc_stakes1(self) -> Tuple[Eth, Eth]:
@@ -326,10 +328,10 @@ class PredictoorAgent:
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
-        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        (stake_up, stake_down) = self.calc_stakes_2ss_model(feed)
         return (stake_up, stake_down)
 
-    def calc_stakes3(self) -> Tuple[Eth, Eth]:
+    def calc_stakes3(self, feed) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 3.
@@ -340,7 +342,7 @@ class PredictoorAgent:
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 3
-        (stake_up, stake_down) = self.calc_stakes_2ss_model()
+        (stake_up, stake_down) = self.calc_stakes_2ss_model(feed)
         if stake_up == stake_down:
             return (Eth(0), Eth(0))
 
@@ -351,7 +353,7 @@ class PredictoorAgent:
         return (Eth(0), stake_down - stake_up)
 
     @enforce_types
-    def calc_stakes_2ss_model(self) -> Tuple[Eth, Eth]:
+    def calc_stakes_2ss_model(self, feed) -> Tuple[Eth, Eth]:
         """
         @description
           Model-based calculate up-vs-down stake.
