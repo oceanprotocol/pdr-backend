@@ -130,7 +130,7 @@ class GQLDataFactory:
 
         return TableRegistry().get_tables(self.record_config["gql_tables"])
 
-    def _prepare_temp_table(self, table_name, st_ut, fin_ut):
+    def _prepare_temp_table(self, table_name, st_ut, fin_ut, schema):
         """
         @description
             # 1. get last timestamp from database
@@ -150,13 +150,13 @@ class GQLDataFactory:
 
         if db_last_timestamp is None:
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
-            data = CSVDataStore(table.base_path).read_all(table_name)
+            data = CSVDataStore(table.base_path).read_all(table_name, schema)
             table._append_to_db(data, TableType.TEMP)
             return
 
         if csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
             logger.info("  Table exists. Insert pending %s csv data", table_name)
-            data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut)
+            data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut, schema)
             table._append_to_db(data, TableType.TEMP)
 
     @enforce_types
@@ -310,7 +310,7 @@ class GQLDataFactory:
                 logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
-            self._prepare_temp_table(table.table_name, st_ut, fin_ut)
+            self._prepare_temp_table(table.table_name, st_ut, fin_ut, table.df_schema)
 
             # fetch from subgraph and add to temp table
             logger.info("Updating table %s", get_table_name(table.table_name))
