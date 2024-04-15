@@ -25,6 +25,7 @@ from pdr_backend.util.currency_types import Eth
 # do _not_ parameterize these. It's much easier to test them individually
 #  and debug when they're separate
 
+
 @enforce_types
 def test_predictoor_agent_main1(tmpdir, monkeypatch):
     _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
@@ -34,7 +35,7 @@ def test_predictoor_agent_main1(tmpdir, monkeypatch):
 def test_predictoor_agent_main2(tmpdir, monkeypatch):
     _test_predictoor_agent_main(2, str(tmpdir), monkeypatch)
 
-    
+
 @enforce_types
 def test_predictoor_agent_main3(tmpdir, monkeypatch):
     _test_predictoor_agent_main(3, str(tmpdir), monkeypatch)

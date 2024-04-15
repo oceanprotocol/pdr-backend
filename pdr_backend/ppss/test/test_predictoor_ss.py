@@ -41,7 +41,7 @@ def test_predictoor_ss():
     # test setters; test approach 2 & 3
     ss.set_approach(2)
     assert ss.approach == 2
-    
+
     ss.set_approach(3)
     assert ss.approach == 2
 

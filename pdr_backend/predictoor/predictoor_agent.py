@@ -263,7 +263,7 @@ class PredictoorAgent:
             tx1 = self.submit_1prediction_tx(False, stake_down, target_slot)
             # note: we don't need special error-handling when just 1 tx
             return
-            
+
         # case: 2-sided staking (eg approach 1, 2)
         logger.info("Submit prediction tx 1/2 'up' to chain...")
         tx1 = self.submit_1prediction_tx(True, stake_up, target_slot)
