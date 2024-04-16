@@ -21,6 +21,7 @@ class Prediction:
         payout: Union[float, None],
         slot: UnixTimeS,  # slot/epoch timestamp
         user: str,
+        pdr_slot_slot_id: str,
     ) -> None:
         self.ID = ID
         self.contract = contract
@@ -34,6 +35,7 @@ class Prediction:
         self.payout = payout
         self.slot = slot
         self.user = user
+        self.pdr_slot_slot_id = pdr_slot_slot_id
 
 
 # =========================================================================

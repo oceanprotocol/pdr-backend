@@ -143,6 +143,7 @@ def fetch_filtered_predictions(
         payout = None
         predicted_value = None
         stake = None
+        pdr_slot_slot_id = f"{prediction_sg_dict['id'].split('-')[0]}-{prediction_sg_dict['id'].split('-')[1]}"
 
         if not prediction_sg_dict["payout"] is None:
             stake = float(prediction_sg_dict["stake"])
@@ -163,6 +164,7 @@ def fetch_filtered_predictions(
             payout=payout,
             slot=slot,
             user=user,
+            pdr_slot_slot_id=pdr_slot_slot_id
         )
         predictions.append(prediction)
 

@@ -163,7 +163,7 @@ def fetch_payouts(
                 ),
                 "roundSumStakes": float(payout["prediction"]["slot"]["roundSumStakes"]),
                 "stake": float(payout["prediction"]["stake"]),
-                "pdr_slot_slot_id": f"{payout['id'].split('-')[1]}-{payout['id'].split('-')[2]}",
+                "pdr_slot_slot_id": f"{payout['id'].split('-')[0]}-{payout['id'].split('-')[1]}",
             }
         )
         for payout in data

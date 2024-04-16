@@ -131,11 +131,6 @@ class ETL:
 
             end_ts = time.time_ns() / 1e9
             logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
-
-            self._move_from_temp_tables_to_live()
-            logger.info(
-                "do_etl - Moved build tables to permanent tables. ETL Complete."
-            )
         except Exception as e:
             logger.info("Error when executing ETL: %s", e)
 

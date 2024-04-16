@@ -18,6 +18,7 @@ predictions_schema = {
     "payout": Float64,
     "slot": Int64,
     "user": Utf8,
+    "pdr_slot_slot_id": Utf8,
 }
 
 # PREDICTOOR_SUMMARY_SCHEMA
