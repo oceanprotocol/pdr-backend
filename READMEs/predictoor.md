@@ -48,7 +48,7 @@ You need a local copy of Ocean contract addresses [`address.json`](https://githu
 mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
 
 # copy from github to local directory. Or, use wget if Linux. Or, download via browser.
-curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+curl https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
 ```
 
 If you're running MacOS, then in console:
@@ -133,7 +133,18 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
 cp ppss.yaml my_ppss.yaml
 ```
 
-Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr` and update the rest as desired.
+#### Update YAML config with the contract address
+
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr`:
+
+```
+predictoor_ss:
+  ...
+  pred_submitter_mgr: "CONTRACT_ADDRESS"
+  ...
+```
+
+Update the rest of the config as desired.
 
 ### Running the bot
 
