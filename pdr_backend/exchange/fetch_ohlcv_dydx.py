@@ -1,11 +1,9 @@
-from datetime import datetime
 import logging
 from typing import List, Optional, Union
 
 from enforce_typing import enforce_types
 import requests
 
-from pdr_backend.cli.arg_exchange import verify_exchange_str
 from pdr_backend.cli.arg_pair import verify_pair_str
 from pdr_backend.cli.arg_timeframe import verify_timeframe_str
 from pdr_backend.exchange.constants import (
@@ -18,7 +16,7 @@ logger = logging.getLogger("fetch_ohlcv_dydx")
 
 
 @enforce_types
-def safe_fetch_ohlcv_dydx(
+def fetch_ohlcv_dydx(
     pair_str: str,
     timeframe: str,
     since: UnixTimeMs,
@@ -58,27 +56,27 @@ def safe_fetch_ohlcv_dydx(
     fromISO = since.to_iso_timestr()
     headers = {"Accept": "application/json"}
     try:
-        s = f"{BASE_URL_DYDX}/candles/perpetualMarkets/{ticker}" \
+        s = (
+            f"{baseURL}/candles/perpetualMarkets/{ticker}"
             f"?resolution={resolution}&fromISO={fromISO}&limit={limit}"
+        )
         response = requests.get(s, headers=headers, timeout=20)
-    
+
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
 
     data = response.json()
-    
+
     raw_tohlcv_data = []
     key_name = next(iter(data))  # Get the first key in the dict
     items = data[key_name]
-    import pdb; pdb.set_trace()
 
     if key_name == "candles" and items:
         for item in items:
             t_iso_str = item["startedAt"]
             t_UnixTimeMs = UnixTimeMs.from_iso_timestr(t_iso_str)
             assert t_iso_str == t_UnixTimeMs.to_iso_timestr()
-            import pdb; pdb.set_trace()
             tohlcv_tup = (
                 t_UnixTimeMs,
                 _float_or_none(item["open"]),

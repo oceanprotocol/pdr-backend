@@ -2,7 +2,6 @@ import logging
 from typing import List, Union
 
 from enforce_typing import enforce_types
-import requests
 
 from pdr_backend.cli.arg_exchange import verify_exchange_str
 from pdr_backend.cli.arg_pair import verify_pair_str
@@ -13,8 +12,9 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv_ccxt")
 
+
 @enforce_types
-def safe_fetch_ohlcv_ccxt(
+def fetch_ohlcv_ccxt(
     exchange_str: str,
     pair_str: str,
     timeframe: str,
@@ -64,4 +64,3 @@ def safe_fetch_ohlcv_ccxt(
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
-

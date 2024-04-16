@@ -69,7 +69,7 @@ class UnixTimeMs(int):
 
     @staticmethod
     def from_iso_timestr(iso_timestr: str) -> "UnixTimeMs":
-        """Example iso_timestr: '2024-04-16T03:35:00.000Z' """
+        """Example iso_timestr: '2024-04-16T03:35:00.000Z'"""
         dt = datetime.strptime(iso_timestr, "%Y-%m-%dT%H:%M:%S.%fZ")
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
         return UnixTimeMs.from_dt(dt)

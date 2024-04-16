@@ -4,14 +4,14 @@ from typing import List, Union
 from enforce_typing import enforce_types
 
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.exchange.fetch_ohlcv_ccxt import safe_fetch_ohlcv_ccxt
-from pdr_backend.exchange.fetch_ohlcv_dydx import safe_fetch_ohlcv_dydx
+from pdr_backend.exchange.fetch_ohlcv_ccxt import fetch_ohlcv_ccxt
+from pdr_backend.exchange.fetch_ohlcv_dydx import fetch_ohlcv_dydx
 
 logger = logging.getLogger("fetch_ohlcv")
 
 
 @enforce_types
-def safe_fetch_ohlcv(
+def fetch_ohlcv(
     exchange_str: str,
     pair_str: str,
     timeframe: str,
@@ -22,7 +22,7 @@ def safe_fetch_ohlcv(
     @description
       Top-level switch:
       Get ohlcv data from dydx exchange, or an exchange supported by ccxt.
-    
+
       If there's an error it emits a warning and returns None,
       vs crashing everything
 
@@ -39,5 +39,5 @@ def safe_fetch_ohlcv(
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
     if exchange_str == "dydx":
-        return safe_fetch_ohlcv_dydx(pair_str, timeframe, since, limit)
-    return safe_fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
+        return fetch_ohlcv_dydx(pair_str, timeframe, since, limit)
+    return fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
