@@ -141,13 +141,10 @@ def safe_fetch_ohlcv_dydx(
     fromISO = since.to_iso_timestr()
     headers = {"Accept": "application/json"}
     try:
-        response = requests.get(
-            f"{BASE_URL_DYDX}/candles/perpetualMarkets/{ticker}"
-            f"?resolution={resolution}&fromISO={fromISO}&limit={limit}",
-            headers=headers,
-            timeout=20,
-        )
-
+        s = f"{BASE_URL_DYDX}/candles/perpetualMarkets/{ticker}" \
+            f"?resolution={resolution}&fromISO={fromISO}&limit={limit}"
+        response = requests.get(s, headers=headers, timeout=20)
+        
     except Exception as e:
         logger.warning("exchange: %s", e)
         return None
@@ -160,17 +157,18 @@ def safe_fetch_ohlcv_dydx(
 
     if key_name == "candles" and items:
         for item in items:
-            dt = datetime.strptime(item["startedAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            timestamp = int(dt.timestamp() * 1000)
-            ohlcv_tuple = (
-                timestamp,
+            t_iso_str = item["startedAt"]
+            t_UnixTimeMs = UnixTimeMs.from_iso_timestr(t_iso_str)
+            assert t_iso_str == t_UnixTimeMs.to_iso_timestr()
+            tohlcv_tup = (
+                t_UnixTimeMs,
                 _float_or_none(item["open"]),
                 _float_or_none(item["high"]),
                 _float_or_none(item["low"]),
                 _float_or_none(item["close"]),
                 _float_or_none(item["baseTokenVolume"]),
             )
-            raw_tohlcv_data.append(ohlcv_tuple)
+            raw_tohlcv_data.append(tohlcv_tup)
 
         return raw_tohlcv_data
 
