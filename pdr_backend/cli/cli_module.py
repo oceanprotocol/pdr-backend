@@ -76,6 +76,8 @@ def do_sim(args, nested_args=None):
     # TO-DO Find a way to pass a specific feed
     # Or update simengine to simulate on all feeds
     feed = ppss.predictoor_ss.feeds[0]
+    if len(ppss.predictoor_ss.feeds > 0):
+        logger.warning("Multiple prediction feeds provided, using the first one")
     sim_engine = SimEngine(ppss, feed)
     sim_engine.run()
 
