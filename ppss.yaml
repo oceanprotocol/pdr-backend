@@ -15,7 +15,7 @@ predictoor_ss:
       - binance BTC/USDT ETH/USDT c 5m
   approach: 2 # 1->50/50; 2->two-sided model-based; 3-> one-sided model-based
   stake_amount: 100 # How much your bot stakes. In OCEAN per epoch, per feed
-  pred_submitter_mgr: DeployNewMgr # DeployNewMgr | <address of deployed mgr>  
+  pred_submitter_mgr: "DeployNewMgr" # DeployNewMgr | <address of deployed mgr>  
   sim_only:
     others_stake: 10000 # How much all others' bots stake. In OCEAN per epoch, per feed. Calcs: stake volume = 10e6 $/day/20_feeds = 34700 $/epoch/20_feeds (bc 288 5m epochs/day) = 1735 $/epoch/feed = 2313 OCEAN/epoch/feed (at 1 OCEAN=$0.75)
     others_accuracy: 0.50001 # What percent of others' bots stake is correct. Value in range 0.0-1.0. 0.50001 means mostly 50-50 stake and some small fry predicting a bit accurately
