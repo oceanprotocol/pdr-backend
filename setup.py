@@ -35,7 +35,7 @@ install_requirements = [
     "pyyaml",
     "requests==2.31.0",
     "requests-mock==1.12.1",
-    "scikit-learn==1.4.1.post1",
+    "scikit-learn==1.4.2",
     "statsmodels==0.14.1",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.31.0.20240406",
