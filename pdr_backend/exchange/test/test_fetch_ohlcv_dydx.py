@@ -78,10 +78,11 @@ def test_dydx__real_response__basic():
     
 @enforce_types
 def test_dydx__real_response_fromISO():
-    # setup problem: 'since'
-    since_iso = "2024-02-27_00:00:00.000"
-    since_utms = UnixTimeMs.from_timestr(since_iso)
-    assert since_utms == 1708992000000
+    # setup problem: 'tsince'
+    tsince_iso_str = "2024-02-27_00:00:00.000"
+    tsince_UnixTimeMs = UnixTimeMs.from_timestr(tsince_iso_str)
+    assert tsince_UnixTimeMs == 1708992000000
+    assert tsince_UnixTimeMs.to_timestr() == tsince_iso_str
     
     # setup problem: the rest
     symbol = "BTC/USD"
@@ -89,15 +90,15 @@ def test_dydx__real_response_fromISO():
     limit = 1
 
     # get result
-    raw_tohlcv_data = safe_fetch_ohlcv_dydx(symbol, timeframe, since_utms, limit)
+    raw_tohlcv_data = safe_fetch_ohlcv_dydx(symbol, timeframe, tsince_UnixTimeMs, limit)
     tohlcv = raw_tohlcv_data[0]
 
     # dydx api doesn't properly address fromISO. We must fix this, see #879
     t, ohlcv = tohlcv[0], tohlcv[1:]
-    t_utms = UnixTimeMs(t)
-    t_iso = t_utms.to_iso_timestr() # bad eg '2024-04-16T00:25:00.000Z'
-    assert t_iso == since
-    assert t_utms == since_utms
+    t_UnixTimeMs = UnixTimeMs(t)
+    t_iso_str = t_UnixTimeMs.to_iso_timestr() # bad eg '2024-04-16T00:25:00.000Z'
+    assert t_iso_str == tsince_iso_str
+    assert t_UnixTimeMs == tsince_UnixTimeMs
 
 
 @enforce_types
