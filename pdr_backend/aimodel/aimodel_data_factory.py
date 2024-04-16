@@ -1,12 +1,15 @@
 import logging
 import sys
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import polars as pl
+
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -65,6 +68,8 @@ class AimodelDataFactory:
         self,
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
+        feed: ArgFeed,
+        feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -98,15 +103,19 @@ class AimodelDataFactory:
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
         ss = self.ss.aimodel_ss
-
+        x_dim_len = 0
+        if not feeds:
+            x_dim_len = ss.n
+            feeds = ss.feeds
+        else:
+            x_dim_len = len(feeds) * ss.autoregressive_n
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
+            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in feeds
         ]
-
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
@@ -137,15 +146,14 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        ref_ss = self.ss
-        hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
+        hist_col = f"{feed.exchange}:{feed.pair}:{feed.signal}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
-        assert X.shape[1] == ss.n
+        assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
 
         assert "timestamp" not in x_df.columns

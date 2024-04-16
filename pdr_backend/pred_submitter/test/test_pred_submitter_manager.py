@@ -131,8 +131,8 @@ def test_submit_prediction_and_payout(
     feed_contract2,
     OCEAN,
 ):
-    # the user transfers 100 OCEAN tokens to the prediction manager
-    OCEAN.transfer(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
+    # the user approves 100 OCEAN tokens to the prediction manager
+    OCEAN.approve(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
 
     # get the next prediction epoch
     current_epoch = feed_contract1.get_current_epoch_ts()
@@ -140,11 +140,9 @@ def test_submit_prediction_and_payout(
     # set prediction epoch
     prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 2)
 
-    # get the OCEAN balance of the contract before submitting
-    bal_before = OCEAN.balanceOf(pred_submitter_mgr.contract_address)
-    assert bal_before == Wei(
-        100
-    ), "OCEAN balance of the contract should be 100 before submitting"
+    # get the OCEAN balance of the owner before submitting
+    bal_before = OCEAN.balanceOf(web3_config.owner)
+    assert bal_before > Wei(100), "Not enough balance to execute the test"
 
     feeds = [
         feed_contract1.contract_address,
@@ -167,8 +165,8 @@ def test_submit_prediction_and_payout(
     assert tx_receipt.status == 1, "Transaction failed"
 
     # get the OCEAN balance of the contract after submitting
-    bal_after = OCEAN.balanceOf(pred_submitter_mgr.contract_address)
-    assert bal_after == 0, "OCEAN balance of the contract should be 0 after submitting"
+    bal_after = OCEAN.balanceOf(web3_config.owner)
+    assert bal_before - bal_after == Wei(100), "Should have spent 100 OCEAN"
 
     # fast forward time to get payout
     web3_config.w3.provider.make_request(
@@ -183,17 +181,15 @@ def test_submit_prediction_and_payout(
     # time to claim payouts
 
     # get the OCEAN balance of the contract before claiming
-    bal_before = OCEAN.balanceOf(pred_submitter_mgr.contract_address)
+    bal_before = OCEAN.balanceOf(web3_config.owner)
 
     # claim
     pred_submitter_mgr.get_payout([prediction_epoch], feeds, wait_for_receipt=True)
 
-    # get the OCEAN balance of the contract after claiming
-    bal_after = OCEAN.balanceOf(pred_submitter_mgr.contract_address)
+    # get the OCEAN balance of the owner after claiming
+    bal_after = OCEAN.balanceOf(web3_config.owner)
 
-    assert bal_after == Wei(
-        100
-    ), "OCEAN balance of the contract should be 100 after claiming"
+    assert bal_after - bal_before == Wei(100), "Payout should be 100 OCEAN"
 
     # check predictions one by one
     pmup = pred_submitter_mgr.predictoor_up_address()

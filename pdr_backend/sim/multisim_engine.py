@@ -51,7 +51,8 @@ class MultisimEngine:
             point_i = self.ss.point_i(run_i)
             logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
             ppss = self.ppss_from_point(point_i)
-            sim_engine = SimEngine(ppss, multi_id=str(uuid.uuid4()))
+            feed = ppss.predictoor_ss.feeds[0]
+            sim_engine = SimEngine(ppss, feed=feed, multi_id=str(uuid.uuid4()))
             sim_engine.run()
             run_metrics = sim_engine.st.recent_metrics()
             self.update_csv(run_i, run_metrics, point_i)

@@ -52,7 +52,11 @@ def mock_get_opf_addresses():
 
 @enforce_types
 def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tmpdir):
-    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet", str(tmpdir))
+    ppss = mock_ppss(
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
+        "sapphire-mainnet",
+        str(tmpdir),
+    )
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-testnet"
