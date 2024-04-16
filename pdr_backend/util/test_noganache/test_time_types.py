@@ -58,6 +58,14 @@ def test_from_timestr():
 
 
 @enforce_types
+def test_from_iso_timestr():
+    t_iso_str = "2024-04-16T03:35:00.000Z"
+    t_UnixTimeMs = UnixTimeMs.from_iso_timestr(t_iso_str)
+    assert t_iso_str == t_UnixTimeMs.to_iso_timestr()
+    assert t_UnixTimeMs == 1713238500000
+
+
+@enforce_types
 def test_ut_to_timestr():
     # ensure it returns a str
     assert isinstance(UnixTimeMs(0).to_timestr(), str)

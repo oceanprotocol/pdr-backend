@@ -21,11 +21,11 @@ def clean_raw_ohlcv(
 ) -> list:
     """
     @description
-      From the raw data coming directly from exchange via safe_fetch_ohlcv(),
+      From the raw data coming directly from exchange via fetch_ohlcv(),
       condition it and account for corner cases.
 
     @arguments
-      raw_tohlcv_data -- output of safe_fetch_ohlcv(), see below
+      raw_tohlcv_data -- output of fetch_ohlcv(), see below
       feed - ArgFeed. eg Binance ETH/USDT
       st_ut -- min allowed time. A timestamp, in ms, in UTC
       fin_ut -- max allowed time. ""
