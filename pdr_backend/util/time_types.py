@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from enforce_typing import enforce_types
 
@@ -43,8 +43,8 @@ class UnixTimeMs(int):
         return UnixTimeMs(dt.timestamp() * 1000)
 
     @staticmethod
-    def from_dt(from_dt: datetime) -> "UnixTimeMs":
-        return UnixTimeMs(int(from_dt.timestamp() * 1000))
+    def from_dt(dt: datetime) -> "UnixTimeMs":
+        return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
     def from_timestr(timestr: str) -> "UnixTimeMs":
@@ -67,13 +67,20 @@ class UnixTimeMs(int):
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
         return UnixTimeMs.from_dt(dt)
 
+    @staticmethod
+    def from_iso_timestr(iso_timestr: str) -> "UnixTimeMs":
+        """Example iso_timestr: '2024-04-16T03:35:00.000Z'"""
+        dt = datetime.strptime(iso_timestr, "%Y-%m-%dT%H:%M:%S.%fZ")
+        dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
+        return UnixTimeMs.from_dt(dt)
+
     @enforce_types
     def to_dt(self) -> datetime:
         # precondition
         assert int(self) >= 0, self
 
         # main work
-        dt = datetime.utcfromtimestamp(int(self) / 1000)
+        dt = datetime.fromtimestamp(int(self) / 1000, UTC)
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
 
         # postcondition
