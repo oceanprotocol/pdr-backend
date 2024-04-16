@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from enforce_typing import enforce_types
 
@@ -80,7 +80,7 @@ class UnixTimeMs(int):
         assert int(self) >= 0, self
 
         # main work
-        dt = datetime.utcfromtimestamp(int(self) / 1000)
+        dt = datetime.fromtimestamp(int(self) / 1000, UTC)
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
 
         # postcondition
