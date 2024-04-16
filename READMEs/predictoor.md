@@ -116,7 +116,7 @@ First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake an
 Then, copy & paste your private keys as envvars. In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
 ### Deploy the Prediction Submitter Manager
@@ -179,7 +179,7 @@ First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEA
 Then, copy & paste your private keys as envvars. (You can skip this if keys are same as testnet.) In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
 Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-prediction-submitter-manager) and make sure to update `pred_submitter_mgr` in the `my_ppss.yaml` config, update the rest of it as desired.
