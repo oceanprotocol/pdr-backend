@@ -149,7 +149,7 @@ class AimodelDataFactory:
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
-        assert X.shape[1] == feeds.length
+        assert X.shape[1] == len(feeds)
         assert isinstance(x_df, pd.DataFrame)
 
         assert "timestamp" not in x_df.columns
