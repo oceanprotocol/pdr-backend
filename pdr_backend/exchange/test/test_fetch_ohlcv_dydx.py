@@ -89,7 +89,7 @@ def test_dydx__real_response_fromISO():
     limit = 1
 
     # get result
-    raw_tohlcv_data = safe_fetch_ohlcv_dydx(symbol, timeframe, since, limit)
+    raw_tohlcv_data = safe_fetch_ohlcv_dydx(symbol, timeframe, since_utms, limit)
     tohlcv = raw_tohlcv_data[0]
 
     # dydx api doesn't properly address fromISO. We must fix this, see #879
