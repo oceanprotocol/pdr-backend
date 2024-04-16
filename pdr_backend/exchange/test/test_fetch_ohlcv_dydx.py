@@ -3,7 +3,7 @@ import pytest
 import requests_mock
 
 from pdr_backend.exchange.constants import BASE_URL_DYDX
-from pdr_backend.exchange.fetch_ohlcv import (
+from pdr_backend.exchange.fetch_ohlcv_dydx import (
     safe_fetch_ohlcv_dydx,
     _dydx_ticker,
     _dydx_resolution,
