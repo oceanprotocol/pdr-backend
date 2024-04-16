@@ -48,7 +48,7 @@ You need a local copy of Ocean contract addresses [`address.json`](https://githu
 mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
 
 # copy from github to local directory. Or, use wget if Linux. Or, download via browser.
-curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+curl https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
 ```
 
 If you're running MacOS, then in console:
@@ -58,6 +58,9 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 ```
 
 ## 2. Simulate Modeling and Trading
+
+> [!WARNING]  
+> Simulation has been temporarily disabled as of version v0.3.3
 
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
@@ -106,18 +109,44 @@ Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire
 
 Let's get our predictoor bot running on testnet first.
 
-The bot does two-sided predictions, like in simulation. This also means it needs two Ethereum accounts, with keys PRIVATE_KEY and PRIVATE_KEY2.
+The bot does two-sided predictions, like in simulation.
 
 First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn, for both accounts. [Get them here](testnet-faucet.md).
 
 Then, copy & paste your private keys as envvars. In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Next, update `my_ppss.yaml` as desired.
+### Deploy the Prediction Submitter Manager
+
+Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
+
+```
+pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
+```
+
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
+
+```console
+cp ppss.yaml my_ppss.yaml
+```
+
+#### Update YAML config with the contract address
+
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr`:
+
+```
+predictoor_ss:
+  ...
+  pred_submitter_mgr: "CONTRACT_ADDRESS"
+  ...
+```
+
+Update the rest of the config as desired.
+
+### Running the bot
 
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
@@ -150,11 +179,10 @@ First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEA
 Then, copy & paste your private keys as envvars. (You can skip this if keys are same as testnet.) In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `my_ppss.yaml` as desired.
+Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-prediction-submitter-manager) and make sure to update `pred_submitter_mgr` in the `my_ppss.yaml` config, update the rest of it as desired.
 
 Then, run the bot. In console:
 

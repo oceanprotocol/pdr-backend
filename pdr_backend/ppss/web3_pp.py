@@ -325,6 +325,18 @@ class _MockEthWithTracking:
     def get_balance(self, account):  # pylint: disable=unused-argument
         return 100e18
 
+    def contract(self, address, abi):  # pylint: disable=unused-argument
+        return Mock()
+
+    def wait_for_transaction_receipt(self, tx_hash):
+        m = {}
+        m["status"] = 1
+        m["transactionHash"] = tx_hash
+        return m
+
+    def chain_id(self):
+        return 8996
+
 
 @enforce_types
 class _MockFeedContractWithTracking:
