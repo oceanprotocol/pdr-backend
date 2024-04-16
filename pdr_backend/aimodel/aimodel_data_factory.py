@@ -103,8 +103,12 @@ class AimodelDataFactory:
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
         ss = self.ss.aimodel_ss
+        x_dim_len = 0
         if not feeds:
+            x_dim_len = ss.n
             feeds = ss.feeds
+        else:
+            x_dim_len = len(feeds) * ss.autoregressive_n
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""
@@ -149,7 +153,7 @@ class AimodelDataFactory:
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
-        assert X.shape[1] == len(feeds)
+        assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
 
         assert "timestamp" not in x_df.columns
