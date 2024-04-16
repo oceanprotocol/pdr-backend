@@ -13,7 +13,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
-def test_safe_fetch_ohlcv_dydx__mocked_response():
+def test_dydx__mocked_response():
     # setup problem
     symbol = "BTC/USD"
     timeframe = "5m"
@@ -61,7 +61,7 @@ def test_safe_fetch_ohlcv_dydx__mocked_response():
 
 
 @enforce_types
-def test_safe_fetch_ohlcv_dydx__real_response():
+def test_dydx__real_response__basic():
     # setup problem
     symbol = "BTC/USD"
     timeframe = "5m"
@@ -75,14 +75,33 @@ def test_safe_fetch_ohlcv_dydx__real_response():
     tohlcv = raw_tohlcv_data[0]
     assert len(tohlcv) == 6
 
+    
+@enforce_types
+def test_dydx__real_response_fromISO():
+    # setup problem: 'since'
+    since_iso = "2024-02-27_00:00:00.000"
+    since_utms = UnixTimeMs.from_timestr(since_iso)
+    assert since_utms == 1708992000000
+    
+    # setup problem: the rest
+    symbol = "BTC/USD"
+    timeframe = "5m"
+    limit = 1
+
+    # get result
+    raw_tohlcv_data = safe_fetch_ohlcv_dydx(symbol, timeframe, since, limit)
+    tohlcv = raw_tohlcv_data[0]
+
     # dydx api doesn't properly address fromISO. We must fix this, see #879
-    # t, ohlcv = tohlcv[0], tohlcv[1:]
-    # assert t == 1709135400000
-    # assert ohlcv == "FIX ME"
+    t, ohlcv = tohlcv[0], tohlcv[1:]
+    t_utms = UnixTimeMs(t)
+    t_iso = t_utms.to_iso_timestr() # bad eg '2024-04-16T00:25:00.000Z'
+    assert t_iso == since
+    assert t_utms == since_utms
 
 
 @enforce_types
-def test_safe_fetch_ohlcv_dydx__bad_paths():
+def test_dydx__bad_paths():
     # setup problem
     symbol = "BTC/USD"
     timeframe = "5m"
