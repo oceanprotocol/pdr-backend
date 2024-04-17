@@ -28,6 +28,7 @@ bronze_pdr_predictions_schema = {
     "last_event_timestamp": Int64,
 }
 
+
 def get_bronze_pdr_predictions_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
 ):

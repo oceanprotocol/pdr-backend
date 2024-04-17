@@ -225,11 +225,13 @@ class ETL:
             [NamedTable(tb, TableType.NORMAL) for tb in table_names]
         )
 
-        logger.info("get_timestamp_values - max_timestamp_values: %s", max_timestamp_values)
+        logger.info(
+            "get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
+        )
         # check if all values are None in max_timestamp_values
         # and return the default_timestr if so
         if all(value is None for value in max_timestamp_values.values()):
-            return UnixTimeMs.from_timestr(default_timestr)    
+            return UnixTimeMs.from_timestr(default_timestr)
 
         values = []
         if len(max_timestamp_values) > 0:
