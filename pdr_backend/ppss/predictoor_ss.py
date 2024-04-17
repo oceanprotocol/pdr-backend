@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.predict_feeds import PredictFeed, PredictFeeds
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset, PredictFeeds
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
@@ -19,25 +19,13 @@ class PredictoorSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
 
     @enforce_types
-    def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
+    def __init__(self, d: dict):
         self.d = d
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
         
         if self.approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
             raise ValueError(s)
-        
-        if assert_feed_attributes:
-            missing_attributes = []
-            for attr in assert_feed_attributes:
-                for feed in self.feeds.feeds:
-                    if not getattr(feed, attr):
-                        missing_attributes.append(attr)
-
-            if missing_attributes:
-                raise AssertionError(
-                    f"Missing attributes {missing_attributes} for some feeds."
-                )
 
     # ------------------------------------------------------------------
     # yaml properties (except 'feeds' attribute, see below for that)
@@ -99,8 +87,8 @@ class PredictoorSS(StrMixin):
     # 'feeds' attribute and related
 
     @property
-    def feeds(self) -> PredictFeeds:
-        return PredictFeeds.from_array(self.d["feeds"])
+    def feeds(self) -> PredictTrainFeedsets:
+        return PredictTrainFeedsets.from_array(self.d["feeds"])
 
     @property
     def minimum_timeframe_seconds(self) -> int:
@@ -113,12 +101,12 @@ class PredictoorSS(StrMixin):
         return min_tf_seconds
 
     @enforce_types
-    def get_predict_feed(self, pair, timeframe, exchange) -> Optional[PredictFeed]:
-        # TODO: rename get_predict_feed(), after we've renamed PredictFeed
-        
-        for feed in self.feeds: # for PredictFeed in PredictFeeds
-            p: ArgFeed = feed.predict
-            if p.pair == pair and p.timeframe == timeframe and p.exchange == exchange:
+    def get_predict_train_feedset(self, pair, timeframe, exchange) -> Optional[PredictTrainFeedset]:        
+        for predict_train_feedset in self.predict_train_feedsets:
+            predict_feed: ArgFeed = predict_train_feedset.predict
+            if predict_feed.pair == pair and \
+               predict_feed.timeframe == timeframe and \
+               predict_feed.exchange == exchange:
                 return feed
         return None
 
@@ -162,7 +150,7 @@ class PredictoorSS(StrMixin):
 
 
 @enforce_types
-def predictoor_ss_feeds_test_list() -> list:
+def test_feedset_list() -> list:
     return [
         {
             "predict": "binance BTC/USDT c 5m",
@@ -177,15 +165,13 @@ def predictoor_ss_feeds_test_list() -> list:
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds=None,
-    input_feeds=None,
+    predict_train_feedsets: Optional[List] = None,
     pred_submitter_mgr="",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or predictoor_ss_feeds_test_list()
-    input_feeds = input_feeds or PredictFeeds.from_array(predict_feeds).feeds_str
+    predict_train_feedsets = predict_feeds or test_feedset_list()
     d = {
-        "feeds": predict_feeds,
+        "feeds": predict_train_feedsets,
         "approach": 1,
         "stake_amount": 1,
         "pred_submitter_mgr": pred_submitter_mgr,
@@ -197,6 +183,6 @@ def predictoor_ss_test_dict(
         "bot_only": {
             "s_until_epoch_end": 60,
         },
-        "aimodel_ss": aimodel_ss_test_dict(input_feeds),
+        "aimodel_ss": aimodel_ss_test_dict(),
     }
     return d

@@ -16,7 +16,7 @@ from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.cli.predict_feeds import PredictFeed
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
@@ -28,14 +28,15 @@ logger = logging.getLogger("sim_engine")
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
     @enforce_types
-    def __init__(self, ppss: PPSS, feed: PredictFeed, multi_id: Optional[str] = None):
-        self.feed = feed
-
-        # timeframe doesn't need to match
-        assert (
-            str(feed.predict.exchange),
-            str(feed.predict.pair),
-        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+    def __init__(
+            self,
+            ppss: PPSS,
+            predict_train_feedset: PredictTrainFeedset,
+            multi_id: Optional[str] = None,
+    ):
+        self.predict_train_feedset = predict_train_feedset
+        assert isinstance(self.tokcoin, str)
+        assert isinstance(self.usdcoin, str)
 
         self.ppss = ppss
 
@@ -59,20 +60,18 @@ class SimEngine:
             self.multi_id = str(uuid.uuid4())
 
     @property
+    def predict_feed(self) -> ArgFeed:
+        assert self.predict_train_feedset.predict
+
+    @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        base_str = self.feed.predict_base_str
-        if base_str is None:
-            raise ValueError("base_str is None")
-        return base_str
+        return self.predict_feed.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        quote_str = self.feed.predict_quote_str
-        if quote_str is None:
-            raise ValueError("quote_str is None")
-        return quote_str
+        return self.predict_feed.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -111,8 +110,10 @@ class SimEngine:
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
+        predict_feed = self.predict_train_feedset.predict
+        train_feeds = self.predict_train_feedset.train_on
         X, ycont, x_df, _ = data_f.create_xy(
-            mergedohlcv_df, testshift, feed=self.feed.predict
+            mergedohlcv_df, testshift, predict_feed, train_feeds,
         )
         colnames = list(x_df.columns)
 
@@ -132,7 +133,7 @@ class SimEngine:
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * self.feed.timeframe_ms)
+        ut = UnixTimeMs(recent_ut - testshift * predict_feed.timeframe_ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
@@ -265,7 +266,7 @@ class SimEngine:
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
-            self.feed.predict_pair_str, tokcoin_amt_recd
+            self.predict_feed.pair_str, tokcoin_amt_recd
         )
 
         logger.info(
@@ -302,7 +303,7 @@ class SimEngine:
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
-            self.feed.predict_pair_str, tokcoin_amt_send
+            self.predict_feed.pair_str, tokcoin_amt_send
         )
 
         logger.info(

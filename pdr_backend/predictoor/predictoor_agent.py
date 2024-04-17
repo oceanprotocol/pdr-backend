@@ -7,11 +7,12 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.cli.predict_feeds import PredictFeed
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.predictoor.stakes_per_slot import StakeTup, StakesPerSlot
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
@@ -19,36 +20,7 @@ from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("predictoor_agent")
-
-
-class PredictionSlotsData:
-    def __init__(self):
-        self.target_slots = {}
-
-    def add_prediction(self, slot, feed, stake_up, stake_down):
-        if slot not in self.target_slots:
-            self.target_slots[slot] = []
-        self.target_slots[slot].append((feed, stake_up, stake_down))
-
-    def get_predictions(self, slot):
-        return self.target_slots.get(slot, [])
-
-    def get_predictions_arr(self, slot):
-        stakes_up = []
-        stakes_down = []
-        feed_addrs = []
-
-        for feed, stake_up, stake_down in self.get_predictions(slot):
-            stakes_up.append(stake_up)
-            stakes_down.append(stake_down)
-            feed_addrs.append(feed.address)
-
-        return stakes_up, stakes_down, feed_addrs
-
-    @property
-    def slots(self):
-        return list(self.target_slots.keys())
-
+MAX_WEI = Wei(2**256 - 1)
 
 # pylint: disable=too-many-public-methods
 class PredictoorAgent:
@@ -76,19 +48,17 @@ class PredictoorAgent:
             self.ppss.web3_pp, pred_submitter_mgr_addr
         )
 
-        # set self.feed
-        cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
-        checksummed_addresses = [
-            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
-            for addr in cand_feeds.keys()
-        ]
-        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, Wei(2**256 - 1))
-        self.pred_submitter_mgr.approve_ocean(checksummed_addresses)
+        cand_feeds: Dict[str, SubgraphFeed] = \
+            ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
-
-        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
-            cand_feeds
-        )
+        
+        feed_addrs = cand_feeds.keys()
+        feed_addrs = self._to_checksum(addrs)
+        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
+        self.pred_submitter_mgr.approve_ocean(feed_addrs)
+        
+        self.feeds: List[SubgraphFeed] = \
+            ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
         if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 
@@ -114,19 +84,19 @@ class PredictoorAgent:
                 break
 
     @enforce_types
-    def prepare_stakes(self, feeds: List[SubgraphFeed]) -> PredictionSlotsData:
-        slot_data = PredictionSlotsData()
+    def calc_stakes_across_feeds(self, feeds: List[SubgraphFeed]) -> StakesPerSlot:
+        stakes = StakesPerSlot()
 
         seconds_per_epoch = None
         cur_epoch = None
 
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
-            predict_pair = self.ppss.predictoor_ss.get_predict_feed(
+            feedset = self.ppss.predictoor_ss.get_predict_train_feedset(
                 feed.pair, feed.timeframe, feed.source
             )
-            if predict_pair is None:
-                logger.error("No predict pair found for feed %s", feed)
+            if feedset is None:
+                logger.error("No (predict, train) pair found for feed %s", feed)
             seconds_per_epoch = feed.seconds_per_epoch
             cur_epoch = contract.get_current_epoch()
             next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
@@ -139,11 +109,12 @@ class PredictoorAgent:
             # get the target slot
 
             # get the stakes
-            stake_up, stake_down = self.calc_stakes(predict_pair)
+            stake_up, stake_down = self.calc_stakes(feedset)
             target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
-            slot_data.add_prediction(target_slot, feed, stake_up, stake_down)
+            tup = StakeTup(feed, stake_up, stake_down)
+            stakes.add_stake_at_slot(target_slot, tup)
 
-        return slot_data
+        return stakes
 
     @enforce_types
     def take_step(self):
@@ -161,19 +132,17 @@ class PredictoorAgent:
         self.prev_block_timestamp = UnixTimeS(self.cur_timestamp)
 
         # get payouts
-        # set predictoor_ss.bot_only.s_start_payouts to 0 to disable auto payouts
         self.get_payout()
 
-        slot_data = self.prepare_stakes(list(self.feeds.values()))
+        # for each feed, calculate up/down stake (eg via models)
+        feeds = list(self.feeds.values())
+        stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
 
-        for target_slot in slot_data.slots:
-            stakes_up, stakes_down, feed_addrs = slot_data.get_predictions_arr(
-                target_slot
-            )
-            feed_addrs = [
-                self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
-                for addr in feed_addrs
-            ]
+        # submit prediction txs
+        for target_slot in stakes.target_slots:
+            stakes_up, stakes_down, feed_addrs = \
+                stakes.get_stake_lists(target_slot)
+            feed_addrs = self._to_checksum(feed_addrs)
 
             required_OCEAN = Eth(0)
             for stake in stakes_up + stakes_down:
@@ -183,14 +152,18 @@ class PredictoorAgent:
                 return
 
             logger.info(self.status_str())
-            s = f"-> Predict result: {stakes_up} up, {stakes_down} down, feeds={feed_addrs}"
+            s = f"-> Predict result: {stakes_up} up, {stakes_down} down"
+            s += f", feeds={feed_addrs}"
             logger.info(s)
-            if required_OCEAN == 0:
+            
+            if required_OCEAN == Eth(0):
                 logger.warning("Done: no predictions to submit")
                 return
 
-            # submit prediction to chaineds]
-            self.submit_prediction_txs(stakes_up, stakes_down, target_slot, feed_addrs)
+            # submit prediction to chain
+            self.submit_prediction_txs(
+                stakes_up, stakes_down, target_slot, feed_addrs,
+            )
             self.prev_submit_epochs.append(target_slot)
 
             # start printing for next round
@@ -198,6 +171,14 @@ class PredictoorAgent:
                 print("" + "=" * 180)
             logger.info(self.status_str())
             logger.info("Waiting...")
+
+    @enforce_types
+    def _to_checksum(self, addrs: List[str]) -> List[str]:
+        checksummed_addrs = [
+            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
+            for addr in addrs
+        ]
+        return checksummed_addrs
 
     @property
     def cur_block(self):
@@ -285,7 +266,7 @@ class PredictoorAgent:
             logger.warning(s)
 
     @enforce_types
-    def calc_stakes(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
+    def calc_stakes(self, feedset: PredictTrainFeedset) -> Tuple[Eth, Eth]:
         """
         @return
           stake_up -- amt to stake up, in units of Eth
@@ -295,9 +276,9 @@ class PredictoorAgent:
         if approach == 1:
             return self.calc_stakes1()
         if approach == 2:
-            return self.calc_stakes2(feed)
+            return self.calc_stakes2(feedset)
         if approach == 3:
-            return self.calc_stakes3(feed)
+            return self.calc_stakes3(feedset)
         raise ValueError("Approach not supported")
 
     @enforce_types
@@ -317,7 +298,7 @@ class PredictoorAgent:
         return (stake_up, stake_down)
 
     @enforce_types
-    def calc_stakes2(self, feed: PredictFeed) -> Tuple[Eth, Eth]:
+    def calc_stakes2(self, feedset: PredictTrainFeedset) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 2.
@@ -328,10 +309,11 @@ class PredictoorAgent:
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 2
-        (stake_up, stake_down) = self.calc_stakes_2ss_model(feed)
+        (stake_up, stake_down) = self.calc_stakes_2ss_model(feedset)
         return (stake_up, stake_down)
 
-    def calc_stakes3(self, feed) -> Tuple[Eth, Eth]:
+    @enforce_types
+    def calc_stakes3(self, feedset) -> Tuple[Eth, Eth]:
         """
         @description
           Calculate up-vs-down stake according to approach 3.
@@ -342,7 +324,7 @@ class PredictoorAgent:
           stake_down -- amt to stake down, ""
         """
         assert self.ppss.predictoor_ss.approach == 3
-        (stake_up, stake_down) = self.calc_stakes_2ss_model(feed)
+        (stake_up, stake_down) = self.calc_stakes_2ss_model(feedset)
         if stake_up == stake_down:
             return (Eth(0), Eth(0))
 
@@ -353,7 +335,7 @@ class PredictoorAgent:
         return (Eth(0), stake_down - stake_up)
 
     @enforce_types
-    def calc_stakes_2ss_model(self, feed) -> Tuple[Eth, Eth]:
+    def calc_stakes_2ss_model(self, feedset) -> Tuple[Eth, Eth]:
         """
         @description
           Model-based calculate up-vs-down stake.
@@ -367,7 +349,10 @@ class PredictoorAgent:
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
         X, ycont, _, xrecent = data_f.create_xy(
-            mergedohlcv_df, testshift=0, feed=feed.predict, feeds=feed.train_on
+            mergedohlcv_df,
+            testshift=0,
+            predict_feed=feedset.predict,
+            train_feeds=feedset.train_on
         )
 
         curprice = ycont[-1]
@@ -421,6 +406,7 @@ class PredictoorAgent:
 
         return True
 
+    @enforce_types
     def get_payout(self):
         """Claims payouts"""
         if (
@@ -432,6 +418,7 @@ class PredictoorAgent:
 
         logger.info(self.status_str())
         logger.info("Running payouts")
+        
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_unique_epoch)
 

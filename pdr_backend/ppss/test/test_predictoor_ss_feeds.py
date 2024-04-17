@@ -8,8 +8,8 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 @enforce_types
 def test_predictoor_ss_feeds():
     d = predictoor_ss_test_dict()
-    assert "feeds" in d
-    d["feeds"] = [
+    assert "predict_train_feedsets" in d
+    d["predict_train_feedsets"] = [
         {
             "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
             "train_on": [
@@ -56,4 +56,4 @@ def test_predictoor_ss_feeds():
     
     predictoor_ss = PredictoorSS(feed_dict)
     
-    assert predictoor_ss.feeds.to_list() == expected
+    assert predictoor_ss.predict_train_feedsets.to_list() == expected

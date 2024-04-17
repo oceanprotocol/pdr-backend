@@ -38,8 +38,8 @@ def _constructor_d_with_fast_runtime(tmpdir):
     s = fast_test_yaml_str(tmpdir)
     constructor_d = PPSS.constructor_dict(yaml_str=s)
 
-    predict_feed = "binanceus BTC/USDT c 5m"
-    input_feeds = [predict_feed]
+    predict_train_feedset = "binanceus BTC/USDT c 5m"
+    input_feeds = [predict_train_feedset]
 
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
@@ -50,7 +50,7 @@ def _constructor_d_with_fast_runtime(tmpdir):
 
     # predictoor ss
     d = predictoor_ss_test_dict(
-        [{"train_on": predict_feed, "predict": predict_feed}], input_feeds
+        [{"train_on": predict_train_feedset, "predict": predict_feed}], input_feeds
     )
     d["aimodel_ss"]["max_n_train"] = 100
     constructor_d["predictoor_ss"] = d

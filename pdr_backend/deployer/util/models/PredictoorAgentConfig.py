@@ -49,15 +49,13 @@ class PredictoorAgentConfig(SingleAgentConfig):
     ):
         lake_feed_name = full_pair_name.replace(" c", "")
         override_feed = [
-            f"--predictoor_ss.predict_feed={full_pair_name}",
-            f'--predictoor_ss.aimodel_ss.input_feeds=["{full_pair_name}"]',
             f'--lake_ss.feeds=["{lake_feed_name}"]',
+            f'--predictoor_ss.predict_train_feedsets=["predict":{full_pair_name},"train_on":[{full_pair_name}]]',
         ]
         if with_apostrophe:
             override_feed = [
-                f'--predictoor_ss.predict_feed="{full_pair_name}"',
-                f"--predictoor_ss.aimodel_ss.input_feeds='[\"{full_pair_name}\"]'",
                 f"--lake_ss.feeds='[\"{lake_feed_name}\"]'",
+                f"--predictoor_ss.predict_train_feedsets='[\"predict\":{full_pair_name},\"train_on\":[{full_pair_name}]]",
             ]
         override_stake = [f"--predictoor_ss.stake_amount={stake_amt}"]
         override_s_until = [

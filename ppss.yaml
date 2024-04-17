@@ -9,7 +9,7 @@ lake_ss:
   fin_timestr: now # ending date for data
 
 predictoor_ss:
-  feeds: 
+  predict_train_feedsets: 
     - predict: binance BTC/USDT ETH/USDT c 5m
       train_on:
       - binance BTC/USDT ETH/USDT c 5m

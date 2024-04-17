@@ -11,8 +11,8 @@ def test_predictoor_ss():
     # build PredictoorSS
     d = predictoor_ss_test_dict()
 
-    assert "feeds" in d
-    d["feeds"] = [
+    assert "predict_train_feedset" in d
+    d["predict_train_feedset"] = [
         {
             "predict": "binance BTC/USDT c 5m",
             "train_on": "binance BTC/USDT c 5m",
@@ -59,28 +59,28 @@ def test_predictoor_ss_test_dict():
     assert type(f) == list
 
     # test 5m
-    predict_feeds = [
+    predict_train_feedsets = [
         {
             "predict": "binance ETH/USDT c 5m",
             "train_on": "binance ETH/USDT ADA/USDT c 5m",
         }
     ]
-    d = predictoor_ss_test_dict(predict_feeds)
-    assert d["feeds"] == predict_feeds
+    d = predictoor_ss_test_dict(predict_train_feedsets)
+    assert d["feeds"] == predict_train_feedsets
     assert d["aimodel_ss"]["input_feeds"] == [
         "binance ETH/USDT c 5m",
         "binance ADA/USDT c 5m",
     ]
 
     # test 1h
-    predict_feeds = [
+    predict_train_feedsets = [
         {
             "predict": "binance ETH/USDT c 1h",
             "train_on": "binance ETH/USDT c 1h",
         }
     ]
-    d = predictoor_ss_test_dict(predict_feeds)
-    assert d["feeds"] == predict_feeds
+    d = predictoor_ss_test_dict(predict_train_feedsets)
+    assert d["feeds"] == predict_train_feedsets
     assert d["aimodel_ss"]["input_feeds"] == ["binance ETH/USDT c 1h"]
 
     # test s_start_payouts attribute set
