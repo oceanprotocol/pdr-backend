@@ -111,7 +111,7 @@ class PredictoorAgent:
             # get the stakes
             stake_up, stake_down = self.calc_stakes(feedset)
             target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
-            tup = StakeTup(feed, stake_up, stake_down)
+            tup = StakeTup((feed, stake_up, stake_down))
             stakes.add_stake_at_slot(target_slot, tup)
 
         return stakes

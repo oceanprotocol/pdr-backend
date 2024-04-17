@@ -2,7 +2,10 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset, PredictFeeds
+from pdr_backend.cli.predict_train_feedsets import (
+    PredictTrainFeedset,
+    PredictTrainFeedsets,
+)
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
@@ -28,7 +31,7 @@ class PredictoorSS(StrMixin):
             raise ValueError(s)
 
     # ------------------------------------------------------------------
-    # yaml properties (except 'feeds' attribute, see below for that)
+    # yaml properties (except feeds-related attributes, see below for that)
 
     @property
     def approach(self) -> int:
@@ -84,11 +87,11 @@ class PredictoorSS(StrMixin):
         return self.d["pred_submitter_mgr"]
 
     # ------------------------------------------------------------------
-    # 'feeds' attribute and related
+    # 'predict_train_feedsets' attribute and related
 
     @property
-    def feeds(self) -> PredictTrainFeedsets:
-        return PredictTrainFeedsets.from_array(self.d["feeds"])
+    def predict_train_feedsets(self) -> PredictTrainFeedsets:
+        return PredictTrainFeedsets.from_array(self.d["predict_train_feedsets"])
 
     @property
     def minimum_timeframe_seconds(self) -> int:
@@ -150,7 +153,7 @@ class PredictoorSS(StrMixin):
 
 
 @enforce_types
-def test_feedset_list() -> list:
+def feedset_test_list() -> list:
     return [
         {
             "predict": "binance BTC/USDT c 5m",
@@ -165,13 +168,13 @@ def test_feedset_list() -> list:
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_train_feedsets: Optional[List] = None,
-    pred_submitter_mgr="",
+    feedset_list: Optional[List] = None,
+    pred_submitter_mgr = "",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_train_feedsets = predict_feeds or test_feedset_list()
+    feedset_list = feedset_list or feedset_test_list()
     d = {
-        "feeds": predict_train_feedsets,
+        "predict_train_feedsets": feedset_list,
         "approach": 1,
         "stake_amount": 1,
         "pred_submitter_mgr": pred_submitter_mgr,
@@ -182,6 +185,7 @@ def predictoor_ss_test_dict(
         },
         "bot_only": {
             "s_until_epoch_end": 60,
+            "s_start_payouts": 0,
         },
         "aimodel_ss": aimodel_ss_test_dict(),
     }

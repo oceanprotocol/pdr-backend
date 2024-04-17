@@ -102,7 +102,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         assert lake_fs
         assert feedsets
 
-        # lake feeds should hold all predict feeds and train feeds. Does it?
+        # does lake feeds hold each predict feed? Each train feed?
         # - check for matching {exchange, pair, timeframe} but not {signal}
         #   because lake holds all signals o,h,l,c,v
         for feedset in feedsets:
@@ -118,7 +118,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
             for train_f in train_fs:
                 if not lake_fs.contains_combination(
-                    lake_f.exchange, predict_f.pair, predict_f.timeframe
+                    predict_f.exchange, predict_f.pair, predict_f.timeframe
                 ):
                     s = "a training feed isn't in lake_ss.feeds"
                     s += f"\n  training feed = {train_f}"
@@ -193,7 +193,7 @@ def mock_feed_ppss(
 
 @enforce_types
 def mock_ppss(
-    feeds: list,
+    feedset_list: list,
     network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
@@ -204,7 +204,7 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
 
     ppss = PPSS(yaml_str=yaml_str, network=network)
-    predict_train_feedsets = PredictTrainFeedsets.from_array(feeds)
+    predict_train_feedsets = PredictTrainFeedsets.from_array(feedset_list)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
 
@@ -220,7 +220,8 @@ def mock_ppss(
 
     assert hasattr(ppss, "predictoor_ss")
     d = predictoor_ss_test_dict(
-        predict_train_feedsets=feeds, pred_submitter_mgr=pred_submitter_mgr
+        feedset_list=feedset_list,
+        pred_submitter_mgr=pred_submitter_mgr,
     )
     ppss.predictoor_ss = PredictoorSS(d)
 

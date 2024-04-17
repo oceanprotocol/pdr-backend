@@ -2,7 +2,7 @@
 import pytest
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset, PredictFeeds
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset, PredictTrainFeedsets
 
 
 @pytest.fixture

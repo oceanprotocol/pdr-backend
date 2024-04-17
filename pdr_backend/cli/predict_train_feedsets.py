@@ -5,9 +5,11 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.parse_feed_obj import parse_feed_obj
+from pdr_backend.cli.predict_train_feedset import PredictTrainFeedset
 
 
-class PredictTrainFeedsets(List[PredictFeed]):
+class PredictTrainFeedsets(List[PredictTrainFeedset]):
     """
     Easy manipulation of all (predict/train_on) PredictTrainFeedset objects.
     Includes a way to parse from the raw yaml inputs.
@@ -17,10 +19,10 @@ class PredictTrainFeedsets(List[PredictFeed]):
         super().__init__(feedsets)
 
     @classmethod
-    def from_array(cls, feedsets_list: List[dict]) -> PredictTrainFeedsets:
+    def from_array(cls, feedset_list: List[dict]) -> "PredictTrainFeedsets":
         """
         @arguments
-          feedsets_list -- yaml-parsed list of dicts, where each entry has
+          feedset_list -- yaml-parsed list of dicts, where each entry has
             a "predict" and "train_on" item. Example below.
 
         @return
@@ -28,7 +30,7 @@ class PredictTrainFeedsets(List[PredictFeed]):
 
         @notes
 
-        Example 'feedsets_list' = [
+        Example 'feedset_list' = [
             {
                 "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
                 "train_on": [
@@ -42,7 +44,7 @@ class PredictTrainFeedsets(List[PredictFeed]):
             },
         """
         return_list = []
-        for feedset_dict in feedsets_list:
+        for feedset_dict in feedset_list:
             predict_dict = feedset_dict.get("predict")
             train_dict = feedset_dict.get("train_on")
             if train_dict is None:

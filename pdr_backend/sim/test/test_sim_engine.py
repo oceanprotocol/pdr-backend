@@ -15,13 +15,13 @@ def test_sim_engine(tmpdir):
     ppss = PPSS(yaml_str=s, network="development")
 
     # set feeds; we'll use them below
-    feedsets_list = [
+    feedset_list = [
         {
             "predict": "binanceus BTC/USDT c 5m",
             "train_on": "binanceus BTC/USDT c 5m",
         }
     ]
-    feedsets = PredictTrainFeedsets.from_array(feedsets_list)
+    feedsets = PredictTrainFeedsets.from_array(feedset_list)
     
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
@@ -32,7 +32,7 @@ def test_sim_engine(tmpdir):
     ppss.lake_ss = LakeSS(d)
 
     # predictoor ss
-    d = predictoor_ss_test_dict(feedsets_list)
+    d = predictoor_ss_test_dict(feedset_list)
     assert "approach" in d["aimodel_ss"]
     assert "max_n_train" in d["aimodel_ss"]
     assert "autoregressive_n" in d["aimodel_ss"]
