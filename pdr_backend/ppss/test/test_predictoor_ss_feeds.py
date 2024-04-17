@@ -1,28 +1,32 @@
+from enforce_typing import enforce_types
+
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 
 
-def test_predict_feed_mixin():
-    feed_dict = {
-        "feeds": [
-            {
-                "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
-                "train_on": [
-                    "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
-                    "kraken BTC/USDT c 5m",
-                ],
-            },
-            {
-                "predict": "binance ETH/USDT ADA/USDT c 5m",
-                "train_on": "binance BTC/USDT ETH/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
-            },
-            {
-                "predict": "binance BTC/USDT c 1h",
-                "train_on": "binance BTC/USDT ETH/USDT c 5m",
-            },
-        ]
-    }
+@enforce_types
+def test_predictoor_ss_feeds():
+    d = predictoor_ss_test_dict()
+    assert "feeds" in d
+    d["feeds"] = [
+        {
+            "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
+            "train_on": [
+                "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
+                "kraken BTC/USDT c 5m",
+            ],
+        },
+        {
+            "predict": "binance ETH/USDT ADA/USDT c 5m",
+            "train_on": "binance BTC/USDT ETH/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
+        },
+        {
+            "predict": "binance BTC/USDT c 1h",
+            "train_on": "binance BTC/USDT ETH/USDT c 5m",
+        },
+    ]
+    
     expected = [
         {
             "predict": ArgFeed.from_str("binance BTC/USDT c 5m"),
@@ -49,6 +53,7 @@ def test_predict_feed_mixin():
             "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT c 5m"),
         },
     ]
-    parser = PredictFeedMixin(feed_dict)
-
-    assert parser.feeds.to_list() == expected
+    
+    predictoor_ss = PredictoorSS(feed_dict)
+    
+    assert predictoor_ss.feeds.to_list() == expected

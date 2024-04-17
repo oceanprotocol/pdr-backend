@@ -1,13 +1,12 @@
+from enforce_typing import enforce_types
+import numpy as np
+from numpy.testing import assert_array_equal
 import pandas as pd
 import polars as pl
 import pytest
-import numpy as np
 
-from numpy.testing import assert_array_equal
-from enforce_typing import enforce_types
-
-from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
@@ -235,7 +234,6 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
 
     d = predictoor_ss_test_dict()
     assert "feeds" in d
-    assert "input_feeds" in d["aimodel_ss"]
     d["predict_feed"] = PredictFeeds.from_array(
         [
             {
@@ -244,14 +242,9 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
             }
         ]
     )
-    d["aimodel_ss"]["input_feeds"] = [
-        "binanceus BTC/USDT,ETH/USDT hl",
-        "kraken BTC/USDT,ETH/USDT hl",
-    ]
     ss = PredictoorSS(d)
 
     assert ss.aimodel_ss.autoregressive_n == 3
-    assert ss.aimodel_ss.n == (4 + 4) * 3
 
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 

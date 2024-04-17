@@ -1,10 +1,12 @@
-from enforce_typing import enforce_types
-from pdr_backend.cli.predict_feeds import PredictFeeds
+from typing import Dict, List, Optional
 
+from enforce_typing import enforce_types
+
+from pdr_backend.cli.predict_feeds import PredictFeed, PredictFeeds
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
-from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
-from pdr_backend.util.strutil import StrMixin
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.strutil import StrMixin
 
 # Approaches:
 #  1: Two-sided: Allocate up-vs-down stake equally (50-50). Baseline.
@@ -13,22 +15,32 @@ from pdr_backend.util.currency_types import Eth
 CAND_APPROACHES = [1, 2, 3]
 
 
-class PredictoorSS(PredictFeedMixin, StrMixin):
+class PredictoorSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEEDS_KEY = "feeds"
 
     @enforce_types
-    def __init__(self, d: dict):
-        super().__init__(d, assert_feed_attributes=["timeframe"])
+    def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
+        self.d = d
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
+        
         if self.approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
             raise ValueError(s)
+        
+        if assert_feed_attributes:
+            missing_attributes = []
+            for attr in assert_feed_attributes:
+                for feed in self.feeds.feeds:
+                    if not getattr(feed, attr):
+                        missing_attributes.append(attr)
 
-    # --------------------------------
-    # yaml properties
+            if missing_attributes:
+                raise AssertionError(
+                    f"Missing attributes {missing_attributes} for some feeds."
+                )
 
-    # (predict_feeds defined in base)
+    # ------------------------------------------------------------------
+    # yaml properties (except 'feeds' attribute, see below for that)
 
     @property
     def approach(self) -> int:
@@ -83,6 +95,58 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
     def pred_submitter_mgr(self) -> str:
         return self.d["pred_submitter_mgr"]
 
+    # ------------------------------------------------------------------
+    # 'feeds' attribute and related
+
+    @property
+    def feeds(self) -> PredictFeeds:
+        return PredictFeeds.from_array(self.d["feeds"])
+
+    @property
+    def minimum_timeframe_seconds(self) -> int:
+        min_tf_seconds = int(1e9)
+        for feed in self.feeds:
+            assert (
+                feed.predict.timeframe is not None
+            ), f"Feed: {feed} is missing timeframe"
+            min_tf_seconds = min(min_tf_seconds, feed.predict.timeframe.s)
+        return min_tf_seconds
+
+    @enforce_types
+    def get_predict_feed(self, pair, timeframe, exchange) -> Optional[PredictFeed]:
+        # TODO: rename get_predict_feed(), after we've renamed PredictFeed
+        
+        for feed in self.feeds: # for PredictFeed in PredictFeeds
+            p: ArgFeed = feed.predict
+            if p.pair == pair and p.timeframe == timeframe and p.exchange == exchange:
+                return feed
+        return None
+
+    @enforce_types
+    def get_feed_from_candidates(
+        self, cand_feeds: Dict[str, SubgraphFeed]
+    ) -> Dict[str, SubgraphFeed]:
+        """
+        @description
+          Return a set of feeds as the intersection of
+          (1) candidate feeds read from chain, ie the input SubgraphFeeds; and
+          (2) self's feeds to predict, ie input by PPSS
+        """
+        result: Dict[str, SubgraphFeed] = {}
+
+        allowed_tups = [
+            (str(feed.exchange), str(feed.pair), str(feed.timeframe))
+            for feed in self.feeds.feeds
+        ]
+
+        for sg_key, sg_feed in cand_feeds.items():
+            assert isinstance(sg_feed, SubgraphFeed)
+
+            if (sg_feed.source, sg_feed.pair, sg_feed.timeframe) in allowed_tups:
+                result[sg_key] = sg_feed
+
+        return result
+
     # --------------------------------
     # setters (add as needed)
     @enforce_types
@@ -97,7 +161,8 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
 # utilities for testing
 
 
-def example_predict_feeds() -> list:
+@enforce_types
+def predictoor_ss_feeds_test_list() -> list:
     return [
         {
             "predict": "binance BTC/USDT c 5m",
@@ -117,7 +182,7 @@ def predictoor_ss_test_dict(
     pred_submitter_mgr="",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or example_predict_feeds()
+    predict_feeds = predict_feeds or predictoor_ss_feeds_test_list()
     input_feeds = input_feeds or PredictFeeds.from_array(predict_feeds).feeds_str
     d = {
         "feeds": predict_feeds,

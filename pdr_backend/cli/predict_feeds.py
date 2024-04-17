@@ -1,5 +1,7 @@
 from typing import List, Optional, Union
+
 from enforce_typing import enforce_types
+
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
@@ -27,8 +29,23 @@ def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
     return parsed_objs
 
 
-@enforce_types
 class PredictFeed:
+    """
+    Easy manipulation of a single (predict feed / train_on feeds).
+
+    To be precise, it has:
+    - 1 feed to predict
+    - >=1 feeds as inputs to the model
+
+    Therefore 'PredictFeed' is a misnomer, since it isn't just one feed. 
+    TODO: rename PredictFeed, PredictFeeds, predict_feeds.py
+    Candidate names:
+      PredictTrainFeedSet, # favoriate
+      PredictTrainFeedGroup,
+      PredictTrainFeedset,
+      PredictoorTrainFeedset,
+    """
+    @enforce_types
     def __init__(self, predict: ArgFeed, train_on: ArgFeeds):
         self.predict: ArgFeed = predict
         self.train_on: ArgFeeds = train_on
@@ -38,6 +55,7 @@ class PredictFeed:
         parsed_train_on: ArgFeeds = parse_feed_obj(train_on)
         return cls(predict, parsed_train_on)
 
+    @enforce_types
     def to_dict(self):
         return {"predict": self.predict, "train_on": self.train_on}
 
@@ -63,13 +81,40 @@ class PredictFeed:
         return ArgPair(self.predict.pair).pair_str
 
 
-@enforce_types
 class PredictFeeds(List[PredictFeed]):
+    """
+    Easy manipulation of all (predict/train_on) PredictFeed objects.
+    Includes a way to parse from the raw yaml inputs.
+    """
+    @enforce_types
     def __init__(self, feeds: List[PredictFeed]):
         super().__init__(feeds)
 
     @classmethod
-    def from_array(cls, feeds: List[dict]):
+    def from_array(cls, feeds: List[dict]) -> PredictFeeds:
+        """
+        @arguments
+          feeds -- yaml-parsed list of dicts, where each entry has
+            a "predict" and "train_on" item. Example below.
+
+        @return
+          PredictFeeds
+
+        @notes
+
+        Example 'feeds' = [
+            {
+                "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
+                "train_on": [
+                    "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
+                    "kraken BTC/USDT c 5m",
+                ],
+            },
+            {
+                "predict": "binance ETH/USDT ADA/USDT c 5m",
+                "train_on": "binance BTC/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
+            },
+        """
         fin = []
         for pairs in feeds:
             predict = pairs.get("predict")
@@ -117,5 +162,6 @@ class PredictFeeds(List[PredictFeed]):
             epoch = min(epoch, feed.predict.timeframe.s)
         return int(epoch)
 
+    @enforce_types
     def to_list(self) -> List[dict]:
         return [feed.to_dict() for feed in self]

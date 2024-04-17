@@ -160,10 +160,8 @@ class MockModel:
 
     def predict_ptrue(self, X: np.ndarray) -> np.ndarray:
         ar_n = self.aimodel_ss.autoregressive_n
-        n_feeds = self.aimodel_ss.n_feeds
-        (n_points, n_vars) = X.shape
+        (n_points, _) = X.shape
         assert n_points == 1  # this mock can only handle 1 input point
-        assert n_vars == self.aimodel_ss.n == ar_n * n_feeds
 
         CLOSE_VALS = X
         prob_up = np.sum(CLOSE_VALS) / 1e6
@@ -202,7 +200,6 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
             2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
         )
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
-        assert aimodel_ss.n_feeds == 1
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
@@ -246,7 +243,6 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
 
         assert len(feeds) == 2
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
-        assert aimodel_ss.n_feeds == 2
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss

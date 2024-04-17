@@ -6,7 +6,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.predict_feeds import PredictFeeds
-from pdr_backend.ppss.predictoor_ss import example_predict_feeds
+from pdr_backend.ppss.predictoor_ss import predictoor_ss_feeds_test_list
 
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_feed_ppss, mock_ppss
 
@@ -72,13 +72,13 @@ def test_mock_feed_ppss():
 
 @enforce_types
 def test_mock_ppss_simple():
-    ppss = mock_ppss(example_predict_feeds(), "sapphire-mainnet")
+    ppss = mock_ppss(predictoor_ss_feeds_test_list(), "sapphire-mainnet")
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_default_network_development():
-    ppss = mock_ppss(example_predict_feeds())
+    ppss = mock_ppss(predictoor_ss_feeds_test_list())
     assert ppss.web3_pp.network == "development"
 
 
@@ -108,7 +108,6 @@ def test_mock_ppss_onefeed1(feed_str):
     assert ppss.predictoor_ss.d["feeds"] == [
         {"predict": feed_str, "train_on": feed_str}
     ]
-    assert ppss.predictoor_ss.aimodel_ss.d["input_feeds"] == [feed_str]
     assert ppss.trader_ss.d["feed"] == feed_str
     assert ppss.trueval_ss.d["feeds"] == [feed_str]
     assert ppss.dfbuyer_ss.d["feeds"] == [feed_str]
@@ -132,7 +131,6 @@ def test_mock_ppss_manyfeed():
 
     assert ppss.lake_ss.d["feeds"] == predict_feeds.feeds_str
     assert ppss.predictoor_ss.d["feeds"] == feeds
-    assert ppss.predictoor_ss.aimodel_ss.d["input_feeds"] == predict_feeds.feeds_str
     assert ppss.trader_ss.d["feed"] == predict_feeds.feeds_str[0]
     assert ppss.trueval_ss.d["feeds"] == predict_feeds.feeds_str
     assert ppss.dfbuyer_ss.d["feeds"] == predict_feeds.feeds_str
@@ -143,7 +141,7 @@ def test_mock_ppss_manyfeed():
 @enforce_types
 def test_verify_feed_dependencies():
     ppss = mock_ppss(
-        example_predict_feeds(),
+        predictoor_ss_feeds_test_list(),
         "sapphire-mainnet",
     )
     ppss.verify_feed_dependencies()
@@ -151,7 +149,7 @@ def test_verify_feed_dependencies():
     # don't fail if aimodel needs more ohlcv feeds for same exchange/pair/time
     ppss2 = deepcopy(ppss)
     ppss2.predictoor_ss.aimodel_ss.d["input_feeds"] = PredictFeeds.from_array(
-        example_predict_feeds()
+        predictoor_ss_feeds_test_list()
     ).feeds_str
     ppss2.verify_feed_dependencies()
 
