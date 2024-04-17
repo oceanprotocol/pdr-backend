@@ -2,14 +2,21 @@ import os
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.lake_cli import (
+    PersistentDataStore,
+    do_etl_drop,
+    do_etl_update,
     do_lake_describe,
     do_lake_query,
     do_lake_subcommand,
+    do_raw_drop,
+    do_raw_update,
     get_lake_dir,
 )
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
@@ -71,3 +78,114 @@ def test_do_lake_query(caplog):
         do_lake_query(query, args)
 
     assert "Error querying lake: boom!" in caplog.text
+
+
+@enforce_types
+def test_do_lake_raw_delegation():
+    args = ["raw", "drop", "lake_data", "2021-01-01"]
+
+    pds_mock = Mock()
+
+    with patch("pdr_backend.cli.lake_cli.do_raw_drop") as raw_drop:
+        with patch(
+            "pdr_backend.cli.lake_cli.PersistentDataStore", return_value=pds_mock
+        ):
+            do_lake_subcommand(args)
+
+    assert raw_drop.called
+
+    args.append("2021-01-01")
+    with pytest.raises(SystemExit):
+        # raw does not recognize the extra END argument
+        do_lake_subcommand(args)
+
+    args[1] = "update"
+
+    with patch("pdr_backend.cli.lake_cli.do_raw_update") as raw_update:
+        with patch("pdr_backend.cli.lake_cli.PersistentDataStore", return_value=Mock()):
+            do_lake_subcommand(args)
+
+    assert raw_update.called
+
+    args[3] = "invalid date"
+
+    with pytest.raises(SystemExit):
+        # end date is invalid
+        do_lake_subcommand(args)
+
+
+@enforce_types
+def test_do_lake_etl_delegation():
+    args = ["etl", "drop", "lake_data", "2021-01-01"]
+
+    pds_mock = Mock()
+
+    with patch("pdr_backend.cli.lake_cli.do_etl_drop") as etl_drop:
+        with patch(
+            "pdr_backend.cli.lake_cli.PersistentDataStore", return_value=pds_mock
+        ):
+            do_lake_subcommand(args)
+
+    assert etl_drop.called
+    assert isinstance(etl_drop.call_args[0][1].ST, UnixTimeMs)
+
+    args.append("2021-01-01")
+    with pytest.raises(SystemExit):
+        # raw does not recognize the extra END argument
+        do_lake_subcommand(args)
+
+    args[1] = "update"
+
+    with patch("pdr_backend.cli.lake_cli.do_etl_update") as etl_update:
+        with patch("pdr_backend.cli.lake_cli.PersistentDataStore", return_value=Mock()):
+            do_lake_subcommand(args)
+
+    assert etl_update.called
+
+
+@enforce_types
+def test_do_lake_raw_drop(capsys):
+    args = Namespace()
+    args.ST = UnixTimeMs.from_timestr("2021-01-01")
+
+    pds = Mock(spec=PersistentDataStore)
+    do_raw_drop(pds, args)
+    assert "TODO: start ms = 1609459200000" in capsys.readouterr().out
+
+
+@enforce_types
+def test_do_lake_raw_update(capsys):
+    args = Namespace()
+    args.ST = UnixTimeMs.from_timestr("2021-01-01")
+    args.END = UnixTimeMs.from_timestr("2021-01-02")
+
+    pds = Mock(spec=PersistentDataStore)
+    do_raw_update(pds, args)
+    assert (
+        "TODO: start ms = 1609459200000, end ms = 1609545600000"
+        in capsys.readouterr().out
+    )
+
+
+@enforce_types
+def test_do_lake_etl_drop(capsys):
+    args = Namespace()
+    args.ST = UnixTimeMs.from_timestr("2021-01-01")
+
+    pds = Mock(spec=PersistentDataStore)
+    do_etl_drop(pds, args)
+    assert "TODO: start ms = 1609459200000" in capsys.readouterr().out
+
+
+@enforce_types
+def test_do_lake_etl_update(capsys):
+    args = Namespace()
+    args.ST = UnixTimeMs.from_timestr("2021-01-01")
+    args.END = UnixTimeMs.from_timestr("2021-01-02")
+
+    pds = Mock(spec=PersistentDataStore)
+    do_etl_update(pds, args)
+    assert (
+        "TODO: start ms = 1609459200000, end ms = 1609545600000"
+        in capsys.readouterr().out
+    )

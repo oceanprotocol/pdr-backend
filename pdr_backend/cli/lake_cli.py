@@ -6,20 +6,54 @@ from enforce_typing import enforce_types
 
 from pdr_backend.analytics.lakeinfo import LakeInfo
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
-LAKE_SUBCOMMANDS = ["describe", "query"]
+LAKE_SUBCOMMANDS = ["describe", "query", "raw", "etl"]
 
 
+# utilities
+@enforce_types
+def timestr(s: str) -> UnixTimeMs:
+    try:
+        return UnixTimeMs.from_timestr(s)
+    except ValueError as exc:
+        raise TypeError(
+            f"Invalid timestr value {s}. Please use the format 'yyyy-mm-dd'."
+        ) from exc
+
+
+@enforce_types
+def get_lake_dir(s: str):
+    if s != os.path.abspath(s):  # rel path given; needs an abs path
+        return os.path.abspath(s)
+    # abs path given
+    return s
+
+
+# entrypoint
 def do_lake_subcommand(args):
     assert args[0] in LAKE_SUBCOMMANDS, f"Invalid lake subcommand: {args[0]}"
 
     parser = ArgumentParser()
     parser.add_argument("subcommand", type=str, help="")
+
+    if args[0] in ["raw", "etl"]:
+        parser.add_argument(
+            "raw_subcommand_type",
+            type=str,
+            choices=["drop", "update"],
+            help="drop or update",
+        )
+
     parser.add_argument("LAKE_DIR", type=str, help="The directory of the lake")
 
     if args[0] == "query":
         parser.add_argument("QUERY", type=str, help="The query to run")
+    elif args[0] in ["raw", "etl"]:
+        parser.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
+        if args[1] == "update":
+            parser.add_argument("END", type=timestr, help="End date yyyy-mm-dd")
 
     args = parser.parse_args(args)
     lake_dir = get_lake_dir(args.LAKE_DIR)
@@ -27,13 +61,6 @@ def do_lake_subcommand(args):
     func_name = f"do_lake_{args.subcommand}"
     func = globals().get(func_name)
     func(lake_dir, args)
-
-
-def get_lake_dir(s):
-    if s != os.path.abspath(s):  # rel path given; needs an abs path
-        return os.path.abspath(s)
-    # abs path given
-    return s
 
 
 @enforce_types
@@ -56,3 +83,49 @@ def do_lake_query(lake_dir: str, args):
     except Exception as e:
         logger.error("Error querying lake: %s", e)
         print(e)
+
+
+@enforce_types
+def do_lake_raw(lake_dir: str, args):
+    """
+    @description
+        Drop or update raw data
+    """
+    pds = PersistentDataStore(lake_dir, read_only=False)
+    if args.raw_subcommand_type == "drop":
+        do_raw_drop(pds, args)
+    elif args.raw_subcommand_type == "update":
+        do_raw_update(pds, args)
+
+
+@enforce_types
+def do_raw_drop(pds: PersistentDataStore, args):
+    assert pds  # silence unused warning until we use it
+    print(f"TODO: start ms = {args.ST}")
+
+
+@enforce_types
+def do_raw_update(pds: PersistentDataStore, args):
+    assert pds  # silence unused warning until we use it
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}")
+
+
+@enforce_types
+def do_lake_etl(lake_dir: str, args):
+    pds = PersistentDataStore(lake_dir, read_only=False)
+    if args.raw_subcommand_type == "drop":
+        do_etl_drop(pds, args)
+    elif args.raw_subcommand_type == "update":
+        do_etl_update(pds, args)
+
+
+@enforce_types
+def do_etl_drop(pds: PersistentDataStore, args):
+    assert pds  # silence unused warning until we use it
+    print(f"TODO: start ms = {args.ST}")
+
+
+@enforce_types
+def do_etl_update(pds: PersistentDataStore, args):
+    assert pds  # silence unused warning until we use it
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}")
