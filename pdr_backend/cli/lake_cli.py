@@ -26,7 +26,7 @@ def do_lake_subcommand(args):
 
     func_name = f"do_lake_{args.subcommand}"
     func = globals().get(func_name)
-    func(args, lake_dir)
+    func(lake_dir, args)
 
 
 def get_lake_dir(s):
@@ -37,13 +37,14 @@ def get_lake_dir(s):
 
 
 @enforce_types
-def do_lake_describe(args, lake_dir: str):
+# pylint: disable=unused-argument
+def do_lake_describe(lake_dir: str, args):
     lake_info = LakeInfo(lake_dir)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_query(args, lake_dir):
+def do_lake_query(lake_dir: str, args):
     """
     @description
         Query the lake for a table or view
