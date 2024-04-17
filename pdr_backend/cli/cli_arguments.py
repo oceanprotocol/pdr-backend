@@ -57,6 +57,7 @@ Utilities:
 
 Inspect lake:
   pdr lake_describe PPSS_FILE NETWORK
+  pdr lake_query PPSS_FILE NETWORK "SQL QUERY ..."
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -254,6 +255,15 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
+
+
+@enforce_types
+class _ArgParser_PPSS_NETWORK_QUERY(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
+    @enforce_types
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
+        self.add_argument("QUERY", type=str, help="SQL query to run on the lake")
 
 
 @enforce_types
@@ -513,6 +523,7 @@ ClaimRoseArgParser = _ArgParser_PPSS
 MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
 LakeArgParser = _ArgParser_PPSS_NETWORK
+LakeQueryArgParser = _ArgParser_PPSS_NETWORK_QUERY
 AnalyticsArgParser = _ArgParser_PPSS_NETWORK
 
 # utilities
@@ -548,7 +559,10 @@ defined_parsers = {
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_lake_describe": LakeArgParser("Show lake infol", "lake_describe"),
+    "do_lake_describe": LakeArgParser("Show lake info", "lake_describe"),
+    "do_lake_query": LakeQueryArgParser(
+        "Run query on lake persistent data store", "lake_query"
+    ),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
     "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
         "Deploy prediction submitter manager contract", "deploy_pred_submitter_mgr"

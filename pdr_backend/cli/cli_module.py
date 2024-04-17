@@ -22,6 +22,7 @@ from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
@@ -183,6 +184,27 @@ def do_lake_describe(args, nested_args=None):
 
     lake_info = LakeInfo(ppss)
     lake_info.run()
+
+
+@enforce_types
+def do_lake_query(args, nested_args=None):
+    """
+    @description
+        Query the lake for a table or view
+    """
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
+    try:
+        df = pds.query_data(args.QUERY)
+        print(df)
+    except Exception as e:
+        logger.error("Error querying lake: %s", e)
+        print(e)
 
 
 @enforce_types
