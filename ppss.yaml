@@ -26,8 +26,6 @@ predictoor_ss:
     s_start_payouts: 220 # in s. Run payout when there's this seconds left, set to 0 to disable
 
   aimodel_ss:
-    input_feeds:
-      - binance BTC/USDT ETH/USDT c 5m
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
     approach: LinearLogistic # LinearLogistic | LinearSVC | Constant
