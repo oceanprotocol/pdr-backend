@@ -66,7 +66,8 @@ def get_bronze_pdr_predictions_data_with_SQL(
             {pdr_predictions_table_name}
         LEFT JOIN {pdr_truevals_table_name}
             ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot
-            AND {pdr_predictions_table_name}.contract = SPLIT_PART({pdr_truevals_table_name}.ID, '-', 1)
+            AND {pdr_predictions_table_name}.contract = 
+                SPLIT_PART({pdr_truevals_table_name}.ID, '-', 1)
         LEFT JOIN {pdr_payouts_table_name}
             ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
         WHERE {pdr_predictions_table_name}.timestamp >= {st_ms}
