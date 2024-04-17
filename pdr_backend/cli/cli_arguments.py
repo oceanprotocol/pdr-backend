@@ -54,7 +54,9 @@ Utilities:
   pdr create_accounts NUM PPSS_FILE NETWORK
   pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
-  pdr lakeinfo PPSS_FILE NETWORK
+
+Inspect lake:
+  pdr lake_describe PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -546,7 +548,7 @@ defined_parsers = {
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_lakeinfo": LakeArgParser("Show lake infol", "lakeinfo"),
+    "do_lake_describe": LakeArgParser("Show lake infol", "lake_describe"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
     "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
         "Deploy prediction submitter manager contract", "deploy_pred_submitter_mgr"

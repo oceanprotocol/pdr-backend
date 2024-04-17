@@ -174,7 +174,7 @@ def do_lake(args, nested_args=None):
 
 
 @enforce_types
-def do_lakeinfo(args, nested_args=None):
+def do_lake_describe(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,

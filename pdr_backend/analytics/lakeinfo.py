@@ -49,7 +49,10 @@ class LakeInfo:
 
             if has_timestamp:
                 max_timestamp = source[table_name]["timestamp"].max()
-                print(f"Max timestamp: {max_timestamp}")
+                if max_timestamp is not None:
+                    print("Max timestamp: " + str(max_timestamp))
+                else:
+                    print("No timestamp data")
 
             shape = source[table_name].shape
             print(f"Number of rows: {shape[0]}")
