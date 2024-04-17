@@ -124,7 +124,7 @@ class ETL:
             logger.info("do_etl - Drop build tables.")
 
             # Sync data
-            #self.gql_data_factory.get_gql_tables()
+            self.gql_data_factory.get_gql_tables()
             logger.info("do_etl - Synced data. Start bronze_step.")
 
             self.do_bronze_step()
