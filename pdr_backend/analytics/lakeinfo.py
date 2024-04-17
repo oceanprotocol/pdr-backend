@@ -38,11 +38,18 @@ class LakeInfo:
             print("-" * 80)
             print("Columns for table {}:".format(table_name), end=" ")
             columns = []
+            has_timestamp = False
 
             for col in source[table_name].iter_columns():
+                if col.name == "timestamp":
+                    has_timestamp = True
                 columns.append(f"{col.name}: {col.dtype}")
 
             print(",".join(columns))
+
+            if has_timestamp:
+                max_timestamp = source[table_name]["timestamp"].max()
+                print(f"Max timestamp: {max_timestamp}")
 
             shape = source[table_name].shape
             print(f"Number of rows: {shape[0]}")
