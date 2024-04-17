@@ -69,14 +69,16 @@ class PersistentDataStore(BaseDataStore):
         self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
-    def get_table_names(self):
+    def get_table_names(self, all_schemas: Optional[bool] = False):
         """
         Get the names of all tables from duckdb main schema.
         @returns:
             list - The names of the tables in the dataset.
         """
+        where = " WHERE table_schema = 'main'" if not all_schemas else ""
+
         tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            "SELECT table_name FROM information_schema.tables " + where
         ).fetchall()
 
         return [table[0] for table in tables]
