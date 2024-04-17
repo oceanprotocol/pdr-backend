@@ -19,7 +19,7 @@ def test_predictoor_ss_default():
     assert feedsets[0].predict == ArgFeed("binance", "close", "BTC/USDT", "5m")
     assert feedsets[1].predict == ArgFeed("kraken", "close", "ETH/USDT", "5m")
     assert feedsets[0].train_on == [ArgFeed("binance", "close", "BTC/USDT", "5m")]
-  
+
     assert ss.approach == 1
     assert ss.stake_amount == Eth(1)
     assert ss.others_stake == Eth(2313)
@@ -48,7 +48,7 @@ def test_predictoor_ss_feedsets_in_test_dict():
         }
     ]
     d = predictoor_ss_test_dict(feedsets)
-    assert d["predict_train_feedsets"] == feedsets    
+    assert d["predict_train_feedsets"] == feedsets
 
     # test 1h
     feedsets = [
@@ -60,7 +60,7 @@ def test_predictoor_ss_feedsets_in_test_dict():
     d = predictoor_ss_test_dict(feedsets)
     assert d["predict_train_feedsets"] == feedsets
 
-    
+
 @enforce_types
 def test_predictoor_ss_start_payouts():
     # use defaults
@@ -94,7 +94,7 @@ def test_predictoor_ss_bad_approach():
         with pytest.raises(ValueError):
             ss.set_approach(bad_approach)
 
-            
+
 @enforce_types
 def test_big_predict_train_feedsets():
     d = predictoor_ss_test_dict()
@@ -116,7 +116,7 @@ def test_big_predict_train_feedsets():
             "train_on": "binance BTC/USDT ETH/USDT c 5m",
         },
     ]
-    
+
     expected = [
         {
             "predict": ArgFeed.from_str("binance BTC/USDT c 5m"),
@@ -143,7 +143,7 @@ def test_big_predict_train_feedsets():
             "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT c 5m"),
         },
     ]
-    
+
     predictoor_ss = PredictoorSS(d)
-    
+
     assert predictoor_ss.predict_train_feedsets.to_list() == expected

@@ -8,13 +8,16 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class StakeTup(tuple):    
+class StakeTup(tuple):
     def __new__(self, feed: SubgraphFeed, stake_up: Eth, stake_down: Eth):
         return tuple.__new__(StakeTup, (feed, stake_up, stake_down))
-    
+
+
 class StakeTup(Tuple[SubgraphFeed, Eth, Eth]):
     """(feed, stake_up, stake_down)"""
+
     pass
+
 
 @enforce_types
 class StakeTups(List[StakeTup]):
@@ -29,12 +32,12 @@ class StakesPerSlot:
     def slots(self) -> List[UnixTimeS]:
         """@return -- list of timeslots handled so far"""
         return list(self.target_slots.keys())
-    
+
     @enforce_types
     def add_stake_at_slot(
-            self,
-            timeslot: UnixTimeS,
-            stake_tup: StakeTup,
+        self,
+        timeslot: UnixTimeS,
+        stake_tup: StakeTup,
     ):
         if timeslot not in self.target_slots:
             self.target_slots[timeslot] = StakeTups([])
@@ -47,8 +50,9 @@ class StakesPerSlot:
         return tups
 
     @enforce_types
-    def get_stake_lists(self, timeslot: UnixTimeS) -> \
-            Tuple[List[Eth], List[Eth], List[Eth]]:
+    def get_stake_lists(
+        self, timeslot: UnixTimeS
+    ) -> Tuple[List[Eth], List[Eth], List[Eth]]:
         stakes_up: List[Eth] = []
         stakes_down: List[Eth] = []
         feed_addrs: List[str] = []

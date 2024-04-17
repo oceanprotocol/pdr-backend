@@ -18,7 +18,9 @@ def arg_feed_list() -> ArgFeeds:
 
 
 def test_predict_train_feedset_initialization(arg_feed_single, arg_feed_list):
-    predict_train_feedset = PredictTrainFeedset(predict=arg_feed_single, train_on=arg_feed_list)
+    predict_train_feedset = PredictTrainFeedset(
+        predict=arg_feed_single, train_on=arg_feed_list
+    )
     assert predict_train_feedset.predict == arg_feed_single
     assert predict_train_feedset.train_on == arg_feed_list
 
@@ -39,11 +41,16 @@ def test_predict_train_feedset_from_dict(arg_feed_single, arg_feed_list):
 
 
 def test_predict_train_feedset_timeframe_ms(arg_feed_single, arg_feed_list):
-    predict_train_feedset = PredictTrainFeedset(predict=arg_feed_single, train_on=arg_feed_list)
+    predict_train_feedset = PredictTrainFeedset(
+        predict=arg_feed_single, train_on=arg_feed_list
+    )
     assert predict_train_feedset.timeframe_ms == arg_feed_single.timeframe.ms
 
+
 def test_predict_train_feedset_predict_pair_str(arg_feed_single, arg_feed_list):
-    predict_train_feedset = PredictTrainFeedset(predict=arg_feed_single, train_on=arg_feed_list)
+    predict_train_feedset = PredictTrainFeedset(
+        predict=arg_feed_single, train_on=arg_feed_list
+    )
     assert predict_train_feedset.predict_pair_str == "BTC/USDT"
 
 

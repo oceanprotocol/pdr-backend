@@ -25,7 +25,7 @@ class PredictoorSS(StrMixin):
     def __init__(self, d: dict):
         self.d = d
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
-        
+
         if self.approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
             raise ValueError(s)
@@ -104,12 +104,16 @@ class PredictoorSS(StrMixin):
         return min_tf_seconds
 
     @enforce_types
-    def get_predict_train_feedset(self, pair, timeframe, exchange) -> Optional[PredictTrainFeedset]:        
+    def get_predict_train_feedset(
+        self, pair, timeframe, exchange
+    ) -> Optional[PredictTrainFeedset]:
         for predict_train_feedset in self.predict_train_feedsets:
             predict_feed: ArgFeed = predict_train_feedset.predict
-            if predict_feed.pair == pair and \
-               predict_feed.timeframe == timeframe and \
-               predict_feed.exchange == exchange:
+            if (
+                predict_feed.pair == pair
+                and predict_feed.timeframe == timeframe
+                and predict_feed.exchange == exchange
+            ):
                 return feed
         return None
 
@@ -169,7 +173,7 @@ def feedset_test_list() -> list:
 @enforce_types
 def predictoor_ss_test_dict(
     feedset_list: Optional[List] = None,
-    pred_submitter_mgr = "",
+    pred_submitter_mgr="",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     feedset_list = feedset_list or feedset_test_list()

@@ -30,10 +30,10 @@ logger = logging.getLogger("sim_engine")
 class SimEngine:
     @enforce_types
     def __init__(
-            self,
-            ppss: PPSS,
-            predict_train_feedset: PredictTrainFeedset,
-            multi_id: Optional[str] = None,
+        self,
+        ppss: PPSS,
+        predict_train_feedset: PredictTrainFeedset,
+        multi_id: Optional[str] = None,
     ):
         self.predict_train_feedset = predict_train_feedset
         assert self.predict_feed
@@ -115,7 +115,10 @@ class SimEngine:
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
         X, ycont, x_df, _ = data_f.create_xy(
-            mergedohlcv_df, testshift, predict_feed, train_feeds,
+            mergedohlcv_df,
+            testshift,
+            predict_feed,
+            train_feeds,
         )
         colnames = list(x_df.columns)
 

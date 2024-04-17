@@ -162,36 +162,38 @@ def test_verify_feed_dependencies():
     # - check for matching {exchange, pair, timeframe} but not {signal}
     good_feed = "binance BTC/USDT c 5m"
     for wrong_feed in [
-        "dydx BTC/USDT c 5m", # bad exchange
-        "binance DOT/USDT c 5m", # bad pair
-        "binance BTC/USDT c 1h", # bad timeframe
+        "dydx BTC/USDT c 5m",  # bad exchange
+        "binance DOT/USDT c 5m",  # bad pair
+        "binance BTC/USDT c 1h",  # bad timeframe
     ]:
         # test lake <> predict feed
         ppss2 = deepcopy(ppss)
         ppss2.predictoor_ss.d["predict_train_feedsets"] = [
-            {   "predict": wrong_feed, "train_on": good_feed} ]
+            {"predict": wrong_feed, "train_on": good_feed}
+        ]
         with pytest.raises(ValueError):
             ppss2.verify_feed_dependencies()
-            
+
         # test lake <> train feed
         ppss2 = deepcopy(ppss)
         ppss2.predictoor_ss.d["predict_train_feedsets"] = [
-            {   "predict": good_feed, "train_on": wrong_feed} ]
+            {"predict": good_feed, "train_on": wrong_feed}
+        ]
         with pytest.raises(ValueError):
             ppss2.verify_feed_dependencies()
 
     # fail check: do all feeds in predict/train sets have identical timeframe?
     ppss2 = deepcopy(ppss)
-    ppss2.predictoor_ss.d["predict_train_feedsets"] = [{
-        "predict": "binance BTC/USDT c 5m",
-        "train_on": "binance BTC/USDT c 1h" }]
+    ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+        {"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 1h"}
+    ]
     with pytest.raises(ValueError):
         ppss2.verify_feed_dependencies()
 
     # fail check: is the predict feed in the corr. train feeds?
     ppss2 = deepcopy(ppss)
-    ppss2.predictoor_ss.d["predict_train_feedsets"] = [{
-        "predict": "binance BTC/USDT c 5m",
-        "train_on": "binance ETH/USDT c 5m" }]
+    ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+        {"predict": "binance BTC/USDT c 5m", "train_on": "binance ETH/USDT c 5m"}
+    ]
     with pytest.raises(ValueError):
         ppss2.verify_feed_dependencies()

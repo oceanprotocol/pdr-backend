@@ -17,10 +17,10 @@ FEED1 = Mock(spec=SubgraphFeed)
 FEED0.address = "0xFeed0"
 FEED1.address = "0xFeed1"
 
-STAKE_UP0, STAKE_DOWN0 = Eth(10.), Eth(20.)
-STAKE_UP1, STAKE_DOWN1 = Eth(11.), Eth(21.)
-STAKE_UP2, STAKE_DOWN2 = Eth(12.), Eth(22.)
-STAKE_UP3, STAKE_DOWN3 = Eth(13.), Eth(23.)
+STAKE_UP0, STAKE_DOWN0 = Eth(10.0), Eth(20.0)
+STAKE_UP1, STAKE_DOWN1 = Eth(11.0), Eth(21.0)
+STAKE_UP2, STAKE_DOWN2 = Eth(12.0), Eth(22.0)
+STAKE_UP3, STAKE_DOWN3 = Eth(13.0), Eth(23.0)
 
 TUP0 = StakeTup((FEED0, STAKE_UP0, STAKE_DOWN0))
 TUP1 = StakeTup((FEED0, STAKE_UP1, STAKE_DOWN1))
@@ -37,14 +37,14 @@ def test_StakeTup():
     assert TUP0[1] == STAKE_UP0
     assert TUP0[2] == STAKE_DOWN0
 
-    
+
 @enforce_types
 def test_StakeTups():
     tups = StakeTups([TUP0, TUP1])
     assert tups[0] == TUP0
     assert tups[1] == TUP1
 
-    
+
 @enforce_types
 def test_StakesPerSlot():
     # empty to start
@@ -73,12 +73,8 @@ def test_StakesPerSlot():
     assert stakes_up == [STAKE_UP0, STAKE_UP1]
     assert stakes_down == [STAKE_DOWN0, STAKE_DOWN1]
     assert feed_addrs == ["0xFeed0", "0xFeed0"]
-    
+
     (stakes_up, stakes_down, feed_addrs) = stakes.get_stake_lists(TIMESLOT1)
     assert stakes_up == [STAKE_UP2, STAKE_UP3]
     assert stakes_down == [STAKE_DOWN2, STAKE_DOWN3]
     assert feed_addrs == ["0xFeed1", "0xFeed1"]
-    
-    
-    
-    

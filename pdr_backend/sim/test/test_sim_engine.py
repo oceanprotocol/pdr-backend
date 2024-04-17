@@ -22,7 +22,7 @@ def test_sim_engine(tmpdir):
         }
     ]
     feedsets = PredictTrainFeedsets.from_array(feedset_list)
-    
+
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
     d = lake_ss_test_dict(parquet_dir, feeds=feedsets.feeds_str)

@@ -27,4 +27,3 @@ def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
         arg_feeds: List[ArgFeed] = ArgFeeds.from_str(str(feed))
         parsed_objs.extend(arg_feeds)
     return parsed_objs
-

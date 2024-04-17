@@ -37,6 +37,7 @@ class PredictTrainFeedset:
     - 1 feed to predict
     - >=1 feeds as inputs to the model
     """
+
     @enforce_types
     def __init__(self, predict_feed: ArgFeed, train_feeds: ArgFeeds):
         self.predict: ArgFeed = predict_feed
@@ -44,9 +45,9 @@ class PredictTrainFeedset:
 
     @classmethod
     def from_feed_objs(
-            cls,
-            predict_feed: ArgFeed,
-            unparsed_train_feeds: Union[str, list],
+        cls,
+        predict_feed: ArgFeed,
+        unparsed_train_feeds: Union[str, list],
     ):
         train_feeds: ArgFeeds = parse_feed_obj(unparsed_train_feeds)
         return cls(predict_feed, train_feeds)
@@ -66,6 +67,5 @@ class PredictTrainFeedset:
 
     @property
     def predict_pair_str(self) -> Optional[str]:
-        pair : ArgPair = self.predict.pair
+        pair: ArgPair = self.predict.pair
         return pair.pair_str
-

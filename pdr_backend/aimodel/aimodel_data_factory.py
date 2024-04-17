@@ -109,7 +109,7 @@ class AimodelDataFactory:
             train_feeds = [feed]
         ss = self.ss.aimodel_ss
         x_dim_len = len(train_feeds) * ss.autoregressive_n
-        
+
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""

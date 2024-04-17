@@ -107,7 +107,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         #   because lake holds all signals o,h,l,c,v
         for feedset in feedsets:
             predict_f, train_fs = feedset.predict, feedset.train_on
-            
+
             if not lake_fs.contains_combination(
                 predict_f.exchange, predict_f.pair, predict_f.timeframe
             ):
@@ -133,7 +133,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             ok = ok and predict_f.timeframe == ref_timeframe
             for train_f in feedset.train_on:
                 ok = ok and train_f.timeframe == ref_timeframe
-                
+
         if not ok:
             s = "predict/train feedsets have inconsistent timeframes"
             s += f"\n predict_train_feedsets = {feedsets}"

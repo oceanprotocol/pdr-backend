@@ -18,7 +18,7 @@ class AimodelSS(StrMixin):
     def __init__(self, d: dict):
         """d -- yaml_dict["aimodel_ss"]"""
         self.d = d
-        
+
         # test inputs
         if not 0 < self.max_n_train:
             raise ValueError(self.max_n_train)

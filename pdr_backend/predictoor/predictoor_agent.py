@@ -22,6 +22,7 @@ from pdr_backend.util.time_types import UnixTimeS
 logger = logging.getLogger("predictoor_agent")
 MAX_WEI = Wei(2**256 - 1)
 
+
 # pylint: disable=too-many-public-methods
 class PredictoorAgent:
     """
@@ -48,17 +49,17 @@ class PredictoorAgent:
             self.ppss.web3_pp, pred_submitter_mgr_addr
         )
 
-        cand_feeds: Dict[str, SubgraphFeed] = \
-            ppss.web3_pp.query_feed_contracts()
+        cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
-        
+
         feed_addrs = cand_feeds.keys()
         feed_addrs = self._to_checksum(addrs)
         self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
         self.pred_submitter_mgr.approve_ocean(feed_addrs)
-        
-        self.feeds: List[SubgraphFeed] = \
-            ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
+
+        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
+            cand_feeds
+        )
         if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 
@@ -140,8 +141,7 @@ class PredictoorAgent:
 
         # submit prediction txs
         for target_slot in stakes.target_slots:
-            stakes_up, stakes_down, feed_addrs = \
-                stakes.get_stake_lists(target_slot)
+            stakes_up, stakes_down, feed_addrs = stakes.get_stake_lists(target_slot)
             feed_addrs = self._to_checksum(feed_addrs)
 
             required_OCEAN = Eth(0)
@@ -155,14 +155,17 @@ class PredictoorAgent:
             s = f"-> Predict result: {stakes_up} up, {stakes_down} down"
             s += f", feeds={feed_addrs}"
             logger.info(s)
-            
+
             if required_OCEAN == Eth(0):
                 logger.warning("Done: no predictions to submit")
                 return
 
             # submit prediction to chain
             self.submit_prediction_txs(
-                stakes_up, stakes_down, target_slot, feed_addrs,
+                stakes_up,
+                stakes_down,
+                target_slot,
+                feed_addrs,
             )
             self.prev_submit_epochs.append(target_slot)
 
@@ -175,8 +178,7 @@ class PredictoorAgent:
     @enforce_types
     def _to_checksum(self, addrs: List[str]) -> List[str]:
         checksummed_addrs = [
-            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
-            for addr in addrs
+            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in addrs
         ]
         return checksummed_addrs
 
@@ -352,7 +354,7 @@ class PredictoorAgent:
             mergedohlcv_df,
             testshift=0,
             predict_feed=feedset.predict,
-            train_feeds=feedset.train_on
+            train_feeds=feedset.train_on,
         )
 
         curprice = ycont[-1]
@@ -418,7 +420,7 @@ class PredictoorAgent:
 
         logger.info(self.status_str())
         logger.info("Running payouts")
-        
+
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_unique_epoch)
 

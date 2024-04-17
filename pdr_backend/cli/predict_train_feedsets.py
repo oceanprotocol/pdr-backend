@@ -14,6 +14,7 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
     Easy manipulation of all (predict/train_on) PredictTrainFeedset objects.
     Includes a way to parse from the raw yaml inputs.
     """
+
     @enforce_types
     def __init__(self, feedsets: List[PredictTrainFeedset]):
         super().__init__(feedsets)
@@ -57,7 +58,7 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
                     predict_feed, train_dict
                 )
                 return_list.append(predict_train_feedset)
-                
+
         return cls(return_list)
 
     @property
@@ -72,7 +73,7 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
             predict_feed = predict_train_feedset.predict
             if str(predict_feed) not in str_list:
                 str_list.append(str(predict_feed))
-                
+
         return str_list
 
     @property
@@ -94,12 +95,12 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
         epoch = 1e9
         for predict_train_feedset in self:
             predict_feed = predict_train_feedset.predict
-            assert predict_feed.timeframe is not None, \
-                f"Predict feed: {predict_feed} is missing timeframe"
+            assert (
+                predict_feed.timeframe is not None
+            ), f"Predict feed: {predict_feed} is missing timeframe"
             epoch = min(epoch, predict_feed.timeframe.s)
         return int(epoch)
 
     @enforce_types
     def to_list(self) -> List[dict]:
-        return [predict_train_feedset.to_dict()
-                for predict_train_feedset in self]
+        return [predict_train_feedset.to_dict() for predict_train_feedset in self]

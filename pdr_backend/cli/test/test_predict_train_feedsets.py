@@ -2,7 +2,10 @@
 import pytest
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset, PredictTrainFeedsets
+from pdr_backend.cli.predict_train_feedsets import (
+    PredictTrainFeedset,
+    PredictTrainFeedsets,
+)
 
 
 @pytest.fixture
@@ -44,7 +47,9 @@ def test_predict_train_feedsets_from_array_valid_data(
     predict_train_feedsets = PredictTrainFeedsets.from_array(array)
     assert len(predict_train_feedsets) == 1
     assert predict_train_feedsets[0].predict == ArgFeed.from_str(arg_feed_predict_str)
-    assert predict_train_feedsets[0].train_on == ArgFeeds.from_str(arg_feed_train_on_str)
+    assert predict_train_feedsets[0].train_on == ArgFeeds.from_str(
+        arg_feed_train_on_str
+    )
     assert predict_train_feedsets.min_epoch_seconds == 3600
 
 
@@ -61,7 +66,9 @@ def test_predict_train_feedsets_from_array_missing_train_on(arg_feed_predict_str
 
 
 def test_predict_train_feedsets_properties(predict_feed_fixture):
-    predict_train_feedsets = PredictTrainFeedsets([predict_feed_fixture, predict_feed_fixture])
+    predict_train_feedsets = PredictTrainFeedsets(
+        [predict_feed_fixture, predict_feed_fixture]
+    )
     assert len(predict_train_feedsets.feeds_str) == 2
     assert len(predict_train_feedsets.feeds) == 2
     assert predict_train_feedsets.min_epoch_seconds == 3600
