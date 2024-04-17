@@ -124,7 +124,7 @@ class ETL:
             logger.info("do_etl - Drop build tables.")
 
             # Sync data
-            self.gql_data_factory.get_gql_tables()
+            #self.gql_data_factory.get_gql_tables()
             logger.info("do_etl - Synced data. Start bronze_step.")
 
             self.do_bronze_step()
@@ -190,6 +190,8 @@ class ETL:
 
             queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
+        logger.info("_get_max_timestamp_values_from - queries: %s", queries)
+
         table_names = [table.fullname for table in tables]
         none_values: Dict[str, Optional[UnixTimeMs]] = {
             table_name: None for table_name in table_names
@@ -212,7 +214,7 @@ class ETL:
             table_name = row["table_name"]
             max_timestamp = row["max_timestamp"]
 
-            values[table_name] = UnixTimeMs(max_timestamp)
+            values[table_name] = UnixTimeMs(max_timestamp) if max_timestamp else None
 
         return values
 
@@ -222,11 +224,20 @@ class ETL:
         max_timestamp_values = self._get_max_timestamp_values_from(
             [NamedTable(tb, TableType.NORMAL) for tb in table_names]
         )
+
+        logger.info("get_timestamp_values - max_timestamp_values: %s", max_timestamp_values)
+        # check if all values are None in max_timestamp_values
+        # and return the default_timestr if so
+        if all(value is None for value in max_timestamp_values.values()):
+            return UnixTimeMs.from_timestr(default_timestr)    
+
         values = []
         if len(max_timestamp_values) > 0:
             values = [
                 value for value in max_timestamp_values.values() if value is not None
             ]
+
+        logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
             min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
@@ -308,17 +319,18 @@ class ETL:
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
-            data = get_data_func(
+            get_data_func(
                 path=self.ppss.lake_ss.lake_dir,
                 st_ms=st_timestamp,
                 fin_ms=fin_timestamp,
             )
 
             logger.info("update_bronze_pdr - Inserting data into %s", table_name)
-            TableRegistry().get_table(table_name)._append_to_db(
-                data,
-                table_type=TableType.TEMP,
-            )
+
+            # TableRegistry().get_table(table_name)._append_to_db(
+            #     data,
+            #     table_type=TableType.TEMP,
+            # )
 
             # For each bronze table that we process, that data will be entered into TEMP
             # Create view so downstream queries can access production + TEMP data

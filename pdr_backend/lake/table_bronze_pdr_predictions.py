@@ -5,6 +5,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import get_table_name
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table import TableType
 
 logger = logging.getLogger("lake")
 bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
@@ -27,10 +28,9 @@ bronze_pdr_predictions_schema = {
     "last_event_timestamp": Int64,
 }
 
-
 def get_bronze_pdr_predictions_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
-) -> pl.DataFrame:
+):
     """
     @description
         Get the bronze pdr predictions data
@@ -38,12 +38,21 @@ def get_bronze_pdr_predictions_data_with_SQL(
     pdr_predictions_table_name = get_table_name("pdr_predictions")
     pdr_truevals_table_name = get_table_name("pdr_truevals")
     pdr_payouts_table_name = get_table_name("pdr_payouts")
+    temp_bronze_pdr_predictions_table_name = get_table_name(
+        bronze_pdr_predictions_table_name, TableType.TEMP
+    )
 
     pds = PersistentDataStore(path)
     logger.info("pds tables %s", pds.get_table_names())
 
-    return pds.query_data(
+    pds.create_table_if_not_exists(
+        temp_bronze_pdr_predictions_table_name,
+        bronze_pdr_predictions_schema,
+    )
+
+    return pds.execute_sql(
         f"""
+        INSERT INTO {temp_bronze_pdr_predictions_table_name}
         SELECT
             {pdr_predictions_table_name}.ID as ID,
             SPLIT_PART({pdr_predictions_table_name}.ID, '-', 1)

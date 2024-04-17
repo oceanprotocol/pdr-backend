@@ -35,15 +35,26 @@ bronze_pdr_slots_schema = {
 @enforce_types
 def get_bronze_pdr_slots_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
-) -> pl.DataFrame:
+):
     pdr_slots_table_name = get_table_name(slots_table_name)
     pdr_truevals_table_name = get_table_name(truevals_table_name)
     pdr_payouts_table_name = get_table_name(payouts_table_name)
     etl_bronze_pdr_predictions_table_name = get_table_name(
         bronze_pdr_predictions_table_name, TableType.ETL
     )
+    temp_bronze_pdr_slots_table_name = get_table_name(
+        bronze_pdr_slots_table_name, TableType.TEMP
+    )
+
+    pds = PersistentDataStore(path)
+
+    pds.create_table_if_not_exists(
+        temp_bronze_pdr_slots_table_name,
+        bronze_pdr_slots_schema,
+    )
 
     query = f"""
+            INSERT INTO {temp_bronze_pdr_slots_table_name}
             SELECT
                 {pdr_slots_table_name}.ID as ID,
                 SPLIT_PART({pdr_slots_table_name}.ID, '-', 1) as contract,
@@ -77,4 +88,4 @@ def get_bronze_pdr_slots_data_with_SQL(
 
     logger.info("table_bronze_slot_query %s", query)
 
-    return PersistentDataStore(path).query_data(query)
+    return pds.execute_sql(query)
