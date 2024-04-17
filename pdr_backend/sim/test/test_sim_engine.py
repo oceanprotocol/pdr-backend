@@ -47,8 +47,8 @@ def test_sim_engine(tmpdir):
     ppss.sim_ss = SimSS(d)
 
     # go
-    feedset = ppss.predictoor_ss.predict_train_feedset
-    sim_engine = SimEngine(ppss, feedset)
+    feedsets = ppss.predictoor_ss.predict_train_feedsets
+    sim_engine = SimEngine(ppss, feedsets[0])
     sim_engine.run()
 
     # after implementing the P/C architeture, check state saved

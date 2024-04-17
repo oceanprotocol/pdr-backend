@@ -14,9 +14,10 @@ from statsmodels.stats.proportion import proportion_confint
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
@@ -35,6 +36,7 @@ class SimEngine:
             multi_id: Optional[str] = None,
     ):
         self.predict_train_feedset = predict_train_feedset
+        assert self.predict_feed
         assert isinstance(self.tokcoin, str)
         assert isinstance(self.usdcoin, str)
 
@@ -61,17 +63,17 @@ class SimEngine:
 
     @property
     def predict_feed(self) -> ArgFeed:
-        assert self.predict_train_feedset.predict
+        return self.predict_train_feedset.predict
 
     @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.predict_feed.base_str
+        return self.predict_feed.pair.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.predict_feed.quote_str
+        return self.predict_feed.pair.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -133,7 +135,7 @@ class SimEngine:
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * predict_feed.timeframe_ms)
+        ut = UnixTimeMs(recent_ut - testshift * predict_feed.timeframe.ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
@@ -266,7 +268,7 @@ class SimEngine:
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
-            self.predict_feed.pair_str, tokcoin_amt_recd
+            str(self.predict_feed.pair), tokcoin_amt_recd
         )
 
         logger.info(
@@ -303,7 +305,7 @@ class SimEngine:
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
-            self.predict_feed.pair_str, tokcoin_amt_send
+            str(self.predict_feed.pair), tokcoin_amt_send
         )
 
         logger.info(
