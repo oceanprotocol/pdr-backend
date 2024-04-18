@@ -122,8 +122,20 @@ def do_lake_etl(lake_dir: str, args):
 
 @enforce_types
 def do_etl_drop(pds: PersistentDataStore, args):
-    assert pds  # silence unused warning until we use it
-    print(f"TODO: start ms = {args.ST}")
+    trunc_count = table_count = 0
+
+    for table_name in pds.get_table_names():
+        logger.info("drop table %s starting at %s", table_name, args.ST)
+        rows_before = pds.row_count(table_name)
+        logger.info("rows before: %s", rows_before)
+        pds.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {args.ST}")
+        rows_after = pds.row_count(table_name)
+        logger.info("rows after: %s", rows_after)
+        if rows_before != rows_after:
+            table_count += 1
+            trunc_count += rows_before - rows_after
+
+    logger.info("truncated %s rows from %s tables", trunc_count, table_count)
 
 
 @enforce_types

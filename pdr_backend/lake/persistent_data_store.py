@@ -269,3 +269,18 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
         self.duckdb_conn.execute("COMMIT")
+
+    @enforce_types
+    def row_count(self, table_name: str) -> int:
+        """
+        Get the number of rows in a table.
+        @arguments:
+            table_name - The name of the table.
+        @returns:
+            int - The number of rows in the table.
+        """
+        return self.duckdb_conn.execute(
+            f"SELECT COUNT(*) FROM {table_name}"
+        ).fetchone()[
+            0
+        ]  # type: ignore[index]
