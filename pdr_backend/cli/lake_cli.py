@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.lakeinfo import LakeInfo
-from pdr_backend.cli.cli_arguments import PPSS_Mixin, NETWORK_Mixin
+from pdr_backend.cli.cli_arguments import NETWORK_Mixin, PPSS_Mixin
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -71,29 +71,65 @@ def do_lake_subcommand(args):
     parsed_args = parser.parse_args(args)
 
     func_name = f"do_lake_{parsed_args.subcommand}"
+    if hasattr(parsed_args, "l2_subcommand_type"):
+        func_name += f"_{parsed_args.l2_subcommand_type}"
+
     func = globals().get(func_name)
     func(parsed_args)
 
 
+# subcommands
 @enforce_types
-# pylint: disable=unused-argument
 def do_lake_describe(args):
     lake_info = LakeInfo(args.LAKE_DIR)
     lake_info.run()
 
 
-def remove_prefix(table_name: str) -> str:
+@enforce_types
+def do_lake_query(args):
+    """
+    @description
+        Query the lake for a table or view
+    """
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=True)
+    try:
+        df = pds.query_data(args.QUERY)
+        print(df)
+    except Exception as e:
+        logger.error("Error querying lake: %s", e)
+        print(e)
+
+
+@enforce_types
+def do_lake_raw_drop(args):
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+    drop_tables_from_st(pds, "raw", args.ST)
+
+
+@enforce_types
+def do_lake_raw_update(args):
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+
+
+@enforce_types
+def do_lake_etl_drop(args):
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+    drop_tables_from_st(pds, "etl", args.ST)
+
+
+@enforce_types
+def do_lake_etl_update(args):
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+
+
+# functionality
+def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("etl_")
     table_name = table_name.removeprefix("temp_")
 
-    return table_name
-
-
-def is_etl_table(table_name: str) -> bool:
-    table_name = remove_prefix(table_name)
     return (
         table_name.startswith("bronze_")
         or table_name.startswith("silver_")
@@ -128,60 +164,3 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
             trunc_count += rows_before - rows_after
 
     logger.info("truncated %s rows from %s tables", trunc_count, table_count)
-
-
-@enforce_types
-def do_lake_query(args):
-    """
-    @description
-        Query the lake for a table or view
-    """
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=True)
-    try:
-        df = pds.query_data(args.QUERY)
-        print(df)
-    except Exception as e:
-        logger.error("Error querying lake: %s", e)
-        print(e)
-
-
-@enforce_types
-def do_lake_raw(args):
-    """
-    @description
-        Drop or update raw data
-    """
-    if args.l2_subcommand_type == "drop":
-        do_raw_drop(args)
-    elif args.l2_subcommand_type == "update":
-        do_raw_update(args)
-
-
-@enforce_types
-def do_raw_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
-    drop_tables_from_st(pds, "raw", args.ST)
-
-
-@enforce_types
-def do_raw_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
-
-
-@enforce_types
-def do_lake_etl(args):
-    if args.l2_subcommand_type == "drop":
-        do_etl_drop(args)
-    elif args.l2_subcommand_type == "update":
-        do_etl_update(args)
-
-
-@enforce_types
-def do_etl_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
-    drop_tables_from_st(pds, "etl", args.ST)
-
-
-@enforce_types
-def do_etl_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
