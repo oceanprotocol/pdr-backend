@@ -35,10 +35,10 @@ class ArgFeed:
 
         if timeframe is None:
             self.timeframe = None
+        elif isinstance(timeframe, str):
+            self.timeframe = ArgTimeframe(timeframe)
         else:
-            self.timeframe = (
-                ArgTimeframe(timeframe) if isinstance(timeframe, str) else timeframe
-            )
+            self.timeframe = timeframe
 
     def __str__(self):
         feed_str = f"{self.exchange} {self.pair}"

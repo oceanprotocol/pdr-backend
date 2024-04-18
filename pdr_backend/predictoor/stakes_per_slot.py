@@ -45,7 +45,7 @@ class StakesPerSlot:
     @enforce_types
     def get_stake_lists(
         self, timeslot: UnixTimeS
-    ) -> Tuple[List[Eth], List[Eth], List[Eth]]:
+    ) -> Tuple[List[Eth], List[Eth], List[str]]:
         stakes_up: List[Eth] = []
         stakes_down: List[Eth] = []
         feed_addrs: List[str] = []

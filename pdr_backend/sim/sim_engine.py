@@ -15,6 +15,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -36,7 +37,7 @@ class SimEngine:
         multi_id: Optional[str] = None,
     ):
         self.predict_train_feedset = predict_train_feedset
-        assert self.predict_feed
+        assert isinstance(self.predict_feed, ArgFeed)
         assert isinstance(self.tokcoin, str)
         assert isinstance(self.usdcoin, str)
 
@@ -138,7 +139,8 @@ class SimEngine:
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * predict_feed.timeframe.ms)
+        timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
+        ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]

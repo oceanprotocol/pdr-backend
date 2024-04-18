@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -105,10 +105,13 @@ class AimodelDataFactory:
             mergedohlcv_df = fill_nans(mergedohlcv_df)
 
         # condition other inputs
-        if not train_feeds:
-            train_feeds = [predict_feed]
+        train_feeds_list: List[ArgFeed]
+        if train_feeds:
+            train_feeds_list = train_feeds
+        else:
+            train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_ss
-        x_dim_len = len(train_feeds) * ss.autoregressive_n
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work
         x_df = pd.DataFrame()  # build this up
@@ -116,7 +119,7 @@ class AimodelDataFactory:
 
         target_hist_cols = [
             f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
-            for train_feed in train_feeds
+            for train_feed in train_feeds_list
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"

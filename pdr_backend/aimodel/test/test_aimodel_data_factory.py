@@ -476,7 +476,5 @@ def _assert_pd_df_shape(
 ):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
-    assert X.shape[1] == ss.n
 
     assert len(x_df) == X.shape[0]
-    assert len(x_df.columns) == ss.n

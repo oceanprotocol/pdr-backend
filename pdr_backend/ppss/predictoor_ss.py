@@ -2,7 +2,10 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_exchange import ArgExchange
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_pair import ArgPair
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import (
     PredictTrainFeedset,
     PredictTrainFeedsets,
@@ -97,17 +100,19 @@ class PredictoorSS(StrMixin):
     @property
     def minimum_timeframe_seconds(self) -> int:
         min_tf_seconds = int(1e9)
-        for feed in self.feeds:
-            assert (
-                feed.predict.timeframe is not None
-            ), f"Feed: {feed} is missing timeframe"
-            min_tf_seconds = min(min_tf_seconds, feed.predict.timeframe.s)
+        for feed in self.predict_train_feedsets.feeds:
+            assert feed.timeframe is not None, f"Feed: {feed} is missing timeframe"
+            min_tf_seconds = min(min_tf_seconds, feed.timeframe.s)
         return min_tf_seconds
 
     @enforce_types
     def get_predict_train_feedset(
-        self, pair, timeframe, exchange
+        self,
+        pair: ArgPair,
+        timeframe: Optional[ArgTimeframe],
+        exchange: ArgExchange,
     ) -> Optional[PredictTrainFeedset]:
+
         for predict_train_feedset in self.predict_train_feedsets:
             predict_feed: ArgFeed = predict_train_feedset.predict
             if (
@@ -115,33 +120,43 @@ class PredictoorSS(StrMixin):
                 and predict_feed.timeframe == timeframe
                 and predict_feed.exchange == exchange
             ):
-                return predict_feed
+                return predict_train_feedset
+
         return None
 
     @enforce_types
     def get_feed_from_candidates(
-        self, cand_feeds: Dict[str, SubgraphFeed]
+        self,
+        cand_feeds: Dict[str, SubgraphFeed],
     ) -> Dict[str, SubgraphFeed]:
         """
         @description
-          Return a set of feeds as the intersection of
-          (1) candidate feeds read from chain, ie the input SubgraphFeeds; and
-          (2) self's feeds to predict, ie input by PPSS
+          Filter down the input cand_feeds to the ones we're supposed to predict
+
+          More precisely: return a set of feeds as the intersection of
+          (1) candidate feeds read from chain, ie the input SubgraphFeeds,
+          and (2) self's feeds to predict, ie input by PPSS
+
+        @arguments
+          cand_feeds -- dict of [feed_addr] : SubgraphFeed
+
+        @return
+          filtered_feeds -- dict of [feed_addr] : SubgraphFeed
         """
-        result: Dict[str, SubgraphFeed] = {}
+        filtered_feeds: Dict[str, SubgraphFeed] = {}
 
         allowed_tups = [
             (str(feed.exchange), str(feed.pair), str(feed.timeframe))
-            for feed in self.feeds.feeds
+            for feed in self.predict_train_feedsets.feeds
         ]
 
-        for sg_key, sg_feed in cand_feeds.items():
-            assert isinstance(sg_feed, SubgraphFeed)
+        for feed_addr, feed in cand_feeds.items():
+            assert isinstance(feed, SubgraphFeed)
 
-            if (sg_feed.source, sg_feed.pair, sg_feed.timeframe) in allowed_tups:
-                result[sg_key] = sg_feed
+            if (feed.source, feed.pair, feed.timeframe) in allowed_tups:
+                filtered_feeds[feed_addr] = feed
 
-        return result
+        return filtered_feeds
 
     # --------------------------------
     # setters (add as needed)

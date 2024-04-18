@@ -52,7 +52,7 @@ class PredictoorAgent:
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed_addrs = cand_feeds.keys()
+        feed_addrs: List[str] = list(cand_feeds.keys())
         feed_addrs = self._to_checksum(feed_addrs)
         self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
         self.pred_submitter_mgr.approve_ocean(feed_addrs)
@@ -177,9 +177,8 @@ class PredictoorAgent:
 
     @enforce_types
     def _to_checksum(self, addrs: List[str]) -> List[str]:
-        checksummed_addrs = [
-            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr) for addr in addrs
-        ]
+        w3 = self.ppss.web3_pp.w3
+        checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
         return checksummed_addrs
 
     @property
@@ -248,7 +247,7 @@ class PredictoorAgent:
         stakes_up: List[Eth],
         stakes_down: List[Eth],
         target_slot: UnixTimeS,  # a timestamp
-        feeds: List[str],
+        feed_addrs: List[str],
     ):
         logger.info("Submitting predictions to the chain...")
         stakes_up_wei = [i.to_wei() for i in stakes_up]
@@ -256,7 +255,7 @@ class PredictoorAgent:
         tx = self.pred_submitter_mgr.submit_prediction(
             stakes_up=stakes_up_wei,
             stakes_down=stakes_down_wei,
-            feeds=feeds,
+            feed_addrs=feed_addrs,
             epoch=target_slot,
         )
         logger.info("Tx submitted %s", tx["transactionHash"].hex())
