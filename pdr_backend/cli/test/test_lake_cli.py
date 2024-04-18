@@ -144,13 +144,43 @@ def test_do_lake_etl_delegation():
 
 
 @enforce_types
-def test_do_lake_raw_drop(capsys):
+def test_do_lake_raw_drop(tmpdir, caplog):
     args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
+    args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
 
-    pds = Mock(spec=PersistentDataStore)
-    do_etl_drop(pds, args)
-    assert "TODO: start ms = 1609459200000" in capsys.readouterr().out
+    one_day = 1000 * 60 * 60 * 24
+    first_entry_ts = 1609459200000 - one_day * 3  # 3 days before ST
+
+    pds = PersistentDataStore(str(tmpdir))
+    pds.query_data("CREATE TABLE _temp_test1 (id INT, timestamp INT64)")
+
+    for i in range(5):
+        pds.query_data(
+            f"INSERT INTO _temp_test1 VALUES ({i}, {first_entry_ts + i * one_day})"
+        )
+
+    pds.query_data("CREATE TABLE test2 (id INT, timestamp INT64)")
+
+    for i in range(5):
+        pds.query_data(
+            f"INSERT INTO test2 VALUES ({i}, {first_entry_ts + (i+1) * one_day})"
+        )
+
+    pds.query_data("CREATE TABLE _etl_bronze_test(id INT, timestamp INT64)")
+    for i in range(5):
+        pds.query_data(
+            f"INSERT INTO _etl_bronze_test VALUES ({i}, {first_entry_ts + (i+1) * one_day})"
+        )
+
+    do_raw_drop(pds, args)
+    assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
+    assert "rows before: 5" in caplog.text
+    assert "rows after: 2" in caplog.text
+    assert "drop table test2 starting at 1609459200000" in caplog.text
+    assert "rows before: 5" in caplog.text
+    assert "rows after: 3" in caplog.text
+    assert "skipping etl table _etl_bronze_test" in caplog.text
+    assert "truncated 5 rows from 2 tables" in caplog.text
 
 
 @enforce_types
@@ -176,27 +206,34 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     first_entry_ts = 1609459200000 - one_day * 3  # 3 days before ST
 
     pds = PersistentDataStore(str(tmpdir))
-    pds.query_data("CREATE TABLE test1 (id INT, timestamp INT64)")
+    pds.query_data("CREATE TABLE _temp_bronze_test1 (id INT, timestamp INT64)")
 
     for i in range(5):
         pds.query_data(
-            f"INSERT INTO test1 VALUES ({i}, {first_entry_ts + i * one_day})"
+            f"INSERT INTO _temp_bronze_test1 VALUES ({i}, {first_entry_ts + i * one_day})"
         )
 
-    pds.query_data("CREATE TABLE test2 (id INT, timestamp INT64)")
+    pds.query_data("CREATE TABLE _etl_silver_test2 (id INT, timestamp INT64)")
 
     for i in range(5):
         pds.query_data(
-            f"INSERT INTO test2 VALUES ({i}, {first_entry_ts + (i+1) * one_day})"
+            f"INSERT INTO _etl_silver_test2 VALUES ({i}, {first_entry_ts + (i+1) * one_day})"
         )
 
-    do_raw_drop(pds, args)
-    assert "drop table test1 starting at 1609459200000" in caplog.text
+    pds.query_data("CREATE TABLE _etl_test_raw(id INT, timestamp INT64)")
+    for i in range(5):
+        pds.query_data(
+            f"INSERT INTO _etl_test_raw VALUES ({i}, {first_entry_ts + (i+1) * one_day})"
+        )
+
+    do_etl_drop(pds, args)
+    assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
     assert "rows after: 2" in caplog.text
-    assert "drop table test2 starting at 1609459200000" in caplog.text
+    assert "drop table _etl_silver_test2 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
     assert "rows after: 3" in caplog.text
+    assert "skipping non-etl table _etl_test_raw" in caplog.text
     assert "truncated 5 rows from 2 tables" in caplog.text
 
 
