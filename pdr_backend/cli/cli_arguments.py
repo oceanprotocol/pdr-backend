@@ -262,15 +262,6 @@ class _ArgParser_PPSS_NETWORK(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
 
 
 @enforce_types
-class _ArgParser_PPSS_NETWORK_QUERY(CustomArgParser, PPSS_Mixin, NETWORK_Mixin):
-    @enforce_types
-    def __init__(self, description: str, command_name: str):
-        super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["PPSS", "NETWORK"])
-        self.add_argument("QUERY", type=str, help="SQL query to run on the lake")
-
-
-@enforce_types
 # pylint: disable=too-many-ancestors
 class _ArgParser_APPROACH_PPSS_NETWORK(
     CustomArgParser,
@@ -527,7 +518,6 @@ ClaimRoseArgParser = _ArgParser_PPSS
 MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
 LakeArgParser = _ArgParser_PPSS_NETWORK
-LakeQueryArgParser = _ArgParser_PPSS_NETWORK_QUERY
 AnalyticsArgParser = _ArgParser_PPSS_NETWORK
 
 # utilities
