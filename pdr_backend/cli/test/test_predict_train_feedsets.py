@@ -33,11 +33,11 @@ def predict_train_feedset_fixture(arg_feed_single, arg_feed_list):
     return PredictTrainFeedset(predict=arg_feed_single, train_on=arg_feed_list)
 
 
-def test_predict_train_feedsets_initialization(predict_feed_fixture):
-    feeds = [predict_train_feedset_fixture]
-    predict_train_feedsets = PredictTrainFeedsets(feeds)
-    assert len(predict_train_feedsets) == 1
-    assert predict_train_feedsets[0] == predict_feed_fixture
+def test_predict_train_feedsets_initialization(predict_train_feedset_fixture):
+    feedset_list = [predict_train_feedset_fixture]
+    feedsets = PredictTrainFeedsets(feedset_list)
+    assert len(feedsets) == 1
+    assert feedsets[0] == predict_train_feedset_fixture
 
 
 def test_predict_train_feedsets_from_array_valid_data(
@@ -65,17 +65,17 @@ def test_predict_train_feedsets_from_array_missing_train_on(arg_feed_predict_str
     assert "train_on must be provided" in str(excinfo.value)
 
 
-def test_predict_train_feedsets_properties(predict_feed_fixture):
-    predict_train_feedsets = PredictTrainFeedsets(
-        [predict_feed_fixture, predict_feed_fixture]
+def test_predict_train_feedsets_properties(predict_train_feedset_fixture):
+    feedsets = PredictTrainFeedsets(
+        [predict_train_feedset_fixture, predict_train_feedset_fixture]
     )
-    assert len(predict_train_feedsets.feeds_str) == 2
-    assert len(predict_train_feedsets.feeds) == 2
-    assert predict_train_feedsets.min_epoch_seconds == 3600
+    assert len(feedsets.feeds_str) == 2
+    assert len(feedsets.feeds) == 2
+    assert feedsets.min_epoch_seconds == 3600
 
 
-def test_predict_train_feedsets_to_list(predict_feed_fixture):
-    predict_train_feedsets = PredictTrainFeedsets([predict_feed_fixture])
-    result = predict_train_feedsets.to_list()
+def test_predict_train_feedsets_to_list(predict_train_feedset_fixture):
+    feedsets = PredictTrainFeedsets([predict_train_feedset_fixture])
+    result = feedsets.to_list()
     assert isinstance(result, list)
     assert result[0]["predict"] == predict_train_feedset_fixture.predict
