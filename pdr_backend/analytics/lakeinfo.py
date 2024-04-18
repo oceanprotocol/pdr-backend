@@ -18,7 +18,7 @@ class LakeInfo:
         self.view_info: Dict[str, DataFrame] = {}
 
     def generate(self):
-        self.all_table_names = self.pds.get_table_names()
+        self.all_table_names = self.pds.get_table_names(all_schemas=True)
 
         for table_name in self.all_table_names:
             self.table_info[table_name] = self.pds.query_data(
