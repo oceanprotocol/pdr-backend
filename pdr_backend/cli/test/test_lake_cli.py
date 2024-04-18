@@ -14,7 +14,7 @@ from pdr_backend.cli.lake_cli import (
     do_lake_subcommand,
     do_raw_drop,
     do_raw_update,
-    get_lake_dir,
+    str_as_abspath,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -33,10 +33,10 @@ def test_do_lake_subcommand():
 
 
 @enforce_types
-def test_get_lake_dir():
+def test_str_as_abspath():
     abs_path = os.path.abspath("lake_data")
-    assert get_lake_dir("lake_data") == abs_path
-    assert get_lake_dir(os.path.abspath("lake_data")) == abs_path
+    assert str_as_abspath("lake_data") == abs_path
+    assert str_as_abspath(os.path.abspath("lake_data")) == abs_path
 
 
 @enforce_types

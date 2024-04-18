@@ -24,7 +24,7 @@ def timestr(s: str) -> UnixTimeMs:
 
 
 @enforce_types
-def get_lake_dir(s: str):
+def str_as_abspath(s: str):
     if s != os.path.abspath(s):  # rel path given; needs an abs path
         return os.path.abspath(s)
     # abs path given
@@ -46,7 +46,9 @@ def do_lake_subcommand(args):
             help="drop or update",
         )
 
-    parser.add_argument("LAKE_DIR", type=str, help="The directory of the lake")
+    parser.add_argument(
+        "LAKE_DIR", type=str_as_abspath, help="The directory of the lake"
+    )
 
     if args[0] == "query":
         parser.add_argument("QUERY", type=str, help="The query to run")
@@ -56,11 +58,10 @@ def do_lake_subcommand(args):
             parser.add_argument("END", type=timestr, help="End date yyyy-mm-dd")
 
     args = parser.parse_args(args)
-    lake_dir = get_lake_dir(args.LAKE_DIR)
 
     func_name = f"do_lake_{args.subcommand}"
     func = globals().get(func_name)
-    func(lake_dir, args)
+    func(args.LAKE_DIR, args)
 
 
 @enforce_types
