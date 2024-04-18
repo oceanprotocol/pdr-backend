@@ -81,15 +81,14 @@ def test_table_bronze_pdr_slots(
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )
 
-
     # Create etl view for bronze_pdr_slots
     view_query = """
             CREATE VIEW {} 
             AS SELECT * FROM {}
         """.format(
-            get_table_name(bronze_pdr_predictions_table_name, TableType.ETL),
-            get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
-        )
+        get_table_name(bronze_pdr_predictions_table_name, TableType.ETL),
+        get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP),
+    )
 
     pds.execute_sql(view_query)
 
