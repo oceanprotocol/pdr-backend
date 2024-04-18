@@ -8,8 +8,18 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class StakeTup(Tuple[SubgraphFeed, Eth, Eth]):
-    """(feed, stake_up, stake_down)"""
+class StakeTup:
+    def __init__(self, feed: SubgraphFeed, stake_up: Eth, stake_down: Eth):
+        self.feed = feed
+        self.stake_up = stake_up
+        self.stake_down = stake_down
+
+    def __eq__(self, other):
+        return (
+            self.feed == other.feed
+            and self.stake_up == other.stake_up
+            and self.stake_down == other.stake_down
+        )
 
 
 @enforce_types
@@ -50,9 +60,9 @@ class StakesPerSlot:
         stakes_down: List[Eth] = []
         feed_addrs: List[str] = []
 
-        for feed, stake_up, stake_down in self.get_stakes_at_slot(timeslot):
-            stakes_up.append(stake_up)
-            stakes_down.append(stake_down)
-            feed_addrs.append(feed.address)
+        for tup in self.get_stakes_at_slot(timeslot):
+            stakes_up.append(tup.stake_up)
+            stakes_down.append(tup.stake_down)
+            feed_addrs.append(tup.feed.address)
 
         return stakes_up, stakes_down, feed_addrs

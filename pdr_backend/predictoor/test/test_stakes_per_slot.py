@@ -21,10 +21,10 @@ STAKE_UP1, STAKE_DOWN1 = Eth(11.0), Eth(21.0)
 STAKE_UP2, STAKE_DOWN2 = Eth(12.0), Eth(22.0)
 STAKE_UP3, STAKE_DOWN3 = Eth(13.0), Eth(23.0)
 
-TUP0 = StakeTup((FEED0, STAKE_UP0, STAKE_DOWN0))
-TUP1 = StakeTup((FEED0, STAKE_UP1, STAKE_DOWN1))
-TUP2 = StakeTup((FEED1, STAKE_UP2, STAKE_DOWN2))
-TUP3 = StakeTup((FEED1, STAKE_UP3, STAKE_DOWN3))
+TUP0 = StakeTup(FEED0, STAKE_UP0, STAKE_DOWN0)
+TUP1 = StakeTup(FEED0, STAKE_UP1, STAKE_DOWN1)
+TUP2 = StakeTup(FEED1, STAKE_UP2, STAKE_DOWN2)
+TUP3 = StakeTup(FEED1, STAKE_UP3, STAKE_DOWN3)
 
 TIMESLOT0 = UnixTimeS(1000)
 TIMESLOT1 = UnixTimeS(2000)
@@ -32,9 +32,9 @@ TIMESLOT1 = UnixTimeS(2000)
 
 @enforce_types
 def test_StakeTup():
-    assert TUP0[0] == FEED0
-    assert TUP0[1] == STAKE_UP0
-    assert TUP0[2] == STAKE_DOWN0
+    assert TUP0.feed == FEED0
+    assert TUP0.stake_up == STAKE_UP0
+    assert TUP0.stake_down == STAKE_DOWN0
 
 
 @enforce_types
