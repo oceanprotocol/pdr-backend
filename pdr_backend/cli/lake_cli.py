@@ -9,7 +9,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
-LAKE_SUBCOMMANDS = ["describe", "query", "raw", "etl"]
+LAKE_SUBCOMMANDS = ["describe", "query", "raw", "etl", "update"]
 
 
 # utilities
@@ -31,43 +31,56 @@ def str_as_abspath(s: str):
     return s
 
 
+@enforce_types
+class LakeArgParser(ArgumentParser):
+    def __init__(self, plain_args):
+        super().__init__()
+        self.add_argument("subcommand", type=str, help="")
+
+        if plain_args[0] in ["raw", "etl"]:
+            self.add_argument(
+                "raw_subcommand_type",
+                type=str,
+                choices=["drop", "update"],
+                help="drop or update",
+            )
+
+        if plain_args[0] in ["etl", "raw"] and plain_args[1] == "update":
+            self.add_argument("PPSS_FILE", type=str, help="PPSS yaml settings file")
+            self.add_argument(
+                "NETWORK",
+                type=str,
+                help="sapphire-testnet|sapphire-mainnet|development|barge-pytest|..",
+            )
+        else:
+            self.add_argument(
+                "LAKE_DIR", type=str_as_abspath, help="The directory of the lake"
+            )
+
+        if plain_args[0] == "query":
+            self.add_argument("QUERY", type=str, help="The query to run")
+        elif plain_args[0] in ["raw", "etl"]:
+            self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
+            if plain_args[1] == "update":
+                self.add_argument("END", type=timestr, help="End date yyyy-mm-dd")
+
+
 # entrypoint
 def do_lake_subcommand(args):
     assert args[0] in LAKE_SUBCOMMANDS, f"Invalid lake subcommand: {args[0]}"
 
-    parser = ArgumentParser()
-    parser.add_argument("subcommand", type=str, help="")
+    parser = LakeArgParser(args)
+    parsed_args = parser.parse_args(args)
 
-    if args[0] in ["raw", "etl"]:
-        parser.add_argument(
-            "raw_subcommand_type",
-            type=str,
-            choices=["drop", "update"],
-            help="drop or update",
-        )
-
-    parser.add_argument(
-        "LAKE_DIR", type=str_as_abspath, help="The directory of the lake"
-    )
-
-    if args[0] == "query":
-        parser.add_argument("QUERY", type=str, help="The query to run")
-    elif args[0] in ["raw", "etl"]:
-        parser.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
-        if args[1] == "update":
-            parser.add_argument("END", type=timestr, help="End date yyyy-mm-dd")
-
-    args = parser.parse_args(args)
-
-    func_name = f"do_lake_{args.subcommand}"
+    func_name = f"do_lake_{parsed_args.subcommand}"
     func = globals().get(func_name)
-    func(args.LAKE_DIR, args)
+    func(parsed_args)
 
 
 @enforce_types
 # pylint: disable=unused-argument
-def do_lake_describe(lake_dir: str, args):
-    lake_info = LakeInfo(lake_dir)
+def do_lake_describe(args):
+    lake_info = LakeInfo(args.LAKE_DIR)
     lake_info.run()
 
 
@@ -120,12 +133,12 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
 
 
 @enforce_types
-def do_lake_query(lake_dir: str, args):
+def do_lake_query(args):
     """
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(lake_dir, read_only=True)
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
         print(df)
@@ -135,44 +148,42 @@ def do_lake_query(lake_dir: str, args):
 
 
 @enforce_types
-def do_lake_raw(lake_dir: str, args):
+def do_lake_raw(args):
     """
     @description
         Drop or update raw data
     """
-    pds = PersistentDataStore(lake_dir, read_only=False)
     if args.raw_subcommand_type == "drop":
-        do_raw_drop(pds, args)
+        do_raw_drop(args)
     elif args.raw_subcommand_type == "update":
-        do_raw_update(pds, args)
+        do_raw_update(args)
 
 
 @enforce_types
-def do_raw_drop(pds: PersistentDataStore, args):
+def do_raw_drop(args):
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
     drop_tables_from_st(pds, "raw", args.ST)
 
 
 @enforce_types
-def do_raw_update(pds: PersistentDataStore, args):
-    assert pds  # silence unused warning until we use it
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}")
+def do_raw_update(args):
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
 
 
 @enforce_types
-def do_lake_etl(lake_dir: str, args):
-    pds = PersistentDataStore(lake_dir, read_only=False)
+def do_lake_etl(args):
     if args.raw_subcommand_type == "drop":
-        do_etl_drop(pds, args)
+        do_etl_drop(args)
     elif args.raw_subcommand_type == "update":
-        do_etl_update(pds, args)
+        do_etl_update(args)
 
 
 @enforce_types
-def do_etl_drop(pds: PersistentDataStore, args):
+def do_etl_drop(args):
+    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
 
 @enforce_types
-def do_etl_update(pds: PersistentDataStore, args):
-    assert pds  # silence unused warning until we use it
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}")
+def do_etl_update(args):
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
