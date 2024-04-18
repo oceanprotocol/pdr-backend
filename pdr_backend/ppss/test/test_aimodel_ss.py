@@ -1,5 +1,3 @@
-import re
-
 from enforce_typing import enforce_types
 import numpy as np
 import pytest

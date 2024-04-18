@@ -159,7 +159,6 @@ class MockModel:
         self.last_yptrue = None  # ""
 
     def predict_ptrue(self, X: np.ndarray) -> np.ndarray:
-        ar_n = self.aimodel_ss.autoregressive_n
         (n_points, _) = X.shape
         assert n_points == 1  # this mock can only handle 1 input point
 

@@ -36,28 +36,34 @@ def test_multisim1(tmpdir):
 @enforce_types
 def _constructor_d_with_fast_runtime(tmpdir):
     s = fast_test_yaml_str(tmpdir)
-    constructor_d = PPSS.constructor_dict(yaml_str=s)
+    main_d = PPSS.constructor_dict(yaml_str=s)
 
-    predict_train_feedset = "binanceus BTC/USDT c 5m"
-    input_feeds = [predict_train_feedset]
+    feed_s = "binanceus BTC/USDT c 5m"
+    input_feeds = [feed_s]
+    feedset_list = [{"train_on": feed_s, "predict": feed_s}]
 
     # lake ss
     parquet_dir = os.path.join(tmpdir, "parquet_data")
-    d = lake_ss_test_dict(parquet_dir, input_feeds)
-    d["st_timestr"] = "2023-06-18"
-    d["fin_timestr"] = "2023-06-19"
-    constructor_d["lake_ss"] = d
+    lake_d = lake_ss_test_dict(parquet_dir, input_feeds)
+    assert "st_timestr" in lake_d
+    assert "fin_timestr" in lake_d
+    lake_d["st_timestr"] = "2023-06-18"
+    lake_d["fin_timestr"] = "2023-06-19"
+    assert "lake_ss" in main_d
+    main_d["lake_ss"] = lake_d
 
     # predictoor ss
-    d = predictoor_ss_test_dict(
-        [{"train_on": predict_train_feedset, "predict": predict_feed}], input_feeds
-    )
-    d["aimodel_ss"]["max_n_train"] = 100
-    constructor_d["predictoor_ss"] = d
+    pdr_d = predictoor_ss_test_dict(feedset_list)
+    assert "aimodel_ss" in pdr_d
+    assert "max_n_train" in pdr_d["aimodel_ss"]
+    pdr_d["aimodel_ss"]["max_n_train"] = 100
+    assert "predictoor_ss" in main_d
+    main_d["predictoor_ss"] = pdr_d
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir=log_dir, test_n=10)
-    constructor_d["sim_ss"] = d
+    sim_d = sim_ss_test_dict(log_dir=log_dir, test_n=10)
+    assert "sim_ss" in main_d
+    main_d["sim_ss"] = sim_d
 
-    return constructor_d
+    return main_d

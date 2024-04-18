@@ -9,24 +9,28 @@ from pdr_backend.cli.arg_pair import ArgPair
 
 @enforce_types
 def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
-    # If feed_obj is a string, convert to list
-    if isinstance(feed_obj, str):
+    # Create feed_list from feed_obj
+    if isinstance(feed_obj, list):
+        feed_list = feed_obj
+    else:
+        assert isinstance(feed_obj, str)
         # If comma separated string, split
         # If not comma separated, convert to list
         if "," in feed_obj:
-            feed_obj = feed_obj.split(",")
+            feed_list = feed_obj.split(",")
         else:
-            feed_obj = [feed_obj]
+            feed_list = [feed_obj]
 
-    if not isinstance(feed_obj, list):
-        raise ValueError(f"feed_obj must be a list, got {feed_obj}")
+    if not isinstance(feed_list, list):
+        raise ValueError(f"feed_list must be a list, got {feed_list}")
 
-    parsed_objs: ArgFeeds = ArgFeeds([])
-    for feed in feed_obj:
-        # Convert each feed_obj string to ArgFeeds
+    parsed_arg_feeds: ArgFeeds = ArgFeeds([])
+    for feed in feed_list:
+        # Convert each feed string to ArgFeeds
         arg_feeds: List[ArgFeed] = ArgFeeds.from_str(str(feed))
-        parsed_objs.extend(arg_feeds)
-    return parsed_objs
+        parsed_arg_feeds.extend(arg_feeds)
+
+    return parsed_arg_feeds
 
 
 class PredictTrainFeedset:
@@ -39,18 +43,18 @@ class PredictTrainFeedset:
     """
 
     @enforce_types
-    def __init__(self, predict_feed: ArgFeed, train_feeds: ArgFeeds):
-        self.predict: ArgFeed = predict_feed
-        self.train_on: ArgFeeds = train_feeds
+    def __init__(self, predict: ArgFeed, train_on: ArgFeeds):
+        self.predict: ArgFeed = predict
+        self.train_on: ArgFeeds = train_on
 
     @classmethod
     def from_feed_objs(
         cls,
-        predict_feed: ArgFeed,
-        unparsed_train_feeds: Union[str, list],
+        predict: ArgFeed,
+        unparsed_train_on: Union[str, list],
     ):
-        train_feeds: ArgFeeds = parse_feed_obj(unparsed_train_feeds)
-        return cls(predict_feed, train_feeds)
+        train_on: ArgFeeds = parse_feed_obj(unparsed_train_on)
+        return cls(predict, train_on)
 
     @enforce_types
     def to_dict(self):

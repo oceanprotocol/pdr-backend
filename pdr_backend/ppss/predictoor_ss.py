@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.predict_train_feedsets import (
     PredictTrainFeedset,
     PredictTrainFeedsets,
@@ -114,7 +115,7 @@ class PredictoorSS(StrMixin):
                 and predict_feed.timeframe == timeframe
                 and predict_feed.exchange == exchange
             ):
-                return feed
+                return predict_feed
         return None
 
     @enforce_types

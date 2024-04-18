@@ -1,10 +1,9 @@
-from typing import List, Optional, Union
+from typing import List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.cli.parse_feed_obj import parse_feed_obj
 from pdr_backend.cli.predict_train_feedset import PredictTrainFeedset
 
@@ -30,8 +29,7 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
           PredictTrainFeedsets
 
         @notes
-
-        Example 'feedset_list' = [
+          Example 'feedset_list' = [
             {
                 "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
                 "train_on": [
@@ -44,22 +42,23 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
                 "train_on": "binance BTC/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
             },
         """
-        return_list = []
+        final_list = []
         for feedset_dict in feedset_list:
             predict_dict = feedset_dict.get("predict")
-            train_dict = feedset_dict.get("train_on")
-            if train_dict is None:
+            train_on_dict = feedset_dict.get("train_on")
+            if train_on_dict is None:
                 raise ValueError(f"train_on must be provided, got {feedset_dict}")
             if predict_dict is None:
                 raise ValueError(f"predict must be provided, got {feedset_dict}")
             predict_feeds: ArgFeeds = parse_feed_obj(predict_dict)
             for predict_feed in predict_feeds:
-                predict_train_feedset = PredictTrainFeedset.from_feed_objs(
-                    predict_feed, train_dict
+                feedset = PredictTrainFeedset.from_feed_objs(
+                    predict_feed, train_on_dict
                 )
-                return_list.append(predict_train_feedset)
+                final_list.append(feedset)
 
-        return cls(return_list)
+        predict_train_feedset = cls(final_list)
+        return predict_train_feedset
 
     @property
     def feeds_str(self) -> List[str]:

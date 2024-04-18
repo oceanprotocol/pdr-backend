@@ -4,7 +4,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.arg_pair import ArgPair
 
 
 @enforce_types

@@ -106,7 +106,7 @@ class AimodelDataFactory:
 
         # condition other inputs
         if not train_feeds:
-            train_feeds = [feed]
+            train_feeds = [predict_feed]
         ss = self.ss.aimodel_ss
         x_dim_len = len(train_feeds) * ss.autoregressive_n
 

@@ -8,15 +8,8 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class StakeTup(tuple):
-    def __new__(self, feed: SubgraphFeed, stake_up: Eth, stake_down: Eth):
-        return tuple.__new__(StakeTup, (feed, stake_up, stake_down))
-
-
 class StakeTup(Tuple[SubgraphFeed, Eth, Eth]):
     """(feed, stake_up, stake_down)"""
-
-    pass
 
 
 @enforce_types

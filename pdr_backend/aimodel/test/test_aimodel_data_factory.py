@@ -35,15 +35,13 @@ def test_ycont_to_ytrue():
 @enforce_types
 def test_create_xy__0():
     # create predictoor_ss
-    feedsets = [
+    feedset_list = [
         {
             "predict": "binanceus ETH/USDT c 5m",
             "train_on": "binanceus ETH/USDT c 5m",
         }
     ]
-    d = predictoor_ss_test_dict(
-        predict_train_feedsets=feedsets,
-    )
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
     assert "max_n_train" in d["ai_model_ss"]
     d["aimodel_ss"]["max_n_train"] = 4
 
@@ -113,7 +111,7 @@ def test_create_xy__0():
     )
 
     # test X/y/etc - explicit train_feeds
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X2, y2, x2_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X2, y2, x_df2)
     assert_array_equal(X2, target_X)
     assert_array_equal(y2, target_y)
     assert x_df2.equals(target_x_df)
@@ -122,13 +120,13 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy_reg__1exchange_1coin_1signal():
-    feedsets = [
+    feedset_list = [
         {
             "predict": "binanceus ETH/USDT h 5m",
             "train_on": "binanceus ETH/USDT h 5m",
         }
     ]
-    d = predictoor_ss_test_dict(predict_train_feedsets=feedsets)
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
     predictoor_ss = PredictoorSS(d)
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
@@ -274,7 +272,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
 
     # create predictoor_ss
     d = predictoor_ss_test_dict()
-    feedsets = redictTrainFeedsets.from_array(
+    feedsets = PredictTrainFeedsets.from_array(
         [
             {
                 "predict": "binanceus ETH/USDT h 5m",
@@ -306,13 +304,13 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     # create X, y, x_df
     aimodel_data_factory = AimodelDataFactory(ss)
     testshift = 0
-    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
-    train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
+    predict_feed = ss.predict_train_feedsets[0].predict
+    train_feeds = ss.predict_train_feedsets[0].train_on
     assert len(train_feeds) == 4
     X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
-        predict_feeds,
+        predict_feed,
         train_feeds,
     )
 
@@ -384,25 +382,25 @@ def test_create_xy_reg__check_timestamp_order():
     bad_uts = sorted(uts, reverse=True)  # bad order
     bad_mergedohlcv_df = mergedohlcv_df.with_columns(pl.Series("timestamp", bad_uts))
     with pytest.raises(AssertionError):
-        factory.create_xy(bad_mergedohlcv_df, testshift=0, feed=feed.predict)
+        factory.create_xy(bad_mergedohlcv_df, testshift, predict_feed)
 
 
 @enforce_types
 def test_create_xy_reg__input_type():
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT()
+    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT()
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(aimodel_data_factory, AimodelDataFactory)
+    assert isinstance(factory, AimodelDataFactory)
 
     # create_xy() input should be pl
     testshift = 0
     predict_feed = factory.ss.predict_train_feedsets[0].predict
-    aimodel_data_factory.create_xy(mergedohlcv_df, testshift, predict_feed)
+    factory.create_xy(mergedohlcv_df, testshift, predict_feed)
 
     # create_xy() inputs shouldn't be pd
     pandas_df = mergedohlcv_df.to_pandas()
     with pytest.raises(AssertionError):
-        aimodel_data_factory.create_xy(pandas_df, testshift, predict_feed)
+        factory.create_xy(pandas_df, testshift, predict_feed)
 
 
 @enforce_types
@@ -414,10 +412,10 @@ def test_create_xy_reg__handle_nan():
             "train_on": "binanceus ETH/USDT h 5m",
         }
     ]
-    d = predictoor_ss_test_dict(predict_train_feedsets=feeds)
+    d = predictoor_ss_test_dict(feedset_list=feeds)
     predictoor_ss = PredictoorSS(d)
+    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     testshift = 0
-    predict_feed = factory.ss.predict_train_feedsets[0].predict
     factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 

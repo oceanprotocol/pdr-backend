@@ -53,7 +53,7 @@ class PredictoorAgent:
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
         feed_addrs = cand_feeds.keys()
-        feed_addrs = self._to_checksum(addrs)
+        feed_addrs = self._to_checksum(feed_addrs)
         self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
         self.pred_submitter_mgr.approve_ocean(feed_addrs)
 
