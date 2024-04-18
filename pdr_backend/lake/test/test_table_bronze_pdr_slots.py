@@ -75,25 +75,39 @@ def test_table_bronze_pdr_slots(
     assert pdr_slots_df["roundSumStakesUp"][0] is None
     assert pdr_slots_df["roundSumStakes"][0] is None
 
-    bronze_pdr_predictions_df = get_bronze_pdr_predictions_data_with_SQL(
+    get_bronze_pdr_predictions_data_with_SQL(
         ppss.lake_ss.lake_dir,
         st_ms=UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr),
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )
 
-    gql_tables["bronze_pdr_predictions"].append_to_storage(
-        bronze_pdr_predictions_df, TableType.ETL
-    )
 
-    bronze_pdr_slots = get_bronze_pdr_slots_data_with_SQL(
+    # Create etl view for bronze_pdr_slots
+    view_query = """
+            CREATE VIEW {} 
+            AS SELECT * FROM {}
+        """.format(
+            get_table_name(bronze_pdr_predictions_table_name, TableType.ETL),
+            get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+        )
+
+    pds.execute_sql(view_query)
+
+    get_bronze_pdr_slots_data_with_SQL(
         ppss.lake_ss.lake_dir,
         st_ms=UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr),
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
+    )
+
+    bronze_pdr_slots = pds.query_data(
+        f"""
+        SELECT * FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        """
     )
 
     assert len(bronze_pdr_slots) == 7
     assert bronze_pdr_slots.schema == bronze_pdr_slots_schema
 
-    assert bronze_pdr_slots["truevalue"].null_count() == 1
+    assert bronze_pdr_slots["truevalue"].null_count() == 2
     assert bronze_pdr_slots["roundSumStakes"].null_count() == 2
     assert bronze_pdr_slots["source"].null_count() == 2
