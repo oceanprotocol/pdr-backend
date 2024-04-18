@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.lake_cli import (
+from pdr_backend.cli.cli_module_lake import (
     PersistentDataStore,
     do_lake_describe,
     do_lake_etl_drop,
@@ -14,29 +14,23 @@ from pdr_backend.cli.lake_cli import (
     do_lake_raw_drop,
     do_lake_raw_update,
     do_lake_subcommand,
-    str_as_abspath,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
 def test_do_lake_subcommand():
-    with patch("pdr_backend.cli.lake_cli.do_lake_describe") as mock_do_lake_describe:
+    with patch(
+        "pdr_backend.cli.cli_module_lake.do_lake_describe"
+    ) as mock_do_lake_describe:
         do_lake_subcommand(["describe", "lake_data"])
 
     mock_do_lake_describe.assert_called_once()
 
-    with patch("pdr_backend.cli.lake_cli.do_lake_query") as mock_do_lake_query:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_query") as mock_do_lake_query:
         do_lake_subcommand(["query", "lake_data", "query"])
 
     mock_do_lake_query.assert_called_once()
-
-
-@enforce_types
-def test_str_as_abspath():
-    abs_path = os.path.abspath("lake_data")
-    assert str_as_abspath("lake_data") == abs_path
-    assert str_as_abspath(os.path.abspath("lake_data")) == abs_path
 
 
 @enforce_types
@@ -46,7 +40,7 @@ def test_do_lake_describe():
     args.subcommand = "describe"
     args.LAKE_DIR = lake_dir
 
-    with patch("pdr_backend.cli.lake_cli.LakeInfo") as mock_lake_info:
+    with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
         do_lake_describe(args)
 
     mock_lake_info.assert_called_once_with(lake_dir)
@@ -64,7 +58,9 @@ def test_do_lake_query(caplog):
     mock_pds = Mock()
     mock_pds.query_data.return_value = "query result"
 
-    with patch("pdr_backend.cli.lake_cli.PersistentDataStore", return_value=mock_pds):
+    with patch(
+        "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds
+    ):
         do_lake_query(args)
 
     mock_pds.query_data.assert_called_once_with(query)
@@ -73,7 +69,7 @@ def test_do_lake_query(caplog):
     mock_pds_err.query_data.side_effect = Exception("boom!")
 
     with patch(
-        "pdr_backend.cli.lake_cli.PersistentDataStore", return_value=mock_pds_err
+        "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds_err
     ):
         do_lake_query(args)
 
@@ -84,7 +80,7 @@ def test_do_lake_query(caplog):
 def test_do_lake_raw_delegation():
     args = ["raw", "drop", "lake_data", "2021-01-01"]
 
-    with patch("pdr_backend.cli.lake_cli.do_lake_raw_drop") as raw_drop:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_drop") as raw_drop:
         do_lake_subcommand(args)
 
     assert raw_drop.called
@@ -109,7 +105,7 @@ def test_do_lake_raw_delegation():
         "2021-01-02",
     ]
 
-    with patch("pdr_backend.cli.lake_cli.do_lake_raw_update") as raw_update:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
         do_lake_subcommand(args)
 
     assert raw_update.called
@@ -119,7 +115,7 @@ def test_do_lake_raw_delegation():
 def test_do_lake_etl_delegation():
     args = ["etl", "drop", "lake_data", "2021-01-01"]
 
-    with patch("pdr_backend.cli.lake_cli.do_lake_etl_drop") as etl_drop:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
         do_lake_subcommand(args)
 
     assert etl_drop.called
@@ -139,7 +135,7 @@ def test_do_lake_etl_delegation():
         "2021-01-02",
     ]
 
-    with patch("pdr_backend.cli.lake_cli.do_lake_etl_update") as etl_update:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
         do_lake_subcommand(args)
 
     assert etl_update.called
@@ -169,7 +165,7 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "test2", ts - 2 * one_day)
     _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
 
-    with patch("pdr_backend.cli.lake_cli.PersistentDataStore", return_value=pds):
+    with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
         do_lake_raw_drop(args)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
@@ -196,7 +192,7 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_silver_test2", ts - 2 * one_day)
     _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
 
-    with patch("pdr_backend.cli.lake_cli.PersistentDataStore", return_value=pds):
+    with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
         do_lake_etl_drop(args)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
