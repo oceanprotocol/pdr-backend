@@ -1,5 +1,4 @@
 import logging
-import polars as pl
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
