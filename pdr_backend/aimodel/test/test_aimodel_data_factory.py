@@ -37,7 +37,7 @@ def test_create_xy__0():
     feedset_list = [
         {
             "predict": "binanceus ETH/USDT c 5m",
-            "train_on": "binanceus ETH/USDT c 5m",
+            "train_on": "binanceus ETH/USDT oc 5m",
         }
     ]
     d = predictoor_ss_test_dict(feedset_list=feedset_list)
@@ -83,39 +83,24 @@ def test_create_xy__0():
 
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
 
-    # create X/y/etc - default train_feeds
+    # do work
     testshift = 0
     factory = AimodelDataFactory(predictoor_ss)
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
-    X, y, x_df, xrecent = factory.create_xy(
-        mergedohlcv_df,
-        testshift,
-        predict_feed,
-    )
-
-    # test X/y/etc - default train_feeds
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
-    assert_array_equal(X, target_X)
-    assert_array_equal(y, target_y)
-    assert x_df.equals(target_x_df)
-    assert_array_equal(xrecent, target_xrecent)
-
-    # create X/y/etc - explicit train_feeds
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
-    assert len(train_feeds) == 1
-    X2, y2, x_df2, xrecent2 = factory.create_xy(
+    X, y, x_df, xrecent = factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
         train_feeds,
     )
 
-    # test X/y/etc - explicit train_feeds
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X2, y2, x_df2)
-    assert_array_equal(X2, target_X)
-    assert_array_equal(y2, target_y)
-    assert x_df2.equals(target_x_df)
-    assert_array_equal(xrecent2, target_xrecent)
+    # test result
+    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    assert_array_equal(X, target_X)
+    assert_array_equal(y, target_y)
+    assert x_df.equals(target_x_df)
+    assert_array_equal(xrecent, target_xrecent)
 
 
 @enforce_types
@@ -274,8 +259,8 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
         {
             "predict": "binanceus ETH/USDT h 5m",
             "train_on": [
-                "binanceus BTC/USDT ETH/USDT h 5m",
-                "kraken BTC/USDT ETH/USDT h 5m",
+                "binanceus BTC/USDT ETH/USDT hl 5m",
+                "kraken BTC/USDT ETH/USDT hl 5m",
             ],
         }
     ]
@@ -301,7 +286,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     testshift = 0
     predict_feed = ss.predict_train_feedsets[0].predict
     train_feeds = ss.predict_train_feedsets[0].train_on
-    assert len(train_feeds) == 4
+    assert len(train_feeds) == 8
     X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
