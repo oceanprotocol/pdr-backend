@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -68,8 +68,8 @@ class AimodelDataFactory:
         self,
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
-        feed: ArgFeed,
-        feeds: Optional[ArgFeeds] = None,
+        predict_feed: ArgFeed,
+        train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -80,6 +80,8 @@ class AimodelDataFactory:
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
+          predict_feed -- feed to predict
+          train_feeds -- feeds to use for model inputs. If None use predict feed
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
@@ -94,27 +96,30 @@ class AimodelDataFactory:
         assert "timestamp" in mergedohlcv_df.columns
         assert "datetime" not in mergedohlcv_df.columns
 
-        # every column should be ordered with oldest first, youngest last.
-        # let's verify! The timestamps should be in ascending order
+        # condition mergedohlcv_df
+        # - every column should be ordered with oldest first, youngest last.
+        #  let's verify! The timestamps should be in ascending order
         uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
-
-        # condition inputs
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
-        ss = self.ss.aimodel_ss
-        x_dim_len = 0
-        if not feeds:
-            x_dim_len = ss.n
-            feeds = ss.feeds
+
+        # condition other inputs
+        train_feeds_list: List[ArgFeed]
+        if train_feeds:
+            train_feeds_list = train_feeds
         else:
-            x_dim_len = len(feeds) * ss.autoregressive_n
+            train_feeds_list = [predict_feed]
+        ss = self.ss.aimodel_ss
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
+
         # main work
         x_df = pd.DataFrame()  # build this up
         xrecent_df = pd.DataFrame()  # ""
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in feeds
+            f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
+            for train_feed in train_feeds_list
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
@@ -146,7 +151,7 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{feed.exchange}:{feed.pair}:{feed.signal}"
+        hist_col = f"{predict_feed.exchange}:{predict_feed.pair}:{predict_feed.signal}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 

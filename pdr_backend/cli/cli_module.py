@@ -73,12 +73,10 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-    # TO-DO Find a way to pass a specific feed
-    # Or update simengine to simulate on all feeds
-    feed = ppss.predictoor_ss.feeds[0]
-    if len(ppss.predictoor_ss.feeds) > 0:
-        logger.warning("Multiple prediction feeds provided, using the first one")
-    sim_engine = SimEngine(ppss, feed)
+    feedset = ppss.predictoor_ss.predict_train_feedsets[0]
+    if len(ppss.predictoor_ss.predict_train_feedsets) > 0:
+        logger.warning("Multiple predict feeds provided, using the first one")
+    sim_engine = SimEngine(ppss, feedset)
     sim_engine.run()
 
 

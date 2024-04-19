@@ -1,6 +1,9 @@
+from enforce_typing import enforce_types
+
 from pdr_backend.deployer.util.models.PredictoorAgentConfig import PredictoorAgentConfig
 
 
+@enforce_types
 def test_predictoor_agent_config():
     agent_config = PredictoorAgentConfig(
         private_key="0x1",

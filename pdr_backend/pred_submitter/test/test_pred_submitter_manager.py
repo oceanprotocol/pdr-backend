@@ -144,12 +144,12 @@ def test_submit_prediction_and_payout(
     bal_before = OCEAN.balanceOf(web3_config.owner)
     assert bal_before > Wei(100), "Not enough balance to execute the test"
 
-    feeds = [
+    feed_addrs = [
         feed_contract1.contract_address,
         feed_contract2.contract_address,
     ]
     # give allowance
-    tx_receipt = pred_submitter_mgr.approve_ocean(feeds)
+    tx_receipt = pred_submitter_mgr.approve_ocean(feed_addrs)
     assert tx_receipt.status == 1, "Transaction failed"
 
     # submit prediction
@@ -158,7 +158,7 @@ def test_submit_prediction_and_payout(
     tx_receipt = pred_submitter_mgr.submit_prediction(
         stakes_up=[Wei(20), Wei(30)],
         stakes_down=[Wei(40), Wei(10)],
-        feeds=feeds,
+        feed_addrs=feed_addrs,
         epoch=prediction_epoch,
         wait_for_receipt=True,
     )
@@ -184,7 +184,7 @@ def test_submit_prediction_and_payout(
     bal_before = OCEAN.balanceOf(web3_config.owner)
 
     # claim
-    pred_submitter_mgr.get_payout([prediction_epoch], feeds, wait_for_receipt=True)
+    pred_submitter_mgr.get_payout([prediction_epoch], feed_addrs, wait_for_receipt=True)
 
     # get the OCEAN balance of the owner after claiming
     bal_after = OCEAN.balanceOf(web3_config.owner)
