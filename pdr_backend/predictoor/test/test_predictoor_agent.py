@@ -203,7 +203,7 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        feed = ppss.predictoor_ss.feeds[0]
+        feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n
@@ -246,7 +246,7 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
         agent = PredictoorAgent(ppss)
-        feed = ppss.predictoor_ss.feeds[0]
+        feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
 
         ar_n = aimodel_ss.autoregressive_n

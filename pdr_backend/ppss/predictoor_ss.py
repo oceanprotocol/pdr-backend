@@ -2,10 +2,6 @@ from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.arg_exchange import ArgExchange
-from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import (
     PredictTrainFeedset,
     PredictTrainFeedsets,
@@ -35,7 +31,11 @@ class PredictoorSS(StrMixin):
             raise ValueError(s)
 
     # ------------------------------------------------------------------
-    # yaml properties (except feeds-related attributes, see below for that)
+    # yaml properties
+    @property
+    def predict_train_feedsets(self) -> PredictTrainFeedsets:
+        feedset_list: List[dict] = self.d["predict_train_feedsets"]
+        return PredictTrainFeedsets.from_list_of_dict(feedset_list)
 
     @property
     def approach(self) -> int:
@@ -90,40 +90,30 @@ class PredictoorSS(StrMixin):
     def pred_submitter_mgr(self) -> str:
         return self.d["pred_submitter_mgr"]
 
+    # --------------------------------
+    # setters (add as needed)
+    @enforce_types
+    def set_approach(self, approach: int):
+        if approach not in CAND_APPROACHES:
+            s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
+            raise ValueError(s)
+        self.d["approach"] = approach
+
     # ------------------------------------------------------------------
-    # 'predict_train_feedsets' attribute and related
-
-    @property
-    def predict_train_feedsets(self) -> PredictTrainFeedsets:
-        feedset_list: List[dict] = self.d["predict_train_feedsets"]
-        return PredictTrainFeedsets.from_list_of_dict(feedset_list)
-
-    @property
-    def minimum_timeframe_seconds(self) -> int:
-        min_tf_seconds = int(1e9)
-        for feed in self.predict_train_feedsets.feeds:
-            assert feed.timeframe is not None, f"Feed: {feed} is missing timeframe"
-            min_tf_seconds = min(min_tf_seconds, feed.timeframe.s)
-        return min_tf_seconds
-
+    # 'predict_train_feedsets' workers
     @enforce_types
     def get_predict_train_feedset(
         self,
-        pair: ArgPair,
-        timeframe: Optional[ArgTimeframe],
-        exchange: ArgExchange,
+        exchange_str: str,
+        pair_str: str,
+        timeframe_str: str,
     ) -> Optional[PredictTrainFeedset]:
-
-        for predict_train_feedset in self.predict_train_feedsets:
-            predict_feed: ArgFeed = predict_train_feedset.predict
-            if (
-                predict_feed.pair == pair
-                and predict_feed.timeframe == timeframe
-                and predict_feed.exchange == exchange
-            ):
-                return predict_train_feedset
-
-        return None
+        """Eg return a feedset given ("binance", "BTC/USDT", "5m" """
+        return self.predict_train_feedsets.get_feedset(
+            exchange_str,
+            pair_str,
+            timeframe_str,
+        )
 
     @enforce_types
     def get_feed_from_candidates(
@@ -159,15 +149,6 @@ class PredictoorSS(StrMixin):
 
         return filtered_feeds
 
-    # --------------------------------
-    # setters (add as needed)
-    @enforce_types
-    def set_approach(self, approach: int):
-        if approach not in CAND_APPROACHES:
-            s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
-            raise ValueError(s)
-        self.d["approach"] = approach
-
 
 # =========================================================================
 # utilities for testing
@@ -175,7 +156,7 @@ class PredictoorSS(StrMixin):
 
 @enforce_types
 def feedset_test_list() -> list:
-    return [
+    feedset_list = [
         {
             "predict": "binance BTC/USDT c 5m",
             "train_on": "binance BTC/USDT c 5m",
@@ -185,6 +166,7 @@ def feedset_test_list() -> list:
             "train_on": "kraken ETH/USDT c 5m",
         },
     ]
+    return feedset_list
 
 
 @enforce_types

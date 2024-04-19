@@ -113,3 +113,38 @@ def test_feedsets_from_list_of_dict__thorough():
         },
     ]
     assert feedset_list2 == target_feedset_list2
+
+
+@enforce_types
+def test_feedsets__get_feedset():
+    feedset_list = [
+        {
+            "predict": "binance BTC/USDT c 5m",
+            "train_on": "binance BTC/USDT c 5m",
+        },
+        {
+            "predict": "kraken BTC/USDT ETH/USDT c 5m",
+            "train_on": "kraken BTC/USDT ETH/USDT DOT/USDT c 5m",
+        },
+    ]
+    feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
+    f0, f1, f2 = feedsets[0], feedsets[1], feedsets[2]
+
+    assert f0.predict == ArgFeed("binance", "close", "BTC/USDT", "5m")
+    assert f1.predict == ArgFeed("kraken", "close", "BTC/USDT", "5m")
+    assert f2.predict == ArgFeed("kraken", "close", "ETH/USDT", "5m")
+
+    assert feedsets.get_feedset("binance", "BTC/USDT", "5m") == f0
+    assert feedsets.get_feedset("kraken", "BTC/USDT", "5m") == f1
+    assert feedsets.get_feedset("kraken", "ETH/USDT", "5m") == f2
+
+    assert feedsets.get_feedset("foo", "BTC/USDT", "5m") is None
+    assert feedsets.get_feedset("binance", "foo", "5m") is None
+    assert feedsets.get_feedset("binance", "BTC/USDT", "foo") is None
+
+    with pytest.raises(TypeError):
+        feedsets.get_feedset(1, "BTC/USDT", "5m")
+    with pytest.raises(TypeError):
+        feedsets.get_feedset("binance", 1, "5m")
+    with pytest.raises(TypeError):
+        feedsets.get_feedset("binance", "BTC/USDT", 1)

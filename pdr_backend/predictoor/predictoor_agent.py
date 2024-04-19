@@ -94,7 +94,9 @@ class PredictoorAgent:
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
             feedset = self.ppss.predictoor_ss.get_predict_train_feedset(
-                feed.pair, feed.timeframe, feed.source
+                feed.source,
+                feed.pair,
+                feed.timeframe,
             )
             if feedset is None:
                 logger.error("No (predict, train) pair found for feed %s", feed)

@@ -96,3 +96,28 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
 
             epoch = min(epoch, predict_feed.timeframe.s)
         return int(epoch)
+
+    @enforce_types
+    def get_feedset(
+        self,
+        exchange_str: str,
+        pair_str: str,
+        timeframe_str: str,
+    ):
+        """
+        @description
+          Return a feedset if the input (exchange, pair, timeframe)
+          is found in one of the predict feeds
+
+         Example input: "binance", "BTC/USDT", "5m"
+        """
+        for feedset in self:
+            predict_feed: ArgFeed = feedset.predict
+            if (
+                str(predict_feed.exchange) == exchange_str
+                and str(predict_feed.pair) == pair_str
+                and str(predict_feed.timeframe) == timeframe_str
+            ):
+                return feedset
+
+        return None
