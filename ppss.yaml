@@ -64,12 +64,15 @@ multisim_ss:
   - trader_ss.buy_amt: 1000 USD, 2000 USD
   - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
   - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
-  - predictoor_ss.aimodel_ss.input_feeds:
+  - predictoor_ss.predict_train_feedsets:
     -
-      - binance BTC/USDT c 5m
+      - predict: binance BTC/USDT c 5m
+        train_on:
+        - binance BTC/USDT c 5m
     -
-      - binance BTC/USDT ETH/USDT c 5m
-#    -
+      - predict: binance BTC/USDT ETH/USDT c 5m
+        train_on:
+        - binance BTC/USDT ETH/USDT c 5m
 #      - binance BTC/USDT c 5m
 #      - kraken BTC/USDT c 5m
 
