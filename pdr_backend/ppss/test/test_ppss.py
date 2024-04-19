@@ -136,12 +136,12 @@ def test_mock_ppss_manyfeed():
     ]
     ppss = mock_ppss(feedset_list, "sapphire-mainnet")
 
-    feedsets = PredictTrainFeedsets.from_array(feedset_list)
-    assert ppss.lake_ss.d["feeds"] == feedsets.feeds_str
+    feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
+    assert ppss.lake_ss.d["feeds"] == feedsets.feed_strs
     assert ppss.predictoor_ss.d["predict_train_feedsets"] == feedset_list
-    assert ppss.trader_ss.d["feed"] == feedsets.feeds_str[0]
-    assert ppss.trueval_ss.d["feeds"] == feedsets.feeds_str
-    assert ppss.dfbuyer_ss.d["feeds"] == feedsets.feeds_str
+    assert ppss.trader_ss.d["feed"] == feedsets.feed_strs[0]
+    assert ppss.trueval_ss.d["feeds"] == feedsets.feed_strs
+    assert ppss.dfbuyer_ss.d["feeds"] == feedsets.feed_strs
 
     ppss.verify_feed_dependencies()
 

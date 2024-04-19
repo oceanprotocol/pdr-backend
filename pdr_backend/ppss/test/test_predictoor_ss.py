@@ -2,7 +2,6 @@ from enforce_typing import enforce_types
 import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.util.currency_types import Eth
 
@@ -93,57 +92,3 @@ def test_predictoor_ss_bad_approach():
         ss = PredictoorSS(d)
         with pytest.raises(ValueError):
             ss.set_approach(bad_approach)
-
-
-@enforce_types
-def test_big_predict_train_feedsets():
-    d = predictoor_ss_test_dict()
-    assert "predict_train_feedsets" in d
-    d["predict_train_feedsets"] = [
-        {
-            "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
-            "train_on": [
-                "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
-                "kraken BTC/USDT c 5m",
-            ],
-        },
-        {
-            "predict": "binance ETH/USDT ADA/USDT c 5m",
-            "train_on": "binance BTC/USDT ETH/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
-        },
-        {
-            "predict": "binance BTC/USDT c 1h",
-            "train_on": "binance BTC/USDT ETH/USDT c 5m",
-        },
-    ]
-
-    expected = [
-        {
-            "predict": ArgFeed.from_str("binance BTC/USDT c 5m"),
-            "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
-            + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
-        },
-        {
-            "predict": ArgFeed.from_str("kraken BTC/USDT c 5m"),
-            "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
-            + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
-        },
-        {
-            "predict": ArgFeed.from_str("binance ETH/USDT c 5m"),
-            "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
-            + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
-        },
-        {
-            "predict": ArgFeed.from_str("binance ADA/USDT c 5m"),
-            "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT DOT/USDT c 5m")
-            + ArgFeeds.from_str("kraken BTC/USDT c 5m"),
-        },
-        {
-            "predict": ArgFeed.from_str("binance BTC/USDT c 1h"),
-            "train_on": ArgFeeds.from_str("binance BTC/USDT ETH/USDT c 5m"),
-        },
-    ]
-
-    predictoor_ss = PredictoorSS(d)
-
-    assert predictoor_ss.predict_train_feedsets.to_list() == expected

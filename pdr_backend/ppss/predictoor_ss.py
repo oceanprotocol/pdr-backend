@@ -95,7 +95,8 @@ class PredictoorSS(StrMixin):
 
     @property
     def predict_train_feedsets(self) -> PredictTrainFeedsets:
-        return PredictTrainFeedsets.from_array(self.d["predict_train_feedsets"])
+        feedset_list: List[dict] = self.d["predict_train_feedsets"]
+        return PredictTrainFeedsets.from_list_of_dict(feedset_list)
 
     @property
     def minimum_timeframe_seconds(self) -> int:

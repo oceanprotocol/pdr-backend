@@ -204,14 +204,14 @@ def mock_ppss(
     yaml_str = fast_test_yaml_str(tmpdir)
 
     ppss = PPSS(yaml_str=yaml_str, network=network)
-    predict_train_feedsets = PredictTrainFeedsets.from_array(feedset_list)
+    predict_train_feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
 
     assert hasattr(ppss, "lake_ss")
     ppss.lake_ss = LakeSS(
         {
-            "feeds": predict_train_feedsets.feeds_str,
+            "feeds": predict_train_feedsets.feed_strs,
             "parquet_dir": os.path.join(tmpdir, "parquet_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
@@ -228,7 +228,7 @@ def mock_ppss(
     assert hasattr(ppss, "trader_ss")
     ppss.trader_ss = TraderSS(
         {
-            "feed": predict_train_feedsets.feeds_str[0],
+            "feed": predict_train_feedsets.feed_strs[0],
             "sim_only": {
                 "buy_amt": "10 USD",
             },
@@ -245,12 +245,12 @@ def mock_ppss(
 
     assert hasattr(ppss, "trueval_ss")
     assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
-    ppss.trueval_ss.d["feeds"] = predict_train_feedsets.feeds_str  # type: ignore[attr-defined]
+    ppss.trueval_ss.d["feeds"] = predict_train_feedsets.feed_strs  # type: ignore[attr-defined]
 
     assert hasattr(ppss, "dfbuyer_ss")
     ppss.dfbuyer_ss = DFBuyerSS(
         {
-            "feeds": predict_train_feedsets.feeds_str,
+            "feeds": predict_train_feedsets.feed_strs,
             "batch_size": 20,
             "consume_interval_seconds": 86400,
             "weekly_spending_limit": 37000,

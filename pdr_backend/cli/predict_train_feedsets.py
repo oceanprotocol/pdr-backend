@@ -18,18 +18,23 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
     def __init__(self, feedsets: List[PredictTrainFeedset]):
         super().__init__(feedsets)
 
+    @enforce_types
+    def __str__(self) -> str:
+        strs = [str(feedset) for feedset in self]
+        return "[" + ", ".join(strs) + "]"
+
     @classmethod
-    def from_array(cls, feedset_list: List[dict]) -> "PredictTrainFeedsets":
+    @enforce_types
+    def from_list_of_dict(cls, feedset_list: List[dict]) -> "PredictTrainFeedsets":
         """
         @arguments
-          feedset_list -- yaml-parsed list of dicts, where each entry has
-            a "predict" and "train_on" item. Example below.
+          feedset_list -- list of feedset_dict,
+            where feedset_dict has the following format:
+            {"predict":predict_feeds_str,
+             "train_on":train_on_feeds_str}
+            Note that >=1 predict feeds are allowed for a given feedset_dict.
 
-        @return
-          PredictTrainFeedsets
-
-        @notes
-          Example 'feedset_list' = [
+          Example feedset_list = [
             {
                 "predict": "binance BTC/USDT c 5m, kraken BTC/USDT c 5m",
                 "train_on": [
@@ -44,62 +49,50 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
         """
         final_list = []
         for feedset_dict in feedset_list:
-            predict_dict = feedset_dict.get("predict")
-            train_on_dict = feedset_dict.get("train_on")
-            if train_on_dict is None:
-                raise ValueError(f"train_on must be provided, got {feedset_dict}")
-            if predict_dict is None:
-                raise ValueError(f"predict must be provided, got {feedset_dict}")
-            predict_feeds: ArgFeeds = parse_feed_obj(predict_dict)
-            for predict_feed in predict_feeds:
-                feedset = PredictTrainFeedset.from_feed_objs(
-                    predict_feed, train_on_dict
-                )
+            if not ("predict" in feedset_dict and "train_on" in feedset_dict):
+                raise ValueError(feedset_dict)
+
+            predict_feeds: ArgFeeds = parse_feed_obj(feedset_dict["predict"])
+            for predict in predict_feeds:
+                train_on = parse_feed_obj(feedset_dict["train_on"])
+                feedset = PredictTrainFeedset(predict, train_on)
                 final_list.append(feedset)
 
-        predict_train_feedset = cls(final_list)
-        return predict_train_feedset
+        return cls(final_list)
+
+    @enforce_types
+    def to_list_of_dict(self) -> List[dict]:
+        """Like from_list_of_dict(), but in reverse"""
+        return [feedset.to_dict() for feedset in self]
 
     @property
-    def feeds_str(self) -> List[str]:
-        str_list = []
-        for predict_train_feedset in self:
-            for train_feeds in [predict_train_feedset.train_on]:
-                for train_feed in train_feeds:
-                    if str(train_feed) not in str_list:
-                        str_list.append(str(train_feed))
-
-            predict_feed = predict_train_feedset.predict
-            if str(predict_feed) not in str_list:
-                str_list.append(str(predict_feed))
-
-        return str_list
+    def feed_strs(self) -> List[str]:
+        """
+        Return eg ['binance BTC/USDT DOT/USDT c 5m','kraken BTC/USDT c 5m']
+        """
+        return [str(feed) for feed in self.feeds]
 
     @property
     def feeds(self) -> List[ArgFeed]:
         feed_list = []
-        for predict_train_feedset in self:
-            for train_feeds in [predict_train_feedset.train_on]:
+        for feedset in self:
+            for train_feeds in [feedset.train_on]:
                 for train_feed in train_feeds:
                     if train_feed not in feed_list:
                         feed_list.append(train_feed)
 
-            predict_feed = predict_train_feedset.predict
+            predict_feed = feedset.predict
             if predict_feed not in feed_list:
                 feed_list.append(predict_feed)
+
         return feed_list
 
     @property
     def min_epoch_seconds(self) -> int:
         epoch = 1e9
-        for predict_train_feedset in self:
-            predict_feed = predict_train_feedset.predict
-            assert (
-                predict_feed.timeframe is not None
-            ), f"Predict feed: {predict_feed} is missing timeframe"
+        for feedset in self:
+            predict_feed = feedset.predict
+            assert predict_feed.timeframe is not None, predict_feed
+
             epoch = min(epoch, predict_feed.timeframe.s)
         return int(epoch)
-
-    @enforce_types
-    def to_list(self) -> List[dict]:
-        return [predict_train_feedset.to_dict() for predict_train_feedset in self]

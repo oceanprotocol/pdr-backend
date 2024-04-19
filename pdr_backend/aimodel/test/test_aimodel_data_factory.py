@@ -6,7 +6,6 @@ import polars as pl
 import pytest
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
     BINANCE_BTC_DATA,
@@ -42,10 +41,11 @@ def test_create_xy__0():
         }
     ]
     d = predictoor_ss_test_dict(feedset_list=feedset_list)
-    assert "max_n_train" in d["ai_model_ss"]
+    assert "aimodel_ss" in d
+    assert "max_n_train" in d["aimodel_ss"]
     d["aimodel_ss"]["max_n_train"] = 4
 
-    assert "autoregressive_n" in d["ai_model_ss"]
+    assert "autoregressive_n" in d["aimodel_ss"]
     d["aimodel_ss"]["autoregressive_n"] = 2
 
     predictoor_ss = PredictoorSS(d)
@@ -269,22 +269,17 @@ def test_create_xy_reg__1exchange_1coin_1signal():
 
 @enforce_types
 def test_create_xy_reg__2exchanges_2coins_2signals():
-
     # create predictoor_ss
-    d = predictoor_ss_test_dict()
-    feedsets = PredictTrainFeedsets.from_array(
-        [
-            {
-                "predict": "binanceus ETH/USDT h 5m",
-                "train_on": [
-                    "binanceus BTC/USDT ETH/USDT h 5m",
-                    "kraken BTC/USDT ETH/USDT h 5m",
-                ],
-            }
-        ]
-    )
-    assert "predict_train_feedsets" in d
-    d["predict_train_feedsets"] = feedsets
+    feedset_list = [
+        {
+            "predict": "binanceus ETH/USDT h 5m",
+            "train_on": [
+                "binanceus BTC/USDT ETH/USDT h 5m",
+                "kraken BTC/USDT ETH/USDT h 5m",
+            ],
+        }
+    ]
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
     ss = PredictoorSS(d)
     assert ss.aimodel_ss.autoregressive_n == 3
 

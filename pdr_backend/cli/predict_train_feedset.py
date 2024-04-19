@@ -1,36 +1,10 @@
-from typing import List, Optional, Union
+from typing import List
 
 from enforce_typing import enforce_types
+from typeguard import check_type
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.arg_pair import ArgPair
-
-
-@enforce_types
-def parse_feed_obj(feed_obj: Union[str, list]) -> ArgFeeds:
-    # Create feed_list from feed_obj
-    if isinstance(feed_obj, list):
-        feed_list = feed_obj
-    else:
-        assert isinstance(feed_obj, str)
-        # If comma separated string, split
-        # If not comma separated, convert to list
-        if "," in feed_obj:
-            feed_list = feed_obj.split(",")
-        else:
-            feed_list = [feed_obj]
-
-    if not isinstance(feed_list, list):
-        raise ValueError(f"feed_list must be a list, got {feed_list}")
-
-    parsed_arg_feeds: ArgFeeds = ArgFeeds([])
-    for feed in feed_list:
-        # Convert each feed string to ArgFeeds
-        arg_feeds: List[ArgFeed] = ArgFeeds.from_str(str(feed))
-        parsed_arg_feeds.extend(arg_feeds)
-
-    return parsed_arg_feeds
 
 
 class PredictTrainFeedset:
@@ -47,29 +21,49 @@ class PredictTrainFeedset:
         self.predict: ArgFeed = predict
         self.train_on: ArgFeeds = train_on
 
-    @classmethod
-    def from_feed_objs(
-        cls,
-        predict: ArgFeed,
-        unparsed_train_on: Union[str, list],
-    ):
-        train_on: ArgFeeds = parse_feed_obj(unparsed_train_on)
-        return cls(predict, train_on)
+    @enforce_types
+    def __str__(self) -> str:
+        return str(self.to_dict())
+
+    @enforce_types
+    def __eq__(self, other):
+        return self.predict == other.predict and self.train_on == other.train_on
 
     @enforce_types
     def to_dict(self):
-        return {"predict": self.predict, "train_on": self.train_on}
+        return {"predict": str(self.predict), "train_on": str(self.train_on)}
 
     @classmethod
-    def from_dict(cls, d):
-        return cls(d["predict"], d["train_on"])
+    def from_dict(cls, feedset_dict: dict) -> "PredictTrainFeedset":
+        """
+        @arguments
+          feedset_dict -- has the following format:
+            {"predict":predict_feed_str (1 feed),
+             "train_on":train_on_feeds_str (>=1 feeds)}
+            Note just ONE predict feed is allowed, not >=1.
+
+          Here are three examples. from_dict() gives the same output for each.
+          1. { "predict" : "binance BTC/USDT o 1h",
+               "train_on" : "binance BTC/USDT ETH/USDT o 1h"}
+          2. { "predict" : "binance BTC/USDT o 1h",
+                "train_on" : "binance BTC/USDT o 1h, binance ETH/USDT o 1h"}
+          3. { "predict" : "binance BTC/USDT o 1h",
+               "train_on" : ["binance BTC/USDT o 1h", "binance ETH/USDT o 1h"]}
+        """
+        predict = ArgFeed.from_str(feedset_dict["predict"])
+        train_on = ArgFeeds.from_strs(_as_list(feedset_dict["train_on"]))
+        return cls(predict, train_on)
 
     @property
     def timeframe_ms(self) -> int:
         """Returns timeframe, in ms"""
         return self.predict.timeframe.ms if self.predict.timeframe else 0
 
-    @property
-    def predict_pair_str(self) -> Optional[str]:
-        pair: ArgPair = self.predict.pair
-        return pair.pair_str
+
+@enforce_types
+def _as_list(str_or_list) -> List[str]:
+    """Given a str or a list of str, always returns as a list"""
+    if isinstance(str_or_list, str):
+        return [str_or_list]
+    check_type(str_or_list, List[str])  # raises TypeCheckError if wrong type
+    return str_or_list

@@ -1,76 +1,81 @@
-# pylint: disable=redefined-outer-name
-import pytest
-
 from enforce_typing import enforce_types
+import pytest
+from typeguard import TypeCheckError
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.parse_feed_obj import parse_feed_obj
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 
 
-@pytest.fixture
-def arg_feed_single() -> ArgFeed:
-    return ArgFeed("binance", "open", "BTC/USDT", "1h")
+# for "predict"
+ARG_FEED_STR = "binance BTC/USDT o 1h"
+ARG_FEED: ArgFeed = ArgFeed.from_str(ARG_FEED_STR)
 
-
-@pytest.fixture
-def arg_feed_list() -> ArgFeeds:
-    return ArgFeeds.from_str("binance BTC/USDT ETH/USDT o 1h")
-
-
-@enforce_types
-def test_predict_train_feedset_initialization(arg_feed_single, arg_feed_list):
-    feedset = PredictTrainFeedset(predict=arg_feed_single, train_on=arg_feed_list)
-    assert feedset.predict == arg_feed_single
-    assert feedset.train_on == arg_feed_list
+# for "train_on"
+ARG_FEEDS_STR = "binance BTC/USDT ETH/USDT o 1h"
+ARG_FEEDS: ArgFeeds = ArgFeeds.from_str(ARG_FEEDS_STR)
 
 
 @enforce_types
-def test_predict_train_feedset_from_feed_objs(arg_feed_single, arg_feed_list):
-    feedset = PredictTrainFeedset.from_feed_objs(
-        predict=arg_feed_single, unparsed_train_on=arg_feed_list
+def test_feedset_main():
+    feedset = PredictTrainFeedset(predict=ARG_FEED, train_on=ARG_FEEDS)
+
+    assert feedset.predict == ARG_FEED
+    assert feedset.train_on == ARG_FEEDS
+    assert feedset.timeframe_ms == ARG_FEED.timeframe.ms
+
+    assert feedset.to_dict() == {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR}
+
+    assert (
+        str(feedset)
+        == "{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h'}"
     )
-    assert feedset.predict == arg_feed_single
-    assert feedset.train_on == arg_feed_list
 
 
 @enforce_types
-def test_predict_train_feedset_from_dict(arg_feed_single, arg_feed_list):
-    dict_feed = {"predict": arg_feed_single, "train_on": arg_feed_list}
-    predict_train_feedset = PredictTrainFeedset.from_dict(dict_feed)
-    assert predict_train_feedset.predict == arg_feed_single
-    assert predict_train_feedset.train_on == arg_feed_list
+def test_feedset_eq_same():
+    feedset1 = PredictTrainFeedset(predict=ARG_FEED, train_on=ARG_FEEDS)
+    feedset2 = PredictTrainFeedset(predict=ARG_FEED, train_on=ARG_FEEDS)
+    assert feedset1 == feedset2
 
 
 @enforce_types
-def test_predict_train_feedset_timeframe_ms(arg_feed_single, arg_feed_list):
-    predict_train_feedset = PredictTrainFeedset(
-        predict=arg_feed_single, train_on=arg_feed_list
-    )
-    assert predict_train_feedset.timeframe_ms == arg_feed_single.timeframe.ms
+def test_feedset_eq_diff():
+    feedset1 = PredictTrainFeedset(predict=ARG_FEED, train_on=ARG_FEEDS)
+
+    arg_feed2 = ArgFeed.from_str("kraken BTC/USDT o 1h")
+    arg_feeds2 = ArgFeeds.from_str("kraken BTC/USDT ETH/USDT o 1h")
+
+    # different "predict"
+    feedset2a = PredictTrainFeedset(predict=arg_feed2, train_on=ARG_FEEDS)
+    assert feedset1 != feedset2a
+
+    # different "train_on"
+    feedset2b = PredictTrainFeedset(predict=ARG_FEED, train_on=arg_feeds2)
+    assert feedset1 != feedset2b
 
 
 @enforce_types
-def test_predict_train_feedset_predict_pair_str(arg_feed_single, arg_feed_list):
-    predict_train_feedset = PredictTrainFeedset(
-        predict=arg_feed_single, train_on=arg_feed_list
-    )
-    assert predict_train_feedset.predict_pair_str == "BTC/USDT"
+def test_feedset_from_dict():
+    # "train_on" as str
+    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR}
+    feedset = PredictTrainFeedset.from_dict(d)
+    assert feedset.predict == ARG_FEED
+    assert feedset.train_on == ARG_FEEDS
+    assert feedset.to_dict() == d
 
+    # "train_on" as list
+    d = {"predict": ARG_FEED_STR, "train_on": [ARG_FEEDS_STR]}
+    feedset = PredictTrainFeedset.from_dict(d)
+    assert feedset.predict == ARG_FEED
+    assert feedset.train_on == ARG_FEEDS
 
-@enforce_types
-def test_parse_feed_obj():
-    feed_str = "binance BTC/USDT ETH/USDT o 1h, kraken ADA/USDT c 5m"
+    # "predict" value must be a str
+    d = {"predict": ARG_FEED, "train_on": ARG_FEEDS_STR}
+    with pytest.raises(TypeError):
+        feedset = PredictTrainFeedset.from_dict(d)
 
-    parsed = parse_feed_obj(feed_str)
-
-    assert type(parsed) == ArgFeeds
-    assert str(parsed) == "binance BTC/USDT ETH/USDT o 1h, kraken ADA/USDT c 5m"
-
-    feed_list = ["binance BTC/USDT ETH/USDT o 1h", "kraken ADA/USDT c 5m"]
-
-    parsed = parse_feed_obj(feed_list)
-
-    assert type(parsed) == ArgFeeds
-    assert str(parsed) == "binance BTC/USDT ETH/USDT o 1h, kraken ADA/USDT c 5m"
+    # "train_on" value must be a str
+    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS}
+    with pytest.raises(TypeCheckError):
+        feedset = PredictTrainFeedset.from_dict(d)

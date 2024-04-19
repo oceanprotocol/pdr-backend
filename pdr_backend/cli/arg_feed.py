@@ -52,7 +52,8 @@ class ArgFeed:
 
         return feed_str
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        assert isinstance(other, ArgFeed), (other, type(other))
         return (
             self.exchange == other.exchange
             and str(self.signal) == str(other.signal)
