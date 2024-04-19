@@ -202,7 +202,9 @@ class PredictoorAgent:
         """
         Returns the closest epoch time left in seconds
         """
-        min_tf_seconds = self.ppss.predictoor_ss.predict_train_feedsets.min_epoch_seconds
+        min_tf_seconds = (
+            self.ppss.predictoor_ss.predict_train_feedsets.min_epoch_seconds
+        )
         current_ts = self.cur_timestamp
         seconds_left = min_tf_seconds - current_ts % min_tf_seconds
         return seconds_left
@@ -213,7 +215,9 @@ class PredictoorAgent:
         Returns the unique epoch number for the current timestamp
         """
         t = self.cur_timestamp
-        min_tf_seconds = self.ppss.predictoor_ss.predict_train_feedsets.min_epoch_seconds
+        min_tf_seconds = (
+            self.ppss.predictoor_ss.predict_train_feedsets.min_epoch_seconds
+        )
         return t // min_tf_seconds
 
     @property
