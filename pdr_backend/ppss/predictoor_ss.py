@@ -1,10 +1,15 @@
-from enforce_typing import enforce_types
-from pdr_backend.cli.predict_feeds import PredictFeeds
+from typing import Dict, List, Optional
 
+from enforce_typing import enforce_types
+
+from pdr_backend.cli.predict_train_feedsets import (
+    PredictTrainFeedset,
+    PredictTrainFeedsets,
+)
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
-from pdr_backend.ppss.predict_feed_mixin import PredictFeedMixin
-from pdr_backend.util.strutil import StrMixin
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.strutil import StrMixin
 
 # Approaches:
 #  1: Two-sided: Allocate up-vs-down stake equally (50-50). Baseline.
@@ -13,22 +18,24 @@ from pdr_backend.util.currency_types import Eth
 CAND_APPROACHES = [1, 2, 3]
 
 
-class PredictoorSS(PredictFeedMixin, StrMixin):
+class PredictoorSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEEDS_KEY = "feeds"
 
     @enforce_types
     def __init__(self, d: dict):
-        super().__init__(d, assert_feed_attributes=["timeframe"])
+        self.d = d
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
+
         if self.approach not in CAND_APPROACHES:
             s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
             raise ValueError(s)
 
-    # --------------------------------
+    # ------------------------------------------------------------------
     # yaml properties
-
-    # (predict_feeds defined in base)
+    @property
+    def predict_train_feedsets(self) -> PredictTrainFeedsets:
+        feedset_list: List[dict] = self.d["predict_train_feedsets"]
+        return PredictTrainFeedsets.from_list_of_dict(feedset_list)
 
     @property
     def approach(self) -> int:
@@ -92,13 +99,64 @@ class PredictoorSS(PredictFeedMixin, StrMixin):
             raise ValueError(s)
         self.d["approach"] = approach
 
+    # ------------------------------------------------------------------
+    # 'predict_train_feedsets' workers
+    @enforce_types
+    def get_predict_train_feedset(
+        self,
+        exchange_str: str,
+        pair_str: str,
+        timeframe_str: str,
+    ) -> Optional[PredictTrainFeedset]:
+        """Eg return a feedset given ("binance", "BTC/USDT", "5m" """
+        return self.predict_train_feedsets.get_feedset(
+            exchange_str,
+            pair_str,
+            timeframe_str,
+        )
+
+    @enforce_types
+    def get_feed_from_candidates(
+        self,
+        cand_feeds: Dict[str, SubgraphFeed],
+    ) -> Dict[str, SubgraphFeed]:
+        """
+        @description
+          Filter down the input cand_feeds to the ones we're supposed to predict
+
+          More precisely: return a set of feeds as the intersection of
+          (1) candidate feeds read from chain, ie the input SubgraphFeeds,
+          and (2) self's feeds to predict, ie input by PPSS
+
+        @arguments
+          cand_feeds -- dict of [feed_addr] : SubgraphFeed
+
+        @return
+          filtered_feeds -- dict of [feed_addr] : SubgraphFeed
+        """
+        filtered_feeds: Dict[str, SubgraphFeed] = {}
+
+        allowed_tups = [
+            (str(feed.exchange), str(feed.pair), str(feed.timeframe))
+            for feed in self.predict_train_feedsets.feeds
+        ]
+
+        for feed_addr, feed in cand_feeds.items():
+            assert isinstance(feed, SubgraphFeed)
+
+            if (feed.source, feed.pair, feed.timeframe) in allowed_tups:
+                filtered_feeds[feed_addr] = feed
+
+        return filtered_feeds
+
 
 # =========================================================================
 # utilities for testing
 
 
-def example_predict_feeds() -> list:
-    return [
+@enforce_types
+def feedset_test_list() -> list:
+    feedset_list = [
         {
             "predict": "binance BTC/USDT c 5m",
             "train_on": "binance BTC/USDT c 5m",
@@ -108,19 +166,18 @@ def example_predict_feeds() -> list:
             "train_on": "kraken ETH/USDT c 5m",
         },
     ]
+    return feedset_list
 
 
 @enforce_types
 def predictoor_ss_test_dict(
-    predict_feeds=None,
-    input_feeds=None,
+    feedset_list: Optional[List] = None,
     pred_submitter_mgr="",
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
-    predict_feeds = predict_feeds or example_predict_feeds()
-    input_feeds = input_feeds or PredictFeeds.from_array(predict_feeds).feeds_str
+    feedset_list = feedset_list or feedset_test_list()
     d = {
-        "feeds": predict_feeds,
+        "predict_train_feedsets": feedset_list,
         "approach": 1,
         "stake_amount": 1,
         "pred_submitter_mgr": pred_submitter_mgr,
@@ -131,7 +188,8 @@ def predictoor_ss_test_dict(
         },
         "bot_only": {
             "s_until_epoch_end": 60,
+            "s_start_payouts": 0,
         },
-        "aimodel_ss": aimodel_ss_test_dict(input_feeds),
+        "aimodel_ss": aimodel_ss_test_dict(),
     }
     return d
