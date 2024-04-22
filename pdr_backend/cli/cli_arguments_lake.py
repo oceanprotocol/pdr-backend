@@ -1,6 +1,7 @@
 import logging
 import os
 from argparse import ArgumentParser
+from typing import Union
 
 from enforce_typing import enforce_types
 
@@ -14,13 +15,25 @@ SUPPORTS_L2_COMMANDS = ["raw", "etl"]
 
 # utilities
 @enforce_types
-def timestr(s: str) -> UnixTimeMs:
+def timestr(s: str, allows_now=False) -> UnixTimeMs:
+    if s == "now" and not allows_now:
+        raise TypeError
+
     try:
         return UnixTimeMs.from_timestr(s)
     except ValueError as exc:
+        extra_msg = " or 'now'" if allows_now else ""
         raise TypeError(
-            f"Invalid timestr value {s}. Please use the format 'yyyy-mm-dd'."
+            f"Invalid timestr value {s}. Please use the format 'yyyy-mm-dd'{extra_msg}."
         ) from exc
+
+
+@enforce_types
+def timestr_or_now(s: str) -> Union[UnixTimeMs, str]:
+    if s == "now":
+        return "now"
+
+    return timestr(s)
 
 
 @enforce_types
@@ -58,4 +71,6 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
         elif plain_args[0] in SUPPORTS_L2_COMMANDS:
             self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
             if plain_args[1] == "update":
-                self.add_argument("END", type=timestr, help="End date yyyy-mm-dd")
+                self.add_argument(
+                    "END", type=timestr_or_now, help="End date yyyy-mm-dd"
+                )

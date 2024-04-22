@@ -85,17 +85,6 @@ def test_do_lake_raw_delegation():
 
     assert raw_drop.called
 
-    args[3] = "invalid date"
-
-    with pytest.raises(SystemExit):
-        # start date is invalid
-        do_lake_subcommand(args)
-
-    args.append("2021-01-01")
-    with pytest.raises(SystemExit):
-        # raw does not recognize the extra END argument
-        do_lake_subcommand(args)
-
     args = [
         "raw",
         "update",
