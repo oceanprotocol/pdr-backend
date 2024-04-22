@@ -87,35 +87,46 @@ class PredictoorAgent:
     @enforce_types
     def calc_stakes_across_feeds(self, feeds: List[SubgraphFeed]) -> StakesPerSlot:
         stakes = StakesPerSlot()
+        prediction_objs = []
 
-        seconds_per_epoch = None
-        cur_epoch = None
-
+        # First pass: Collect data and prepare predictions
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
             feedset = self.ppss.predictoor_ss.get_predict_train_feedset(
-                feed.source,
-                feed.pair,
-                feed.timeframe,
+                feed.source, feed.pair, feed.timeframe
             )
+
             if feedset is None:
                 logger.error("No (predict, train) pair found for feed %s", feed)
-            seconds_per_epoch = feed.seconds_per_epoch
+                continue  # Skip further processing for this feed
+
             cur_epoch = contract.get_current_epoch()
-            next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
+            seconds_per_epoch = feed.seconds_per_epoch
+            stake_up, stake_down = self.calc_stakes(feedset)
+
+            target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
+            prediction_objs.append(
+                (feed, stake_up, stake_down, target_slot, seconds_per_epoch, contract)
+            )
+
+        # Second pass: Apply stakes based on predictions and current time conditions
+        for (
+            feed,
+            stake_up,
+            stake_down,
+            target_slot,
+            seconds_per_epoch,
+            contract,
+        ) in prediction_objs:
+            next_slot = UnixTimeS(
+                (contract.get_current_epoch() + 1) * seconds_per_epoch
+            )
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
-            # within the time window to predict?
             if cur_epoch_s_left > self.epoch_s_thr:
-                continue
+                continue  # Skip if the time left is greater than threshold
 
-            # get the target slot
-
-            # get the stakes
-            stake_up, stake_down = self.calc_stakes(feedset)
-            target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
-            tup = StakeTup(feed, stake_up, stake_down)
-            stakes.add_stake_at_slot(target_slot, tup)
+            stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
         return stakes
 
@@ -137,6 +148,10 @@ class PredictoorAgent:
         # get payouts
         self.get_payout()
 
+        # --- Prediction ---
+        if self.min_epoch_s_left > self.epoch_s_thr:
+            # not time to predict yet
+            return
         # for each feed, calculate up/down stake (eg via models)
         feeds = list(self.feeds.values())
         stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
