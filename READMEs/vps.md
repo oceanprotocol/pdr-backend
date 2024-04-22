@@ -248,9 +248,13 @@ Then, run a bot with modeling-on-the fly (approach 2). In console:
 pdr predictoor 2 my_ppss.yaml development
 ```
 
-Or, to be fancier: (a) add `nohup` so that the run keeps going if the ssh session closes, and (b) output to out.txt. 
+Or, to be fancier: (a) add `nohup` so that the run keeps going if the ssh session closes, and (b) output to out.txt (c) observe output 
 ```console
-nohup pdr predictoor 2 my_ppss.yaml development 1>out.txt 2>&1
+# start bot
+nohup pdr predictoor 2 my_ppss.yaml development 1>out.txt 2>&1 &
+
+# observe output
+tail -f out.txt
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
