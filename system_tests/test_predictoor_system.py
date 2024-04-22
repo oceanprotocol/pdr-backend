@@ -54,7 +54,7 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
         return_value=merged_ohlcv_df,
     ):
         # Mock sys.argv
-        sys.argv = ["pdr", "predictoor", str(approach), "ppss.yaml", "development"]
+        sys.argv = ["pdr", "predictoor", "ppss.yaml", "development"]
 
         cli_module._do_main()
 
