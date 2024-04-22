@@ -51,10 +51,6 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 ## Simulate Modeling and Trading
 
-
-> [!WARNING]  
-> Simulation has been temporarily disabled as of version v0.3.3
-
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
