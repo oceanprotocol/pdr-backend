@@ -502,7 +502,7 @@ def print_args(arguments: Namespace):
 
 # main tools
 SimArgParser = _ArgParser_PPSS
-PredictoorArgParser = _ArgParser_APPROACH_PPSS_NETWORK
+PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
 ClaimRoseArgParser = _ArgParser_PPSS
