@@ -51,6 +51,10 @@ codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
 
 ## Simulate Modeling and Trading
 
+
+> [!WARNING]  
+> Simulation has been temporarily disabled as of version v0.3.3
+
 Simulation allows us to quickly build intuition, and assess the performance of the data / predicting / trading strategy (backtest).
 
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change parameters as you see fit.
@@ -59,14 +63,12 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 cp ppss.yaml my_ppss.yaml
 ```
 
-Let's simulate! In console:
-
+Let's run the simulation engine. In console:
 ```console
 pdr sim my_ppss.yaml
 ```
 
-What it does:
-
+What the engine does does:
 1. Set simulation parameters.
 1. Grab historical price data from exchanges and stores in `parquet_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
@@ -74,6 +76,16 @@ What it does:
    - Predict
    - Trade
    - Log to console and `logs/out_<time>.txt`
+   - For plots, output state to `sim_state/`
+
+Let's visualize results. Open a separate console, and:
+```console
+cd ~/code/pdr-backend # or wherever your pdr-backend dir is
+source venv/bin/activate
+
+#display real-time plots of the simulation
+streamlit run sim_plots.py
+```
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
@@ -85,10 +97,9 @@ To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
-Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
-
 By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
 Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+
 You can run many instances of streamlit at once, with different URLs.
 
 ## Run Trader Bot on Sapphire Testnet
