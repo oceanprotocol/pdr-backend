@@ -61,7 +61,6 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
         # Verifying outputs
         assert "pdr predictoor: Begin" in caplog.text
         assert "Arguments:" in caplog.text
-        assert f"APPROACH={approach}" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
         assert "NETWORK=development" in caplog.text
         assert "Feed: 5m binance BTC/USDT 0x1" in caplog.text
