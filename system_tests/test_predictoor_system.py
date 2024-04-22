@@ -35,6 +35,7 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_feed_contract
     )
+    mock_predictoor_ss.approach = approach
 
     merged_ohlcv_df = Mock()
 
@@ -80,15 +81,15 @@ def test_predictoor_approach_1_system(
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 1, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
-def test_predictoor_approach_3_system(
+def test_predictoor_approach_2_system(
     mock_verify_feed_dependencies,
     mock_feeds,
     mock_feed_contract,
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 3, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
