@@ -18,7 +18,7 @@ Usage: pdr sim|predictoor|trader|..
 HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
-  pdr predictoor APPROACH PPSS_FILE NETWORK
+  pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE

@@ -245,13 +245,13 @@ In `my_ppss.yaml` file, in `web3_pp` -> `development` section:
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml development
+pdr predictoor my_ppss.yaml development
 ```
 
 Or, to be fancier: (a) add `nohup` so that the run keeps going if the ssh session closes, and (b) output to out.txt (c) observe output 
 ```console
 # start bot
-nohup pdr predictoor 2 my_ppss.yaml development 1>out.txt 2>&1 &
+nohup pdr predictoor my_ppss.yaml development 1>out.txt 2>&1 &
 
 # observe output
 tail -f out.txt
