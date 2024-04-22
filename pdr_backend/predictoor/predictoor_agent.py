@@ -106,7 +106,7 @@ class PredictoorAgent:
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
             # within the time window to predict?
-            if cur_epoch_s_left > self.epoch_s_thr:
+            if cur_epoch_s_left < self.epoch_s_thr:
                 continue
 
             # get the target slot
