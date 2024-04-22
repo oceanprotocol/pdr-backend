@@ -8,7 +8,6 @@ import polars as pl
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 
-from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -30,22 +29,22 @@ from pdr_backend.util.currency_types import Eth
 
 
 @enforce_types
-def test_predictoor_agent_main1(tmpdir, monkeypatch, pred_submitter_mgr):
-    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch, pred_submitter_mgr)
+def test_predictoor_agent_main1(tmpdir, monkeypatch):
+    _test_predictoor_agent_main(1, str(tmpdir), monkeypatch)
 
 
 @enforce_types
-def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
-    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch, pred_submitter_mgr)
+def test_predictoor_agent_main2(tmpdir, monkeypatch):
+    _test_predictoor_agent_main(2, str(tmpdir), monkeypatch)
 
 
-def test_predictoor_agent_main3(tmpdir, monkeypatch, pred_submitter_mgr):
-    _test_predictoor_agent_main(3, str(tmpdir), monkeypatch, pred_submitter_mgr)
+def test_predictoor_agent_main3(tmpdir, monkeypatch):
+    _test_predictoor_agent_main(3, str(tmpdir), monkeypatch)
 
 
 @enforce_types
 def _test_predictoor_agent_main(
-    approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
+    approach: int, tmpdir: str, monkeypatch
 ):
     """
     @description
@@ -57,10 +56,11 @@ def _test_predictoor_agent_main(
     # mock tokens
     mock_token = Mock()
     mock_token.balanceOf.return_value = Eth(1000).to_wei()
+    pred_submitter_mgr = Mock()
 
     with patch("pdr_backend.ppss.web3_pp.Token", return_value=mock_token), patch(
         "pdr_backend.ppss.web3_pp.NativeToken", return_value=mock_token
-    ):
+    ), patch("pdr_backend.predictoor.predictoor_agent.PredSubmitterMgr", return_value=pred_submitter_mgr):
         _, ppss, _mock_pdr_contract = mock_ppss_1feed(
             approach,
             tmpdir,
