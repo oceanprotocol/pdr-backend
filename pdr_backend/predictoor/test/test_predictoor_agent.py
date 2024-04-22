@@ -41,12 +41,14 @@ def test_predictoor_agent_main2(tmpdir, monkeypatch, pred_submitter_mgr):
 def test_predictoor_agent_main3(tmpdir, monkeypatch, pred_submitter_mgr):
     _test_predictoor_agent_main(3, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
+
 @pytest.fixture()
 def pred_submitter_mgr():
     with patch("pdr_backend.predictoor.predictoor_agent.PredSubmitterMgr") as mock:
         mock.submit_prediction.return_value = {"transactionHash": b"hello", "status": 1}
         mock.contract_address = "0x123"
         yield mock
+
 
 @enforce_types
 def _test_predictoor_agent_main(
@@ -91,7 +93,6 @@ def _test_predictoor_agent_main(
         agent = PredictoorAgent(ppss)
         for _ in range(500):
             agent.take_step()
-        
 
     # log some final results for debubbing / inspection
     mock_w3 = ppss.web3_pp.web3_config.w3
@@ -323,7 +324,7 @@ def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitte
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
     mock_model.aimodel_ss = aimodel_ss
-    
+
     feed_contracts = ppss.web3_pp.query_feed_contracts()
     mock_OCEAN = Mock()
     mock_OCEAN.balanceOf.return_value = OCEAN
