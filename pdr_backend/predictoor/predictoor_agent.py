@@ -106,9 +106,9 @@ class PredictoorAgent:
             stake_up, stake_down = self.calc_stakes(feedset)
 
             timeframe_key = feed.timeframe
-            if not epoch_cache[timeframe_key]:
-                epoch_cache[timeframe_key] = contract.get_current_epoch()
-            current_epoch = epoch_cache[timeframe_key]
+            current_epoch = epoch_cache.setdefault(
+                timeframe_key, contract.get_current_epoch()
+            )
 
             target_slot = UnixTimeS((current_epoch + 2) * seconds_per_epoch)
             prediction_objs.append(
@@ -116,6 +116,7 @@ class PredictoorAgent:
             )
 
         epoch_cache.clear()  # Reset cache
+
         # Second pass: Add stakes based on predictions and current time conditions
         for (
             feed,
@@ -126,11 +127,11 @@ class PredictoorAgent:
             contract,
         ) in prediction_objs:
             timeframe_key = feed.timeframe
-            if not epoch_cache[timeframe_key]:
-                epoch_cache[timeframe_key] = contract.get_current_epoch()
-            current_epoch = epoch_cache[timeframe_key]
+            current_epoch = epoch_cache.setdefault(
+                timeframe_key, contract.get_current_epoch()
+            )
 
-            next_slot = UnixTimeS((current_epoch + 1) * seconds_per_epoch)
+            next_slot = (current_epoch + 1) * seconds_per_epoch
             expected_target_slot = next_slot + seconds_per_epoch
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
@@ -139,7 +140,6 @@ class PredictoorAgent:
                 or target_slot != expected_target_slot
             ):
                 continue  # Skip if the time left is greater than threshold or in a different epoch
-
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
         return stakes
@@ -168,7 +168,11 @@ class PredictoorAgent:
             return
         # for each feed, calculate up/down stake (eg via models)
         feeds = list(self.feeds.values())
+        logger.info("Calculating predictions and stakes")
         stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
+
+        if len(stakes.slots) == 0:
+            logger.info("No predictions to submit, skipping")
 
         # submit prediction txs
         for target_slot in stakes.target_slots:
