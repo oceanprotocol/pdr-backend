@@ -89,7 +89,7 @@ class PredictoorAgent:
     def calc_stakes_across_feeds(self, feeds: List[SubgraphFeed]) -> StakesPerSlot:
         stakes = StakesPerSlot()
         prediction_objs = []
-        epoch_cache = defaultdict(int)  # Cache to store epoch values
+        epoch_cache: Dict[str, int] = defaultdict(int)
 
         # First pass: Collect data and prepare predictions
         for feed in feeds:
@@ -115,7 +115,7 @@ class PredictoorAgent:
                 (feed, stake_up, stake_down, target_slot, seconds_per_epoch, contract)
             )
 
-        epoch_cache = defaultdict(int)  # Reset cache
+        epoch_cache.clear()  # Reset cache
         # Second pass: Add stakes based on predictions and current time conditions
         for (
             feed,
