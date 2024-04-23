@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from collections import defaultdict
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
@@ -88,6 +89,7 @@ class PredictoorAgent:
     def calc_stakes_across_feeds(self, feeds: List[SubgraphFeed]) -> StakesPerSlot:
         stakes = StakesPerSlot()
         prediction_objs = []
+        epoch_cache = defaultdict(int)  # Cache to store epoch values
 
         # First pass: Collect data and prepare predictions
         for feed in feeds:
@@ -100,16 +102,21 @@ class PredictoorAgent:
                 logger.error("No (predict, train) pair found for feed %s", feed)
                 continue  # Skip further processing for this feed
 
-            cur_epoch = contract.get_current_epoch()
             seconds_per_epoch = feed.seconds_per_epoch
             stake_up, stake_down = self.calc_stakes(feedset)
 
-            target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
+            timeframe_key = feed.timeframe
+            if not epoch_cache[timeframe_key]:
+                epoch_cache[timeframe_key] = contract.get_current_epoch()
+            current_epoch = epoch_cache[timeframe_key]
+
+            target_slot = UnixTimeS((current_epoch + 2) * seconds_per_epoch)
             prediction_objs.append(
                 (feed, stake_up, stake_down, target_slot, seconds_per_epoch, contract)
             )
 
-        # Second pass: Apply stakes based on predictions and current time conditions
+        epoch_cache = defaultdict(int)  # Reset cache
+        # Second pass: Add stakes based on predictions and current time conditions
         for (
             feed,
             stake_up,
@@ -118,13 +125,20 @@ class PredictoorAgent:
             seconds_per_epoch,
             contract,
         ) in prediction_objs:
-            next_slot = UnixTimeS(
-                (contract.get_current_epoch() + 1) * seconds_per_epoch
-            )
+            timeframe_key = feed.timeframe
+            if not epoch_cache[timeframe_key]:
+                epoch_cache[timeframe_key] = contract.get_current_epoch()
+            current_epoch = epoch_cache[timeframe_key]
+
+            next_slot = UnixTimeS((current_epoch + 1) * seconds_per_epoch)
+            expected_target_slot = next_slot + seconds_per_epoch
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
-            if cur_epoch_s_left > self.epoch_s_thr:
-                continue  # Skip if the time left is greater than threshold
+            if (
+                cur_epoch_s_left > self.epoch_s_thr
+                or target_slot != expected_target_slot
+            ):
+                continue  # Skip if the time left is greater than threshold or in a different epoch
 
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
