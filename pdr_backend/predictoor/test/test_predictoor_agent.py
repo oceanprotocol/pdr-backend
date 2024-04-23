@@ -8,6 +8,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
@@ -20,7 +21,7 @@ from pdr_backend.predictoor.test.mockutil import (
     mock_ppss_2feeds,
 )
 from pdr_backend.util.currency_types import Eth
-
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 # ===========================================================================
 # test approach {1, 2, 3} - main loop
@@ -310,3 +311,67 @@ def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitte
     agent.ppss.web3_pp.NativeToken = mock_ROSE
 
     assert agent.check_balances(Eth(100)) == expected
+
+
+def test_calc_stakes_across_feeds(tmpdir, monkeypatch):
+    _, ppss, _mock_pdr_contract = mock_ppss_1feed(
+        1,
+        str(tmpdir),
+        monkeypatch,
+    )
+    feed_contracts = ppss.web3_pp.query_feed_contracts()
+    predictoor_ss = ppss.predictoor_ss
+    predictoor_ss.d["pred_submitter_mgr"] = "0x1"
+    predictoor_ss.d["stake_amount"] = 1.0
+    predictoor_ss.d["bot_only"]["s_until_epoch_end"] = 50000
+    web3_config = ppss.web3_pp.web3_config
+    w3 = ppss.web3_pp.w3
+
+    contract_mock = Mock()
+    contract_mock.get_current_epoch.return_value = 30
+    ppss.web3_pp.get_single_contract = Mock()
+    ppss.web3_pp.get_single_contract.return_value = contract_mock
+
+    feeds = [
+        SubgraphFeed("BTC/USDT 5m", "0x1", "", 300, 0, "", "", "5m", ""),
+        SubgraphFeed("BTC/USDT 1h", "0x2", "", 3600, 0, "", "", "1h", ""),
+    ]
+    predict_train_feedsets = [
+        PredictTrainFeedset.from_dict(
+            {
+                "predict": "binance BTC/USDT o 5m",
+                "train_on": "binance BTC/USDT ETH/USDT o 5m",
+            }
+        ),
+        PredictTrainFeedset.from_dict(
+            {
+                "predict": "binance LTC/USDT o 1h",
+                "train_on": "binance LTC/USDT ADA/USDT o 1h",
+            }
+        ),
+    ]
+    predictoor_ss.get_predict_train_feedset = Mock()
+    predictoor_ss.get_predict_train_feedset.side_effect = predict_train_feedsets
+
+    ppss = MagicMock(spec=PPSS)
+    ppss.predictoor_ss = predictoor_ss
+    ppss.web3_pp = MagicMock(spec=Web3PP)
+    ppss.web3_pp.get_single_contract.return_value = _mock_pdr_contract
+    ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
+    ppss.web3_pp.web3_config = web3_config
+    ppss.web3_pp.w3 = w3
+    with patch("pdr_backend.predictoor.predictoor_agent.PredSubmitterMgr"):
+        agent = PredictoorAgent(ppss=ppss)
+
+    stakes = agent.calc_stakes_across_feeds(feeds)
+    assert 600 in stakes.slots, "Must have a prediction for next 5m slot"
+    assert 7200 in stakes.slots, "Must have a prediction for next 1h slot"
+
+    target_slots = stakes.target_slots
+    preds_5m = target_slots[600]
+    assert preds_5m[0].feed == feeds[0], "Must have a prediction for BTC/USDT 5m"
+    assert preds_5m[0].stake_up + preds_5m[0].stake_down == Eth(1.0), "sum up to 1.0"
+
+    preds_1h = target_slots[7200]
+    assert preds_1h[0].feed == feeds[1], "Must have a prediction for BTC/USDT 1h"
+    assert preds_1h[0].stake_up + preds_1h[0].stake_down == Eth(1.0), "sum up to 1.0"
