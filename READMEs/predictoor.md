@@ -154,7 +154,7 @@ Update the rest of the config as desired.
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-testnet
+pdr predictoor my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -190,7 +190,7 @@ Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-p
 Then, run the bot. In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-mainnet
+pdr predictoor my_ppss.yaml sapphire-mainnet
 ```
 
 This is where there's real $ at stake. Good luck!
