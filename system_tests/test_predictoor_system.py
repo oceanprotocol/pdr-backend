@@ -63,6 +63,9 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
     ), patch(
         "pdr_backend.lake.ohlcv_data_factory.OhlcvDataFactory.get_mergedohlcv_df",
         return_value=merged_ohlcv_df,
+    ), patch(
+        "pdr_backend.predictoor.predictoor_agent.PredictoorAgent.calc_stakes_2ss_model",
+        return_value=(10, 10),
     ):
         # Mock sys.argv
         sys.argv = ["pdr", "predictoor", "ppss.yaml", "development"]
@@ -91,7 +94,7 @@ def test_predictoor_approach_1_system(
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
