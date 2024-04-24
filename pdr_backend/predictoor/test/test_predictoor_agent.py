@@ -9,7 +9,6 @@ from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
-from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.ppss.web3_pp import Web3PP
@@ -44,6 +43,14 @@ def test_predictoor_agent_main3(tmpdir, monkeypatch, pred_submitter_mgr):
     _test_predictoor_agent_main(3, str(tmpdir), monkeypatch, pred_submitter_mgr)
 
 
+@pytest.fixture()
+def pred_submitter_mgr():
+    with patch("pdr_backend.predictoor.predictoor_agent.PredSubmitterMgr") as mock:
+        mock.submit_prediction.return_value = {"transactionHash": b"hello", "status": 1}
+        mock.contract_address = "0x123"
+        yield mock
+
+
 @enforce_types
 def _test_predictoor_agent_main(
     approach: int, tmpdir: str, monkeypatch, pred_submitter_mgr
@@ -66,10 +73,21 @@ def _test_predictoor_agent_main(
             approach,
             tmpdir,
             monkeypatch,
-            pred_submitter_mgr=pred_submitter_mgr.contract_address,
         )
         assert ppss.predictoor_ss.approach == approach
         ppss.predictoor_ss.d["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
+        feed_contracts = ppss.web3_pp.query_feed_contracts()
+        web3_config = ppss.web3_pp.web3_config
+        w3 = ppss.web3_pp.w3
+        mock_token = Mock()
+        mock_token.balanceOf.return_value = Eth(1000).to_wei()
+        ppss.web3_pp = MagicMock(spec=Web3PP)
+        ppss.web3_pp.OCEAN_Token = mock_token
+        ppss.web3_pp.NativeToken = mock_token
+        ppss.web3_pp.get_single_contract.return_value = _mock_pdr_contract
+        ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
+        ppss.web3_pp.web3_config = web3_config
+        ppss.web3_pp.w3 = w3
         # now we're done the mocking, time for the real work!!
 
         # real work: main iterations
@@ -203,6 +221,11 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
 
         # do prediction
         mock_model.aimodel_ss = aimodel_ss
+
+        feed_contracts = ppss.web3_pp.query_feed_contracts()
+        ppss.web3_pp = Mock(spec=Web3PP)
+        ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
+
         agent = PredictoorAgent(ppss)
         feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
@@ -240,6 +263,9 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
             2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
         )
         assert ppss.predictoor_ss.approach == 2
+        feed_contracts = ppss.web3_pp.query_feed_contracts()
+        ppss.web3_pp = Mock(spec=Web3PP)
+        ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 
         assert len(feeds) == 2
         aimodel_ss = ppss.predictoor_ss.aimodel_ss
@@ -299,16 +325,18 @@ def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitte
     aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
     mock_model.aimodel_ss = aimodel_ss
-    agent = PredictoorAgent(ppss)
 
+    feed_contracts = ppss.web3_pp.query_feed_contracts()
     mock_OCEAN = Mock()
     mock_OCEAN.balanceOf.return_value = OCEAN
     mock_ROSE = Mock()
     mock_ROSE.balanceOf.return_value = ROSE
+    ppss.web3_pp = Mock(spec=Web3PP)
+    ppss.web3_pp.OCEAN_Token = mock_OCEAN
+    ppss.web3_pp.NativeToken = mock_ROSE
+    ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 
-    agent.ppss.web3_pp = Mock(spec=Web3PP)
-    agent.ppss.web3_pp.OCEAN_Token = mock_OCEAN
-    agent.ppss.web3_pp.NativeToken = mock_ROSE
+    agent = PredictoorAgent(ppss)
 
     assert agent.check_balances(Eth(100)) == expected
 
