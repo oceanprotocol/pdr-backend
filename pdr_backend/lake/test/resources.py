@@ -18,13 +18,13 @@ from pdr_backend.ppss.web3_pp import mock_web3_pp
 
 @enforce_types
 def _mergedohlcv_df_ETHUSDT():
-    predict_feeds = [
+    predict_train_feedsets = [
         {
             "predict": "binanceus ETH/USDT h 5m",
             "train_on": "binanceus ETH/USDT h 5m",
         }
     ]
-    d = predictoor_ss_test_dict(predict_feeds)
+    d = predictoor_ss_test_dict(predict_train_feedsets)
     predictoor_ss = PredictoorSS(d)
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)

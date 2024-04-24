@@ -9,7 +9,7 @@ lake_ss:
   fin_timestr: now # ending date for data
 
 predictoor_ss:
-  feeds: 
+  predict_train_feedsets: 
     - predict: binance BTC/USDT ETH/USDT c 5m
       train_on:
       - binance BTC/USDT ETH/USDT c 5m
@@ -22,12 +22,10 @@ predictoor_ss:
     revenue: 0.93006 # Sales revenue going towards predictoors. In OCEAN per epoch, per feed. Calcs: 37500 OCEAN/week/20_feeds (Predictoor DF rewards) = 18.6012 OCEAN/epoch/20_feeds (bc 2016 5m epochs/week) = 0.93006 OCEAN/epoch/feed
 
   bot_only:
-    s_until_epoch_end: 60 # in s. Start predicting if there's > this time left
-    s_start_payouts: 220 # in s. Run payout when there's this seconds left, set to 0 to disable
+    s_start_payouts: 220 # in s. Run payout if > this time left. 0 to disable
+    s_until_epoch_end: 60 # in s. Start predicting if > this time left
 
   aimodel_ss:
-    input_feeds:
-      - binance BTC/USDT ETH/USDT c 5m
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
     approach: LinearLogistic # LinearLogistic | LinearSVC | Constant
@@ -66,7 +64,7 @@ multisim_ss:
   - trader_ss.buy_amt: 1000 USD, 2000 USD
   - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
   - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
-  - predictoor_ss.feeds:
+  - predictoor_ss.predict_train_feedsets:
     -
       - predict: binance BTC/USDT c 5m
         train_on:
@@ -75,7 +73,6 @@ multisim_ss:
       - predict: binance BTC/USDT ETH/USDT c 5m
         train_on:
         - binance BTC/USDT ETH/USDT c 5m
-#    -
 #      - binance BTC/USDT c 5m
 #      - kraken BTC/USDT c 5m
 

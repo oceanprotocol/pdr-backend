@@ -1,12 +1,10 @@
+from enforce_typing import enforce_types
+import numpy as np
+from numpy.testing import assert_array_equal
 import pandas as pd
 import polars as pl
 import pytest
-import numpy as np
 
-from numpy.testing import assert_array_equal
-from enforce_typing import enforce_types
-
-from pdr_backend.cli.predict_feeds import PredictFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
@@ -35,17 +33,24 @@ def test_ycont_to_ytrue():
 
 @enforce_types
 def test_create_xy__0():
-    predict_feeds = [
-        {"predict": "binanceus ETH/USDT c 5m", "train_on": "binanceus ETH/USDT c 5m"}
+    # create predictoor_ss
+    feedset_list = [
+        {
+            "predict": "binanceus ETH/USDT c 5m",
+            "train_on": "binanceus ETH/USDT oc 5m",
+        }
     ]
-    d = predictoor_ss_test_dict(
-        predict_feeds=predict_feeds,
-        input_feeds=["binanceus ETH/USDT oc"],
-    )
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
+    assert "aimodel_ss" in d
+    assert "max_n_train" in d["aimodel_ss"]
     d["aimodel_ss"]["max_n_train"] = 4
+
+    assert "autoregressive_n" in d["aimodel_ss"]
     d["aimodel_ss"]["autoregressive_n"] = 2
+
     predictoor_ss = PredictoorSS(d)
 
+    # create df
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
@@ -56,6 +61,7 @@ def test_create_xy__0():
         }
     )
 
+    # set target X,y
     target_X = np.array(
         [
             [0.1, 0.1, 3.1, 4.2],  # oldest
@@ -75,12 +81,21 @@ def test_create_xy__0():
     )
     target_xrecent = np.array([0.1, 0.1, 8.6, 9.7])
 
-    factory = AimodelDataFactory(predictoor_ss)
-
     target_y = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest to newest
+
+    # do work
+    testshift = 0
+    factory = AimodelDataFactory(predictoor_ss)
+    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
+    train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
     X, y, x_df, xrecent = factory.create_xy(
-        mergedohlcv_df, testshift=0, feed=predictoor_ss.feeds.feeds[0]
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
     )
+
+    # test result
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
@@ -90,11 +105,16 @@ def test_create_xy__0():
 
 @enforce_types
 def test_create_xy_reg__1exchange_1coin_1signal():
-    predict_feeds = [
-        {"predict": "binanceus ETH/USDT h 5m", "train_on": "binanceus ETH/USDT h 5m"}
+    feedset_list = [
+        {
+            "predict": "binanceus ETH/USDT h 5m",
+            "train_on": "binanceus ETH/USDT h 5m",
+        }
     ]
-    d = predictoor_ss_test_dict(predict_feeds)
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
     predictoor_ss = PredictoorSS(d)
+    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
+    train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
@@ -133,8 +153,12 @@ def test_create_xy_reg__1exchange_1coin_1signal():
     )
     target_xrecent = np.array([3.0, 2.0, 1.0])
 
+    testshift = 0
     X, y, x_df, xrecent = aimodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, feed=predictoor_ss.feeds.feeds[0]
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
     )
 
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
@@ -177,8 +201,12 @@ def test_create_xy_reg__1exchange_1coin_1signal():
     )
     target_xrecent = np.array([4.0, 3.0, 2.0])
 
+    testshift = 1
     X, y, x_df, xrecent = aimodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=1, feed=predictoor_ss.feeds.feeds[0]
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
     )
 
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
@@ -210,8 +238,12 @@ def test_create_xy_reg__1exchange_1coin_1signal():
     assert "max_n_train" in predictoor_ss.aimodel_ss.d
     predictoor_ss.aimodel_ss.d["max_n_train"] = 5
 
+    testshift = 0
     X, y, x_df, _ = aimodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, feed=predictoor_ss.feeds.feeds[0]
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
     )
 
     _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
@@ -222,6 +254,21 @@ def test_create_xy_reg__1exchange_1coin_1signal():
 
 @enforce_types
 def test_create_xy_reg__2exchanges_2coins_2signals():
+    # create predictoor_ss
+    feedset_list = [
+        {
+            "predict": "binanceus ETH/USDT h 5m",
+            "train_on": [
+                "binanceus BTC/USDT ETH/USDT hl 5m",
+                "kraken BTC/USDT ETH/USDT hl 5m",
+            ],
+        }
+    ]
+    d = predictoor_ss_test_dict(feedset_list=feedset_list)
+    ss = PredictoorSS(d)
+    assert ss.aimodel_ss.autoregressive_n == 3
+
+    # create mergedohlcv_df
     rawohlcv_dfs = {
         "binanceus": {
             "BTC/USDT": _df_from_raw_data(BINANCE_BTC_DATA),
@@ -232,34 +279,22 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
             "ETH/USDT": _df_from_raw_data(KRAKEN_ETH_DATA),
         },
     }
-
-    d = predictoor_ss_test_dict()
-    assert "feeds" in d
-    assert "input_feeds" in d["aimodel_ss"]
-    d["predict_feed"] = PredictFeeds.from_array(
-        [
-            {
-                "predict": "binanceus ETH/USDT h 5m",
-                "train_on": "binanceus ETH/USDT h 5m",
-            }
-        ]
-    )
-    d["aimodel_ss"]["input_feeds"] = [
-        "binanceus BTC/USDT,ETH/USDT hl",
-        "kraken BTC/USDT,ETH/USDT hl",
-    ]
-    ss = PredictoorSS(d)
-
-    assert ss.aimodel_ss.autoregressive_n == 3
-    assert ss.aimodel_ss.n == (4 + 4) * 3
-
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
+    # create X, y, x_df
     aimodel_data_factory = AimodelDataFactory(ss)
+    testshift = 0
+    predict_feed = ss.predict_train_feedsets[0].predict
+    train_feeds = ss.predict_train_feedsets[0].train_on
+    assert len(train_feeds) == 8
     X, y, x_df, _ = aimodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, feed=d["predict_feed"].feeds[0]
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
     )
 
+    # test X, y, x_df
     _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
     target_cols = [
@@ -290,7 +325,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     ]
     assert found_cols == target_cols
 
-    # test binanceus:ETH/USDT:high like in 1-signal
+    # - test binanceus:ETH/USDT:high like in 1-signal
     assert target_cols[3:6] == [
         "binanceus:ETH/USDT:high:t-4",
         "binanceus:ETH/USDT:high:t-3",
@@ -305,17 +340,9 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     assert x_df.iloc[-2].tolist()[3:6] == [5, 4, 3]
     assert x_df.iloc[0].tolist()[3:6] == [11, 10, 9]
 
-    assert x_df["binanceus:ETH/USDT:high:t-2"].tolist() == [
-        9,
-        8,
-        7,
-        6,
-        5,
-        4,
-        3,
-        2,
-    ]
-    assert Xa[:, 2].tolist() == [9, 8, 7, 6, 5, 4, 3, 2]
+    target_list = [9, 8, 7, 6, 5, 4, 3, 2]
+    assert x_df["binanceus:ETH/USDT:high:t-2"].tolist() == target_list
+    assert Xa[:, 2].tolist() == target_list
 
 
 @enforce_types
@@ -327,43 +354,49 @@ def test_create_xy_reg__check_timestamp_order():
     assert uts == sorted(uts, reverse=False)
 
     # happy path
-    feed = factory.ss.feeds[0]
-    factory.create_xy(mergedohlcv_df, testshift=0, feed=feed.predict)
+    testshift = 0
+    predict_feed = factory.ss.predict_train_feedsets[0].predict
+    factory.create_xy(mergedohlcv_df, testshift, predict_feed)
 
     # failure path
     bad_uts = sorted(uts, reverse=True)  # bad order
     bad_mergedohlcv_df = mergedohlcv_df.with_columns(pl.Series("timestamp", bad_uts))
     with pytest.raises(AssertionError):
-        factory.create_xy(bad_mergedohlcv_df, testshift=0, feed=feed.predict)
+        factory.create_xy(bad_mergedohlcv_df, testshift, predict_feed)
 
 
 @enforce_types
 def test_create_xy_reg__input_type():
-    mergedohlcv_df, aimodel_data_factory = _mergedohlcv_df_ETHUSDT()
+    mergedohlcv_df, factory = _mergedohlcv_df_ETHUSDT()
 
     assert isinstance(mergedohlcv_df, pl.DataFrame)
-    assert isinstance(aimodel_data_factory, AimodelDataFactory)
+    assert isinstance(factory, AimodelDataFactory)
 
     # create_xy() input should be pl
-    feed = aimodel_data_factory.ss.feeds[0]
-    aimodel_data_factory.create_xy(mergedohlcv_df, testshift=0, feed=feed.predict)
+    testshift = 0
+    predict_feed = factory.ss.predict_train_feedsets[0].predict
+    factory.create_xy(mergedohlcv_df, testshift, predict_feed)
 
     # create_xy() inputs shouldn't be pd
+    pandas_df = mergedohlcv_df.to_pandas()
     with pytest.raises(AssertionError):
-        aimodel_data_factory.create_xy(
-            mergedohlcv_df.to_pandas(), testshift=0, feed=feed.predict
-        )
+        factory.create_xy(pandas_df, testshift, predict_feed)
 
 
 @enforce_types
 def test_create_xy_reg__handle_nan():
     # create mergedohlcv_df
-    predict_feeds = [
-        {"predict": "binanceus ETH/USDT h 5m", "train_on": "binanceus ETH/USDT h 5m"}
+    feeds = [
+        {
+            "predict": "binanceus ETH/USDT h 5m",
+            "train_on": "binanceus ETH/USDT h 5m",
+        }
     ]
-    d = predictoor_ss_test_dict(predict_feeds)
+    d = predictoor_ss_test_dict(feedset_list=feeds)
     predictoor_ss = PredictoorSS(d)
-    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
+    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
+    testshift = 0
+    factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # initial mergedohlcv_df should be ok
@@ -381,14 +414,13 @@ def test_create_xy_reg__handle_nan():
     )
     assert has_nan(mergedohlcv_df)
 
-    # =========== initial testshift (0)
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = factory.create_xy(
         mergedohlcv_df,
-        testshift=0,
+        testshift,
+        predict_feed,
         do_fill_nans=False,
-        feed=predictoor_ss.feeds.feeds[0],
     )
     assert has_nan(X) and has_nan(y) and has_nan(x_df)
 
@@ -397,17 +429,19 @@ def test_create_xy_reg__handle_nan():
     assert not has_nan(mergedohlcv_df2)
 
     # nan approach 2: explicitly tell create_xy to fill nans
-    X, y, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = factory.create_xy(
         mergedohlcv_df,
-        testshift=0,
+        testshift,
+        predict_feed,
         do_fill_nans=True,
-        feed=predictoor_ss.feeds.feeds[0],
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
     # nan approach 3: create_xy fills nans by default (best)
-    X, y, x_df, _ = aimodel_data_factory.create_xy(
-        mergedohlcv_df, testshift=0, feed=predictoor_ss.feeds.feeds[0]
+    X, y, x_df, _ = factory.create_xy(
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
 
@@ -422,7 +456,5 @@ def _assert_pd_df_shape(
 ):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
-    assert X.shape[1] == ss.n
 
     assert len(x_df) == X.shape[0]
-    assert len(x_df.columns) == ss.n
