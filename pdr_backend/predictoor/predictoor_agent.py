@@ -140,6 +140,8 @@ class PredictoorAgent:
                 or target_slot != expected_target_slot
             ):
                 continue  # Skip if the time left is greater than threshold or in a different epoch
+            log_msg = f"Predicted, up: {stake_up}, down: {stake_down} for feed: {str(feed)} and slot: {target_slot}"
+            logger.info(log_msg)
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
         return stakes
@@ -183,12 +185,15 @@ class PredictoorAgent:
             for stake in stakes_up + stakes_down:
                 required_OCEAN += stake
             if not self.check_balances(required_OCEAN):
-                logger.error("Not enough balance, cancel prediction")
+                logger.error(
+                    "Address %s does not have enough OCEAN balance, cancel prediction",
+                    self.ppss.web3_pp.web3_config.owner,
+                )
                 return
 
             logger.info(self.status_str())
             s = f"-> Predict result: {stakes_up} up, {stakes_down} down"
-            s += f", feeds={feed_addrs}"
+            s += f", feeds={feed_addrs}, time slot={target_slot}"
             logger.info(s)
 
             if required_OCEAN == Eth(0):
