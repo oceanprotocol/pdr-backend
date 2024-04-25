@@ -140,7 +140,8 @@ class PredictoorAgent:
                 or target_slot != expected_target_slot
             ):
                 continue  # Skip if the time left is greater than threshold or in a different epoch
-            log_msg = f"Predicted, up: {stake_up}, down: {stake_down} for feed: {str(feed)} and slot: {target_slot}"
+            log_msg = f"Predicted, up: {stake_up}, down: {stake_down} "
+            log_msg += f"for feed: {str(feed)} and slot: {target_slot}"
             logger.info(log_msg)
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
