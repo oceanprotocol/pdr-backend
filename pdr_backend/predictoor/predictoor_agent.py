@@ -148,7 +148,8 @@ class PredictoorAgent:
                 stake_up.amt_eth / (stake_up.amt_eth + stake_down.amt_eth) * 100
             )
             feed_str = f"{feed.source} {feed.pair} {feed.timeframe} {feed.address[:6]}"
-            log_msg = f"Predicted feed {feed_str}, slot: {target_slot}: up = {stake_up.amt_eth:.2f} OCEAN, down = {stake_down.amt_eth:.2f} OCEAN ({up_stake_percentage:.2f}% up)"
+            log_msg = f"Predicted feed {feed_str}, slot: {target_slot}: up = {stake_up.amt_eth:.2f} OCEAN"
+            log_mst += f" down = {stake_down.amt_eth:.2f} OCEAN ({up_stake_percentage:.2f}% up)"
             logger.info(log_msg)
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
