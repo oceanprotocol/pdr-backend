@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import sys
 
 import plotly
 from dash import Dash, Input, Output, State, callback, dcc, html
@@ -7,10 +8,9 @@ from dash import Dash, Input, Output, State, callback, dcc, html
 from pdr_backend.aimodel import aimodel_plotter
 from pdr_backend.sim.sim_plotter import SimPlotter
 
-# TODO: run with specific state -> check args in Readme
-# TODO: run with specific ports for multiple instances -> check args in Readme
 # TODO: display slider to select state and add callback
 # TODO: handle clickdata in varimps callback
+# TODO: CSS/HTML layout tweaks
 
 
 app = Dash(__name__)
@@ -63,6 +63,11 @@ def get_latest_state_id():
     return str(path).replace("sim_state/", "")
 
 
+def get_all_state_names():
+    path = Path("sim_state").iterdir()
+    return [str(p).replace("sim_state/", "") for p in path]
+
+
 def get_figures_by_state(clickData=None):
     figures = {}
     for key in canvas:
@@ -90,7 +95,9 @@ def get_figures_by_state(clickData=None):
 )
 # pylint: disable=unused-argument
 def update_graph_live(n, clickData):
-    state_id = get_latest_state_id()
+    global g_state_id
+
+    state_id = get_latest_state_id() if g_state_id is None else g_state_id
 
     try:
         st, ts = sim_plotter.load_state(state_id)
@@ -147,4 +154,29 @@ def update_graph_live(n, clickData):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    msg = "USAGE: python sim_plots.py [state_id] [port]"
+
+    if len(sys.argv) > 3:
+        print(msg)
+        sys.exit(1)
+
+    if len(sys.argv) == 3:
+        state_id = sys.argv[1]
+        if state_id not in get_all_state_names():
+            print("Invalid state_id")
+            sys.exit(1)
+        port = int(sys.argv[2])
+    elif len(sys.argv) == 2:
+        state_id = sys.argv[1]
+        port = None
+        if state_id not in get_all_state_names():
+            state_id = None
+            port = int(sys.argv[1])
+    else:
+        state_id = None
+        port = 8050
+
+    global g_state_id
+    g_state_id = state_id
+
+    app.run(debug=True, port=port)
