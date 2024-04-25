@@ -61,10 +61,19 @@ class PredictoorAgent:
         self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
             cand_feeds
         )
+
         if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 
         print_feeds(self.feeds, "filtered feed")
+
+        feed_addrs: List[str] = list(self.feeds.keys())
+        feed_addrs = self._to_checksum(feed_addrs)
+
+        logger.info("Approving tokens...")
+        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
+        self.pred_submitter_mgr.approve_ocean(feed_addrs)
+        logger.info("Tokens approved")
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():
