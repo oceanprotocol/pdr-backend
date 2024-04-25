@@ -63,11 +63,17 @@ def get_latest_state_id():
     return str(path).replace("sim_state/", "")
 
 
-def get_figures_by_state():
+def get_figures_by_state(clickData=None):
     figures = {}
     for key in canvas:
         if not key.startswith("aimodel"):
             fig = getattr(sim_plotter, f"plot_{key}")()
+        elif key == "aimodel_response":
+            func_name = getattr(aimodel_plotter, f"plot_{key}")
+            label = clickData["points"][0]["y"] if clickData else None
+            fig = aimodel_plotter.plot_aimodel_response(
+                sim_plotter.aimodel_plotdata, label
+            )
         else:
             func_name = getattr(aimodel_plotter, f"plot_{key}")
             fig = func_name(sim_plotter.aimodel_plotdata)
@@ -97,7 +103,7 @@ def update_graph_live(n, clickData):
             ),
         ]
 
-    figures = get_figures_by_state()
+    figures = get_figures_by_state(clickData)
 
     return [
         html.H2(f"Simulation ID: {state_id}", id="sim_state_text"),
@@ -106,7 +112,6 @@ def update_graph_live(n, clickData):
             id="sim_current_ts",
             className="finalState" if ts == "final" else "runningState",
         ),
-        html.H2(str(clickData)),
         html.Div(
             [
                 dcc.Graph(figure=figures["pdr_profit_vs_time"]),

@@ -1,6 +1,8 @@
-from enforce_typing import enforce_types
+from typing import Optional
+
 import numpy as np
 import plotly.graph_objects as go
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -8,6 +10,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 @enforce_types
 def plot_aimodel_response(
     aimodel_plotdata: AimodelPlotdata,
+    label: Optional[str] = None,
 ):
     """
     @description
@@ -28,6 +31,9 @@ def plot_aimodel_response(
     if aimodel_plotdata.n == 1:
         return _plot_aimodel_lineplot(aimodel_plotdata)
 
+    if label is not None:
+        return _plot_aimodel_lineplot(aimodel_plotdata, label=label)
+
     return _plot_aimodel_contour(aimodel_plotdata)
 
 
@@ -35,19 +41,24 @@ J = np.array([], dtype=float)  # jitter
 
 
 @enforce_types
-def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
+def _plot_aimodel_lineplot(
+    aimodel_plotdata: AimodelPlotdata, label: Optional[str] = None
+):
     """
     @description
       Plot the model, when there's 1 input x-var. Use a line plot.
       Will fail if not 1 var.
     """
     # aimodel data
-    assert aimodel_plotdata.n == 1
+    assert aimodel_plotdata.n == 1 or label in aimodel_plotdata.colnames
     d = aimodel_plotdata
     X, ytrue = d.X_train, d.ytrue_train
 
-    x = X[:, 0]
+    label_index = d.colnames.index(label) if label is not None else 0
+    x = X[:, label_index]
     N = len(x)
+
+    # TODO: fix err
 
     # calc mesh_X = uniform grid
     mesh_x = np.linspace(min(x), max(x), 200)
