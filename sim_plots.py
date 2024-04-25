@@ -8,7 +8,6 @@ from dash import Dash, Input, Output, State, callback, dcc, html
 from pdr_backend.aimodel import aimodel_plotter
 from pdr_backend.sim.sim_plotter import SimPlotter
 
-# TODO: display slider to select state and add callback
 # TODO: handle clickdata in varimps callback
 # TODO: CSS/HTML layout tweaks
 
@@ -27,9 +26,23 @@ canvas = [
     "aimodel_response",
     "f1_precision_recall_vs_time",
 ]
-empty_graphs_template = [
-    dcc.Graph(figure=plotly.graph_objs.Figure(), id=key) for key in canvas
-]
+
+empty_slider = dcc.Slider(
+    id="state_slider",
+    min=0,
+    max=0,
+    step=1,
+    disabled=True,
+)
+
+empty_slider_div = html.Div([empty_slider], style={"display": "none"})
+
+
+empty_graphs_template = html.Div(
+    [dcc.Graph(figure=plotly.graph_objs.Figure(), id=key) for key in canvas]
+    + [empty_slider],
+    style={"display": "none"},
+)
 
 
 app.layout = html.Div(
@@ -92,33 +105,58 @@ def get_figures_by_state(clickData=None):
     Output("live-graphs", "children"),
     Input("interval-component", "n_intervals"),
     Input("aimodel_varimps", "clickData"),
+    Input("state_slider", "value"),
 )
 # pylint: disable=unused-argument
-def update_graph_live(n, clickData):
+def update_graph_live(n, clickData, slider_value):
     global g_state_id
 
     state_id = get_latest_state_id() if g_state_id is None else g_state_id
+    set_ts = None
+
+    if slider_value is not None:
+        snapshots = SimPlotter.available_snapshots(state_id)
+        set_ts = snapshots[slider_value]
 
     try:
-        st, ts = sim_plotter.load_state(state_id)
+        st, ts = sim_plotter.load_state(state_id, set_ts)
     except Exception as e:
         return [
             html.Div(
                 [html.H2(f"Error/waiting: {e}", id="sim_state_text")]
-                + empty_graphs_template,
+                + [empty_graphs_template],
                 id="live-graphs",
             ),
         ]
 
-    figures = get_figures_by_state(clickData)
-
-    return [
+    elements = [
         html.H2(f"Simulation ID: {state_id}", id="sim_state_text"),
         html.H2(
             f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state",
             id="sim_current_ts",
             className="finalState" if ts == "final" else "runningState",
         ),
+    ]
+
+    if ts == "final":
+        # display slider if not in final state
+        snapshots = SimPlotter.available_snapshots(state_id)[:-1]
+        marks = {i: f"{s.replace('_', '')[:-4]}" for i, s in enumerate(snapshots)}
+        marks[len(snapshots)] = "final"
+
+        elements.append(
+            dcc.Slider(
+                id="state_slider",
+                marks=marks,
+                value=len(snapshots) if not set_ts else slider_value,
+                step=1,
+            )
+        )
+    else:
+        elements.append(empty_slider_div)
+
+    figures = get_figures_by_state(clickData)
+    elements = elements + [
         html.Div(
             [
                 dcc.Graph(figure=figures["pdr_profit_vs_time"]),
@@ -151,6 +189,8 @@ def update_graph_live(n, clickData):
             ]
         ),
     ]
+
+    return elements
 
 
 if __name__ == "__main__":
