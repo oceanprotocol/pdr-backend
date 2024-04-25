@@ -12,6 +12,7 @@ install_requirements = [
     "bumpversion",
     "ccxt==4.3.4",
     "coverage",
+    "dash==2.16.1",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.0",
@@ -42,7 +43,6 @@ install_requirements = [
     "types-requests==2.31.0.20240406",
     "web3==6.17.2",
     "sapphire.py==0.2.2",
-    "streamlit==1.33.0",
     "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last
 ]

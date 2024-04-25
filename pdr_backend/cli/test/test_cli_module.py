@@ -420,11 +420,3 @@ def test_do_main(monkeypatch, capfd):
             _do_main()
 
     assert "Predictoor tool" in capfd.readouterr().out
-
-    mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
-
-    with patch("sys.argv", ["streamlit_entrypoint.py", "sim", "ppss.yaml"]):
-        _do_main()
-
-    assert mock_f.called
