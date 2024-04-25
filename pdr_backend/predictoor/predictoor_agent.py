@@ -53,7 +53,7 @@ class PredictoorAgent:
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
+        self.feeds: Dict[str, SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
             cand_feeds
         )
 
