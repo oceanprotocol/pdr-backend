@@ -53,11 +53,6 @@ class PredictoorAgent:
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed_addrs: List[str] = list(cand_feeds.keys())
-        feed_addrs = self._to_checksum(feed_addrs)
-        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
-        self.pred_submitter_mgr.approve_ocean(feed_addrs)
-
         self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
             cand_feeds
         )
@@ -149,8 +144,11 @@ class PredictoorAgent:
                 or target_slot != expected_target_slot
             ):
                 continue  # Skip if the time left is greater than threshold or in a different epoch
-            log_msg = f"Predicted, up: {stake_up}, down: {stake_down} "
-            log_msg += f"for feed: {str(feed)} and slot: {target_slot}"
+            up_stake_percentage = (
+                stake_up.amt_eth / (stake_up.amt_eth + stake_down.amt_eth) * 100
+            )
+            feed_str = f"{feed.source} {feed.pair} {feed.timeframe} {feed.address[:6]}"
+            log_msg = f"Predicted feed {feed_str}, slot: {target_slot}: up = {stake_up.amt_eth:.2f} OCEAN, down = {stake_down.amt_eth:.2f} OCEAN ({up_stake_percentage:.2f}% up)"
             logger.info(log_msg)
             stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
