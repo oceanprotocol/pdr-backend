@@ -131,7 +131,7 @@ class ETL:
 
             end_ts = time.time_ns() / 1e9
             logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
-            
+
             # At the end of the ETL pipeline, we want to
             # 1. move from TEMP tables to production tables
             # 2. drop TEMP tables and ETL views
@@ -307,13 +307,20 @@ class ETL:
                 temp_table_name,
             )
             pds.query_data(view_query)
-            logger.info("  Created %s view using %s table and %s temp table", etl_view_name, table_name, temp_table_name)
+            logger.info(
+                "  Created %s view using %s table and %s temp table",
+                etl_view_name,
+                table_name,
+                temp_table_name,
+            )
         else:
             view_query = (
                 f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
             )
             pds.query_data(view_query)
-            logger.info("  Created %s view using %s temp table", etl_view_name, temp_table_name)
+            logger.info(
+                "  Created %s view using %s temp table", etl_view_name, temp_table_name
+            )
 
     def update_bronze_pdr(self):
         """
