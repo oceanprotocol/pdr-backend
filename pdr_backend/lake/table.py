@@ -30,6 +30,51 @@ def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) ->
 
 
 @enforce_types
+def is_etl_table(table_name: str) -> bool:
+    table_name = table_name.removeprefix("_")
+    table_name = table_name.removeprefix("temp_")
+    table_name = table_name.removeprefix("_")
+    table_name = table_name.removeprefix("etl_")
+    table_name = table_name.removeprefix("temp_")
+
+    return (
+        table_name.startswith("bronze_")
+        or table_name.startswith("silver_")
+        or table_name.startswith("gold_")
+    )
+
+
+@enforce_types
+def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
+    trunc_count = table_count = 0
+    if type_filter not in ["raw", "etl"]:
+        return
+
+    table_names = pds.get_table_names()
+
+    for table_name in table_names:
+        if type_filter == "etl" and not is_etl_table(table_name):
+            logger.info("skipping non-etl table %s", table_name)
+            continue
+
+        if type_filter == "raw" and is_etl_table(table_name):
+            logger.info("skipping etl table %s", table_name)
+            continue
+
+        logger.info("drop table %s starting at %s", table_name, st)
+        rows_before = pds.row_count(table_name)
+        logger.info("rows before: %s", rows_before)
+        pds.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")
+        rows_after = pds.row_count(table_name)
+        logger.info("rows after: %s", rows_after)
+        if rows_before != rows_after:
+            table_count += 1
+            trunc_count += rows_before - rows_after
+
+    logger.info("truncated %s rows from %s tables", trunc_count, table_count)
+
+
+@enforce_types
 class Table:
     def __init__(self, table_name: str, df_schema: SchemaDict, ppss: PPSS):
         self.ppss = ppss

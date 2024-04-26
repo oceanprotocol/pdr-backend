@@ -9,7 +9,6 @@ from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
 
-
 from pdr_backend.lake.base_data_store import BaseDataStore
 
 logger = logging.getLogger("pds")
