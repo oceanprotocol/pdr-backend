@@ -204,7 +204,7 @@ class PredictoorAgent:
             logger.info(self.status_str())
             s = f"-> Predict result: {stakes_up} up, {stakes_down} down"
             s += f", feeds={feed_addrs}, time slot={target_slot}"
-            logger.info(s)
+            logger.debug(s)
 
             if required_OCEAN == Eth(0):
                 logger.warning("Done: no predictions to submit")
