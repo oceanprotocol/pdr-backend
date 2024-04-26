@@ -2,6 +2,7 @@ import sys
 from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.web3_config import Web3Config
@@ -19,8 +20,18 @@ def setup_mock_web3_pp(mock_feeds, mock_feed_contract):
     mock_web3_pp.w3.eth.block_number = 100
     mock_predictoor_ss = Mock()
     mock_predictoor_ss.get_feed_from_candidates.return_value = mock_feeds["0x1"]
+    mock_predictoor_ss.get_predict_train_feedset.return_value = (
+        PredictTrainFeedset.from_dict(
+            {
+                "predict": "binance BTC/USDT o 5m",
+                "train_on": "binance BTC/USDT ETH/USDT o 5m",
+            }
+        )
+    )
     mock_predictoor_ss.s_until_epoch_end = 100
     mock_predictoor_ss.s_start_payouts = 0
+    mock_predictoor_ss.stake_amount = 20
+    mock_predictoor_ss.predict_train_feedsets.min_epoch_seconds = 20
 
     mock_web3_config = Mock(spec=Web3Config)
     mock_web3_config.w3 = Mock()
@@ -52,6 +63,9 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
     ), patch(
         "pdr_backend.lake.ohlcv_data_factory.OhlcvDataFactory.get_mergedohlcv_df",
         return_value=merged_ohlcv_df,
+    ), patch(
+        "pdr_backend.predictoor.predictoor_agent.PredictoorAgent.calc_stakes_2ss_model",
+        return_value=(10, 10),
     ):
         # Mock sys.argv
         sys.argv = ["pdr", "predictoor", "ppss.yaml", "development"]
@@ -80,7 +94,7 @@ def test_predictoor_approach_1_system(
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 1, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
