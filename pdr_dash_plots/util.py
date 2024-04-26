@@ -24,9 +24,10 @@ def get_figures_by_state(sim_plotter: SimPlotter, clickData=None):
         elif key == "aimodel_response":
             func_name = getattr(aimodel_plotter, f"plot_{key}")
             label = clickData["points"][0]["y"] if clickData else None
-            fig = aimodel_plotter.plot_aimodel_response(
-                sim_plotter.aimodel_plotdata, label
+            sim_plotter.aimodel_plotdata.sweep_vars = (
+                [sim_plotter.aimodel_plotdata.colnames.index(label)] if label else None
             )
+            fig = aimodel_plotter.plot_aimodel_response(sim_plotter.aimodel_plotdata)
         else:
             func_name = getattr(aimodel_plotter, f"plot_{key}")
             fig = func_name(sim_plotter.aimodel_plotdata)

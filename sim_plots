@@ -7,7 +7,7 @@ from pdr_dash_plots.callbacks import get_callbacks
 from pdr_dash_plots.view_elements import empty_graphs_template
 from pdr_dash_plots.util import get_all_run_names
 
-# TODO: handle clickdata in varimps callback
+# TODO: handle deselection of varimps!
 # TODO: CSS/HTML layout tweaks
 
 app = Dash(__name__)
