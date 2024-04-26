@@ -17,6 +17,7 @@ class AimodelPlotdata:
         ytrue_train: np.ndarray,
         colnames: List[str],
         slicing_x: np.ndarray,
+        sweep_vars: List[int],
     ):
         """
         @arguments
@@ -24,7 +25,10 @@ class AimodelPlotdata:
           X_train -- 2d array [sample_i, var_i]:cont_value -- model trn inputs
           ytrue_train -- 1d array [sample_i]:bool_value -- model trn outputs
           colnames -- [var_i]:str -- name for each of the X inputs
-          slicing_x -- arrat [dim_i]:floatval - when >2 dims, plot about this pt
+          slicing_x -- array [var_i]:floatval - values for non-sweep vars
+          sweep_vars -- list with [sweepvar_i] or [sweepvar_i, sweepvar_j]
+            -- If 1 entry, do line plot (1 var), where y-axis is response
+            -- If 2 entries, do contour plot (2 vars), where z-axis is response
         """
         # preconditions
         assert X_train.shape[1] == len(colnames) == slicing_x.shape[0], (
@@ -36,6 +40,7 @@ class AimodelPlotdata:
             X_train.shape[0],
             ytrue_train.shape[0],
         )
+        assert len(sweep_vars) in [1, 2]
 
         # set values
         self.model = model
@@ -43,8 +48,14 @@ class AimodelPlotdata:
         self.ytrue_train = ytrue_train
         self.colnames = colnames
         self.slicing_x = slicing_x
+        self.sweep_vars = sweep_vars
 
     @property
     def n(self) -> int:
         """Number of input dimensions == # columns in X"""
         return self.X_train.shape[1]
+
+    @property
+    def n_sweep(self) -> int:
+        """Number of variables to sweep in the plot"""
+        return len(self.sweep_vars)

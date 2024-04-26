@@ -16,7 +16,7 @@ from pdr_backend.aimodel.aimodel_plotter import (
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 
 @enforce_types
@@ -135,7 +135,7 @@ def test_aimodel_accuracy_from_create_xy():
 
 
 @enforce_types
-def test_aimodel_factory_1var_main():
+def test_aimodel_factory_1varmodel_lineplot():
     """1 input var. It will plot that var on both axes"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
@@ -159,12 +159,55 @@ def test_aimodel_factory_1var_main():
     # plot
     colnames = ["x0"]
     slicing_x = np.array([0.1])  # arbitrary
-    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    sweep_vars = [0]
+    aimodel_plotdata = AimodelPlotdata(
+        model, X, ytrue, colnames, slicing_x, sweep_vars,
+    )
     figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
     if SHOW_PLOT:
         figure.show()
+
+
+        
+@enforce_types
+def test_aimodel_factory_5varmodel_lineplot():
+    """5 input vars; sweep 1 var. """
+    # settings, factory
+    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 1000
+    mn, mx = -10.0, +10.0
+    X = np.random.uniform(mn, mx, (N, 5))
+    ycont = 10.0 + 0.1 * X[:, 0] + 1.0 * X[:, 1] + 2.0 * X[:, 2] \
+        + 3.0 * X[:, 3] + 4.0 * X[:, 4]
+    y_thr = np.average(ycont)  # avg gives good class balance
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, show_warnings=False)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert len(imps) == 5
+    assert imps[0] < imps[1] < imps[2] < imps[3] < imps[4]
+
+    # plot
+    colnames = ["x0", "x1", "x2", "x3", "x4"]
+    slicing_x = np.array([0.1] * 5)  # arbitrary
+    sweep_vars = [2] # x2
+    aimodel_plotdata = AimodelPlotdata(
+        model, X, ytrue, colnames, slicing_x, sweep_vars,
+    )
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
+
+    if SHOW_PLOT:
+        figure.show()
+
 
 
 @enforce_types
