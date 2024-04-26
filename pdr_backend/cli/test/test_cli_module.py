@@ -408,7 +408,7 @@ def test_do_topup(monkeypatch):
 
 
 @enforce_types
-def test_do_main(monkeypatch, capfd):
+def test_do_main(capfd):
     with patch("sys.argv", ["pdr", "help"]):
         with pytest.raises(SystemExit):
             _do_main()

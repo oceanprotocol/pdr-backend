@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pdr_backend.aimodel import aimodel_plotter
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_dash_plots.layout import canvas
+from pdr_dash_plots.view_elements import figure_names
 
 
 def get_latest_run_id():
@@ -18,7 +18,7 @@ def get_all_run_names():
 
 def get_figures_by_state(sim_plotter: SimPlotter, clickData=None):
     figures = {}
-    for key in canvas:
+    for key in figure_names:
         if not key.startswith("aimodel"):
             fig = getattr(sim_plotter, f"plot_{key}")()
         elif key == "aimodel_response":

@@ -1,7 +1,7 @@
 from dash import Input, Output, State
 
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_dash_plots.layout import (
+from pdr_dash_plots.view_elements import (
     arrange_figures,
     empty_slider_div,
     get_header_elements,

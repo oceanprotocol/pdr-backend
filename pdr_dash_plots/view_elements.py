@@ -3,7 +3,7 @@ from plotly.graph_objs import Figure
 
 from pdr_backend.sim.sim_plotter import SimPlotter
 
-canvas = [
+figure_names = [
     "pdr_profit_vs_time",
     "trader_profit_vs_time",
     "accuracy_vs_time",
@@ -26,7 +26,7 @@ empty_slider_div = html.Div([empty_slider], style={"display": "none"})
 
 
 empty_graphs_template = html.Div(
-    [dcc.Graph(figure=Figure(), id=key) for key in canvas] + [empty_slider],
+    [dcc.Graph(figure=Figure(), id=key) for key in figure_names] + [empty_slider],
     style={"display": "none"},
 )
 
