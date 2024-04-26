@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from collections import defaultdict
 from typing import Dict, List, Tuple
 
 from enforce_typing import enforce_types
@@ -52,18 +53,22 @@ class PredictoorAgent:
         cand_feeds: Dict[str, SubgraphFeed] = ppss.web3_pp.query_feed_contracts()
         print_feeds(cand_feeds, f"cand feeds, owner={ppss.web3_pp.owner_addrs}")
 
-        feed_addrs: List[str] = list(cand_feeds.keys())
-        feed_addrs = self._to_checksum(feed_addrs)
-        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
-        self.pred_submitter_mgr.approve_ocean(feed_addrs)
-
-        self.feeds: List[SubgraphFeed] = ppss.predictoor_ss.get_feed_from_candidates(
-            cand_feeds
+        self.feeds: Dict[str, SubgraphFeed] = (
+            ppss.predictoor_ss.get_feed_from_candidates(cand_feeds)
         )
+
         if len(self.feeds) == 0:
             raise ValueError("No feeds found.")
 
         print_feeds(self.feeds, "filtered feed")
+
+        feed_addrs: List[str] = list(self.feeds.keys())
+        feed_addrs = self._to_checksum(feed_addrs)
+
+        logger.info("Approving tokens...")
+        self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
+        self.pred_submitter_mgr.approve_ocean(feed_addrs)
+        logger.info("Tokens approved")
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():
@@ -87,35 +92,67 @@ class PredictoorAgent:
     @enforce_types
     def calc_stakes_across_feeds(self, feeds: List[SubgraphFeed]) -> StakesPerSlot:
         stakes = StakesPerSlot()
+        prediction_objs = []
+        epoch_cache: Dict[str, int] = defaultdict(int)
 
-        seconds_per_epoch = None
-        cur_epoch = None
-
+        # First pass: Collect data and prepare predictions
         for feed in feeds:
             contract = self.ppss.web3_pp.get_single_contract(feed.address)
             feedset = self.ppss.predictoor_ss.get_predict_train_feedset(
-                feed.source,
-                feed.pair,
-                feed.timeframe,
+                feed.source, feed.pair, feed.timeframe
             )
+
             if feedset is None:
                 logger.error("No (predict, train) pair found for feed %s", feed)
+                continue  # Skip further processing for this feed
+
             seconds_per_epoch = feed.seconds_per_epoch
-            cur_epoch = contract.get_current_epoch()
-            next_slot = UnixTimeS((cur_epoch + 1) * seconds_per_epoch)
+            stake_up, stake_down = self.calc_stakes(feedset)
+
+            timeframe_key = feed.timeframe
+            current_epoch = epoch_cache.setdefault(
+                timeframe_key, contract.get_current_epoch()
+            )
+
+            target_slot = UnixTimeS((current_epoch + 2) * seconds_per_epoch)
+            prediction_objs.append(
+                (feed, stake_up, stake_down, target_slot, seconds_per_epoch, contract)
+            )
+
+        epoch_cache.clear()  # Reset cache
+
+        # Second pass: Add stakes based on predictions and current time conditions
+        for (
+            feed,
+            stake_up,
+            stake_down,
+            target_slot,
+            seconds_per_epoch,
+            contract,
+        ) in prediction_objs:
+            timeframe_key = feed.timeframe
+            current_epoch = epoch_cache.setdefault(
+                timeframe_key, contract.get_current_epoch()
+            )
+
+            next_slot = (current_epoch + 1) * seconds_per_epoch
+            expected_target_slot = next_slot + seconds_per_epoch
             cur_epoch_s_left = next_slot - self.cur_timestamp
 
-            # within the time window to predict?
-            if cur_epoch_s_left > self.epoch_s_thr:
-                continue
-
-            # get the target slot
-
-            # get the stakes
-            stake_up, stake_down = self.calc_stakes(feedset)
-            target_slot = UnixTimeS((cur_epoch + 2) * seconds_per_epoch)
-            tup = StakeTup(feed, stake_up, stake_down)
-            stakes.add_stake_at_slot(target_slot, tup)
+            if (
+                cur_epoch_s_left > self.epoch_s_thr
+                or target_slot != expected_target_slot
+            ):
+                continue  # Skip if the time left is greater than threshold or in a different epoch
+            up_stake_percentage = (
+                stake_up.amt_eth / (stake_up.amt_eth + stake_down.amt_eth) * 100
+            )
+            feed_str = f"{feed.source} {feed.pair} {feed.timeframe} {feed.address[:6]}"
+            log_msg = f"Predicted feed {feed_str}, "
+            log_msg += f"slot: {target_slot}: up = {stake_up.amt_eth:.2f} OCEAN"
+            log_msg += f" down = {stake_down.amt_eth:.2f} OCEAN ({up_stake_percentage:.2f}% up)"
+            logger.info(log_msg)
+            stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
 
         return stakes
 
@@ -137,9 +174,17 @@ class PredictoorAgent:
         # get payouts
         self.get_payout()
 
+        # --- Prediction ---
+        if self.min_epoch_s_left > self.epoch_s_thr:
+            # not time to predict yet
+            return
         # for each feed, calculate up/down stake (eg via models)
         feeds = list(self.feeds.values())
+        logger.info("Calculating predictions and stakes")
         stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
+
+        if len(stakes.slots) == 0:
+            logger.info("No predictions to submit, skipping")
 
         # submit prediction txs
         for target_slot in stakes.target_slots:
@@ -150,13 +195,16 @@ class PredictoorAgent:
             for stake in stakes_up + stakes_down:
                 required_OCEAN += stake
             if not self.check_balances(required_OCEAN):
-                logger.error("Not enough balance, cancel prediction")
+                logger.error(
+                    "Address %s does not have enough OCEAN balance, cancel prediction",
+                    self.ppss.web3_pp.web3_config.owner,
+                )
                 return
 
             logger.info(self.status_str())
             s = f"-> Predict result: {stakes_up} up, {stakes_down} down"
-            s += f", feeds={feed_addrs}"
-            logger.info(s)
+            s += f", feeds={feed_addrs}, time slot={target_slot}"
+            logger.debug(s)
 
             if required_OCEAN == Eth(0):
                 logger.warning("Done: no predictions to submit")
