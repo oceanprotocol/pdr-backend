@@ -35,6 +35,7 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
     mock_web3_pp, mock_predictoor_ss = setup_mock_web3_pp(
         mock_feeds, mock_feed_contract
     )
+    mock_predictoor_ss.approach = approach
 
     merged_ohlcv_df = Mock()
 
@@ -53,14 +54,13 @@ def _test_predictoor_system(mock_feeds, mock_feed_contract, approach, caplog):
         return_value=merged_ohlcv_df,
     ):
         # Mock sys.argv
-        sys.argv = ["pdr", "predictoor", str(approach), "ppss.yaml", "development"]
+        sys.argv = ["pdr", "predictoor", "ppss.yaml", "development"]
 
         cli_module._do_main()
 
         # Verifying outputs
         assert "pdr predictoor: Begin" in caplog.text
         assert "Arguments:" in caplog.text
-        assert f"APPROACH={approach}" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
         assert "NETWORK=development" in caplog.text
         assert "Feed: 5m binance BTC/USDT 0x1" in caplog.text
@@ -80,15 +80,15 @@ def test_predictoor_approach_1_system(
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 1, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
 
 
 @patch("pdr_backend.ppss.ppss.PPSS.verify_feed_dependencies")
-def test_predictoor_approach_3_system(
+def test_predictoor_approach_2_system(
     mock_verify_feed_dependencies,
     mock_feeds,
     mock_feed_contract,
     caplog,
 ):
     _ = mock_verify_feed_dependencies
-    _test_predictoor_system(mock_feeds, mock_feed_contract, 3, caplog)
+    _test_predictoor_system(mock_feeds, mock_feed_contract, 2, caplog)
