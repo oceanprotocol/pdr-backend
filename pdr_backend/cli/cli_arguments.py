@@ -56,6 +56,14 @@ Utilities:
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
   pdr lakeinfo PPSS_FILE NETWORK
 
+Inspect and manage lake:
+  pdr lake describe LAKE_DIR
+  pdr lake query LAKE_DIR "SQL QUERY ..."
+  pdr lake raw drop LAKE_DIR ST
+  pdr lake raw update PPSS_FILE NETWORK
+  pdr lake etl drop LAKE_DIR ST
+  pdr lake etl update PPSS_FILE ST END
+
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
   pdr dfbuyer PPSS_FILE NETWORK

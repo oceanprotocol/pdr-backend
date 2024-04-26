@@ -9,7 +9,6 @@ from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
 
-
 from pdr_backend.lake.base_data_store import BaseDataStore
 
 logger = logging.getLogger("pds")
@@ -69,14 +68,16 @@ class PersistentDataStore(BaseDataStore):
         self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
 
     @enforce_types
-    def get_table_names(self):
+    def get_table_names(self, all_schemas: Optional[bool] = False):
         """
         Get the names of all tables from duckdb main schema.
         @returns:
             list - The names of the tables in the dataset.
         """
+        where = " WHERE table_schema = 'main'" if not all_schemas else ""
+
         tables = self.duckdb_conn.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            "SELECT table_name FROM information_schema.tables " + where
         ).fetchall()
 
         return [table[0] for table in tables]
@@ -267,3 +268,18 @@ class PersistentDataStore(BaseDataStore):
         self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
         self.duckdb_conn.execute("COMMIT")
+
+    @enforce_types
+    def row_count(self, table_name: str) -> int:
+        """
+        Get the number of rows in a table.
+        @arguments:
+            table_name - The name of the table.
+        @returns:
+            int - The number of rows in the table.
+        """
+        return self.duckdb_conn.execute(
+            f"SELECT COUNT(*) FROM {table_name}"
+        ).fetchone()[
+            0
+        ]  # type: ignore[index]

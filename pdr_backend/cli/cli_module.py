@@ -17,6 +17,8 @@ from pdr_backend.cli.cli_arguments import (
     get_arg_parser,
     print_args,
 )
+from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
+from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.lake.etl import ETL
@@ -44,8 +46,13 @@ logger = logging.getLogger("cli")
 def _do_main():
     if len(sys.argv) <= 1 or sys.argv[1] == "help":
         do_help_short(0)
+
     if sys.argv[1] == "help_long":
         do_help_long(0)
+
+    if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
+        do_lake_subcommand(sys.argv[2:])
+        return
 
     func_name = f"do_{sys.argv[1]}"
     func = globals().get(func_name)
