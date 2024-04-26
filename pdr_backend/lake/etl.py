@@ -329,11 +329,6 @@ class ETL:
 
             logger.info("update_bronze_pdr - Inserting data into %s", table_name)
 
-            # TableRegistry().get_table(table_name)._append_to_db(
-            #     data,
-            #     table_type=TableType.TEMP,
-            # )
-
             # For each bronze table that we process, that data will be entered into TEMP
             # Create view so downstream queries can access production + TEMP data
             self.create_etl_view(table_name)
