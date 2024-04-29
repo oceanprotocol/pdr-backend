@@ -88,7 +88,7 @@ class PredictoorSS(StrMixin):
 
     @property
     def pred_submitter_mgr(self) -> str:
-        return self.d["pred_submitter_mgr"]
+        return self.d["bot_only"]["pred_submitter_mgr"]
 
     # --------------------------------
     # setters (add as needed)
@@ -180,13 +180,13 @@ def predictoor_ss_test_dict(
         "predict_train_feedsets": feedset_list,
         "approach": 1,
         "stake_amount": 1,
-        "pred_submitter_mgr": pred_submitter_mgr,
         "sim_only": {
             "others_stake": 2313,
             "others_accuracy": 0.50001,
             "revenue": 0.93007,
         },
         "bot_only": {
+            "pred_submitter_mgr": pred_submitter_mgr,
             "s_until_epoch_end": 60,
             "s_start_payouts": 0,
         },

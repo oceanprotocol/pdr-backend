@@ -75,7 +75,7 @@ def _test_predictoor_agent_main(
             monkeypatch,
         )
         assert ppss.predictoor_ss.approach == approach
-        ppss.predictoor_ss.d["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
+        ppss.predictoor_ss.d["bot_only"]["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
         feed_contracts = ppss.web3_pp.query_feed_contracts()
         web3_config = ppss.web3_pp.web3_config
         w3 = ppss.web3_pp.w3
@@ -349,7 +349,7 @@ def test_calc_stakes_across_feeds(tmpdir, monkeypatch):
     )
     feed_contracts = ppss.web3_pp.query_feed_contracts()
     predictoor_ss = ppss.predictoor_ss
-    predictoor_ss.d["pred_submitter_mgr"] = "0x1"
+    predictoor_ss.d["bot_only"]["pred_submitter_mgr"] = "0x1"
     predictoor_ss.d["stake_amount"] = 1.0
     predictoor_ss.d["bot_only"]["s_until_epoch_end"] = 50000
     web3_config = ppss.web3_pp.web3_config
