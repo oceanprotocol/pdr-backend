@@ -158,7 +158,7 @@ def _plot_aimodel_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
             x=sweep_x,
             y=yptrue,
             mode="lines",
-            line={"color": "gray"},
+            line={"color": "#636EFA"},
             name="model prob(true)",
         )
     )
@@ -289,6 +289,8 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     varnames = d.colnames
     n = len(varnames)
 
+    sweep_vars = d.sweep_vars if hasattr(d, "sweep_vars") else []
+
     # if >40 vars, truncate to top 40+1
     if n > 40:
         rest_avg = sum(imps_avg[40:])
@@ -311,6 +313,7 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     imps_stddev = imps_stddev * 100.0
 
     labelalias = {}
+    colors = []
 
     for i in range(n):
         # avoid overlap in figure by giving different labels,
@@ -319,12 +322,15 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
             varnames[i] = f"var{i}"
             labelalias[varnames[i]] = ""
 
+        colors.append("#636EFA" if not sweep_vars or i in sweep_vars else "#D4D5DD")
+
     fig_bars = go.Figure(
         data=go.Bar(
             x=imps_avg,
             y=varnames,
             error_x={"type": "data", "array": imps_stddev * 2},
             orientation="h",
+            marker_color=colors,
         )
     )
 

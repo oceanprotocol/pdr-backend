@@ -22,11 +22,17 @@ empty_slider = dcc.Slider(
     disabled=True,
 )
 
-empty_slider_div = html.Div([empty_slider], style={"display": "none"})
+empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
+
+non_final_state_div = html.Div(
+    [empty_slider, empty_selected_vars],
+    style={"display": "none"},
+)
 
 
 empty_graphs_template = html.Div(
-    [dcc.Graph(figure=Figure(), id=key) for key in figure_names] + [empty_slider],
+    [dcc.Graph(figure=Figure(), id=key) for key in figure_names]
+    + [empty_slider, empty_selected_vars],
     style={"display": "none"},
 )
 
@@ -97,4 +103,13 @@ def snapshot_slider(run_id, set_ts, slider_value):
         marks=marks,
         value=len(snapshots) if not set_ts else slider_value,
         step=1,
+    )
+
+
+def selected_var_checklist(state_options, selected_vars_old):
+    return dcc.Checklist(
+        options=[{"label": var, "value": var} for var in state_options],
+        value=selected_vars_old,
+        id="selected_vars",
+        style={"display": "none"},
     )

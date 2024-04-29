@@ -16,19 +16,19 @@ def get_all_run_names():
     return [str(p).replace("sim_state/", "") for p in path]
 
 
-def get_figures_by_state(sim_plotter: SimPlotter, clickData=None):
+def get_figures_by_state(sim_plotter: SimPlotter, selected_vars):
     figures = {}
+
     for key in figure_names:
         if not key.startswith("aimodel"):
             fig = getattr(sim_plotter, f"plot_{key}")()
-        elif key == "aimodel_response":
-            func_name = getattr(aimodel_plotter, f"plot_{key}")
-            label = clickData["points"][0]["y"] if clickData else None
-            sim_plotter.aimodel_plotdata.sweep_vars = (
-                [sim_plotter.aimodel_plotdata.colnames.index(label)] if label else None
-            )
-            fig = aimodel_plotter.plot_aimodel_response(sim_plotter.aimodel_plotdata)
         else:
+            if key in ["aimodel_response", "aimodel_varimps"]:
+                sweep_vars = []
+                for var in selected_vars:
+                    sweep_vars.append(sim_plotter.aimodel_plotdata.colnames.index(var))
+                sim_plotter.aimodel_plotdata.sweep_vars = sweep_vars
+
             func_name = getattr(aimodel_plotter, f"plot_{key}")
             fig = func_name(sim_plotter.aimodel_plotdata)
 

@@ -1,14 +1,15 @@
 from dash import Input, Output, State
 
 from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_dash_plots.util import get_figures_by_state, get_latest_run_id
 from pdr_dash_plots.view_elements import (
     arrange_figures,
-    empty_slider_div,
     get_header_elements,
     get_waiting_template,
+    non_final_state_div,
+    selected_var_checklist,
     snapshot_slider,
 )
-from pdr_dash_plots.util import get_figures_by_state, get_latest_run_id
 
 
 def get_callbacks(app):
@@ -23,13 +24,31 @@ def get_callbacks(app):
         return value == "finalState"
 
     @app.callback(
+        Output("selected_vars", "value"),
+        Input("aimodel_varimps", "clickData"),
+        State("selected_vars", "value"),
+    )
+    def update_selected_vars(clickData, selected_vars):
+        if clickData is None:
+            return selected_vars
+
+        label = clickData["points"][0]["y"]
+        if label in selected_vars:
+            selected_vars.remove(label)
+        else:
+            selected_vars.append(label)
+
+        return selected_vars
+
+    @app.callback(
         Output("live-graphs", "children"),
         Input("interval-component", "n_intervals"),
-        Input("aimodel_varimps", "clickData"),
+        Input("selected_vars", "value"),
         Input("state_slider", "value"),
+        State("selected_vars", "value"),
     )
     # pylint: disable=unused-argument
-    def update_graph_live(n, clickData, slider_value):
+    def update_graph_live(n, selected_vars, slider_value, selected_vars_old):
         run_id = app.run_id if app.run_id else get_latest_run_id()
         set_ts = None
 
@@ -49,11 +68,14 @@ def get_callbacks(app):
         slider = (
             snapshot_slider(run_id, set_ts, slider_value)
             if ts == "final"
-            else empty_slider_div
+            else non_final_state_div
         )
         elements.append(slider)
 
-        figures = get_figures_by_state(sim_plotter, clickData)
+        state_options = sim_plotter.aimodel_plotdata.colnames
+        elements.append(selected_var_checklist(state_options, selected_vars_old))
+
+        figures = get_figures_by_state(sim_plotter, selected_vars)
         elements = elements + arrange_figures(figures)
 
         return elements
