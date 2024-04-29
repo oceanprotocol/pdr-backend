@@ -64,7 +64,7 @@ def arrange_figures(figures):
                 dcc.Graph(figure=figures["pdr_profit_vs_time"]),
                 dcc.Graph(figure=figures["trader_profit_vs_time"]),
             ],
-            style={"display": "flex"},
+            style={"display": "flex", "justify-content": "space-between"},
         ),
         html.Div(
             [
@@ -76,14 +76,14 @@ def arrange_figures(figures):
                 dcc.Graph(figure=figures["pdr_profit_vs_ptrue"]),
                 dcc.Graph(figure=figures["trader_profit_vs_ptrue"]),
             ],
-            style={"display": "flex"},
+            style={"display": "flex", "justify-content": "space-between"},
         ),
         html.Div(
             [
                 dcc.Graph(figure=figures["aimodel_varimps"], id="aimodel_varimps"),
                 dcc.Graph(figure=figures["aimodel_response"]),
             ],
-            style={"display": "flex"},
+            style={"display": "flex", "justify-content": "space-between"},
         ),
         html.Div(
             [
