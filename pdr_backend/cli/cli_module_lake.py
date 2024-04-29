@@ -2,7 +2,8 @@ import logging
 
 from enforce_typing import enforce_types
 
-from pdr_backend.analytics.lakeinfo import LakeInfo
+from pdr_backend.lake.lake_info import LakeInfo
+from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import drop_tables_from_st
@@ -30,6 +31,12 @@ def do_lake_subcommand(args):
 def do_lake_describe(args):
     lake_info = LakeInfo(args.LAKE_DIR)
     lake_info.run()
+
+
+@enforce_types
+def do_lake_validate(args):
+    lake_validate = LakeValidate(args.LAKE_DIR)
+    lake_validate.run()
 
 
 @enforce_types
@@ -67,3 +74,4 @@ def do_lake_etl_drop(args):
 @enforce_types
 def do_lake_etl_update(args):
     print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+

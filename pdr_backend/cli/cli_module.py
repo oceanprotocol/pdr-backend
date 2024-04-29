@@ -10,7 +10,8 @@ from pdr_backend.analytics.get_predictions_info import (
     get_predictoors_info_main,
     get_traction_info_main,
 )
-from pdr_backend.analytics.lakeinfo import LakeInfo
+from pdr_backend.lake.lake_info import LakeInfo
+from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     do_help_short,
@@ -190,6 +191,18 @@ def do_lakeinfo(args, nested_args=None):
 
     lake_info = LakeInfo(ppss)
     lake_info.run()
+
+
+@enforce_types
+def do_lakevalidate(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+
+    lake_validate = LakeValidate(ppss)
+    lake_validate.run()
 
 
 @enforce_types
