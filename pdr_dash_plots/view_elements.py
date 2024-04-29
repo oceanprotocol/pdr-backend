@@ -61,8 +61,12 @@ def arrange_figures(figures):
     return [
         html.Div(
             [
-                dcc.Graph(figure=figures["pdr_profit_vs_time"]),
-                dcc.Graph(figure=figures["trader_profit_vs_time"]),
+                dcc.Graph(
+                    figure=figures["pdr_profit_vs_time"], style={"width": "100%"}
+                ),
+                dcc.Graph(
+                    figure=figures["trader_profit_vs_time"], style={"width": "100%"}
+                ),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
         ),
@@ -73,15 +77,23 @@ def arrange_figures(figures):
         ),
         html.Div(
             [
-                dcc.Graph(figure=figures["pdr_profit_vs_ptrue"]),
-                dcc.Graph(figure=figures["trader_profit_vs_ptrue"]),
+                dcc.Graph(
+                    figure=figures["pdr_profit_vs_ptrue"], style={"width": "100%"}
+                ),
+                dcc.Graph(
+                    figure=figures["trader_profit_vs_ptrue"], style={"width": "100%"}
+                ),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
         ),
         html.Div(
             [
-                dcc.Graph(figure=figures["aimodel_varimps"], id="aimodel_varimps"),
-                dcc.Graph(figure=figures["aimodel_response"]),
+                dcc.Graph(
+                    figure=figures["aimodel_varimps"],
+                    id="aimodel_varimps",
+                    style={"width": "100%"},
+                ),
+                dcc.Graph(figure=figures["aimodel_response"], style={"width": "100%"}),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
         ),
