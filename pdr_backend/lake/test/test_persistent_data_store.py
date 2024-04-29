@@ -2,6 +2,7 @@ import os
 import threading
 import polars as pl
 import duckdb
+import time
 
 from pdr_backend.lake.table import TableType, get_table_name, TempTable
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -290,6 +291,9 @@ def test_etl_view(tmpdir):
     ).fetchall()
     assert result[0][0] == "2022-06-01"
 
+def thread_with_return_value(persistent_data_store, table_name):
+    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    return result
 
 def test_multiple_thread_table_updates(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
@@ -301,33 +305,39 @@ def test_multiple_thread_table_updates(tmpdir):
     result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
     assert result is None
 
+    thread_result = []
     thread1 = threading.Thread(
         target=thread_function_write_to_db, args=(csv_folder_path, tmpdir)
     )
     thread2 = threading.Thread(
-        target=thread_function_read_from_db, args=(csv_folder_path, tmpdir)
+        target=thread_function_read_from_db, args=(csv_folder_path, tmpdir, thread_result)
     )
     thread1.start()
     thread2.start()
 
+    time.sleep(2)
+
+    assert thread_result[0] is not None
+    assert len(thread_result[0]) == 3
+    assert thread_result[0]["timestamp"][0] == "2022-01-01"
+    assert thread_result[0]["value"][0] == 10
+    assert thread_result[0]["timestamp"][1] == "2022-02-01"
+    assert thread_result[0]["value"][1] == 20
+    assert thread_result[0]["timestamp"][2] == "2022-03-01"
+    assert thread_result[0]["value"][2] == 30
 
 def thread_function_write_to_db(csv_folder_path, tmpdir):
     persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
     persistent_data_store.fill_table_from_csv(table_name, csv_folder_path)
 
 
-def thread_function_read_from_db(csv_folder_path, tmpdir):
+def thread_function_read_from_db(csv_folder_path, tmpdir, thread_result):
     persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
 
+    # Wait for the first thread to finish
+    time.sleep(1)
     # Check if the new data is inserted
-    result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
-    assert len(result) == 3
-    assert result["timestamp"][0] == "2022-01-01"
-    assert result["value"][0] == 10
-    assert result["timestamp"][1] == "2022-02-01"
-    assert result["value"][1] == 20
-    assert result["timestamp"][2] == "2022-03-01"
-    assert result["value"][2] == 30
+    thread_result.append(persistent_data_store.query_data(f"SELECT * FROM {table_name}"))
 
     # clean csv folder
     # delete files in the folder
