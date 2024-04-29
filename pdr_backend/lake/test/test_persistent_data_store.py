@@ -1,8 +1,8 @@
 import os
 import threading
+import time
 import polars as pl
 import duckdb
-import time
 
 from pdr_backend.lake.table import TableType, get_table_name, TempTable
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
