@@ -50,6 +50,9 @@ def _do_main():
     if sys.argv[1] == "help_long":
         do_help_long(0)
 
+    print(">>> DO MAIN <<<")
+    print("CLI args:", sys.argv)
+
     if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
         do_lake_subcommand(sys.argv[2:])
         return
@@ -166,30 +169,6 @@ def do_multisim(args, nested_args=None):
 # pylint: disable=unused-argument
 def do_deployer(args, nested_args=None):
     deployer_main(args)
-
-
-@enforce_types
-def do_lake(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-    ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
-    df = ohlcv_data_factory.get_mergedohlcv_df()
-    print(df)
-
-
-@enforce_types
-def do_lakeinfo(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-
-    lake_info = LakeInfo(ppss)
-    lake_info.run()
 
 
 @enforce_types

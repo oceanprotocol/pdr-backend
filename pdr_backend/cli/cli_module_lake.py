@@ -7,6 +7,7 @@ from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import drop_tables_from_st
+from pdr_backend.ppss.ppss import PPSS
 
 logger = logging.getLogger("cli")
 
@@ -17,7 +18,7 @@ def do_lake_subcommand(args):
 
     parser = LakeArgParser(args)
     parsed_args = parser.parse_args(args)
-
+    
     func_name = f"do_lake_{parsed_args.subcommand}"
     if hasattr(parsed_args, "l2_subcommand_type"):
         func_name += f"_{parsed_args.l2_subcommand_type}"
@@ -29,13 +30,23 @@ def do_lake_subcommand(args):
 # subcommands
 @enforce_types
 def do_lake_describe(args):
-    lake_info = LakeInfo(args.LAKE_DIR)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK
+    )
+
+    lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_validate(args):
-    lake_validate = LakeValidate(args.LAKE_DIR)
+def do_lake_validate(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK
+    )
+
+    lake_validate = LakeValidate(ppss)
     lake_validate.run()
 
 
@@ -45,7 +56,12 @@ def do_lake_query(args):
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=True)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK
+    )
+
+    pds = PersistentDataStore(ppss, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
         print(df)
@@ -56,7 +72,12 @@ def do_lake_query(args):
 
 @enforce_types
 def do_lake_raw_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+    )
+
+    pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "raw", args.ST)
 
 
@@ -67,7 +88,12 @@ def do_lake_raw_update(args):
 
 @enforce_types
 def do_lake_etl_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+    )
+    
+    pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
 

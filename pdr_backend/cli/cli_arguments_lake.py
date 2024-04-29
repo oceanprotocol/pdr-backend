@@ -58,14 +58,9 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
                 help="drop or update",
             )
 
-        if plain_args[0] in SUPPORTS_L2_COMMANDS and plain_args[1] == "update":
-            self.add_argument_PPSS()
-            self.add_argument_NETWORK()
-        else:
-            self.add_argument(
-                "LAKE_DIR", type=str_as_abspath, help="The directory of the lake"
-            )
-
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
+            
         if plain_args[0] == "query":
             self.add_argument("QUERY", type=str, help="The query to run")
         elif plain_args[0] in SUPPORTS_L2_COMMANDS:

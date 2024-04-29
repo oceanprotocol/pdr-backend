@@ -57,11 +57,11 @@ Utilities:
   pdr lakeinfo PPSS_FILE NETWORK
 
 Inspect and manage lake:
-  pdr lake describe LAKE_DIR
-  pdr lake query LAKE_DIR "SQL QUERY ..."
-  pdr lake raw drop LAKE_DIR ST
+  pdr lake describe PPSS_FILE
+  pdr lake query PPSS_FILE "SQL QUERY ..."
+  pdr lake raw drop PPSS_FILE ST
   pdr lake raw update PPSS_FILE NETWORK
-  pdr lake etl drop LAKE_DIR ST
+  pdr lake etl drop PPSS_FILE ST
   pdr lake etl update PPSS_FILE ST END
 
 Tools for core team:
