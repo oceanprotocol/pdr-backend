@@ -291,9 +291,11 @@ def test_etl_view(tmpdir):
     ).fetchall()
     assert result[0][0] == "2022-06-01"
 
+
 def thread_with_return_value(persistent_data_store, table_name):
     result = persistent_data_store.query_data(f"SELECT * FROM {table_name}")
     return result
+
 
 def test_multiple_thread_table_updates(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
@@ -310,7 +312,8 @@ def test_multiple_thread_table_updates(tmpdir):
         target=thread_function_write_to_db, args=(csv_folder_path, tmpdir)
     )
     thread2 = threading.Thread(
-        target=thread_function_read_from_db, args=(csv_folder_path, tmpdir, thread_result)
+        target=thread_function_read_from_db,
+        args=(csv_folder_path, tmpdir, thread_result),
     )
     thread1.start()
     thread2.start()
@@ -326,6 +329,7 @@ def test_multiple_thread_table_updates(tmpdir):
     assert thread_result[0]["timestamp"][2] == "2022-03-01"
     assert thread_result[0]["value"][2] == 30
 
+
 def thread_function_write_to_db(csv_folder_path, tmpdir):
     persistent_data_store, _, table_name = _get_persistent_data_store(tmpdir)
     persistent_data_store.fill_table_from_csv(table_name, csv_folder_path)
@@ -337,7 +341,9 @@ def thread_function_read_from_db(csv_folder_path, tmpdir, thread_result):
     # Wait for the first thread to finish
     time.sleep(1)
     # Check if the new data is inserted
-    thread_result.append(persistent_data_store.query_data(f"SELECT * FROM {table_name}"))
+    thread_result.append(
+        persistent_data_store.query_data(f"SELECT * FROM {table_name}")
+    )
 
     # clean csv folder
     # delete files in the folder
