@@ -75,7 +75,9 @@ def _test_predictoor_agent_main(
             monkeypatch,
         )
         assert ppss.predictoor_ss.approach == approach
-        ppss.predictoor_ss.d["bot_only"]["pred_submitter_mgr"] = pred_submitter_mgr.contract_address
+        ppss.predictoor_ss.d["bot_only"][
+            "pred_submitter_mgr"
+        ] = pred_submitter_mgr.contract_address
         feed_contracts = ppss.web3_pp.query_feed_contracts()
         web3_config = ppss.web3_pp.web3_config
         w3 = ppss.web3_pp.w3
