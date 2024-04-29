@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from enforce_typing import enforce_types
 
 import pytest
@@ -10,6 +10,7 @@ from pdr_backend.exchange.fetch_ohlcv_dydx import (
     _dydx_ticker,
     _dydx_resolution,
     _float_or_none,
+    _time_delta_from_timeframe,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -181,3 +182,26 @@ def test_fetch_ohlcv_float_or_none():
         _ = _float_or_none(3)
     with pytest.raises(ValueError):
         _ = _float_or_none("foo")
+
+
+def test_time_delta_from_valid_timeframes():
+    test_cases = [
+        ("5m", 1, timedelta(seconds=300 * 1)),
+        ("5m", 10, timedelta(seconds=300 * 10)),
+        ("5m", 25, timedelta(seconds=300 * 25)),
+        ("5m", 500, timedelta(seconds=300 * 500)),
+        ("1h", 1, timedelta(seconds=3600 * 1)),
+        ("1h", 5, timedelta(seconds=3600 * 5)),
+        ("1h", 42, timedelta(seconds=3600 * 42)),
+    ]
+
+    for timeframe, limit, expected in test_cases:
+        assert (
+            _time_delta_from_timeframe(timeframe, limit) == expected
+        ), f"Failed for timeframe={timeframe}"
+
+
+def test_time_delta_from_invalid_timeframe():
+    with pytest.raises(ValueError) as excinfo:
+        _time_delta_from_timeframe("1hh", 1)
+    assert "Don't currently support timeframe=1hh" in str(excinfo.value)
