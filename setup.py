@@ -37,7 +37,7 @@ install_requirements = [
     "requests==2.31.0",
     "requests-mock==1.12.1",
     "scikit-learn==1.4.2",
-    "statsmodels==0.14.1",
+    "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.31.0.20240406",
     "web3==6.17.2",
