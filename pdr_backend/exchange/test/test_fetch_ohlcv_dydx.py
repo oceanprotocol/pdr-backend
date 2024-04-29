@@ -1,4 +1,6 @@
+from datetime import datetime
 from enforce_typing import enforce_types
+
 import pytest
 import requests_mock
 
@@ -76,9 +78,8 @@ def test_dydx__real_response__basic():
     assert len(tohlcv) == 6
 
 
-@pytest.mark.skip(reason="Unskip once #879 is fixed")
 @enforce_types
-def test_dydx__real_response__fromISO_issue_879():
+def test_dydx__real_response__fromISO():
     # setup problem: 'tsince'
     tsince_iso_str = "2024-02-27_00:00:00.000"
     tsince_UnixTimeMs = UnixTimeMs.from_timestr(tsince_iso_str)
@@ -88,22 +89,34 @@ def test_dydx__real_response__fromISO_issue_879():
     # setup problem: the rest
     symbol = "BTC/USD"
     timeframe = "5m"
-    limit = 1
+    limit = 10
 
     # get result
     raw_tohlcv_data = fetch_ohlcv_dydx(symbol, timeframe, tsince_UnixTimeMs, limit)
-    tohlcv = raw_tohlcv_data[0]
 
-    # dydx api doesn't properly address fromISO. We must fix this, see #879
-    t = tohlcv[0]
-    t_UnixTimeMs = UnixTimeMs(t)
-    t_iso_str = t_UnixTimeMs.to_iso_timestr()  # bad eg '2024-04-16T00:25:00.000Z'
-    assert t_iso_str == tsince_iso_str
-    assert t_UnixTimeMs == tsince_UnixTimeMs
+    assert len(raw_tohlcv_data) == 10, "Length must be 10, limit is 10"
 
-    # when #879 fixed, add proper vals here
-    # ohlcv = tohlcv[1:]
-    # assert ohlcv == (fix me val, ..)
+    # First timestamp is expected to be:
+    # 2024-02-27T00:00:00.000Z
+    dt = datetime.fromisoformat("2024-02-27T00:00:00.000")
+    unix_ms = dt.timestamp() * 1e3
+    assert (
+        raw_tohlcv_data[-1][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
+
+    # Last timestamp is expected to be:
+    # 2024-02-27T00:45:00.000Z
+    dt = datetime.fromisoformat("2024-02-27T00:45:00.000")
+    unix_ms = dt.timestamp() * 1e3
+    assert (
+        raw_tohlcv_data[0][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
+
+    # Price checks
+    assert raw_tohlcv_data[-1][1] == 54541.0
+    assert raw_tohlcv_data[-1][2] == 54661.0
+    assert raw_tohlcv_data[0][3] == 54545.0
+    assert raw_tohlcv_data[9][4] == 54645.0
 
 
 @enforce_types
