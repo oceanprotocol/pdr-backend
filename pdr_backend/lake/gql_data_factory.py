@@ -231,9 +231,20 @@ class GQLDataFactory:
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(data, table.df_schema)
             df = _transform_timestamp_to_ms(df)
-            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
-                "timestamp"
-            )
+            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
+            if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
+                df = df.filter(pl.col("timestamp") >= df["timestamp"][0])
+                buffer_df = buffer_df.vstack(df)
+                assert df.schema == table.df_schema
+                table.append_to_storage(buffer_df, TableType.TEMP)
+                logger.info(
+                    "Saved %s records to storage while fetching", len(buffer_df)
+                )
+
+                buffer_df = pl.DataFrame([], schema=table.df_schema)
+                save_backoff_count = 0
+                return
+            df = df.sort("timestamp")
 
             if len(buffer_df) == 0:
                 buffer_df = df
