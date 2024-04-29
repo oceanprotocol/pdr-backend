@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.4",
+    "ccxt==4.3.11",
     "coverage",
     "enforce_typing",
     "eth-account==0.11.0",
