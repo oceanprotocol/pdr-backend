@@ -138,12 +138,13 @@ pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
 
 #### Update YAML config with the contract address
 
-Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr`:
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.bot_only.pred_submitter_mgr`:
 
 ```
 predictoor_ss:
   ...
-  pred_submitter_mgr: "CONTRACT_ADDRESS"
+  bot_only:
+    pred_submitter_mgr: "CONTRACT_ADDRESS"
   ...
 ```
 
