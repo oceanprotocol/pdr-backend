@@ -10,6 +10,7 @@ from pdr_backend.analytics.get_predictions_info import (
     get_predictoors_info_main,
     get_traction_info_main,
 )
+from pdr_backend.analytics.lakeinfo import LakeInfo
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     do_help_short,
@@ -177,6 +178,18 @@ def do_lake(args, nested_args=None):
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
+
+
+@enforce_types
+def do_lakeinfo(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+
+    lake_info = LakeInfo(ppss)
+    lake_info.run()
 
 
 @enforce_types

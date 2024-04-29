@@ -60,6 +60,7 @@ def test_etl_do_bronze_step(
 
     # Work 1: Do bronze
     etl.do_bronze_step()
+    etl._move_from_temp_tables_to_live()
 
     # assert bronze_pdr_predictions_df is created
     table_name = get_table_name(bronze_pdr_predictions_table_name)
@@ -163,6 +164,7 @@ def test_etl_views(setup_data):
     # Work 1: First Run
     with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
         etl.do_bronze_step()
+        etl._move_from_temp_tables_to_live()
         assert mock.called
 
     # live table shouldn't exist
