@@ -13,6 +13,7 @@ from pdr_backend.lake.etl import ETL
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
 
+@enforce_types
 class LakeValidate(LakeInfo):
     def __init__(self, ppss: PPSS):
         super().__init__(ppss)
@@ -23,7 +24,8 @@ class LakeValidate(LakeInfo):
             "Validate lake timestamp gaps.": self.validate_lake_timestamp_gaps,
         }
         self.results: Dict[str, (str, bool)] = {}
-        
+
+
     @enforce_types
     def validate_expected_table_names(self) -> (bool, str):
         # test result and return message
@@ -37,12 +39,14 @@ class LakeValidate(LakeInfo):
         
         return (False, "Tables in lake [{}], do not match expected Complete-ETL table names [{}]".format(self.all_table_names, expected_table_names))
     
+
     @enforce_types
     def validate_expected_temp_names(self) -> (bool, str):
         if len(self.all_temp_names) == 0:
             return (True, "Clean Lake contains no TEMP tables.")
         return (False,"Lake contains TEMP tables. Please review logs and clean lake using the CLI.")
     
+
     @enforce_types
     def validate_lake_timestamp_gaps(self) -> (bool, str):
         """
@@ -64,13 +68,15 @@ class LakeValidate(LakeInfo):
         if len(gap_errors) == 0:
             return (True, "No gap errors. Data is perfect.")
         return (False,"Gaps detected in lake data. Please review logs and consider a lake resync.")
-    
+
+
     def generate(self):
         super().generate()
 
         for key, value in self.config.items():
             result = self.validations[key] = value(self)
             self.results[key] = result
+
 
     def print_results(self):
         """
@@ -89,10 +95,14 @@ class LakeValidate(LakeInfo):
             print(f"{key}: {success} - {message}")
             
         print(f"\nErrors: {num_errors}, Successes: {num_successes}, Total: {total}")
+
         
+    @enforce_types
     def print_table_info(self, source: Dict[str, DataFrame]):
         super().print_table_info(source)
         self.print_results()
-    
+
+
+    @enforce_types
     def run(self):
         super().run()
