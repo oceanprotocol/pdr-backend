@@ -124,16 +124,16 @@ export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 
 ### Deploy the Prediction Submitter Manager
 
-Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
-
-```
-pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
-```
-
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
 
 ```console
 cp ppss.yaml my_ppss.yaml
+```
+
+Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
+
+```
+pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
 ```
 
 #### Update YAML config with the contract address
