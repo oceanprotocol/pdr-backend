@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.cli_module_lake import (
     PersistentDataStore,
     do_lake_describe,
+    do_lake_validate,
     do_lake_etl_drop,
     do_lake_etl_update,
     do_lake_query,
@@ -41,6 +42,19 @@ def test_do_lake_describe():
     args.LAKE_DIR = lake_dir
 
     with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
+        do_lake_describe(args)
+
+    mock_lake_info.assert_called_once_with(lake_dir)
+
+
+@enforce_types
+def test_do_lake_validate():
+    lake_dir = os.path.abspath("lake_data")
+    args = Namespace()
+    args.subcommand = "validate"
+    args.LAKE_DIR = lake_dir
+
+    with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
         do_lake_describe(args)
 
     mock_lake_info.assert_called_once_with(lake_dir)
