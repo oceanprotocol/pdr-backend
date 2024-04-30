@@ -5,9 +5,11 @@ import polars as pl
 from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.table_bronze_pdr_predictions import bronze_pdr_predictions_table_name
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.lake_info import LakeInfo
 
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
@@ -20,18 +22,21 @@ class LakeValidate(LakeInfo):
         
         self.config = {
             "Validate table names in lake match expected values.": self.validate_expected_table_names,
-            "Validate view names in lake match expected values.": self.validate_expected_view_names,
-            "Validate lake timestamp gaps.": self.validate_lake_timestamp_gaps,
+            "Validate no views in lake.": self.validate_expected_view_names,
+            "Validate few gaps in bronze_predictions.": self.validate_lake_bronze_predictions_gaps,
         }
         self.results: Dict[str, (str, bool)] = {}
+
+        self.gql_data_factory = GQLDataFactory(ppss)
+        self.etl = ETL(ppss, self.gql_data_factory)
 
 
     @enforce_types
     def validate_expected_table_names(self) -> (bool, str):
         # test result and return message
         expected_table_names = [
-            ETL.raw_table_names,
-            ETL.bronze_table_names,
+            self.etl.raw_table_names,
+            self.etl.bronze_table_names,
         ]
 
         if self.all_table_names == expected_table_names:
@@ -41,14 +46,14 @@ class LakeValidate(LakeInfo):
     
 
     @enforce_types
-    def validate_expected_temp_names(self) -> (bool, str):
-        if len(self.all_temp_names) == 0:
-            return (True, "Clean Lake contains no TEMP tables.")
-        return (False,"Lake contains TEMP tables. Please review logs and clean lake using the CLI.")
+    def validate_expected_view_names(self) -> (bool, str):
+        if len(self.all_view_names) == 0:
+            return (True, "Clean Lake contains no VIEWs.")
+        return (False,"Lake contains VIEWs. Please review logs and clean lake using the CLI.")
     
 
     @enforce_types
-    def validate_lake_timestamp_gaps(self) -> (bool, str):
+    def validate_lake_bronze_predictions_gaps(self) -> (bool, str):
         """
         description:
             Validate that the [lake slots] data does not have any timestamp gaps, and other basic timestamp checks.
@@ -59,22 +64,43 @@ class LakeValidate(LakeInfo):
         how to improve:
             Expand ohlcv into lake/this check
         """
-        gap_errors = []
+        gap_errors = Dict[str, List[str]] = {}
 
-        # for table_name in self.all_table_names:
-        #     df = self.pds.query
-        #     df.select(pl.col("timestamp").diff().slice(1).rle()).unnest("timestamp").rename({"lengths":"seq_lengths", "values": "time_difference"})
-        
+        table_name = bronze_pdr_predictions_table_name
+        timeframes = ["5m", "1h"]
+        query = """
+            select 
+                slot,
+                count(*) as predictions_count
+            from {}
+            where timeframe = {}
+            group by slot
+            order by slot
+        """
+        for timeframe in timeframes:
+            query = query.format(table_name, timeframe)
+            df = self.pds.query_data(query)
+            print(">>> {} DF: [{}]".format(table_name, df))
+
+            result = df.select(pl.col("slot").diff().slice(1).rle()) \
+                .unnest("slot") \
+                .rename({"lengths":"seq_lengths", "values": "time_difference"})
+
+            print(">>> {} Data Gappiness: [{}]".format(table_name, result))
+            if result['time_difference'].sum() > 0:
+                print(">>> time difference sum > 0: ", result['time_difference'].sum())
+                gap_errors[timeframe] = result
+
         if len(gap_errors) == 0:
             return (True, "No gap errors. Data is perfect.")
-        return (False,"Gaps detected in lake data. Please review logs and consider a lake resync.")
-
+        
+        return (False,"Gaps detected in lake data. Please review logs.")
 
     def generate(self):
         super().generate()
 
         for key, value in self.config.items():
-            result = self.validations[key] = value(self)
+            result = value()
             self.results[key] = result
 
 
