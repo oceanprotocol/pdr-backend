@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from unittest.mock import MagicMock
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -6,7 +7,6 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.subgraph.prediction import mock_daily_predictions
-from unittest.mock import MagicMock
 
 
 def test_gql_data_factory():
