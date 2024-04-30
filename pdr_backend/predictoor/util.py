@@ -33,7 +33,7 @@ def find_shared_slots(
 
     # Format the results as a list of tuples
     result: List[Tuple[List[str], List[int]]] = []
-    for addresses, slots in address_combination_to_slots.items(): # type: ignore
+    for addresses, slots in address_combination_to_slots.items():  # type: ignore
         tup = (list(addresses), list(slots))
         result.append(tup)
 
