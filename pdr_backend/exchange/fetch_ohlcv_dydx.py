@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from typing import List, Optional, Union
 
 from enforce_typing import enforce_types
@@ -9,6 +10,7 @@ from pdr_backend.cli.arg_timeframe import verify_timeframe_str
 from pdr_backend.exchange.constants import (
     BASE_URL_DYDX,
     TIMEFRAME_TO_DYDX_RESOLUTION,
+    TIMEFRAME_TO_DYDX_RESOLUTION_SECONDS,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -54,11 +56,13 @@ def fetch_ohlcv_dydx(
     ticker = _dydx_ticker(pair_str)
     resolution = _dydx_resolution(timeframe)
     fromISO = since.to_iso_timestr()
+    toISO_dt = since.to_dt() + _time_delta_from_timeframe(timeframe, limit)
+    toISO = UnixTimeMs(toISO_dt.timestamp() * 1e3).to_iso_timestr()
     headers = {"Accept": "application/json"}
     try:
         s = (
             f"{baseURL}/candles/perpetualMarkets/{ticker}"
-            f"?resolution={resolution}&fromISO={fromISO}&limit={limit}"
+            f"?resolution={resolution}&fromISO={fromISO}&toISO={toISO}&limit={limit}"
         )
         response = requests.get(s, headers=headers, timeout=20)
 
@@ -125,3 +129,11 @@ def _dydx_resolution(timeframe: str):
 @enforce_types
 def _float_or_none(x: Optional[str]) -> Optional[float]:
     return None if x is None else float(x)
+
+
+def _time_delta_from_timeframe(timeframe: str, limit: int) -> timedelta:
+    # Convert timeframe and limit to a timedelta.
+    if timeframe not in TIMEFRAME_TO_DYDX_RESOLUTION_SECONDS:
+        raise ValueError(f"Don't currently support timeframe={timeframe}")
+    second_duration = TIMEFRAME_TO_DYDX_RESOLUTION_SECONDS[timeframe]
+    return timedelta(seconds=second_duration * limit)

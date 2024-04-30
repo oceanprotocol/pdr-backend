@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 from enforce_typing import enforce_types
+
 import pytest
 import requests_mock
 
@@ -8,6 +10,7 @@ from pdr_backend.exchange.fetch_ohlcv_dydx import (
     _dydx_ticker,
     _dydx_resolution,
     _float_or_none,
+    _time_delta_from_timeframe,
 )
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -76,9 +79,8 @@ def test_dydx__real_response__basic():
     assert len(tohlcv) == 6
 
 
-@pytest.mark.skip(reason="Unskip once #879 is fixed")
 @enforce_types
-def test_dydx__real_response__fromISO_issue_879():
+def test_dydx__real_response__fromISO():
     # setup problem: 'tsince'
     tsince_iso_str = "2024-02-27_00:00:00.000"
     tsince_UnixTimeMs = UnixTimeMs.from_timestr(tsince_iso_str)
@@ -88,22 +90,34 @@ def test_dydx__real_response__fromISO_issue_879():
     # setup problem: the rest
     symbol = "BTC/USD"
     timeframe = "5m"
-    limit = 1
+    limit = 10
 
     # get result
     raw_tohlcv_data = fetch_ohlcv_dydx(symbol, timeframe, tsince_UnixTimeMs, limit)
-    tohlcv = raw_tohlcv_data[0]
 
-    # dydx api doesn't properly address fromISO. We must fix this, see #879
-    t = tohlcv[0]
-    t_UnixTimeMs = UnixTimeMs(t)
-    t_iso_str = t_UnixTimeMs.to_iso_timestr()  # bad eg '2024-04-16T00:25:00.000Z'
-    assert t_iso_str == tsince_iso_str
-    assert t_UnixTimeMs == tsince_UnixTimeMs
+    assert len(raw_tohlcv_data) == 10, "Length must be 10, limit is 10"
 
-    # when #879 fixed, add proper vals here
-    # ohlcv = tohlcv[1:]
-    # assert ohlcv == (fix me val, ..)
+    # First timestamp is expected to be:
+    # 2024-02-27T00:00:00.000Z
+    dt = datetime.fromisoformat("2024-02-27T00:00:00.000")
+    unix_ms = dt.timestamp() * 1e3
+    assert (
+        raw_tohlcv_data[-1][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
+
+    # Last timestamp is expected to be:
+    # 2024-02-27T00:45:00.000Z
+    dt = datetime.fromisoformat("2024-02-27T00:45:00.000")
+    unix_ms = dt.timestamp() * 1e3
+    assert (
+        raw_tohlcv_data[0][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
+
+    # Price checks
+    assert raw_tohlcv_data[-1][1] == 54541.0
+    assert raw_tohlcv_data[-1][2] == 54661.0
+    assert raw_tohlcv_data[0][3] == 54545.0
+    assert raw_tohlcv_data[9][4] == 54645.0
 
 
 @enforce_types
@@ -168,3 +182,26 @@ def test_fetch_ohlcv_float_or_none():
         _ = _float_or_none(3)
     with pytest.raises(ValueError):
         _ = _float_or_none("foo")
+
+
+def test_time_delta_from_valid_timeframes():
+    test_cases = [
+        ("5m", 1, timedelta(seconds=300 * 1)),
+        ("5m", 10, timedelta(seconds=300 * 10)),
+        ("5m", 25, timedelta(seconds=300 * 25)),
+        ("5m", 500, timedelta(seconds=300 * 500)),
+        ("1h", 1, timedelta(seconds=3600 * 1)),
+        ("1h", 5, timedelta(seconds=3600 * 5)),
+        ("1h", 42, timedelta(seconds=3600 * 42)),
+    ]
+
+    for timeframe, limit, expected in test_cases:
+        assert (
+            _time_delta_from_timeframe(timeframe, limit) == expected
+        ), f"Failed for timeframe={timeframe}"
+
+
+def test_time_delta_from_invalid_timeframe():
+    with pytest.raises(ValueError) as excinfo:
+        _time_delta_from_timeframe("1hh", 1)
+    assert "Don't currently support timeframe=1hh" in str(excinfo.value)
