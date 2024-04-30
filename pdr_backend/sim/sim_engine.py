@@ -184,7 +184,7 @@ class SimEngine:
             zero_division=0.0,
         )
         if min(st.ytrues) == max(st.ytrues):
-            loss = 1.0
+            loss = 3.0
         else:
             loss = log_loss(st.ytrues, st.probs_up)
         st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
@@ -221,23 +221,28 @@ class SimEngine:
         st.trader_profits_USD.append(trader_profit_USD)
 
         # log
-        s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
-        s += f"ut={ut.pretty_timestr()[9:][:-10]}"
+        s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}"
+        s += f" ut={ut}"
+        s += f" dt={ut.to_timestr()[:-7]}"
+        s += " ║"
 
         s += f" prob_up={prob_up:.3f}"
-        s += " pdr profit = "
-        s += f"{acct_up_profit:7.2f} up"
-        s += f" + {acct_down_profit:7.2f} down"
-        s += f" = {pdr_profit_OCEAN:7.2f} OCEAN"
-        s += f" (cumul. {sum(st.pdr_profits_OCEAN):7.2f} OCEAN)"
+        s += " pdr_profit="
+        s += f"{acct_up_profit:5.2f} up"
+        s += f" + {acct_down_profit:5.2f} down"
+        s += f" = {pdr_profit_OCEAN:5.2f} OCEAN"
+        s += f" (cumul. {sum(st.pdr_profits_OCEAN):5.2f} OCEAN)"
+        s += " ║"
 
-        s += f". Acc={n_correct:4d}/{n_trials:4d} "
-        s += f"= {acc_est*100:.2f}% [{acc_l*100:.1f}%, {acc_u*100:.1f}%]"
-        s += f", prcsn={precision:.3f}, recall={recall:.3f}"
-        s += f", f1={f1:.3f}"
+        s += f" Acc={n_correct:4d}/{n_trials:4d} "
+        s += f"= {acc_est*100:6.2f}% [{acc_l*100:5.1f}%, {acc_u*100:5.1f}%]"
+        s += f" prcsn={precision:.3f} recall={recall:.3f}"
+        s += f" f1={f1:.3f}"
+        s += f" loss={loss:.3f}"
+        s += " ║"
 
-        s += f". trader profit = ${trader_profit_USD:9.2f}"
-        s += f" (cumul. ${sum(st.trader_profits_USD):9.2f})"
+        s += f" tdr_profit=${trader_profit_USD:6.2f}"
+        s += f" (cumul. ${sum(st.trader_profits_USD):6.2f})"
         logger.info(s)
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
