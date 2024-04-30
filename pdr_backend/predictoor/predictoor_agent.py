@@ -14,6 +14,7 @@ from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.stakes_per_slot import StakeTup, StakesPerSlot
+from pdr_backend.predictoor.util import find_shared_slots
 from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
@@ -481,22 +482,26 @@ class PredictoorAgent:
         pending_slots = query_pending_payouts(
             self.ppss.web3_pp.subgraph_url, up_pred_addr
         )
-        contracts = list(pending_slots.keys())
-        contracts_checksummed = [
-            self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
-            for addr in contracts
-        ]
-        slots = list(pending_slots.values())
-        slots_flat = [item for sublist in slots for item in sublist]
-        slots_unique_flat = list(set(slots_flat))
-        if len(slots_unique_flat) == 0:
+        shared_slots = find_shared_slots(pending_slots)
+        if len(shared_slots) == 0:
             logger.info("No payouts available")
             return
+            
+        for slot_tuple in shared_slots:
+            contract_addresses = slot_tuple[0]
+            contracts_checksummed = [
+                self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
+                for addr in contract_addresses
+            ]
+            slots = slot_tuple[1]
+            tx = self.pred_submitter_mgr.get_payout(
+                slots, contracts_checksummed
+            )
 
-        tx = self.pred_submitter_mgr.get_payout(
-            slots_unique_flat, contracts_checksummed
-        )
-        logger.info("Payout tx: %s", tx["transactionHash"].hex())
+            cur_index = shared_slots.index(slot_tuple)
+            progress = f"{cur_index + 1}/{len(shared_slots)}"
+            logger.info("Payout tx %s: %s", progress, tx["transactionHash"].hex())
+
 
 
 @enforce_types
