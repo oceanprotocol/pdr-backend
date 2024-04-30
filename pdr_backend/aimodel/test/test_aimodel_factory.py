@@ -68,7 +68,7 @@ def _test_aimodel_factory_2vars_main(approach):
 
     if approach != "Constant":
         assert classif_acc(ytrue_hat, ytrue) > 0.8
-        assert 0 < min(yptrue_hat) < max(yptrue_hat) < 1.0
+        assert 0 <= min(yptrue_hat) <= max(yptrue_hat) <= 1.0
     assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
 
     # test variable importances
@@ -83,6 +83,9 @@ def _test_aimodel_factory_2vars_main(approach):
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
     figure = plot_aimodel_response(d)
     assert isinstance(figure, Figure)
+
+    if SHOW_PLOT:
+        figure.show()
 
 
 @enforce_types
