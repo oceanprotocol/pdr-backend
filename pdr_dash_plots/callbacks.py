@@ -1,3 +1,5 @@
+import time
+
 from dash import Input, Output, State
 
 from pdr_backend.sim.sim_plotter import SimPlotter
@@ -10,6 +12,19 @@ from pdr_dash_plots.view_elements import (
     selected_var_checklist,
     snapshot_slider,
 )
+
+
+def wait_for_state(sim_plotter, run_id, set_ts):
+    for _ in range(5):
+        try:
+            st, ts = sim_plotter.load_state(run_id, set_ts)
+            return st, ts
+        except Exception as e:
+            if "out of input" in str(e):
+                time.sleep(0.1)
+                continue
+
+            raise e
 
 
 def get_callbacks(app):
@@ -59,7 +74,7 @@ def get_callbacks(app):
         sim_plotter = SimPlotter()
 
         try:
-            st, ts = sim_plotter.load_state(run_id, set_ts)
+            st, ts = wait_for_state(sim_plotter, run_id, set_ts)
         except Exception as e:
             return [get_waiting_template(e)]
 
