@@ -5,10 +5,19 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 
-APPROACH_OPTIONS = ["LinearLogistic", "LinearSVC", "Constant"]
+APPROACH_OPTIONS = [
+    "LinearLogistic",
+    "LinearLogistic_Balanced",
+    "LinearSVC",
+    "Constant",
+]
 WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
-CALIBRATE_PROBS_OPTIONS = ["CalibratedClassifierCV_5x", "None"]
+CALIBRATE_PROBS_OPTIONS = [
+    "CalibratedClassifierCV_Sigmoid",
+    "CalibratedClassifierCV_Isotonic",
+    "None",
+]
 
 
 class AimodelSS(StrMixin):
@@ -64,8 +73,27 @@ class AimodelSS(StrMixin):
 
     @property
     def calibrate_probs(self) -> str:
-        """eg 'CalibratedClassifierCV_5x'"""
+        """eg 'CalibratedClassifierCV_Sigmoid'"""
         return self.d["calibrate_probs"]
+
+    def calibrate_probs_skmethod(self, N: int) -> str:
+        """
+        @description
+          Return the value for 'method' argument in sklearn
+          CalibratedClassiferCV().
+
+        @arguments
+          N -- number of samples
+        """
+        if N < 200:
+            return "sigmoid"
+
+        c = self.calibrate_probs
+        if c == "CalibratedClassifierCV_Sigmoid":
+            return "sigmoid"
+        if c == "CalibratedClassifierCV_Isotonic":
+            return "isotonic"
+        raise ValueError(c)
 
 
 # =========================================================================
@@ -88,6 +116,6 @@ def aimodel_ss_test_dict(
         "approach": approach or "LinearLogistic",
         "weight_recent": weight_recent or "10x_5x",
         "balance_classes": balance_classes or "SMOTE",
-        "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_5x",
+        "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",
     }
     return d

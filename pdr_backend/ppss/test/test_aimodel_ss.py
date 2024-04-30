@@ -23,7 +23,9 @@ def test_aimodel_ss__default_values():
     assert ss.approach == d["approach"] == "LinearLogistic"
     assert ss.weight_recent == d["weight_recent"] == "10x_5x"
     assert ss.balance_classes == d["balance_classes"] == "SMOTE"
-    assert ss.calibrate_probs == d["calibrate_probs"] == "CalibratedClassifierCV_5x"
+    assert (
+        ss.calibrate_probs == d["calibrate_probs"] == "CalibratedClassifierCV_Sigmoid"
+    )
 
     # str
     assert "AimodelSS" in str(ss)
@@ -86,3 +88,16 @@ def test_aimodel_ss__bad_inputs():
 
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(calibrate_probs="foo"))
+
+
+@enforce_types
+def test_aimodel_ss__calibrate_probs_skmethod():
+    d = aimodel_ss_test_dict(calibrate_probs="CalibratedClassifierCV_Sigmoid")
+    ss = AimodelSS(d)
+    assert ss.calibrate_probs_skmethod(100) == "sigmoid"
+    assert ss.calibrate_probs_skmethod(1000) == "sigmoid"
+
+    d = aimodel_ss_test_dict(calibrate_probs="CalibratedClassifierCV_Isotonic")
+    ss = AimodelSS(d)
+    assert ss.calibrate_probs_skmethod(100) == "sigmoid"  # because N is small
+    assert ss.calibrate_probs_skmethod(1000) == "isotonic"
