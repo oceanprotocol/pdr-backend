@@ -88,7 +88,7 @@ cd ~/code/pdr-backend # or wherever your pdr-backend dir is
 source venv/bin/activate
 
 #display real-time plots of the simulation
-streamlit run sim_plots.py
+sim_plots
 ```
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
@@ -101,10 +101,10 @@ To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
-By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
-Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+By default, Dash plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `sim_plots --run_id <unique_id>` e.g. `sim_plots --run-id 97f9633c-a78c-4865-9cc6-b5152c9500a3`
 
-You can run many instances of streamlit at once, with different URLs.
+You can run many instances of Dash at once, with different URLs. To run on different ports, use the `--port` argument.
 
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
