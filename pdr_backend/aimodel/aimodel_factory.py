@@ -97,7 +97,9 @@ class AimodelFactory:
             method = "sigmoid" if N < 200 else "isotonic"
             cv = min(smallest_n, 5)
             if cv > 1:
-                skm = CalibratedClassifierCV(skm, method=method, cv=cv)
+                skm = CalibratedClassifierCV(
+                    skm, method=method, cv=cv, ensemble=True, n_jobs=-1,
+                )
         else:
             raise ValueError(ss.calibrate_probs)
 
