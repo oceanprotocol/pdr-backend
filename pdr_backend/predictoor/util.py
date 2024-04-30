@@ -8,7 +8,8 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
     This function is used to organize payout slots and contract addresses based on shared slots.
 
     @return
-    List[Tuple[List[str], List[int]]]: A list of tuples where each tuple contains a list of addresses sharing the same slots and the slots they share.
+    List[Tuple[List[str], List[int]]]: 
+        A list of tuples where each tuple contains a list of addresses sharing the same slots and the slots they share.
     """
     slot_to_addresses: Dict[int, set] = {}
 
