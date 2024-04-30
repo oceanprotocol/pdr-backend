@@ -27,11 +27,11 @@ class SimPlotter:
         self.multi_id = None
 
     @staticmethod
-    def available_snapshots():
-        all_state_files = glob.glob("sim_state/st_*.pkl")
+    def available_snapshots(multi_id):
+        all_state_files = glob.glob(f"sim_state/{multi_id}/st_*.pkl")
 
         all_timestamps = [
-            f.replace("sim_state/st_", "").replace(".pkl", "")
+            f.replace(f"sim_state/{multi_id}/st_", "").replace(".pkl", "")
             for f in all_state_files
             if "final" not in f
         ]
