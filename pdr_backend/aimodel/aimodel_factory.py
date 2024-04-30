@@ -93,9 +93,11 @@ class AimodelFactory:
         if do_constant or ss.calibrate_probs == "None":
             pass
         elif ss.calibrate_probs == "CalibratedClassifierCV_5x":
+            N = X.shape[0]
+            method = "sigmoid" if N < 200 else "isotonic"
             cv = min(smallest_n, 5)
             if cv > 1:
-                skm = CalibratedClassifierCV(skm, cv=cv)
+                skm = CalibratedClassifierCV(skm, method=method, cv=cv)
         else:
             raise ValueError(ss.calibrate_probs)
 
