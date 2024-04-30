@@ -8,7 +8,7 @@ import numpy as np
 import polars as pl
 
 from enforce_typing import enforce_types
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -183,7 +183,11 @@ class SimEngine:
             average="binary",
             zero_division=0.0,
         )
-        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
+        if min(st.ytrues) == max(st.ytrues):
+            loss = 1.0
+        else:
+            loss = log_loss(st.ytrues, st.probs_up)
+        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
 
         # trader: exit the trading position
         if pred_up:
