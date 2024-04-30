@@ -9,7 +9,8 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
 
     @return
     List[Tuple[List[str], List[int]]]: 
-        A list of tuples where each tuple contains a list of addresses sharing the same slots and the slots they share.
+        A list of tuples where each tuple contains a list of 
+        addresses sharing the same slots and the slots they share.
     """
     slot_to_addresses: Dict[int, set] = {}
 
