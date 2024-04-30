@@ -105,16 +105,33 @@ def arrange_figures(figures):
     ]
 
 
+def format_ts(s):
+    from datetime import datetime
+
+    base = s.replace("_", "")[:-4]
+    return datetime.strptime(base, "%Y%m%d%H%M%S").strftime("%H:%M:%S")
+
+
 def snapshot_slider(run_id, set_ts, slider_value):
     snapshots = SimPlotter.available_snapshots(run_id)[:-1]
-    marks = {i: f"{s.replace('_', '')[:-4]}" for i, s in enumerate(snapshots)}
-    marks[len(snapshots)] = "final"
+    max_states_ux = 50
+    if len(snapshots) > max_states_ux:
+        snapshots = snapshots[:: len(snapshots) // max_states_ux]
 
-    return dcc.Slider(
-        id="state_slider",
-        marks=marks,
-        value=len(snapshots) if not set_ts else slider_value,
-        step=1,
+    marks = {
+        i: {"label": format_ts(s), "style": {"transform": "rotate(45deg)"}}
+        for i, s in enumerate(snapshots)
+    }
+    marks[len(snapshots)] = {"label": "final", "style": {"transform": "rotate(45deg)"}}
+
+    return html.Div(
+        dcc.Slider(
+            id="state_slider",
+            marks=marks,
+            value=len(snapshots) if not set_ts else slider_value,
+            step=1,
+        ),
+        style={"padding-bottom": "35px"},
     )
 
 
