@@ -1,3 +1,4 @@
+from datetime import datetime
 from dash import dcc, html
 from plotly.graph_objs import Figure
 
@@ -106,8 +107,6 @@ def arrange_figures(figures):
 
 
 def format_ts(s):
-    from datetime import datetime
-
     base = s.replace("_", "")[:-4]
     return datetime.strptime(base, "%Y%m%d%H%M%S").strftime("%H:%M:%S")
 

@@ -1,5 +1,6 @@
-from dash import Input, Output, State
 import time
+
+from dash import Input, Output, State
 
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_dash_plots.util import get_figures_by_state, get_latest_run_id
@@ -14,7 +15,7 @@ from pdr_dash_plots.view_elements import (
 
 
 def wait_for_state(sim_plotter, run_id, set_ts):
-    for i in range(5):
+    for _ in range(5):
         try:
             st, ts = sim_plotter.load_state(run_id, set_ts)
             return st, ts
