@@ -3,7 +3,9 @@ from enforce_typing import enforce_types
 
 
 @enforce_types
-def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[Tuple[List[str], List[int]]]:
+def find_shared_slots(
+    pending_slots: Dict[str, List[int]]
+) -> List[Tuple[List[str], List[int]]]:
     """
     This function is used to organize payout slots and contract addresses based on shared slots.
 
