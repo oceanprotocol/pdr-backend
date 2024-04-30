@@ -228,10 +228,10 @@ class SimEngine:
 
         s += f" prob_up={prob_up:.3f}"
         s += " pdr_profit="
-        s += f"{acct_up_profit:5.2f} up"
-        s += f" + {acct_down_profit:5.2f} down"
-        s += f" = {pdr_profit_OCEAN:5.2f} OCEAN"
-        s += f" (cumul. {sum(st.pdr_profits_OCEAN):5.2f} OCEAN)"
+        s += f"{acct_up_profit:6.2f} up"
+        s += f" + {acct_down_profit:6.2f} down"
+        s += f" = {pdr_profit_OCEAN:6.2f} OCEAN"
+        s += f" (cumul {sum(st.pdr_profits_OCEAN):6.2f} OCEAN)"
         s += " ║"
 
         s += f" Acc={n_correct:4d}/{n_trials:4d} "
@@ -242,7 +242,7 @@ class SimEngine:
         s += " ║"
 
         s += f" tdr_profit=${trader_profit_USD:6.2f}"
-        s += f" (cumul. ${sum(st.trader_profits_USD):6.2f})"
+        s += f" (cumul ${sum(st.trader_profits_USD):6.2f})"
         logger.info(s)
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)

@@ -17,7 +17,7 @@ class ClassifierMetrics:
         self.precisions: List[float] = []  # [i] : precision
         self.recalls: List[float] = []  # [i] : recall
 
-        self.losses:  List[float] = []  # [i] : log-loss
+        self.losses: List[float] = []  # [i] : log-loss
 
     def update(self, acc_est, acc_l, acc_u, f1, precision, recall, loss):
         self.acc_ests.append(acc_est)
