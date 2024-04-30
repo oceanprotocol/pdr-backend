@@ -1,4 +1,3 @@
-import pytest
 from pdr_backend.predictoor.util import find_shared_slots
 
 
