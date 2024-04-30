@@ -57,29 +57,40 @@ def get_bronze_pdr_slots_data_with_SQL(
             SELECT
                 {pdr_slots_table_name}.ID as ID,
                 SPLIT_PART({pdr_slots_table_name}.ID, '-', 1) as contract,
-                {etl_bronze_pdr_predictions_table_name}.pair as pair,
-                {etl_bronze_pdr_predictions_table_name}.timeframe as timeframe,
-                {etl_bronze_pdr_predictions_table_name}.source as source,
+                filtered_{etl_bronze_pdr_predictions_table_name}.pair as pair,
+                filtered_{etl_bronze_pdr_predictions_table_name}.timeframe as timeframe,
+                filtered_{etl_bronze_pdr_predictions_table_name}.source as source,
                 {pdr_slots_table_name}.slot as slot,
-                {pdr_slots_table_name}.timestamp as timestamp,
-                {pdr_payouts_table_name}.roundSumStakesUp as roundSumStakesUp,
-                {pdr_payouts_table_name}.roundSumStakes as roundSumStakes,
+                filtered_{pdr_payouts_table_name}.roundSumStakesUp as roundSumStakesUp,
+                filtered_{pdr_payouts_table_name}.roundSumStakes as roundSumStakes,
                 {pdr_truevals_table_name}.truevalue as truevalue,
+                {pdr_slots_table_name}.timestamp as timestamp,
                 GREATEST(
                     {pdr_slots_table_name}.timestamp,
-                    {pdr_payouts_table_name}.timestamp,
-                    {etl_bronze_pdr_predictions_table_name}.timestamp,
+                    filtered_{pdr_payouts_table_name}.timestamp,
+                    filtered_{etl_bronze_pdr_predictions_table_name}.timestamp,
                     {pdr_truevals_table_name}.timestamp
                 ) as last_event_timestamp,
             FROM
                 {pdr_slots_table_name}
-            LEFT JOIN {pdr_payouts_table_name}
-            ON {pdr_slots_table_name}.ID = SPLIT_PART({pdr_payouts_table_name}.ID, '-', 1)
-                || '-' || SPLIT_PART({pdr_payouts_table_name}.ID, '-', 2)
             LEFT JOIN {pdr_truevals_table_name}
             ON {pdr_slots_table_name}.ID = {pdr_truevals_table_name}.ID
-            LEFT JOIN {etl_bronze_pdr_predictions_table_name}
-            ON {pdr_slots_table_name}.ID = {etl_bronze_pdr_predictions_table_name}.slot_id
+            LEFT JOIN (
+                SELECT *,
+                    SPLIT_PART({pdr_payouts_table_name}.ID, '-', 1)
+                || '-' || SPLIT_PART({pdr_payouts_table_name}.ID, '-', 2) as match_id,
+                ROW_NUMBER() OVER (PARTITION BY match_id) as rn,
+                FROM {pdr_payouts_table_name} 
+            ) AS filtered_{pdr_payouts_table_name} 
+            ON {pdr_slots_table_name}.ID = filtered_{pdr_payouts_table_name}.match_id
+            AND filtered_{pdr_payouts_table_name}.rn = 1
+            LEFT JOIN (
+                SELECT *,
+                    ROW_NUMBER() OVER (PARTITION BY {etl_bronze_pdr_predictions_table_name}.slot_id) as rn
+                FROM {etl_bronze_pdr_predictions_table_name}
+            ) AS filtered_{etl_bronze_pdr_predictions_table_name}
+            ON {pdr_slots_table_name}.ID = filtered_{etl_bronze_pdr_predictions_table_name}.slot_id
+            AND filtered_{etl_bronze_pdr_predictions_table_name}.rn = 1
             WHERE
                 {pdr_slots_table_name}.timestamp >= {st_ms}
                 AND {pdr_slots_table_name}.timestamp <= {fin_ms}
