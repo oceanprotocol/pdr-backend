@@ -27,11 +27,11 @@ class SimPlotter:
         self.multi_id = None
 
     @staticmethod
-    def available_snapshots():
-        all_state_files = glob.glob("sim_state/st_*.pkl")
+    def available_snapshots(multi_id):
+        all_state_files = glob.glob(f"sim_state/{multi_id}/st_*.pkl")
 
         all_timestamps = [
-            f.replace("sim_state/st_", "").replace(".pkl", "")
+            f.replace(f"sim_state/{multi_id}/st_", "").replace(".pkl", "")
             for f in all_state_files
             if "final" not in f
         ]
@@ -179,6 +179,7 @@ class SimPlotter:
                     mode="lines",
                     fill=None,
                     name="accuracy upper bound",
+                    marker_color="#636EFA",
                 ),
                 go.Scatter(
                     x=df["time"],
@@ -186,13 +187,22 @@ class SimPlotter:
                     mode="lines",
                     fill="tonexty",
                     name="accuracy lower bound",
+                    marker_color="#1F77B4",
                 ),
             ]
         )
 
         fig.update_layout(showlegend=False)
 
-        fig.add_trace(go.Scatter(x=df["time"], y=df[y], mode="lines", name="accuracy"))
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=df[y],
+                mode="lines",
+                name="accuracy",
+                marker_color="#000000",
+            )
+        )
 
         fig.add_hline(y=50, line_dash="dot", line_color="grey")
         fig.update_layout(title=s)
@@ -215,15 +225,31 @@ class SimPlotter:
         df["time"] = range(len(clm.f1s))
 
         fig = go.Figure(
-            go.Scatter(x=df["time"], y=df["f1"], mode="lines", name="f1"),
+            go.Scatter(
+                x=df["time"],
+                y=df["f1"],
+                mode="lines",
+                name="f1",
+                marker_color="#72B7B2",
+            ),
         )
 
         fig.add_traces(
             [
                 go.Scatter(
-                    x=df["time"], y=df["precisions"], mode="lines", name="precision"
+                    x=df["time"],
+                    y=df["precisions"],
+                    mode="lines",
+                    name="precision",
+                    marker_color="#AB63FA",
                 ),
-                go.Scatter(x=df["time"], y=df["recalls"], mode="lines", name="recall"),
+                go.Scatter(
+                    x=df["time"],
+                    y=df["recalls"],
+                    mode="lines",
+                    name="recall",
+                    marker_color="#636EFA",
+                ),
             ]
         )
 

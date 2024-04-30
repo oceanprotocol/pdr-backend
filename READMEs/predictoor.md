@@ -88,7 +88,7 @@ cd ~/code/pdr-backend # or wherever your pdr-backend dir is
 source venv/bin/activate
 
 #display real-time plots of the simulation
-streamlit run sim_plots.py
+sim_plots
 ```
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
@@ -101,10 +101,10 @@ To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
-By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
-Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
+By default, Dash plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `sim_plots --run_id <unique_id>` e.g. `sim_plots --run-id 97f9633c-a78c-4865-9cc6-b5152c9500a3`
 
-You can run many instances of streamlit at once, with different URLs.
+You can run many instances of Dash at once, with different URLs. To run on different ports, use the `--port` argument.
 
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
@@ -124,26 +124,27 @@ export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 
 ### Deploy the Prediction Submitter Manager
 
-Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
-
-```
-pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
-```
-
 Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
 
 ```console
 cp ppss.yaml my_ppss.yaml
 ```
 
+Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
+
+```
+pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
+```
+
 #### Update YAML config with the contract address
 
-Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.pred_submitter_mgr`:
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.bot_only.pred_submitter_mgr`:
 
 ```
 predictoor_ss:
   ...
-  pred_submitter_mgr: "CONTRACT_ADDRESS"
+  bot_only:
+    pred_submitter_mgr: "CONTRACT_ADDRESS"
   ...
 ```
 
@@ -154,7 +155,7 @@ Update the rest of the config as desired.
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-testnet
+pdr predictoor my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -190,7 +191,7 @@ Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-p
 Then, run the bot. In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-mainnet
+pdr predictoor my_ppss.yaml sapphire-mainnet
 ```
 
 This is where there's real $ at stake. Good luck!

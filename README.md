@@ -45,7 +45,7 @@ Usage: pdr sim|predictoor|trader|..
 
 Main tools:
   pdr sim YAML_FILE
-  pdr predictoor APPROACH YAML_FILE NETWORK
+  pdr predictoor YAML_FILE NETWORK
   pdr trader APPROACH YAML_FILE NETWORK
 ...
 ```
