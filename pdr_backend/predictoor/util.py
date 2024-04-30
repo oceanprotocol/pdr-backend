@@ -28,7 +28,7 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
         address_combination_to_slots[address_tuple].append(slot)
 
     # Format the results as a list of tuples
-    result: List[tuple] = []
+    result = []
     for addresses, slots in address_combination_to_slots.items():
         result.append((list(addresses), slots))
 
