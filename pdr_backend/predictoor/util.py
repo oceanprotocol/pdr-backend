@@ -1,6 +1,7 @@
 from typing import Dict, List
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
     """
@@ -9,7 +10,7 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
     @return
     List[Tuple[List[str], List[int]]]: A list of tuples where each tuple contains a list of addresses sharing the same slots and the slots they share.
     """
-    slot_to_addresses = {}
+    slot_to_addresses: Dict[int, set] = {}
 
     # Collect all addresses for each slot
     for address, slots in pending_slots.items():
@@ -19,7 +20,7 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
             slot_to_addresses[slot].add(address)
 
     # Build a dictionary to group addresses sharing the same slots
-    address_combination_to_slots = {}
+    address_combination_to_slots: Dict[tuple, List[int]] = {}
     for slot, addresses in slot_to_addresses.items():
         address_tuple = tuple(sorted(addresses))
         if address_tuple not in address_combination_to_slots:
@@ -27,9 +28,8 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
         address_combination_to_slots[address_tuple].append(slot)
 
     # Format the results as a list of tuples
-    result = []
+    result: List[tuple] = []
     for addresses, slots in address_combination_to_slots.items():
         result.append((list(addresses), slots))
 
     return result
-

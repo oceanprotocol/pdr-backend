@@ -486,7 +486,7 @@ class PredictoorAgent:
         if len(shared_slots) == 0:
             logger.info("No payouts available")
             return
-            
+
         for slot_tuple in shared_slots:
             contract_addresses = slot_tuple[0]
             contracts_checksummed = [
@@ -494,14 +494,11 @@ class PredictoorAgent:
                 for addr in contract_addresses
             ]
             slots = slot_tuple[1]
-            tx = self.pred_submitter_mgr.get_payout(
-                slots, contracts_checksummed
-            )
+            tx = self.pred_submitter_mgr.get_payout(slots, contracts_checksummed)
 
             cur_index = shared_slots.index(slot_tuple)
             progress = f"{cur_index + 1}/{len(shared_slots)}"
             logger.info("Payout tx %s: %s", progress, tx["transactionHash"].hex())
-
 
 
 @enforce_types
