@@ -233,6 +233,10 @@ class GQLDataFactory:
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
 
+            if len(df) > 0:
+                if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
+                    df = df.filter(pl.col("timestamp") >= df["timestamp"][0])
+
             if len(buffer_df) == 0:
                 buffer_df = df
             else:
