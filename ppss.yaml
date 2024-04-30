@@ -28,10 +28,10 @@ predictoor_ss:
   aimodel_ss:
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
-    approach: LinearLogistic # LinearLogistic | LinearSVC | Constant
+    approach: LinearLogistic # LinearLogistic | LinearLogisticBalanced | LinearSVC | Constant
     weight_recent: 10x_5x # 10x_5x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
-    calibrate_probs: CalibratedClassifierCV_5x # CalibratedClassifierCV_5x | None
+    calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
 
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000

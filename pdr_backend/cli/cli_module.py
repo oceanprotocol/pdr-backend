@@ -54,7 +54,7 @@ def _do_main():
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
     print_args(args)
-    logger.info(nested_args)
+    logger.info("Nested args: %s", nested_args)
 
     func(args, nested_args)
 
