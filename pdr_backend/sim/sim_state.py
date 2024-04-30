@@ -17,7 +17,9 @@ class ClassifierMetrics:
         self.precisions: List[float] = []  # [i] : precision
         self.recalls: List[float] = []  # [i] : recall
 
-    def update(self, acc_est, acc_l, acc_u, f1, precision, recall):
+        self.losses: List[float] = []  # [i] : log-loss
+
+    def update(self, acc_est, acc_l, acc_u, f1, precision, recall, loss):
         self.acc_ests.append(acc_est)
         self.acc_ls.append(acc_l)
         self.acc_us.append(acc_u)
@@ -26,9 +28,11 @@ class ClassifierMetrics:
         self.precisions.append(precision)
         self.recalls.append(recall)
 
+        self.losses.append(loss)
+
     @staticmethod
     def recent_metrics_names() -> List[str]:
-        return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall"]
+        return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
 
     def recent_metrics(self) -> List[Union[int, float]]:
         """Return most recent classifier metrics"""
@@ -40,6 +44,7 @@ class ClassifierMetrics:
             self.f1s[-1],
             self.precisions[-1],
             self.recalls[-1],
+            self.losses[-1],
         ]
 
 
