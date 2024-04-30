@@ -79,9 +79,11 @@ Let's visualize results. Open a separate console, and:
 cd ~/code/pdr-backend # or wherever your pdr-backend dir is
 source venv/bin/activate
 
-#display real-time plots of the simulation
+#start the plots server
 sim_plots
 ```
+
+The plots server will give a url, such as [http://127.0.0.1:8050](http://127.0.0.1:8050). Open that url in your browser to see plots update in real time.
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
