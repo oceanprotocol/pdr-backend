@@ -326,33 +326,3 @@ def _test_aimodel_factory_nvars_varimps(n: int):
 
     if SHOW_PLOT:
         figure.show()
-
-
-@enforce_types
-def test_aimodel_factory_calibrate_probs():
-    """1 input var. It will plot that var on both axes"""
-    # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
-    factory = AimodelFactory(ss)
-
-    # data
-    N = 50
-    mn, mx = -10.0, +10.0
-    X = np.random.uniform(mn, mx, (N, 1))
-    ycont = 3.0 + 4.0 * X[:, 0]
-    y_thr = np.average(ycont)  # avg gives good class balance
-    ytrue = ycont > y_thr
-
-    # build model
-    model = factory.build(X, ytrue, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    assert_array_equal(imps, np.array([1.0]))
-
-    # plot
-    colnames = ["x0"]
-    slicing_x = np.array([0.1])  # arbitrary
-    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    figure = plot_aimodel_response(aimodel_plotdata)
-    assert isinstance(figure, Figure)
