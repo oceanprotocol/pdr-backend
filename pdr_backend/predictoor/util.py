@@ -1,9 +1,9 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from enforce_typing import enforce_types
 
 
 @enforce_types
-def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
+def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[Tuple[List[str], List[int]]]:
     """
     This function is used to organize payout slots and contract addresses based on shared slots.
 
@@ -30,8 +30,9 @@ def find_shared_slots(pending_slots: Dict[str, List[int]]) -> List[tuple]:
         address_combination_to_slots[address_tuple].append(slot)
 
     # Format the results as a list of tuples
-    result = []
+    result: List[Tuple[List[str], List[int]]] = []
     for addresses, slots in address_combination_to_slots.items():
-        result.append((list(addresses), slots))
+        tup = (list(addresses), slots)
+        result.append(tup)
 
     return result
