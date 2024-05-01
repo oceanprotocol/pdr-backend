@@ -22,9 +22,9 @@ class LakeValidate(LakeInfo):
         super().__init__(ppss)
         
         self.config = {
-            "Validate table names in lake match expected values.": self.validate_expected_table_names,
-            "Validate no views in lake.": self.validate_expected_view_names,
-            "Validate few gaps in bronze_predictions.": self.validate_lake_bronze_predictions_gaps,
+            "Validate table names in lake match expected values": self.validate_expected_table_names,
+            "Validate no views in lake": self.validate_expected_view_names,
+            "Validate few gaps in bronze_predictions": self.validate_lake_bronze_predictions_gaps,
         }
         self.results: Dict[str, (str, bool)] = {}
 
@@ -41,17 +41,21 @@ class LakeValidate(LakeInfo):
             self.etl.bronze_table_names,
         ]
 
-        if self.all_table_names == expected_table_names:
+        sorted_names = self.all_table_names.sort()
+        expected_sorted_names = expected_table_names.sort()
+
+        if sorted_names == expected_sorted_names:
             return (True, "Tables in lake match expected Complete-ETL table names.")
         
-        return (False, "Tables in lake [{}], do not match expected Complete-ETL table names [{}]".format(self.all_table_names, expected_table_names))
+        return (False, "Tables in lake [{}], do not match expected Complete-ETL table names [{}]".format(sorted_names, expected_sorted_names))
     
 
     @enforce_types
     def validate_expected_view_names(self) -> (bool, str):
         if len(self.all_view_names) == 0:
-            return (True, "Clean Lake contains no VIEWs.")
-        return (False,"Lake contains VIEWs. Please review logs and clean lake using the CLI.")
+            return (True, "Lake is clean. Has no VIEWs.")
+        
+        return (False,"Lake has VIEWs. Please clean lake using CLI.")
     
 
     @enforce_types
@@ -120,20 +124,13 @@ class LakeValidate(LakeInfo):
 
         # Get the count of slots with the same timedelta
         # understand how frequent the event/slots are happening based
-        # pair,timeframe,timedelta,total_count
-        # ADA/USDT,5m,,1
-        # ADA/USDT,5m,300,8314
-        # ADA/USDT,5m,3900,1
         counts_per_timedelta = df.groupby(['pair','timeframe','timedelta']).agg([
             pl.col('count').sum().alias('total_count')
         ]).sort(['pair','timeframe','timedelta'])
 
         # Quality of Gap in data
-        # we want to calculate the total_count / sum(total_count for that pair,timeframe) * 100
-        # this should give us an idea regarding the gappiness and quality of the data
-        # pair,timeframe,sum_total_count,timedelta,total_count,gap_pct
-        # ADA/USDT,1h,6,3600,5,83.33333333333334
-        # ADA/USDT,5m,8316,300,8314,99.97594997594997
+        # 99.5% of the data should be without gaps
+        alert_threshold = 99.5
         gap_pct = (
             counts_per_timedelta
             .groupby(['pair', 'timeframe'])
@@ -146,25 +143,28 @@ class LakeValidate(LakeInfo):
                 how='left'
             )
             .with_columns([
-                (pl.col("total_count") / pl.col("sum_total_count") * 100).alias("gap_pct")
+                (pl.col("total_count") / pl.col("sum_total_count") * 100).alias("gap_pct"),
+                (pl.col("total_count") / pl.col("sum_total_count") * 100 < alert_threshold).alias("alert")
             ])
         ).filter(
             (pl.col('timedelta') == 300) | (pl.col('timedelta') == 3600)
         ).sort(['pair','timeframe','timedelta'])
 
-        # Provide report on all tables if quality is less than 99.5
-        alert_threshold = 99.5
-        gap_validation_failures = gap_pct.filter(pl.col('gap_pct') < alert_threshold)
+        # Report results
+        print("[Gap Validation - {} Table]".format(table_name))
+        print("[{}] feeds in gap validation".format(gap_pct.shape[0]))
         
-        print(">>> {} [{}] items in the gap_pct validation".format(table_name, gap_pct.shape[0]))
-        print(">>> {} [{}] items failed the gap_pct validation".format(table_name, gap_validation_failures.shape[0]))
-            
-        if gap_validation_failures.shape[0] > 0:
-            print(">>> {} gap_pct report: [{}]".format(table_name, gap_pct))
-            return (False,"Gap Validation - Gaps detected in lake data. Please review logs.")
-            
-        return (True, "Gap Validation - More than 99.5% of data doesn't have gaps")
+        # check if quality is less than 99.5
+        gap_validation_failures = gap_pct.filter(pl.col('gap_pct') < alert_threshold)        
+        if gap_validation_failures.shape[0] == 0:
+            return (True, "Gaps Ok - 99.5% of feeds don't have gaps.")
         
+        # display report in a readable format
+        print("[{}] feeds failed gap validation".format(gap_validation_failures.shape[0]))
+        with pl.Config(tbl_rows=100):
+            print("{} Gap Report\n{}".format(table_name, gap_pct))
+        return (False,"Please review gap validation.")
+
 
     def generate(self):
         super().generate()
@@ -182,23 +182,17 @@ class LakeValidate(LakeInfo):
             #   print message with: (1) key, (2) error/success, (3) message
             # print num errors, num successes, and total
         """
-        print("\nValidation Results:")
         num_errors = len([result for result in self.results.values() if not result[0]])
         num_successes = len([result for result in self.results.values() if result[0]])
         total = len(self.results)
 
         for key, (success, message) in self.results.items():
-            print(f"{key}: {success} - {message}")
+            print(f"[{key}]\n{success}-{message}")
             
         print(f"\nErrors: {num_errors}, Successes: {num_successes}, Total: {total}")
-
-        
-    @enforce_types
-    def print_table_info(self, source: Dict[str, DataFrame]):
-        super().print_table_info(source)
-        self.print_results()
 
 
     @enforce_types
     def run(self):
-        super().run()
+        self.generate()
+        self.print_results()

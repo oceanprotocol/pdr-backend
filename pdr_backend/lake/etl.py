@@ -73,10 +73,7 @@ class ETL:
             bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
-        logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
-
         self.bronze_table_names = list(self.bronze_table_getters.keys())
-
         self.temp_table_names = []
         
         # TODO - Revert this code...? Woudln't this potentially drop the normal tables?

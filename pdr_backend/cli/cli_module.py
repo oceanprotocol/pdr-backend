@@ -50,9 +50,6 @@ def _do_main():
     if sys.argv[1] == "help_long":
         do_help_long(0)
 
-    print(">>> DO MAIN <<<")
-    print("CLI args:", sys.argv)
-
     if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
         do_lake_subcommand(sys.argv[2:])
         return
