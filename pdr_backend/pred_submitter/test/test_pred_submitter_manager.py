@@ -21,14 +21,14 @@ def test_version(
 def test_get_up_predictoor_address(
     pred_submitter_mgr: PredSubmitterMgr,
 ):
-    address = pred_submitter_mgr.predictoor_up_address()
+    address = pred_submitter_mgr.pred_submitter_up_address()
     assert address
 
 
 def test_get_down_predictoor_address(
     pred_submitter_mgr: PredSubmitterMgr,
 ):
-    address = pred_submitter_mgr.predictoor_down_address()
+    address = pred_submitter_mgr.pred_submitter_down_address()
     assert address
 
 
@@ -38,8 +38,8 @@ def test_approve(
     feed_contract2,
     OCEAN,
 ):
-    pmup = pred_submitter_mgr.predictoor_up_address()
-    pmdown = pred_submitter_mgr.predictoor_down_address()
+    pmup = pred_submitter_mgr.pred_submitter_up_address()
+    pmdown = pred_submitter_mgr.pred_submitter_down_address()
     pc1 = feed_contract1.contract_address
     pc2 = feed_contract2.contract_address
     assert OCEAN.allowance(pmup, pc1) == 0
@@ -94,8 +94,8 @@ def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, OCEAN):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
-    pmup = pred_submitter_mgr.predictoor_up_address()
-    pmdown = pred_submitter_mgr.predictoor_down_address()
+    pmup = pred_submitter_mgr.pred_submitter_up_address()
+    pmdown = pred_submitter_mgr.pred_submitter_down_address()
 
     # approve rewards
     OCEAN.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
@@ -192,8 +192,8 @@ def test_submit_prediction_and_payout(
     assert bal_after - bal_before == Wei(100), "Payout should be 100 OCEAN"
 
     # check predictions one by one
-    pmup = pred_submitter_mgr.predictoor_up_address()
-    pmdown = pred_submitter_mgr.predictoor_down_address()
+    pmup = pred_submitter_mgr.pred_submitter_up_address()
+    pmdown = pred_submitter_mgr.pred_submitter_down_address()
 
     pred_down_first_feed = feed_contract1.get_prediction(prediction_epoch, pmdown)
     pred_down_second_feed = feed_contract2.get_prediction(prediction_epoch, pmdown)
