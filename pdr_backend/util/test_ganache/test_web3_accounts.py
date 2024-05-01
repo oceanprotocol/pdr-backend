@@ -3,7 +3,11 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
+from pdr_backend.util.web3_accounts import (
+    create_accounts,
+    fund_accounts,
+    print_balances,
+)
 from pdr_backend.util.currency_types import Eth
 
 
@@ -20,7 +24,7 @@ def test_create_accounts(mock_create):
 @patch("pdr_backend.ppss.web3_pp.Token")
 @patch("pdr_backend.ppss.web3_pp.NativeToken")
 @patch("pdr_backend.ppss.web3_pp.Web3PP.get_address")
-def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
+def test_print_balances(mock_get_address, mock_native_token, mock_token):
     web3_pp = mock_web3_pp("development")
 
     # Create Mock instances for NativeToken and Token
@@ -34,7 +38,7 @@ def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
     # Set the return value for get_address
     mock_get_address.return_value = "0xOCEAN"
 
-    view_accounts(["0x123", "0x1234"], web3_pp)
+    print_balances("0x123", web3_pp)
 
     # Assert methods are returning right values
     assert mock_get_address(web3_pp, "Ocean") == "0xOCEAN"
