@@ -483,7 +483,7 @@ class PredictoorAgent:
             self.ppss.web3_pp.subgraph_url, up_pred_addr
         )
         shared_slots = find_shared_slots(pending_slots)
-        if len(shared_slots) == 0:
+        if not shared_slots:
             logger.info("No payouts available")
             return
 
