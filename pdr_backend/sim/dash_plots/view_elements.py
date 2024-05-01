@@ -112,11 +112,17 @@ def format_ts(s):
     return datetime.strptime(base, "%Y%m%d%H%M%S").strftime("%H:%M:%S")
 
 
-def snapshot_slider(run_id, set_ts, slider_value):
+def prune_snapshots(run_id):
     snapshots = SimPlotter.available_snapshots(run_id)[:-1]
     max_states_ux = 50
     if len(snapshots) > max_states_ux:
-        snapshots = snapshots[:: len(snapshots) // max_states_ux]
+        return snapshots[:: len(snapshots) // max_states_ux]
+
+    return snapshots
+
+
+def snapshot_slider(run_id, set_ts, slider_value):
+    snapshots = prune_snapshots(run_id)
 
     marks = {
         i: {"label": format_ts(s), "style": {"transform": "rotate(45deg)"}}
