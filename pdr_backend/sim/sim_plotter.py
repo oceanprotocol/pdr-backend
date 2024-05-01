@@ -3,6 +3,7 @@ import os
 import pickle
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -38,6 +39,16 @@ class SimPlotter:
         all_timestamps.sort()
 
         return all_timestamps + ["final"]
+
+    @staticmethod
+    def get_latest_run_id():
+        path = sorted(Path("sim_state").iterdir(), key=os.path.getmtime)[-1]
+        return str(path).replace("sim_state/", "")
+
+    @staticmethod
+    def get_all_run_names():
+        path = Path("sim_state").iterdir()
+        return [str(p).replace("sim_state/", "") for p in path]
 
     def load_state(self, multi_id, timestamp: Optional[str] = None):
         root_path = f"sim_state/{multi_id}"

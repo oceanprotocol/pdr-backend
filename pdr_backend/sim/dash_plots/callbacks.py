@@ -2,9 +2,8 @@ import time
 
 from dash import Input, Output, State
 
-from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_dash_plots.util import get_figures_by_state, get_latest_run_id
-from pdr_dash_plots.view_elements import (
+from pdr_backend.sim.dash_plots.util import get_figures_by_state
+from pdr_backend.sim.dash_plots.view_elements import (
     arrange_figures,
     get_header_elements,
     get_waiting_template,
@@ -12,6 +11,7 @@ from pdr_dash_plots.view_elements import (
     selected_var_checklist,
     snapshot_slider,
 )
+from pdr_backend.sim.sim_plotter import SimPlotter
 
 
 def wait_for_state(sim_plotter, run_id, set_ts):
@@ -64,7 +64,7 @@ def get_callbacks(app):
     )
     # pylint: disable=unused-argument
     def update_graph_live(n, selected_vars, slider_value, selected_vars_old):
-        run_id = app.run_id if app.run_id else get_latest_run_id()
+        run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
         set_ts = None
 
         if slider_value is not None:
