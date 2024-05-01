@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 
-from dash import dcc
 from plotly.graph_objs import Figure
 
 from pdr_backend.sim.dash_plots.util import get_figures_by_state

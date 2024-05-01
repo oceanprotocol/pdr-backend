@@ -1,7 +1,7 @@
 import argparse
 import logging
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from typing import List
 
 from enforce_typing import enforce_types
@@ -570,6 +570,7 @@ class TopupArgParser(_ArgParser_PPSS_NETWORK):
 
 
 class SimPlotsArgParser(CustomArgParser):
+    # pylint: disable=unused-argument
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
 
