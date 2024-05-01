@@ -488,13 +488,9 @@ class PredictoorAgent:
             return
 
         for slot_tuple in shared_slots:
-            contract_addresses = slot_tuple[0]
-            contracts_checksummed = [
-                self.ppss.web3_pp.web3_config.w3.to_checksum_address(addr)
-                for addr in contract_addresses
-            ]
-            slots = slot_tuple[1]
-            tx = self.pred_submitter_mgr.get_payout(slots, contracts_checksummed)
+            contract_addrs, slots = slot_tuple
+            contract_addrs = self._to_checksum(contract_addrs)  
+            tx = self.pred_submitter_mgr.get_payout(slots, contract_addrs)
 
             cur_index = shared_slots.index(slot_tuple)
             progress = f"{cur_index + 1}/{len(shared_slots)}"
