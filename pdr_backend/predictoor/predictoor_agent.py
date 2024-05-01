@@ -480,9 +480,7 @@ class PredictoorAgent:
 
         # we only need to query in one direction, since both predict on the same slots
         up_addr = self.pred_submitter_mgr.pred_submitter_up_address()
-        pending_slots = query_pending_payouts(
-            self.ppss.web3_pp.subgraph_url, up_addr
-        )
+        pending_slots = query_pending_payouts(self.ppss.web3_pp.subgraph_url, up_addr)
         shared_slots = find_shared_slots(pending_slots)
         if not shared_slots:
             logger.info("No payouts available")
@@ -490,7 +488,7 @@ class PredictoorAgent:
 
         for slot_tuple in shared_slots:
             contract_addrs, slots = slot_tuple
-            contract_addrs = self._to_checksum(contract_addrs)  
+            contract_addrs = self._to_checksum(contract_addrs)
             tx = self.pred_submitter_mgr.get_payout(slots, contract_addrs)
 
             cur_index = shared_slots.index(slot_tuple)
