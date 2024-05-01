@@ -1,13 +1,14 @@
 import argparse
-from argparse import Namespace
 import logging
 import sys
+from argparse import Namespace
 from typing import List
 
 from enforce_typing import enforce_types
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
+from pdr_backend.sim.sim_plotter import SimPlotter
 
 logger = logging.getLogger("cli")
 
@@ -46,6 +47,7 @@ Power tools:
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
+  pdr sim_plots [--run_id RUN_ID] [--port PORT]
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
@@ -151,6 +153,13 @@ def check_address(addr) -> str:
         raise TypeError(f"{addr} is not a valid Ethereum address") from exc
 
     return addr2
+
+
+def validate_run_id(run_id):
+    if run_id not in SimPlotter.get_all_run_names():
+        raise ValueError(f"Invalid run_id: {run_id}")
+
+    return run_id
 
 
 @enforce_types
@@ -560,6 +569,29 @@ class TopupArgParser(_ArgParser_PPSS_NETWORK):
         return ["sapphire-testnet", "sapphire-mainnet"]
 
 
+class SimPlotsArgParser(CustomArgParser):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_argument(
+            "--run_id",
+            help=(
+                "The run_id of the simulation to visualize. "
+                "If not provided, the latest run_id will be used."
+            ),
+            type=validate_run_id,
+        )
+
+        self.add_argument(
+            "--port",
+            nargs="?",
+            help="The port to run the server on. Default is 8050.",
+            type=int,
+            default=8050,
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -604,6 +636,7 @@ defined_parsers = {
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+    "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
 }
 
 

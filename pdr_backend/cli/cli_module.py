@@ -27,6 +27,7 @@ from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.multisim_engine import MultisimEngine
+from pdr_backend.sim.sim_dash import sim_dash
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
@@ -356,3 +357,9 @@ def do_deploy_pred_submitter_mgr(args, nested_args=None):
     logger.info(
         "Prediction Submitter Manager Contract deployed at %s", contract_address
     )
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_sim_plots(args, nested_args=None):
+    sim_dash(args)

@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from dash import dcc, html
 from plotly.graph_objs import Figure
 
@@ -62,11 +63,9 @@ def arrange_figures(figures):
     return [
         html.Div(
             [
+                dcc.Graph(figure=figures["pdr_profit_vs_time"], style={"width": "50%"}),
                 dcc.Graph(
-                    figure=figures["pdr_profit_vs_time"], style={"width": "100%"}
-                ),
-                dcc.Graph(
-                    figure=figures["trader_profit_vs_time"], style={"width": "100%"}
+                    figure=figures["trader_profit_vs_time"], style={"width": "50%"}
                 ),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
@@ -79,10 +78,10 @@ def arrange_figures(figures):
         html.Div(
             [
                 dcc.Graph(
-                    figure=figures["pdr_profit_vs_ptrue"], style={"width": "100%"}
+                    figure=figures["pdr_profit_vs_ptrue"], style={"width": "50%"}
                 ),
                 dcc.Graph(
-                    figure=figures["trader_profit_vs_ptrue"], style={"width": "100%"}
+                    figure=figures["trader_profit_vs_ptrue"], style={"width": "50%"}
                 ),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
@@ -92,9 +91,9 @@ def arrange_figures(figures):
                 dcc.Graph(
                     figure=figures["aimodel_varimps"],
                     id="aimodel_varimps",
-                    style={"width": "100%"},
+                    style={"width": "50%"},
                 ),
-                dcc.Graph(figure=figures["aimodel_response"], style={"width": "100%"}),
+                dcc.Graph(figure=figures["aimodel_response"], style={"width": "50%"}),
             ],
             style={"display": "flex", "justifyContent": "space-between"},
         ),
@@ -111,11 +110,17 @@ def format_ts(s):
     return datetime.strptime(base, "%Y%m%d%H%M%S").strftime("%H:%M:%S")
 
 
-def snapshot_slider(run_id, set_ts, slider_value):
+def prune_snapshots(run_id):
     snapshots = SimPlotter.available_snapshots(run_id)[:-1]
     max_states_ux = 50
     if len(snapshots) > max_states_ux:
-        snapshots = snapshots[:: len(snapshots) // max_states_ux]
+        return snapshots[:: len(snapshots) // max_states_ux]
+
+    return snapshots
+
+
+def snapshot_slider(run_id, set_ts, slider_value):
+    snapshots = prune_snapshots(run_id)
 
     marks = {
         i: {"label": format_ts(s), "style": {"transform": "rotate(45deg)"}}
