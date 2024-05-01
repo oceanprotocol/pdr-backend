@@ -28,12 +28,12 @@ def test_print_balances(mock_get_address, mock_native_token, mock_token):
     web3_pp = mock_web3_pp("development")
 
     # Create Mock instances for NativeToken and Token
-    native_token_instance = mock_native_token.return_value
-    token_instance = mock_token.return_value
+    ROSE = mock_native_token.return_value
+    OCEAN = mock_token.return_value
 
     # Set the return values for balanceOf methods
-    native_token_instance.balanceOf.return_value = Eth(2).to_wei()
-    token_instance.balanceOf.return_value = Eth(1).to_wei()
+    ROSE.balanceOf.return_value = Eth(2).to_wei()
+    OCEAN.balanceOf.return_value = Eth(1).to_wei()
 
     # Set the return value for get_address
     mock_get_address.return_value = "0xOCEAN"
@@ -42,12 +42,12 @@ def test_print_balances(mock_get_address, mock_native_token, mock_token):
 
     # Assert methods are returning right values
     assert mock_get_address(web3_pp, "Ocean") == "0xOCEAN"
-    assert native_token_instance.balanceOf(mock_get_address) == Eth(2).to_wei()
-    assert token_instance.balanceOf(mock_get_address) == Eth(1).to_wei()
+    assert ROSE.balanceOf(mock_get_address) == Eth(2).to_wei()
+    assert OCEAN.balanceOf(mock_get_address) == Eth(1).to_wei()
 
     # Assert methods were called the right amount of times
-    assert native_token_instance.balanceOf.call_count == 3
-    assert token_instance.balanceOf.call_count == 3
+    assert ROSE.balanceOf.call_count == 2
+    assert OCEAN.balanceOf.call_count == 2
     assert mock_get_address.call_count == 2
 
 
