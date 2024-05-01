@@ -34,7 +34,11 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
+from pdr_backend.util.web3_accounts import (
+    create_accounts,
+    fund_accounts,
+    print_balances,
+)
 
 logger = logging.getLogger("cli")
 
@@ -53,8 +57,10 @@ def _do_main():
 
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
-    print_args(args)
-    logger.info("Nested args: %s", nested_args)
+
+    do_log_args = func_name != "do_print_balances"
+    if do_log_args:
+        print_args(args, nested_args)
 
     func(args, nested_args)
 
@@ -318,14 +324,14 @@ def do_create_accounts(args, nested_args=None):
 
 
 @enforce_types
-def do_view_accounts(args, nested_args=None):
+def do_print_balances(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    accounts = args.ACCOUNTS
-    view_accounts(accounts, ppss.web3_pp)
+    account = args.ACCOUNT
+    print_balances(account, ppss.web3_pp)
 
 
 @enforce_types
