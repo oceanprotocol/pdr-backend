@@ -27,23 +27,18 @@ def create_accounts(n_accounts: int):
 
 
 @enforce_types
-def view_accounts(addresses: List[str], web3_pp: Web3PP):
+def print_balances(addr: str, web3_pp: Web3PP):
     """
     @description
-        View account balances for multiple addresses
+      Print account balances for the given address
+
+    @notes
+      Does *not* use logger.info on purpose. We want output to be compact.
     """
-    # get assets
-    native_token = web3_pp.NativeToken
-    OCEAN_token = web3_pp.OCEAN_Token
-
-    # loop through all addresses and print balances
-    for address in addresses:
-        native_token_balance = native_token.balanceOf(address)
-        OCEAN_balance = OCEAN_token.balanceOf(address)
-
-        logger.info("Account %s", address)
-        logger.info("Native token balance: %s", native_token_balance.to_eth())
-        logger.info("OCEAN balance: %s", OCEAN_balance.to_eth())
+    ROSE, OCEAN = web3_pp.NativeToken, web3_pp.OCEAN_Token
+    ROSE_bal: float = ROSE.balanceOf(addr).to_eth().amount
+    OCEAN_bal: float = OCEAN.balanceOf(addr).to_eth().amount
+    print(f"{ROSE_bal} ROSE, {OCEAN_bal} OCEAN")
 
 
 @enforce_types
