@@ -478,9 +478,10 @@ class PredictoorAgent:
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_unique_epoch)
 
-        up_pred_addr = self.pred_submitter_mgr.pred_submitter_up_address()
+        # we only need to query in one direction, since both predict on the same slots
+        up_addr = self.pred_submitter_mgr.pred_submitter_up_address()
         pending_slots = query_pending_payouts(
-            self.ppss.web3_pp.subgraph_url, up_pred_addr
+            self.ppss.web3_pp.subgraph_url, up_addr
         )
         shared_slots = find_shared_slots(pending_slots)
         if not shared_slots:
