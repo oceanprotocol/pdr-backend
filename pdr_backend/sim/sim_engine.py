@@ -86,13 +86,13 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.st.init_loop_attributes()
+        logger.info("Initialize plot data.")
+        self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
     def run(self):
-        self._init_loop_attributes()
         logger.info("Start run")
-
-        self.sim_plotter.init_state(self.multi_id)
+        self._init_loop_attributes()
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
