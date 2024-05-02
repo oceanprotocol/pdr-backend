@@ -1,7 +1,8 @@
 import polars as pl
-import pytest
 from enforce_typing import enforce_types
+from unittest.mock import patch
 
+from pdr_backend.lake.lake_validate import LakeValidate 
 
 csv_string = """
 pair,timeframe,slot,datetime,timedelta,count
@@ -165,10 +166,26 @@ ADA/USDT,5m,1711975200,01-04-2024 05:40,300,1
 ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 """
 
+# Function to replace query_data
 @enforce_types
-def test_validate_lake_mock_sql():
+def mock_query_data(query: str):
+    return pl.scan_csv(csv_string)
+
+
+@enforce_types
+def test_validate_lake_mock_sql(
+    setup_data,
+):
     sql_result = pl.scan_csv(csv_string)
     assert isinstance(sql_result, pl.DataFrame)
 
-    # TODO - validate_lake_bronze_predictions_gaps
-    
+    etl, pds, gql_tables = setup_data
+
+    lake_validate = LakeValidate(etl.ppss)
+
+    with patch("pdr_backend.lake.lake_validate.LakeValidate.pds.query_data") as mock_lake_info:
+        mock_lake_info.return_value = csv_string
+        result = lake_validate.validate_lake_bronze_predictions_gaps()
+
+        assert result[0] == True
+        assert result[1] == "No gaps in bronze_predictions table."    
