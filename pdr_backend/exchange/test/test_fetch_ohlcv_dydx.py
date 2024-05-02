@@ -102,22 +102,22 @@ def test_dydx__real_response__fromISO():
     dt = datetime.fromisoformat("2024-02-27T00:00:00.000")
     unix_ms = dt.timestamp() * 1e3
     assert (
-        raw_tohlcv_data[-1][0] == unix_ms
-    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
+        raw_tohlcv_data[0][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
 
     # Last timestamp is expected to be:
     # 2024-02-27T00:45:00.000Z
     dt = datetime.fromisoformat("2024-02-27T00:45:00.000")
     unix_ms = dt.timestamp() * 1e3
     assert (
-        raw_tohlcv_data[0][0] == unix_ms
-    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
+        raw_tohlcv_data[-1][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
 
     # Price checks
-    assert raw_tohlcv_data[-1][1] == 54541.0
-    assert raw_tohlcv_data[-1][2] == 54661.0
-    assert raw_tohlcv_data[0][3] == 54545.0
-    assert raw_tohlcv_data[9][4] == 54645.0
+    assert raw_tohlcv_data[0][1] == 54541.0
+    assert raw_tohlcv_data[0][2] == 54661.0
+    assert raw_tohlcv_data[1][4] == 54691.0
+    assert raw_tohlcv_data[-1][3] == 54545.0
 
 
 @enforce_types
