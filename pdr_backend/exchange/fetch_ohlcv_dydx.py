@@ -47,9 +47,8 @@ def fetch_ohlcv_dydx(
       Dydx candles API docs:
       https://docs.dydx.exchange/developers/indexer/indexer_api#getcandles
     """
+    limit = min(limit, 100) # cannot be greater than 100
     verify_pair_str(pair_str)
-    if "-" in pair_str:
-        raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
     verify_timeframe_str(timeframe)
 
     baseURL = BASE_URL_DYDX
@@ -90,8 +89,8 @@ def fetch_ohlcv_dydx(
                 _float_or_none(item["baseTokenVolume"]),
             )
             raw_tohlcv_data.append(tohlcv_tup)
-
-        return raw_tohlcv_data
+        # reverse for compatibility with ccxt
+        return list(reversed(raw_tohlcv_data))
 
     if key_name == "errors" and items:
         errors = items[0]
@@ -106,12 +105,10 @@ def fetch_ohlcv_dydx(
 def _dydx_ticker(pair_str: str):
     """
     Compute a pair_str friendly for dydx.
-    Eg given 'BTC/USDT', returns 'BTC-USDT'
+    Eg given 'BTC/USDT', returns 'BTC-USD'
     """
     verify_pair_str(pair_str)
-    if "-" in pair_str:
-        raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
-    return pair_str.replace("/", "-")
+    return pair_str.replace("/", "-").replace("USDT", "USD")
 
 
 @enforce_types
