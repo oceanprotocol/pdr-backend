@@ -57,19 +57,19 @@ def get_bronze_pdr_slots_data_with_SQL(
             SELECT DISTINCT
                 {pdr_slots_table_name}.ID AS ID,
                 SPLIT_PART({pdr_slots_table_name}.ID, '-', 1) AS contract,
-                {etl_bronze_pdr_predictions_table_name}.pair AS pair,
-                {etl_bronze_pdr_predictions_table_name}.timeframe AS timeframe,
-                {etl_bronze_pdr_predictions_table_name}.source AS source,
+                joined_{etl_bronze_pdr_predictions_table_name}.pair AS pair,
+                joined_{etl_bronze_pdr_predictions_table_name}.timeframe AS timeframe,
+                joined_{etl_bronze_pdr_predictions_table_name}.source AS source,
                 {pdr_slots_table_name}.slot AS slot,
-                {pdr_payouts_table_name}.roundSumStakesUp AS roundSumStakesUp,
-                {pdr_payouts_table_name}.roundSumStakes AS roundSumStakes,
+                joined_{pdr_payouts_table_name}.roundSumStakesUp AS roundSumStakesUp,
+                joined_{pdr_payouts_table_name}.roundSumStakes AS roundSumStakes,
                 {pdr_truevals_table_name}.truevalue AS truevalue,
                 {pdr_slots_table_name}.timestamp AS timestamp,
                 GREATEST(
                     {pdr_slots_table_name}.timestamp,
                     {pdr_truevals_table_name}.timestamp,
-                    {pdr_payouts_table_name}.timestamp,
-                    {etl_bronze_pdr_predictions_table_name}.timestamp
+                    joined_{pdr_payouts_table_name}.timestamp,
+                    joined_{etl_bronze_pdr_predictions_table_name}.timestamp
                 ) AS last_event_timestamp
             FROM
                 {pdr_slots_table_name}
@@ -84,7 +84,7 @@ def get_bronze_pdr_slots_data_with_SQL(
                 FROM {pdr_slots_table_name}
                 LEFT JOIN {etl_bronze_pdr_predictions_table_name} ON SPLIT_PART({pdr_slots_table_name}.ID, '-', 1) = {etl_bronze_pdr_predictions_table_name}.contract
                 GROUP BY {pdr_slots_table_name}.ID
-            ) AS {etl_bronze_pdr_predictions_table_name} ON {pdr_slots_table_name}.ID = {etl_bronze_pdr_predictions_table_name}.slot_id
+            ) AS joined_{etl_bronze_pdr_predictions_table_name} ON {pdr_slots_table_name}.ID = joined_{etl_bronze_pdr_predictions_table_name}.slot_id
             LEFT JOIN (
                 SELECT 
                     SPLIT_PART(ID, '-', 1) || '-' || SPLIT_PART(ID, '-', 2) AS slot_id,
@@ -93,10 +93,7 @@ def get_bronze_pdr_slots_data_with_SQL(
                     MAX(timestamp) AS timestamp
                 FROM {pdr_payouts_table_name}
                 GROUP BY slot_id
-            ) AS {pdr_payouts_table_name} ON {pdr_slots_table_name}.ID = {pdr_payouts_table_name}.slot_id
-            WHERE
-                {pdr_slots_table_name}.timestamp >= {st_ms}
-                AND {pdr_slots_table_name}.timestamp <= {fin_ms}
+            ) AS joined_{pdr_payouts_table_name} ON {pdr_slots_table_name}.ID = joined_{pdr_payouts_table_name}.slot_id
             ORDER BY timestamp
         """
 
