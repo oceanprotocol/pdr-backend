@@ -75,7 +75,7 @@ def fetch_filtered_predictions(
 
     query = f"""
         {{
-            predictPredictions(skip: {skip}, first: {first} {where_clause}) {{
+            predictPredictions(skip: {skip}, first: {first} {where_clause}, orderBy: timestamp, orderDirection: asc) {{
                 id
                 timestamp
                 user {{
