@@ -94,6 +94,9 @@ def get_bronze_pdr_slots_data_with_SQL(
                 FROM {pdr_payouts_table_name}
                 GROUP BY slot_id
             ) AS joined_{pdr_payouts_table_name} ON {pdr_slots_table_name}.ID = joined_{pdr_payouts_table_name}.slot_id
+            WHERE
+                pdr_slots.timestamp >= {st_ms}
+                AND pdr_slots.timestamp <= {fin_ms}
             ORDER BY timestamp
         """
 
