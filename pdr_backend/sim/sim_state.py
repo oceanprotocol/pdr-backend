@@ -34,7 +34,7 @@ class ClassifierMetrics:
     def recent_metrics_names() -> List[str]:
         return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
 
-    def recent_metrics(self) -> List[Union[int, float]]:
+    def recent_metrics(self) -> Dict[str, Union[int, float, None]]:
         """Return most recent classifier metrics"""
         if not self.acc_ests:
             return {key: None for key in ClassifierMetrics.recent_metrics_names()}

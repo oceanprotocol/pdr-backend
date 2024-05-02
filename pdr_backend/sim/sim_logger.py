@@ -2,10 +2,13 @@ import logging
 from typing import Union
 
 import numpy as np
+from enforce_typing import enforce_types
 
 logger = logging.getLogger("sim_engine")
 
 
+@enforce_types
+# pylint: disable=too-many-instance-attributes
 class SimLogLine:
     def __init__(self, ppss, st, test_i, ut, acct_up_profit, acct_down_profit):
         self.st = st
