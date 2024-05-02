@@ -18,17 +18,17 @@ class PredSubmitterMgr(BaseContract):
         """
         super().__init__(web3_pp, address, "PredSubmitterMgr")
 
-    def predictoor_up_address(self) -> str:
+    def pred_submitter_up_address(self) -> str:
         """
         @return
-          address -- str, address of upward predictoor contract
+          address -- str, address of upward pred submitter contract
         """
         return self.contract_instance.functions.instanceUp().call()
 
-    def predictoor_down_address(self) -> str:
+    def pred_submitter_down_address(self) -> str:
         """
         @return
-         address -- address of downward predictoor contract
+         address -- address of downward pred submitter contract
         """
         return self.contract_instance.functions.instanceDown().call()
 

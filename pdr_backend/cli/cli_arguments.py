@@ -2,11 +2,13 @@ import argparse
 import logging
 import sys
 from argparse import Namespace
+from typing import List
 
 from enforce_typing import enforce_types
 from eth_utils import to_checksum_address
 
 from pdr_backend.cli.nested_arg_parser import NestedArgParser
+from pdr_backend.sim.sim_plotter import SimPlotter
 
 logger = logging.getLogger("cli")
 
@@ -45,6 +47,7 @@ Power tools:
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
+  pdr sim_plots [--run_id RUN_ID] [--port PORT]
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
@@ -52,7 +55,7 @@ Utilities:
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
   pdr create_accounts NUM PPSS_FILE NETWORK
-  pdr view_accounts ACCOUNTS PPSS_FILE NETWORK
+  pdr print_balances ACCOUNT PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
   pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
@@ -120,23 +123,43 @@ class NETWORK_Mixin:
 
 
 @enforce_types
-def check_addresses(value):
+def check_addresses(value) -> List[str]:
     """
     @description
-        validates that all addressses is a comma-separated list of strings
-        each string, will be a valid Ethereum address
+        Validates that all addresses is a comma-separated list of strings
+        Each string must be a valid Ethereum address
+
+    @return
+        checksummed list of addresses
     """
     if not value:
         return []
+    addrs = value.split(",")
+    return [check_address(addr) for addr in addrs]
 
-    addresses = value.split(",")
-    checksummed_addresses = []
-    for address in addresses:
-        try:
-            checksummed_addresses.append(to_checksum_address(address.lower()))
-        except Exception as exc:
-            raise TypeError(f"{address} is not a valid Ethereum address") from exc
-    return checksummed_addresses
+
+@enforce_types
+def check_address(addr) -> str:
+    """
+    @description
+        Validates the input address a string, with a valid eth address
+
+    @return
+        checksummed version of the address
+    """
+    try:
+        addr2 = to_checksum_address(addr.lower())
+    except Exception as exc:
+        raise TypeError(f"{addr} is not a valid Ethereum address") from exc
+
+    return addr2
+
+
+def validate_run_id(run_id):
+    if run_id not in SimPlotter.get_all_run_names():
+        raise ValueError(f"Invalid run_id: {run_id}")
+
+    return run_id
 
 
 @enforce_types
@@ -194,6 +217,16 @@ def check_positive(value):
 class NUM_Mixin:
     def add_argument_NUM(self):
         self.add_argument("NUM", type=check_positive)
+
+
+@enforce_types
+class ACCOUNT_Mixin:
+    def add_argument_ACCOUNT(self):
+        self.add_argument(
+            "ACCOUNT",
+            type=check_address,
+            help="Valid ethereum address",
+        )
 
 
 @enforce_types
@@ -331,16 +364,16 @@ class _ArgParser_NUM_PPSS_NETWORK(
 
 
 @enforce_types
-class _ArgParser_ACCOUNTS_PPSS_NETWORK(
+class _ArgParser_ACCOUNT_PPSS_NETWORK(
     CustomArgParser,
-    ACCOUNTS_Mixin,
+    ACCOUNT_Mixin,
     PPSS_Mixin,
     NETWORK_Mixin,
 ):  # pylint: disable=too-many-ancestors
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["ACCOUNTS", "PPSS", "NETWORK"])
+        self.add_arguments_bulk(command_name, ["ACCOUNT", "PPSS", "NETWORK"])
 
 
 @enforce_types
@@ -487,7 +520,7 @@ def do_help_long(status_code=0):
 
 
 @enforce_types
-def print_args(arguments: Namespace):
+def print_args(arguments: Namespace, nested_args: dict):
     arguments_dict = arguments.__dict__
     command = arguments_dict.pop("command", None)
 
@@ -496,6 +529,8 @@ def print_args(arguments: Namespace):
 
     for arg_k, arg_v in arguments_dict.items():
         logger.info("%s=%s", arg_k, arg_v)
+
+    logger.info("Nested args: %s", nested_args)
 
 
 ## below, list *ArgParser classes in same order as HELP_LONG
@@ -519,7 +554,7 @@ GetPredictionsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
 GetTractionInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS
 CheckNetworkArgParser = _ArgParser_PPSS_NETWORK_LOOKBACK
 CreateAccountsArgParser = _ArgParser_NUM_PPSS_NETWORK
-AccountsArgParser = _ArgParser_ACCOUNTS_PPSS_NETWORK
+PrintBalancesArgParser = _ArgParser_ACCOUNT_PPSS_NETWORK
 FundAccountsArgParser = _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK
 
 # Tools for core team
@@ -532,6 +567,29 @@ class TopupArgParser(_ArgParser_PPSS_NETWORK):
     @property
     def network_choices(self):
         return ["sapphire-testnet", "sapphire-mainnet"]
+
+
+class SimPlotsArgParser(CustomArgParser):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_argument(
+            "--run_id",
+            help=(
+                "The run_id of the simulation to visualize. "
+                "If not provided, the latest run_id will be used."
+            ),
+            type=validate_run_id,
+        )
+
+        self.add_argument(
+            "--port",
+            nargs="?",
+            help="The port to run the server on. Default is 8050.",
+            type=int,
+            default=8050,
+        )
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
@@ -567,8 +625,8 @@ defined_parsers = {
     "do_create_accounts": CreateAccountsArgParser(
         "Create multiple accounts..", "create_accounts"
     ),
-    "do_view_accounts": AccountsArgParser(
-        "View balances from 1 or more accounts", "view_accounts"
+    "do_print_balances": PrintBalancesArgParser(
+        "View balances of an account", "print_balances"
     ),
     "do_fund_accounts": FundAccountsArgParser(
         "Fund multiple wallets from a single address", "fund_accounts"
@@ -578,6 +636,7 @@ defined_parsers = {
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+    "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
 }
 
 
