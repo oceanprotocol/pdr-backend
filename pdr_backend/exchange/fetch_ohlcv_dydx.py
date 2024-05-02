@@ -47,7 +47,7 @@ def fetch_ohlcv_dydx(
       Dydx candles API docs:
       https://docs.dydx.exchange/developers/indexer/indexer_api#getcandles
     """
-    limit = min(limit, 100) # cannot be greater than 100
+    limit = min(limit, 100)  # cannot be greater than 100
     verify_pair_str(pair_str)
     verify_timeframe_str(timeframe)
 
