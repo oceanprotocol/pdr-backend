@@ -311,6 +311,25 @@ class SimPlotter:
 
         return fig
 
+    @enforce_types
+    def plot_log_loss_vs_time(self):
+        clm = self.st.clm
+        s = f"log loss = {clm.losses[-1]:.4f}"
+
+        y = "log loss"
+        df = pd.DataFrame(clm.losses, columns=[y])
+        df["time"] = range(len(clm.losses))
+
+        fig = go.Figure(
+            go.Scatter(x=df["time"], y=df[y], mode="lines", name="log loss")
+        )
+
+        fig.update_layout(title=s)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title=y)
+
+        return fig
+
 
 def file_age_in_seconds(pathname):
     stat_result = os.stat(pathname)
