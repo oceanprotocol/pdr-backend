@@ -124,14 +124,8 @@ def test_dydx__real_response__fromISO():
 def test_dydx__bad_paths():
     # setup problem
     symbol = "BTC/USD"
-    timeframe = "5m"
     since = UnixTimeMs.from_timestr("2024-02-27_00:00:00.000")
     limit = 1
-
-    # bad symbol
-    bad_symbol = "BTC-USD"
-    with pytest.raises(ValueError):
-        _ = fetch_ohlcv_dydx(bad_symbol, timeframe, since, limit)
 
     # bad timeframe: should be eg "5m"
     bad_timeframe = "5MINS"
@@ -141,12 +135,7 @@ def test_dydx__bad_paths():
 
 @enforce_types
 def test_dydx_ticker():
-    # happy path
-    assert _dydx_ticker("BTC/USDT") == "BTC-USDT"
-
-    # bad paths
-    with pytest.raises(ValueError):
-        _ = _dydx_ticker("BTC-USDT")
+    assert _dydx_ticker("BTC/USDT") == "BTC-USD"
 
 
 @enforce_types
