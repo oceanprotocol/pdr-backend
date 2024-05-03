@@ -1,12 +1,11 @@
 import copy
 import logging
 import os
-from typing import Optional
 import uuid
+from typing import Optional
 
 import numpy as np
 import polars as pl
-
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
@@ -20,6 +19,7 @@ from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.time_types import UnixTimeMs
@@ -86,13 +86,13 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.st.init_loop_attributes()
+        logger.info("Initialize plot data.")
+        self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
     def run(self):
-        self._init_loop_attributes()
         logger.info("Start run")
-
-        self.sim_plotter.init_state(self.multi_id)
+        self._init_loop_attributes()
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
@@ -220,30 +220,7 @@ class SimEngine:
         trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
         st.trader_profits_USD.append(trader_profit_USD)
 
-        # log
-        s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}"
-        s += f" ut={ut}"
-        s += f" dt={ut.to_timestr()[:-7]}"
-        s += " ║"
-
-        s += f" prob_up={prob_up:.3f}"
-        s += " pdr_profit="
-        s += f"{acct_up_profit:6.2f} up"
-        s += f" + {acct_down_profit:6.2f} down"
-        s += f" = {pdr_profit_OCEAN:6.2f} OCEAN"
-        s += f" (cumul {sum(st.pdr_profits_OCEAN):6.2f} OCEAN)"
-        s += " ║"
-
-        s += f" Acc={n_correct:4d}/{n_trials:4d} "
-        s += f"= {acc_est*100:6.2f}% [{acc_l*100:5.1f}%, {acc_u*100:5.1f}%]"
-        s += f" prcsn={precision:.3f} recall={recall:.3f}"
-        s += f" f1={f1:.3f}"
-        s += f" loss={loss:.3f}"
-        s += " ║"
-
-        s += f" tdr_profit=${trader_profit_USD:6.2f}"
-        s += f" (cumul ${sum(st.trader_profits_USD):6.2f})"
-        logger.info(s)
+        SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
