@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from unittest.mock import patch, MagicMock
 
 from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.lake.lake_validate import LakeValidate 
+from pdr_backend.lake.lake_validate import LakeValidate
 
 csv_string = """
 pair,timeframe,slot,datetime,timedelta,count
@@ -174,7 +174,7 @@ ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 
 @enforce_types
 def test_validate_lake_mock_sql(tmpdir):
-    sql_result =  pl.read_csv(io.StringIO(csv_string))
+    sql_result = pl.read_csv(io.StringIO(csv_string))
     assert isinstance(sql_result, pl.DataFrame)
 
     st_timestr = "2023-11-02_0:00"
@@ -197,6 +197,6 @@ def test_validate_lake_mock_sql(tmpdir):
     result = lake_validate.validate_lake_bronze_predictions_gaps()
 
     assert mock_pds.query_data.called, "lake_validate did not call pds.query_data()"
-    
+
     assert result[0] == False
     assert result[1] == "Please review gap validation."

@@ -10,7 +10,6 @@ from pdr_backend.analytics.get_predictions_info import (
     get_predictoors_info_main,
     get_traction_info_main,
 )
-from pdr_backend.lake.lake_info import LakeInfo
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     do_help_short,
@@ -23,7 +22,6 @@ from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract

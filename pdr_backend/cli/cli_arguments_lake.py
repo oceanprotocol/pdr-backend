@@ -60,7 +60,7 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
 
         self.add_argument_PPSS()
         self.add_argument_NETWORK()
-            
+
         if plain_args[0] == "query":
             self.add_argument("QUERY", type=str, help="The query to run")
         elif plain_args[0] in SUPPORTS_L2_COMMANDS:

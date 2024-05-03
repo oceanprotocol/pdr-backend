@@ -18,7 +18,7 @@ def do_lake_subcommand(args):
 
     parser = LakeArgParser(args)
     parsed_args = parser.parse_args(args)
-    
+
     func_name = f"do_lake_{parsed_args.subcommand}"
     if hasattr(parsed_args, "l2_subcommand_type"):
         func_name += f"_{parsed_args.l2_subcommand_type}"
@@ -30,21 +30,15 @@ def do_lake_subcommand(args):
 # subcommands
 @enforce_types
 def do_lake_describe(args):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK
-    )
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_validate(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK
-    )
+def do_lake_validate(args):
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     lake_validate = LakeValidate(ppss)
     lake_validate.run()
@@ -56,10 +50,7 @@ def do_lake_query(args):
     @description
         Query the lake for a table or view
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK
-    )
+    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
 
     pds = PersistentDataStore(ppss, read_only=True)
     try:
@@ -92,7 +83,7 @@ def do_lake_etl_drop(args):
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
     )
-    
+
     pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
@@ -100,4 +91,3 @@ def do_lake_etl_drop(args):
 @enforce_types
 def do_lake_etl_update(args):
     print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
-
