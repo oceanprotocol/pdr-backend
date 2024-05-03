@@ -39,16 +39,12 @@ def test_arrange_figures():
     figures = {key: Figure() for key in figure_names}
     result = arrange_figures(figures)
     seen = set()
-    count = 0
     for div in result:
         for graph in div.children:
-            count += 1
             if hasattr(graph, "id"):
                 seen.add(graph.id)
 
-    assert count == len(figure_names)
-    assert seen == {"aimodel_varimps"}  # only one with id present for now
-    set(figure_names)
+    assert len(seen) == len(figure_names)
 
 
 def test_snapshot_slider():
@@ -91,8 +87,11 @@ def test_get_figures_by_state():
     mock_sim_plotter.plot_pdr_profit_vs_ptrue.return_value = Figure()
     mock_sim_plotter.plot_trader_profit_vs_ptrue.return_value = Figure()
     mock_sim_plotter.plot_f1_precision_recall_vs_time.return_value = Figure()
+    mock_sim_plotter.plot_log_loss_vs_time.return_value = Figure()
+
     plotdata = Mock()
     plotdata.colnames = ["var1", "var2"]
+
     mock_sim_plotter.aimodel_plotdata = plotdata
 
     with patch(

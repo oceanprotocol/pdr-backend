@@ -14,6 +14,7 @@ figure_names = [
     "aimodel_varimps",
     "aimodel_response",
     "f1_precision_recall_vs_time",
+    "log_loss_vs_time",
 ]
 
 empty_slider = dcc.Slider(
@@ -59,49 +60,27 @@ def get_header_elements(run_id, st, ts):
     ]
 
 
+def side_by_side_graphs(figures, name1, name2):
+    return html.Div(
+        [
+            dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
+            dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
+        ],
+        style={"display": "flex", "justifyContent": "space-between"},
+    )
+
+
 def arrange_figures(figures):
     return [
+        side_by_side_graphs(figures, "pdr_profit_vs_time", "trader_profit_vs_time"),
         html.Div(
             [
-                dcc.Graph(figure=figures["pdr_profit_vs_time"], style={"width": "50%"}),
-                dcc.Graph(
-                    figure=figures["trader_profit_vs_time"], style={"width": "50%"}
-                ),
-            ],
-            style={"display": "flex", "justifyContent": "space-between"},
-        ),
-        html.Div(
-            [
-                dcc.Graph(figure=figures["accuracy_vs_time"]),
+                dcc.Graph(figure=figures["accuracy_vs_time"], id="accuracy_vs_time"),
             ]
         ),
-        html.Div(
-            [
-                dcc.Graph(
-                    figure=figures["pdr_profit_vs_ptrue"], style={"width": "50%"}
-                ),
-                dcc.Graph(
-                    figure=figures["trader_profit_vs_ptrue"], style={"width": "50%"}
-                ),
-            ],
-            style={"display": "flex", "justifyContent": "space-between"},
-        ),
-        html.Div(
-            [
-                dcc.Graph(
-                    figure=figures["aimodel_varimps"],
-                    id="aimodel_varimps",
-                    style={"width": "50%"},
-                ),
-                dcc.Graph(figure=figures["aimodel_response"], style={"width": "50%"}),
-            ],
-            style={"display": "flex", "justifyContent": "space-between"},
-        ),
-        html.Div(
-            [
-                dcc.Graph(figure=figures["f1_precision_recall_vs_time"]),
-            ]
-        ),
+        side_by_side_graphs(figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"),
+        side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response"),
+        side_by_side_graphs(figures, "f1_precision_recall_vs_time", "log_loss_vs_time"),
     ]
 
 
