@@ -69,7 +69,7 @@ class MultisimEngine:
         multi_id = str(uuid.uuid4())
         sim_engine = SimEngine(ppss, feedset, multi_id)
         sim_engine.run()
-        run_metrics = sim_engine.st.recent_metrics()
+        run_metrics = list(sim_engine.st.recent_metrics().values())
 
         async with lock:
             self.update_csv(run_i, run_metrics, point_i)
