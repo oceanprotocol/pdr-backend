@@ -388,7 +388,6 @@ class _ArgParser_FUND_ACCOUNTS_PPSS_NETWORK(
     @enforce_types
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_argument("command", choices=[command_name])
         self.add_arguments_bulk(
             command_name,
             ["TOKEN_AMOUNT", "ACCOUNTS", "PPSS", "NETWORK", "NATIVE_TOKEN"],
