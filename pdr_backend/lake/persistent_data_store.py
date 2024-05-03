@@ -27,6 +27,8 @@ class PersistentDataStore(BaseDataStore):
             base_path - The base directory to store the persistent data.
         """
         super().__init__(base_path, read_only)
+        print(f"base_path = {base_path}")
+
         self.duckdb_conn = duckdb.connect(
             database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
@@ -127,7 +129,7 @@ class PersistentDataStore(BaseDataStore):
             return
 
         logger.info("create_and_fill_table = %s", table_name)
-        logger.info("create_and_fill_table DF = %s", df)
+        logger.info("\n%s", df)
         self._create_and_fill_table(df, table_name)
 
     @enforce_types

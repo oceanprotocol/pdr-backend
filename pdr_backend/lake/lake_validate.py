@@ -124,7 +124,7 @@ class LakeValidate(LakeInfo):
 
         # Get the count of slots with the same timedelta
         # understand how frequent the event/slots are happening based
-        counts_per_timedelta = df.groupby(['pair','timeframe','timedelta']).agg([
+        counts_per_timedelta = df.group_by(['pair','timeframe','timedelta']).agg([
             pl.col('count').sum().alias('total_count')
         ]).sort(['pair','timeframe','timedelta'])
 
@@ -133,7 +133,7 @@ class LakeValidate(LakeInfo):
         alert_threshold = 99.5
         gap_pct = (
             counts_per_timedelta
-            .groupby(['pair', 'timeframe'])
+            .group_by(['pair', 'timeframe'])
             .agg([
                 (pl.sum("total_count").alias("sum_total_count"))
             ])

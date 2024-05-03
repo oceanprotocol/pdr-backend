@@ -1,7 +1,12 @@
-import polars as pl
-from enforce_typing import enforce_types
-from unittest.mock import patch
+import pytest
 
+import polars as pl
+import io
+
+from enforce_typing import enforce_types
+from unittest.mock import patch, MagicMock
+
+from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.lake_validate import LakeValidate 
 
 csv_string = """
@@ -166,26 +171,32 @@ ADA/USDT,5m,1711975200,01-04-2024 05:40,300,1
 ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 """
 
-# Function to replace query_data
-@enforce_types
-def mock_query_data(query: str):
-    return pl.scan_csv(csv_string)
-
 
 @enforce_types
-def test_validate_lake_mock_sql(
-    setup_data,
-):
-    sql_result = pl.scan_csv(csv_string)
+def test_validate_lake_mock_sql(tmpdir):
+    sql_result =  pl.read_csv(io.StringIO(csv_string))
     assert isinstance(sql_result, pl.DataFrame)
 
-    etl, pds, gql_tables = setup_data
+    st_timestr = "2023-11-02_0:00"
+    fin_timestr = "2023-11-07_0:00"
 
-    lake_validate = LakeValidate(etl.ppss)
+    ppss, _ = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
 
-    with patch("pdr_backend.lake.lake_validate.LakeValidate.pds.query_data") as mock_lake_info:
-        mock_lake_info.return_value = csv_string
-        result = lake_validate.validate_lake_bronze_predictions_gaps()
+    lake_validate = LakeValidate(ppss)
 
-        assert result[0] == True
-        assert result[1] == "No gaps in bronze_predictions table."    
+    # mock pds
+    mock_pds = MagicMock()
+    mock_pds.query_data.return_value = sql_result
+    lake_validate.pds = mock_pds
+
+    result = lake_validate.validate_lake_bronze_predictions_gaps()
+
+    assert mock_pds.query_data.called, "lake_validate did not call pds.query_data()"
+    
+    assert result[0] == False
+    assert result[1] == "Please review gap validation."

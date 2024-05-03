@@ -55,7 +55,7 @@ def test_do_lake_validate():
     args.LAKE_DIR = lake_dir
 
     with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
-        do_lake_describe(args)
+        do_lake_validate(args)
 
     mock_lake_info.assert_called_once_with(lake_dir)
 
