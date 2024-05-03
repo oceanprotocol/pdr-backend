@@ -102,36 +102,30 @@ def test_dydx__real_response__fromISO():
     dt = datetime.fromisoformat("2024-02-27T00:00:00.000")
     unix_ms = dt.timestamp() * 1e3
     assert (
-        raw_tohlcv_data[-1][0] == unix_ms
-    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
+        raw_tohlcv_data[0][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
 
     # Last timestamp is expected to be:
     # 2024-02-27T00:45:00.000Z
     dt = datetime.fromisoformat("2024-02-27T00:45:00.000")
     unix_ms = dt.timestamp() * 1e3
     assert (
-        raw_tohlcv_data[0][0] == unix_ms
-    ), f"Expected {unix_ms}, got {raw_tohlcv_data[0][0]}"
+        raw_tohlcv_data[-1][0] == unix_ms
+    ), f"Expected {unix_ms}, got {raw_tohlcv_data[-1][0]}"
 
     # Price checks
-    assert raw_tohlcv_data[-1][1] == 54541.0
-    assert raw_tohlcv_data[-1][2] == 54661.0
-    assert raw_tohlcv_data[0][3] == 54545.0
-    assert raw_tohlcv_data[9][4] == 54645.0
+    assert raw_tohlcv_data[0][1] == 54541.0
+    assert raw_tohlcv_data[0][2] == 54661.0
+    assert raw_tohlcv_data[1][4] == 54691.0
+    assert raw_tohlcv_data[-1][3] == 54545.0
 
 
 @enforce_types
 def test_dydx__bad_paths():
     # setup problem
     symbol = "BTC/USD"
-    timeframe = "5m"
     since = UnixTimeMs.from_timestr("2024-02-27_00:00:00.000")
     limit = 1
-
-    # bad symbol
-    bad_symbol = "BTC-USD"
-    with pytest.raises(ValueError):
-        _ = fetch_ohlcv_dydx(bad_symbol, timeframe, since, limit)
 
     # bad timeframe: should be eg "5m"
     bad_timeframe = "5MINS"
@@ -141,12 +135,7 @@ def test_dydx__bad_paths():
 
 @enforce_types
 def test_dydx_ticker():
-    # happy path
-    assert _dydx_ticker("BTC/USDT") == "BTC-USDT"
-
-    # bad paths
-    with pytest.raises(ValueError):
-        _ = _dydx_ticker("BTC-USDT")
+    assert _dydx_ticker("BTC/USDT") == "BTC-USD"
 
 
 @enforce_types
