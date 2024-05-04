@@ -196,5 +196,5 @@ def test_validate_lake_mock_sql(tmpdir):
 
     assert mock_pds.query_data.called, "lake_validate did not call pds.query_data()"
 
-    assert result[0] == False
+    assert result[0] is False
     assert result[1] == "Please review gap validation."

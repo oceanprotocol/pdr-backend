@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from enforce_typing import enforce_types
 
 import polars as pl
@@ -26,14 +26,14 @@ class LakeValidate(LakeInfo):
             "Validate no views in lake": self.validate_expected_view_names,
             "Validate few gaps in bronze_predictions": self.validate_lake_bronze_predictions_gaps,
         }
-        self.results: Dict[str, (str, bool)] = {}
+        self.results: Dict[str, Tuple[str, bool]] = {}
 
         self.csvds = CSVDataStore(ppss.lake_ss.lake_dir)
         self.gql_data_factory = GQLDataFactory(ppss)
         self.etl = ETL(ppss, self.gql_data_factory)
 
     @enforce_types
-    def validate_expected_table_names(self) -> (bool, str):
+    def validate_expected_table_names(self) -> Tuple[bool, str]:
         expected_table_names = [
             self.etl.raw_table_names,
             self.etl.bronze_table_names,
@@ -53,14 +53,14 @@ class LakeValidate(LakeInfo):
         )
 
     @enforce_types
-    def validate_expected_view_names(self) -> (bool, str):
+    def validate_expected_view_names(self) -> Tuple[bool, str]:
         if len(self.all_view_names) == 0:
             return (True, "Lake is clean. Has no VIEWs.")
 
         return (False, "Lake has VIEWs. Please clean lake using CLI.")
 
     @enforce_types
-    def validate_lake_bronze_predictions_gaps(self) -> (bool, str):
+    def validate_lake_bronze_predictions_gaps(self) -> Tuple[bool, str]:
         """
         description:
             Validate that the [lake slots] data has very few timestamp gaps.
