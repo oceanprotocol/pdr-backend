@@ -133,4 +133,3 @@ def do_lake_etl_update(args, nested_args=None):
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()
-

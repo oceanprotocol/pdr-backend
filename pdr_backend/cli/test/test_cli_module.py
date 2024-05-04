@@ -16,7 +16,6 @@ from pdr_backend.cli.cli_module import (
     # power tools
     do_multisim,
     do_ohlcv,
-    do_analytics,
     # utilities
     do_get_predictoors_info,
     do_get_predictions_info,
@@ -287,13 +286,24 @@ def test_do_ohlcv(monkeypatch):
 def test_do_lake(monkeypatch, capfd):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
+
+    with patch("sys.argv", ["pdr", "lake", "update"]):
+        with pytest.raises(SystemExit):
+            _do_main()
+
+    print(capfd.readouterr().out)
+    assert "Predictoor tool" in capfd.readouterr().out
+
+    mock_f.assert_called()
+
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
 
-    with patch("sys.argv", ["pdr", "lake"]):
+    with patch("sys.argv", ["pdr", "etl", "update"]):
         with pytest.raises(SystemExit):
             _do_main()
-            # do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
 
     print(capfd.readouterr().out)
     assert "Predictoor tool" in capfd.readouterr().out

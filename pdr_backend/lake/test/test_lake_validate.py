@@ -1,10 +1,8 @@
-import pytest
-
-import polars as pl
 import io
+from unittest.mock import MagicMock
 
 from enforce_typing import enforce_types
-from unittest.mock import patch, MagicMock
+import polars as pl
 
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.lake_validate import LakeValidate
