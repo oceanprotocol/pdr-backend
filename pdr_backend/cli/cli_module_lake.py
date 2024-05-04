@@ -65,12 +65,23 @@ def do_lake_query(args):
 
 
 @enforce_types
-def do_lake_raw(args, nested_args=None):
+def do_lake_raw_drop(args):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+    )
+
+    pds = PersistentDataStore(ppss, read_only=False)
+    drop_tables_from_st(pds, "raw", args.ST)
+
+
+@enforce_types
+def do_lake_raw_update(args, nested_args=None):
     """
     @description
         This updates the raw lake data
         1. All subgraph data will be fetched
-        
+
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
@@ -89,23 +100,18 @@ def do_lake_raw(args, nested_args=None):
 
 
 @enforce_types
-def do_lake_raw_drop(args):
+def do_lake_etl_drop(args):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
     )
 
     pds = PersistentDataStore(ppss, read_only=False)
-    drop_tables_from_st(pds, "raw", args.ST)
+    drop_tables_from_st(pds, "etl", args.ST)
 
 
 @enforce_types
-def do_lake_raw_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
-
-
-@enforce_types
-def do_lake_etl(args, nested_args=None):
+def do_lake_etl_update(args, nested_args=None):
     """
     @description
         This runs all dependencies to build analytics
@@ -127,20 +133,4 @@ def do_lake_etl(args, nested_args=None):
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()
-
-
-@enforce_types
-def do_lake_etl_drop(args):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-    )
-
-    pds = PersistentDataStore(ppss, read_only=False)
-    drop_tables_from_st(pds, "etl", args.ST)
-
-
-@enforce_types
-def do_lake_etl_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
 
