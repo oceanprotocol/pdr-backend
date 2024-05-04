@@ -518,6 +518,7 @@ ClaimRoseArgParser = _ArgParser_PPSS
 # power tools
 MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
+OHLCVArgParser = _ArgParser_PPSS_NETWORK
 LakeArgParser = _ArgParser_PPSS_NETWORK
 AnalyticsArgParser = _ArgParser_PPSS_NETWORK
 
@@ -554,8 +555,7 @@ defined_parsers = {
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_lakeinfo": LakeArgParser("Show lake infol", "lakeinfo"),
-    "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
+    "do_ohlcv": OHLCVArgParser("Run the ohlcv tool", "ohlcv"),
     "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
         "Deploy prediction submitter manager contract", "deploy_pred_submitter_mgr"
     ),

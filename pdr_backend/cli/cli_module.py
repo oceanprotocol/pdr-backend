@@ -20,8 +20,7 @@ from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
 from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
@@ -167,28 +166,15 @@ def do_deployer(args, nested_args=None):
 
 
 @enforce_types
-def do_analytics(args, nested_args=None):
-    """
-    @description
-        This runs all dependencies to build analytics
-        All raw, clean, and aggregate data will be generated
-        1. All subgraph data will be fetched
-        2. All analytic data will be built
-        3. Lake contains all required data
-        4. Dashboards read from lake
-
-        Please use nested_args to control lake_ss
-        ie: st_timestr, fin_timestr, lake_dir
-    """
+def do_ohlcv(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-
-    gql_data_factory = GQLDataFactory(ppss)
-    etl = ETL(ppss, gql_data_factory)
-    etl.do_etl()
+    ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
+    df = ohlcv_data_factory.get_mergedohlcv_df()
+    print(df)
 
 
 @enforce_types

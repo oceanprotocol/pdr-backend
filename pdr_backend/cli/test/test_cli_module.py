@@ -15,7 +15,7 @@ from pdr_backend.cli.cli_module import (
     do_claim_ROSE,
     # power tools
     do_multisim,
-    do_lake,
+    do_ohlcv,
     do_analytics,
     # utilities
     do_get_predictoors_info,
@@ -275,22 +275,29 @@ def test_do_multisim(monkeypatch):
 
 
 @enforce_types
-def test_do_lake(monkeypatch):
+def test_do_ohlcv(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
 
-    do_lake(MockArgParser_PPSS_NETWORK().parse_args())
+    do_ohlcv(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
 @enforce_types
-def test_do_analytics(monkeypatch):
+def test_do_lake(monkeypatch, capfd):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
     monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
 
-    do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
+    with patch("sys.argv", ["pdr", "lake"]):
+        with pytest.raises(SystemExit):
+            _do_main()
+            # do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
+
+    print(capfd.readouterr().out)
+    assert "Predictoor tool" in capfd.readouterr().out
+
     mock_f.assert_called()
 
 
