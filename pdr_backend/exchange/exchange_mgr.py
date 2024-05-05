@@ -1,8 +1,9 @@
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
+from pdr_backend.exchange.dydx_exchange import DydxExchange
 from pdr_backend.exchange.mock_exchange import MockExchange
+from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 
 
 @enforce_types
@@ -47,7 +48,7 @@ class ExchangeMgr:
             return MockExchange()
 
         if exchange_str == "dydx":
-            raise NotImplementedError()
+            return DydxExchange(self.ss)
 
         exchange_class = getattr(ccxt, exchange_str)  # eg ccxt.binance
         exchange = exchange_class(self.ss.ccxt_params)  # eg ccxt.binance(params)

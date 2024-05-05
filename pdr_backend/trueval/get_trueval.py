@@ -2,7 +2,7 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.exchange.fetch_ohlcv import safe_fetch_ohlcv
+from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.time_types import UnixTimeS
 
@@ -41,7 +41,7 @@ def get_trueval(
     end_timestamp = end_timestamp_s.to_milliseconds()
 
     exchange_str: str = feed.source
-    tohlcvs = safe_fetch_ohlcv(
+    tohlcvs = fetch_ohlcv(
         exchange_str, symbol, feed.timeframe, since=init_timestamp, limit=2
     )
     assert len(tohlcvs) == 2, f"expected exactly 2 tochlv tuples. {tohlcvs}"

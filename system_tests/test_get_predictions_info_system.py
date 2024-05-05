@@ -41,7 +41,7 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
     fin_timestr = "2024-12-05"
 
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,

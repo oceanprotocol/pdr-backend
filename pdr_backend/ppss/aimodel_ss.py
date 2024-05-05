@@ -3,24 +3,30 @@ from typing import Optional
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.base_ss import MultiFeedMixin
 from pdr_backend.util.strutil import StrMixin
 
-APPROACH_OPTIONS = ["LinearLogistic", "LinearSVC", "Constant"]
+APPROACH_OPTIONS = [
+    "LinearLogistic",
+    "LinearLogistic_Balanced",
+    "LinearSVC",
+    "Constant",
+]
 WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
-CALIBRATE_PROBS_OPTIONS = ["CalibratedClassifierCV_5x", "None"]
+CALIBRATE_PROBS_OPTIONS = [
+    "CalibratedClassifierCV_Sigmoid",
+    "CalibratedClassifierCV_Isotonic",
+    "None",
+]
 
 
-@enforce_types
-class AimodelSS(MultiFeedMixin, StrMixin):
+class AimodelSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
-    FEEDS_KEY = "input_feeds"
 
+    @enforce_types
     def __init__(self, d: dict):
-        super().__init__(
-            d, assert_feed_attributes=["signal"]
-        )  # yaml_dict["aimodel_ss"]
+        """d -- yaml_dict["aimodel_ss"]"""
+        self.d = d
 
         # test inputs
         if not 0 < self.max_n_train:
@@ -67,17 +73,27 @@ class AimodelSS(MultiFeedMixin, StrMixin):
 
     @property
     def calibrate_probs(self) -> str:
-        """eg 'CalibratedClassifierCV_5x'"""
+        """eg 'CalibratedClassifierCV_Sigmoid'"""
         return self.d["calibrate_probs"]
 
-    # input feeds defined in base
+    def calibrate_probs_skmethod(self, N: int) -> str:
+        """
+        @description
+          Return the value for 'method' argument in sklearn
+          CalibratedClassiferCV().
 
-    # --------------------------------
-    # derivative properties
-    @property
-    def n(self) -> int:
-        """Number of input dimensions == # columns in X"""
-        return self.n_feeds * self.autoregressive_n
+        @arguments
+          N -- number of samples
+        """
+        if N < 200:
+            return "sigmoid"
+
+        c = self.calibrate_probs
+        if c == "CalibratedClassifierCV_Sigmoid":
+            return "sigmoid"
+        if c == "CalibratedClassifierCV_Isotonic":
+            return "isotonic"
+        raise ValueError(c)
 
 
 # =========================================================================
@@ -86,7 +102,6 @@ class AimodelSS(MultiFeedMixin, StrMixin):
 
 @enforce_types
 def aimodel_ss_test_dict(
-    input_feeds: Optional[list] = None,
     max_n_train: Optional[int] = None,
     autoregressive_n: Optional[int] = None,
     approach: Optional[str] = None,
@@ -96,12 +111,11 @@ def aimodel_ss_test_dict(
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelSS(d)"""
     d = {
-        "input_feeds": input_feeds or ["binance BTC/USDT c"],
         "max_n_train": 7 if max_n_train is None else max_n_train,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
         "approach": approach or "LinearLogistic",
         "weight_recent": weight_recent or "10x_5x",
         "balance_classes": balance_classes or "SMOTE",
-        "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_5x",
+        "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",
     }
     return d
