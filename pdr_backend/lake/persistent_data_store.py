@@ -31,6 +31,29 @@ class PersistentDataStore(BaseDataStore):
             database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
 
+        self.duckdb_data_types = {
+            pl.Int8: "TINYINT",  # TINYINT in SQL typically represents an 8-bit integer.
+            pl.Int16: "SMALLINT",  # SMALLINT in SQL represents a 16-bit integer.
+            pl.Int32: "INTEGER",  # INTEGER is commonly used in SQL.
+            pl.Int64: "BIGINT",  # BIGINT in SQL represents a 64-bit integer.
+            pl.UInt8: "TINYINT",  # For unsigned, DuckDB may handle this similarly; check specifics.
+            pl.UInt16: "SMALLINT",  # Same note as above for unsigned small integer.
+            pl.UInt32: "INTEGER",  # Same note as above for unsigned integer.
+            pl.UInt64: "BIGINT",  # Same note as above for unsigned big integer.
+            pl.Float32: "FLOAT",  # FLOAT in SQL.
+            pl.Float64: "DOUBLE",  # DOUBLE in SQL for higher precision.
+            pl.Boolean: "BOOLEAN",  # BOOLEAN is standard in SQL.
+            pl.Utf8: "TEXT",  # TEXT for string data.
+            pl.Date: "DATE",  # DATE only for date; TIMESTAMP if including time.
+            pl.Datetime: "TIMESTAMP",  # TIMESTAMP for date and time.
+            pl.Time: "TIME",  # TIME only for time data.
+            pl.Duration: "INTERVAL",  # INTERVAL for time durations.
+            pl.List: "ARRAY",  # ARRAY for list data types, ensure compatibility.
+            pl.Object: "BLOB",  # BLOB for binary large objects, check usage context.
+            pl.Struct: "STRUCT",  # STRUCT for nested data, might need specific handling in SQL.
+            # Additional types like dictionaries, etc., can be added based on specific needs and compatibility.
+        }
+
     @enforce_types
     def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):
         """
@@ -53,6 +76,23 @@ class PersistentDataStore(BaseDataStore):
             empty_df = pl.DataFrame([], schema=schema)
             self._create_and_fill_table(empty_df, table_name)
 
+    def _create_sql_table_schema(self, schema: SchemaDict) -> str:
+        """
+        Create the SQL schema for the table.
+        @arguments:
+            schema - The schema of the table.
+        @returns:
+            str - The SQL schema for the table.
+        """
+        table_schema = ", ".join(
+            [
+                f"{column} {self.duckdb_data_types[schema[column]]}{' UNIQUE' if column == 'ID' else ''}"
+                for column in schema.keys()
+            ]
+        )
+
+        return table_schema
+
     @enforce_types
     def _create_and_fill_table(
         self, df: pl.DataFrame, table_name: str
@@ -64,8 +104,12 @@ class PersistentDataStore(BaseDataStore):
             dataset_identifier - A unique identifier for the dataset.
         """
 
+        sql_table_schema = self._create_sql_table_schema(df.schema)
         # Create the table
-        self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
+        self.execute_sql(f"CREATE TABLE {table_name} ({sql_table_schema})")
+
+        # Insert the data columns
+        self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
 
     @enforce_types
     def get_table_names(self, all_schemas: Optional[bool] = False):
@@ -196,15 +240,43 @@ class PersistentDataStore(BaseDataStore):
 
         # check if the permanent table exists
         if permanent_table_name not in table_names:
+            # select one row from the temporary table
+            temp_table_df = self.duckdb_conn.execute(
+                f"SELECT * FROM {temp_table.fullname} LIMIT 1"
+            ).pl()
+
+            # create the sql schema
+            sql_table_schema = self._create_sql_table_schema(temp_table_df.schema)
+
+            # create the permanent table
+            self.execute_sql(
+                f"CREATE TABLE {permanent_table_name} ({sql_table_schema})"
+            )
+
             # create table if it does not exist
             self.execute_sql(
-                f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
+                f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
             )
             return
 
+        # get temporary table columns
+        temp_table_columns = self.duckdb_conn.execute(
+            f"SELECT * FROM {temp_table.fullname} LIMIT 0"
+        ).df()
+
+        temp_table_columns = temp_table_columns.columns
+
+        # generate on conflict clause
+        on_conflict_columns = ", ".join(
+            [
+                f"{column} = EXCLUDED.{column}"
+                for column in temp_table_columns
+                if column != "ID"
+            ]
+        )
         # Move the data from the temporary table to the permanent table
         self.execute_sql(
-            f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
+            f"""INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname} ON CONFLICT (ID) DO UPDATE SET {on_conflict_columns}"""
         )
 
     @enforce_types

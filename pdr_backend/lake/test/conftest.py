@@ -416,6 +416,7 @@ def _gql_datafactory_etl_predictions_df():
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
 
+    print("_gql_datafactory_etl_predictions_df---------", predictions_df["timestamp"])
     return predictions_df
 
 

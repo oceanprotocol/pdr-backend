@@ -1,12 +1,13 @@
 from unittest.mock import patch
 from unittest.mock import MagicMock
+
+from pdr_backend.lake.test.conftest import mock_daily_predictions
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.subgraph.prediction import mock_daily_predictions
 
 
 def test_gql_data_factory():
@@ -177,6 +178,33 @@ def test_calc_start_ut(tmpdir):
     assert st_ut.to_seconds() == 1701561601
 
 
+def test_calc_start_ut_from_predictions(_gql_datafactory_etl_predictions_df, tmpdir):
+    """
+    Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
+    """
+    st_timestr = "2023-12-03"
+    fin_timestr = "2024-12-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+
+    st_ut = gql_data_factory._calc_start_ut_from_predictions()
+    assert st_ut.to_seconds() == 1701561601
+
+    ## Add some predictions
+    table = TableRegistry().get_table("pdr_predictions")
+    table.append_to_storage(_gql_datafactory_etl_predictions_df)
+
+    st_ut = gql_data_factory._calc_start_ut_from_predictions()
+    assert st_ut.to_seconds() == 1699300701
+
+
 def test_do_subgraph_fetch(
     _mock_fetch_gql,
     tmpdir,
@@ -298,3 +326,39 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 3
 
     assert "Fetched" in caplog.text
+
+
+def test_get_etl_st_fin(_gql_datafactory_etl_predictions_df, tmpdir):
+    st_timestr = "2023-01-03"
+    fin_timestr = "2024-05-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
+
+    st_ut, fin_ut = gql_data_factory.get_etl_st_fin()
+
+    assert st_ut is None
+    assert fin_ut is None
+
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    # Add some predictions
+    pds.drop_table(get_table_name("pdr_predictions", TableType.TEMP))
+
+    pds.insert_to_table(
+        _gql_datafactory_etl_predictions_df,
+        get_table_name("pdr_predictions", TableType.TEMP),
+    )
+
+    gql_data_factory._move_from_temp_tables_to_live()
+
+    st_ut, fin_ut = gql_data_factory.get_etl_st_fin()
+
+    assert st_ut.to_seconds() == 1672704000
+    assert fin_ut.to_seconds() == 1699300700

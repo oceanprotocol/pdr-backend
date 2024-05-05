@@ -330,7 +330,13 @@ class ETL:
         logger.info("update_bronze_pdr - Update bronze tables.")
 
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
-        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
+        st_timestamp, fin_timestamp = self.gql_data_factory.get_etl_st_fin()
+        st_timestamp = (
+            self.ppss.lake_ss.st_timestamp if st_timestamp is None else st_timestamp
+        )
+        fin_timestamp = (
+            self.ppss.lake_ss.fin_timestamp if fin_timestamp is None else fin_timestamp
+        )
 
         for table_name, get_data_func in self.bronze_table_getters.items():
             get_data_func(

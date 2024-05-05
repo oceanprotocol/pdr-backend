@@ -106,6 +106,9 @@ class GQLDataFactory:
             }
         )
 
+        self._etl_st_ms = None
+        self._etl_fin_ms = None
+
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
         """
@@ -158,6 +161,37 @@ class GQLDataFactory:
             logger.info("  Table exists. Insert pending %s csv data", table_name)
             data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut, schema)
             table._append_to_db(data, TableType.TEMP)
+
+    @enforce_types
+    def _calc_start_ut_from_predictions(self) -> UnixTimeMs:
+        """
+        @description
+            Calculate start timestamp, reconciling whether file exists and where
+            its data starts. If file exists, you can only append to end.
+
+        @return
+            start_ut - timestamp (ut) to start grabbing data for (in ms)
+        """
+
+        # check if the predictions table exists in the database
+        if not PersistentDataStore(self.ppss.lake_ss.lake_dir).table_exists(
+            predictions_table_name
+        ):
+            return UnixTimeMs(self.ppss.lake_ss.st_timestamp + 1000)
+
+        # get last timestamp of the predictions table from the database
+
+        last_timestamp = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(
+            f"SELECT MAX(timestamp) FROM {predictions_table_name}"
+        )
+
+        start_ut = (
+            last_timestamp['max("timestamp")'][0]
+            if last_timestamp is not None
+            else self.ppss.lake_ss.st_timestamp
+        )
+
+        return UnixTimeMs(start_ut + 1000)
 
     @enforce_types
     def _calc_start_ut(self, table: Table) -> UnixTimeMs:
@@ -275,6 +309,17 @@ class GQLDataFactory:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
+        if not PersistentDataStore(self.ppss.lake_ss.lake_dir).table_exists(
+            predictions_table_name
+        ):
+            self._etl_st_ms = self.ppss.lake_ss.st_timestamp
+        else:
+            self._etl_st_ms = UnixTimeMs(
+                PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(
+                    f"SELECT MAX(timestamp) FROM {predictions_table_name}"
+                )['max("timestamp")'][0]
+            )
+
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
             pds.move_table_data(
@@ -283,6 +328,15 @@ class GQLDataFactory:
             )
 
             pds.drop_table(get_table_name(table_name, TableType.TEMP))
+
+        self._etl_fin_ms = UnixTimeMs(
+            PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(
+                f"SELECT MAX(timestamp) FROM {predictions_table_name}"
+            )['max("timestamp")'][0]
+        )
+
+    def get_etl_st_fin(self):
+        return self._etl_st_ms, self._etl_fin_ms
 
     @enforce_types
     def _update(self):
@@ -301,12 +355,13 @@ class GQLDataFactory:
             fin_ut -- a timestamp, in ms, in UTC
         """
 
+        st_ut = self._calc_start_ut_from_predictions()
+        fin_ut = self.ppss.lake_ss.fin_timestamp
+
         for table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):
             # calculate start and end timestamps
-            st_ut = self._calc_start_ut(table)
-            fin_ut = self.ppss.lake_ss.fin_timestamp
             logger.info(
                 "      Aim to fetch data from start time: %s", st_ut.pretty_timestr()
             )
