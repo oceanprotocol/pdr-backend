@@ -40,7 +40,9 @@ def test_do_lake_describe():
     args = Namespace()
     args.subcommand = "describe"
     args.LAKE_DIR = lake_dir
-
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
+    
     with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
         do_lake_describe(args)
 
@@ -53,6 +55,8 @@ def test_do_lake_validate():
     args = Namespace()
     args.subcommand = "validate"
     args.LAKE_DIR = lake_dir
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
 
     with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
         do_lake_validate(args)
@@ -68,6 +72,8 @@ def test_do_lake_query(caplog):
     args = Namespace()
     args.LAKE_DIR = lake_dir
     args.QUERY = query
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
 
     mock_pds = Mock()
     mock_pds.query_data.return_value = "query result"
@@ -159,6 +165,9 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
     args.LAKE_DIR = ""
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
+    
 
     ts = 1609459200000
     one_day = 1000 * 60 * 60 * 24
@@ -186,6 +195,9 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
     args.LAKE_DIR = ""
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
+    
 
     one_day = 1000 * 60 * 60 * 24
     ts = 1609459200000

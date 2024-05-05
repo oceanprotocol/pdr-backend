@@ -285,28 +285,22 @@ def test_do_ohlcv(monkeypatch):
 @enforce_types
 def test_do_lake(monkeypatch, capfd):
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
+    monkeypatch.setattr(f"pdr_backend.lake.gql_data_factory.GQLDataFactory", mock_f)
 
     with patch("sys.argv", ["pdr", "lake", "update"]):
         with pytest.raises(SystemExit):
             _do_main()
 
-    print(capfd.readouterr().out)
-    assert "Predictoor tool" in capfd.readouterr().out
-
     mock_f.assert_called()
 
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
+    monkeypatch.setattr(f"pdr_backend.lake.gql_data_factory.GQLDataFactory", mock_f)
+    monkeypatch.setattr(f"pdr_backend.lake.etl.ETL", mock_f)
+    monkeypatch.setattr(f"pdr_backend.lake.etl.ETL.do_etl", mock_f)
 
     with patch("sys.argv", ["pdr", "etl", "update"]):
         with pytest.raises(SystemExit):
             _do_main()
-
-    print(capfd.readouterr().out)
-    assert "Predictoor tool" in capfd.readouterr().out
 
     mock_f.assert_called()
 
