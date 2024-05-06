@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Tuple
 from enforce_typing import enforce_types
 
@@ -14,6 +15,8 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
+
+logger = logging.getLogger("LakeValidate")
 
 
 @enforce_types
@@ -157,8 +160,8 @@ class LakeValidate(LakeInfo):
         )
 
         # Report results
-        print("[Gap Validation - {} Table]".format(table_name))
-        print("[{}] feeds in gap validation".format(gap_pct.shape[0]))
+        logger.info("[Gap Validation - {} Table]".format(table_name))
+        logger.info("[{}] feeds in gap validation".format(gap_pct.shape[0]))
 
         # check if quality is less than 99.5
         gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
@@ -166,11 +169,11 @@ class LakeValidate(LakeInfo):
             return (True, "Gaps Ok - 99.5% of feeds don't have gaps.")
 
         # display report in a readable format
-        print(
+        logger.info(
             "[{}] feeds failed gap validation".format(gap_validation_failures.shape[0])
         )
         with pl.Config(tbl_rows=100):
-            print("{} Gap Report\n{}".format(table_name, gap_pct))
+            logger.info("{} Gap Report\n{}".format(table_name, gap_pct))
         return (False, "Please review gap validation.")
 
     def generate(self):
