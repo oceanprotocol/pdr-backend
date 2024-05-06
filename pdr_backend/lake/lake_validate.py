@@ -41,7 +41,7 @@ class LakeValidate(LakeInfo):
             self.etl.raw_table_names,
             self.etl.bronze_table_names,
         ]
-        
+
         if set(self.all_table_names) == set(expected_table_names):
             return (True, "Tables in lake match expected Complete-ETL table names.")
 
@@ -157,8 +157,8 @@ class LakeValidate(LakeInfo):
         )
 
         # Report results
-        logger.info("[Gap Validation - {} Table]".format(table_name))
-        logger.info("[{}] feeds in gap validation".format(gap_pct.shape[0]))
+        logger.info("[Gap Validation - %s Table]", table_name)
+        logger.info("[%s] feeds in gap validation", gap_pct.shape[0])
 
         # check if quality is less than 99.5
         gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
@@ -166,11 +166,9 @@ class LakeValidate(LakeInfo):
             return (True, "Gaps Ok - 99.5% of feeds don't have gaps.")
 
         # display report in a readable format
-        logger.info(
-            "[{}] feeds failed gap validation".format(gap_validation_failures.shape[0])
-        )
+        logger.info("[%s] feeds failed gap validation", gap_validation_failures.shape[0])
         with pl.Config(tbl_rows=100):
-            logger.info("{} Gap Report\n{}".format(table_name, gap_pct))
+            logger.info("%s Gap Report\n%s", table_name, gap_pct)
         return (False, "Please review gap validation.")
 
     def generate(self):
