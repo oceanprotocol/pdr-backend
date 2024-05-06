@@ -21,7 +21,7 @@ install_requirements = [
     "freezegun==1.5.0",
     "imblearn",
     "kaleido==0.2.1",
-    "mypy==1.9.0",
+    "mypy==1.10.0",
     "numpy==1.26.4",
     "pandas==2.2.2",
     "pathlib",
