@@ -494,8 +494,14 @@ def _gql_datafactory_1k_predictions_df():
 def _gql_datafactory_second_predictions_df():
     _predictions = mock_second_predictions()
     predictions_df = _object_list_to_df(_predictions, predictions_schema)
+
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    # Manipulate the ID column to have a different value
+    predictions_df = predictions_df.with_columns(
+        [pl.col("ID").apply(lambda x: f"{x}-1").alias("ID")]
     )
 
     return predictions_df

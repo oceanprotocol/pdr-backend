@@ -88,6 +88,10 @@ def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
     }
 
     gql_data_factory = GQLDataFactory(ppss)
+    pds = _get_test_PDS(ppss.lake_ss.lake_dir)
+    pds.drop_table(get_table_name("pdr_predictions", TableType.TEMP))
+    pds.drop_table(get_table_name("pdr_predictions", TableType.NORMAL))
+
     with patch(
         "pdr_backend.lake.gql_data_factory.GQLDataFactory._move_from_temp_tables_to_live"
     ):
@@ -98,7 +102,6 @@ def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
         gql_data_factory._update()
 
         # Verify records exist in temp pred tables
-        pds = _get_test_PDS(ppss.lake_ss.lake_dir)
         target_table_name = get_table_name("pdr_predictions", TableType.TEMP)
         target_records = pds.query_data("SELECT * FROM {}".format(target_table_name))
 
@@ -112,7 +115,7 @@ def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
         pds.drop_table(get_table_name(table_name, TableType.TEMP))
 
     # manipulate ppss poorly and run gql_data_factory again
-    gql_data_factory.ppss.lake_ss.d["st_timestr"] = "2023-11-01"
+    gql_data_factory.ppss.lake_ss.d["st_timestr"] = "2023-11-05"
     gql_data_factory.ppss.lake_ss.d["fin_timestr"] = "2023-11-07"
     gql_data_factory._update()
 

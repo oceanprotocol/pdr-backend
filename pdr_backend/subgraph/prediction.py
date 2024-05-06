@@ -190,7 +190,7 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701589500,
-        "0xcccc4cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xcccc4cb4ff2584bad80ff5f109034a891c3d88df",
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
@@ -203,7 +203,7 @@ _SECOND_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1701675900,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88de",
     ),
 ]
 
@@ -232,7 +232,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0,
         1698951600,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dq",
     ),
     (
         "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
@@ -245,7 +245,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1699038000,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dc",
     ),
     (
         "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd",
@@ -258,7 +258,7 @@ _DAILY_PREDICTION_TUPS = [
         "kraken",
         0.0500,
         1699124400,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dr",
     ),
     (
         "0xaa6515c138183303b89b98aea756b54f711710c5",
@@ -271,7 +271,7 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0,
         1701589500,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88de",
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695",
@@ -284,6 +284,6 @@ _DAILY_PREDICTION_TUPS = [
         "binance",
         0.0500,
         1699300800,
-        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd",
+        "0xd2a24cb4ff2584bad80ff5f109034a891c3d88df",
     ),
 ]
