@@ -14,7 +14,7 @@ install_requirements = [
     "coverage",
     "dash==2.17.0",
     "enforce_typing",
-    "eth-account==0.11.0",
+    "eth-account==0.12.2",
     "eth-keys==0.5.1",
     "eth-typing==4.2.2",
     "flask==3.0.3",
