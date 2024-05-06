@@ -1,15 +1,16 @@
 import logging
-from typing import Union
 
 import numpy as np
 from enforce_typing import enforce_types
+
+from pdr_backend.util.logger_base import BaseLogLine
 
 logger = logging.getLogger("sim_engine")
 
 
 @enforce_types
 # pylint: disable=too-many-instance-attributes
-class SimLogLine:
+class SimLogLine(BaseLogLine):
     def __init__(self, ppss, st, test_i, ut, acct_up_profit, acct_down_profit):
         self.st = st
 
@@ -27,17 +28,6 @@ class SimLogLine:
 
         # unused for now, but supports future configuration from ppss
         self.format = "compact"
-
-    def _compactNum(self, attr_or_amount: Union[float, str]) -> str:
-        x = (
-            getattr(self, attr_or_amount)
-            if isinstance(attr_or_amount, str)
-            else attr_or_amount
-        )
-
-        if x < 0.01:
-            return f"{x:6.2e}"
-        return f"{x:6.2f}"
 
     def log_line(self):
         s = f"Iter #{self.test_i+1}/{self.test_n}"
