@@ -13,9 +13,10 @@ from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.predictoor.stakes_per_slot import StakeTup, StakesPerSlot
+from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
+from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
 from pdr_backend.predictoor.util import find_shared_slots
-from pdr_backend.subgraph.subgraph_feed import print_feeds, SubgraphFeed
+from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
@@ -145,15 +146,11 @@ class PredictoorAgent:
                 or target_slot != expected_target_slot
             ):
                 continue  # Skip if the time left is greater than threshold or in a different epoch
-            up_stake_percentage = (
-                stake_up.amt_eth / (stake_up.amt_eth + stake_down.amt_eth) * 100
-            )
-            feed_str = f"{feed.source} {feed.pair} {feed.timeframe} {feed.address[:6]}"
-            log_msg = f"Predicted feed {feed_str}, "
-            log_msg += f"slot: {target_slot}: up = {stake_up.amt_eth:.2f} OCEAN"
-            log_msg += f" down = {stake_down.amt_eth:.2f} OCEAN ({up_stake_percentage:.2f}% up)"
-            logger.info(log_msg)
-            stakes.add_stake_at_slot(target_slot, StakeTup(feed, stake_up, stake_down))
+            stake_tup = StakeTup(feed, stake_up, stake_down)
+
+            prediction_line = PredictoorAgentLogLine(self.ppss, target_slot, stake_tup)
+            prediction_line.log_line()
+            stakes.add_stake_at_slot(target_slot, stake_tup)
 
         return stakes
 

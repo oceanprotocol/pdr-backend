@@ -1,8 +1,9 @@
 import logging
-from typing import Union
 
 import numpy as np
 from enforce_typing import enforce_types
+
+from pdr_backend.util.strutil import compactSmallNum
 
 logger = logging.getLogger("sim_engine")
 
@@ -28,17 +29,6 @@ class SimLogLine:
         # unused for now, but supports future configuration from ppss
         self.format = "compact"
 
-    def _compactNum(self, attr_or_amount: Union[float, str]) -> str:
-        x = (
-            getattr(self, attr_or_amount)
-            if isinstance(attr_or_amount, str)
-            else attr_or_amount
-        )
-
-        if x < 0.01:
-            return f"{x:6.2e}"
-        return f"{x:6.2f}"
-
     def log_line(self):
         s = f"Iter #{self.test_i+1}/{self.test_n}"
         s += f" ut={self.ut}"
@@ -47,10 +37,10 @@ class SimLogLine:
 
         s += f" prob_up={self.prob_up:.3f}"
         s += " pdr_profit="
-        s += f"{self._compactNum('acct_up_profit')} up"
-        s += f" + {self._compactNum('acct_down_profit')} down"
-        s += f" = {self._compactNum('pdr_profit_OCEAN')} OCEAN"
-        s += f" (cumul {self._compactNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
+        s += f"{compactSmallNum(self.acct_up_profit)} up"
+        s += f" + {compactSmallNum(self.acct_down_profit)} down"
+        s += f" = {compactSmallNum(self.pdr_profit_OCEAN)} OCEAN"
+        s += f" (cumul {compactSmallNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
         s += " ║"
 
         s += f" Acc={self.n_correct:4d}/{self.n_trials:4d} "
