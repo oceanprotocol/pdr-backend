@@ -3,14 +3,14 @@ import logging
 import numpy as np
 from enforce_typing import enforce_types
 
-from pdr_backend.util.logger_base import BaseLogLine
+from pdr_backend.util.strutil import compactSmallNum
 
 logger = logging.getLogger("sim_engine")
 
 
 @enforce_types
 # pylint: disable=too-many-instance-attributes
-class SimLogLine(BaseLogLine):
+class SimLogLine:
     def __init__(self, ppss, st, test_i, ut, acct_up_profit, acct_down_profit):
         self.st = st
 
@@ -37,10 +37,10 @@ class SimLogLine(BaseLogLine):
 
         s += f" prob_up={self.prob_up:.3f}"
         s += " pdr_profit="
-        s += f"{self._compactNum('acct_up_profit')} up"
-        s += f" + {self._compactNum('acct_down_profit')} down"
-        s += f" = {self._compactNum('pdr_profit_OCEAN')} OCEAN"
-        s += f" (cumul {self._compactNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
+        s += f"{compactSmallNum(self.acct_up_profit)} up"
+        s += f" + {compactSmallNum(self.acct_down_profit)} down"
+        s += f" = {compactSmallNum(self.pdr_profit_OCEAN)} OCEAN"
+        s += f" (cumul {compactSmallNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
         s += " ║"
 
         s += f" Acc={self.n_correct:4d}/{self.n_trials:4d} "
