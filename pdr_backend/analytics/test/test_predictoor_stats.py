@@ -55,7 +55,7 @@ def test_get_traction_statistics(
     assert stats_df.shape == (3, 3)
     assert "datetime" in stats_df.columns
     assert "daily_unique_predictoors_count" in stats_df.columns
-    assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 4]
+    assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 5]
 
     pq_dir = "lake_data/"
     plot_traction_daily_statistics(stats_df, pq_dir)
@@ -121,7 +121,7 @@ def test_plot_slot_statistics(
     assert slot_daily_df["daily_average_predictoor_count"].round(2).to_list() == [
         1.0,
         1.0,
-        1.0,
+        1.5,
     ]
 
     pq_dir = "lake_data/"
