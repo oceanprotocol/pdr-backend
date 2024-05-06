@@ -41,17 +41,14 @@ class LakeValidate(LakeInfo):
             self.etl.raw_table_names,
             self.etl.bronze_table_names,
         ]
-        expected_table_names.sort()
-
-        sorted_names = self.all_table_names.sort()
-
-        if sorted_names == expected_table_names:
+        
+        if set(self.all_table_names) == set(expected_table_names):
             return (True, "Tables in lake match expected Complete-ETL table names.")
 
         return (
             False,
             "Tables in lake [{}], do not match expected Complete-ETL table names [{}]".format(
-                sorted_names, expected_table_names
+                self.all_table_names, expected_table_names
             ),
         )
 
