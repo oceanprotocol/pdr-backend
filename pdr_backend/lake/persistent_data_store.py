@@ -2,9 +2,10 @@
 import logging
 import os
 import glob
-from typing import Optional
+from typing import Optional, Dict
 import duckdb
 
+from polars.datatypes import DataType, DataTypeClass
 from polars.type_aliases import SchemaDict
 from enforce_typing import enforce_types
 import polars as pl
@@ -31,7 +32,7 @@ class PersistentDataStore(BaseDataStore):
             database=f"{self.base_path}/duckdb.db", read_only=read_only
         )  # Keep a persistent connection
 
-        self.duckdb_data_types = {
+        self.duckdb_data_types: Dict[DataTypeClass, str] = {
             pl.Int8: "TINYINT",  # TINYINT in SQL typically represents an 8-bit integer.
             pl.Int16: "SMALLINT",  # SMALLINT in SQL represents a 16-bit integer.
             pl.Int32: "INTEGER",  # INTEGER is commonly used in SQL.
@@ -51,8 +52,19 @@ class PersistentDataStore(BaseDataStore):
             pl.List: "ARRAY",  # ARRAY for list data types, ensure compatibility.
             pl.Object: "BLOB",  # BLOB for binary large objects, check usage context.
             pl.Struct: "STRUCT",  # STRUCT for nested data, might need specific handling in SQL.
-            # Additional types like dictionaries, etc., can be added based on specific needs and compatibility.
+            # Additional types like dictionaries, etc.,
+            # can be added based on specific needs and compatibility.
         }
+
+    def _get_sql_column_type(self, column_type) -> str:
+        """
+        Get the SQL column type from the Polars column type.
+        @arguments:
+            column_type - The Polars column type.
+        @returns:
+            str - The SQL column type.
+        """
+        return self.duckdb_data_types[column_type]
 
     @enforce_types
     def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):
@@ -84,9 +96,15 @@ class PersistentDataStore(BaseDataStore):
         @returns:
             str - The SQL schema for the table.
         """
+
         table_schema = ", ".join(
             [
-                f"{column} {self.duckdb_data_types[schema[column]]}{' UNIQUE' if column == 'ID' else ''}"
+                (
+                    f"""{column} {self._get_sql_column_type(schema[column])}
+                    {' UNIQUE' if column == 'ID' else ''}"""
+                    if isinstance(schema[column], DataType)
+                    else ""
+                )
                 for column in schema.keys()
             ]
         )
@@ -276,7 +294,9 @@ class PersistentDataStore(BaseDataStore):
         )
         # Move the data from the temporary table to the permanent table
         self.execute_sql(
-            f"""INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname} ON CONFLICT (ID) DO UPDATE SET {on_conflict_columns}"""
+            f"""INSERT INTO {permanent_table_name}
+            SELECT * FROM {temp_table.fullname}
+            ON CONFLICT (ID) DO UPDATE SET {on_conflict_columns}"""
         )
 
     @enforce_types

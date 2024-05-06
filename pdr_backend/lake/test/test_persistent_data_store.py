@@ -399,3 +399,17 @@ def test_create_table_if_not_exists(tmpdir):
     # Check if the table is registered
     check_result = persistent_data_store.table_exists(table_name)
     assert check_result
+
+
+def test_get_sql_column_type(tmpdir):
+    """
+    Test get sql column type.
+    """
+    persistent_data_store, _, _ = _get_persistent_data_store(tmpdir)
+
+    # Test get sql column type
+    sql_column_type = persistent_data_store._get_sql_column_type(pl.Utf8)
+    assert sql_column_type == "TEXT"
+
+    sql_column_type = persistent_data_store._get_sql_column_type(pl.Int64)
+    assert sql_column_type == "BIGINT"
