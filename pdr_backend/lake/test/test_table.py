@@ -15,6 +15,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
 
+
 # pylint: disable=too-many-instance-attributes
 class MyClass:
     def __init__(self, data):
@@ -73,9 +74,9 @@ if os.path.exists(file_path2):
     os.remove(file_path2)
 
 
-def _table_exists(persistent_data_store, table_name):
+def _table_exists(persistent_data_store, searched_table_name):
     table_names = persistent_data_store.get_table_names()
-    return [table_name in table_names, table_name]
+    return [searched_table_name in table_names, table_name]
 
 
 def test_table_initialization(tmpdir):
@@ -123,15 +124,15 @@ def test_csv_data_store(
 
     assert CSVDataStore(table.base_path).has_data(predictions_table_name)
 
-    file_path = os.path.join(
+    csv_file_path = os.path.join(
         ppss.lake_ss.lake_dir,
         table.table_name,
         f"{table.table_name}_from_1701503000000_to_.csv",
     )
 
-    assert os.path.exists(file_path)
+    assert os.path.exists(csv_file_path)
 
-    with open(file_path, "r") as file:
+    with open(csv_file_path, "r") as file:
         lines = file.readlines()
         assert len(lines) == 3
         file.close()
@@ -144,12 +145,12 @@ def test_csv_data_store(
 
     assert len(files) == 2
 
-    file_path = os.path.join(
+    new_file_path = os.path.join(
         ppss.lake_ss.lake_dir,
         table.table_name,
         files[0],
     )
-    with open(file_path, "r") as file:
+    with open(new_file_path, "r") as file:
         lines = file.readlines()
         assert len(lines) == 3
 
