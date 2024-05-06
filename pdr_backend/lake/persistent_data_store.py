@@ -129,7 +129,7 @@ class PersistentDataStore(BaseDataStore):
             return
 
         logger.info("create_and_fill_table = %s", table_name)
-        logger.info("\n%s", df)
+        logger.info("%s", df)
         self._create_and_fill_table(df, table_name)
 
     @enforce_types
