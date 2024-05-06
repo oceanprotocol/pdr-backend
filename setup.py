@@ -12,7 +12,7 @@ install_requirements = [
     "bumpversion",
     "ccxt==4.3.11",
     "coverage",
-    "dash==2.16.1",
+    "dash==2.17.0",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
