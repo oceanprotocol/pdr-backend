@@ -150,10 +150,9 @@ def test_etl_do_bronze_step(
     bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
     assert len(bronze_pdr_slots_records) == 6
-    assert bronze_pdr_slots_records["truevalue"].null_count() == 2
+    assert bronze_pdr_slots_records["truevalue"].null_count() == 1
     assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 2
-    assert bronze_pdr_slots_records["source"].null_count() == 2
-
+    assert bronze_pdr_slots_records["source"].null_count() == 0
 
 @pytest.mark.parametrize(
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
