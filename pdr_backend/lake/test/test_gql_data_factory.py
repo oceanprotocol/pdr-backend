@@ -1,10 +1,12 @@
 from unittest.mock import patch
+from unittest.mock import MagicMock
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.subgraph.prediction import mock_daily_predictions
 
 
 def test_gql_data_factory():
@@ -244,3 +246,55 @@ def test_do_fetch_with_empty_data(
 
     assert temp_table_name in all_tables
     assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 0
+
+
+def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
+    tmpdir,
+    caplog,
+):
+    # If wrong timestamps in response data filter them out and stop the fetch loop
+
+    st_timestr = "2023-11-03"
+    fin_timestr = "2023-11-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+
+    table = TableRegistry().get_table("pdr_predictions")
+
+    initial_response = mock_daily_predictions()
+    mocked_function = MagicMock()
+
+    assert len(initial_response) == 6
+
+    # set wrong dates from the data within reponse
+    initial_response[3].timestamp = 1697865200000
+    initial_response[4].timestamp = 1697865700000
+    initial_response[5].timestamp = 1697866200000
+
+    mocked_function.return_value = initial_response
+
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        mocked_function,
+        "sapphire-mainnet",
+        UnixTimeMs(1698865200000),
+        UnixTimeMs(1699300800000),
+        {"contract_list": ["0x123"]},
+    )
+    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    all_tables = pds.get_table_names()
+
+    assert temp_table_name in all_tables
+
+    # check that data with wrong timestamp is filtered out
+    assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 3
+
+    assert "Fetched" in caplog.text

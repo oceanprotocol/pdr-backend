@@ -53,7 +53,9 @@ def get_payout_query(
             skip: %s
             where: {
                 or: [%s]
-            }
+            },
+            orderBy: timestamp,
+            orderDirection: asc
         ) {
                 id
                 timestamp

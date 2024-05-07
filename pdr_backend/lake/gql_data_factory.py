@@ -231,9 +231,11 @@ class GQLDataFactory:
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(data, table.df_schema)
             df = _transform_timestamp_to_ms(df)
-            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut)).sort(
-                "timestamp"
-            )
+            df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
+
+            if len(df) > 0:
+                if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
+                    df = df.filter(pl.col("timestamp") >= df["timestamp"][0])
 
             if len(buffer_df) == 0:
                 buffer_df = df
@@ -254,6 +256,8 @@ class GQLDataFactory:
 
                 buffer_df = pl.DataFrame([], schema=table.df_schema)
                 save_backoff_count = 0
+                if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
+                    return
 
             # avoids doing next fetch if we've reached the end
             if len(df) < pagination_limit:

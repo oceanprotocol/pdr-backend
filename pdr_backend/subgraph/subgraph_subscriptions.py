@@ -61,7 +61,8 @@ def fetch_filtered_subscriptions(
     # pylint: disable=line-too-long
     query = f"""
         {{
-            predictSubscriptions(skip: {skip}, first: {first} {where_clause}) {{
+            predictSubscriptions(skip: {skip}, first: {first} {where_clause}, orderBy: timestamp,
+            orderDirection: asc) {{
                 id
                 txId
                 timestamp
