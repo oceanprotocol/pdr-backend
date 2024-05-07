@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import dateparser
 from enforce_typing import enforce_types
 
 
@@ -47,13 +48,18 @@ class UnixTimeMs(int):
         return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
-    def from_timestr(timestr: str) -> "UnixTimeMs":
-        if timestr.lower() == "now":
-            return UnixTimeMs.now()
+    def from_natural_language(nat_lang: str) -> "UnixTimeMs":
+        dt = dateparser.parse(nat_lang).replace(tzinfo=timezone.utc)
+        return UnixTimeMs(dt.timestamp() * 1000)
 
+    @staticmethod
+    def from_timestr(timestr: str) -> "UnixTimeMs":
         ncolon = timestr.count(":")
         if ncolon == 0:
-            dt = datetime.strptime(timestr, "%Y-%m-%d")
+            try:
+                dt = datetime.strptime(timestr, "%Y-%m-%d")
+            except ValueError:
+                return UnixTimeMs.from_natural_language(timestr)
         elif ncolon == 1:
             dt = datetime.strptime(timestr, "%Y-%m-%d_%H:%M")
         elif ncolon == 2:
