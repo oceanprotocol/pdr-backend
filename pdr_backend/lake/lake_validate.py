@@ -48,7 +48,7 @@ class LakeValidate(LakeInfo):
 
         if temp_table_names != expected_table_names:
             violations.append(
-                "Tables in lake do not match expected table names - [Lake: {}], [Expected: {}]".format(
+                "Tables in lake do not match expected names - [Lake: {}], [Expected: {}]".format(
                     temp_table_names, expected_table_names
                 )
             )
