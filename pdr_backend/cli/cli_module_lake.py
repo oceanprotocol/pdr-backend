@@ -28,7 +28,6 @@ def do_lake_subcommand(args):
 
     func = globals().get(func_name)
 
-    # TODO - Implement nested_args
     ppss = PPSS(yaml_filename=parsed_args.PPSS_FILE, network=parsed_args.NETWORK)
 
     func(parsed_args, ppss)
@@ -36,13 +35,13 @@ def do_lake_subcommand(args):
 
 # subcommands
 @enforce_types
-def do_lake_describe(args, ppss):
+def do_lake_describe(_, ppss):
     lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_validate(args, ppss):
+def do_lake_validate(_, ppss):
     lake_validate = LakeValidate(ppss)
     lake_validate.run()
 
@@ -69,7 +68,7 @@ def do_lake_raw_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_raw_update(args, ppss):
+def do_lake_raw_update(_, ppss):
     """
     @description
         This updates the raw lake data
@@ -93,7 +92,7 @@ def do_lake_etl_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_etl_update(args, ppss):
+def do_lake_etl_update(_, ppss):
     """
     @description
         This runs all dependencies to build analytics

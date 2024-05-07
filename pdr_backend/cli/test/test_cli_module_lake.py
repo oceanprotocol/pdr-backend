@@ -1,4 +1,3 @@
-import os
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
