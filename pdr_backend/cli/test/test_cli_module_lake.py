@@ -24,53 +24,51 @@ def test_do_lake_subcommand():
     with patch(
         "pdr_backend.cli.cli_module_lake.do_lake_describe"
     ) as mock_do_lake_describe:
-        do_lake_subcommand(["describe", "lake_data"])
+        do_lake_subcommand(["describe", "ppss.yaml", "sapphire-mainnet"])
 
     mock_do_lake_describe.assert_called_once()
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_query") as mock_do_lake_query:
-        do_lake_subcommand(["query", "lake_data", "query"])
+        do_lake_subcommand(["query", "ppss.yaml", "sapphire-mainnet", "query"])
 
     mock_do_lake_query.assert_called_once()
 
 
 @enforce_types
 def test_do_lake_describe():
-    lake_dir = os.path.abspath("lake_data")
     args = Namespace()
     args.subcommand = "describe"
-    args.LAKE_DIR = lake_dir
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
 
-    with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
-        do_lake_describe(args)
+    ppss = Mock()
 
-    mock_lake_info.assert_called_once_with(lake_dir)
+    with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
+        do_lake_describe(args, ppss)
+
+    mock_lake_info.assert_called_once_with(ppss)
 
 
 @enforce_types
 def test_do_lake_validate():
-    lake_dir = os.path.abspath("lake_data")
     args = Namespace()
     args.subcommand = "validate"
-    args.LAKE_DIR = lake_dir
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
 
-    with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
-        do_lake_validate(args)
+    ppss = Mock()
 
-    mock_lake_info.assert_called_once_with(lake_dir)
+    with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
+        do_lake_validate(args, ppss)
+
+    mock_lake_info.assert_called_once_with(ppss)
 
 
 @enforce_types
 def test_do_lake_query(caplog):
-    lake_dir = os.path.abspath("lake_data")
     query = "SELECT * FROM table"
 
     args = Namespace()
-    args.LAKE_DIR = lake_dir
     args.QUERY = query
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
@@ -81,7 +79,7 @@ def test_do_lake_query(caplog):
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds
     ):
-        do_lake_query(args)
+        do_lake_query(args, None)
 
     mock_pds.query_data.assert_called_once_with(query)
 
@@ -91,7 +89,7 @@ def test_do_lake_query(caplog):
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds_err
     ):
-        do_lake_query(args)
+        do_lake_query(args, None)
 
     assert "Error querying lake: boom!" in caplog.text
 
@@ -111,7 +109,7 @@ def test_do_lake_raw_delegation():
         "ppss.yaml",
         "sapphire-mainnet",
         "2021-01-01",
-        "2021-01-02"
+        "2021-01-02",
     ]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
@@ -177,7 +175,7 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
 
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_raw_drop(args)
+        do_lake_raw_drop(args, None)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -205,7 +203,7 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
 
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_etl_drop(args)
+        do_lake_etl_drop(args, None)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -226,7 +224,7 @@ def test_do_lake_raw_update(capsys):
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
 
-    do_lake_raw_update(args)
+    do_lake_raw_update(args, None)
     assert (
         "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
         in capsys.readouterr().out
@@ -241,8 +239,8 @@ def test_do_lake_etl_update(capsys):
     args.END = UnixTimeMs.from_timestr("2021-01-02")
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
-    
-    do_lake_etl_update(args)
+
+    do_lake_etl_update(args, None)
     assert (
         "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
         in capsys.readouterr().out

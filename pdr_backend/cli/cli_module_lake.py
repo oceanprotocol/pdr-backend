@@ -27,34 +27,32 @@ def do_lake_subcommand(args):
         func_name += f"_{parsed_args.l2_subcommand_type}"
 
     func = globals().get(func_name)
-    func(parsed_args)
+
+    # TODO - Implement nested_args
+    ppss = PPSS(yaml_filename=parsed_args.PPSS_FILE, network=parsed_args.NETWORK)
+
+    func(parsed_args, ppss)
 
 
 # subcommands
 @enforce_types
-def do_lake_describe(args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-
+def do_lake_describe(args, ppss):
     lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_validate(args):
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-
+def do_lake_validate(args, ppss):
     lake_validate = LakeValidate(ppss)
     lake_validate.run()
 
 
 @enforce_types
-def do_lake_query(args):
+def do_lake_query(args, ppss):
     """
     @description
         Query the lake for a table or view
     """
-    ppss = PPSS(yaml_filename=args.PPSS_FILE, network=args.NETWORK)
-
     pds = PersistentDataStore(ppss, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
@@ -65,18 +63,13 @@ def do_lake_query(args):
 
 
 @enforce_types
-def do_lake_raw_drop(args):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-    )
-
+def do_lake_raw_drop(args, ppss):
     pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "raw", args.ST)
 
 
 @enforce_types
-def do_lake_raw_update(args, nested_args=None):
+def do_lake_raw_update(args, ppss):
     """
     @description
         This updates the raw lake data
@@ -85,12 +78,6 @@ def do_lake_raw_update(args, nested_args=None):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-
     try:
         gql_data_factory = GQLDataFactory(ppss)
         gql_data_factory.get_gql_tables()
@@ -100,18 +87,13 @@ def do_lake_raw_update(args, nested_args=None):
 
 
 @enforce_types
-def do_lake_etl_drop(args):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-    )
-
+def do_lake_etl_drop(args, ppss):
     pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
 
 @enforce_types
-def do_lake_etl_update(args, nested_args=None):
+def do_lake_etl_update(args, ppss):
     """
     @description
         This runs all dependencies to build analytics
@@ -124,12 +106,6 @@ def do_lake_etl_update(args, nested_args=None):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()

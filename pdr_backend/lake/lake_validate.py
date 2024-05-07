@@ -166,7 +166,9 @@ class LakeValidate(LakeInfo):
             return (True, "Gaps Ok - 99.5% of feeds don't have gaps.")
 
         # display report in a readable format
-        logger.info("[%s] feeds failed gap validation", gap_validation_failures.shape[0])
+        logger.info(
+            "[%s] feeds failed gap validation", gap_validation_failures.shape[0]
+        )
         with pl.Config(tbl_rows=100):
             logger.info("%s Gap Report\n%s", table_name, gap_pct)
         return (False, "Please review gap validation.")
