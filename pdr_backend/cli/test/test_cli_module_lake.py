@@ -122,7 +122,7 @@ def test_do_lake_raw_delegation():
 
 @enforce_types
 def test_do_lake_etl_delegation():
-    args = ["etl", "drop", "lake_data", "2021-01-01"]
+    args = ["etl", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
         do_lake_subcommand(args)
