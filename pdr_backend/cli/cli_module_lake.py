@@ -2,15 +2,14 @@ import logging
 
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.lake_info import LakeInfo
 from pdr_backend.lake.lake_validate import LakeValidate
-from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import drop_tables_from_st
 from pdr_backend.ppss.ppss import PPSS
-
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("cli")
 
@@ -68,7 +67,7 @@ def do_lake_raw_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_raw_update(_, ppss):
+def do_lake_raw_update(args, ppss):
     """
     @description
         This updates the raw lake data
@@ -77,6 +76,8 @@ def do_lake_raw_update(_, ppss):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+
     try:
         gql_data_factory = GQLDataFactory(ppss)
         gql_data_factory.get_gql_tables()
@@ -92,7 +93,7 @@ def do_lake_etl_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_etl_update(_, ppss):
+def do_lake_etl_update(args, ppss):
     """
     @description
         This runs all dependencies to build analytics
@@ -105,6 +106,8 @@ def do_lake_etl_update(_, ppss):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
+    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()

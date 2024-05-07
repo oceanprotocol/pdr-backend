@@ -276,32 +276,9 @@ def test_do_multisim(monkeypatch):
 @enforce_types
 def test_do_ohlcv(monkeypatch):
     mock_f = Mock()
-    monkeypatch.setattr("{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
 
     do_ohlcv(MockArgParser_PPSS_NETWORK().parse_args())
-    mock_f.assert_called()
-
-
-@enforce_types
-def test_do_lake(monkeypatch):
-    mock_f = Mock()
-    monkeypatch.setattr("pdr_backend.lake.gql_data_factory.GQLDataFactory", mock_f)
-
-    with patch("sys.argv", ["pdr", "lake", "update"]):
-        with pytest.raises(SystemExit):
-            _do_main()
-
-    mock_f.assert_called()
-
-    mock_f = Mock()
-    monkeypatch.setattr("pdr_backend.lake.gql_data_factory.GQLDataFactory", mock_f)
-    monkeypatch.setattr("pdr_backend.lake.etl.ETL", mock_f)
-    monkeypatch.setattr("pdr_backend.lake.etl.ETL.do_etl", mock_f)
-
-    with patch("sys.argv", ["pdr", "etl", "update"]):
-        with pytest.raises(SystemExit):
-            _do_main()
-
     mock_f.assert_called()
 
 

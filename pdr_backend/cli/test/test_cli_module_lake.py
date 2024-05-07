@@ -7,14 +7,15 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.cli_module_lake import (
     PersistentDataStore,
     do_lake_describe,
-    do_lake_validate,
     do_lake_etl_drop,
     do_lake_etl_update,
     do_lake_query,
     do_lake_raw_drop,
     do_lake_raw_update,
     do_lake_subcommand,
+    do_lake_validate,
 )
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -215,7 +216,6 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 
 
 @enforce_types
-@pytest.mark.skip(reason="TODO: implement a dummy gql handler")
 def test_do_lake_raw_update(capsys):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")
@@ -223,7 +223,11 @@ def test_do_lake_raw_update(capsys):
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
 
-    do_lake_raw_update(args, None)
+    ppss = Mock(spec=PPSS)
+
+    with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
+        do_lake_raw_update(args, ppss)
+
     assert (
         "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
         in capsys.readouterr().out
@@ -231,7 +235,6 @@ def test_do_lake_raw_update(capsys):
 
 
 @enforce_types
-@pytest.mark.skip(reason="TODO: implement a dummy gql handler")
 def test_do_lake_etl_update(capsys):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")
@@ -239,7 +242,12 @@ def test_do_lake_etl_update(capsys):
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
 
-    do_lake_etl_update(args, None)
+    ppss = Mock(spec=PPSS)
+
+    with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
+        with patch("pdr_backend.cli.cli_module_lake.ETL"):
+            do_lake_etl_update(args, ppss)
+
     assert (
         "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
         in capsys.readouterr().out

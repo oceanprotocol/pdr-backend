@@ -17,7 +17,7 @@ def test_str_as_abspath():
 
 @enforce_types
 def test_timestr_args(capsys):
-    args = ["raw", "drop", "lake_data", "invalid_date"]
+    args = ["raw", "drop", "ppss.yaml", "network", "invalid_date"]
 
     with pytest.raises(SystemExit):
         do_lake_subcommand(args)
@@ -26,7 +26,7 @@ def test_timestr_args(capsys):
     assert "error: argument ST: invalid timestr value: 'invalid_date'" in captured.err
 
     # drop does not recognize the end date as a valid argument
-    args = ["raw", "drop", "lake_data", "2021-01-01", "2021-01-02"]
+    args = ["raw", "drop", "ppss.yaml", "network", "2021-01-01", "2021-01-02"]
     with pytest.raises(SystemExit):
         do_lake_subcommand(args)
 
@@ -34,7 +34,7 @@ def test_timestr_args(capsys):
     assert "error: unrecognized arguments: 2021-01-02" in captured.err
 
     # start date can not be now
-    args = ["raw", "drop", "lake_data", "now"]
+    args = ["raw", "drop", "ppss.yaml", "network", "now"]
     with pytest.raises(SystemExit):
         do_lake_subcommand(args)
 
