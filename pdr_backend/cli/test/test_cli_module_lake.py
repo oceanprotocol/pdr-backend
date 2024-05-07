@@ -98,7 +98,7 @@ def test_do_lake_query(caplog):
 
 @enforce_types
 def test_do_lake_raw_delegation():
-    args = ["raw", "drop", "lake_data", "2021-01-01"]
+    args = ["raw", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_drop") as raw_drop:
         do_lake_subcommand(args)
@@ -111,7 +111,7 @@ def test_do_lake_raw_delegation():
         "ppss.yaml",
         "sapphire-mainnet",
         "2021-01-01",
-        "2021-01-02",
+        "2021-01-02"
     ]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
