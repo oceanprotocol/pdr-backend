@@ -13,6 +13,7 @@ install_requirements = [
     "ccxt==4.3.11",
     "coverage",
     "dash==2.17.0",
+    "dateparser==1.2.0",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
