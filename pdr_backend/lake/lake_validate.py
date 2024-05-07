@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Tuple
+from typing import Dict, List
 from enforce_typing import enforce_types
 
 import polars as pl
@@ -24,43 +24,47 @@ class LakeValidate(LakeInfo):
     def __init__(self, ppss: PPSS):
         super().__init__(ppss)
 
-        self.config = {
+        self.validations = {
             "Validate table names in lake": self.validate_expected_table_names,
             "Validate no views in lake": self.validate_expected_view_names,
             "Validate few gaps in bronze_predictions": self.validate_lake_bronze_predictions_gaps,
         }
-        self.results: Dict[str, Tuple[str, bool]] = {}
+        self.results: Dict[str, List[str]] = {}
 
         self.csvds = CSVDataStore(ppss.lake_ss.lake_dir)
         self.gql_data_factory = GQLDataFactory(ppss)
         self.etl = ETL(ppss, self.gql_data_factory)
 
     @enforce_types
-    def validate_expected_table_names(self) -> Tuple[bool, str]:
-        expected_table_names = [
-            self.etl.raw_table_names,
-            self.etl.bronze_table_names,
-        ]
+    def validate_expected_table_names(self) -> List[str]:
+        violations = []
+        expected_table_names = []
+        expected_table_names += self.etl.raw_table_names
+        expected_table_names += self.etl.bronze_table_names
+        expected_table_names.sort()
 
-        if set(self.all_table_names) == set(expected_table_names):
-            return (True, "Tables in lake match expected Complete-ETL table names.")
+        temp_table_names = self.all_table_names
+        temp_table_names.sort()
 
-        return (
-            False,
-            "Tables in lake [{}], do not match expected Complete-ETL table names [{}]".format(
-                self.all_table_names, expected_table_names
-            ),
-        )
+        if temp_table_names != expected_table_names:
+            violations.append(
+                "Tables in lake do not match expected table names - [Lake: {}], [Expected: {}]".format(
+                    temp_table_names, expected_table_names
+                )
+            )
 
-    @enforce_types
-    def validate_expected_view_names(self) -> Tuple[bool, str]:
-        if len(self.all_view_names) == 0:
-            return (True, "Lake is clean. Has no VIEWs.")
-
-        return (False, "Lake has VIEWs. Please clean lake using CLI.")
+        return violations
 
     @enforce_types
-    def validate_lake_bronze_predictions_gaps(self) -> Tuple[bool, str]:
+    def validate_expected_view_names(self) -> List[str]:
+        violations = []
+        if len(self.all_view_names) > 0:
+            violations.append("Lake has VIEWs. Please clean lake using CLI.")
+
+        return violations
+
+    @enforce_types
+    def validate_lake_bronze_predictions_gaps(self) -> List[str]:
         """
         description:
             Validate that the [lake slots] data has very few timestamp gaps.
@@ -72,6 +76,7 @@ class LakeValidate(LakeInfo):
         how to improve:
             Expand ohlcv into lake/this check
         """
+        violations = []
         table_name = bronze_pdr_predictions_table_name
 
         # Query retrieves results grouped by [pair, timeframe, slot]
@@ -162,21 +167,22 @@ class LakeValidate(LakeInfo):
 
         # check if quality is less than 99.5
         gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
-        if gap_validation_failures.shape[0] == 0:
-            return (True, "Gaps Ok - 99.5% of feeds don't have gaps.")
+        if gap_validation_failures.shape[0] != 0:
+            # display report in a readable format
+            logger.info(
+                "[%s] feeds failed gap validation", gap_validation_failures.shape[0]
+            )
+            with pl.Config(tbl_rows=100):
+                logger.info("%s Gap Report\n%s", table_name, gap_pct)
 
-        # display report in a readable format
-        logger.info(
-            "[%s] feeds failed gap validation", gap_validation_failures.shape[0]
-        )
-        with pl.Config(tbl_rows=100):
-            logger.info("%s Gap Report\n%s", table_name, gap_pct)
-        return (False, "Please review gap validation.")
+            violations.append("Gap validation failed. Please review logs.")
+
+        return violations
 
     def generate(self):
         super().generate()
 
-        for key, value in self.config.items():
+        for key, value in self.validations.items():
             result = value()
             self.results[key] = result
 
@@ -188,14 +194,19 @@ class LakeValidate(LakeInfo):
             #   print message with: (1) key, (2) error/success, (3) message
             # print num errors, num successes, and total
         """
-        num_errors = len([result for result in self.results.values() if not result[0]])
-        num_successes = len([result for result in self.results.values() if result[0]])
-        total = len(self.results)
+        violations = [result for result in self.results.values() if not result is None]
+        num_violations = 0
 
-        for key, (success, message) in self.results.items():
-            print(f"[{key}]\n{success}-{message}")
+        for key, (violations) in self.results.items():
+            if violations is None or len(violations) == 0:
+                continue
 
-        print(f"\nErrors: {num_errors}, Successes: {num_successes}, Total: {total}")
+            print(f"{key}")
+            num_violations += len(violations)
+            for violation in violations:
+                print(f"> {violation}")
+
+        print(f"Num violations: {num_violations}")
 
     @enforce_types
     def run(self):

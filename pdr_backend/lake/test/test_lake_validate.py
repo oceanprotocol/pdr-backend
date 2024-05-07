@@ -171,7 +171,7 @@ ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 
 
 @enforce_types
-def test_validate_lake_mock_sql(tmpdir):
+def test_validate_lake_mock_sql_failure(tmpdir):
     sql_result = pl.read_csv(io.StringIO(csv_string))
     assert isinstance(sql_result, pl.DataFrame)
 
@@ -194,7 +194,9 @@ def test_validate_lake_mock_sql(tmpdir):
 
     result = lake_validate.validate_lake_bronze_predictions_gaps()
 
-    assert mock_pds.query_data.called, "lake_validate did not call pds.query_data()"
+    # assert that the function called the query_data method
+    mock_pds.query_data.assert_called_once()
 
-    assert result[0] is False
-    assert result[1] == "Please review gap validation."
+    # assert that the data validation failed as we would expect it to
+    # review the logs and verify the data is what we expect to see
+    assert result[0] == "Gap validation failed. Please review logs."
