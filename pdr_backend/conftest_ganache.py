@@ -3,10 +3,12 @@ from unittest.mock import Mock
 import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.predictoor_batcher import PredictoorBatcher
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.token import Token
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.publisher.publish_asset import publish_asset
 from pdr_backend.util.currency_types import Eth
 
@@ -121,3 +123,9 @@ def predictoor_batcher():
     w3p = _web3_pp()
     predictoor_batcher_addr = w3p.get_address("PredictoorHelper")
     return PredictoorBatcher(w3p, predictoor_batcher_addr)
+
+
+@pytest.fixture()
+def pred_submitter_mgr(web3_pp):
+    contract_address = deploy_pred_submitter_mgr_contract(web3_pp)
+    return PredSubmitterMgr(web3_pp, contract_address)

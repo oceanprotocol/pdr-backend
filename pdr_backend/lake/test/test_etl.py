@@ -69,6 +69,9 @@ def test_etl_do_bronze_step(
     )
     assert len(bronze_pdr_predictions_records) == 5
 
+    # TODO:
+    assert len(_gql_datafactory_etl_predictions_df) == 6
+
     print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
