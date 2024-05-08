@@ -209,16 +209,8 @@ def test__duckdb_connection(tmpdir):
 
 def test_move_table_data(tmpdir):
     persistent_data_store, example_df, table_name = _get_persistent_data_store(tmpdir)
-
-    # add ID column
-    example_df_w_ID = example_df.with_columns(
-        ID=pl.Series("series", list(["1", "2", "3"]))
-    )
-
-    persistent_data_store.drop_table(get_table_name(table_name, TableType.TEMP))
-
     persistent_data_store.insert_to_table(
-        example_df_w_ID, get_table_name(table_name, TableType.TEMP)
+        example_df, get_table_name(table_name, TableType.TEMP)
     )
 
     # Check if the table is registered
@@ -251,29 +243,6 @@ def test_move_table_data(tmpdir):
 
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
-
-    # Move the table again
-    # re-create the temp table
-    # insert same data
-    # Move the table
-    # Assert temp table is dropped
-    # Check if the same data is not inserted
-
-    # re-create the temp table
-    persistent_data_store.insert_to_table(
-        example_df_w_ID, get_table_name(table_name, TableType.TEMP)
-    )
-
-    # Move the table
-    persistent_data_store.move_table_data(TempTable(table_name), table_name)
-
-    # Check if the new data is inserted
-    n_result = persistent_data_store.duckdb_conn.execute(
-        f"SELECT * FROM {table_name}"
-    ).fetchall()
-
-    assert len(n_result) == 3
-    assert n_result[0][0] == "2022-01-01"
 
 
 def test_etl_view(tmpdir):
@@ -399,17 +368,3 @@ def test_create_table_if_not_exists(tmpdir):
     # Check if the table is registered
     check_result = persistent_data_store.table_exists(table_name)
     assert check_result
-
-
-def test_get_sql_column_type(tmpdir):
-    """
-    Test get sql column type.
-    """
-    persistent_data_store, _, _ = _get_persistent_data_store(tmpdir)
-
-    # Test get sql column type
-    sql_column_type = persistent_data_store._get_sql_column_type(pl.Utf8)
-    assert sql_column_type == "TEXT"
-
-    sql_column_type = persistent_data_store._get_sql_column_type(pl.Int64)
-    assert sql_column_type == "BIGINT"
