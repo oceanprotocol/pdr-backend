@@ -107,7 +107,7 @@ def test_csv_data_store(
     st_timestr = "2023-11-01"
     fin_timestr = "2024-11-03"
     ppss = mock_ppss(
-        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,

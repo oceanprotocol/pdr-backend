@@ -24,6 +24,7 @@ def test_sim_engine(tmpdir):
     feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
     lake_dir = os.path.join(tmpdir, "lake_data")
     d = lake_ss_test_dict(lake_dir, feeds=feedsets.feed_strs)
+
     assert "st_timestr" in d
     d["st_timestr"] = "2023-06-18"
     d["fin_timestr"] = "2023-06-19"

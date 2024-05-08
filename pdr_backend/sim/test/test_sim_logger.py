@@ -37,13 +37,13 @@ def test_compact_num(tmpdir, caplog):
     log_line = SimLogLine(ppss, st, 1, ut, 0.5, 0.6)
     log_line.log_line()
 
-    assert "pdr_profit=  0.50 up" in caplog.text
+    assert "pdr_profit=0.50 up" in caplog.text
     assert "prcsn=0.100" in caplog.text
     assert f"Iter #2/{ppss.sim_ss.test_n}" in caplog.text
 
     log_line = SimLogLine(ppss, st, 1, ut, 0.003, 0.4)
     log_line.log_line()
 
-    assert "pdr_profit=3.00e-03 up" in caplog.text
+    assert "pdr_profit=3.00e-3 up" in caplog.text
     assert "prcsn=0.100" in caplog.text
     assert f"Iter #2/{ppss.sim_ss.test_n}" in caplog.text

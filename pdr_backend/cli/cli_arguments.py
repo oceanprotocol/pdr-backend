@@ -57,7 +57,7 @@ Utilities:
   pdr create_accounts NUM PPSS_FILE NETWORK
   pdr print_balances ACCOUNT PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
-  pdr lakeinfo PPSS_FILE NETWORK
+  pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
 Inspect and manage lake:
   pdr lake describe LAKE_DIR
@@ -66,7 +66,6 @@ Inspect and manage lake:
   pdr lake raw update PPSS_FILE NETWORK
   pdr lake etl drop LAKE_DIR ST
   pdr lake etl update PPSS_FILE ST END
-  pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK

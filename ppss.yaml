@@ -5,11 +5,11 @@ lake_ss:
     - binance BTC/USDT ETH/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
   #    - kraken BTC/USDT 5m
-  st_timestr: 2023-06-01_00:00 # starting date for data
+  st_timestr: 18 days ago # starting date for data
   fin_timestr: now # ending date for data
 
 predictoor_ss:
-  predict_train_feedsets: 
+  predict_train_feedsets:
     - predict: binance BTC/USDT ETH/USDT c 5m
       train_on:
       - binance BTC/USDT ETH/USDT c 5m
@@ -21,7 +21,7 @@ predictoor_ss:
     revenue: 0.93006 # Sales revenue going towards predictoors. In OCEAN per epoch, per feed. Calcs: 37500 OCEAN/week/20_feeds (Predictoor DF rewards) = 18.6012 OCEAN/epoch/20_feeds (bc 2016 5m epochs/week) = 0.93006 OCEAN/epoch/feed
 
   bot_only:
-    pred_submitter_mgr: "DeployNewMgr" # DeployNewMgr | <address of deployed mgr>  
+    pred_submitter_mgr: "DeployNewMgr" # DeployNewMgr | <address of deployed mgr>
     s_start_payouts: 220 # in s. Run payout if > this time left. 0 to disable
     s_until_epoch_end: 60 # in s. Start predicting if > this time left
 
