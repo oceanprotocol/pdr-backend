@@ -373,18 +373,14 @@ class GQLDataFactory:
 
             # fetch from subgraph and add to temp table
             logger.info("Updating table %s", get_table_name(table.table_name))
-            try:
-                self._do_subgraph_fetch(
-                    table,
-                    self.record_config["fetch_functions"][table.table_name],
-                    self.ppss.web3_pp.network,
-                    st_ut,
-                    fin_ut,
-                    self.record_config["config"],
-                )
-            except Exception as e:
-                self._move_from_temp_tables_to_live()
-                logger.error("Error on fetching data from %s: %s", table.table_name, e)
+            self._do_subgraph_fetch(
+                table,
+                self.record_config["fetch_functions"][table.table_name],
+                self.ppss.web3_pp.network,
+                st_ut,
+                fin_ut,
+                self.record_config["config"],
+            )
 
         # move data from temp tables to live tables
         self._move_from_temp_tables_to_live()
