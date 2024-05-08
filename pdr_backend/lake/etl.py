@@ -11,11 +11,6 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_schema,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-from pdr_backend.lake.table_bronze_pdr_slots import (
-    bronze_pdr_slots_table_name,
-    bronze_pdr_slots_schema,
-    get_bronze_pdr_slots_data_with_SQL,
-)
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
@@ -50,12 +45,7 @@ class ETL:
                     bronze_pdr_predictions_table_name,
                     bronze_pdr_predictions_schema,
                     self.ppss,
-                ),
-                bronze_pdr_slots_table_name: (
-                    bronze_pdr_slots_table_name,
-                    bronze_pdr_slots_schema,
-                    self.ppss,
-                ),
+                )
             }
         )
 
@@ -69,7 +59,6 @@ class ETL:
 
         self.bronze_table_getters = {
             bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
-            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
         }
 
         logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
@@ -266,10 +255,10 @@ class ETL:
             self.raw_table_names, self.ppss.lake_ss.fin_timestr
         )
 
-        assert from_timestamp <= to_timestamp, (
-            f"from_timestamp ({from_timestamp}) must be less than or equal to "
-            f"to_timestamp ({to_timestamp})"
-        )
+        #assert from_timestamp <= to_timestamp, (
+        #    f"from_timestamp ({from_timestamp}) must be less than or equal to "
+        #    f"to_timestamp ({to_timestamp})"
+        #)
 
         return from_timestamp, to_timestamp
 
