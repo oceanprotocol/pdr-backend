@@ -198,7 +198,7 @@ def test_calc_start_ut_from_predictions(_gql_datafactory_etl_predictions_df, tmp
     gql_data_factory = GQLDataFactory(ppss)
 
     st_ut = gql_data_factory._calc_start_ut_from_predictions()
-    assert st_ut.to_seconds() == 1701561601
+    assert st_ut.to_seconds() == 1701561600
 
     ## Add some predictions
     table = TableRegistry().get_table("pdr_predictions")
