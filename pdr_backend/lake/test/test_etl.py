@@ -113,6 +113,9 @@ def test_etl_do_bronze_step(
     assert bronze_pdr_predictions_df["truevalue"][2] is True
     assert bronze_pdr_predictions_df["truevalue"][3] is False
 
+    print(bronze_pdr_predictions_df["truevalue"])
+    print(_gql_datafactory_etl_truevals_df["truevalue"])
+
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
         == _gql_datafactory_etl_truevals_df["truevalue"][2]
