@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Lake, ETL, and our lord, data quality.
+# Lake & ETL Overview
 
 This README describes how you can operate the lake and use analytics to understand the world of predictoor.
 
@@ -11,10 +11,10 @@ First, we want to make sure we get all the data we'll need! Then, we'll process 
 
 To complete this we'll be interacting different components in our stack, such as the: lake, GQLDataFactory, and the ETL.
 
-## Lake - Our Data Warehouse.
-For most users, the lake can simply be thought of as a database. It should contain many tables with complete records and reliable information. It should be easy to understand and to work with. 
+## Lake - Think "Database"
+For most users, the lake can simply be thought of as a database. It contains many tables with complete records and reliable information. It should be easy to understand and to work with. We use a combination of CSVs & DuckDB as our Data Lake/Warehouse.
 
-Currently, the Lake data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via via the cli (cli_module_lake.py).
+Currently, the Lake data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via via the cli wth the command `pdr lake describe ppss.yaml sapphire-mainnet` (cli_module_lake.py)
 
 Some features include:
 1. The lake has a few commands: describe, validate, update, drop, and query
@@ -25,46 +25,78 @@ Some features include:
 1. The main work building the data will take place inside the ETL.
 1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
 
-## ETL - The jobs and queries that are run to build and keep the lake in great shape.
+## ETL
+Is responsible for running the jobs and queries that keep the lake in great shape.
 
-### Tyical ETL Workflow
-1. Filling the lake with clean raw_predictions. Loading from Raw/CSV into DuckDB.
-1. Cleaning it + Enriching it into bronze tables.
-1. Aggregating + Summarizing it into silver & gold tables.
-1. Being re-built and updated many times, in efficient ways.
+### ETL - End-To-End Update from CLI
+1. from the cli - `pdr lake raw update && pdr lake etl update`
+
+### ETL - End-To-End - Data Workflow from Code
+As you are developing and building around the data and lake, you might need to update how the system works, and be able to follow this workflow.
+1. GQLDF completes succesfully. Fetch from source raw => into CSV & DuckDB.
+1. Run SQL query over this data to clean it, join w/ other tables, transform => into Bronze Tables
+1. Aggregating + Summarizing it => into Silver & Gold tables.
+1. Serving this data into dahboards and other locations.
+
+### ETL - User Operations Workflow from Code & CLI
+As you are developing and building around the lake, your workflow migh look like this.
+1. Writing & Updating ETL code
+1. Dropping ETL tables via CLI
+1. Rebuilding ETL tables via CLI
 
 ### ETL Limitations
 1. Insert only. No updates. Null values inside `bronze_pdr_prediction` tables.
-1. No backfilling data before `st_ts`. If you want to backfill, please select a new `lake_path`.
+1. No backfilling data before `st_ts`. If you want to backfill drop all records or select a new `lake_path`.
 
-## PredictoorETL - From subgraph to pretty charts
-To provide summaries on Predidctoor users and systems, we want to fetch all of this data and make it available for analysis.
+## PredictoorETL - From subgraph to chart data
+To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
 
-PredictoorETL helps us achieve this by breaking the process down into 2 steps.
+PredictoorETL helps us achieve this by breaking the process down into 3 steps.
 1. Ingesting + Loading Data - GQLDataFactory
 1. Processing the data - ETL
+1. Querying the data - Dash (TBD)
 
-When these steps complete, the final records are then used in dashbords and other systems.
+When these steps complete (1)(2), the final records are then used in dashbords (3) and other systems.
 ![Screenshot from 2024-02-29 13-51-46](https://github.com/oceanprotocol/pdr-backend/assets/69865342/8dc020e2-cf53-49d8-8327-9afc222e1750)
 
 ### PredictoorETL Workflow
 To understand how this works a bit better, let's break this down into more detail.
 
-GQLDataFactory - Fetching predictoor data from subgraph into csv & lake.
-1. Fetching all raw data.
+#### Step 1 - GQLDataFactory - Fetching predictoor data [st_ts => end_ts] from subgraph into csv & lake.
+1. Fetching the new raw data [st_ts => end_ts].
 1. Saving it to CSV.
-1. Saving it to lake
+1. Saving it to the Lake.
 
-ETL - Processing data from sources through SQL queries.
-1. Processing basic `INSERT SQL` queries and saving it to a `temp_table_data` inside lake
+#### Step 2 - ETL - Processing new raw data from sources through SQL queries.
+1. Processing latest data + inserting w/ basic `INSERT SQL` query into `temp_table_data` inside lake.
 1. Completing swap strategy to get `temp_table_data` into `prod_table_data`.
 
+### Step 3 - Dash - TBD
+
+_There were already streamlit plots created for silver tables. Please read further._
+
 ### PredictoorETL Checkpointing
-In order to only process new data, we want to "maintain a checkpoint" that let's us know where to start or resume from.
+In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
-The simplest way to do this right now, is to use the most frequent event we'll have in our data: predictions submitted by predictoors. We use this timestamp checkpoint such that we process everything only once.
+The simplest way to do this right now is to use the most frequent event we have in our data: **predictions submitted by predictoors**. We use this timestamp/checkpoint such that we only process new events, once.
 
-By separating the ETL from RAW data, at any point, we should be able to drop rows and re-processt them. Making our data very flexible to work with. _The cost do to this at scale may not be cheap, but you should be able to downscale the workload_
+By separating the RAW from the ETL data, at any point we should be able to (1) drop the ETL rows and rebuild them from raw. Making our data very flexible and forgiving to work with. 
+
+_(1a) The cost do to this at scale may not be cheap, but you should be able to downscale the workload. Just choose a small date_range to work with._
+
+# REVIEW TODO
+# REVIEW TODO
+
+
+### Lake Stack st_ts => end_ts
+All systems should be working in-sync... with the same [st_ts => end_ts] across all systems. In conjunction with ppss.yaml and everything else.
+1. GQLDF fetches [st_ts => end_ts]
+1. CSV saves [st_ts => end_ts]
+1. PDS saves [st_ts => end_ts]
+1. ETL processes + saves [st_ts => end_ts]
+1. CLI/Dash querying [st_ts => end_ts]
+
+All systems [GQLDF + CSV + PDS + ETL Updating] should be working as expected along w/ the cli.
 
 ## GQLDF Fetch + DuckDB Insert - NO ETL
 
@@ -99,23 +131,19 @@ Providing us with the parmeters:
 
 ## ETL SQL Queries - Insert Step - Bronze Predictions - No Updating
 
-Now that all raw records have been written to DuckDB, the ETL can kick off.
+Now that the latest raw records have been written to DuckDB, the ETL can kick off/resume.
 
-We probably want to start w/ updating the bronze_predictions table and records.
+We want to start w/ updating the bronze_predictions table and records since these will be updtaed by other events.
 
-When inserting from raw data into duckdb, we try to clean up and enrich this data if possible. This lets us complete the most basic first step.
+When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step.
 
-However, many data points are not yet available when a prediction is submitted (like the payout). These columns and values will be null for now. This query simply captures the old (cold) prediction data and all related events (truevals, payouts) that are already available.
+However, many events and data points are not yet available when a prediction is submitted (like the payout). These values (and columns) remain null for now. 
+
+This query best captures the old (cold) prediction data and all related events (truevals, payouts) that are already available.
 
 We now have to handle events as-they-are-happening. (Incremental Updates)
 
-### GQLDF + CSV + PDS + ETL Updating:
-
-For this to work, 
-1. GQLDF + CSV + PDS need to be working in-sync - same st_ts, end_ts - errors/events being handled well.
-1. CSV vs. PDS may have different max(timestamp) => st_ts if not careful.
-
-# [TO COME] 
+# [TBD - TO COME] 
 
 ### ETL - Incremental Update
 
@@ -129,3 +157,10 @@ We probably want to start w/ updating the bronze_predictions table and records w
 
 _We had this before in polars, but not in SQL._
 
+### Dash Plots
+
+There were already streamlit plots created for silver tables. However, the silver queries and tables are not quite there yet.
+
+Until then, if needed, bronze_prediction tables could be queried/charted via PDS.
+1. Queries would be completed against lake via PDS by using `SELECT * FROM prod_data` and plotted into charts
+1. Dash could then be used to display and interact with plots further.
