@@ -127,7 +127,7 @@ def test_etl_do_bronze_step(
     )
     assert (
         bronze_pdr_predictions_df["truevalue"][2]
-        != _gql_datafactory_etl_truevals_df["truevalue"][3]
+        == _gql_datafactory_etl_truevals_df["truevalue"][3]
     )
 
     # Assert payout ts > prediction ts
