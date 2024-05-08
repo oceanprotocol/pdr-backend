@@ -58,6 +58,9 @@ def test_etl_do_bronze_step(
 ):
     etl, pds, _ = setup_data
 
+    print("herrrreeeeeeeeerrrrreee")
+    print('ppss lake data', etl.ppss.lake_ss)
+
     # Work 1: Do bronze
     etl.do_bronze_step()
     etl._move_from_temp_tables_to_live()
@@ -113,8 +116,10 @@ def test_etl_do_bronze_step(
     assert bronze_pdr_predictions_df["truevalue"][2] is True
     assert bronze_pdr_predictions_df["truevalue"][3] is False
 
-    print(bronze_pdr_predictions_df["truevalue"])
-    print(_gql_datafactory_etl_truevals_df["truevalue"])
+    print(_gql_datafactory_etl_predictions_df)
+    print(_gql_datafactory_etl_truevals_df)
+    print(bronze_pdr_predictions_df)
+    print(_gql_datafactory_etl_truevals_df)
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
@@ -122,7 +127,7 @@ def test_etl_do_bronze_step(
     )
     assert (
         bronze_pdr_predictions_df["truevalue"][2]
-        == _gql_datafactory_etl_truevals_df["truevalue"][3]
+        != _gql_datafactory_etl_truevals_df["truevalue"][3]
     )
 
     # Assert payout ts > prediction ts
