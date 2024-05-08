@@ -177,7 +177,7 @@ class GQLDataFactory:
         if not PersistentDataStore(self.ppss.lake_ss.lake_dir).table_exists(
             predictions_table_name
         ):
-            return UnixTimeMs(self.ppss.lake_ss.st_timestamp + 1000)
+            return UnixTimeMs(self.ppss.lake_ss.st_timestamp)
 
         # get last timestamp of the predictions table from the database
 
