@@ -255,6 +255,7 @@ class PersistentDataStore(BaseDataStore):
             logger.info(
                 "move_table_data - Table %s does not exist", temp_table.fullname
             )
+            return
 
         # check if the permanent table exists
         if permanent_table_name not in table_names:
