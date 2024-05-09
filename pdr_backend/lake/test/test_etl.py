@@ -58,9 +58,6 @@ def test_etl_do_bronze_step(
 ):
     etl, pds, _ = setup_data
 
-    print("herrrreeeeeeeeerrrrreee")
-    print('ppss lake data', etl.ppss.lake_ss)
-
     # Work 1: Do bronze
     etl.do_bronze_step()
     etl._move_from_temp_tables_to_live()
@@ -71,8 +68,6 @@ def test_etl_do_bronze_step(
         "SELECT * FROM {}".format(table_name)
     )
     assert len(bronze_pdr_predictions_records) == 5
-
-    # TODO:
     assert len(_gql_datafactory_etl_predictions_df) == 6
 
     print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
@@ -115,11 +110,6 @@ def test_etl_do_bronze_step(
     # Assert predictions.truevalue == gql truevals_df
     assert bronze_pdr_predictions_df["truevalue"][2] is True
     assert bronze_pdr_predictions_df["truevalue"][3] is False
-
-    print(_gql_datafactory_etl_predictions_df)
-    print(_gql_datafactory_etl_truevals_df)
-    print(bronze_pdr_predictions_df)
-    print(_gql_datafactory_etl_truevals_df)
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
