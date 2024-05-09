@@ -3,7 +3,7 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Lake & ETL Overview
+# Lake,ETL, and PredictoorJob Overview
 
 This README describes how you can operate the lake and use analytics to understand the world of predictoor.
 
@@ -26,7 +26,7 @@ Some features include:
 1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
 
 ## ETL
-Is responsible for running the jobs and queries that keep the lake in great shape.
+Is responsible for running a series of Jobs and queries that keep the lake in great shape.
 
 ### ETL - End-To-End Update from CLI
 1. from the cli - `pdr lake raw update && pdr lake etl update`
@@ -48,7 +48,7 @@ As you are developing and building around the lake, your workflow migh look like
 1. Insert only. No updates. Null values inside `bronze_pdr_prediction` tables.
 1. No backfilling data before `st_ts`. If you want to backfill drop all records or select a new `lake_path`.
 
-## PredictoorETL - From subgraph to chart data
+## PredictoorJob - From subgraph to chart data
 To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
 
 PredictoorJob helps us achieve this by breaking the process down into 3 steps.
@@ -67,7 +67,7 @@ To understand how this works a bit better, let's break this down into more detai
 1. Saving it to CSV.
 1. Saving it to the Lake.
 
-#### Step 2 - ETL - Processing new raw data from sources through SQL queries.
+#### Step 2 - ETL - (PredictoorJob) - Processing new raw data from sources through SQL queries.
 1. Processing latest data + inserting w/ basic `INSERT SQL` query into `temp_table_data` inside lake.
 1. Completing swap strategy to get `temp_table_data` into `prod_table_data`.
 
