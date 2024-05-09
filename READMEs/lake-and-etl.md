@@ -51,7 +51,7 @@ As you are developing and building around the lake, your workflow migh look like
 ## PredictoorETL - From subgraph to chart data
 To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
 
-PredictoorETL helps us achieve this by breaking the process down into 3 steps.
+PredictoorJob helps us achieve this by breaking the process down into 3 steps.
 1. Ingesting + Loading Data - GQLDataFactory
 1. Processing the data - ETL
 1. Querying the data - Dash (TBD)
@@ -59,7 +59,7 @@ PredictoorETL helps us achieve this by breaking the process down into 3 steps.
 When these steps complete (1)(2), the final records are then used in dashbords (3) and other systems.
 ![Screenshot from 2024-02-29 13-51-46](https://github.com/oceanprotocol/pdr-backend/assets/69865342/8dc020e2-cf53-49d8-8327-9afc222e1750)
 
-### PredictoorETL Workflow
+### PredictoorJob Workflow
 To understand how this works a bit better, let's break this down into more detail.
 
 #### Step 1 - GQLDataFactory - Fetching predictoor data [st_ts => end_ts] from subgraph into csv & lake.
@@ -75,7 +75,7 @@ To understand how this works a bit better, let's break this down into more detai
 
 _There were already streamlit plots created for silver tables. Please read further._
 
-## PredictoorETL Checkpointing
+## PredictoorJob Checkpointing
 In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
 The simplest way to do this right now is to use the most frequent event we have in our data: **predictions submitted by predictoors**. We use this timestamp/checkpoint such that we only process new events, once.
@@ -104,9 +104,9 @@ How to resolve a drop?
 3. RAW Tables are rebuilt from CSV records.
 4. ETL Tables are rebuilt from RAW tables.
 
-All systems [GQLDF + CSV + PDS + ETL Updating] should be working as expected along w/ the cli & ppss.yaml.
+All systems [GQLDF + CSV + RAW + ETL Updating] should be working as expected along w/ the cli & ppss.yaml.
 
-## [Ingest + Load Step] - GQLDF Fetch + DuckDB Insert
+## [PredictoorJob][Ingest + Load Step] - GQLDF Fetch + DuckDB Insert
 
 GQL CSV and Lake max(timestamp) should remain 1:1 right now.
 As new records are fetched, both of these should update atomically.
@@ -137,7 +137,7 @@ Providing us with the parmeters:
 
 **ETL Step does not begin until this completes successfully**
 
-## [ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates
+## [PredictoorJob][ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates
 
 When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step. Now that the latest raw records have been written to DuckDB the ETL can kick off.
 
@@ -151,7 +151,7 @@ We now have to handle events as-they-are-happening in hot (new) data. (Increment
 
 # [TBD - TO COME] 
 
-### ETL - Incremental Update
+### [PredictoorJob][IncrementalJob][ETL]
 
 Many data points are not yet available when a prediction is submitted (like the payout). There are many adjustments and improvements to the data that help enrich it like hadling predictoor_payout events when they arrive and updating the lake.
 
