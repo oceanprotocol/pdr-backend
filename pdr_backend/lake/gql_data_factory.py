@@ -123,7 +123,7 @@ class GQLDataFactory:
         # To solve, for a given call to this method, we make a constant fin_ut
 
         logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
 
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
@@ -148,16 +148,19 @@ class GQLDataFactory:
         if csv_last_timestamp is None:
             return
 
-        if db_last_timestamp is None:
+        if db_last_timestamp['max("timestamp")'][0] is None:
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
             data = CSVDataStore(table.base_path).read_all(table_name, schema)
             table._append_to_db(data, TableType.TEMP)
             return
 
-        if csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
-            logger.info("  Table exists. Insert pending %s csv data", table_name)
-            data = CSVDataStore(table.base_path).read(table_name, st_ut, fin_ut, schema)
-            table._append_to_db(data, TableType.TEMP)
+        if db_last_timestamp['max("timestamp")'][0]:
+            if csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
+                logger.info("  Table exists. Insert pending %s csv data", table_name)
+                data = CSVDataStore(table.base_path).read(
+                    table_name, st_ut, fin_ut, schema
+                )
+                table._append_to_db(data, TableType.TEMP)
 
     @enforce_types
     def _calc_start_ut(self, table: Table) -> UnixTimeMs:

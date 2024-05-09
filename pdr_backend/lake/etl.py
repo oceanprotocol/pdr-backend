@@ -255,10 +255,10 @@ class ETL:
             self.raw_table_names, self.ppss.lake_ss.fin_timestr
         )
 
-        #assert from_timestamp <= to_timestamp, (
+        # assert from_timestamp <= to_timestamp, (
         #    f"from_timestamp ({from_timestamp}) must be less than or equal to "
         #    f"to_timestamp ({to_timestamp})"
-        #)
+        # )
 
         return from_timestamp, to_timestamp
 
