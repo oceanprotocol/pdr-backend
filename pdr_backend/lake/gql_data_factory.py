@@ -2,7 +2,13 @@ import logging
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table, TableType, get_table_name, TempTable
+from pdr_backend.lake.table import (
+    Table,
+    TableType,
+    get_table_name,
+    drop_tables_from_st,
+    TempTable,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -146,9 +152,20 @@ class GQLDataFactory:
         )
 
         if csv_last_timestamp is None:
+            drop_tables_from_st(PersistentDataStore(table.base_path), "raw", 0)
             return
 
-        if db_last_timestamp['max("timestamp")'][0] is None:
+        if (db_last_timestamp['max("timestamp")'][0] is not None) and (
+            csv_last_timestamp < db_last_timestamp['max("timestamp")'][0]
+        ):
+            drop_tables_from_st(
+                PersistentDataStore(table.base_path), "raw", csv_last_timestamp
+            )
+            return
+
+        if (db_last_timestamp is None) or (
+            db_last_timestamp['max("timestamp")'][0] is None
+        ):
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
             data = CSVDataStore(table.base_path).read_all(table_name, schema)
             table._append_to_db(data, TableType.TEMP)
