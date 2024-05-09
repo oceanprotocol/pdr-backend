@@ -14,15 +14,15 @@ To complete this we'll be interacting different components in our stack, such as
 ## Lake - Think "Database"
 For most users, the lake can simply be thought of as a database. It contains many tables with complete records and reliable information. It should be easy to understand and to work with. We use a combination of CSVs & DuckDB as our Data Lake/Warehouse.
 
-Currently, the Lake data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via via the cli wth the command `pdr lake describe ppss.yaml sapphire-mainnet` (cli_module_lake.py)
+Currently, the "Lake" (DB) data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via the CLI module `lake` command `pdr lake describe ppss.yaml sapphire-mainnet` (cli_module_lake.py)
 
 Some features include:
-1. The lake has a few commands: describe, validate, update, drop, and query
-1. The lake is organized as a timeseries between st_ts and end_ts.
-1. All the data inside lake tables exist between st_ts and end_ts.
-1. The st_ts and end_ts checkpoints move as time progresses, new records are fetched, and processed.
-1. The lake is designed so the raw data is only fetched once, then built many times.
-1. The main work building the data will take place inside the ETL.
+1. The lake has a few commands: `describe`, `validate`, `update`, `drop`, and `query`
+1. The lake is made up of many timeseries objects that should exist from `st_ts` and `end_ts`.
+1. All the data inside lake tables should exist between `st_ts` and `end_ts`.
+1. The `st_ts` and `end_ts` checkpoints come from `ppss.yaml` but are computed through the lake as time progresses, new events are fired, and records are processed.
+1. The lake is designed so raw data is fetched once, so the rest can be rebuilt many times.
+1. The main work building the data take place inside the ETL in the form of SQL queries that run on DuckDB.
 1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
 
 ## ETL
@@ -95,12 +95,12 @@ All systems should be working in-sync... with the same [st_ts => end_ts] across 
 ### Exception to the rule
 This doesn't always have to be the case.
 1. RAW + ETL Tables could have been dropped.
-2. GQLDF + CSV => could be far ahead.
-3. CLI/FE/Querying => would be limited to RAW + ETL tables
+2. CSV + GQLDF => could be far ahead.
+3. CLI/FE/Querying => would be limited to RAW + ETL tables & data
 
-How to resolve?
-1. RAW + ETL Tables should be 1:1.
-2. CSV would be ahead. So we can take the max(timestamp) to know how far it is and where to sync-to.
+How to resolve a drop?
+1. RAW + ETL Tables should be 1:1 => st_st.
+2. CSV would be ahead. So we can take the max(timestamp) to know how far it is and where to sync-to => st_end
 3. RAW Tables are rebuilt from CSV records.
 4. ETL Tables are rebuilt from RAW tables.
 
