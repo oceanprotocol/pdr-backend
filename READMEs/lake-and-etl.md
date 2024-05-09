@@ -71,22 +71,18 @@ To understand how this works a bit better, let's break this down into more detai
 1. Processing latest data + inserting w/ basic `INSERT SQL` query into `temp_table_data` inside lake.
 1. Completing swap strategy to get `temp_table_data` into `prod_table_data`.
 
-### Step 3 - Dash - TBD
+#### Step 3 - Dash - TBD
 
 _There were already streamlit plots created for silver tables. Please read further._
 
-### PredictoorETL Checkpointing
+## PredictoorETL Checkpointing
 In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
 The simplest way to do this right now is to use the most frequent event we have in our data: **predictions submitted by predictoors**. We use this timestamp/checkpoint such that we only process new events, once.
 
 By separating the RAW from the ETL data, at any point we should be able to (1) drop the ETL rows and rebuild them from raw. Making our data very flexible and forgiving to work with. 
 
-_(1a) The cost do to this at scale may not be cheap, but you should be able to downscale the workload. Just choose a small date_range to work with._
-
-# REVIEW TODO
-# REVIEW TODO
-
+_(1a) The cost do analyze all of predictoor may in the futurenot be cheap, but you should be able to downscale the date_range._
 
 ### Lake Stack st_ts => end_ts
 All systems should be working in-sync... with the same [st_ts => end_ts] across all systems. In conjunction with ppss.yaml and everything else.
@@ -94,11 +90,23 @@ All systems should be working in-sync... with the same [st_ts => end_ts] across 
 1. CSV saves [st_ts => end_ts]
 1. PDS saves [st_ts => end_ts]
 1. ETL processes + saves [st_ts => end_ts]
-1. CLI/Dash querying [st_ts => end_ts]
+1. CLI/FE/Querying [st_ts => end_ts]
 
-All systems [GQLDF + CSV + PDS + ETL Updating] should be working as expected along w/ the cli.
+### Exception to the rule
+This doesn't always have to be the case.
+1. RAW + ETL Tables could have been dropped.
+2. GQLDF + CSV => could be far ahead.
+3. CLI/FE/Querying => would be limited to RAW + ETL tables
 
-## GQLDF Fetch + DuckDB Insert - NO ETL
+How to resolve?
+1. RAW + ETL Tables should be 1:1.
+2. CSV would be ahead. So we can take the max(timestamp) to know how far it is and where to sync-to.
+3. RAW Tables are rebuilt from CSV records.
+4. ETL Tables are rebuilt from RAW tables.
+
+All systems [GQLDF + CSV + PDS + ETL Updating] should be working as expected along w/ the cli & ppss.yaml.
+
+## [Ingest + Load Step] - GQLDF Fetch + DuckDB Insert
 
 GQL CSV and Lake max(timestamp) should remain 1:1 right now.
 As new records are fetched, both of these should update atomically.
@@ -129,19 +137,17 @@ Providing us with the parmeters:
 
 **ETL Step does not begin until this completes successfully**
 
-## ETL SQL Queries - Insert Step - Bronze Predictions - No Updating
+## [ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates
 
-Now that the latest raw records have been written to DuckDB, the ETL can kick off/resume.
+When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step. Now that the latest raw records have been written to DuckDB the ETL can kick off.
 
-We want to start w/ updating the bronze_predictions table and records since these will be updtaed by other events.
-
-When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step.
+We want to start w/ updating the bronze_predictions table and other bronze_records since these reflect newly-arrived events.
 
 However, many events and data points are not yet available when a prediction is submitted (like the payout). These values (and columns) remain null for now. 
 
-This query best captures the old (cold) prediction data and all related events (truevals, payouts) that are already available.
+The `bronze_pdr_prediction` query captures all parameters required to complete a pdr_prediction schema object, by joining across all table and related events (truevals, payouts) that are available in cold (old) data.
 
-We now have to handle events as-they-are-happening. (Incremental Updates)
+We now have to handle events as-they-are-happening in hot (new) data. (Incremental Updates)
 
 # [TBD - TO COME] 
 
