@@ -104,9 +104,45 @@ def test_table_bronze_pdr_slots(
         """
     )
 
+    pdr_slots = pds.query_data(
+        f"""
+        SELECT * FROM {get_table_name("pdr_slots", TableType.NORMAL)}
+        """
+    )
+
     assert len(bronze_pdr_slots) == 7
     assert bronze_pdr_slots.schema == bronze_pdr_slots_schema
 
-    assert bronze_pdr_slots["truevalue"].null_count() == 2
+    assert bronze_pdr_slots["truevalue"].null_count() == 1
     assert bronze_pdr_slots["roundSumStakes"].null_count() == 2
-    assert bronze_pdr_slots["source"].null_count() == 2
+    assert bronze_pdr_slots["source"].null_count() == 0
+
+    # bronze_pdr_slots should have the same amount of rows as pdr_slots
+    # last item from the pdr_slots is filtered out by fin_ms
+    assert len(bronze_pdr_slots) == len(pdr_slots) - 1
+
+    ## test data without filtering
+
+    # delete current rows from the bronze table
+    pds.query_data(
+        f"""
+        DELETE FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        """
+    )
+
+    # query the data again with a new end date that doesn't filter out anything from pdr_slots
+    get_bronze_pdr_slots_data_with_SQL(
+        ppss.lake_ss.lake_dir,
+        st_ms=UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr),
+        fin_ms=UnixTimeMs.from_timestr("2023-11-10_0:00"),
+    )
+
+    # select new data from bronze table
+    bronze_pdr_slots = pds.query_data(
+        f"""
+        SELECT * FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        """
+    )
+
+    # check that if not filtered, the two tables should have the same length
+    assert len(bronze_pdr_slots) == len(pdr_slots)
