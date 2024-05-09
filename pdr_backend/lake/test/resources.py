@@ -87,7 +87,7 @@ def get_filtered_timestamps_df(
     return df.filter(
         (pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
         & (pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
+    ).rechunk()
 
 
 # ==================================================================
