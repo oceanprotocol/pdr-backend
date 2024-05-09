@@ -106,7 +106,14 @@ class CSVDataStore(BaseDataStore):
                 last_file_path = self._get_last_file_path(
                     self._get_folder_path(dataset_identifier)
                 )
+
+                print(f"Remaining data columns and types: {remaining_data.dtypes}")
+
+
                 last_file_data = pl.read_csv(last_file_path, schema=schema)
+                
+                print(f"expected schema columns and types: {schema}")
+                print(f"Last file data columns and types: {last_file_data.dtypes}")
                 last_file_data = last_file_data.vstack(remaining_data)
 
                 t_start_time = last_file_data["timestamp"][0]
@@ -384,3 +391,21 @@ class CSVDataStore(BaseDataStore):
         row_count = last_file.shape[0]
 
         return row_count
+
+    def delete(self, dataset_identifier: str):
+        """
+        Deletes the csv files in the folder corresponding to the given dataset_identifier.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+        """
+        folder_path = self._get_folder_path(dataset_identifier)
+
+        # check if the folder exists
+        if not os.path.exists(folder_path):
+            return
+
+        file_names = os.listdir(folder_path)
+        for file_name in file_names:
+            file_path = os.path.join(folder_path, file_name)
+            os.remove(file_path)
+        os.rmdir(folder_path)

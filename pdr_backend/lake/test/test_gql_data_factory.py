@@ -1,10 +1,12 @@
 from unittest.mock import patch
 from unittest.mock import MagicMock
+import polars as pl
 
 from pdr_backend.lake.test.conftest import mock_daily_predictions
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
@@ -365,3 +367,93 @@ def test_get_etl_st_fin(_gql_datafactory_etl_predictions_df, tmpdir):
 
     assert st_ut.to_seconds() == 1672704000
     assert fin_ut.to_seconds() == 1699300700
+
+def test_prepare_temp_table(
+        _gql_datafactory_etl_predictions_df,
+        _gql_datafactory_etl_predictions_df_second_part,
+        tmpdir
+    ):
+    st_timestr = "2023-06-01"
+    fin_timestr = "2024-05-05"
+    ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
+
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    csvds = CSVDataStore(ppss.lake_ss.lake_dir)
+    # Add some predictions
+    pds.drop_table(get_table_name("pdr_predictions", TableType.TEMP))
+    csvds.delete("pdr_predictions")
+
+    result = gql_data_factory._prepare_temp_table(
+        table_name="pdr_predictions",
+        st_ut=UnixTimeMs(ppss.lake_ss.st_timestamp), 
+        fin_ut=UnixTimeMs(ppss.lake_ss.fin_timestamp),
+        schema=_gql_datafactory_etl_predictions_df.schema
+    )
+    
+    assert result is None
+
+    csvds.write(
+        dataset_identifier="pdr_predictions",
+        data=_gql_datafactory_etl_predictions_df,
+        schema=_gql_datafactory_etl_predictions_df.schema)
+
+    result = gql_data_factory._prepare_temp_table(
+        table_name="pdr_predictions",
+        st_ut=UnixTimeMs(ppss.lake_ss.st_timestamp), 
+        fin_ut=UnixTimeMs(ppss.lake_ss.fin_timestamp),
+        schema=_gql_datafactory_etl_predictions_df.schema
+    )
+
+    assert result == _gql_datafactory_etl_predictions_df['timestamp'].max()
+
+    queried_data = pds.query_data(
+        "SELECT * FROM {}".format(get_table_name("pdr_predictions", TableType.TEMP)))
+
+    print("queried_data--->", queried_data)
+    assert queried_data['timestamp'].max() == _gql_datafactory_etl_predictions_df['timestamp'].max()
+
+    csvds.write(
+        dataset_identifier="pdr_predictions",
+        data=_gql_datafactory_etl_predictions_df_second_part,
+        schema=_gql_datafactory_etl_predictions_df.schema)
+
+    result = gql_data_factory._prepare_temp_table(
+        table_name="pdr_predictions",
+        st_ut=UnixTimeMs(ppss.lake_ss.st_timestamp), 
+        fin_ut=UnixTimeMs(ppss.lake_ss.fin_timestamp),
+        schema=_gql_datafactory_etl_predictions_df_second_part.schema
+    )
+
+    assert result == _gql_datafactory_etl_predictions_df_second_part['timestamp'].max()
+
+    pds.drop_table(get_table_name("pdr_predictions", TableType.TEMP))
+
+    alternative_ppss = mock_ppss(
+        ["binance BTC/USDT c 5m"],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr="2023-11-13",
+    )
+
+    alternative_gql_data_factory = GQLDataFactory(alternative_ppss)
+
+    alternative_gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
+
+    result = gql_data_factory._prepare_temp_table(
+        table_name="pdr_predictions",
+        st_ut=UnixTimeMs(alternative_ppss.lake_ss.st_timestamp), 
+        fin_ut=UnixTimeMs(alternative_ppss.lake_ss.fin_timestamp),
+        schema=_gql_datafactory_etl_predictions_df_second_part.schema
+    )
+
+    assert result == 1699815500000
