@@ -1,4 +1,5 @@
 import inspect
+from typing import Union
 
 from enforce_typing import enforce_types
 
@@ -112,5 +113,24 @@ def prettyBigNum(amount, remove_zeroes: bool = True) -> str:
 
     if amount < 0:
         s = "-" + s
+
+    return s
+
+
+def compactSmallNum(x: Union[float, int]) -> str:
+    """
+    @description
+      Prints numbers with two decimal places precision,
+      using e-notation for small numbers if needed.
+      Removes unneeded zeroes.
+    """
+    if x == 0:
+        return "0"
+
+    if x >= 0.01:
+        return f"{x:6.2f}".strip()
+
+    s = f"{x:6.2e}"
+    s = s.replace("e-0", "e-")
 
     return s

@@ -16,7 +16,7 @@ def test_gql_data_factory():
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -37,7 +37,7 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -70,7 +70,7 @@ def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -142,7 +142,7 @@ def test_get_gql_tables(mock_update):
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr=st_timestr,
@@ -163,7 +163,7 @@ def test_calc_start_ut(tmpdir):
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -185,7 +185,7 @@ def test_do_subgraph_fetch(
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -216,7 +216,7 @@ def test_do_fetch_with_empty_data(
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -257,7 +257,7 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,

@@ -4,7 +4,7 @@ from pdr_backend.ppss.ppss import mock_ppss
 
 def _get_mock_ppss():
     return mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         ".",
         st_timestr="2023-12-03",

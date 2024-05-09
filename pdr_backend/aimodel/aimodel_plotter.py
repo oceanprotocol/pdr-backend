@@ -1,32 +1,25 @@
-from enforce_typing import enforce_types
 import numpy as np
 import plotly.graph_objects as go
+from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel_response(
-    aimodel_plotdata: AimodelPlotdata,
-):
+def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
     """
     @description
-      Plot the model response in a line plot (1 var) contour plot (>1 vars)
+      Plot the model response in a line plot (1 var) or contour plot (2 vars).
       And overlay X-data. (Training data or otherwise.)
-      If the model has >2 vars, it plots the 2 most important vars.
-
-    @arguments
-      aimodel_plotdata -- holds:
-        model -- Aimodel
-        X_train -- array [sample_i][var_i]:floatval -- trn model inputs (or other)
-        ytrue_train -- array [sample_i]:boolval -- trn model outputs (or other)
-        colnames -- list [var_i]:X_column_name
-        slicing_x -- arrat [var_i]:floatval - when >2 dims, plot about this pt
-      fig_ax -- None or (fig, ax) to easily embed into existing plot
-      legend_loc -- eg "upper left". Applies only to contour plots.
     """
-    if aimodel_plotdata.n == 1:
-        return _plot_aimodel_lineplot(aimodel_plotdata)
+    d = aimodel_plotdata
+    # assert d.n_sweep in [1, 2]
+
+    if d.n_sweep == 1 and d.n == 1 or d.n == 1:
+        return _plot_aimodel_lineplot_1var(aimodel_plotdata)
+
+    if d.n_sweep == 1 and d.n > 1:
+        return _plot_aimodel_lineplot_nvars(aimodel_plotdata)
 
     return _plot_aimodel_contour(aimodel_plotdata)
 
@@ -35,15 +28,17 @@ J = np.array([], dtype=float)  # jitter
 
 
 @enforce_types
-def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
+def _plot_aimodel_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     """
     @description
-      Plot the model, when there's 1 input x-var. Use a line plot.
+      Do a 1d lineplot, when exactly 1 input x-var
       Will fail if not 1 var.
+      Because one var total, we can show more info of true-vs-actual
     """
     # aimodel data
-    assert aimodel_plotdata.n == 1
     d = aimodel_plotdata
+    assert d.n == 1
+    assert d.n_sweep == 1
     X, ytrue = d.X_train, d.ytrue_train
 
     x = X[:, 0]
@@ -126,6 +121,49 @@ def _plot_aimodel_lineplot(aimodel_plotdata: AimodelPlotdata):
     fig_bars.add_trace(fig_scatter_true.data[2])
 
     return fig_bars
+
+
+@enforce_types
+def _plot_aimodel_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
+    """
+    @description
+      Do a 1d lineplot, when >1 input x-var, and we have chosen the var.
+      Because >1 var total, we can show more info of true-vs-actual
+    """
+    # input data
+    d = aimodel_plotdata
+    assert d.n >= 1
+    assert d.n_sweep == 1
+
+    # construct sweep_x
+    sweepvar_i = d.sweep_vars[0]  #  type: ignore[index]
+    mn_x, mx_x = min(d.X_train[:, sweepvar_i]), max(d.X_train[:, sweepvar_i])
+    N = 200
+    sweep_x = np.linspace(mn_x, mx_x, N)
+
+    # construct X
+    X = np.empty((N, d.n), dtype=float)
+    X[:, sweepvar_i] = sweep_x
+    for var_i in range(d.n):
+        if var_i == sweepvar_i:
+            continue
+        X[:, var_i] = d.slicing_x[var_i]
+
+    # calc model response
+    yptrue = d.model.predict_ptrue(X)  # [sample_i]: prob_of_being_true
+
+    # line plot: model response surface
+    fig_line = go.Figure(
+        data=go.Scatter(
+            x=sweep_x,
+            y=yptrue,
+            mode="lines",
+            line={"color": "#636EFA"},
+            name="model prob(true)",
+        )
+    )
+
+    return fig_line
 
 
 @enforce_types
@@ -251,6 +289,8 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     varnames = d.colnames
     n = len(varnames)
 
+    sweep_vars = d.sweep_vars if hasattr(d, "sweep_vars") else []
+
     # if >40 vars, truncate to top 40+1
     if n > 40:
         rest_avg = sum(imps_avg[40:])
@@ -273,6 +313,7 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     imps_stddev = imps_stddev * 100.0
 
     labelalias = {}
+    colors = []
 
     for i in range(n):
         # avoid overlap in figure by giving different labels,
@@ -281,12 +322,15 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
             varnames[i] = f"var{i}"
             labelalias[varnames[i]] = ""
 
+        colors.append("#636EFA" if not sweep_vars or i in sweep_vars else "#D4D5DD")
+
     fig_bars = go.Figure(
         data=go.Bar(
             x=imps_avg,
             y=varnames,
             error_x={"type": "data", "array": imps_stddev * 2},
             orientation="h",
+            marker_color=colors,
         )
     )
 

@@ -1,10 +1,18 @@
-from copy import deepcopy
 import os
+from copy import deepcopy
 
-from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_feed_ppss, mock_ppss
+from enforce_typing import enforce_types
+
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
+from pdr_backend.ppss.ppss import (
+    fast_test_yaml_str,
+    mock_feed_ppss,
+    mock_ppss,
+    PPSS,
+)
+from pdr_backend.ppss.predictoor_ss import feedset_test_list
 
 
 @enforce_types
@@ -61,21 +69,21 @@ def test_mock_feed_ppss():
     assert feed.source == "binance"
     assert feed.pair == "BTC/USDT"
 
-    assert ppss.predictoor_ss.timeframe_str == "5m"
-    assert str(ppss.predictoor_ss.feed) == "binance BTC/USDT c 5m"
+    predict_feed0 = ppss.predictoor_ss.predict_train_feedsets[0].predict
+    assert str(predict_feed0) == "binance BTC/USDT c 5m"
     assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_simple():
-    ppss = mock_ppss(["binance BTC/USDT c 5m"], "sapphire-mainnet")
+    ppss = mock_ppss(feedset_test_list(), "sapphire-mainnet")
     assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_default_network_development():
-    ppss = mock_ppss(["binance BTC/USDT c 5m"])
+    ppss = mock_ppss(feedset_test_list())
     assert ppss.web3_pp.network == "development"
 
 
@@ -99,11 +107,12 @@ def test_mock_ppss_onefeed1(feed_str):
       feed_str -- eg "binance BTC/USDT c 5m"
     """
 
-    ppss = mock_ppss([feed_str], "sapphire-mainnet")
+    ppss = mock_ppss([{"predict": feed_str, "train_on": feed_str}], "sapphire-mainnet")
 
     assert ppss.lake_ss.d["feeds"] == [feed_str]
-    assert ppss.predictoor_ss.d["predict_feed"] == feed_str
-    assert ppss.predictoor_ss.aimodel_ss.d["input_feeds"] == [feed_str]
+    assert ppss.predictoor_ss.d["predict_train_feedsets"] == [
+        {"predict": feed_str, "train_on": feed_str}
+    ]
     assert ppss.trader_ss.d["feed"] == feed_str
     assert ppss.trueval_ss.d["feeds"] == [feed_str]
     assert ppss.dfbuyer_ss.d["feeds"] == [feed_str]
@@ -115,77 +124,76 @@ def test_mock_ppss_onefeed1(feed_str):
 def test_mock_ppss_manyfeed():
     """Thorough test that the many-feed arg is used everywhere"""
 
-    feed_strs = ["binance BTC/USDT ETH/USDT c 5m", "kraken BTC/USDT c 5m"]
-    feed_str = "binance BTC/USDT c 5m"  # must be the first in feed_strs
-    ppss = mock_ppss(feed_strs, "sapphire-mainnet")
+    feedset_list = [
+        {
+            "predict": "binance BTC/USDT ETH/USDT c 5m",
+            "train_on": "binance BTC/USDT ETH/USDT c 5m",
+        },
+        {
+            "predict": "kraken BTC/USDT c 5m",
+            "train_on": "kraken BTC/USDT c 5m",
+        },
+    ]
+    ppss = mock_ppss(feedset_list, "sapphire-mainnet")
 
-    assert ppss.lake_ss.d["feeds"] == feed_strs
-    assert ppss.predictoor_ss.d["predict_feed"] == feed_str
-    assert ppss.predictoor_ss.aimodel_ss.d["input_feeds"] == feed_strs
-    assert ppss.trader_ss.d["feed"] == feed_str
-    assert ppss.trueval_ss.d["feeds"] == feed_strs
-    assert ppss.dfbuyer_ss.d["feeds"] == feed_strs
+    feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
+    assert ppss.lake_ss.d["feeds"] == feedsets.feed_strs
+    assert ppss.predictoor_ss.d["predict_train_feedsets"] == feedset_list
+    assert ppss.trader_ss.d["feed"] == feedsets.feed_strs[0]
+    assert ppss.trueval_ss.d["feeds"] == feedsets.feed_strs
+    assert ppss.dfbuyer_ss.d["feeds"] == feedsets.feed_strs
 
     ppss.verify_feed_dependencies()
 
 
 @enforce_types
 def test_verify_feed_dependencies():
+    # create ppss
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m", "kraken ETH/USDT c 5m"],
+        feedset_test_list(),
         "sapphire-mainnet",
     )
+    assert "predict_train_feedsets" in ppss.predictoor_ss.d
+
+    # baseline should pass
     ppss.verify_feed_dependencies()
 
-    # don't fail if aimodel needs more ohlcv feeds for same exchange/pair/time
-    ppss2 = deepcopy(ppss)
-    ppss2.predictoor_ss.aimodel_ss.d["input_feeds"] = ["binance BTC/USDT ohlcv 5m"]
-    ppss2.verify_feed_dependencies()
-
-    # fail check: is predictoor_ss.predict_feed in lake feeds?
+    # fail check: does lake feeds hold each predict feed? Each train feed?
     # - check for matching {exchange, pair, timeframe} but not {signal}
-    assert "predict_feed" in ppss.predictoor_ss.d
+    good_feed = "binance BTC/USDT c 5m"
     for wrong_feed in [
-        "binance BTC/USDT o 5m",
-        "binance ETH/USDT c 5m",
-        "binance BTC/USDT c 1h",
-        "kraken BTC/USDT c 5m",
+        "dydx BTC/USDT c 5m",  # bad exchange
+        "binance DOT/USDT c 5m",  # bad pair
+        "binance BTC/USDT c 1h",  # bad timeframe
     ]:
+        # test lake <> predict feed
         ppss2 = deepcopy(ppss)
-        ppss2.predictoor_ss.d["predict_feed"] = wrong_feed
+        ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+            {"predict": wrong_feed, "train_on": good_feed}
+        ]
         with pytest.raises(ValueError):
             ppss2.verify_feed_dependencies()
 
-    # fail check: do all aimodel_ss input feeds conform to predict feed timeframe?
+        # test lake <> train feed
+        ppss2 = deepcopy(ppss)
+        ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+            {"predict": good_feed, "train_on": wrong_feed}
+        ]
+        with pytest.raises(ValueError):
+            ppss2.verify_feed_dependencies()
+
+    # fail check: do all feeds in predict/train sets have identical timeframe?
     ppss2 = deepcopy(ppss)
-    ppss2.predictoor_ss.aimodel_ss.d["input_feeds"] = [
-        "binance BTC/USDT c 5m",
-        "binance BTC/USDT c 1h",
-    ]  # 0th ok, 1st bad
+    ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+        {"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 1h"}
+    ]
     with pytest.raises(ValueError):
         ppss2.verify_feed_dependencies()
 
-    # fail check: is each predictoor_ss.aimodel_ss.input_feeds in lake feeds?
-    # - check for matching {exchange, pair, timeframe} but not {signal}
-    for wrong_feed in [
-        "kraken BTC/USDT c 5m",
-        "binance ETH/USDT c 5m",
-        "binance BTC/USDT c 1h",
-    ]:
-        ppss2 = deepcopy(ppss)
-        ppss2.predictoor_ss.aimodel_ss.d["input_feeds"] = [wrong_feed]
-        with pytest.raises(ValueError):
-            ppss2.verify_feed_dependencies()
-
-    # fail check: is predictoor_ss.predict_feed in aimodel_ss.input_feeds?
-    # - check for matching {exchange, pair, timeframe AND signal}
-    for wrong_feed in [
-        "mexc BTC/USDT c 5m",
-        "binance DOT/USDT c 5m",
-        "binance BTC/USDT c 1h",
-        "binance BTC/USDT o 5m",
-    ]:
-        ppss2 = deepcopy(ppss)
-        ppss2.predictoor_ss.d["predict_feed"] = wrong_feed
-        with pytest.raises(ValueError):
-            ppss2.verify_feed_dependencies()
+    # fail check: is the predict feed in the corr. train feeds?
+    ppss2 = deepcopy(ppss)
+    ppss2.predictoor_ss.d["predict_train_feedsets"] = [
+        {"predict": "binance BTC/USDT c 5m", "train_on": "binance ETH/USDT c 5m"}
+    ]
+    with pytest.raises(ValueError):
+        ppss2.verify_feed_dependencies()
