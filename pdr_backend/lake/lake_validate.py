@@ -25,9 +25,9 @@ class LakeValidate(LakeInfo):
         super().__init__(ppss)
 
         self.validations = {
-            "Validate table names in lake": self.validate_expected_table_names,
-            "Validate no views in lake": self.validate_expected_view_names,
-            "Validate few gaps in bronze_predictions": self.validate_lake_bronze_predictions_gaps,
+            "validate_tables_in_lake": self.validate_expected_table_names,
+            "validate_no_views_in_lake": self.validate_expected_view_names,
+            "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
         }
         self.results: Dict[str, List[str]] = {}
 
@@ -199,9 +199,9 @@ class LakeValidate(LakeInfo):
 
         for key, (violations) in self.results.items():
             if violations is None or len(violations) == 0:
-                continue
+                print(f"{key} Validation Successful")
 
-            print(f"{key}")
+            print(f"{key} Validation Errors")
             num_violations += len(violations)
             for violation in violations:
                 print(f"> {violation}")
