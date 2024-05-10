@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import List
+
 from enforce_typing import enforce_types
 import numpy as np
 import plotly.graph_objects as go
@@ -70,11 +73,23 @@ class SeasonalPlotdata:
         return self.dr.observed.shape[0]
 
     @property
-    def x(self) -> np.ndarray:
-        """@return -- x-values = timestamps (ms)"""
-        st = self.start_time
-        fin = st + self.N
-        return np.arange(self.start_time, self.start_time + self.N)
+    def x_ut(self) -> List[UnixTimeMs]:
+        """@return -- x-values in unix time (ms)"""
+        s = self.timeframe.timeframe_str
+        if s == "5m":
+            ms_per_5m = 300000
+            uts = [self.start_time + i * ms_per_5m for i in range(self.N)]
+        elif s == "1h":
+            ms_per_1h = 3600000
+            uts = [self.start_time + i * ms_per_1h for i in range(self.N)]
+        else:
+            raise ValueError(s)
+        return [UnixTimeMs(ut) for ut in uts]
+
+    @property
+    def x_dt(self) -> List[datetime]:
+        """@return - x-values in datetime object"""
+        return [ut.to_dt() for ut in self.x_ut]
 
 @enforce_types
 def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
@@ -87,11 +102,12 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
       4. residual
     """
     d = seasonal_plotdata
+    x = d.x_dt
 
     fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
     fig.add_trace(
         go.Scatter(
-            x=d.x,
+            x=x,
             y=d.dr.observed,
             mode="lines",
             line={"color": "black", "width": 1},
@@ -102,7 +118,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     
     fig.add_trace(
         go.Scatter(
-            x=d.x,
+            x=x,
             y=d.dr.trend,
             mode="lines",
             line={"color": "blue", "width": 1},
@@ -113,7 +129,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     
     fig.add_trace(
         go.Scatter(
-            x=d.x,
+            x=x,
             y=d.dr.seasonal,
             mode="lines",
             line={"color": "green", "width": 1},
@@ -124,7 +140,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     
     fig.add_trace(
         go.Scatter(
-            x=d.x,
+            x=x,
             y=d.dr.resid,
             mode="lines",
             line={"color": "red", "width": 1},
