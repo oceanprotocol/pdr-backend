@@ -46,8 +46,7 @@ def test_timestr_args(capsys):
         "update",
         "ppss.yaml",
         "sapphire-mainnet",
-        "2021-01-01",
-        "invalid_end_date",
+        "invalid_start_date"
     ]
 
     with pytest.raises(SystemExit):
@@ -55,11 +54,11 @@ def test_timestr_args(capsys):
 
     captured = capsys.readouterr()
     assert (
-        "error: argument END: invalid timestr_or_now value: 'invalid_end_date'"
+        "error: unrecognized arguments: invalid_start_date"
         in captured.err
     )
 
-    args[5] = "now"
+    args.pop()
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
         do_lake_subcommand(args)
