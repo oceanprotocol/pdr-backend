@@ -67,6 +67,7 @@ def test_lake_ss_now():
     assert ss.fin_timestamp / 1000 == pytest.approx(ut2 / 1000, 1.0)
 
 
+@enforce_types
 def test_lake_ss_start_time():
     d = copy.deepcopy(_D)
     d["st_timestr"] = "3 days ago"
