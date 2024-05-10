@@ -104,7 +104,9 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     d = seasonal_plotdata
     x = d.x_dt
 
-    fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.01)
+
+    # subplot 1: observed
     fig.add_trace(
         go.Scatter(
             x=x,
@@ -115,7 +117,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Observed", row=1, col=1)
 
-    
+    # subplot 2: trend
     fig.add_trace(
         go.Scatter(
             x=x,
@@ -126,7 +128,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Trend", row=2, col=1)
 
-    
+    # subplot 3: seasonal
     fig.add_trace(
         go.Scatter(
             x=x,
@@ -137,7 +139,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Seasonal", row=3, col=1)
 
-    
+    # subplot 4: residual
     fig.add_trace(
         go.Scatter(
             x=x,
@@ -149,7 +151,14 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     fig.update_yaxes(title_text="Residual", row=4, col=1)
     fig.update_xaxes(title_text="Time", row=4, col=1)
 
+    # global
+    minor = dict(ticks="inside", showgrid=True)
+    for row in [1,2,3,4]:
+        fig.update_yaxes(minor=minor, row=row, col=1)
+        fig.update_xaxes(minor=minor, row=row, col=1)
     fig.update_layout(title_text="Seasonal decomposition", showlegend=False)
+    fig.update_yaxes(nticks=8)
+    fig.update_xaxes(nticks=15)
 
     return fig
 
