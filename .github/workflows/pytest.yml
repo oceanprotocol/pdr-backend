@@ -53,6 +53,9 @@ jobs:
             [ -f "$HOME/.ocean/ocean-contracts/artifacts/ready" ] && break
             done
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Test with pytest
         id: pytest
         run: |
