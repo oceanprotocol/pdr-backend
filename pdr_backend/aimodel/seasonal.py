@@ -94,7 +94,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
             x=d.x,
             y=d.dr.observed,
             mode="lines",
-            line={"color": "blue", "width": 1},
+            line={"color": "black", "width": 1},
         ), row=1, col=1,
     )
     fig.update_yaxes(title_text="Observed", row=1, col=1)
@@ -105,10 +105,10 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
             x=d.x,
             y=d.dr.trend,
             mode="lines",
-            line={"color": "red", "width": 1},
+            line={"color": "blue", "width": 1},
         ), row=2, col=1,
     )
-    fig.update_yaxes(title_text="Trend", row=1, col=1)
+    fig.update_yaxes(title_text="Trend", row=2, col=1)
 
     
     fig.add_trace(
@@ -119,7 +119,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
             line={"color": "green", "width": 1},
         ), row=3, col=1,
     )
-    fig.update_yaxes(title_text="Seasonal", row=1, col=1)
+    fig.update_yaxes(title_text="Seasonal", row=3, col=1)
 
     
     fig.add_trace(
@@ -127,15 +127,13 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
             x=d.x,
             y=d.dr.resid,
             mode="lines",
-            line={"color": "black", "width": 1},
+            line={"color": "red", "width": 1},
         ), row=4, col=1,
     )
-    fig.update_yaxes(title_text="Residual", row=1, col=1)
+    fig.update_yaxes(title_text="Residual", row=4, col=1)
     fig.update_xaxes(title_text="Time", row=4, col=1)
 
-    fig.update_layout(
-        height=800, width=800, title_text="Seasonal decomposition",
-    )
+    fig.update_layout(title_text="Seasonal decomposition", showlegend=False)
 
     return fig
 
