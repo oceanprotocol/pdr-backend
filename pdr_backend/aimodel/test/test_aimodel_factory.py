@@ -20,7 +20,7 @@ SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types
-def test_SHOW_PLOT():
+def test_aimodel_factory_SHOW_PLOT():
     """SHOW_PLOT should only be set to True temporarily in local testing."""
     assert not SHOW_PLOT
 
