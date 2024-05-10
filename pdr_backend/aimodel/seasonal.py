@@ -88,7 +88,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     """
     d = seasonal_plotdata
 
-    fig = make_subplots(rows=4, cols=1)
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
     fig.add_trace(
         go.Scatter(
             x=d.x,
