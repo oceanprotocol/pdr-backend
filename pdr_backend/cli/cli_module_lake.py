@@ -67,7 +67,7 @@ def do_lake_raw_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_raw_update(args, ppss):
+def do_lake_raw_update(_, ppss):
     """
     @description
         This updates the raw lake data
@@ -91,7 +91,7 @@ def do_lake_etl_drop(args, ppss):
 
 
 @enforce_types
-def do_lake_etl_update(args, ppss):
+def do_lake_etl_update(_, ppss):
     """
     @description
         This runs all dependencies to build analytics
