@@ -199,9 +199,10 @@ class LakeValidate(LakeInfo):
 
         for key, (violations) in self.results.items():
             if violations is None or len(violations) == 0:
-                print(f"{key} Validation Successful")
+                print(f"[{key}] Validation Successful")
+                continue
 
-            print(f"{key} Validation Errors")
+            print(f"[{key}] Validation Errors:")
             num_violations += len(violations)
             for violation in violations:
                 print(f"> {violation}")
