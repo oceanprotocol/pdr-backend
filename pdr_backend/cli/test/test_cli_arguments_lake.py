@@ -41,22 +41,13 @@ def test_timestr_args(capsys):
     captured = capsys.readouterr()
     assert "error: argument ST: invalid timestr value: 'now'" in captured.err
 
-    args = [
-        "raw",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet",
-        "invalid_start_date"
-    ]
+    args = ["raw", "update", "ppss.yaml", "sapphire-mainnet", "invalid_start_date"]
 
     with pytest.raises(SystemExit):
         do_lake_subcommand(args)
 
     captured = capsys.readouterr()
-    assert (
-        "error: unrecognized arguments: invalid_start_date"
-        in captured.err
-    )
+    assert "error: unrecognized arguments: invalid_start_date" in captured.err
 
     args.pop()
 

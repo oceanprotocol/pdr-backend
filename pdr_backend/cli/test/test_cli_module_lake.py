@@ -107,9 +107,7 @@ def test_do_lake_raw_delegation():
         "raw",
         "update",
         "ppss.yaml",
-        "sapphire-mainnet",
-        "2021-01-01",
-        "2021-01-02",
+        "sapphire-mainnet"
     ]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
@@ -137,9 +135,7 @@ def test_do_lake_etl_delegation():
         "etl",
         "update",
         "ppss.yaml",
-        "sapphire-mainnet",
-        "2021-01-01",
-        "2021-01-02",
+        "sapphire-mainnet"
     ]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
@@ -216,7 +212,7 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 
 
 @enforce_types
-@pytest.mark.skip(reason="test always fails")
+@pytest.mark.skip(reason="please fix assertion")
 def test_do_lake_raw_update(capsys):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")
@@ -236,7 +232,7 @@ def test_do_lake_raw_update(capsys):
 
 
 @enforce_types
-@pytest.mark.skip(reason="test always fails")
+@pytest.mark.skip(reason="please fix assertion")
 def test_do_lake_etl_update(capsys):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")
