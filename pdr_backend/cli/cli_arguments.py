@@ -62,7 +62,7 @@ Inspect and manage lake:
   pdr lake raw drop PPSS_FILE ST
   pdr lake raw update PPSS_FILE NETWORK
   pdr lake etl drop PPSS_FILE ST
-  pdr lake etl update PPSS_FILE ST END
+  pdr lake etl update PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK

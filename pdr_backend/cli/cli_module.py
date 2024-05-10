@@ -47,6 +47,8 @@ def _do_main():
     if sys.argv[1] == "help_long":
         do_help_long(0)
 
+    print("do_lake_submcommand: parsed_args:", sys.argv[1:])
+
     if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
         do_lake_subcommand(sys.argv[2:])
         return

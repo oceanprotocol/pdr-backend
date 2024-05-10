@@ -76,8 +76,6 @@ def do_lake_raw_update(args, ppss):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
-
     try:
         gql_data_factory = GQLDataFactory(ppss)
         gql_data_factory.get_gql_tables()
@@ -106,8 +104,6 @@ def do_lake_etl_update(args, ppss):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, lake_dir
     """
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
-
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()

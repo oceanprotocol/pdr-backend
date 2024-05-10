@@ -63,9 +63,5 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
 
         if plain_args[0] == "query":
             self.add_argument("QUERY", type=str, help="The query to run")
-        elif plain_args[0] in SUPPORTS_L2_COMMANDS:
+        elif plain_args[1] == "drop":
             self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
-            if plain_args[1] == "update":
-                self.add_argument(
-                    "END", type=timestr_or_now, help="End date yyyy-mm-dd"
-                )
