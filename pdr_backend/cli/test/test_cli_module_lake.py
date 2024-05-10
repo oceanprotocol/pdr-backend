@@ -202,41 +202,23 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 
 
 @enforce_types
-@pytest.mark.skip(reason="please fix assertion")
 def test_do_lake_raw_update(capsys):
     args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
-    args.END = UnixTimeMs.from_timestr("2021-01-02")
-    args.PPSS_FILE = "ppss.yaml"
-    args.NETWORK = "sapphire-mainnet"
-
     ppss = Mock(spec=PPSS)
 
     with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
         do_lake_raw_update(args, ppss)
 
-    assert (
-        "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
-        in capsys.readouterr().out
-    )
+    assert capsys.readouterr().out == ""
 
 
 @enforce_types
-@pytest.mark.skip(reason="please fix assertion")
 def test_do_lake_etl_update(capsys):
     args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
-    args.END = UnixTimeMs.from_timestr("2021-01-02")
-    args.PPSS_FILE = "ppss.yaml"
-    args.NETWORK = "sapphire-mainnet"
-
     ppss = Mock(spec=PPSS)
 
     with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
         with patch("pdr_backend.cli.cli_module_lake.ETL"):
             do_lake_etl_update(args, ppss)
 
-    assert (
-        "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
-        in capsys.readouterr().out
-    )
+    assert capsys.readouterr().out == ""
