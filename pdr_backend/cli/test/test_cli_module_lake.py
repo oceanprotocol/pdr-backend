@@ -103,12 +103,7 @@ def test_do_lake_raw_delegation():
 
     assert raw_drop.called
 
-    args = [
-        "raw",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet"
-    ]
+    args = ["raw", "update", "ppss.yaml", "sapphire-mainnet"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
         do_lake_subcommand(args)
@@ -131,12 +126,7 @@ def test_do_lake_etl_delegation():
         # raw does not recognize the extra END argument
         do_lake_subcommand(args)
 
-    args = [
-        "etl",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet"
-    ]
+    args = ["etl", "update", "ppss.yaml", "sapphire-mainnet"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
         do_lake_subcommand(args)
