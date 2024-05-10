@@ -9,8 +9,7 @@ from pdr_backend.cli.cli_arguments import NETWORK_Mixin, PPSS_Mixin
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
-LAKE_SUBCOMMANDS = ["describe", "query", "raw", "etl"]
-SUPPORTS_L2_COMMANDS = ["raw", "etl"]
+LAKE_SUBCOMMANDS = ["describe", "query", "drop", "update"]
 
 
 # utilities
@@ -50,15 +49,7 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
         super().__init__()
         self.add_argument("subcommand", type=str, help="")
 
-        if plain_args[0] in SUPPORTS_L2_COMMANDS:
-            self.add_argument(
-                "l2_subcommand_type",
-                type=str,
-                choices=["drop", "update"],
-                help="drop or update",
-            )
-
-        if plain_args[0] in SUPPORTS_L2_COMMANDS and plain_args[1] == "update":
+        if (plain_args[0] == "update") or (plain_args[0] == "describe"):
             self.add_argument_PPSS()
             self.add_argument_NETWORK()
         else:
@@ -68,9 +59,13 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
 
         if plain_args[0] == "query":
             self.add_argument("QUERY", type=str, help="The query to run")
-        elif plain_args[0] in SUPPORTS_L2_COMMANDS:
+            return
+
+        if plain_args[0] == "drop":
             self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
-            if plain_args[1] == "update":
-                self.add_argument(
-                    "END", type=timestr_or_now, help="End date yyyy-mm-dd"
-                )
+            return
+
+        if (plain_args[0] == "update") and (len(plain_args) > 3):
+            self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
+            self.add_argument("END", type=timestr_or_now, help="End date yyyy-mm-dd")
+            return

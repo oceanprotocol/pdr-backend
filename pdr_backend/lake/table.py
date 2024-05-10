@@ -45,22 +45,11 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
+def drop_tables_from_st(pds: PersistentDataStore, st):
     trunc_count = table_count = 0
-    if type_filter not in ["raw", "etl"]:
-        return
-
     table_names = pds.get_table_names()
 
     for table_name in table_names:
-        if type_filter == "etl" and not is_etl_table(table_name):
-            logger.info("skipping non-etl table %s", table_name)
-            continue
-
-        if type_filter == "raw" and is_etl_table(table_name):
-            logger.info("skipping etl table %s", table_name)
-            continue
-
         logger.info("drop table %s starting at %s", table_name, st)
         rows_before = pds.row_count(table_name)
         logger.info("rows before: %s", rows_before)

@@ -8,11 +8,9 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.cli_module_lake import (
     PersistentDataStore,
     do_lake_describe,
-    do_lake_etl_drop,
-    do_lake_etl_update,
+    do_lake_drop,
+    do_lake_update,
     do_lake_query,
-    do_lake_raw_drop,
-    do_lake_raw_update,
     do_lake_subcommand,
 )
 from pdr_backend.util.time_types import UnixTimeMs
@@ -77,38 +75,14 @@ def test_do_lake_query(caplog):
 
 
 @enforce_types
-def test_do_lake_raw_delegation():
-    args = ["raw", "drop", "lake_data", "2021-01-01"]
+def test_do_lake_delegation():
+    args = ["drop", "lake_data", "2021-01-01"]
 
-    with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_drop") as raw_drop:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_drop") as lake_drop:
         do_lake_subcommand(args)
 
-    assert raw_drop.called
-
-    args = [
-        "raw",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet",
-        "2021-01-01",
-        "2021-01-02",
-    ]
-
-    with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
-        do_lake_subcommand(args)
-
-    assert raw_update.called
-
-
-@enforce_types
-def test_do_lake_etl_delegation():
-    args = ["etl", "drop", "lake_data", "2021-01-01"]
-
-    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
-        do_lake_subcommand(args)
-
-    assert etl_drop.called
-    assert isinstance(etl_drop.call_args[0][0].ST, UnixTimeMs)
+    assert lake_drop.called
+    assert isinstance(lake_drop.call_args[0][0].ST, UnixTimeMs)
 
     args.append("2021-01-01")
     with pytest.raises(SystemExit):
@@ -116,7 +90,6 @@ def test_do_lake_etl_delegation():
         do_lake_subcommand(args)
 
     args = [
-        "etl",
         "update",
         "ppss.yaml",
         "sapphire-mainnet",
@@ -124,10 +97,10 @@ def test_do_lake_etl_delegation():
         "2021-01-02",
     ]
 
-    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_update") as lake_update:
         do_lake_subcommand(args)
 
-    assert etl_update.called
+    assert lake_update.called
 
 
 def _make_and_fill_timestamps(pds, table_name, first_entry_ts):
@@ -141,7 +114,7 @@ def _make_and_fill_timestamps(pds, table_name, first_entry_ts):
 
 
 @enforce_types
-def test_do_lake_raw_drop(tmpdir, caplog):
+def test_do_lake_drop(tmpdir, caplog):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
     args.LAKE_DIR = ""
@@ -155,7 +128,7 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
 
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_raw_drop(args)
+        do_lake_drop(args)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -163,59 +136,17 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     assert "drop table test2 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
     assert "rows after: 3" in caplog.text
-    assert "skipping etl table _etl_bronze_test" in caplog.text
-    assert "truncated 5 rows from 2 tables" in caplog.text
+    assert "truncated 8 rows from 3 tables" in caplog.text
 
 
 @enforce_types
-def test_do_lake_etl_drop(tmpdir, caplog):
-    args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
-    args.LAKE_DIR = ""
-
-    one_day = 1000 * 60 * 60 * 24
-    ts = 1609459200000
-
-    pds = PersistentDataStore(str(tmpdir))
-    _make_and_fill_timestamps(pds, "_temp_bronze_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(pds, "_etl_silver_test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
-
-    with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_etl_drop(args)
-
-    assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
-    assert "rows before: 5" in caplog.text
-    assert "rows after: 2" in caplog.text
-    assert "drop table _etl_silver_test2 starting at 1609459200000" in caplog.text
-    assert "rows before: 5" in caplog.text
-    assert "rows after: 3" in caplog.text
-    assert "skipping non-etl table _etl_test_raw" in caplog.text
-    assert "truncated 5 rows from 2 tables" in caplog.text
-
-
-@enforce_types
-def test_do_lake_raw_update(capsys):
+def test_do_lake_update(capsys):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")
     args.END = UnixTimeMs.from_timestr("2021-01-02")
     args.PPSS_FILE = "ppss.yaml"
 
-    do_lake_raw_update(args)
-    assert (
-        "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
-        in capsys.readouterr().out
-    )
-
-
-@enforce_types
-def test_do_lake_etl_update(capsys):
-    args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
-    args.END = UnixTimeMs.from_timestr("2021-01-02")
-    args.PPSS_FILE = "ppss.yaml"
-
-    do_lake_etl_update(args)
+    do_lake_update(args)
     assert (
         "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
         in capsys.readouterr().out

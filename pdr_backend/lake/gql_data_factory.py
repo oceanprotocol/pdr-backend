@@ -151,15 +151,17 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-        if csv_last_timestamp is None:
-            drop_tables_from_st(PersistentDataStore(table.base_path), "raw", 0)
+        if (csv_last_timestamp is None) and (
+            db_last_timestamp['max("timestamp")'][0] is not None
+        ):
+            drop_tables_from_st(PersistentDataStore(table.base_path), 0)
             return
 
         if (db_last_timestamp['max("timestamp")'][0] is not None) and (
             csv_last_timestamp < db_last_timestamp['max("timestamp")'][0]
         ):
             drop_tables_from_st(
-                PersistentDataStore(table.base_path), "raw", csv_last_timestamp
+                PersistentDataStore(table.base_path), csv_last_timestamp
             )
             return
 
@@ -175,7 +177,10 @@ class GQLDataFactory:
             if csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]:
                 logger.info("  Table exists. Insert pending %s csv data", table_name)
                 data = CSVDataStore(table.base_path).read(
-                    table_name, st_ut, fin_ut, schema
+                    table_name,
+                    db_last_timestamp['max("timestamp")'][0],
+                    csv_last_timestamp,
+                    schema,
                 )
                 table._append_to_db(data, TableType.TEMP)
 

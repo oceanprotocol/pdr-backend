@@ -2,9 +2,12 @@ import logging
 
 from enforce_typing import enforce_types
 
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.analytics.lakeinfo import LakeInfo
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.table import drop_tables_from_st
 
 logger = logging.getLogger("cli")
@@ -28,7 +31,12 @@ def do_lake_subcommand(args):
 # subcommands
 @enforce_types
 def do_lake_describe(args):
-    lake_info = LakeInfo(args.LAKE_DIR)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+    )
+
+    lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
@@ -48,22 +56,24 @@ def do_lake_query(args):
 
 
 @enforce_types
-def do_lake_raw_drop(args):
+def do_lake_drop(args):
     pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
-    drop_tables_from_st(pds, "raw", args.ST)
+    drop_tables_from_st(pds, args.ST)
 
 
 @enforce_types
-def do_lake_raw_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+def do_lake_update(args):
+    if len(list(args.__dict__.keys())) > 3:
+        print(
+            f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}, network = {args.NETWORK}"
+        )
+    else:
+        print(f"ppss = {args.PPSS_FILE}, network = {args.NETWORK}")
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+    )
 
-
-@enforce_types
-def do_lake_etl_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
-    drop_tables_from_st(pds, "etl", args.ST)
-
-
-@enforce_types
-def do_lake_etl_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    etl.do_etl()

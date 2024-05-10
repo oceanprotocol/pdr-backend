@@ -59,10 +59,8 @@ Utilities:
 Inspect and manage lake:
   pdr lake describe LAKE_DIR
   pdr lake query LAKE_DIR "SQL QUERY ..."
-  pdr lake raw drop LAKE_DIR ST
-  pdr lake raw update PPSS_FILE NETWORK
-  pdr lake etl drop LAKE_DIR ST
-  pdr lake etl update PPSS_FILE ST END
+  pdr lake drop LAKE_DIR ST
+  pdr lake update PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -554,7 +552,6 @@ defined_parsers = {
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_lakeinfo": LakeArgParser("Show lake infol", "lakeinfo"),
     "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
     "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
         "Deploy prediction submitter manager contract", "deploy_pred_submitter_mgr"
