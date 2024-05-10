@@ -48,7 +48,7 @@ You need a local copy of Ocean contract addresses [`address.json`](https://githu
 mkdir -p ~/.ocean; mkdir -p ~/.ocean/ocean-contracts; mkdir -p ~/.ocean/ocean-contracts/artifacts/
 
 # copy from github to local directory. Or, use wget if Linux. Or, download via browser.
-curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
+curl https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/address.json -o ~/.ocean/ocean-contracts/artifacts/address.json
 ```
 
 If you're running MacOS, then in console:
@@ -67,22 +67,31 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 cp ppss.yaml my_ppss.yaml
 ```
 
-Let's simulate! In console:
-
+Let's run the simulation engine. In console:
 ```console
 pdr sim my_ppss.yaml
 ```
 
-What it does:
-
+What the engine does does:
 1. Set simulation parameters.
 1. Grab historical price data from exchanges and stores in `lake_data/` dir. It re-uses any previously saved data.
 1. Run through many 5min epochs. At each epoch:
    - Build a model
    - Predict
    - Trade
-   - Plot profit versus time, more
    - Log to console and `logs/out_<time>.txt`
+   - For plots, output state to `sim_state/`
+
+Let's visualize results. Open a separate console, and:
+```console
+cd ~/code/pdr-backend # or wherever your pdr-backend dir is
+source venv/bin/activate
+
+# start the plots server
+pdr sim_plots
+```
+
+The plots server will give a url, such as [http://127.0.0.1:8050](http://127.0.0.1:8050). Open that url in your browser to see plots update in real time.
 
 "Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
 
@@ -94,11 +103,10 @@ To see simulation CLI options: `pdr sim -h`.
 
 Simulation uses Python [logging](https://docs.python.org/3/howto/logging.html) framework. Configure it via [`logging.yaml`](../logging.yaml). [Here's](https://medium.com/@cyberdud3/a-step-by-step-guide-to-configuring-python-logging-with-yaml-files-914baea5a0e5) a tutorial on yaml settings.
 
-Plot profit versus time, more: use `streamlit run sim_plots.py` to display real-time plots of the simulation while it is running. After the final iteration, the app settles into an overview of the final state.
+By default, Dash plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
+Select that unique id from the `sim_state` folder, and run `pdr sim_plots --run_id <unique_id>` e.g. `pdr sim_plots --run-id 97f9633c-a78c-4865-9cc6-b5152c9500a3`
 
-By default, streamlit plots the latest sim (even if it is still running). To enable plotting for a specific run, e.g. if you used multisim or manually triggered different simulations, the sim engine assigns unique ids to each run.
-Select that unique id from the `sim_state` folder, and run `streamlit run sim_plots.py <unique_id>` e.g. `streamlit run sim_plots.py 97f9633c-a78c-4865-9cc6-b5152c9500a3`
-You can run many instances of streamlit at once, with different URLs.
+You can run many instances of Dash at once, with different URLs. To run on different ports, use the `--port` argument.
 
 ## 3. Run Predictoor Bot on Sapphire Testnet
 
@@ -106,23 +114,50 @@ Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire
 
 Let's get our predictoor bot running on testnet first.
 
-The bot does two-sided predictions, like in simulation. This also means it needs two Ethereum accounts, with keys PRIVATE_KEY and PRIVATE_KEY2.
+The bot does two-sided predictions, like in simulation.
 
 First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn, for both accounts. [Get them here](testnet-faucet.md).
 
 Then, copy & paste your private keys as envvars. In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Next, update `my_ppss.yaml` as desired.
+### Deploy the Prediction Submitter Manager
+
+Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml`.
+
+```console
+cp ppss.yaml my_ppss.yaml
+```
+
+Prediction submitter manager is a smart contract that can submit predictions for multiple pairs and both sides in a single transaction. Predictoor agent uses this smart contract to submit predictions and it must be deployed first. To deploy the contract, run:
+
+```
+pdr deploy_pred_submitter_mgr my_ppss.yaml sapphire-testnet
+```
+
+#### Update YAML config with the contract address
+
+Next, update `my_ppss.yaml` and input the contract address in place of `predictoor_ss.bot_only.pred_submitter_mgr`:
+
+```
+predictoor_ss:
+  ...
+  bot_only:
+    pred_submitter_mgr: "CONTRACT_ADDRESS"
+  ...
+```
+
+Update the rest of the config as desired.
+
+### Running the bot
 
 Then, run a bot with modeling-on-the fly (approach 2). In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-testnet
+pdr predictoor my_ppss.yaml sapphire-testnet
 ```
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
@@ -150,16 +185,15 @@ First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEA
 Then, copy & paste your private keys as envvars. (You can skip this if keys are same as testnet.) In console:
 
 ```console
-export PRIVATE_KEY=<YOUR_PRIVATE_KEY 1>
-export PRIVATE_KEY2=<YOUR_PRIVATE_KEY 2>
+export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 ```
 
-Update `my_ppss.yaml` as desired.
+Follow the same steps in [Deploy the Prediction Submitter Manager](#deploy-the-prediction-submitter-manager) and make sure to update `pred_submitter_mgr` in the `my_ppss.yaml` config, update the rest of it as desired.
 
 Then, run the bot. In console:
 
 ```console
-pdr predictoor 2 my_ppss.yaml sapphire-mainnet
+pdr predictoor my_ppss.yaml sapphire-mainnet
 ```
 
 This is where there's real $ at stake. Good luck!

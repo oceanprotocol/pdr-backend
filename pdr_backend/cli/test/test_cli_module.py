@@ -22,7 +22,7 @@ from pdr_backend.cli.cli_module import (
     do_get_traction_info,
     do_check_network,
     do_create_accounts,
-    do_view_accounts,
+    do_print_balances,
     do_fund_accounts,
     # tools for core team
     do_trueval,
@@ -85,6 +85,10 @@ class _PDRS:
 
 class _NUM:
     NUM = 1
+
+
+class _ACCOUNT:
+    ACCOUNT = "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
 
 
 class _ACCOUNTS:
@@ -168,9 +172,9 @@ class MockArgParser_NUM(_Base):
         return MockArgs()
 
 
-class MockArgParser_ACCOUNTS_PPSS_NETWORK(_Base):
+class MockArgParser_ACCOUNT_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _ACCOUNTS, _PPSS, _NETWORK):
+        class MockArgs(Namespace, _ACCOUNT, _PPSS, _NETWORK):
             pass
 
         return MockArgs()
@@ -334,11 +338,11 @@ def test_do_create_accounts(monkeypatch):
 
 
 @enforce_types
-def test_do_view_accounts(monkeypatch):
+def test_do_print_balances(monkeypatch):
     mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.view_accounts", mock_f)
+    monkeypatch.setattr(f"{_CLI_PATH}.print_balances", mock_f)
 
-    do_view_accounts(MockArgParser_ACCOUNTS_PPSS_NETWORK().parse_args())
+    do_print_balances(MockArgParser_ACCOUNT_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
@@ -396,7 +400,7 @@ def test_do_topup(monkeypatch):
 
 
 @enforce_types
-def test_do_main(monkeypatch, capfd):
+def test_do_main(capfd):
     with patch("sys.argv", ["pdr", "help"]):
         with pytest.raises(SystemExit):
             _do_main()
@@ -408,11 +412,3 @@ def test_do_main(monkeypatch, capfd):
             _do_main()
 
     assert "Predictoor tool" in capfd.readouterr().out
-
-    mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
-
-    with patch("sys.argv", ["streamlit_entrypoint.py", "sim", "ppss.yaml"]):
-        _do_main()
-
-    assert mock_f.called

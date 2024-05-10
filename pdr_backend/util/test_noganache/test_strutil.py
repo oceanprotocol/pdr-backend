@@ -1,7 +1,7 @@
 import random
 
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import StrMixin, dictStr, prettyBigNum
+from pdr_backend.util.strutil import StrMixin, compactSmallNum, dictStr, prettyBigNum
 
 
 def testStrMixin1():
@@ -336,3 +336,15 @@ def testPrettyBigNum3_Random_DontRemoveZeros():
     ]
     for x, target_s in x_s_pairs:
         assert prettyBigNum(x, False) == target_s
+
+
+def test_compactSmallNum():
+    pairs = [
+        (0, "0"),
+        (0.5, "0.50"),
+        (0.333333, "0.33"),
+        (0.003333333, "3.33e-3"),
+    ]
+
+    for x, target_s in pairs:
+        assert compactSmallNum(x) == target_s

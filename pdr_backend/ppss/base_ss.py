@@ -97,6 +97,7 @@ class MultiFeedMixin:
 class SingleFeedMixin:
     FEED_KEY = ""
 
+    @enforce_types
     def __init__(self, d: dict, assert_feed_attributes: Optional[List] = None):
         assert self.__class__.FEED_KEY
         self.d = d
