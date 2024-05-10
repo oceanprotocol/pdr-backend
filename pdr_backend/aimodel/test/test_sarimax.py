@@ -20,44 +20,6 @@ SHOW_PLOT = False  # only turn on for manual testing
 def test_sarimax_SHOW_PLOT():
     """SHOW_PLOT should only be set to True temporarily in local testing."""
     assert not SHOW_PLOT
-
-    
-@enforce_types
-def test_sarimax__seasonal_decomposition():
-    col_s = "binance:BTC/USDT:close"
-    df = pd.read_csv(DATA_FILE) # all data
-    import pdb; pdb.set_trace()
-
-    y = df[col_s].array
-    period = 288 # 288 5min epochs per day. https://stackoverflow.com/questions/60017052/decompose-for-time-series-valueerror-you-must-specify-a-period-or-x-must-be
-    decompose_result = seasonal_decompose(y, period=period) # class DecomposeResult
-
-    if False:
-        df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
-        df = df.set_index("datetime")
-        df = pd.concat([df[col_s]]) # just BTC/USDT c column
-        df = df.asfreq(freq='5min')
-        #if has_nan(df):
-        #    df = fill_nans(df)
-        decompose_result = seasonal_decompose(df) # class DecomposeResult
-
-
-        # https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.DecomposeResult.html#statsmodels.tsa.seasonal.DecomposeResult
-
-        # x must be a pandas object with a DatetimeIndex with a freq not set to None
-        decompose_result = seasonal_decompose(df) # class DecomposeResult
-
-    #decompose_plot = decompose_result.plot()
-    decompose_result.plot()
-    
-    #figure = go.Figure()
-    #figure.add_trace(decompose_plot)
-    if SHOW_PLOT:
-        plt.show()
-        #figure.show()
-
-
-    import pdb; pdb.set_trace()
         
 # @enforce_types
 # def test_residuals_analysis():
