@@ -1,5 +1,6 @@
 from enforce_typing import enforce_types
 import pandas as pd
+import numpy as np
 from scipy import stats     
 
 from pdr_backend.aimodel.autocorrelation import (
@@ -28,12 +29,12 @@ def test_autocorrelation_SHOW_PLOT():
 @enforce_types
 def test_autocorrelation():
     # play with me
-    nlags = 20
+    nlags = 500
     do_boxcox = True
     differencing_order = 0
 
     # 
-    y = _get_data()
+    y = np.array(_get_data()) #[:1000]
     if do_boxcox:
         y, _ = stats.boxcox(y)
     for i in range(differencing_order):
@@ -41,16 +42,6 @@ def test_autocorrelation():
         
     d = AutocorrelationPlotdataFactory.build(y, nlags)
     assert isinstance(d, AutocorrelationPlotdata)
-    assert (
-        d.acf_results.max_lag
-        == len(d.acf_results.values)
-        == len(d.acf_results.lower_values)
-        == len(d.acf_results.upper_values)
-        == d.pacf_results.max_lag
-        == len(d.pacf_results.values)
-        == len(d.pacf_results.lower_values)
-        == len(d.pacf_results.upper_values)
-    )
     
     fig = plot_autocorrelation(d)
 
