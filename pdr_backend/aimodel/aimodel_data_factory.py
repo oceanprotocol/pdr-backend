@@ -96,6 +96,9 @@ class AimodelDataFactory:
         assert "timestamp" in mergedohlcv_df.columns
         assert "datetime" not in mergedohlcv_df.columns
 
+        # log
+        logger.info("Create model X/y data: begin.")
+
         # condition mergedohlcv_df
         # - every column should be ordered with oldest first, youngest last.
         #  let's verify! The timestamps should be in ascending order
@@ -114,9 +117,10 @@ class AimodelDataFactory:
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work
-        x_df = pd.DataFrame()  # build this up
-        xrecent_df = pd.DataFrame()  # ""
-
+        x_list = [] # [col_i] : Series. Build this up. Not df here (slow)
+        xrecent_list = [] ## ""
+        xcol_list = [] # [col_i] : name_str
+        
         target_hist_cols = [
             f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
             for train_feed in train_feeds_list
@@ -143,9 +147,16 @@ class AimodelDataFactory:
                 x_col = hist_col + f":t-{delayshift+1}"
                 assert (shift + N_train + 1) <= len(z)
                 # 1 point for test, the rest for train data
-                x_df[x_col] = _slice(z, -shift - N_train - 1, -shift)
-                xrecent_df[x_col] = _slice(z, -shift, -shift + 1)
+                x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
+                xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
+                xcol_list += [x_col]
 
+        # convert x lists to dfs, all at once. Faster than building up df.
+        assert len(x_list) == len(xrecent_list) == len(xcol_list)
+        x_df = pd.concat(x_list, keys=xcol_list, axis=1)
+        xrecent_df = pd.concat(xrecent_list, keys=xcol_list, axis=1)
+
+        # convert x dfs to numpy arrays
         X = x_df.to_numpy()
         xrecent = xrecent_df.to_numpy()[0, :]
 
@@ -163,6 +174,9 @@ class AimodelDataFactory:
 
         assert "timestamp" not in x_df.columns
         assert "datetime" not in x_df.columns
+
+        # log
+        logger.info("Create model X/y data: done.")
 
         # return
         ycont = y
