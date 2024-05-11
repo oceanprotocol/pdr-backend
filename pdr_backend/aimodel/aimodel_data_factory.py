@@ -117,10 +117,10 @@ class AimodelDataFactory:
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work
-        x_list = [] # [col_i] : Series. Build this up. Not df here (slow)
-        xrecent_list = [] ## ""
-        xcol_list = [] # [col_i] : name_str
-        
+        x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
+        xrecent_list = []  ## ""
+        xcol_list = []  # [col_i] : name_str
+
         target_hist_cols = [
             f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
             for train_feed in train_feeds_list
