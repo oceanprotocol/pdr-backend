@@ -119,18 +119,31 @@ def plot_autocorrelation(autocorrelation_plotdata: AutocorrelationPlotdata):
     
 @enforce_types
 def _add_corr_traces(corr_results: CorrResults, fig, row:int):
-    for x, y in zip(corr_results.x_lags, corr_results.values):
-        fig.add_trace(
-            go.Scatter(
-                x=[x, x],
-                y=[0, y],
-                mode="lines",
-                line={"color": "black", "width": 5},
-            ),
-            row=row,
-            col=1,
-        )
-        
+
+    # confidence intervals
+    fig.add_trace(
+        go.Scatter(
+            x=corr_results.x_lags,
+            y=corr_results.lower_values,
+            mode="lines",
+            line={"color":"cornflowerblue", "width":0},
+        ),
+        row=row,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=corr_results.x_lags,
+            y=corr_results.upper_values,
+            fill="tonexty", # fill area between this trace and previous one
+            mode="lines",
+            line={"color":"cornflowerblue", "width":0},
+        ),
+        row=row,
+        col=1,
+    )
+
+    # main values
     fig.add_trace(
         go.Scatter(
             x=corr_results.x_lags,
@@ -142,3 +155,16 @@ def _add_corr_traces(corr_results: CorrResults, fig, row:int):
         col=1,
     )
     
+    # vertical bars
+    for x, y in zip(corr_results.x_lags, corr_results.values):
+        fig.add_trace(
+            go.Scatter(
+                x=[x, x],
+                y=[0, y],
+                mode="lines",
+                line={"color": "black", "width": 5},
+            ),
+            row=row,
+            col=1,
+        )
+
