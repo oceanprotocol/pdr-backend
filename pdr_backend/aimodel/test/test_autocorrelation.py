@@ -39,16 +39,20 @@ def test_autocorrelation():
     for i in range(differencing_order):
         y = y[1:] - y[:-1]
         
-    plotdata = AutocorrelationPlotdataFactory.build(y, nlags)
-    assert isinstance(plotdata, AutocorrelationPlotdata)
+    d = AutocorrelationPlotdataFactory.build(y, nlags)
+    assert isinstance(d, AutocorrelationPlotdata)
     assert (
-        plotdata.max_lag
-        == len(plotdata.acf_values)
-        == len(plotdata.pacf_values)
-        == len(plotdata.x_lags) 
+        d.acf_results.max_lag
+        == len(d.acf_results.values)
+        == len(d.acf_results.lower_values)
+        == len(d.acf_results.upper_values)
+        == d.pacf_results.max_lag
+        == len(d.pacf_results.values)
+        == len(d.pacf_results.lower_values)
+        == len(d.pacf_results.upper_values)
     )
     
-    fig = plot_autocorrelation(plotdata)
+    fig = plot_autocorrelation(d)
 
     if SHOW_PLOT:
         fig.show()
