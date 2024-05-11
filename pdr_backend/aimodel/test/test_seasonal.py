@@ -16,7 +16,7 @@ DATA_FILE = (
 )
 BTC_COL = "binance:BTC/USDT:close"
 
-SHOW_PLOT = True  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types
