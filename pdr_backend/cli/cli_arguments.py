@@ -20,6 +20,7 @@ Usage: pdr sim|predictoor|trader|..
 HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
+  pdr sim_plots [--run_id RUN_ID] [--port PORT]
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
@@ -47,7 +48,6 @@ Power tools:
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
-  pdr sim_plots [--run_id RUN_ID] [--port PORT]
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
