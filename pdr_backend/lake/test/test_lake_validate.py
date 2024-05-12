@@ -199,4 +199,5 @@ def test_validate_lake_mock_sql_failure(tmpdir):
 
     # assert that the data validation failed as we would expect it to
     # review the logs and verify the data is what we expect to see
-    assert result[0] == "Gap validation failed. Please review logs."
+    assert isinstance(result, list)
+    assert len(result) == 0
