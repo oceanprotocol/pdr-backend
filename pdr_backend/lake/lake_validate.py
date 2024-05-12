@@ -134,6 +134,7 @@ class LakeValidate(LakeInfo):
         counts_per_timedelta = (
             df.group_by(["pair", "timeframe", "timedelta"])
             .agg([pl.col("count").sum().alias("total_count")])
+            .drop_nulls()
             .sort(["pair", "timeframe", "timedelta"])
         )
 
