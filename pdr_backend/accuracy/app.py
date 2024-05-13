@@ -9,8 +9,8 @@ from flask import Flask, jsonify
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.slot import Slot
 from pdr_backend.subgraph.subgraph_predictions import (
     ContractIdAndSPE,
     fetch_contract_id_and_spe,

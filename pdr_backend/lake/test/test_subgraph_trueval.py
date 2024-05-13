@@ -4,8 +4,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_trueval import (
     Trueval,
-    get_truevals_query,
     fetch_truevals,
+    get_truevals_query,
 )
 from pdr_backend.util.time_types import UnixTimeS
 

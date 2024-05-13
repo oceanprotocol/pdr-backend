@@ -1,10 +1,11 @@
-from typing import List
 import logging
+from typing import List
+
 from enforce_typing import enforce_types
 
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.networkutil import get_subgraph_url
-from pdr_backend.subgraph.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("trueval")

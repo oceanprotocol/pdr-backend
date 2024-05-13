@@ -4,12 +4,12 @@ from collections import OrderedDict
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
-from pdr_backend.subgraph.payout import Payout
-from pdr_backend.subgraph.slot import Slot
-from pdr_backend.subgraph.trueval import Trueval
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake")

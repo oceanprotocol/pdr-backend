@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.slot import Slot, mock_slots
+from pdr_backend.lake.slot import Slot, mock_slots
 
 
 @enforce_types

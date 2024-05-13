@@ -5,9 +5,9 @@ from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.prediction import Prediction
 
 
 # pylint: disable=too-many-instance-attributes

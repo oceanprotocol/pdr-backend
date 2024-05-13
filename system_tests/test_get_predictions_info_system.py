@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, Mock, patch
 from pdr_backend.cli import cli_module
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.web3_config import Web3Config
 

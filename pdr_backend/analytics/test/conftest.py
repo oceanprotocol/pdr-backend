@@ -2,7 +2,7 @@ import polars as pl
 import pytest
 
 from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.subgraph.prediction import (
+from pdr_backend.lake.prediction import (
     mock_daily_predictions,
     mock_first_predictions,
     mock_second_predictions,

@@ -1,8 +1,8 @@
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
+from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.prediction import Prediction
-from pdr_backend.subgraph.slot import Slot
-from pdr_backend.subgraph.subscription import Subscription
 
 
 def _get_mock_ppss():

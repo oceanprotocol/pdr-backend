@@ -1,15 +1,15 @@
 from enforce_typing import enforce_types
 
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import Table, TableType, get_table_name
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
 from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.subgraph.payout import Payout
-from pdr_backend.subgraph.prediction import Prediction
-from pdr_backend.subgraph.trueval import Trueval
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
 
 

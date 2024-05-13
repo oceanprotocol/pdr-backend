@@ -5,7 +5,11 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
+from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table import NamedTable, TableType, TempTable, get_table_name
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
@@ -16,12 +20,8 @@ from pdr_backend.lake.table_bronze_pdr_slots import (
     get_bronze_pdr_slots_data_with_SQL,
 )
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.payout import Payout
-from pdr_backend.subgraph.prediction import Prediction
-from pdr_backend.subgraph.slot import Slot
-from pdr_backend.subgraph.subscription import Subscription
-from pdr_backend.subgraph.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("etl")
