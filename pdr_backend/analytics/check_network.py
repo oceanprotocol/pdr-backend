@@ -74,6 +74,20 @@ def check_dfbuyer(
             "got %s consume for contract: %s, expected %s", x, addr, expect_amt_consume
         )
 
+@enforce_types
+def check_subgraph(web3_pp):
+    current_block = web3_pp.w3.eth.block_number
+    threshold = 50
+    check_block_number = current_block - threshold
+
+    is_synced = block_number_is_synced(web3_pp.subgraph_url, check_block_number)
+
+    if not is_synced:
+        logger.warning(
+            "Subgraph is out of sync, checked block %d, current block: %d",
+            check_block_number,
+            current_block,
+        )
 
 @enforce_types
 def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
@@ -196,4 +210,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     # If token_amt is not a multiple of 60, adjust it to the next multiple of 60
     if token_amt % 60 != 0:
         token_amt = ((token_amt // 60) + 1) * 60
+    
     check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
+
+    check_subgraph(web3_pp)
