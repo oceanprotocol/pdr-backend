@@ -1,6 +1,9 @@
+from collections import OrderedDict
 from typing import List
 
 from enforce_typing import enforce_types
+from polars import Boolean, Float64, Int64, Utf8
+
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -31,6 +34,28 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.stake = stake
+
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,
+                "token": Utf8,
+                "user": Utf8,
+                "slot": Int64,
+                "timestamp": Int64,
+                "payout": Float64,
+                "predvalue": Boolean,
+                "revenue": Float64,
+                "roundSumStakesUp": Float64,
+                "roundSumStakes": Float64,
+                "stake": Float64,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "pdr_payouts"
 
 
 @enforce_types

@@ -1,18 +1,15 @@
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
-from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-)
-from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
-from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.web3_config import Web3Config
-from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
-from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
+from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.ppss.web3_pp import Web3PP
+from pdr_backend.subgraph.prediction import Prediction
+from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.web3_config import Web3Config
 
 
 @patch("pdr_backend.analytics.get_predictions_info.plot_slot_daily_statistics")
@@ -47,7 +44,7 @@ def test_traction_info_system(mock_plot_stats, caplog):
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(mock_predictions)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
     # DROP TABLE IF EXISTS

@@ -1,55 +1,63 @@
 import logging
+from collections import OrderedDict
+
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import get_table_name, TableType
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table_pdr_slots import slots_table_name
-from pdr_backend.lake.table_pdr_truevals import truevals_table_name
-from pdr_backend.lake.table_pdr_payouts import payouts_table_name
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    bronze_pdr_predictions_table_name,
-)
+from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
+from pdr_backend.subgraph.payout import Payout
+from pdr_backend.subgraph.slot import Slot
+from pdr_backend.subgraph.trueval import Trueval
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake")
-bronze_pdr_slots_table_name = "bronze_pdr_slots"
+
 
 # CLEAN & ENRICHED PREDICTOOR SLOTS SCHEMA
-bronze_pdr_slots_schema = {
-    "ID": Utf8,  # f"{contract}-{slot}"
-    "contract": Utf8,  # f"{contract}"
-    "pair": Utf8,
-    "timeframe": Utf8,
-    "source": Utf8,
-    "slot": Int64,
-    "roundSumStakesUp": Float64,
-    "roundSumStakes": Float64,
-    "truevalue": Boolean,
-    "timestamp": Int64,
-    "last_event_timestamp": Int64,
-}
+class BronzeSlot:
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,  # f"{contract}-{slot}"
+                "contract": Utf8,  # f"{contract}"
+                "pair": Utf8,
+                "timeframe": Utf8,
+                "source": Utf8,
+                "slot": Int64,
+                "roundSumStakesUp": Float64,
+                "roundSumStakes": Float64,
+                "truevalue": Boolean,
+                "timestamp": Int64,
+                "last_event_timestamp": Int64,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "bronze_pdr_slots"
 
 
 @enforce_types
 def get_bronze_pdr_slots_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
 ):
-    pdr_slots_table_name = get_table_name(slots_table_name)
-    pdr_truevals_table_name = get_table_name(truevals_table_name)
-    pdr_payouts_table_name = get_table_name(payouts_table_name)
+    pdr_slots_table_name = get_table_name(Slot.get_lake_table_name())
+    pdr_truevals_table_name = get_table_name(Trueval.get_lake_table_name())
+    pdr_payouts_table_name = get_table_name(Payout.get_lake_table_name())
     etl_bronze_pdr_predictions_table_name = get_table_name(
-        bronze_pdr_predictions_table_name, TableType.ETL
+        BronzePrediction.get_lake_table_name(), TableType.ETL
     )
     temp_bronze_pdr_slots_table_name = get_table_name(
-        bronze_pdr_slots_table_name, TableType.TEMP
+        BronzeSlot.get_lake_table_name(), TableType.TEMP
     )
 
     pds = PersistentDataStore(path)
 
     pds.create_table_if_not_exists(
-        temp_bronze_pdr_slots_table_name,
-        bronze_pdr_slots_schema,
+        temp_bronze_pdr_slots_table_name, BronzeSlot.get_lake_schema()
     )
 
     query = f"""
@@ -75,7 +83,7 @@ def get_bronze_pdr_slots_data_with_SQL(
                 {pdr_slots_table_name}
             LEFT JOIN {pdr_truevals_table_name} ON {pdr_slots_table_name}.ID = {pdr_truevals_table_name}.ID
             LEFT JOIN (
-                SELECT 
+                SELECT
                     {pdr_slots_table_name}.ID AS slot_id,
                     MAX({etl_bronze_pdr_predictions_table_name}.pair) AS pair,
                     MAX({etl_bronze_pdr_predictions_table_name}.timeframe) AS timeframe,
@@ -86,7 +94,7 @@ def get_bronze_pdr_slots_data_with_SQL(
                 GROUP BY {pdr_slots_table_name}.ID
             ) AS joined_{etl_bronze_pdr_predictions_table_name} ON {pdr_slots_table_name}.ID = joined_{etl_bronze_pdr_predictions_table_name}.slot_id
             LEFT JOIN (
-                SELECT 
+                SELECT
                     SPLIT_PART(ID, '-', 1) || '-' || SPLIT_PART(ID, '-', 2) AS slot_id,
                     MAX(roundSumStakesUp) AS roundSumStakesUp,
                     MAX(roundSumStakes) AS roundSumStakes,

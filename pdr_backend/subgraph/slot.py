@@ -1,6 +1,8 @@
+from collections import OrderedDict
 from typing import List, Union
 
 from enforce_typing import enforce_types
+from polars import Boolean, Float64, Int64, Utf8
 
 
 @enforce_types
@@ -22,6 +24,23 @@ class Slot:
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.slot = slot
+
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,
+                "timestamp": Int64,
+                "slot": Int64,
+                "truevalue": Boolean,
+                "roundSumStakesUp": Float64,
+                "roundSumStakes": Float64,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "pdr_slots"
 
 
 # =========================================================================

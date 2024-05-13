@@ -1,12 +1,13 @@
-from enum import Enum
 import logging
+from enum import Enum
+
 import polars as pl
+from enforce_typing import enforce_types
 from polars.type_aliases import SchemaDict
 
-from enforce_typing import enforce_types
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.ppss.ppss import PPSS
 
 logger = logging.getLogger("table")
 
@@ -85,10 +86,10 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
 
 @enforce_types
 class Table:
-    def __init__(self, table_name: str, df_schema: SchemaDict, ppss: PPSS):
+    def __init__(self, dataclass: type, ppss: PPSS):
         self.ppss = ppss
-        self.table_name = table_name
-        self.df_schema = df_schema
+        self.dataclass = dataclass
+        self.table_name = dataclass.get_lake_table_name()
 
         self.base_path = self.ppss.lake_ss.lake_dir
 
@@ -110,7 +111,7 @@ class Table:
         """
         csvds = CSVDataStore(self.base_path)
         logger.info(" csvds = %s", csvds)
-        csvds.write(self.table_name, data, schema=self.df_schema)
+        csvds.write(self.table_name, data, schema=self.dataclass.get_lake_schema())
         logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
 
     @enforce_types

@@ -1,31 +1,41 @@
 import logging
+from collections import OrderedDict
+
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import get_table_name
+from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import TableType
 
 logger = logging.getLogger("lake")
-bronze_pdr_predictions_table_name = "bronze_pdr_predictions"
+
 
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
-bronze_pdr_predictions_schema = {
-    "ID": Utf8,  # f"{contract}-{slot}-{user}"
-    "slot_id": Utf8,  # f"{contract}-{slot}"
-    "contract": Utf8,  # f"{contract}"
-    "slot": Int64,
-    "user": Utf8,
-    "pair": Utf8,
-    "timeframe": Utf8,
-    "source": Utf8,
-    "predvalue": Boolean,
-    "truevalue": Boolean,
-    "stake": Float64,
-    "payout": Float64,
-    "timestamp": Int64,
-    "last_event_timestamp": Int64,
-}
+class BronzePrediction:
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,  # f"{contract}-{slot}-{user}"
+                "slot_id": Utf8,  # f"{contract}-{slot}"
+                "contract": Utf8,  # f"{contract}"
+                "slot": Int64,
+                "user": Utf8,
+                "pair": Utf8,
+                "timeframe": Utf8,
+                "source": Utf8,
+                "predvalue": Boolean,
+                "truevalue": Boolean,
+                "stake": Float64,
+                "payout": Float64,
+                "timestamp": Int64,
+                "last_event_timestamp": Int64,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "bronze_pdr_predictions"
 
 
 def get_bronze_pdr_predictions_data_with_SQL(
@@ -39,7 +49,7 @@ def get_bronze_pdr_predictions_data_with_SQL(
     pdr_truevals_table_name = get_table_name("pdr_truevals")
     pdr_payouts_table_name = get_table_name("pdr_payouts")
     temp_bronze_pdr_predictions_table_name = get_table_name(
-        bronze_pdr_predictions_table_name, TableType.TEMP
+        BronzePrediction.get_lake_table_name(), TableType.TEMP
     )
 
     pds = PersistentDataStore(path)
@@ -47,7 +57,7 @@ def get_bronze_pdr_predictions_data_with_SQL(
 
     pds.create_table_if_not_exists(
         temp_bronze_pdr_predictions_table_name,
-        bronze_pdr_predictions_schema,
+        BronzePrediction.get_lake_schema(),
     )
 
     return pds.execute_sql(
@@ -75,7 +85,7 @@ def get_bronze_pdr_predictions_data_with_SQL(
             {pdr_predictions_table_name}
         LEFT JOIN {pdr_truevals_table_name}
             ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot
-            AND {pdr_predictions_table_name}.contract = 
+            AND {pdr_predictions_table_name}.contract =
                 SPLIT_PART({pdr_truevals_table_name}.ID, '-', 1)
         LEFT JOIN {pdr_payouts_table_name}
             ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID

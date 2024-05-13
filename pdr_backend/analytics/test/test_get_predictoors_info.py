@@ -1,14 +1,13 @@
 from unittest.mock import patch
-import pytest
 
-from enforce_typing import enforce_types
 import polars as pl
+import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictoors_info_main
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
-
-table_name = "pdr_predictions"
+from pdr_backend.subgraph.prediction import Prediction
 
 
 @enforce_types
@@ -29,7 +28,7 @@ def test_get_predictoors_info_main_mainnet(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table = Table(Prediction, ppss)
     predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -81,7 +80,7 @@ def test_get_predictoors_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table = Table(Prediction, ppss)
     predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
@@ -131,7 +130,7 @@ def test_get_predictoors_info_bad_user_address(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table = Table(Prediction, ppss)
     predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"

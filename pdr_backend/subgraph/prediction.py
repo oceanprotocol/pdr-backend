@@ -1,6 +1,9 @@
+from collections import OrderedDict
 from typing import List, Union
 
 from enforce_typing import enforce_types
+from polars import Boolean, Float64, Int64, Utf8
+
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -34,6 +37,29 @@ class Prediction:
         self.payout = payout
         self.slot = slot
         self.user = user
+
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,
+                "contract": Utf8,
+                "pair": Utf8,
+                "timeframe": Utf8,
+                "predvalue": Boolean,
+                "stake": Float64,
+                "truevalue": Boolean,
+                "timestamp": Int64,
+                "source": Utf8,
+                "payout": Float64,
+                "slot": Int64,
+                "user": Utf8,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "pdr_predictions"
 
 
 # =========================================================================

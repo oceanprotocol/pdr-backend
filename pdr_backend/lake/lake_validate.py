@@ -1,18 +1,15 @@
 import logging
 from typing import Dict, List
-from enforce_typing import enforce_types
 
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    bronze_pdr_predictions_table_name,
-)
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.lake_info import LakeInfo
-
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.lake_info import LakeInfo
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
+from pdr_backend.ppss.ppss import PPSS
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
@@ -77,14 +74,14 @@ class LakeValidate(LakeInfo):
             Expand ohlcv into lake/this check
         """
         violations = []
-        table_name = bronze_pdr_predictions_table_name
+        table_name = BronzePrediction.get_lake_table_name()
 
         # Query retrieves results grouped by [pair, timeframe, slot]
         # We observe the timedelta between each slot group, equal to 300s or 3600s respectively
         # Finally, we only count each instance as 1 because it represents a grouping of events
         query = """
             WITH slots AS (
-                SELECT 
+                SELECT
                     pair,
                     timeframe,
                     slot
@@ -93,7 +90,7 @@ class LakeValidate(LakeInfo):
                 ORDER BY pair, timeframe, slot
             ),
             lag_slots AS (
-                SELECT 
+                SELECT
                     pair,
                     timeframe,
                     slot,
@@ -110,7 +107,7 @@ class LakeValidate(LakeInfo):
                 FROM pdr_predictions
                 GROUP BY pair, timeframe, slot
             )
-            SELECT 
+            SELECT
                 data.pair,
                 data.timeframe,
                 data.slot,
@@ -118,7 +115,7 @@ class LakeValidate(LakeInfo):
                 lag_slots.timedelta,
                 1 as count
             FROM data
-            JOIN lag_slots 
+            JOIN lag_slots
             ON data.slot = lag_slots.slot
             AND data.pair = lag_slots.pair
             AND data.timeframe = lag_slots.timeframe

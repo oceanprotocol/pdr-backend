@@ -1,6 +1,9 @@
+from collections import OrderedDict
 from typing import List
 
 from enforce_typing import enforce_types
+from polars import Float32, Int64, Utf8
+
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -26,6 +29,25 @@ class Subscription:
         self.tx_id = tx_id
         self.last_price_value = last_price_value
         self.user = user
+
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,
+                "pair": Utf8,
+                "timeframe": Utf8,
+                "source": Utf8,
+                "tx_id": Utf8,
+                "last_price_value": Float32,
+                "timestamp": Int64,
+                "user": Utf8,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "pdr_subscriptions"
 
 
 # =========================================================================

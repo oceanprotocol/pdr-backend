@@ -1,45 +1,32 @@
 import os
-
 from typing import List
-from enforce_typing import enforce_types
-import pytest
+
 import polars as pl
+import pytest
+from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.prediction import (
-    Prediction,
-    mock_first_predictions,
-    mock_second_predictions,
-    mock_daily_predictions,
-    mock_prediction,
-)
-from pdr_backend.subgraph.subscription import mock_subscriptions
-from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
-from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
-from pdr_backend.subgraph.slot import Slot, mock_slots, mock_slot
-
-from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_slots import slots_schema, slots_table_name
-from pdr_backend.lake.table_pdr_subscriptions import (
-    subscriptions_schema,
-    subscriptions_table_name,
-)
-from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
-from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.csv_data_store import CSVDataStore
-
 from pdr_backend.lake.etl import ETL
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table import Table, get_table_name
+from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
 )
-from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.subgraph.payout import Payout, mock_payout, mock_payouts
+from pdr_backend.subgraph.prediction import (
+    Prediction,
+    mock_daily_predictions,
+    mock_first_predictions,
+    mock_prediction,
+    mock_second_predictions,
+)
+from pdr_backend.subgraph.slot import Slot, mock_slot, mock_slots
+from pdr_backend.subgraph.subscription import Subscription, mock_subscriptions
+from pdr_backend.subgraph.trueval import Trueval, mock_trueval, mock_truevals
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @pytest.fixture(autouse=True)
@@ -400,7 +387,7 @@ def mock_etl_slots() -> List[Slot]:
 @pytest.fixture()
 def _gql_datafactory_etl_payouts_df():
     _payouts = mock_etl_payouts()
-    payouts_df = _object_list_to_df(_payouts, payouts_schema)
+    payouts_df = _object_list_to_df(_payouts)
     payouts_df = payouts_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -411,7 +398,7 @@ def _gql_datafactory_etl_payouts_df():
 @pytest.fixture()
 def _gql_datafactory_etl_predictions_df():
     _predictions = mock_etl_predictions()
-    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_predictions)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -422,7 +409,7 @@ def _gql_datafactory_etl_predictions_df():
 @pytest.fixture()
 def _gql_datafactory_etl_truevals_df():
     _truevals = mock_etl_truevals()
-    truevals_df = _object_list_to_df(_truevals, truevals_schema)
+    truevals_df = _object_list_to_df(_truevals)
     truevals_df = truevals_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -433,7 +420,7 @@ def _gql_datafactory_etl_truevals_df():
 @pytest.fixture()
 def _gql_datafactory_etl_slots_df():
     _slots = mock_etl_slots()
-    slots_df = _object_list_to_df(_slots, slots_schema)
+    slots_df = _object_list_to_df(_slots)
     slots_df = slots_df.with_columns([pl.col("timestamp").mul(1000).alias("timestamp")])
     print("_gql_datafactory_etl_slots_df", slots_df)
     return slots_df
@@ -449,6 +436,76 @@ def _mock_fetch_gql():
             f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
         )
         return mock_daily_predictions()
+
+    return fetch_function
+
+
+@pytest.fixture()
+def _mock_fetch_gql_predictions():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_daily_predictions()
+
+    return fetch_function
+
+
+@pytest.fixture()
+def _mock_fetch_gql_subscriptions():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_subscriptions()
+
+    return fetch_function
+
+
+@pytest.fixture()
+def _mock_fetch_gql_truevals():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_truevals()
+
+    return fetch_function
+
+
+@pytest.fixture()
+def _mock_fetch_gql_slots():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_slots()
+
+    return fetch_function
+
+
+@pytest.fixture()
+def _mock_fetch_gql_payouts():
+    # return a callable that returns a list of objects
+    def fetch_function(
+        network, st_ut, fin_ut, save_backoff_limit, pagination_limit, config
+    ):
+        print(
+            f"{network}, {st_ut}, {fin_ut}, {save_backoff_limit}, {pagination_limit}, {config}"
+        )
+        return mock_payouts()
 
     return fetch_function
 
@@ -470,7 +527,7 @@ def _mock_fetch_empty_gql():
 @pytest.fixture()
 def _gql_datafactory_first_predictions_df():
     _predictions = mock_first_predictions()
-    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_predictions)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -481,7 +538,7 @@ def _gql_datafactory_first_predictions_df():
 @pytest.fixture()
 def _gql_datafactory_1k_predictions_df():
     _predictions = mock_first_predictions(500)
-    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_predictions)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -492,7 +549,7 @@ def _gql_datafactory_1k_predictions_df():
 @pytest.fixture()
 def _gql_datafactory_second_predictions_df():
     _predictions = mock_second_predictions()
-    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_predictions)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -548,13 +605,11 @@ def setup_data(
     )
 
     gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "pdr_slots": Table(slots_table_name, slots_schema, ppss),
-        "pdr_subscriptions": Table(
-            subscriptions_table_name, subscriptions_schema, ppss
-        ),
+        "pdr_predictions": Table(Prediction, ppss),
+        "pdr_truevals": Table(Trueval, ppss),
+        "pdr_payouts": Table(Payout, ppss),
+        "pdr_slots": Table(Slot, ppss),
+        "pdr_subscriptions": Table(Subscription, ppss),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds)

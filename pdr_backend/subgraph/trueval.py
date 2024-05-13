@@ -1,6 +1,9 @@
-from typing import Union, List
+from collections import OrderedDict
+from typing import List, Union
 
 from enforce_typing import enforce_types
+from polars import Boolean, Int64, Utf8
+
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -20,6 +23,22 @@ class Trueval:
         self.timestamp = timestamp
         self.token = token
         self.slot = slot
+
+    @staticmethod
+    def get_lake_schema():
+        return OrderedDict(
+            {
+                "ID": Utf8,
+                "token": Utf8,
+                "timestamp": Int64,
+                "truevalue": Boolean,
+                "slot": Int64,
+            }
+        )
+
+    @staticmethod
+    def get_lake_table_name():
+        return "pdr_truevals"
 
 
 # =========================================================================
