@@ -12,7 +12,7 @@ from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.time_types import UnixTimeS
-
+from pdr_backend.subgraph.subgraph_sync import block_number_is_synced
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 logger = logging.getLogger("check_network")
 
