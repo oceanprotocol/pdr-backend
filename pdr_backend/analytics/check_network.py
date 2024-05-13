@@ -47,7 +47,7 @@ def check_dfbuyer(
     dfbuyer_addr: str,
     contract_query_result: dict,
     subgraph_url: str,
-    token_amt: int,
+    token_amt: float,
 ):
     cur_ut = UnixTimeS.now()
     start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
@@ -90,7 +90,7 @@ def check_subgraph(web3_pp):
         )
 
 @enforce_types
-def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
+def get_expected_consume(for_ut: int, token_amt: float) -> Union[float, int]:
     """
     @arguments
       for_ut -- unix time, in ms, in UTC time zone
@@ -103,7 +103,7 @@ def get_expected_consume(for_ut: int, token_amt: int) -> Union[float, int]:
     week_start_ut = (math.floor(for_ut / S_PER_WEEK)) * S_PER_WEEK
     time_passed = for_ut - week_start_ut
     n_weeks = int(time_passed / S_PER_DAY) + 1
-    return n_weeks * amt_per_feed_per_week
+    return int(n_weeks * amt_per_feed_per_week)
 
 
 @enforce_types
@@ -211,6 +211,6 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     if token_amt % 60 != 0:
         token_amt = ((token_amt // 60) + 1) * 60
     
-    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, int(token_amt))
+    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
 
     check_subgraph(web3_pp)
