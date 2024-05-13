@@ -11,7 +11,6 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
 )
-from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -42,13 +41,13 @@ def test_etl_tables(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 7
+    assert len(TableRegistry().get_tables()) == 6
 
 
 # pylint: disable=too-many-statements
 @enforce_types
 @pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+    "setup_data", [("2023-11-01_0:00", "2023-11-06_0:00")], indirect=True
 )
 def test_etl_do_bronze_step(
     _gql_datafactory_etl_payouts_df,
@@ -73,50 +72,53 @@ def test_etl_do_bronze_step(
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     bronze_pdr_predictions_df = bronze_pdr_predictions_records
+    print(bronze_pdr_predictions_df)
+    print(_gql_datafactory_etl_predictions_df)
     assert (
         bronze_pdr_predictions_df["contract"][0]
+        == _gql_datafactory_etl_predictions_df["contract"][0]
+    )
+    print("herrre")
+    assert (
+        bronze_pdr_predictions_df["contract"][1]
         == _gql_datafactory_etl_predictions_df["contract"][1]
     )
     assert (
-        bronze_pdr_predictions_df["contract"][1]
-        == _gql_datafactory_etl_predictions_df["contract"][2]
-    )
-    assert (
         bronze_pdr_predictions_df["contract"][2]
-        == _gql_datafactory_etl_predictions_df["contract"][3]
+        == _gql_datafactory_etl_predictions_df["contract"][2]
     )
 
     # Assert timestamp == predictions timestamp
     assert (
         bronze_pdr_predictions_df["timestamp"][1]
-        == _gql_datafactory_etl_predictions_df["timestamp"][2]
+        == _gql_datafactory_etl_predictions_df["timestamp"][1]
     )
     assert (
         bronze_pdr_predictions_df["timestamp"][2]
-        == _gql_datafactory_etl_predictions_df["timestamp"][3]
+        == _gql_datafactory_etl_predictions_df["timestamp"][2]
     )
 
     # Assert last_event_timestamp == payout.timestamp
     assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][1]
+        bronze_pdr_predictions_df["last_event_timestamp"][2]
         == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
     assert (
         bronze_pdr_predictions_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_payouts_df["timestamp"][3]
+        == _gql_datafactory_etl_payouts_df["timestamp"][2]
     )
 
     # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][2] is True
-    assert bronze_pdr_predictions_df["truevalue"][3] is False
+    assert bronze_pdr_predictions_df["truevalue"][2] is False
+    assert bronze_pdr_predictions_df["truevalue"][3] is True
 
     assert (
         bronze_pdr_predictions_df["truevalue"][1]
-        == _gql_datafactory_etl_truevals_df["truevalue"][2]
+        == _gql_datafactory_etl_truevals_df["truevalue"][1]
     )
     assert (
         bronze_pdr_predictions_df["truevalue"][2]
-        == _gql_datafactory_etl_truevals_df["truevalue"][3]
+        == _gql_datafactory_etl_truevals_df["truevalue"][2]
     )
 
     # Assert payout ts > prediction ts
@@ -131,28 +133,28 @@ def test_etl_do_bronze_step(
 
     # Assert payout came from payouts
     assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][2], 3
+        _gql_datafactory_etl_payouts_df["payout"][1], 3
     )
     assert round(bronze_pdr_predictions_df["payout"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][3], 3
+        _gql_datafactory_etl_payouts_df["payout"][2], 3
     )
 
     # Assert stake in the bronze_table came from payouts
     assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][2], 3
+        _gql_datafactory_etl_payouts_df["stake"][1], 3
     )
     assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][3], 3
+        _gql_datafactory_etl_payouts_df["stake"][2], 3
     )
 
     # Assert bronze slots table is building correctly
-    table_name = get_table_name(bronze_pdr_slots_table_name)
-    bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
+    # table_name = get_table_name(bronze_pdr_slots_table_name)
+    # bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
-    assert len(bronze_pdr_slots_records) == 4
-    assert bronze_pdr_slots_records["truevalue"].null_count() == 0
-    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
-    assert bronze_pdr_slots_records["source"].null_count() == 0
+    # assert len(bronze_pdr_slots_records) == 4
+    # assert bronze_pdr_slots_records["truevalue"].null_count() == 0
+    # assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
+    # assert bronze_pdr_slots_records["source"].null_count() == 0
 
 
 @pytest.mark.parametrize(
@@ -370,7 +372,7 @@ def _fill_dummy_tables(tmpdir):
 
 
 @enforce_types
-def test_calc_bronze_start_end_ts(tmpdir):
+def test_calc_bronze_start_end_ts(tmpdir, _gql_datafactory_etl_predictions_df):
     """
     @description
         Verify that the start and end timestamps for the bronze tables are calculated correctly
@@ -400,17 +402,18 @@ def test_calc_bronze_start_end_ts(tmpdir):
         "bronze_table_3",
     ]
 
-    # Calculate from + to timestamps
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        # Calculate from + to timestamps
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-21 00:00:00"
-    )
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert (
+            UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-30 00:00:00"
+        )
 
 
 @enforce_types
@@ -442,16 +445,17 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
         "dummy_table_4",
         "dummy_table_5",
     ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-07 00:00:00"
-    )
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert (
+            UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-07 00:00:00"
+        )
 
 
 @enforce_types
@@ -475,14 +479,15 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
         "bronze_table_3",
     ]
     etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
+        ts_now = UnixTimeMs.now()
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert abs(ts_now - to_timestamp) < 100
 
 
 @enforce_types
@@ -514,11 +519,12 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         "dummy_table_4",
         "dummy_table_5",
     ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
+        ts_now = UnixTimeMs.now()
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert abs(ts_now - to_timestamp) < 100

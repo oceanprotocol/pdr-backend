@@ -213,7 +213,9 @@ class ETL:
 
     def get_timestamp_values(self, table_name: str, default_timestr: str) -> UnixTimeMs:
 
-        max_timestamp_values = self._get_max_timestamp_values_from([NamedTable(table_name)])
+        max_timestamp_values = self._get_max_timestamp_values_from(
+            [NamedTable(table_name)]
+        )
 
         logger.info(
             "get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
@@ -246,9 +248,13 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        from_timestamp = self.get_timestamp_values(table_name, self.ppss.lake_ss.st_timestr)
+        from_timestamp = self.get_timestamp_values(
+            table_name, self.ppss.lake_ss.st_timestr
+        )
 
-        to_timestamp = self.get_timestamp_values(table_name[len("bronze_") :], self.ppss.lake_ss.fin_timestr)
+        to_timestamp = self.get_timestamp_values(
+            table_name[len("bronze_") :], self.ppss.lake_ss.fin_timestr
+        )
 
         # assert from_timestamp <= to_timestamp, (
         #    f"from_timestamp ({from_timestamp}) must be less than or equal to "

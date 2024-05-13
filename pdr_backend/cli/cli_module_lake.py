@@ -63,12 +63,7 @@ def do_lake_drop(args):
 
 @enforce_types
 def do_lake_update(args):
-    if len(list(args.__dict__.keys())) > 3:
-        print(
-            f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}, network = {args.NETWORK}"
-        )
-    else:
-        print(f"ppss = {args.PPSS_FILE}, network = {args.NETWORK}")
+    print(f"ppss = {args.PPSS_FILE}, network = {args.NETWORK}")
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,

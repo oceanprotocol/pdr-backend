@@ -151,19 +151,26 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-
-        if (db_last_timestamp is None):
+        if db_last_timestamp is None:
             return
 
-        if (csv_last_timestamp is None) and (db_last_timestamp['max("timestamp")'][0] is not None):
-            drop_tables_from_st(PersistentDataStore(table.base_path), 0, [get_table_name(table_name, TableType.TEMP)])
+        if (csv_last_timestamp is None) and (
+            db_last_timestamp['max("timestamp")'][0] is not None
+        ):
+            drop_tables_from_st(
+                PersistentDataStore(table.base_path),
+                0,
+                [get_table_name(table_name, TableType.TEMP)],
+            )
             return
 
         if (db_last_timestamp['max("timestamp")'][0] is not None) and (
             csv_last_timestamp < db_last_timestamp['max("timestamp")'][0]
         ):
             drop_tables_from_st(
-                PersistentDataStore(table.base_path), csv_last_timestamp, [get_table_name(table_name, TableType.TEMP)]
+                PersistentDataStore(table.base_path),
+                csv_last_timestamp,
+                [get_table_name(table_name, TableType.TEMP)],
             )
             return
 

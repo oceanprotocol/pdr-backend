@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 import logging
 import polars as pl
 from polars.type_aliases import SchemaDict
@@ -45,7 +46,9 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(pds: PersistentDataStore, st, table_names_param: list[str]):
+def drop_tables_from_st(
+    pds: PersistentDataStore, st, table_names_param: Optional[list[str]] = None
+):
     trunc_count = table_count = 0
     table_names = table_names_param if table_names_param else pds.get_table_names()
 
