@@ -50,7 +50,7 @@ def check_dfbuyer(
     token_amt: float,
 ):
     cur_ut = UnixTimeS.now()
-    start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
+    start_ut = UnixTimeS(int((cur_ut // S_PER_WEEK) * S_PER_WEEK))
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
     contract_addresses = [
