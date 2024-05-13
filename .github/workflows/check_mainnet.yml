@@ -32,7 +32,7 @@ jobs:
 
       - name: Notify Slack
         run: |
-          output=$(python pdr check_network ppss.yaml sapphire-mainnet 2>&1)
+          output=$(python pdr check_network ppss.yaml sapphire-mainnet 2>&1 || true)
           echo "$output"          
           filtered_output=$(echo "$output" | grep -E 'FAIL|WARNING|error' || true)
           if [ -z "$filtered_output" ]; then
