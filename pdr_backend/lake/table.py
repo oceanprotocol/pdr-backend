@@ -3,7 +3,6 @@ from enum import Enum
 
 import polars as pl
 from enforce_typing import enforce_types
-from polars.type_aliases import SchemaDict
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -89,7 +88,7 @@ class Table:
     def __init__(self, dataclass: type, ppss: PPSS):
         self.ppss = ppss
         self.dataclass = dataclass
-        self.table_name = dataclass.get_lake_table_name()
+        self.table_name = dataclass.get_lake_table_name()  # type: ignore[attr-defined]
 
         self.base_path = self.ppss.lake_ss.lake_dir
 
@@ -111,7 +110,11 @@ class Table:
         """
         csvds = CSVDataStore(self.base_path)
         logger.info(" csvds = %s", csvds)
-        csvds.write(self.table_name, data, schema=self.dataclass.get_lake_schema())
+        csvds.write(
+            self.table_name,
+            data,
+            schema=self.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+        )
         logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
 
     @enforce_types

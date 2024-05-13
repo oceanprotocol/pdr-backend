@@ -1,7 +1,6 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
-from polars.type_aliases import SchemaDict
 
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
@@ -18,7 +17,7 @@ class TableRegistry:
 
     @enforce_types
     def register_table(self, dataclass: type, ppss: PPSS):
-        table_name = dataclass.get_lake_table_name()
+        table_name = dataclass.get_lake_table_name()  # type: ignore[attr-defined]
         if table_name in self._tables:
             pass
         self._tables[table_name] = Table(dataclass, ppss)

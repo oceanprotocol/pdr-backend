@@ -68,7 +68,7 @@ class GQLDataFactory:
                 "contract_list": contract_list,
             },
             "gql_tables": [
-                dn.get_lake_table_name()
+                dn.get_lake_table_name()  # type: ignore[attr-defined]
                 for dn in [Prediction, Subscription, Trueval, Payout, Slot]
             ],
         }
@@ -181,11 +181,13 @@ class GQLDataFactory:
         save_backoff_count = 0
         pagination_offset = 0
 
-        buffer_df = pl.DataFrame([], schema=table.dataclass.get_lake_schema())
+        buffer_df = pl.DataFrame(
+            [], schema=table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
+        )
 
         PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
             get_table_name(table.table_name, TableType.TEMP),
-            table.dataclass.get_lake_schema(),
+            table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
         )
 
         while True:
@@ -202,7 +204,8 @@ class GQLDataFactory:
             logger.info("Fetched %s from subgraph", len(data))
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(
-                data, fallback_schema=table.dataclass.get_lake_schema()
+                data,
+                fallback_schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
             )
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
@@ -222,13 +225,16 @@ class GQLDataFactory:
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
-                assert df.schema == table.dataclass.get_lake_schema()
+                assert df.schema == table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
                 table.append_to_storage(buffer_df, TableType.TEMP)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
                 )
 
-                buffer_df = pl.DataFrame([], schema=table.dataclass.get_lake_schema())
+                buffer_df = pl.DataFrame(
+                    [],
+                    schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+                )
                 save_backoff_count = 0
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
                     return

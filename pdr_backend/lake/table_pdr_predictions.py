@@ -1,6 +1,7 @@
+from collections import OrderedDict
+
 import polars as pl
 from polars import Float64, Int64, Utf8
-from collections import OrderedDict
 
 
 class PredictoorSummary:

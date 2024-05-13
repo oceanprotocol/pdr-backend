@@ -193,8 +193,6 @@ def test_get_predictions_info_empty(_gql_datafactory_first_predictions_df, tmpdi
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _gql_datafactory_first_predictions_df
-
     predictions_table = Table(Prediction, ppss)
     predictions_table.append_to_storage(
         pl.DataFrame([], schema=Prediction.get_lake_schema())

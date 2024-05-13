@@ -8,7 +8,7 @@ import os
 import shutil
 from io import StringIO
 from tempfile import mkdtemp
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 import polars as pl
