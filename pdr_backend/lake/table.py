@@ -54,14 +54,23 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
 
     for table_name in table_names:
         if type_filter == "etl" and not is_etl_table(table_name):
-            logger.info("skipping non-etl table %s", table_name)
+            logger.info(
+                "[while dropping etl tables] skipping non-etl table %s", table_name
+            )
             continue
 
         if type_filter == "raw" and is_etl_table(table_name):
-            logger.info("skipping etl table %s", table_name)
+            logger.info(
+                "[while dropping raw tables] skipping non-raw table %s", table_name
+            )
             continue
 
-        logger.info("drop table %s starting at %s", table_name, st)
+        logger.info(
+            "[while dropping %s tables] drop table %s starting at %s",
+            type_filter,
+            table_name,
+            st,
+        )
         rows_before = pds.row_count(table_name)
         logger.info("rows before: %s", rows_before)
         pds.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")

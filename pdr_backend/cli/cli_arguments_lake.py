@@ -9,7 +9,7 @@ from pdr_backend.cli.cli_arguments import NETWORK_Mixin, PPSS_Mixin
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
-LAKE_SUBCOMMANDS = ["describe", "query", "raw", "etl"]
+LAKE_SUBCOMMANDS = ["describe", "validate", "query", "raw", "etl"]
 SUPPORTS_L2_COMMANDS = ["raw", "etl"]
 
 
@@ -58,19 +58,10 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
                 help="drop or update",
             )
 
-        if plain_args[0] in SUPPORTS_L2_COMMANDS and plain_args[1] == "update":
-            self.add_argument_PPSS()
-            self.add_argument_NETWORK()
-        else:
-            self.add_argument(
-                "LAKE_DIR", type=str_as_abspath, help="The directory of the lake"
-            )
+        self.add_argument_PPSS()
+        self.add_argument_NETWORK()
 
         if plain_args[0] == "query":
             self.add_argument("QUERY", type=str, help="The query to run")
-        elif plain_args[0] in SUPPORTS_L2_COMMANDS:
+        elif plain_args[1] == "drop":
             self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
-            if plain_args[1] == "update":
-                self.add_argument(
-                    "END", type=timestr_or_now, help="End date yyyy-mm-dd"
-                )

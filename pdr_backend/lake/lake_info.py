@@ -11,7 +11,7 @@ pl.Config.set_tbl_hide_dataframe_shape(True)
 
 class LakeInfo:
     def __init__(self, ppss: PPSS):
-        self.pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
+        self.pds = PersistentDataStore(ppss.lake_ss.lake_dir)
         self.all_table_names: List[str] = []
         self.table_info: Dict[str, DataFrame] = {}
         self.all_view_names: List[str] = []

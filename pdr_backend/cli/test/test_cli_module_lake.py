@@ -1,4 +1,3 @@
-import os
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
@@ -14,7 +13,9 @@ from pdr_backend.cli.cli_module_lake import (
     do_lake_raw_drop,
     do_lake_raw_update,
     do_lake_subcommand,
+    do_lake_validate,
 )
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -23,37 +24,54 @@ def test_do_lake_subcommand():
     with patch(
         "pdr_backend.cli.cli_module_lake.do_lake_describe"
     ) as mock_do_lake_describe:
-        do_lake_subcommand(["describe", "lake_data"])
+        do_lake_subcommand(["describe", "ppss.yaml", "sapphire-mainnet"])
 
     mock_do_lake_describe.assert_called_once()
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_query") as mock_do_lake_query:
-        do_lake_subcommand(["query", "lake_data", "query"])
+        do_lake_subcommand(["query", "ppss.yaml", "sapphire-mainnet", "query"])
 
     mock_do_lake_query.assert_called_once()
 
 
 @enforce_types
 def test_do_lake_describe():
-    lake_dir = os.path.abspath("lake_data")
     args = Namespace()
     args.subcommand = "describe"
-    args.LAKE_DIR = lake_dir
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
+
+    ppss = Mock()
 
     with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
-        do_lake_describe(args)
+        do_lake_describe(args, ppss)
 
-    mock_lake_info.assert_called_once_with(lake_dir)
+    mock_lake_info.assert_called_once_with(ppss)
+
+
+@enforce_types
+def test_do_lake_validate():
+    args = Namespace()
+    args.subcommand = "validate"
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
+
+    ppss = Mock()
+
+    with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
+        do_lake_validate(args, ppss)
+
+    mock_lake_info.assert_called_once_with(ppss)
 
 
 @enforce_types
 def test_do_lake_query(caplog):
-    lake_dir = os.path.abspath("lake_data")
     query = "SELECT * FROM table"
 
     args = Namespace()
-    args.LAKE_DIR = lake_dir
     args.QUERY = query
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
 
     mock_pds = Mock()
     mock_pds.query_data.return_value = "query result"
@@ -61,7 +79,7 @@ def test_do_lake_query(caplog):
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds
     ):
-        do_lake_query(args)
+        do_lake_query(args, None)
 
     mock_pds.query_data.assert_called_once_with(query)
 
@@ -71,28 +89,21 @@ def test_do_lake_query(caplog):
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds_err
     ):
-        do_lake_query(args)
+        do_lake_query(args, None)
 
     assert "Error querying lake: boom!" in caplog.text
 
 
 @enforce_types
 def test_do_lake_raw_delegation():
-    args = ["raw", "drop", "lake_data", "2021-01-01"]
+    args = ["raw", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_drop") as raw_drop:
         do_lake_subcommand(args)
 
     assert raw_drop.called
 
-    args = [
-        "raw",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet",
-        "2021-01-01",
-        "2021-01-02",
-    ]
+    args = ["raw", "update", "ppss.yaml", "sapphire-mainnet"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:
         do_lake_subcommand(args)
@@ -102,7 +113,7 @@ def test_do_lake_raw_delegation():
 
 @enforce_types
 def test_do_lake_etl_delegation():
-    args = ["etl", "drop", "lake_data", "2021-01-01"]
+    args = ["etl", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
         do_lake_subcommand(args)
@@ -115,14 +126,7 @@ def test_do_lake_etl_delegation():
         # raw does not recognize the extra END argument
         do_lake_subcommand(args)
 
-    args = [
-        "etl",
-        "update",
-        "ppss.yaml",
-        "sapphire-mainnet",
-        "2021-01-01",
-        "2021-01-02",
-    ]
+    args = ["etl", "update", "ppss.yaml", "sapphire-mainnet"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
         do_lake_subcommand(args)
@@ -145,6 +149,8 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
     args.LAKE_DIR = ""
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
 
     ts = 1609459200000
     one_day = 1000 * 60 * 60 * 24
@@ -155,7 +161,7 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
 
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_raw_drop(args)
+        do_lake_raw_drop(args, None)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -163,7 +169,6 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     assert "drop table test2 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
     assert "rows after: 3" in caplog.text
-    assert "skipping etl table _etl_bronze_test" in caplog.text
     assert "truncated 5 rows from 2 tables" in caplog.text
 
 
@@ -172,6 +177,8 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     args = Namespace()
     args.ST = UnixTimeMs.from_timestr("2021-01-01")  # 1609459200000
     args.LAKE_DIR = ""
+    args.PPSS_FILE = "ppss.yaml"
+    args.NETWORK = "sapphire-mainnet"
 
     one_day = 1000 * 60 * 60 * 24
     ts = 1609459200000
@@ -182,7 +189,7 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
 
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_etl_drop(args)
+        do_lake_etl_drop(args, None)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -197,26 +204,21 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 @enforce_types
 def test_do_lake_raw_update(capsys):
     args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
-    args.END = UnixTimeMs.from_timestr("2021-01-02")
-    args.PPSS_FILE = "ppss.yaml"
+    ppss = Mock(spec=PPSS)
 
-    do_lake_raw_update(args)
-    assert (
-        "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
-        in capsys.readouterr().out
-    )
+    with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
+        do_lake_raw_update(args, ppss)
+
+    assert capsys.readouterr().out == ""
 
 
 @enforce_types
 def test_do_lake_etl_update(capsys):
     args = Namespace()
-    args.ST = UnixTimeMs.from_timestr("2021-01-01")
-    args.END = UnixTimeMs.from_timestr("2021-01-02")
-    args.PPSS_FILE = "ppss.yaml"
+    ppss = Mock(spec=PPSS)
 
-    do_lake_etl_update(args)
-    assert (
-        "TODO: start ms = 1609459200000, end ms = 1609545600000, ppss = ppss.yaml"
-        in capsys.readouterr().out
-    )
+    with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
+        with patch("pdr_backend.cli.cli_module_lake.ETL"):
+            do_lake_etl_update(args, ppss)
+
+    assert capsys.readouterr().out == ""

@@ -2,10 +2,14 @@ import logging
 
 from enforce_typing import enforce_types
 
-from pdr_backend.analytics.lakeinfo import LakeInfo
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.lake_info import LakeInfo
+from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import drop_tables_from_st
+from pdr_backend.ppss.ppss import PPSS
 
 logger = logging.getLogger("cli")
 
@@ -22,23 +26,32 @@ def do_lake_subcommand(args):
         func_name += f"_{parsed_args.l2_subcommand_type}"
 
     func = globals().get(func_name)
-    func(parsed_args)
+
+    ppss = PPSS(yaml_filename=parsed_args.PPSS_FILE, network=parsed_args.NETWORK)
+
+    func(parsed_args, ppss)
 
 
 # subcommands
 @enforce_types
-def do_lake_describe(args):
-    lake_info = LakeInfo(args.LAKE_DIR)
+def do_lake_describe(_, ppss):
+    lake_info = LakeInfo(ppss)
     lake_info.run()
 
 
 @enforce_types
-def do_lake_query(args):
+def do_lake_validate(_, ppss):
+    lake_validate = LakeValidate(ppss)
+    lake_validate.run()
+
+
+@enforce_types
+def do_lake_query(args, ppss):
     """
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=True)
+    pds = PersistentDataStore(ppss, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
         print(df)
@@ -48,22 +61,49 @@ def do_lake_query(args):
 
 
 @enforce_types
-def do_lake_raw_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+def do_lake_raw_drop(args, ppss):
+    pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "raw", args.ST)
 
 
 @enforce_types
-def do_lake_raw_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+def do_lake_raw_update(_, ppss):
+    """
+    @description
+        This updates the raw lake data
+        1. All subgraph data will be fetched
+
+        Please use nested_args to control lake_ss
+        ie: st_timestr, fin_timestr, lake_dir
+    """
+    try:
+        gql_data_factory = GQLDataFactory(ppss)
+        gql_data_factory.get_gql_tables()
+    except Exception as e:
+        logger.error("Error updating raw lake data: %s", e)
+        print(e)
 
 
 @enforce_types
-def do_lake_etl_drop(args):
-    pds = PersistentDataStore(args.LAKE_DIR, read_only=False)
+def do_lake_etl_drop(args, ppss):
+    pds = PersistentDataStore(ppss, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
 
 @enforce_types
-def do_lake_etl_update(args):
-    print(f"TODO: start ms = {args.ST}, end ms = {args.END}, ppss = {args.PPSS_FILE}")
+def do_lake_etl_update(_, ppss):
+    """
+    @description
+        This runs all dependencies to build analytics
+        All raw, clean, and aggregate data will be generated
+        1. All subgraph data will be fetched
+        2. All analytic data will be built
+        3. Lake contains all required data
+        4. Dashboards read from lake
+
+        Please use nested_args to control lake_ss
+        ie: st_timestr, fin_timestr, lake_dir
+    """
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    etl.do_etl()

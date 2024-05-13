@@ -10,7 +10,6 @@ from pdr_backend.analytics.get_predictions_info import (
     get_predictoors_info_main,
     get_traction_info_main,
 )
-from pdr_backend.analytics.lakeinfo import LakeInfo
 from pdr_backend.cli.cli_arguments import (
     do_help_long,
     do_help_short,
@@ -21,8 +20,6 @@ from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
 from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -54,6 +51,8 @@ def _do_main():
 
     if sys.argv[1] == "help_long":
         do_help_long(0)
+
+    print("do_lake_submcommand: parsed_args:", sys.argv[1:])
 
     if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
         do_lake_subcommand(sys.argv[2:])
@@ -178,7 +177,7 @@ def do_deployer(args, nested_args=None):
 
 
 @enforce_types
-def do_lake(args, nested_args=None):
+def do_ohlcv(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -187,43 +186,6 @@ def do_lake(args, nested_args=None):
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
-
-
-@enforce_types
-def do_lakeinfo(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-
-    lake_info = LakeInfo(ppss)
-    lake_info.run()
-
-
-@enforce_types
-def do_analytics(args, nested_args=None):
-    """
-    @description
-        This runs all dependencies to build analytics
-        All raw, clean, and aggregate data will be generated
-        1. All subgraph data will be fetched
-        2. All analytic data will be built
-        3. Lake contains all required data
-        4. Dashboards read from lake
-
-        Please use nested_args to control lake_ss
-        ie: st_timestr, fin_timestr, lake_dir
-    """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-
-    gql_data_factory = GQLDataFactory(ppss)
-    etl = ETL(ppss, gql_data_factory)
-    etl.do_etl()
 
 
 @enforce_types
