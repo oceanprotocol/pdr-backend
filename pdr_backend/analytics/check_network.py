@@ -81,8 +81,9 @@ def check_subgraph(web3_pp):
     check_block_number = current_block - threshold
 
     is_synced = block_number_is_synced(web3_pp.subgraph_url, check_block_number)
+    is_synced = False
     if not is_synced:
-        logger.warning(
+        logger.error(
             "Subgraph is out of sync, checked block %d, current block: %d",
             check_block_number,
             current_block,
@@ -191,7 +192,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         )
         native_warning = " LOW NATIVE BALANCE!" if native_bal < Eth(10).to_wei() else ""
 
-        lfunc = logger.warning if ocean_warning or native_warning else logger.info
+        lfunc = logger.error if ocean_warning or native_warning else logger.info
 
         lfunc(
             "%s: OCEAN: %.2f%s, Native: %.2f%s",
