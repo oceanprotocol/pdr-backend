@@ -32,6 +32,7 @@ jobs:
 
       - name: Notify Slack
         run: |
+          set +e
           output=$(python pdr check_network ppss.yaml sapphire-mainnet | grep -E 'FAIL|WARNING|error' || true)
           
           if [ -z "$output" ]; then
@@ -40,7 +41,7 @@ jobs:
             joke_response=$(curl -s "https://v2.jokeapi.dev/joke/Any?type=single")
             joke=$(echo "$joke_response" | jq -r '.joke')
 
-            message="🙀 Mainnet Check script failed: \n${output}\n\nHere's a joke: $joke\n"
+            message="🙀 Mainnet Check script failed: \n${output}\n\nHere's a joke:\n$joke\n"
 
             curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$message"'"}' ${{ secrets.SLACK_WEBHOOK_URL_MAINNET }}
           fi
