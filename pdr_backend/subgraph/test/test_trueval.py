@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.trueval import Trueval, mock_truevals
+from pdr_backend.lake.trueval import Trueval, mock_truevals
 
 
 @enforce_types

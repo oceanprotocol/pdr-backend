@@ -1,15 +1,13 @@
 import os
-from polars import Boolean, Float64, Int64, Utf8
-import polars as pl
-from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table import Table
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
 
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+import polars as pl
+from polars import Boolean, Float64, Int64, Utf8
+
 from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.table import Table
+from pdr_backend.ppss.ppss import mock_ppss
 
 
 # pylint: disable=too-many-instance-attributes
@@ -89,9 +87,9 @@ def test_table_initialization(tmpdir):
         fin_timestr=fin_timestr,
     )
 
-    table = Table(predictions_table_name, predictions_schema, ppss)
+    table = Table(Prediction, ppss)
 
-    assert table.table_name == predictions_table_name
+    assert table.table_name == Prediction.get_lake_table_name()
     assert table.ppss.lake_ss.st_timestr == st_timestr
     assert table.ppss.lake_ss.fin_timestr == fin_timestr
 
@@ -115,10 +113,10 @@ def test_csv_data_store(
     )
 
     # Initialize Table, fill with data, validate
-    table = Table(predictions_table_name, predictions_schema, ppss)
+    table = Table(Prediction, ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
-    assert CSVDataStore(table.base_path).has_data(predictions_table_name)
+    assert CSVDataStore(table.base_path).has_data(Prediction.get_lake_table_name())
 
     csv_file_path = os.path.join(
         ppss.lake_ss.lake_dir,
@@ -169,6 +167,7 @@ def test_persistent_store(
         fin_timestr=fin_timestr,
     )
 
+    predictions_table_name = Prediction.get_lake_table_name()
     # Initialize Table, fill with data, validate
     PDS = PersistentDataStore(ppss.lake_ss.lake_dir)
     PDS._create_and_fill_table(
@@ -181,7 +180,9 @@ def test_persistent_store(
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    PDS.insert_to_table(_gql_datafactory_second_predictions_df, predictions_table_name)
+    PDS.insert_to_table(
+        _gql_datafactory_second_predictions_df, Prediction.get_lake_table_name()
+    )
 
     result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
 
@@ -211,8 +212,8 @@ def test_append_to_db(caplog):
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, ppss)
-    data = pl.DataFrame([mocked_object], table_df_schema)
+    table = Table(Prediction, ppss)
+    data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
     table._append_to_db(data)
 
-    assert f"Appended 1 rows to db table: {table_name}" in caplog.text
+    assert "Appended 1 rows to db table: pdr_predictions" in caplog.text

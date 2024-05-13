@@ -1,21 +1,16 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.test.resources import _gql_data_factory
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.table import Table, TableType, get_table_name
 from pdr_backend.lake.table_bronze_pdr_predictions import (
-    bronze_pdr_predictions_schema,
-    bronze_pdr_predictions_table_name,
+    BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
-from pdr_backend.lake.table import Table, get_table_name
-from pdr_backend.lake.table_pdr_truevals import truevals_schema, truevals_table_name
-from pdr_backend.lake.table_pdr_payouts import payouts_schema, payouts_table_name
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.test.resources import _gql_data_factory
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import TableType
 
 
 @enforce_types
@@ -37,12 +32,10 @@ def test_table_bronze_pdr_predictions(
     )
 
     gql_tables = {
-        "pdr_predictions": Table(predictions_table_name, predictions_schema, ppss),
-        "pdr_truevals": Table(truevals_table_name, truevals_schema, ppss),
-        "pdr_payouts": Table(payouts_table_name, payouts_schema, ppss),
-        "bronze_pdr_predictions": Table(
-            bronze_pdr_predictions_table_name, bronze_pdr_predictions_schema, ppss
-        ),
+        "pdr_predictions": Table(Prediction, ppss),
+        "pdr_truevals": Table(Trueval, ppss),
+        "pdr_payouts": Table(Payout, ppss),
+        "bronze_pdr_predictions": Table(BronzePrediction, ppss),
     }
 
     # Work 1: Append all data onto bronze_table
@@ -68,6 +61,7 @@ def test_table_bronze_pdr_predictions(
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )
 
+    bronze_pdr_predictions_table_name = BronzePrediction.get_lake_table_name()
     result = pds.query_data(
         f"""
             SELECT * FROM {get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)}

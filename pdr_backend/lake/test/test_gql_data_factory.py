@@ -1,12 +1,12 @@
-from unittest.mock import patch
-from unittest.mock import MagicMock
-from pdr_backend.ppss.ppss import mock_ppss
+from unittest.mock import MagicMock, patch
+
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.prediction import mock_daily_predictions
 from pdr_backend.lake.table import TableType, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.subgraph.prediction import mock_daily_predictions
+from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 def test_gql_data_factory():
@@ -30,7 +30,15 @@ def test_gql_data_factory():
     assert gql_data_factory.ppss is not None
 
 
-def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
+def test_update_end_to_end(
+    _mock_fetch_gql_predictions,
+    _mock_fetch_gql_subscriptions,
+    _mock_fetch_gql_truevals,
+    _mock_fetch_gql_payouts,
+    _mock_fetch_gql_slots,
+    tmpdir,
+    caplog,
+):
     """
     Test GQLDataFactory update calls the update function for all the tables
     """
@@ -44,11 +52,11 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
         fin_timestr=fin_timestr,
     )
     fns = {
-        "pdr_predictions": _mock_fetch_gql,
-        "pdr_subscriptions": _mock_fetch_gql,
-        "pdr_truevals": _mock_fetch_gql,
-        "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql,
+        "pdr_predictions": _mock_fetch_gql_predictions,
+        "pdr_subscriptions": _mock_fetch_gql_subscriptions,
+        "pdr_truevals": _mock_fetch_gql_truevals,
+        "pdr_payouts": _mock_fetch_gql_payouts,
+        "pdr_slots": _mock_fetch_gql_slots,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
@@ -61,7 +69,15 @@ def test_update_end_to_end(_mock_fetch_gql, tmpdir, caplog):
     assert caplog.text.count("Updating table") == len(tables)
 
 
-def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
+def test_update_partial_then_resume(
+    _mock_fetch_gql_predictions,
+    _mock_fetch_gql_subscriptions,
+    _mock_fetch_gql_truevals,
+    _mock_fetch_gql_payouts,
+    _mock_fetch_gql_slots,
+    _get_test_PDS,
+    tmpdir,
+):
     """
     Test GQLDataFactory should update end-to-end, but fail in the middle
     Work 1: Update csv data (11-03 -> 11-05) and then fail inserting to db
@@ -79,11 +95,11 @@ def test_update_partial_then_resume(_mock_fetch_gql, _get_test_PDS, tmpdir):
 
     # Work 1: update csv files and insert into temp table
     fns = {
-        "pdr_predictions": _mock_fetch_gql,
-        "pdr_subscriptions": _mock_fetch_gql,
-        "pdr_truevals": _mock_fetch_gql,
-        "pdr_payouts": _mock_fetch_gql,
-        "pdr_slots": _mock_fetch_gql,
+        "pdr_predictions": _mock_fetch_gql_predictions,
+        "pdr_subscriptions": _mock_fetch_gql_subscriptions,
+        "pdr_truevals": _mock_fetch_gql_truevals,
+        "pdr_payouts": _mock_fetch_gql_payouts,
+        "pdr_slots": _mock_fetch_gql_slots,
     }
 
     gql_data_factory = GQLDataFactory(ppss)

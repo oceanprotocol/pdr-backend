@@ -1,7 +1,7 @@
 import csv
 import os
 
-from pdr_backend.subgraph.prediction import mock_daily_predictions
+from pdr_backend.lake.prediction import mock_daily_predictions
 from pdr_backend.util.csvs import save_analysis_csv, save_prediction_csv
 
 

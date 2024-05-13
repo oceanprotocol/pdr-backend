@@ -1,17 +1,16 @@
 from unittest.mock import patch
+
+import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-import polars as pl
-from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.table import TableType, get_table_name, NamedTable
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    bronze_pdr_predictions_table_name,
-)
-from pdr_backend.lake.table_bronze_pdr_slots import bronze_pdr_slots_table_name
+from pdr_backend.lake.table import NamedTable, TableType, get_table_name
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
+from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
+from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -63,7 +62,7 @@ def test_etl_do_bronze_step(
     etl._move_from_temp_tables_to_live()
 
     # assert bronze_pdr_predictions_df is created
-    table_name = get_table_name(bronze_pdr_predictions_table_name)
+    table_name = get_table_name(BronzePrediction.get_lake_table_name())
     bronze_pdr_predictions_records = pds.query_data(
         "SELECT * FROM {}".format(table_name)
     )
@@ -147,7 +146,7 @@ def test_etl_do_bronze_step(
     )
 
     # Assert bronze slots table is building correctly
-    table_name = get_table_name(bronze_pdr_slots_table_name)
+    table_name = get_table_name(BronzeSlot.get_lake_table_name())
     bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
     assert len(bronze_pdr_slots_records) == 4
@@ -171,15 +170,15 @@ def test_etl_views(setup_data):
     # live table shouldn't exist
     # temp table should be created
     # etl view shouldn't exist
-    assert not bronze_pdr_predictions_table_name in pds.get_table_names()
+    assert not BronzePrediction.get_lake_table_name() in pds.get_table_names()
     records = pds.query_data(
         "SELECT * FROM {}".format(
-            get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)
+            get_table_name(BronzePrediction.get_lake_table_name(), TableType.TEMP)
         )
     )
     assert len(records) == 5
     assert (
-        get_table_name(bronze_pdr_predictions_table_name, TableType.ETL)
+        get_table_name(BronzePrediction.get_lake_table_name(), TableType.ETL)
         in pds.get_view_names()
     )
 

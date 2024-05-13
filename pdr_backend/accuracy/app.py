@@ -1,18 +1,20 @@
 import logging
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 from enforce_typing import enforce_types
 from flask import Flask, jsonify
-from pdr_backend.lake.table_pdr_slots import slots_table_name
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
+
 from pdr_backend.lake.etl import ETL
-from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.slot import Slot
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import (
+    ContractIdAndSPE,
     fetch_contract_id_and_spe,
     get_all_contract_ids_by_owner,
-    ContractIdAndSPE,
 )
 from pdr_backend.subgraph.subgraph_slot import PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
@@ -354,6 +356,7 @@ def calculate_statistics_from_DuckDB_tables():
     end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
     try:
         db_conn = PersistentDataStore("./lake_data", read_only=True)
+        slots_table_name = Slot.get_lake_table_name()
         slots_table = db_conn.query_data(
             f"""
             SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts} AND SLOT < {end_ts}

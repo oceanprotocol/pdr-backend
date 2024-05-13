@@ -1,15 +1,13 @@
 from unittest.mock import patch
-import pytest
 
 import polars as pl
+import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.table import Table
 from pdr_backend.analytics.get_predictions_info import get_traction_info_main
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
-
-table_name = "pdr_predictions"
 
 
 @enforce_types
@@ -38,7 +36,7 @@ def test_get_traction_info_main_mainnet(
     )
 
     predictions_df = _gql_datafactory_daily_predictions_df
-    predictions_table = Table(table_name, predictions_df.schema, ppss)
+    predictions_table = Table(Prediction, ppss)
     predictions_table.append_to_storage(predictions_df)
 
     get_traction_info_main(ppss, st_timestr, fin_timestr)
@@ -78,8 +76,10 @@ def test_get_traction_info_empty_data(
         fin_timestr=fin_timestr,
     )
 
-    pdr_prediction_table = Table(table_name, predictions_schema, ppss)
-    pdr_prediction_table.append_to_storage(pl.DataFrame([], schema=predictions_schema))
+    pdr_prediction_table = Table(Prediction, ppss)
+    pdr_prediction_table.append_to_storage(
+        pl.DataFrame([], schema=Prediction.get_lake_schema())
+    )
 
     with pytest.raises(AssertionError):
         get_traction_info_main(ppss, st_timestr, fin_timestr)

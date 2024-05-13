@@ -1,28 +1,27 @@
 import logging
 import time
 from typing import Dict, List, Optional, Tuple
+
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.table import TableType, get_table_name, NamedTable, TempTable
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
+from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.table import NamedTable, TableType, TempTable, get_table_name
 from pdr_backend.lake.table_bronze_pdr_predictions import (
-    bronze_pdr_predictions_table_name,
-    bronze_pdr_predictions_schema,
+    BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
 from pdr_backend.lake.table_bronze_pdr_slots import (
-    bronze_pdr_slots_table_name,
-    bronze_pdr_slots_schema,
+    BronzeSlot,
     get_bronze_pdr_slots_data_with_SQL,
 )
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table_pdr_payouts import payouts_table_name
-from pdr_backend.lake.table_pdr_predictions import predictions_table_name
-from pdr_backend.lake.table_pdr_subscriptions import subscriptions_table_name
-from pdr_backend.lake.table_pdr_slots import slots_table_name
-from pdr_backend.lake.table_pdr_truevals import truevals_table_name
+from pdr_backend.lake.trueval import Trueval
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("etl")
@@ -45,32 +44,19 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_tables(
-            {
-                bronze_pdr_predictions_table_name: (
-                    bronze_pdr_predictions_table_name,
-                    bronze_pdr_predictions_schema,
-                    self.ppss,
-                ),
-                bronze_pdr_slots_table_name: (
-                    bronze_pdr_slots_table_name,
-                    bronze_pdr_slots_schema,
-                    self.ppss,
-                ),
-            }
-        )
+        TableRegistry().register_tables([BronzePrediction, BronzeSlot], ppss)
 
         self.raw_table_names = [
-            payouts_table_name,
-            predictions_table_name,
-            truevals_table_name,
-            slots_table_name,
-            subscriptions_table_name,
+            Payout.get_lake_table_name(),
+            Prediction.get_lake_table_name(),
+            Trueval.get_lake_table_name(),
+            Slot.get_lake_table_name(),
+            Subscription.get_lake_table_name(),
         ]
 
         self.bronze_table_getters = {
-            bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
-            bronze_pdr_slots_table_name: get_bronze_pdr_slots_data_with_SQL,
+            BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL,
+            BronzeSlot.get_lake_table_name(): get_bronze_pdr_slots_data_with_SQL,
         }
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())

@@ -1,43 +1,31 @@
 import logging
 from typing import Callable, Dict
-from enforce_typing import enforce_types
+
 import polars as pl
-from pdr_backend.lake.table import Table, TableType, get_table_name, TempTable
-from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
-from pdr_backend.util.networkutil import get_sapphire_postfix
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictions_table_name,
-)
-from pdr_backend.lake.table_pdr_subscriptions import (
-    subscriptions_schema,
-    subscriptions_table_name,
-)
-from pdr_backend.lake.table_pdr_truevals import (
-    truevals_schema,
-    truevals_table_name,
-)
-from pdr_backend.lake.table_pdr_payouts import (
-    payouts_schema,
-    payouts_table_name,
-)
-from pdr_backend.lake.table_pdr_slots import slots_table_name, slots_schema
-from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
-from pdr_backend.subgraph.subgraph_subscriptions import (
-    fetch_filtered_subscriptions,
-)
-from pdr_backend.subgraph.subgraph_predictions import (
-    fetch_filtered_predictions,
-)
-from pdr_backend.subgraph.subgraph_payout import fetch_payouts
-from pdr_backend.subgraph.subgraph_slot import fetch_slots
-from pdr_backend.util.time_types import UnixTimeMs
+from enforce_typing import enforce_types
+
+from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
+from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.table import Table, TableType, TempTable, get_table_name
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.trueval import Trueval
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.subgraph.subgraph_payout import fetch_payouts
+from pdr_backend.subgraph.subgraph_predictions import (
+    fetch_filtered_predictions,
+    get_all_contract_ids_by_owner,
+)
+from pdr_backend.subgraph.subgraph_slot import fetch_slots
+from pdr_backend.subgraph.subgraph_subscriptions import fetch_filtered_subscriptions
+from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
+from pdr_backend.util.networkutil import get_sapphire_postfix
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -70,40 +58,23 @@ class GQLDataFactory:
         # configure all tables that will be recorded onto lake
         self.record_config = {
             "fetch_functions": {
-                predictions_table_name: fetch_filtered_predictions,
-                subscriptions_table_name: fetch_filtered_subscriptions,
-                truevals_table_name: fetch_truevals,
-                payouts_table_name: fetch_payouts,
-                slots_table_name: fetch_slots,
+                Prediction.get_lake_table_name(): fetch_filtered_predictions,
+                Subscription.get_lake_table_name(): fetch_filtered_subscriptions,
+                Trueval.get_lake_table_name(): fetch_truevals,
+                Payout.get_lake_table_name(): fetch_payouts,
+                Slot.get_lake_table_name(): fetch_slots,
             },
             "config": {
                 "contract_list": contract_list,
             },
             "gql_tables": [
-                predictions_table_name,
-                subscriptions_table_name,
-                truevals_table_name,
-                payouts_table_name,
-                slots_table_name,
+                dn.get_lake_table_name()  # type: ignore[attr-defined]
+                for dn in [Prediction, Subscription, Trueval, Payout, Slot]
             ],
         }
 
         TableRegistry().register_tables(
-            {
-                predictions_table_name: (
-                    predictions_table_name,
-                    predictions_schema,
-                    self.ppss,
-                ),
-                subscriptions_table_name: (
-                    subscriptions_table_name,
-                    subscriptions_schema,
-                    self.ppss,
-                ),
-                truevals_table_name: (truevals_table_name, truevals_schema, self.ppss),
-                payouts_table_name: (payouts_table_name, payouts_schema, self.ppss),
-                slots_table_name: (slots_table_name, slots_schema, self.ppss),
-            }
+            [Prediction, Subscription, Trueval, Payout, Slot], self.ppss
         )
 
     @enforce_types
@@ -210,10 +181,13 @@ class GQLDataFactory:
         save_backoff_count = 0
         pagination_offset = 0
 
-        buffer_df = pl.DataFrame([], schema=table.df_schema)
+        buffer_df = pl.DataFrame(
+            [], schema=table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
+        )
 
         PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
-            get_table_name(table.table_name, TableType.TEMP), table.df_schema
+            get_table_name(table.table_name, TableType.TEMP),
+            table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
         )
 
         while True:
@@ -229,7 +203,10 @@ class GQLDataFactory:
 
             logger.info("Fetched %s from subgraph", len(data))
             # convert predictions to df and transform timestamp into ms
-            df = _object_list_to_df(data, table.df_schema)
+            df = _object_list_to_df(
+                data,
+                fallback_schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+            )
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
 
@@ -248,13 +225,16 @@ class GQLDataFactory:
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
-                assert df.schema == table.df_schema
+                assert df.schema == table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
                 table.append_to_storage(buffer_df, TableType.TEMP)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
                 )
 
-                buffer_df = pl.DataFrame([], schema=table.df_schema)
+                buffer_df = pl.DataFrame(
+                    [],
+                    schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+                )
                 save_backoff_count = 0
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
                     return
@@ -314,7 +294,9 @@ class GQLDataFactory:
                 logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
-            self._prepare_temp_table(table.table_name, st_ut, fin_ut, table.df_schema)
+            self._prepare_temp_table(
+                table.table_name, st_ut, fin_ut, table.dataclass.get_lake_schema()
+            )
 
             # fetch from subgraph and add to temp table
             logger.info("Updating table %s", get_table_name(table.table_name))
