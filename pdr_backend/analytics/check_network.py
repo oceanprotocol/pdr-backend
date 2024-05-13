@@ -81,7 +81,7 @@ def check_subgraph(web3_pp):
     check_block_number = current_block - threshold
 
     is_synced = block_number_is_synced(web3_pp.subgraph_url, check_block_number)
-
+    is_synced = False
     if not is_synced:
         logger.warning(
             "Subgraph is out of sync, checked block %d, current block: %d",
