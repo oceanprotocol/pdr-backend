@@ -1,12 +1,15 @@
 import logging
 import sys
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import polars as pl
+
 from enforce_typing import enforce_types
 
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -65,6 +68,8 @@ class AimodelDataFactory:
         self,
         mergedohlcv_df: pl.DataFrame,
         testshift: int,
+        predict_feed: ArgFeed,
+        train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
@@ -75,6 +80,8 @@ class AimodelDataFactory:
         @arguments
           mergedohlcv_df -- *polars* DataFrame. See class docstring
           testshift -- to simulate across historical test data
+          predict_feed -- feed to predict
+          train_feeds -- feeds to use for model inputs. If None use predict feed
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
             If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
 
@@ -89,24 +96,35 @@ class AimodelDataFactory:
         assert "timestamp" in mergedohlcv_df.columns
         assert "datetime" not in mergedohlcv_df.columns
 
-        # every column should be ordered with oldest first, youngest last.
-        # let's verify! The timestamps should be in ascending order
+        # log
+        logger.info("Create model X/y data: begin.")
+
+        # condition mergedohlcv_df
+        # - every column should be ordered with oldest first, youngest last.
+        #  let's verify! The timestamps should be in ascending order
         uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
-
-        # condition inputs
         if do_fill_nans and has_nan(mergedohlcv_df):
             mergedohlcv_df = fill_nans(mergedohlcv_df)
+
+        # condition other inputs
+        train_feeds_list: List[ArgFeed]
+        if train_feeds:
+            train_feeds_list = train_feeds
+        else:
+            train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_ss
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work
-        x_df = pd.DataFrame()  # build this up
-        xrecent_df = pd.DataFrame()  # ""
+        x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
+        xrecent_list = []  ## ""
+        xcol_list = []  # [col_i] : name_str
 
         target_hist_cols = [
-            f"{feed.exchange}:{feed.pair}:{feed.signal}" for feed in ss.feeds
+            f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
+            for train_feed in train_feeds_list
         ]
-
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
@@ -129,27 +147,36 @@ class AimodelDataFactory:
                 x_col = hist_col + f":t-{delayshift+1}"
                 assert (shift + N_train + 1) <= len(z)
                 # 1 point for test, the rest for train data
-                x_df[x_col] = _slice(z, -shift - N_train - 1, -shift)
-                xrecent_df[x_col] = _slice(z, -shift, -shift + 1)
+                x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
+                xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
+                xcol_list += [x_col]
 
+        # convert x lists to dfs, all at once. Faster than building up df.
+        assert len(x_list) == len(xrecent_list) == len(xcol_list)
+        x_df = pd.concat(x_list, keys=xcol_list, axis=1)
+        xrecent_df = pd.concat(xrecent_list, keys=xcol_list, axis=1)
+
+        # convert x dfs to numpy arrays
         X = x_df.to_numpy()
         xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        ref_ss = self.ss
-        hist_col = f"{ref_ss.exchange_str}:{ref_ss.pair_str}:{ref_ss.signal_str}"
+        hist_col = f"{predict_feed.exchange}:{predict_feed.pair}:{predict_feed.signal}"
         z = mergedohlcv_df[hist_col].to_list()
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions
         assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
-        assert X.shape[1] == ss.n
+        assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
 
         assert "timestamp" not in x_df.columns
         assert "datetime" not in x_df.columns
+
+        # log
+        logger.info("Create model X/y data: done.")
 
         # return
         ycont = y

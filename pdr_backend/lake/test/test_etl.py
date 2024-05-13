@@ -67,6 +67,7 @@ def test_etl_do_bronze_step(
         "SELECT * FROM {}".format(table_name)
     )
     assert len(bronze_pdr_predictions_records) == 5
+    assert len(_gql_datafactory_etl_predictions_df) == 6
 
     print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
 

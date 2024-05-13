@@ -4,7 +4,7 @@ from datetime import timezone
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 
 @enforce_types
@@ -55,6 +55,14 @@ def test_from_timestr():
     # test error
     with pytest.raises(ValueError):
         UnixTimeMs.from_timestr("::::::::")
+
+
+@enforce_types
+def test_from_iso_timestr():
+    t_iso_str = "2024-04-16T03:35:00.000Z"
+    t_UnixTimeMs = UnixTimeMs.from_iso_timestr(t_iso_str)
+    assert t_iso_str == t_UnixTimeMs.to_iso_timestr()
+    assert t_UnixTimeMs == 1713238500000
 
 
 @enforce_types
@@ -113,3 +121,26 @@ def test_dt_to_ut_and_back():
 
     dt2 = ut.to_dt()
     assert dt2 == dt
+
+
+@enforce_types
+def test_timezones():
+    # set targets
+    dt = datetime.datetime.now()
+    dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
+    ut_s_target = dt.timestamp()
+    ut_ms_target = ut_s_target * 1000
+
+    # set tolerances
+    tol_s = 1
+    tol_ms = tol_s * 1000
+
+    # test UnixTimeS
+    # - if it's off by 7200, that's 3600 * 2 --> 2 timezones from UTC
+    ut_s = UnixTimeS.now()
+    assert ut_s == pytest.approx(ut_s_target, abs=tol_s)
+
+    # test UnixTimeMs
+    # - if it's off by 7200*1000, that's 3600 * 2 * 1000 --> 2 timezones fr UTC
+    ut_ms = UnixTimeMs.now()
+    assert ut_ms == pytest.approx(ut_ms_target, abs=tol_ms)

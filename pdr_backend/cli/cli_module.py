@@ -16,12 +16,12 @@ from pdr_backend.cli.cli_arguments import (
     get_arg_parser,
     print_args,
 )
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
 from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -29,6 +29,7 @@ from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.multisim_engine import MultisimEngine
+from pdr_backend.sim.sim_dash import sim_dash
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
@@ -36,7 +37,11 @@ from pdr_backend.trueval.trueval_agent import TruevalAgent
 from pdr_backend.util.core_accounts import fund_accounts_with_OCEAN
 from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.topup import topup_main
-from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
+from pdr_backend.util.web3_accounts import (
+    create_accounts,
+    fund_accounts,
+    print_balances,
+)
 
 logger = logging.getLogger("cli")
 
@@ -49,6 +54,8 @@ def _do_main():
     if sys.argv[1] == "help_long":
         do_help_long(0)
 
+    print("do_lake_submcommand: parsed_args:", sys.argv[1:])
+
     if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
         do_lake_subcommand(sys.argv[2:])
         return
@@ -60,8 +67,10 @@ def _do_main():
 
     parser = get_arg_parser(func_name)
     args, nested_args = parser.parse_known_args()
-    print_args(args)
-    logger.info(nested_args)
+
+    do_log_args = func_name != "do_print_balances"
+    if do_log_args:
+        print_args(args, nested_args)
 
     func(args, nested_args)
 
@@ -80,8 +89,10 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-
-    sim_engine = SimEngine(ppss)
+    feedset = ppss.predictoor_ss.predict_train_feedsets[0]
+    if len(ppss.predictoor_ss.predict_train_feedsets) > 0:
+        logger.warning("Multiple predict feeds provided, using the first one")
+    sim_engine = SimEngine(ppss, feedset)
     sim_engine.run()
 
 
@@ -168,7 +179,7 @@ def do_deployer(args, nested_args=None):
 
 
 @enforce_types
-def do_lake(args, nested_args=None):
+def do_ohlcv(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
@@ -323,14 +334,14 @@ def do_create_accounts(args, nested_args=None):
 
 
 @enforce_types
-def do_view_accounts(args, nested_args=None):
+def do_print_balances(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network=args.NETWORK,
         nested_override_args=nested_args,
     )
-    accounts = args.ACCOUNTS
-    view_accounts(accounts, ppss.web3_pp)
+    account = args.ACCOUNT
+    print_balances(account, ppss.web3_pp)
 
 
 @enforce_types
@@ -355,3 +366,9 @@ def do_deploy_pred_submitter_mgr(args, nested_args=None):
     logger.info(
         "Prediction Submitter Manager Contract deployed at %s", contract_address
     )
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_sim_plots(args, nested_args=None):
+    sim_dash(args)

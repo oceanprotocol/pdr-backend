@@ -39,9 +39,9 @@ class ArgPair:
         verify_base_str(base_str)
         verify_quote_str(quote_str)
 
-        self.pair_str = pair_str
-        self.base_str = base_str
-        self.quote_str = quote_str
+        self.pair_str: str = pair_str  # type: ignore[assignment]
+        self.base_str: str = base_str  # type: ignore[assignment]
+        self.quote_str: str = quote_str  # type: ignore[assignment]
 
     def __eq__(self, other):
         return self.pair_str == str(other)

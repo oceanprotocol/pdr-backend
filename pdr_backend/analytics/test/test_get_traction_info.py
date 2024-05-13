@@ -30,7 +30,7 @@ def test_get_traction_info_main_mainnet(
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-07"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,
@@ -71,7 +71,7 @@ def test_get_traction_info_empty_data(
     st_timestr = "2023-11-02"
     fin_timestr = "2023-11-05"
     ppss = mock_ppss(
-        ["binance BTC/USDT c 5m"],
+        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
         st_timestr=st_timestr,

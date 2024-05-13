@@ -3,7 +3,11 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.web3_pp import mock_web3_pp
-from pdr_backend.util.web3_accounts import create_accounts, fund_accounts, view_accounts
+from pdr_backend.util.web3_accounts import (
+    create_accounts,
+    fund_accounts,
+    print_balances,
+)
 from pdr_backend.util.currency_types import Eth
 
 
@@ -20,30 +24,30 @@ def test_create_accounts(mock_create):
 @patch("pdr_backend.ppss.web3_pp.Token")
 @patch("pdr_backend.ppss.web3_pp.NativeToken")
 @patch("pdr_backend.ppss.web3_pp.Web3PP.get_address")
-def test_get_account_balances(mock_get_address, mock_native_token, mock_token):
+def test_print_balances(mock_get_address, mock_native_token, mock_token):
     web3_pp = mock_web3_pp("development")
 
     # Create Mock instances for NativeToken and Token
-    native_token_instance = mock_native_token.return_value
-    token_instance = mock_token.return_value
+    ROSE = mock_native_token.return_value
+    OCEAN = mock_token.return_value
 
     # Set the return values for balanceOf methods
-    native_token_instance.balanceOf.return_value = Eth(2).to_wei()
-    token_instance.balanceOf.return_value = Eth(1).to_wei()
+    ROSE.balanceOf.return_value = Eth(2).to_wei()
+    OCEAN.balanceOf.return_value = Eth(1).to_wei()
 
     # Set the return value for get_address
     mock_get_address.return_value = "0xOCEAN"
 
-    view_accounts(["0x123", "0x1234"], web3_pp)
+    print_balances("0x123", web3_pp)
 
     # Assert methods are returning right values
     assert mock_get_address(web3_pp, "Ocean") == "0xOCEAN"
-    assert native_token_instance.balanceOf(mock_get_address) == Eth(2).to_wei()
-    assert token_instance.balanceOf(mock_get_address) == Eth(1).to_wei()
+    assert ROSE.balanceOf(mock_get_address) == Eth(2).to_wei()
+    assert OCEAN.balanceOf(mock_get_address) == Eth(1).to_wei()
 
     # Assert methods were called the right amount of times
-    assert native_token_instance.balanceOf.call_count == 3
-    assert token_instance.balanceOf.call_count == 3
+    assert ROSE.balanceOf.call_count == 2
+    assert OCEAN.balanceOf.call_count == 2
     assert mock_get_address.call_count == 2
 
 

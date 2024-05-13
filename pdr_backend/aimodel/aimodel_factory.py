@@ -51,7 +51,9 @@ class AimodelFactory:
             ytrue[0], ytrue[1] = True, False
             skm = DummyClassifier(strategy="most_frequent")
         elif ss.approach == "LinearLogistic":
-            skm = LogisticRegression()
+            skm = LogisticRegression(max_iter=1000)
+        elif ss.approach == "LinearLogistic_Balanced":
+            skm = LogisticRegression(max_iter=1000, class_weight="balanced")
         elif ss.approach == "LinearSVC":
             skm = SVC(kernel="linear", probability=True, C=0.025)
         else:
@@ -92,10 +94,21 @@ class AimodelFactory:
         # calibrate output probabilities
         if do_constant or ss.calibrate_probs == "None":
             pass
-        elif ss.calibrate_probs == "CalibratedClassifierCV_5x":
+        elif ss.calibrate_probs in [
+            "CalibratedClassifierCV_Sigmoid",
+            "CalibratedClassifierCV_Isotonic",
+        ]:
+            N = X.shape[0]
+            method = ss.calibrate_probs_skmethod(N)  # 'sigmoid' or 'isotonic'
             cv = min(smallest_n, 5)
             if cv > 1:
-                skm = CalibratedClassifierCV(skm, cv=cv)
+                skm = CalibratedClassifierCV(
+                    skm,
+                    method=method,
+                    cv=cv,
+                    ensemble=True,
+                    n_jobs=-1,
+                )
         else:
             raise ValueError(ss.calibrate_probs)
 

@@ -35,6 +35,7 @@ class ETL:
         To access data/lake, use the table objects.
     """
 
+    @enforce_types
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
@@ -61,11 +62,9 @@ class ETL:
             bronze_pdr_predictions_table_name: get_bronze_pdr_predictions_data_with_SQL,
         }
 
-        logger.info("self.bronze_table_getters: %s", self.bronze_table_getters)
-
         self.bronze_table_names = list(self.bronze_table_getters.keys())
-
         self.temp_table_names = []
+
         for table_name in self.bronze_table_names:
             self.temp_table_names.append(get_table_name(table_name, TableType.NORMAL))
 
@@ -121,9 +120,7 @@ class ETL:
             end_ts = time.time_ns() / 1e9
             logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
 
-            # At the end of the ETL pipeline, we want to
-            # 1. move from TEMP tables to production tables
-            # 2. drop TEMP tables and ETL views
+            # Move data to live at end of ETL
             self._move_from_temp_tables_to_live()
 
             logger.info(
@@ -150,6 +147,7 @@ class ETL:
         end_ts = time.time_ns() / 1e9
         logger.info("do_bronze_step - Completed in %s sec.", end_ts - st_ts)
 
+    @enforce_types
     def _get_max_timestamp_values_from(
         self, tables: List[NamedTable]
     ) -> Dict[str, Optional[UnixTimeMs]]:
@@ -212,7 +210,6 @@ class ETL:
         return values
 
     def get_timestamp_values(self, table_name: str, default_timestr: str) -> UnixTimeMs:
-
         max_timestamp_values = self._get_max_timestamp_values_from(
             [NamedTable(table_name)]
         )

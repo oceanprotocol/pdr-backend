@@ -1,21 +1,25 @@
 import copy
 import logging
 import os
-from typing import Optional
 import uuid
+from typing import Optional
 
 import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.time_types import UnixTimeMs
@@ -26,15 +30,16 @@ logger = logging.getLogger("sim_engine")
 # pylint: disable=too-many-instance-attributes
 class SimEngine:
     @enforce_types
-    def __init__(self, ppss: PPSS, multi_id: Optional[str] = None):
-        # preconditions
-        predict_feed = ppss.predictoor_ss.feed
-
-        # timeframe doesn't need to match
-        assert (
-            str(predict_feed.exchange),
-            str(predict_feed.pair),
-        ) in ppss.predictoor_ss.aimodel_ss.exchange_pair_tups
+    def __init__(
+        self,
+        ppss: PPSS,
+        predict_train_feedset: PredictTrainFeedset,
+        multi_id: Optional[str] = None,
+    ):
+        self.predict_train_feedset = predict_train_feedset
+        assert isinstance(self.predict_feed, ArgFeed)
+        assert isinstance(self.tokcoin, str)
+        assert isinstance(self.usdcoin, str)
 
         self.ppss = ppss
 
@@ -58,14 +63,18 @@ class SimEngine:
             self.multi_id = str(uuid.uuid4())
 
     @property
+    def predict_feed(self) -> ArgFeed:
+        return self.predict_train_feedset.predict
+
+    @property
     def tokcoin(self) -> str:
         """Return e.g. 'ETH'"""
-        return self.ppss.predictoor_ss.base_str
+        return self.predict_feed.pair.base_str
 
     @property
     def usdcoin(self) -> str:
         """Return e.g. 'USDT'"""
-        return self.ppss.predictoor_ss.quote_str
+        return self.predict_feed.pair.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -77,13 +86,13 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.st.init_loop_attributes()
+        logger.info("Initialize plot data.")
+        self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
     def run(self):
-        self._init_loop_attributes()
         logger.info("Start run")
-
-        self.sim_plotter.init_state(self.multi_id)
+        self._init_loop_attributes()
 
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
@@ -104,9 +113,13 @@ class SimEngine:
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
+        predict_feed = self.predict_train_feedset.predict
+        train_feeds = self.predict_train_feedset.train_on
         X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
+            predict_feed,
+            train_feeds,
         )
         colnames = list(x_df.columns)
 
@@ -126,7 +139,8 @@ class SimEngine:
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        ut = UnixTimeMs(recent_ut - testshift * pdr_ss.timeframe_ms)
+        timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
+        ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
@@ -169,7 +183,11 @@ class SimEngine:
             average="binary",
             zero_division=0.0,
         )
-        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall)
+        if min(st.ytrues) == max(st.ytrues):
+            loss = 3.0
+        else:
+            loss = log_loss(st.ytrues, st.probs_up)
+        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
 
         # trader: exit the trading position
         if pred_up:
@@ -202,25 +220,7 @@ class SimEngine:
         trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
         st.trader_profits_USD.append(trader_profit_USD)
 
-        # log
-        s = f"Iter #{test_i+1}/{ppss.sim_ss.test_n}: "
-        s += f"ut={ut.pretty_timestr()[9:][:-10]}"
-
-        s += f" prob_up={prob_up:.2f}"
-        s += " pdr profit = "
-        s += f"{acct_up_profit:7.4f} up"
-        s += f" + {acct_down_profit:7.4f} down"
-        s += f" = {pdr_profit_OCEAN:7.4f} OCEAN"
-        s += f" (cumul. {sum(st.pdr_profits_OCEAN):7.2f} OCEAN)"
-
-        s += f". Acc={n_correct:4d}/{n_trials:4d} "
-        s += f"= {acc_est*100:.2f}% [{acc_l*100:.2f}%, {acc_u*100:.2f}%]"
-        s += f", prcsn={precision:.3f}, recall={recall:.3f}"
-        s += f", f1={f1:.3f}"
-
-        s += f". trader profit = ${trader_profit_USD:9.4f}"
-        s += f" (cumul. ${sum(st.trader_profits_USD):9.4f})"
-        logger.info(s)
+        SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
@@ -259,7 +259,7 @@ class SimEngine:
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
-            self.ppss.predictoor_ss.pair_str, tokcoin_amt_recd
+            str(self.predict_feed.pair), tokcoin_amt_recd
         )
 
         logger.info(
@@ -296,7 +296,7 @@ class SimEngine:
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
-            self.ppss.predictoor_ss.pair_str, tokcoin_amt_send
+            str(self.predict_feed.pair), tokcoin_amt_send
         )
 
         logger.info(

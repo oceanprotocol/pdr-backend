@@ -49,7 +49,11 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
         super().__init__()
         self.add_argument("subcommand", type=str, help="")
 
-        if (plain_args[0] == "update") or (plain_args[0] == "describe"):
+        if (
+            (plain_args[0] == "update")
+            or (plain_args[0] == "describe")
+            or (plain_args[0] == "query")
+        ):
             self.add_argument_PPSS()
             self.add_argument_NETWORK()
         else:

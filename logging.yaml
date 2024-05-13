@@ -22,6 +22,9 @@ loggers:
     ohlcv_data_factory:
         level: INFO
 
+    aimodel_data_factory:
+        level: INFO
+
     sim_engine:
         level: INFO
 
