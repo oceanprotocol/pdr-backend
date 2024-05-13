@@ -32,8 +32,7 @@ jobs:
 
       - name: Notify Slack
         run: |
-          set +e
-          output=$(python pdr check_network ppss.yaml sapphire-mainnet | grep -E 'FAIL|WARNING|error' || true)
+          output=$(python pdr check_network ppss.yaml sapphire-mainnet 2>&1 | grep -E 'FAIL|WARNING|error' || true)
           
           if [ -z "$output" ]; then
             echo "No output, so no message will be sent to Slack"
