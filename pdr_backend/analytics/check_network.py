@@ -10,7 +10,7 @@ from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.util.currency_types import Eth
+from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.time_types import UnixTimeS
 
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
@@ -182,7 +182,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
         ocean_bal = OCEAN.balanceOf(address)
-        native_bal = web3_pp.get_token_balance(address)
+        native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
             " LOW OCEAN BALANCE!"
