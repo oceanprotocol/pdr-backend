@@ -156,6 +156,8 @@ def do_query_network(subgraph_url: str, lookback_hours: int):
 def check_network_main(ppss: PPSS, lookback_hours: int):
     web3_pp = ppss.web3_pp
     result = do_query_network(web3_pp.subgraph_url, lookback_hours)
+    logger.warning("WARNING test WARNING WARNING test")
+    return
 
     # check no of contracts
     no_of_contracts = len(result["data"]["predictContracts"])
