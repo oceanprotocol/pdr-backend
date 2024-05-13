@@ -29,7 +29,7 @@ install_requirements = [
     "plotly==5.22.0",
     "polars==0.20.23",
     "polars[timezone]",
-    "pyarrow==15.0.2",
+    "pyarrow==16.0.0",
     "pylint==3.1.0",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
