@@ -13,6 +13,7 @@ from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.subgraph.subgraph_sync import block_number_is_synced
+
 _N_FEEDS = 20  # magic number alert. FIX ME, shouldn't be hardcoded
 logger = logging.getLogger("check_network")
 
@@ -74,6 +75,7 @@ def check_dfbuyer(
             "got %s consume for contract: %s, expected %s", x, addr, expect_amt_consume
         )
 
+
 @enforce_types
 def check_subgraph(web3_pp):
     current_block = web3_pp.w3.eth.block_number
@@ -87,6 +89,7 @@ def check_subgraph(web3_pp):
             check_block_number,
             current_block,
         )
+
 
 @enforce_types
 def get_expected_consume(for_ut: int, token_amt: float) -> Union[float, int]:
