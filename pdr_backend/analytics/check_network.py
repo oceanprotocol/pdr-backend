@@ -210,8 +210,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     # If token_amt is not a multiple of 60, adjust it to the next multiple of 60
     if token_amt % 60 != 0:
         token_amt = ((token_amt // 60) + 1) * 60
-    token_amt = int(token_amt)
     
-    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
+    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, int(token_amt))
 
     check_subgraph(web3_pp)
