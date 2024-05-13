@@ -35,7 +35,7 @@ def test_check_dfbuyer(  # pylint: disable=unused-argument
     dfbuyer_addr = "0x1"
     contract_query_result = {"data": {"predictContracts": [{"id": "0x1"}]}}
     subgraph_url = "test_dfbuyer"
-    token_amt = 3
+    token_amt = 3.0
     check_dfbuyer(dfbuyer_addr, contract_query_result, subgraph_url, token_amt)
 
     target_str = (
@@ -56,7 +56,7 @@ def test_check_dfbuyer(  # pylint: disable=unused-argument
 def test_get_expected_consume():
     # Test case 1: Beginning of week
     for_ut = S_PER_WEEK  # Start of second week
-    token_amt = 140
+    token_amt = 140.0
     expected = token_amt / 7 / _N_FEEDS  # Expected consume for one interval
     assert get_expected_consume(for_ut, token_amt) == expected
 
@@ -103,7 +103,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     mock_token.return_value.balanceOf.return_value = Eth(1000).to_wei()
 
     mock_w3 = Mock()  # pylint: disable=not-callable
-    mock_w3.eth.get_balance.return_value = Eth(1000).to_wei()
+    mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
     ppss.web3_pp.web3_config.w3 = mock_w3
     check_network_main(ppss, lookback_hours=24)
 

@@ -29,7 +29,7 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer, caplog):
 
     mock_web3_pp.OCEAN_Token = mock_token
     mock_web3_pp.NativeToken = mock_token
-    mock_web3_pp.get_token_balance.return_value = Wei(100)
+    mock_web3_pp.get_token_balance.return_value = 100
 
     mock_query_subgraph = Mock()
     mock_query_subgraph.return_value = {
