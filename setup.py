@@ -19,7 +19,7 @@ install_requirements = [
     "eth-keys==0.5.1",
     "eth-typing==4.2.3",
     "flask==3.0.3",
-    "freezegun==1.5.0",
+    "freezegun==1.5.1",
     "imblearn",
     "kaleido==0.2.1",
     "mypy==1.10.0",
