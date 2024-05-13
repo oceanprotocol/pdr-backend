@@ -105,6 +105,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
     ppss.web3_pp.web3_config.w3 = mock_w3
+    ppss.web3_pp.w3.eth.block_number = 100
     check_network_main(ppss, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with("sapphire-mainnet")
