@@ -180,6 +180,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     OCEAN = web3_pp.OCEAN_Token
 
     addresses = get_opf_addresses(web3_pp.network)
+    print("Debug print")
     for name, address in addresses.items():
         ocean_bal = OCEAN.balanceOf(address)
         native_bal = web3_pp.get_token_balance(address)
@@ -202,11 +203,14 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
             native_warning,
         )
 
+    print("Debug print")
     # ---------------- dfbuyer ----------------
 
     dfbuyer_addr = addresses["dfbuyer"].lower()
     # 37500 * 1.201 = rewards + fees = total consume
+    print("Debug print")
     token_amt = 37500 * 1.201
+    print("Debug print")
     # If token_amt is not a multiple of 60, adjust it to the next multiple of 60
     if token_amt % 60 != 0:
         token_amt = ((token_amt // 60) + 1) * 60
