@@ -34,7 +34,7 @@ jobs:
         run: |
           output=$(python pdr check_network ppss.yaml sapphire-mainnet 2>&1)
           echo "$output"          
-          filtered_output = $(echo "$output" | grep -E 'FAIL|WARNING|error' || true)
+          filtered_output=$(echo "$output" | grep -E 'FAIL|WARNING|error' || true)
           if [ -z "$filtered_output" ]; then
             echo "No output, so no message will be sent to Slack"
           else
