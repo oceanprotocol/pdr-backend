@@ -45,9 +45,9 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(pds: PersistentDataStore, st):
+def drop_tables_from_st(pds: PersistentDataStore, st, table_names_param: list[str]):
     trunc_count = table_count = 0
-    table_names = pds.get_table_names()
+    table_names = table_names_param if table_names_param else pds.get_table_names()
 
     for table_name in table_names:
         logger.info("drop table %s starting at %s", table_name, st)

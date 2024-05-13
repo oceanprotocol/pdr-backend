@@ -136,7 +136,7 @@ class GQLDataFactory:
 
         return TableRegistry().get_tables(self.record_config["gql_tables"])
 
-    def _prepare_temp_table(self, table_name, st_ut, fin_ut, schema):
+    def _prepare_temp_table(self, table_name, schema):
         """
         @description
             # 1. get last timestamp from database
@@ -151,17 +151,19 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-        if (csv_last_timestamp is None) and (
-            db_last_timestamp['max("timestamp")'][0] is not None
-        ):
-            drop_tables_from_st(PersistentDataStore(table.base_path), 0)
+
+        if (db_last_timestamp is None):
+            return
+
+        if (csv_last_timestamp is None) and (db_last_timestamp['max("timestamp")'][0] is not None):
+            drop_tables_from_st(PersistentDataStore(table.base_path), 0, [get_table_name(table_name, TableType.TEMP)])
             return
 
         if (db_last_timestamp['max("timestamp")'][0] is not None) and (
             csv_last_timestamp < db_last_timestamp['max("timestamp")'][0]
         ):
             drop_tables_from_st(
-                PersistentDataStore(table.base_path), csv_last_timestamp
+                PersistentDataStore(table.base_path), csv_last_timestamp, [get_table_name(table_name, TableType.TEMP)]
             )
             return
 
@@ -339,7 +341,7 @@ class GQLDataFactory:
                 logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
-            self._prepare_temp_table(table.table_name, st_ut, fin_ut, table.df_schema)
+            self._prepare_temp_table(table.table_name, table.df_schema)
 
             # fetch from subgraph and add to temp table
             logger.info("Updating table %s", get_table_name(table.table_name))

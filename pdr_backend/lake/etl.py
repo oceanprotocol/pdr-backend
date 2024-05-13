@@ -211,12 +211,9 @@ class ETL:
 
         return values
 
-    def get_timestamp_values(
-        self, table_names: List[str], default_timestr: str
-    ) -> UnixTimeMs:
-        max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
-        )
+    def get_timestamp_values(self, table_name: str, default_timestr: str) -> UnixTimeMs:
+
+        max_timestamp_values = self._get_max_timestamp_values_from([NamedTable(table_name)])
 
         logger.info(
             "get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
@@ -234,11 +231,13 @@ class ETL:
 
         logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
-            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+            values[0] if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
         return timestamp
 
-    def _calc_bronze_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
+    def _calc_bronze_start_end_ts(
+        self, table_name: str
+    ) -> Tuple[UnixTimeMs, UnixTimeMs]:
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -247,13 +246,9 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        from_timestamp = self.get_timestamp_values(
-            self.bronze_table_names, self.ppss.lake_ss.st_timestr
-        )
+        from_timestamp = self.get_timestamp_values(table_name, self.ppss.lake_ss.st_timestr)
 
-        to_timestamp = self.get_timestamp_values(
-            self.raw_table_names, self.ppss.lake_ss.fin_timestr
-        )
+        to_timestamp = self.get_timestamp_values(table_name[len("bronze_") :], self.ppss.lake_ss.fin_timestr)
 
         # assert from_timestamp <= to_timestamp, (
         #    f"from_timestamp ({from_timestamp}) must be less than or equal to "
@@ -319,9 +314,9 @@ class ETL:
         logger.info("update_bronze_pdr - Update bronze tables.")
 
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
-        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
         for table_name, get_data_func in self.bronze_table_getters.items():
+            st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts(table_name)
             get_data_func(
                 path=self.ppss.lake_ss.lake_dir,
                 st_ms=st_timestamp,
