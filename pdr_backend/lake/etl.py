@@ -10,7 +10,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, TableType, TempTable, get_table_name
+from pdr_backend.lake.table import ETLTable, NamedTable, TableType, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -63,7 +63,7 @@ class ETL:
         self.temp_table_names = []
 
         for table_name in self.bronze_table_names:
-            self.temp_table_names.append(get_table_name(table_name, TableType.NORMAL))
+            self.temp_table_names.append(NamedTable(table_name).fullname)
 
     def _drop_temp_sql_tables(self):
         """
@@ -75,7 +75,7 @@ class ETL:
         # drop the tables if it exists
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
-            pds.drop_table(get_table_name(table_name, TableType.TEMP))
+            pds.drop_table(TempTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
@@ -86,13 +86,12 @@ class ETL:
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
             logger.info("move table %s to live", table_name)
-            pds.move_table_data(
-                TempTable(table_name),
-                table_name,
-            )
+            temp_table = TempTable(table_name)
 
-            pds.drop_table(get_table_name(table_name, TableType.TEMP))
-            pds.drop_view(get_table_name(table_name, TableType.ETL))
+            pds.move_table_data(temp_table, table_name)
+
+            pds.drop_table(temp_table.fullname)
+            pds.drop_view(ETLTable(table_name).fullname)
 
     def do_etl(self):
         """
@@ -267,15 +266,15 @@ class ETL:
         ), f"{table_name} must be a bronze table"
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
-        temp_table_name = get_table_name(table_name, TableType.TEMP)
-        etl_view_name = get_table_name(table_name, TableType.ETL)
+        temp_table = TempTable(table_name)
+        etl_view = ETLTable(table_name)
 
         table_exists = pds.table_exists(table_name)
-        temp_table_exists = pds.table_exists(temp_table_name)
-        etl_view_exists = pds.view_exists(etl_view_name)
-        assert temp_table_exists, f"{temp_table_name} must already exist"
+        temp_table_exists = pds.table_exists(temp_table.fullname)
+        etl_view_exists = pds.view_exists(etl_view.fullname)
+        assert temp_table_exists, f"{temp_table.fullname} must already exist"
         if etl_view_exists:
-            logger.error("%s must not exist", etl_view_name)
+            logger.error("%s must not exist", etl_view.fullname)
             return
 
         view_query = None
@@ -288,24 +287,24 @@ class ETL:
                     UNION ALL
                     SELECT * FROM {}
                 )""".format(
-                etl_view_name,
+                etl_view.fullname,
                 table_name,
-                temp_table_name,
+                temp_table.fullname,
             )
             pds.query_data(view_query)
             logger.info(
                 "  Created %s view using %s table and %s temp table",
-                etl_view_name,
+                etl_view.fullname,
                 table_name,
-                temp_table_name,
+                temp_table.fullname,
             )
         else:
-            view_query = (
-                f"CREATE VIEW {etl_view_name} AS SELECT * FROM {temp_table_name}"
-            )
+            view_query = f"CREATE VIEW {etl_view.fullname} AS SELECT * FROM {temp_table.fullname}"
             pds.query_data(view_query)
             logger.info(
-                "  Created %s view using %s temp table", etl_view_name, temp_table_name
+                "  Created %s view using %s temp table",
+                etl_view.fullname,
+                temp_table.fullname,
             )
 
     def update_bronze_pdr(self):

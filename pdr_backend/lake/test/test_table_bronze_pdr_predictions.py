@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import Table, TableType, get_table_name
+from pdr_backend.lake.table import NamedTable, Table, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -45,12 +45,12 @@ def test_table_bronze_pdr_predictions(
 
     pds = PersistentDataStore(ppss.lake_ss.lake_dir)
     # truevals should have 6
-    table_name = get_table_name("pdr_truevals")
+    table_name = NamedTable("pdr_truevals").fullname
     result_truevals = pds.query_data("SELECT * FROM {}".format(table_name))
     assert len(result_truevals) == 6
 
     # payouts should have 6
-    table_name = get_table_name("pdr_payouts")
+    table_name = NamedTable("pdr_payouts").fullname
     result_payouts = pds.query_data("SELECT * FROM {}".format(table_name))
     assert len(result_payouts) == 5
 
@@ -61,10 +61,12 @@ def test_table_bronze_pdr_predictions(
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )
 
-    bronze_pdr_predictions_table_name = BronzePrediction.get_lake_table_name()
+    temp_bronze_pdr_predictions_table_name = TempTable.from_dataclass(
+        BronzePrediction
+    ).fullname
     result = pds.query_data(
         f"""
-            SELECT * FROM {get_table_name(bronze_pdr_predictions_table_name, TableType.TEMP)}
+            SELECT * FROM {temp_bronze_pdr_predictions_table_name}
         """
     )
 
