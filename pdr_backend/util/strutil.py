@@ -74,6 +74,7 @@ def dictStr(d: dict, newline=False) -> str:
     return "".join(s)
 
 
+@enforce_types
 def prettyBigNum(amount, remove_zeroes: bool = True) -> str:
     """Prints, for example:
     1.23e12, 123.4B, 1.23B, 123M, 1.23M, 123K, 1.23K, 123,
@@ -117,6 +118,7 @@ def prettyBigNum(amount, remove_zeroes: bool = True) -> str:
     return s
 
 
+@enforce_types
 def compactSmallNum(x: Union[float, int]) -> str:
     """
     @description
