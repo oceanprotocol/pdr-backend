@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from typing import Optional
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -15,18 +16,6 @@ class TableType(Enum):
     NORMAL = "NORMAL"
     TEMP = "TEMP"
     ETL = "ETL"
-
-
-@enforce_types
-def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) -> str:
-    """
-    Get the table name with the build mode prefix
-    """
-    if table_type == TableType.TEMP:
-        return f"_temp_{table_name}"
-    if table_type == TableType.ETL:
-        return f"_etl_{table_name}"
-    return table_name
 
 
 @enforce_types
@@ -128,7 +117,7 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        table_name = get_table_name(self.table_name, table_type)
+        table_name = NamedTable(self.table_name, table_type).fullname
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
         logger.info("  Appended %s rows to db table: %s", data.shape[0], table_name)
 
@@ -141,9 +130,66 @@ class NamedTable:
 
     @property
     def fullname(self) -> str:
-        return get_table_name(self.table_name, self.table_type)
+        if self.table_type == TableType.TEMP:
+            return f"_temp_{self.table_name}"
+        if self.table_type == TableType.ETL:
+            return f"_etl_{self.table_name}"
+
+        return self.table_name
+
+    @staticmethod
+    def from_dataclass(
+        dataclass: type, table_type: Optional[TableType] = None
+    ) -> "NamedTable":
+        if not table_type:
+            table_type = TableType.NORMAL
+
+        return NamedTable(
+            dataclass.get_lake_table_name(), table_type  # type: ignore[attr-defined]
+        )
+
+    @staticmethod
+    def from_table(
+        table: Table, table_type: Optional[TableType] = None
+    ) -> "NamedTable":
+        if not table_type:
+            table_type = TableType.NORMAL
+
+        return NamedTable(
+            table.dataclass.get_lake_table_name(),  # type: ignore[attr-defined]
+            table_type,
+        )
 
 
 class TempTable(NamedTable):
     def __init__(self, table_name: str):
         super().__init__(table_name, TableType.TEMP)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: type) -> "TempTable":
+        return TempTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_table(table: Table) -> "TempTable":
+        return TempTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+
+
+class ETLTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.ETL)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: type) -> "ETLTable":
+        return ETLTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_table(table: Table) -> "ETLTable":
+        return ETLTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]

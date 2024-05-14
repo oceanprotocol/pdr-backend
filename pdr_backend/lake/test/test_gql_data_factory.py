@@ -1,10 +1,14 @@
 from unittest.mock import MagicMock, patch
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.prediction import mock_daily_predictions
-from pdr_backend.lake.table import TableType, TempTable, get_table_name
+from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
+from pdr_backend.lake.slot import Slot
+from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -52,16 +56,16 @@ def test_update_end_to_end(
         fin_timestr=fin_timestr,
     )
     fns = {
-        "pdr_predictions": _mock_fetch_gql_predictions,
-        "pdr_subscriptions": _mock_fetch_gql_subscriptions,
-        "pdr_truevals": _mock_fetch_gql_truevals,
-        "pdr_payouts": _mock_fetch_gql_payouts,
-        "pdr_slots": _mock_fetch_gql_slots,
+        Prediction: _mock_fetch_gql_predictions,
+        Subscription: _mock_fetch_gql_subscriptions,
+        Trueval: _mock_fetch_gql_truevals,
+        Payout: _mock_fetch_gql_payouts,
+        Slot: _mock_fetch_gql_slots,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
-    for table_name in gql_data_factory.record_config["fetch_functions"]:
-        gql_data_factory.record_config["fetch_functions"][table_name] = fns[table_name]
+    for dataclass in gql_data_factory.record_config["fetch_functions"]:
+        gql_data_factory.record_config["fetch_functions"][dataclass] = fns[dataclass]
 
     gql_data_factory._update()
 
@@ -95,26 +99,26 @@ def test_update_partial_then_resume(
 
     # Work 1: update csv files and insert into temp table
     fns = {
-        "pdr_predictions": _mock_fetch_gql_predictions,
-        "pdr_subscriptions": _mock_fetch_gql_subscriptions,
-        "pdr_truevals": _mock_fetch_gql_truevals,
-        "pdr_payouts": _mock_fetch_gql_payouts,
-        "pdr_slots": _mock_fetch_gql_slots,
+        Prediction: _mock_fetch_gql_predictions,
+        Subscription: _mock_fetch_gql_subscriptions,
+        Trueval: _mock_fetch_gql_truevals,
+        Payout: _mock_fetch_gql_payouts,
+        Slot: _mock_fetch_gql_slots,
     }
 
     gql_data_factory = GQLDataFactory(ppss)
     with patch(
         "pdr_backend.lake.gql_data_factory.GQLDataFactory._move_from_temp_tables_to_live"
     ):
-        for table_name in gql_data_factory.record_config["fetch_functions"]:
-            gql_data_factory.record_config["fetch_functions"][table_name] = fns[
-                table_name
+        for dataclass in gql_data_factory.record_config["fetch_functions"]:
+            gql_data_factory.record_config["fetch_functions"][dataclass] = fns[
+                dataclass
             ]
         gql_data_factory._update()
 
         # Verify records exist in temp pred tables
         pds = _get_test_PDS(ppss.lake_ss.lake_dir)
-        target_table_name = get_table_name("pdr_predictions", TableType.TEMP)
+        target_table_name = TempTable("pdr_predictions").fullname
         target_records = pds.query_data("SELECT * FROM {}".format(target_table_name))
 
         assert len(target_records) == 2
@@ -123,8 +127,8 @@ def test_update_partial_then_resume(
 
     # Work 2: apply simulated error, update ppss "poorly", and verify it works as expected
     # Inject error by dropping db tables
-    for table_name in gql_data_factory.record_config["fetch_functions"]:
-        pds.drop_table(get_table_name(table_name, TableType.TEMP))
+    for dataclass in gql_data_factory.record_config["fetch_functions"]:
+        pds.drop_table(TempTable.from_dataclass(dataclass).fullname)
 
     # manipulate ppss poorly and run gql_data_factory again
     gql_data_factory.ppss.lake_ss.d["st_timestr"] = "2023-11-01"
@@ -132,7 +136,7 @@ def test_update_partial_then_resume(
     gql_data_factory._update()
 
     # Verify expected records were written to db
-    target_table_name = get_table_name("pdr_predictions")
+    target_table_name = NamedTable("pdr_predictions").fullname
     target_records = pds.query_data("SELECT * FROM {}".format(target_table_name))
     assert len(target_records) == 4
     assert target_records["pair"].to_list() == [
@@ -256,7 +260,7 @@ def test_do_fetch_with_empty_data(
 
     # check if the db table is created
 
-    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
+    temp_table_name = TempTable("pdr_predictions").fullname
     pds = PersistentDataStore(ppss.lake_ss.lake_dir)
     all_tables = pds.get_table_names()
 
@@ -304,7 +308,7 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
         UnixTimeMs(1699300800000),
         {"contract_list": ["0x123"]},
     )
-    temp_table_name = get_table_name("pdr_predictions", TableType.TEMP)
+    temp_table_name = TempTable("pdr_predictions").fullname
     pds = PersistentDataStore(ppss.lake_ss.lake_dir)
     all_tables = pds.get_table_names()
 
