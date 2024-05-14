@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import NamedTable, TableType, get_table_name
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
 from pdr_backend.lake.table_registry import TableRegistry
@@ -62,7 +62,7 @@ def test_etl_do_bronze_step(
     etl._move_from_temp_tables_to_live()
 
     # assert bronze_pdr_predictions_df is created
-    table_name = get_table_name(BronzePrediction.get_lake_table_name())
+    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
     bronze_pdr_predictions_records = pds.query_data(
         "SELECT * FROM {}".format(table_name)
     )
@@ -146,7 +146,7 @@ def test_etl_do_bronze_step(
     )
 
     # Assert bronze slots table is building correctly
-    table_name = get_table_name(BronzeSlot.get_lake_table_name())
+    table_name = NamedTable.from_dataclass(BronzeSlot).fullname
     bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
     assert len(bronze_pdr_slots_records) == 4
@@ -172,15 +172,10 @@ def test_etl_views(setup_data):
     # etl view shouldn't exist
     assert not BronzePrediction.get_lake_table_name() in pds.get_table_names()
     records = pds.query_data(
-        "SELECT * FROM {}".format(
-            get_table_name(BronzePrediction.get_lake_table_name(), TableType.TEMP)
-        )
+        "SELECT * FROM {}".format(TempTable.from_dataclass(BronzePrediction).fullname)
     )
     assert len(records) == 5
-    assert (
-        get_table_name(BronzePrediction.get_lake_table_name(), TableType.ETL)
-        in pds.get_view_names()
-    )
+    assert ETLTable.from_dataclass(BronzePrediction).fullname in pds.get_view_names()
 
     # move from temp to live
     etl._move_from_temp_tables_to_live()
