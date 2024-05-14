@@ -19,7 +19,7 @@ from pdr_backend.lake.prediction import (
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
 from pdr_backend.lake.subscription import Subscription, mock_subscriptions
-from pdr_backend.lake.table import Table, get_table_name
+from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
@@ -628,8 +628,7 @@ def setup_data(
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
 
-    table_name = get_table_name("pdr_predictions")
-    _records = pds.query_data("SELECT * FROM {}".format(table_name))
+    _records = pds.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
 
     yield etl, pds, gql_tables

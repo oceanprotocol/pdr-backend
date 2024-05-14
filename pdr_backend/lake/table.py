@@ -18,18 +18,6 @@ class TableType(Enum):
 
 
 @enforce_types
-def get_table_name(table_name: str, table_type: TableType = TableType.NORMAL) -> str:
-    """
-    Get the table name with the build mode prefix
-    """
-    if table_type == TableType.TEMP:
-        return f"_temp_{table_name}"
-    if table_type == TableType.ETL:
-        return f"_etl_{table_name}"
-    return table_name
-
-
-@enforce_types
 def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
@@ -128,7 +116,7 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        table_name = get_table_name(self.table_name, table_type)
+        table_name = NamedTable(self.table_name, table_type).fullname
         PersistentDataStore(self.base_path).insert_to_table(data, table_name)
         logger.info("  Appended %s rows to db table: %s", data.shape[0], table_name)
 
@@ -141,9 +129,43 @@ class NamedTable:
 
     @property
     def fullname(self) -> str:
-        return get_table_name(self.table_name, self.table_type)
+        if self.table_type == TableType.TEMP:
+            return f"_temp_{self.table_name}"
+        if self.table_type == TableType.ETL:
+            return f"_etl_{self.table_name}"
+
+        return self.table_name
+
+    @staticmethod
+    def from_dataclass(dataclass: type, table_type: TableType = TableType.NORMAL):
+        return NamedTable(dataclass.get_lake_table_name(), table_type)
+
+    @staticmethod
+    def from_table(table: Table, table_type: TableType = TableType.NORMAL):
+        return NamedTable(table.dataclass.get_lake_table_name(), table_type)
 
 
 class TempTable(NamedTable):
     def __init__(self, table_name: str):
         super().__init__(table_name, TableType.TEMP)
+
+    @staticmethod
+    def from_dataclass(dataclass: type):
+        return TempTable(dataclass.get_lake_table_name())
+
+    @staticmethod
+    def from_table(table: Table):
+        return TempTable(table.dataclass.get_lake_table_name())
+
+
+class EtlTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.ETL)
+
+    @staticmethod
+    def from_dataclass(dataclass: type):
+        return EtlTable(dataclass.get_lake_table_name())
+
+    @staticmethod
+    def from_table(table: Table):
+        return EtlTable(table.dataclass.get_lake_table_name())

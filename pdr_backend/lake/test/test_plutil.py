@@ -23,7 +23,6 @@ from pdr_backend.lake.plutil import (
     set_col_values,
     text_to_df,
 )
-from pdr_backend.lake.table import TableType, get_table_name
 
 FOUR_ROWS_RAW_TOHLCV_DATA = [
     [1686806100000, 1648.58, 1648.58, 1646.27, 1646.64, 7.4045],
@@ -305,18 +304,3 @@ def test_text_to_df():
     assert df["timestamp"][0] == 0
     assert df["open"][1] == 10.1
     assert isinstance(df["open"][1], float)
-
-
-@enforce_types
-def test_get_table_name():
-    table_name = get_table_name("test")
-    assert table_name == "test"
-
-    table_name = get_table_name("test", TableType.TEMP)
-    assert table_name == "_temp_test"
-
-    table_name = get_table_name("test", TableType.NORMAL)
-    assert table_name == "test"
-
-    table_name = get_table_name("test", TableType.ETL)
-    assert table_name == "_etl_test"

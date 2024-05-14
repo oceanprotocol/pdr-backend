@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from enforce_typing import enforce_types
-from pdr_backend.ppss.ppss import PPSS
+
 from pdr_backend.analytics.predictoor_stats import (
     get_feed_summary_stats,
     get_predictoor_summary_stats,
@@ -12,9 +12,10 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
 )
-from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import get_table_name, TableType
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.table import NamedTable, TableType
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("get_predictions_info")
 
@@ -40,7 +41,7 @@ def get_predictions_info_main(
     logger.info("get_predictions_info_main start_timestr %s", start_timestr)
     logger.info("get_predictions_info_main end_timestr %s", end_timestr)
 
-    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+    table_name = NamedTable("pdr_predictions").fullname
 
     # convert feed addresses to string for SQL query
     feed_addrs_str = _address_list_to_str(feed_addrs)
@@ -69,7 +70,7 @@ def get_predictoors_info_main(
     logger.info(
         "get_predictoors_info_main_ppss.lake_ss.lake_dir--- %s", ppss.lake_ss.lake_dir
     )
-    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+    table_name = NamedTable("pdr_predictions").fullname
 
     # convert feed addresses to string for SQL query
     pdr_addrs_str = _address_list_to_str(pdr_addrs)
@@ -93,7 +94,7 @@ def get_predictoors_info_main(
 
 @enforce_types
 def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
-    table_name = get_table_name("pdr_predictions", TableType.NORMAL)
+    table_name = NamedTable("pdr_predictions").fullname
 
     query = f"""
         SELECT *,

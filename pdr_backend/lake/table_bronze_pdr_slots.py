@@ -7,7 +7,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import EtlTable, NamedTable, TableType, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
@@ -44,15 +44,13 @@ class BronzeSlot:
 def get_bronze_pdr_slots_data_with_SQL(
     path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
 ):
-    pdr_slots_table_name = get_table_name(Slot.get_lake_table_name())
-    pdr_truevals_table_name = get_table_name(Trueval.get_lake_table_name())
-    pdr_payouts_table_name = get_table_name(Payout.get_lake_table_name())
-    etl_bronze_pdr_predictions_table_name = get_table_name(
-        BronzePrediction.get_lake_table_name(), TableType.ETL
-    )
-    temp_bronze_pdr_slots_table_name = get_table_name(
-        BronzeSlot.get_lake_table_name(), TableType.TEMP
-    )
+    pdr_slots_table_name = NamedTable.from_dataclass(Slot).fullname
+    pdr_truevals_table_name = NamedTable.from_dataclass(Trueval).fullname
+    pdr_payouts_table_name = NamedTable.from_dataclass(Payout).fullname
+    etl_bronze_pdr_predictions_table_name = EtlTable.from_dataclass(
+        BronzePrediction
+    ).fullname
+    temp_bronze_pdr_slots_table_name = TempTable.from_dataclass(BronzeSlot).fullname
 
     pds = PersistentDataStore(path)
 

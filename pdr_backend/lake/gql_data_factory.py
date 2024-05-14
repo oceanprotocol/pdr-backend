@@ -11,7 +11,7 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import Table, TableType, TempTable, get_table_name
+from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.trueval import Trueval
@@ -58,11 +58,11 @@ class GQLDataFactory:
         # configure all tables that will be recorded onto lake
         self.record_config = {
             "fetch_functions": {
-                Prediction.get_lake_table_name(): fetch_filtered_predictions,
-                Subscription.get_lake_table_name(): fetch_filtered_subscriptions,
-                Trueval.get_lake_table_name(): fetch_truevals,
-                Payout.get_lake_table_name(): fetch_payouts,
-                Slot.get_lake_table_name(): fetch_slots,
+                Prediction: fetch_filtered_predictions,
+                Subscription: fetch_filtered_subscriptions,
+                Trueval: fetch_truevals,
+                Payout: fetch_payouts,
+                Slot: fetch_slots,
             },
             "config": {
                 "contract_list": contract_list,
@@ -186,7 +186,7 @@ class GQLDataFactory:
         )
 
         PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
-            get_table_name(table.table_name, TableType.TEMP),
+            TempTable.from_table(table).fullname,
             table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
         )
 
@@ -257,12 +257,10 @@ class GQLDataFactory:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
-            pds.move_table_data(
-                TempTable(table_name),
-                table_name,
-            )
+            temp_table = TempTable(table_name)
 
-            pds.drop_table(get_table_name(table_name, TableType.TEMP))
+            pds.move_table_data(temp_table, table_name)
+            pds.drop_table(temp_table.fullname)
 
     @enforce_types
     def _update(self):
@@ -299,10 +297,10 @@ class GQLDataFactory:
             )
 
             # fetch from subgraph and add to temp table
-            logger.info("Updating table %s", get_table_name(table.table_name))
+            logger.info("Updating table %s", NamedTable.from_table(table).fullname)
             self._do_subgraph_fetch(
                 table,
-                self.record_config["fetch_functions"][table.table_name],
+                self.record_config["fetch_functions"][table.dataclass],
                 self.ppss.web3_pp.network,
                 st_ut,
                 fin_ut,

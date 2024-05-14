@@ -4,7 +4,7 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.table import Table, TableType, get_table_name
+from pdr_backend.lake.table import EtlTable, NamedTable, Table, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -55,10 +55,10 @@ def test_table_bronze_pdr_slots(
     # Check that the data is appended correctly
     pds = PersistentDataStore(ppss.lake_ss.lake_dir)
 
-    slots_table_name = Slot.get_lake_table_name()
+    slots_table_prefixed_name = NamedTable.from_dataclass(Slot).fullname
     pdr_slots_df = pds.query_data(
         f"""
-        SELECT * FROM {get_table_name(slots_table_name)}
+        SELECT * FROM {slots_table_prefixed_name}
         """
     )
 
@@ -77,8 +77,8 @@ def test_table_bronze_pdr_slots(
             CREATE VIEW {}
             AS SELECT * FROM {}
         """.format(
-        get_table_name(BronzePrediction.get_lake_table_name(), TableType.ETL),
-        get_table_name(BronzePrediction.get_lake_table_name(), TableType.TEMP),
+        EtlTable.from_dataclass(BronzePrediction).fullname,
+        TempTable.from_dataclass(BronzePrediction).fullname,
     )
 
     pds.execute_sql(view_query)
@@ -89,18 +89,15 @@ def test_table_bronze_pdr_slots(
         fin_ms=UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr),
     )
 
-    bronze_pdr_slots_table_name = BronzeSlot.get_lake_table_name()
+    bronze_pdr_slots_temp_table_name = TempTable.from_dataclass(BronzeSlot).fullname
+
     bronze_pdr_slots = pds.query_data(
         f"""
-        SELECT * FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """
     )
 
-    pdr_slots = pds.query_data(
-        f"""
-        SELECT * FROM {get_table_name("pdr_slots", TableType.NORMAL)}
-        """
-    )
+    pdr_slots = pds.query_data("""SELECT * FROM pdr_slots""")
 
     assert len(bronze_pdr_slots) == 7
     assert bronze_pdr_slots.schema == BronzeSlot.get_lake_schema()
@@ -118,7 +115,7 @@ def test_table_bronze_pdr_slots(
     # delete current rows from the bronze table
     pds.query_data(
         f"""
-        DELETE FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        DELETE FROM {bronze_pdr_slots_temp_table_name}
         """
     )
 
@@ -132,7 +129,7 @@ def test_table_bronze_pdr_slots(
     # select new data from bronze table
     bronze_pdr_slots = pds.query_data(
         f"""
-        SELECT * FROM {get_table_name(bronze_pdr_slots_table_name, TableType.TEMP)}
+        SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """
     )
 
