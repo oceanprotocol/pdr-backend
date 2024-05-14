@@ -13,7 +13,7 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_daily_statistics,
 )
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import NamedTable, TableType
+from pdr_backend.lake.table import NamedTable
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 

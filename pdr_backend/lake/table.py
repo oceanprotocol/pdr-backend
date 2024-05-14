@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from typing import Optional
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -137,12 +138,27 @@ class NamedTable:
         return self.table_name
 
     @staticmethod
-    def from_dataclass(dataclass: type, table_type: TableType = TableType.NORMAL):
-        return NamedTable(dataclass.get_lake_table_name(), table_type)
+    def from_dataclass(
+        dataclass: type, table_type: Optional[TableType] = None
+    ) -> "NamedTable":
+        if not table_type:
+            table_type = TableType.NORMAL
+
+        return NamedTable(
+            dataclass.get_lake_table_name(), table_type  # type: ignore[attr-defined]
+        )
 
     @staticmethod
-    def from_table(table: Table, table_type: TableType = TableType.NORMAL):
-        return NamedTable(table.dataclass.get_lake_table_name(), table_type)
+    def from_table(
+        table: Table, table_type: Optional[TableType] = None
+    ) -> "NamedTable":
+        if not table_type:
+            table_type = TableType.NORMAL
+
+        return NamedTable(
+            table.dataclass.get_lake_table_name(),  # type: ignore[attr-defined]
+            table_type,
+        )
 
 
 class TempTable(NamedTable):
@@ -150,12 +166,16 @@ class TempTable(NamedTable):
         super().__init__(table_name, TableType.TEMP)
 
     @staticmethod
-    def from_dataclass(dataclass: type):
-        return TempTable(dataclass.get_lake_table_name())
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: type) -> "TempTable":
+        return TempTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
 
     @staticmethod
-    def from_table(table: Table):
-        return TempTable(table.dataclass.get_lake_table_name())
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_table(table: Table) -> "TempTable":
+        return TempTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
 
 
 class EtlTable(NamedTable):
@@ -163,9 +183,13 @@ class EtlTable(NamedTable):
         super().__init__(table_name, TableType.ETL)
 
     @staticmethod
-    def from_dataclass(dataclass: type):
-        return EtlTable(dataclass.get_lake_table_name())
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: type) -> "EtlTable":
+        return EtlTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
 
     @staticmethod
-    def from_table(table: Table):
-        return EtlTable(table.dataclass.get_lake_table_name())
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_table(table: Table) -> "EtlTable":
+        return EtlTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]

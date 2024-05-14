@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import EtlTable, NamedTable, TableType, TempTable
+from pdr_backend.lake.table import EtlTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
 from pdr_backend.lake.table_registry import TableRegistry

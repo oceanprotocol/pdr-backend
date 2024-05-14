@@ -7,7 +7,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.table import EtlTable, NamedTable, TableType, TempTable
+from pdr_backend.lake.table import EtlTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
