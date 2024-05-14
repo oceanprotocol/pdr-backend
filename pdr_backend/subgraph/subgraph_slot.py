@@ -4,6 +4,7 @@ from typing import Dict, List
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
 
@@ -122,7 +123,7 @@ def get_slots(
     # by passing the dict as keyword arguments
     # convert roundSumStakesUp and roundSumStakes to float
     new_slots = [
-        PredictSlot(
+        Slot(
             **{
                 "ID": slot["id"],
                 "timestamp": slot["slot"],
