@@ -54,8 +54,7 @@ class ArgTimeframes(List[ArgTimeframe]):
         for timeframe in timeframes:
             if isinstance(timeframe, str):
                 frame = ArgTimeframe(timeframe)
-
-            frames.append(frame)
+                frames.append(frame)
 
         super().__init__(frames)
 
