@@ -10,7 +10,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import EtlTable, NamedTable, TableType, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TableType, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -91,7 +91,7 @@ class ETL:
             pds.move_table_data(temp_table, table_name)
 
             pds.drop_table(temp_table.fullname)
-            pds.drop_view(EtlTable(table_name).fullname)
+            pds.drop_view(ETLTable(table_name).fullname)
 
     def do_etl(self):
         """
@@ -267,7 +267,7 @@ class ETL:
 
         pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
         temp_table = TempTable(table_name)
-        etl_view = EtlTable(table_name)
+        etl_view = ETLTable(table_name)
 
         table_exists = pds.table_exists(table_name)
         temp_table_exists = pds.table_exists(temp_table.fullname)

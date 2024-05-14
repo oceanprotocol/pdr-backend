@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import EtlTable, NamedTable, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
 from pdr_backend.lake.table_registry import TableRegistry
@@ -175,7 +175,7 @@ def test_etl_views(setup_data):
         "SELECT * FROM {}".format(TempTable.from_dataclass(BronzePrediction).fullname)
     )
     assert len(records) == 5
-    assert EtlTable.from_dataclass(BronzePrediction).fullname in pds.get_view_names()
+    assert ETLTable.from_dataclass(BronzePrediction).fullname in pds.get_view_names()
 
     # move from temp to live
     etl._move_from_temp_tables_to_live()

@@ -7,7 +7,7 @@ import polars as pl
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
-from pdr_backend.lake.table import EtlTable, NamedTable, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 
 
 # Initialize the PersistentDataStore instance for testing
@@ -252,7 +252,7 @@ def test_etl_view(tmpdir):
     persistent_data_store.insert_to_table(other_df, TempTable(table_name).fullname)
 
     # Assemble view query and create the view
-    view_name = EtlTable(table_name).fullname
+    view_name = ETLTable(table_name).fullname
     view_query = """
     CREATE VIEW {} AS
     (
@@ -260,7 +260,7 @@ def test_etl_view(tmpdir):
         UNION ALL
         SELECT * FROM {}
     )""".format(
-        EtlTable(table_name).fullname,
+        ETLTable(table_name).fullname,
         NamedTable(table_name).fullname,
         TempTable(table_name).fullname,
     )

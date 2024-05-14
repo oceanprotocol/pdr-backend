@@ -7,7 +7,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.table import EtlTable, NamedTable, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.util.time_types import UnixTimeMs
@@ -47,7 +47,7 @@ def get_bronze_pdr_slots_data_with_SQL(
     pdr_slots_table_name = NamedTable.from_dataclass(Slot).fullname
     pdr_truevals_table_name = NamedTable.from_dataclass(Trueval).fullname
     pdr_payouts_table_name = NamedTable.from_dataclass(Payout).fullname
-    etl_bronze_pdr_predictions_table_name = EtlTable.from_dataclass(
+    etl_bronze_pdr_predictions_table_name = ETLTable.from_dataclass(
         BronzePrediction
     ).fullname
     temp_bronze_pdr_slots_table_name = TempTable.from_dataclass(BronzeSlot).fullname

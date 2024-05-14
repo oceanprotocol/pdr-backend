@@ -4,7 +4,7 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.table import EtlTable, NamedTable, Table, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, Table, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -77,7 +77,7 @@ def test_table_bronze_pdr_slots(
             CREATE VIEW {}
             AS SELECT * FROM {}
         """.format(
-        EtlTable.from_dataclass(BronzePrediction).fullname,
+        ETLTable.from_dataclass(BronzePrediction).fullname,
         TempTable.from_dataclass(BronzePrediction).fullname,
     )
 

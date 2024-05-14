@@ -178,18 +178,18 @@ class TempTable(NamedTable):
         return TempTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
 
 
-class EtlTable(NamedTable):
+class ETLTable(NamedTable):
     def __init__(self, table_name: str):
         super().__init__(table_name, TableType.ETL)
 
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
-    def from_dataclass(dataclass: type) -> "EtlTable":
-        return EtlTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+    def from_dataclass(dataclass: type) -> "ETLTable":
+        return ETLTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
 
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
-    def from_table(table: Table) -> "EtlTable":
-        return EtlTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+    def from_table(table: Table) -> "ETLTable":
+        return ETLTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
