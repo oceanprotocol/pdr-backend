@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import mock_daily_predictions
-from pdr_backend.lake.table import TableType, get_table_name
+from pdr_backend.lake.table import TableType, TempTable, get_table_name
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
@@ -314,3 +314,71 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 3
 
     assert "Fetched" in caplog.text
+
+
+def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
+    """
+    Test that after production table is created and then values are deleted,
+    prepare_temp_table gets data from csv and adds to temp table without errors.
+    """
+    st_timestr = "2023-11-03"
+    fin_timestr = "2023-11-05"
+    ppss = mock_ppss(
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
+
+    table = TableRegistry().get_table("pdr_predictions")
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+
+    initial_response = mock_daily_predictions()
+    assert len(initial_response) == 6
+
+    mocked_function = MagicMock()
+    mocked_function.return_value = initial_response
+
+    gql_data_factory.record_config["gql_tables"] = []
+
+    # temp table and csv should be created with the initial data
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        mocked_function,
+        "sapphire-mainnet",
+        UnixTimeMs(1698865200000),
+        UnixTimeMs(1699300800000),
+        {"contract_list": ["0x123"]},
+    )
+    assert (
+        len(
+            pds.query_data(
+                "SELECT * FROM {}".format("_temp_{}".format(table.table_name))
+            )
+        )
+        == 6
+    )
+
+    # move temp table to production and check the data is there
+    pds.move_table_data(TempTable(table.table_name), table.table_name)
+
+    # now keep both temp and production tables but remove values
+    pds.query_data("DELETE FROM {}".format(table.table_name))
+    pds.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
+    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 0
+
+    # run prepare_temp_table again to check that,
+    # if production table doesn't have any rows doesn't break the preparation
+    gql_data_factory._prepare_temp_table(
+        table.table_name,
+        UnixTimeMs(1699300800000),
+        UnixTimeMs(1699300800000),
+        table.dataclass.get_lake_schema(),
+    )
+    pds.move_table_data(TempTable(table.table_name), table.table_name)
+
+    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 6
