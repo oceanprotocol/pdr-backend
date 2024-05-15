@@ -94,7 +94,7 @@ class GQLDataFactory:
         # To solve, for a given call to this method, we make a constant fin_ut
 
         logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
 
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
@@ -104,9 +104,14 @@ class GQLDataFactory:
     def _prepare_temp_table(self, table_name, st_ut, fin_ut, schema):
         """
         @description
+            _prepare_temp_table is a helper function to fill the temp table with
+            missing data that already exists in the csv files. This way all new records
+            can be appended to the temp table and then moved to the live table.
+
             # 1. get last timestamp from database
             # 2. get last timestamp from csv
-            # 3. check conditions and move to temp tables
+            # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
+            # 4. resume appending to CSVs + Temp tables until complete
         """
         table = TableRegistry().get_table(table_name)
         csv_last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(

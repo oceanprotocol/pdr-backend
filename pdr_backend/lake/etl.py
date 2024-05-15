@@ -10,7 +10,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import ETLTable, NamedTable, TableType, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -210,7 +210,7 @@ class ETL:
         self, table_names: List[str], default_timestr: str
     ) -> UnixTimeMs:
         max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
+            [NamedTable(tb) for tb in table_names]
         )
 
         logger.info(
@@ -229,7 +229,7 @@ class ETL:
 
         logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
-            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+            max(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
         return timestamp
 
