@@ -16,7 +16,6 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_contract_id_and_spe,
     get_all_contract_ids_by_owner,
 )
-from pdr_backend.subgraph.subgraph_slot import PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
 
 app = Flask(__name__)
@@ -55,14 +54,14 @@ def calculate_prediction_result(
 
 @enforce_types
 def process_single_slot(
-    slot: PredictSlot, end_of_previous_day_timestamp: UnixTimeS
+    slot: Slot, end_of_previous_day_timestamp: UnixTimeS
 ) -> Optional[Tuple[float, float, int, int]]:
     """
     Processes a single slot and calculates the staked amounts for yesterday and today,
     as well as the count of correct predictions.
 
     Args:
-        slot: A PredictSlot TypedDict containing information about a single prediction slot.
+        slot: A Slot TypedDict containing information about a single prediction slot.
         end_of_previous_day_timestamp: The Unix timestamp marking the end of the previous day.
 
     Returns:
@@ -73,7 +72,7 @@ def process_single_slot(
     staked_yesterday = staked_today = 0.0
     correct_predictions_count = slots_evaluated = 0
 
-    if float(slot.roundSumStakes) == 0.0:
+    if slot.roundSumStakes is None or float(slot.roundSumStakes) == 0.0:
         return None
 
     # split the id to get the slot timestamp
@@ -115,13 +114,13 @@ def process_single_slot(
 
 @enforce_types
 def aggregate_statistics(
-    slots: List[PredictSlot], end_of_previous_day_timestamp: UnixTimeS
+    slots: List[Slot], end_of_previous_day_timestamp: UnixTimeS
 ) -> Tuple[float, float, int, int]:
     """
     Aggregates statistics across all provided slots for an asset.
 
     Args:
-        slots: A list of PredictSlot TypedDicts containing information
+        slots: A list of Slot TypedDicts containing information
             about multiple prediction slots.
         end_of_previous_day_timestamp: The Unix timestamp marking the end of the previous day.
 
@@ -157,7 +156,7 @@ def aggregate_statistics(
 
 @enforce_types
 def calculate_statistics_for_all_assets(
-    all_slots: List[PredictSlot],
+    all_slots: List[Slot],
     contracts_list: List[ContractIdAndSPE],
     end_ts_param: UnixTimeS,
 ) -> Dict[str, Dict[str, Any]]:
@@ -271,7 +270,7 @@ def filter_func(seconds_per_epoch: int) -> Callable[[Any], bool]:
 
 
 @enforce_types
-def transform_slots_to_statistics(all_slots: List[PredictSlot]):
+def transform_slots_to_statistics(all_slots: List[Slot]):
     """
     Periodically fetches and saves statistical data to a JSON file.
 
@@ -367,11 +366,11 @@ def calculate_statistics_from_DuckDB_tables():
         slots_table = slots_table.group_by("ID").first()
         slots_table = slots_table.sort("slot")
 
-        all_slots: List[PredictSlot] = []
+        all_slots: List[Slot] = []
 
         # Iterate over rows and create objects
         for row in slots_table.rows(named=True):
-            slot = PredictSlot(
+            slot = Slot(
                 row["ID"],
                 row["timestamp"],
                 row["slot"],
