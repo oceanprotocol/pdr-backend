@@ -62,7 +62,7 @@ def do_lake_query(args, ppss):
 
 @enforce_types
 def do_lake_raw_drop(args, ppss):
-    pds = PersistentDataStore(ppss, read_only=False)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
     drop_tables_from_st(pds, "raw", args.ST)
 
 
@@ -86,7 +86,7 @@ def do_lake_raw_update(_, ppss):
 
 @enforce_types
 def do_lake_etl_drop(args, ppss):
-    pds = PersistentDataStore(ppss, read_only=False)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
     drop_tables_from_st(pds, "etl", args.ST)
 
 
