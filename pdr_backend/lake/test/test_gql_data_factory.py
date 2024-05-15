@@ -1,4 +1,6 @@
 from unittest.mock import MagicMock, patch
+import os
+import glob
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.payout import Payout
@@ -385,4 +387,97 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     )
     pds.move_table_data(TempTable(table.table_name), table.table_name)
 
+    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 6
+
+
+def test_prepare_temp_table_deletes_data_that_is_not_inside_csvs(tmpdir):
+    """
+    Test that if there are missing data in the CSVs,
+    production table data is reset to CSVs state without any issues.
+    """
+    st_timestr = "2023-11-03"
+    fin_timestr = "2023-11-05"
+    ppss = mock_ppss(
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
+        "sapphire-mainnet",
+        str(tmpdir),
+        st_timestr=st_timestr,
+        fin_timestr=fin_timestr,
+    )
+
+    gql_data_factory = GQLDataFactory(ppss)
+    gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
+
+    table = TableRegistry().get_table("pdr_predictions")
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+
+    initial_response = mock_daily_predictions()
+    assert len(initial_response) == 6
+
+    mocked_function = MagicMock()
+    mocked_function.return_value = initial_response
+
+    gql_data_factory.record_config["gql_tables"] = []
+
+    # temp table and csv should be created with the initial data
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        mocked_function,
+        "sapphire-mainnet",
+        UnixTimeMs(1698865200000),
+        UnixTimeMs(1699300800000),
+        {"contract_list": ["0x123"]},
+    )
+    assert (
+        len(
+            pds.query_data(
+                "SELECT * FROM {}".format("_temp_{}".format(table.table_name))
+            )
+        )
+        == 6
+    )
+
+    # move temp table to production and check the data is there
+    pds.move_table_data(TempTable(table.table_name), table.table_name)
+    pds.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
+
+    print("temp dir", tmpdir)
+    # csv files are created
+    print(f"{pds.base_path}/{table.table_name}")
+    csv_files = glob.glob(os.path.join(f"{pds.base_path}/{table.table_name}", "*.csv"))
+    num_csv_files = len(csv_files)
+    assert num_csv_files == 1
+
+    # delete csv files
+    for csv_file in csv_files:
+        try:
+            os.remove(csv_file)
+            print(f"Deleted: {csv_file}")
+        except Exception as e:
+            print(f"Error deleting file {csv_file}: {e}")
+    csv_files = glob.glob(os.path.join(f"{pds.base_path}/{table.table_name}", "*.csv"))
+    num_csv_files = len(csv_files)
+    assert num_csv_files == 0
+
+    # run prepare_temp_table again to check that,
+    # if production table doesn't have any rows doesn't break the preparation
+    gql_data_factory._prepare_temp_table(
+        table.table_name,
+        UnixTimeMs(1699300800000),
+        UnixTimeMs(1699300800000),
+        table.dataclass.get_lake_schema(),
+    )
+    pds.move_table_data(TempTable(table.table_name), table.table_name)
+    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 0
+
+    # fetch data again and check that same amount data is in production table as initially
+    gql_data_factory._do_subgraph_fetch(
+        table,
+        mocked_function,
+        "sapphire-mainnet",
+        UnixTimeMs(1698865200000),
+        UnixTimeMs(1699300800000),
+        {"contract_list": ["0x123"]},
+    )
+    pds.move_table_data(TempTable(table.table_name), table.table_name)
     assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 6

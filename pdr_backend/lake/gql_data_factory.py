@@ -11,7 +11,13 @@ from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
+from pdr_backend.lake.table import (
+    NamedTable,
+    Table,
+    TableType,
+    TempTable,
+    drop_tables_from_st,
+)
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.trueval import Trueval
@@ -116,15 +122,33 @@ class GQLDataFactory:
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
-        if csv_last_timestamp is None:
-            return
-
         if (db_last_timestamp is None) or (
             db_last_timestamp['max("timestamp")'][0] is None
         ):
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
             data = CSVDataStore(table.base_path).read_all(table_name, schema)
             table._append_to_db(data, TableType.TEMP)
+            return
+
+        # If CSVs timestamp is before
+        if (csv_last_timestamp is None) and (
+            db_last_timestamp['max("timestamp")'][0] is not None
+        ):
+            PersistentDataStore(table.base_path).query_data(
+                f"DELETE FROM {table_name} WHERE timestamp >= {0}"
+            )
+            drop_tables_from_st(PersistentDataStore(table.base_path), "etl", 0)
+            return
+
+        if (db_last_timestamp['max("timestamp")'][0] is not None) and (
+            csv_last_timestamp < db_last_timestamp['max("timestamp")'][0]
+        ):
+            PersistentDataStore(table.base_path).query_data(
+                f"DELETE FROM {table_name} WHERE timestamp >= {csv_last_timestamp}"
+            )
+            drop_tables_from_st(
+                PersistentDataStore(table.base_path), "etl", csv_last_timestamp
+            )
             return
 
         if db_last_timestamp['max("timestamp")'][0] and (
