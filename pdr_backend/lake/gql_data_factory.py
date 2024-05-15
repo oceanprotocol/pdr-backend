@@ -4,7 +4,7 @@ from typing import Callable, Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.csv_data_store import CSVDataStore, CSVDSIdentifier
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
@@ -109,9 +109,7 @@ class GQLDataFactory:
             # 3. check conditions and move to temp tables
         """
         table = TableRegistry().get_table(table_name)
-        csv_last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
-            table_name
-        )
+        csv_last_timestamp = CSVDSIdentifier.from_table(table).get_last_timestamp()
         db_last_timestamp = PersistentDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
@@ -153,9 +151,7 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
-            table.table_name
-        )
+        last_timestamp = CSVDSIdentifier.from_table(table).get_last_timestamp()
 
         start_ut = (
             last_timestamp
@@ -287,7 +283,6 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
-
         for table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):

@@ -1,81 +1,14 @@
 import os
-from typing import List, Optional, Union
+from typing import Optional, Union
+
 import polars as pl
+from enforce_typing import enforce_types
 from polars.type_aliases import SchemaDict
 
-from enforce_typing import enforce_types
 from pdr_backend.lake.base_data_store import BaseDataStore
 
 
 class CSVDataStore(BaseDataStore):
-    @enforce_types
-    def _get_folder_path(self, dataset_identifier: str) -> str:
-        """
-        Returns the folder path for the given dataset_identifier.
-        If the folder does not exist, it will be created.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-        """
-        folder_path = os.path.join(self.base_path, dataset_identifier)
-        os.makedirs(folder_path, exist_ok=True)
-
-        return folder_path
-
-    @enforce_types
-    def _pad_with_zeroes(self, number: int, length: int = 10) -> str:
-        """
-        Pads the given number with zeros to make it 10 digits long.
-        @args:
-            number: int - number to fill with zeros
-        """
-        number_str = str(number)
-        return number_str.rjust(length, "0")
-
-    @enforce_types
-    def _create_file_name(
-        self, dataset_identifier: str, start_time: int, end_time: Optional[int]
-    ) -> str:
-        """
-        Creates a file name using the given dataset_identifier,
-        start_time, end_time, and row_count.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-            start_time: int - start time of the data TIMESTAMP
-            end_time: int - end time of the data TIMESTAMP
-        """
-        start_time_str = self._pad_with_zeroes(start_time)
-        end_time_str = self._pad_with_zeroes(end_time) if end_time else ""
-
-        return f"{dataset_identifier}_from_{start_time_str}_to_{end_time_str}.csv"
-
-    @enforce_types
-    def _create_file_path(
-        self, dataset_identifier: str, start_time: int, end_time: Optional[int]
-    ) -> str:
-        """
-        Creates the file path for the given dataset_identifier,
-        start_time, end_time.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-            start_time: str - start time of the data
-            end_time: str - end time of the data
-        """
-
-        file_name = self._create_file_name(dataset_identifier, start_time, end_time)
-        folder_path = self._get_folder_path(dataset_identifier)
-        return os.path.join(folder_path, file_name)
-
-    @enforce_types
-    def _chunk_data(self, data: pl.DataFrame) -> List[pl.DataFrame]:
-        """
-        Splits the given data into chunks of up to 1000 rows each.
-        @args:
-            data: pl.DataFrame - data to be chunked
-        """
-        return [
-            data.slice(i, min(1000, len(data) - i)) for i in range(0, len(data), 1000)
-        ]
-
     def write(
         self,
         dataset_identifier: str,
@@ -89,40 +22,10 @@ class CSVDataStore(BaseDataStore):
             data: pl.DataFrame - The data to write, it has to be sorted by timestamp
             dataset_identifier: str - The dataset identifier
         """
-
         max_row_count = 1000
-        last_file_row_count = self._get_last_file_row_count(dataset_identifier)
+        identifier = CSVDSIdentifier(self, dataset_identifier)
         data = data.sort("timestamp")
-
-        if last_file_row_count is not None:
-            if last_file_row_count < max_row_count:
-                remaining_rows = max_row_count - last_file_row_count
-
-                # get the first remaining_rows rows
-                remaining_rows = min(remaining_rows, len(data))
-
-                remaining_data = data.slice(0, remaining_rows)
-
-                last_file_path = self._get_last_file_path(
-                    self._get_folder_path(dataset_identifier)
-                )
-                last_file_data = pl.read_csv(last_file_path, schema=schema)
-                last_file_data = last_file_data.vstack(remaining_data)
-
-                t_start_time = last_file_data["timestamp"][0]
-                t_end_time = last_file_data["timestamp"][-1]
-
-                last_file_data.write_csv(last_file_path)
-                # change the name of the file to reflect the new row count
-                new_file_path = self._create_file_path(
-                    dataset_identifier,
-                    t_start_time,
-                    t_end_time if len(data) >= remaining_rows else None,
-                )
-
-                os.rename(last_file_path, new_file_path)
-
-                data = data.slice(remaining_rows, len(data) - remaining_rows)
+        data = identifier._append_remaining_rows(data, max_row_count, schema)
 
         chunks = [
             data.slice(i, min(max_row_count, len(data) - i))
@@ -132,27 +35,76 @@ class CSVDataStore(BaseDataStore):
         for i, chunk in enumerate(chunks):
             start_time = int(chunk["timestamp"][0])
             end_time = int(chunk["timestamp"][-1])
-            file_path = self._create_file_path(
-                dataset_identifier,
+            file_path = identifier._create_file_path(
                 start_time,
                 end_time if len(chunk) >= max_row_count else None,
             )
             chunk.write_csv(file_path)
 
-    @enforce_types
-    def bulk_write(self, data_list: List[pl.DataFrame], dataset_identifier: str):
+    def read(
+        self,
+        dataset_identifier: str,
+        start_time: int,
+        end_time: int,
+        schema: Optional[SchemaDict] = None,
+        filter_args: Optional[bool] = True,
+    ) -> pl.DataFrame:
         """
-        Writes the given list of data to csv files in the folder
+        Reads the data from the csv file in the folder
+        corresponding to the given dataset_identifier,
+        start_time, and end_time.
+        @args:
+            dataset_identifier: str - identifier of the dataset
+            start_time: int - start time of the data
+            end_time: int - end time of the data
+        @returns:
+            pl.DataFrame - data read from the csv file
+        """
+        data = self.read_all(dataset_identifier, schema=schema)
+        # if the data is empty, return
+        if len(data) == 0:
+            return data
+
+        # if the data is not empty,
+        # check the timestamp column exists and is of type int64
+        if "timestamp" not in data.columns or filter_args is False:
+            return data
+
+        return data.filter(
+            (data["timestamp"] >= start_time) & (data["timestamp"] <= end_time)
+        ).rechunk()
+
+    def read_all(
+        self, dataset_identifier: str, schema: Optional[SchemaDict] = None
+    ) -> pl.DataFrame:
+        """
+        Reads all the data from the csv files in the folder
         corresponding to the given dataset_identifier.
         @args:
-            data_list: List[pl.DataFrame] - list of data to be written
             dataset_identifier: str - identifier of the dataset
+        @returns:
+            pl.DataFrame - data read from the csv files
         """
-        for data in data_list:
-            self.write(dataset_identifier, data)
+        identifier = CSVDSIdentifier(self, dataset_identifier)
+        folder_path = identifier._get_folder_path()
+        file_names = os.listdir(folder_path)
+        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
+        file_paths.sort()
 
+        if not file_paths:
+            return pl.DataFrame([], schema=schema)
+
+        # Read the first file to create the DataFrame
+        data = pl.read_csv(file_paths[0], schema=schema)
+        # Read the remaining files and append them to the DataFrame
+        for file_path in file_paths[1:]:
+            data = data.vstack(pl.read_csv(file_path, schema=schema))
+
+        return data
+
+    @staticmethod
     @enforce_types
-    def _get_to_value(self, file_path: str) -> Union[int, None]:
+    def _get_to_value(file_path: str) -> Union[int, None]:
         """
         Returns the end time from the given file_path.
 
@@ -212,8 +164,9 @@ class CSVDataStore(BaseDataStore):
         # return the to_value
         return int(to_value)
 
+    @staticmethod
     @enforce_types
-    def _get_from_value(self, file_path: str) -> int:
+    def _get_from_value(file_path: str) -> int:
         """
         Returns the start time from the given file_path.
         @args:
@@ -250,84 +203,128 @@ class CSVDataStore(BaseDataStore):
         raise ValueError(f"File {file_path} does not contain a 'from' value")
 
     @enforce_types
-    def has_data(self, dataset_identifier: str) -> bool:
+    def get_last_timestamp(self, dataset_identifier: str) -> Optional[int]:
+        """
+        Returns the last timestamp from the last csv files in the folder
+        corresponding to the given dataset_identifier.
+        @returns:
+            Optional[int] - last timestamp from the csv files
+        """
+        identifier = CSVDSIdentifier(self, dataset_identifier)
+        file_path = identifier._get_last_file_path()
+
+        if not len(file_path):
+            return None
+
+        to_value = CSVDataStore._get_to_value(file_path)
+        if to_value is not None and to_value > 0:
+            return to_value
+
+        # read the last record from the file
+        last_file = pl.read_csv(file_path)
+        return int(last_file["timestamp"][-1])
+
+
+def _pad_with_zeroes(number: int, length: int = 10) -> str:
+    """
+    Pads the given number with zeros to make it 10 digits long.
+    @args:
+        number: int - number to fill with zeros
+    """
+    number_str = str(number)
+    return number_str.rjust(length, "0")
+
+
+class CSVDSIdentifier:
+    def __init__(self, csvds: CSVDataStore, dataset_identifier: str):
+        self.base_path = csvds.base_path
+        self.dataset_identifier = dataset_identifier
+        self.csvds = csvds
+
+    @staticmethod
+    def from_table(table):
+        return CSVDSIdentifier(CSVDataStore(table.base_path), table.table_name)
+
+    @enforce_types
+    def _create_file_name(self, start_time: int, end_time: Optional[int]) -> str:
+        """
+        Creates a file name using the given dataset_identifier,
+        start_time, end_time, and row_count.
+        @args:
+            start_time: int - start time of the data TIMESTAMP
+            end_time: int - end time of the data TIMESTAMP
+        """
+        start_time_str = _pad_with_zeroes(start_time)
+        end_time_str = _pad_with_zeroes(end_time) if end_time else ""
+
+        return f"{self.dataset_identifier}_from_{start_time_str}_to_{end_time_str}.csv"
+
+    @enforce_types
+    def _create_file_path(self, start_time: int, end_time: Optional[int]) -> str:
+        """
+        Creates the file path for the given dataset_identifier,
+        start_time, end_time.
+        @args:
+            start_time: str - start time of the data
+            end_time: str - end time of the data
+        """
+        file_name = self._create_file_name(start_time, end_time)
+        folder_path = self._get_folder_path()
+
+        return os.path.join(folder_path, file_name)
+
+    def _get_folder_path(self) -> str:
+        """
+        Returns the folder path for the given dataset_identifier.
+        If the folder does not exist, it will be created.
+        """
+        folder_path = os.path.join(self.base_path, self.dataset_identifier)
+        os.makedirs(folder_path, exist_ok=True)
+
+        return folder_path
+
+    def get_file_paths(self, do_sort=True) -> list:
+        """
+        Returns the file paths for the given dataset_identifier.
+        """
+        folder_path = self._get_folder_path()
+        file_names = os.listdir(folder_path)
+
+        if do_sort:
+            file_names = sorted(file_names)
+
+        return [os.path.join(folder_path, file_name) for file_name in file_names]
+
+    def has_data(self) -> bool:
         """
         Returns True if the csv files in the folder
         corresponding to the given dataset_identifier have data.
-        @args:
-            dataset_identifier: str - identifier of the dataset
         @returns:
             bool - True if the csv files have data
         """
-        folder_path = self._get_folder_path(dataset_identifier)
-        file_names = os.listdir(folder_path)
-        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
+        file_paths = self.get_file_paths(do_sort=False)
 
         # check if the csv file has more than 0 bytes
         return any(os.path.getsize(file_path) > 0 for file_path in file_paths)
 
-    def read(
-        self,
-        dataset_identifier: str,
-        start_time: int,
-        end_time: int,
-        schema: Optional[SchemaDict] = None,
-        filter_args: Optional[bool] = True,
-    ) -> pl.DataFrame:
+    def _get_last_file_row_count(self) -> Optional[int]:
         """
-        Reads the data from the csv file in the folder
-        corresponding to the given dataset_identifier,
-        start_time, and end_time.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-            start_time: int - start time of the data
-            end_time: int - end time of the data
+        Returns the row count of the last file for the given dataset_identifier.
         @returns:
-            pl.DataFrame - data read from the csv file
+            row_count: Optional[int] - The row count of the last file
         """
-        data = self.read_all(dataset_identifier, schema=schema)
-        # if the data is empty, return
-        if len(data) == 0:
-            return data
+        last_file_path = self._get_last_file_path()
 
-        # if the data is not empty,
-        # check the timestamp column exists and is of type int64
-        if "timestamp" not in data.columns or filter_args is False:
-            return data
+        if not len(last_file_path):
+            return None
 
-        return data.filter(
-            (data["timestamp"] >= start_time) & (data["timestamp"] <= end_time)
-        )
+        # Read the last file
+        last_file = pl.read_csv(last_file_path)
+        row_count = last_file.shape[0]
 
-    def read_all(
-        self, dataset_identifier: str, schema: Optional[SchemaDict] = None
-    ) -> pl.DataFrame:
-        """
-        Reads all the data from the csv files in the folder
-        corresponding to the given dataset_identifier.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-        @returns:
-            pl.DataFrame - data read from the csv files
-        """
+        return row_count
 
-        folder_path = self._get_folder_path(dataset_identifier)
-        file_names = os.listdir(folder_path)
-        file_paths = [os.path.join(folder_path, file_name) for file_name in file_names]
-        file_paths.sort()
-
-        if not file_paths:
-            return pl.DataFrame([], schema=schema)
-
-        # Read the first file to create the DataFrame
-        data = pl.read_csv(file_paths[0], schema=schema)
-        # Read the remaining files and append them to the DataFrame
-        for file_path in file_paths[1:]:
-            data = data.vstack(pl.read_csv(file_path, schema=schema))
-
-        return data
-
-    def _get_last_file_path(self, folder_path: str) -> str:
+    def _get_last_file_path(self) -> str:
         """
         Returns the path of the last file in the given folder_path.
         @args:
@@ -335,52 +332,41 @@ class CSVDataStore(BaseDataStore):
         @returns:
             str - path of the last file
         """
+        file_paths = self.get_file_paths()
 
-        file_names = sorted(os.listdir(folder_path))
-        return os.path.join(folder_path, file_names[-1]) if file_names else ""
+        return file_paths[-1] if file_paths else ""
+
+    def _append_remaining_rows(
+        self,
+        data: pl.DataFrame,
+        max_row_count: int,
+        schema: Optional[SchemaDict] = None,
+    ):
+        last_file_row_count = self._get_last_file_row_count()
+        if last_file_row_count is None or last_file_row_count >= max_row_count:
+            return data
+
+        remaining_rows = min(max_row_count - last_file_row_count, len(data))
+
+        remaining_data = data.slice(0, remaining_rows)
+        last_file_path = self._get_last_file_path()
+        last_file_data = pl.read_csv(last_file_path, schema=schema)
+        last_file_data = last_file_data.vstack(remaining_data).rechunk()
+
+        t_start_time = last_file_data["timestamp"][0]
+        t_end_time = last_file_data["timestamp"][-1]
+
+        last_file_data.write_csv(last_file_path)
+        # change the name of the file to reflect the new row count
+        new_file_path = self._create_file_path(
+            t_start_time,
+            t_end_time if len(data) >= remaining_rows else None,
+        )
+
+        os.rename(last_file_path, new_file_path)
+
+        return data.slice(remaining_rows, len(data) - remaining_rows)
 
     @enforce_types
-    def get_last_timestamp(self, dataset_identifier: str) -> Optional[int]:
-        """
-        Returns the last timestamp from the last csv files in the folder
-        corresponding to the given dataset_identifier.
-        @args:
-            dataset_identifier: str - identifier of the dataset
-        @returns:
-            Optional[int] - last timestamp from the csv files
-        """
-        file_path = self._get_last_file_path(self._get_folder_path(dataset_identifier))
-        if len(file_path):
-            to_value = self._get_to_value(file_path)
-            if to_value is not None and to_value > 0:
-                return to_value
-
-            # read the last record from the file
-            last_file = pl.read_csv(file_path)
-            return int(last_file["timestamp"][-1])
-        return None
-
-    def _get_last_file_row_count(self, dataset_identifier: str) -> Optional[int]:
-        """
-        Returns the row count of the last file for the given dataset_identifier.
-        @args:
-            dataset_identifier: str - The dataset identifier
-        @returns:
-            row_count: Optional[int] - The row count of the last file
-        """
-
-        folder_path = self._get_folder_path(dataset_identifier)
-        file_names = os.listdir(folder_path)
-
-        # Sort by file name
-        file_names.sort()
-        if len(file_names) == 0:
-            return None
-
-        last_file_path = os.path.join(folder_path, file_names[-1])
-
-        # Read the last file
-        last_file = pl.read_csv(last_file_path)
-        row_count = last_file.shape[0]
-
-        return row_count
+    def get_last_timestamp(self) -> Optional[int]:
+        return self.csvds.get_last_timestamp(self.dataset_identifier)

@@ -3,7 +3,7 @@ import os
 import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.csv_data_store import CSVDSIdentifier
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import Table
@@ -116,7 +116,7 @@ def test_csv_data_store(
     table = Table(Prediction, ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
-    assert CSVDataStore(table.base_path).has_data(Prediction.get_lake_table_name())
+    assert CSVDSIdentifier.from_table(table).has_data()
 
     csv_file_path = os.path.join(
         ppss.lake_ss.lake_dir,
