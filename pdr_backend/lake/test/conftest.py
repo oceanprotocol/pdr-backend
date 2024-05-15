@@ -81,11 +81,11 @@ def _get_test_PDS():
 
 
 @pytest.fixture()
-def _get_test_CSVDS():
-    def create_csv_datastore(tmpdir):
-        return CSVDataStore(str(tmpdir))
+def _get_test_CSVDataStore():
+    def create_csv_datastore_identifier(tmpdir, name):
+        return CSVDataStore(tmpdir, name)
 
-    return create_csv_datastore
+    return create_csv_datastore_identifier
 
 
 # pylint: disable=line-too-long

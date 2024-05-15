@@ -97,10 +97,9 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        csvds = CSVDataStore(self.base_path)
+        csvds = CSVDataStore.from_table(self)
         logger.info(" csvds = %s", csvds)
         csvds.write(
-            self.table_name,
             data,
             schema=self.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
         )

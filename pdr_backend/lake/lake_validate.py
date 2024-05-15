@@ -4,7 +4,6 @@ from typing import Dict, List
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.lake_info import LakeInfo
@@ -28,7 +27,6 @@ class LakeValidate(LakeInfo):
         }
         self.results: Dict[str, List[str]] = {}
 
-        self.csvds = CSVDataStore(ppss.lake_ss.lake_dir)
         self.gql_data_factory = GQLDataFactory(ppss)
         self.etl = ETL(ppss, self.gql_data_factory)
 
