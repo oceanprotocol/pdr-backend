@@ -213,7 +213,7 @@ class CSVDataStore(BaseDataStore):
         identifier = CSVDSIdentifier(self, dataset_identifier)
         file_path = identifier._get_last_file_path()
 
-        if not len(file_path):
+        if not file_path:
             return None
 
         to_value = CSVDataStore._get_to_value(file_path)
@@ -315,7 +315,7 @@ class CSVDSIdentifier:
         """
         last_file_path = self._get_last_file_path()
 
-        if not len(last_file_path):
+        if not last_file_path:
             return None
 
         # Read the last file
