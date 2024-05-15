@@ -5,7 +5,7 @@ from typing import Optional
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.csv_data_store import CSVDSIdentifier
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import PPSS
 
@@ -97,10 +97,9 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        csvds = CSVDataStore(self.base_path)
+        csvds = CSVDSIdentifier.from_table(self)
         logger.info(" csvds = %s", csvds)
         csvds.write(
-            self.table_name,
             data,
             schema=self.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
         )

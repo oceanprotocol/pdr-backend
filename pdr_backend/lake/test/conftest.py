@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.csv_data_store import CSVDataStore, CSVDSIdentifier
+from pdr_backend.lake.csv_data_store import CSVDSIdentifier
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -81,17 +81,9 @@ def _get_test_PDS():
 
 
 @pytest.fixture()
-def _get_test_CSVDS():
-    def create_csv_datastore(tmpdir):
-        return CSVDataStore(str(tmpdir))
-
-    return create_csv_datastore
-
-
-@pytest.fixture()
 def _get_test_CSVDSIdentifier():
     def create_csv_datastore_identifier(tmpdir, name):
-        return CSVDSIdentifier(CSVDataStore(str(tmpdir)), name)
+        return CSVDSIdentifier(tmpdir, name)
 
     return create_csv_datastore_identifier
 
