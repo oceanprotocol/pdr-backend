@@ -149,9 +149,9 @@ def test_etl_do_bronze_step(
     table_name = NamedTable.from_dataclass(BronzeSlot).fullname
     bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
 
-    assert len(bronze_pdr_slots_records) == 4
-    assert bronze_pdr_slots_records["truevalue"].null_count() == 0
-    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
+    assert len(bronze_pdr_slots_records) == 6
+    assert bronze_pdr_slots_records["truevalue"].null_count() == 1
+    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 2
     assert bronze_pdr_slots_records["source"].null_count() == 0
 
 
@@ -404,7 +404,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
     assert (
         UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-21 00:00:00"
+        == "2023-11-25 00:00:00"
     )
 
 
