@@ -8,6 +8,8 @@ from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _gql_data_factory
@@ -62,14 +64,17 @@ def test_etl_do_bronze_step(
     etl._move_from_temp_tables_to_live()
 
     # assert bronze_pdr_predictions_df is created
-    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
+    bronze_predictions_table_name = NamedTable.from_dataclass(BronzePrediction).fullname
+    predictions_table_name = NamedTable.from_dataclass(Prediction).fullname
     bronze_pdr_predictions_records = pds.query_data(
-        "SELECT * FROM {}".format(table_name)
+        "SELECT * FROM {}".format(bronze_predictions_table_name)
     )
+    pdr_predictions_records = pds.query_data(
+        "SELECT * FROM {}".format(predictions_table_name)
+    )
+    assert len(bronze_pdr_predictions_records) == len(pdr_predictions_records)
     assert len(bronze_pdr_predictions_records) == 5
     assert len(_gql_datafactory_etl_predictions_df) == 6
-
-    print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
 
     # Assert that "contract" data was created, and matches the same data from pdr_predictions
     bronze_pdr_predictions_df = bronze_pdr_predictions_records
@@ -146,12 +151,16 @@ def test_etl_do_bronze_step(
     )
 
     # Assert bronze slots table is building correctly
-    table_name = NamedTable.from_dataclass(BronzeSlot).fullname
-    bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
-
-    assert len(bronze_pdr_slots_records) == 4
-    assert bronze_pdr_slots_records["truevalue"].null_count() == 0
-    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 1
+    bronze_slots_table_name = NamedTable.from_dataclass(BronzeSlot).fullname
+    slots_table_name = NamedTable.from_dataclass(Slot).fullname
+    bronze_pdr_slots_records = pds.query_data(
+        "SELECT * FROM {}".format(bronze_slots_table_name)
+    )
+    pdr_slots_records = pds.query_data("SELECT * FROM {}".format(slots_table_name))
+    assert len(bronze_pdr_slots_records) == len(pdr_slots_records)
+    assert len(bronze_pdr_slots_records) == 6
+    assert bronze_pdr_slots_records["truevalue"].null_count() == 1
+    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 2
     assert bronze_pdr_slots_records["source"].null_count() == 0
 
 
@@ -395,17 +404,18 @@ def test_calc_bronze_start_end_ts(tmpdir):
         "bronze_table_3",
     ]
 
-    # Calculate from + to timestamps
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        # Calculate from + to timestamps
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-21 00:00:00"
-    )
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert (
+            UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-30 00:00:00"
+        )
 
 
 @enforce_types
@@ -437,16 +447,18 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
         "dummy_table_4",
         "dummy_table_5",
     ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-07 00:00:00"
-    )
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
+
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert (
+            UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-07 00:00:00"
+        )
 
 
 @enforce_types
@@ -470,14 +482,16 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
         "bronze_table_3",
     ]
     etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
+
+        ts_now = UnixTimeMs.now()
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert abs(ts_now - to_timestamp) < 100
 
 
 @enforce_types
@@ -509,11 +523,12 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         "dummy_table_4",
         "dummy_table_5",
     ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    for table_name in etl.bronze_table_names:
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts(table_name)
 
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
+        ts_now = UnixTimeMs.now()
+        assert (
+            UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
+            == "2023-11-02 00:00:00"
+        )
+        assert abs(ts_now - to_timestamp) < 100

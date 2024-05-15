@@ -10,7 +10,7 @@ from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import ETLTable, NamedTable, TableType, TempTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -206,11 +206,9 @@ class ETL:
         return values
 
     @enforce_types
-    def get_timestamp_values(
-        self, table_names: List[str], default_timestr: str
-    ) -> UnixTimeMs:
+    def get_timestamp_values(self, table_name: str, default_timestr: str) -> UnixTimeMs:
         max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb, TableType.NORMAL) for tb in table_names]
+            [NamedTable(table_name)]
         )
 
         logger.info(
@@ -229,12 +227,14 @@ class ETL:
 
         logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
-            min(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+            values[0] if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
         return timestamp
 
     @enforce_types
-    def _calc_bronze_start_end_ts(self) -> Tuple[UnixTimeMs, UnixTimeMs]:
+    def _calc_bronze_start_end_ts(
+        self, table_name: str
+    ) -> Tuple[UnixTimeMs, UnixTimeMs]:
         """
         @description
             Calculate the start and end timestamps for the bronze tables
@@ -244,11 +244,11 @@ class ETL:
             min(max(source_tables_max_timestamp)).
         """
         from_timestamp = self.get_timestamp_values(
-            self.bronze_table_names, self.ppss.lake_ss.st_timestr
+            table_name, self.ppss.lake_ss.st_timestr
         )
 
         to_timestamp = self.get_timestamp_values(
-            self.raw_table_names, self.ppss.lake_ss.fin_timestr
+            table_name[len("bronze_") :], self.ppss.lake_ss.fin_timestr
         )
 
         assert from_timestamp <= to_timestamp, (
@@ -314,10 +314,10 @@ class ETL:
         """
         logger.info("update_bronze_pdr - Update bronze tables.")
 
-        # st_timestamp and fin_timestamp should be valid UnixTimeMS
-        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
-
         for table_name, get_data_func in self.bronze_table_getters.items():
+            # st_timestamp and fin_timestamp should be valid UnixTimeMS
+            st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts(table_name)
+
             get_data_func(
                 path=self.ppss.lake_ss.lake_dir,
                 st_ms=st_timestamp,
