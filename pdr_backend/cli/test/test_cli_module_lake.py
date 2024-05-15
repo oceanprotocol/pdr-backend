@@ -75,11 +75,12 @@ def test_do_lake_query(caplog):
 
     mock_pds = Mock()
     mock_pds.query_data.return_value = "query result"
+    mock_ppss = Mock()
 
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds
     ):
-        do_lake_query(args, None)
+        do_lake_query(args, mock_ppss)
 
     mock_pds.query_data.assert_called_once_with(query)
 
@@ -89,7 +90,7 @@ def test_do_lake_query(caplog):
     with patch(
         "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds_err
     ):
-        do_lake_query(args, None)
+        do_lake_query(args, mock_ppss)
 
     assert "Error querying lake: boom!" in caplog.text
 
@@ -160,8 +161,10 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "test2", ts - 2 * one_day)
     _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
 
+    mock_ppss = Mock()
+
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_raw_drop(args, None)
+        do_lake_raw_drop(args, mock_ppss)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
@@ -188,8 +191,10 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     _make_and_fill_timestamps(pds, "_etl_silver_test2", ts - 2 * one_day)
     _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
 
+    mock_ppss = Mock()
+
     with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
-        do_lake_etl_drop(args, None)
+        do_lake_etl_drop(args, mock_ppss)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
