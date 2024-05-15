@@ -4,11 +4,11 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_slot import (
-    PredictSlot,
     fetch_slots,
     get_predict_slots_query,
     get_slots,
 )
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -31,7 +31,7 @@ def test_get_predict_slots_query():
 # Sample data for tests
 SAMPLE_PREDICT_QUERY_RESULT_ITEM = {
     "id": "0xAsset-12345",
-    "slot": "12345",
+    "slot": 12345,
     "trueValues": [{"ID": "1", "trueValue": True}],
     "roundSumStakesUp": 150.0,
     "roundSumStakes": 100.0,
@@ -78,8 +78,8 @@ def test_get_slots(mock_query_subgraph):
     assert mock_query_subgraph.call_count == 1
     # Verify that the result contains the expected number of slots
     assert len(result_slots) == 1000
-    # Verify that the slots contain instances of PredictSlot
-    assert isinstance(result_slots[0], PredictSlot)
+    # Verify that the slots contain instances of Slot
+    assert isinstance(result_slots[0], Slot)
     # Verify the first slot's data matches the sample
     assert result_slots[0].ID == "0xAsset-12345"
 
