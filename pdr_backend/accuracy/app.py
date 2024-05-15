@@ -72,7 +72,7 @@ def process_single_slot(
     staked_yesterday = staked_today = 0.0
     correct_predictions_count = slots_evaluated = 0
 
-    if float(slot.roundSumStakes) == 0.0:
+    if slot.roundSumStakes is None or float(slot.roundSumStakes) == 0.0:
         return None
 
     # split the id to get the slot timestamp
