@@ -117,14 +117,14 @@ def _get_from_value(file_path: str) -> int:
     raise ValueError(f"File {file_path} does not contain a 'from' value")
 
 
-class CSVDSIdentifier:
+class CSVDataStore:
     def __init__(self, base_path: str, dataset_identifier: str):
         self.base_path = base_path
         self.dataset_identifier = dataset_identifier
 
     @staticmethod
     def from_table(table):
-        return CSVDSIdentifier(table.base_path, table.table_name)
+        return CSVDataStore(table.base_path, table.table_name)
 
     @enforce_types
     def _create_file_name(self, start_time: int, end_time: Optional[int]) -> str:

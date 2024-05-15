@@ -4,7 +4,7 @@ from typing import Callable, Dict
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.csv_data_store import CSVDSIdentifier
+from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
@@ -109,7 +109,7 @@ class GQLDataFactory:
             # 3. check conditions and move to temp tables
         """
         table = TableRegistry().get_table(table_name)
-        csv_last_timestamp = CSVDSIdentifier.from_table(table).get_last_timestamp()
+        csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
         db_last_timestamp = PersistentDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
@@ -121,7 +121,7 @@ class GQLDataFactory:
             db_last_timestamp['max("timestamp")'][0] is None
         ):
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
-            data = CSVDSIdentifier.from_table(table).read_all(schema)
+            data = CSVDataStore.from_table(table).read_all(schema)
             table._append_to_db(data, TableType.TEMP)
             return
 
@@ -129,7 +129,7 @@ class GQLDataFactory:
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
             logger.info("  Table exists. Insert pending %s csv data", table_name)
-            data = CSVDSIdentifier.from_table(table).read(
+            data = CSVDataStore.from_table(table).read(
                 st_ut,
                 fin_ut,
                 schema,
@@ -150,7 +150,7 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = CSVDSIdentifier.from_table(table).get_last_timestamp()
+        last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
 
         start_ut = (
             last_timestamp

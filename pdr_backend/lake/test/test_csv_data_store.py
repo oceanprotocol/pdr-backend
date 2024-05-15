@@ -9,33 +9,33 @@ from pdr_backend.lake.csv_data_store import (
 )
 
 
-def test_get_folder_path(_get_test_CSVDSIdentifier, tmpdir):
-    csv_ds_identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_get_folder_path(_get_test_CSVDataStore, tmpdir):
+    csv_ds_identifier = _get_test_CSVDataStore(tmpdir, "test")
     folder_path = csv_ds_identifier._get_folder_path()
     assert folder_path == f"{tmpdir}/test"
 
 
-def test_create_file_name(_get_test_CSVDSIdentifier, tmpdir):
-    csv_ds_identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_create_file_name(_get_test_CSVDataStore, tmpdir):
+    csv_ds_identifier = _get_test_CSVDataStore(tmpdir, "test")
     file_name = csv_ds_identifier._create_file_name(1707030362, 1709060200)
     print("file_name---", file_name)
     assert file_name == "test_from_1707030362_to_1709060200.csv"
 
 
-def test_create_file_path(_get_test_CSVDSIdentifier, tmpdir):
-    csv_ds_identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_create_file_path(_get_test_CSVDataStore, tmpdir):
+    csv_ds_identifier = _get_test_CSVDataStore(tmpdir, "test")
     file_path = csv_ds_identifier._create_file_path(1, 2)
     assert file_path == f"{tmpdir}/test/test_from_0000000001_to_0000000002.csv"
 
 
-def test_create_file_path_without_endtime(_get_test_CSVDSIdentifier, tmpdir):
-    csv_ds_identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_create_file_path_without_endtime(_get_test_CSVDataStore, tmpdir):
+    csv_ds_identifier = _get_test_CSVDataStore(tmpdir, "test")
     file_path = csv_ds_identifier._create_file_path(1, None)
     assert file_path == f"{tmpdir}/test/test_from_0000000001_to_.csv"
 
 
-def test_read(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_read(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
     file_path = identifier._create_file_path(1, 2)
 
     with open(file_path, "w") as file:
@@ -45,8 +45,8 @@ def test_read(_get_test_CSVDSIdentifier, tmpdir):
     assert data.equals(pl.DataFrame({"a": [1, 4], "b": [2, 5], "c": [3, 6]}))
 
 
-def test_read_all(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_read_all(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
 
     file_path_1 = identifier._create_file_path(0, 20)
     file_path_2 = identifier._create_file_path(21, 41)
@@ -63,8 +63,8 @@ def test_read_all(_get_test_CSVDSIdentifier, tmpdir):
     assert data["c"].to_list() == [3, 6, 9, 12]
 
 
-def test_get_last_file_path(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_get_last_file_path(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
 
     file_path_1 = identifier._create_file_path(0, 20)
     file_path_2 = identifier._create_file_path(21, 41)
@@ -86,8 +86,8 @@ def test_get_last_file_path(_get_test_CSVDSIdentifier, tmpdir):
     assert identifier._get_last_file_path() == os.path.join(folder_path, file_path_4)
 
 
-def test_write(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_write(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
     data = pl.DataFrame({"a": [1, 4], "b": [2, 5], "timestamp": [3, 6]})
 
     identifier.write(data)
@@ -101,8 +101,8 @@ def test_write(_get_test_CSVDSIdentifier, tmpdir):
     assert data["timestamp"].to_list() == [3, 6]
 
 
-def test_write_1000_rows(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_write_1000_rows(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
     data = pl.DataFrame(
         {
             "a": list(range(1000)),
@@ -127,8 +127,8 @@ def test_write_1000_rows(_get_test_CSVDSIdentifier, tmpdir):
     assert data["timestamp"].to_list() == list(range(1000))
 
 
-def test_write_append(_get_test_CSVDSIdentifier, tmpdir):
-    identifier = _get_test_CSVDSIdentifier(tmpdir, "test")
+def test_write_append(_get_test_CSVDataStore, tmpdir):
+    identifier = _get_test_CSVDataStore(tmpdir, "test")
     data = pl.DataFrame({"a": [1, 4], "b": [2, 5], "timestamp": [3, 6]})
     identifier.write(data)
 
