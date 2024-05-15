@@ -9,11 +9,11 @@ from pdr_backend.accuracy.app import (
     aggregate_statistics,
     calculate_statistics_for_all_assets,
 )
-from pdr_backend.subgraph.subgraph_slot import PredictSlot
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.time_types import UnixTimeS
 
 # Sample data for tests
-SAMPLE_PREDICT_SLOT = PredictSlot(
+SAMPLE_PREDICT_SLOT = Slot(
     ID="0xAsset-12345",
     timestamp=12345,
     slot=12345,

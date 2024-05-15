@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Dict, List
 
 from enforce_typing import enforce_types
@@ -7,16 +6,6 @@ from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.lake.slot import Slot
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
-
-
-@dataclass
-class PredictSlot:
-    ID: str
-    timestamp: int
-    slot: int
-    truevalue: bool
-    roundSumStakesUp: float
-    roundSumStakes: float
 
 
 @enforce_types
@@ -83,9 +72,9 @@ def get_slots(
     start_ts_param: UnixTimeS,
     first: int,
     skip: int,
-    slots: List[PredictSlot],
+    slots: List[Slot],
     network: str = "mainnet",
-) -> List[PredictSlot]:
+) -> List[Slot]:
     """
     Retrieves slots information for given addresses and a specified time range from a subgraph.
 
@@ -98,7 +87,7 @@ def get_slots(
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A list of PredictSlot TypedDicts with the queried slot information.
+        A list of Slot TypedDicts with the queried slot information.
     """
 
     slots = slots or []
@@ -119,7 +108,7 @@ def get_slots(
 
     new_slots = result["data"]["predictSlots"] or []
 
-    # Convert the list of dicts to a list of PredictSlot objects
+    # Convert the list of dicts to a list of Slot objects
     # by passing the dict as keyword arguments
     # convert roundSumStakesUp and roundSumStakes to float
     new_slots = [
@@ -154,7 +143,7 @@ def fetch_slots(
     first: int,
     skip: int,
     network: str = "mainnet",
-) -> Dict[str, List[PredictSlot]]:
+) -> Dict[str, List[Slot]]:
     """
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
 
@@ -165,7 +154,7 @@ def fetch_slots(
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A dictionary mapping asset IDs to lists of PredictSlot dataclass
+        A dictionary mapping asset IDs to lists of Slot dataclass
         containing slot information.
     """
 
