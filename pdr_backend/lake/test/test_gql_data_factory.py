@@ -441,9 +441,7 @@ def test_prepare_temp_table_deletes_data_that_is_not_inside_csvs(tmpdir):
     pds.move_table_data(TempTable(table.table_name), table.table_name)
     pds.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
 
-    print("temp dir", tmpdir)
     # csv files are created
-    print(f"{pds.base_path}/{table.table_name}")
     csv_files = glob.glob(os.path.join(f"{pds.base_path}/{table.table_name}", "*.csv"))
     num_csv_files = len(csv_files)
     assert num_csv_files == 1
