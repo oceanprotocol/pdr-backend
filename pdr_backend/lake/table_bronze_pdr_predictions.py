@@ -89,7 +89,7 @@ def get_bronze_pdr_predictions_data_with_SQL(
                 SPLIT_PART({pdr_truevals_table_name}.ID, '-', 1)
         LEFT JOIN {pdr_payouts_table_name}
             ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
-        WHERE {pdr_predictions_table_name}.timestamp >= {st_ms}
+        WHERE {pdr_predictions_table_name}.timestamp > {st_ms}
             AND {pdr_predictions_table_name}.timestamp <= {fin_ms}
     """
     )
