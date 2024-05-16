@@ -105,25 +105,42 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     pred_submitter_mgr = PredSubmitterMgr(
         ppss.web3_pp, pred_submitter_mgr_addr
     )
+    up_addr = pred_submitter_mgr.pred_submitter_up_address()
+    down_addr = pred_submitter_mgr.pred_submitter_down_address()
 
     dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+    wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
 
     dfrewards_contract = DFRewards(ppss.web3_pp, dfrewards_addr)
-    claimable_rewards = dfrewards_contract.get_claimable_rewards(
-        web3_config.owner, wROSE_addr
+    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(
+        up_addr, wROSE_addr
     )
+    claimable_rewards_down = dfrewards_contract.get_claimable_rewards(
+        down_addr, wROSE_addr
+    )
+    total_claimable = claimable_rewards_up + claimable_rewards_down
     logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
 
     if claimable_rewards > Eth(0):
-        logger.info("Claiming wROSE rewards...")
-        dfrewards_contract.claim_rewards(web3_config.owner, wROSE_addr)
+        logger.info("Claiming wROSE rewards from the manager contract...")
+        receipt = pred_submitter_mgr.claim_dfrewards(wROSE_addr, dfrewards_addr, True)
+        if receipt["status"] != 1:
+            logger.warning("Failed to claim wROSE rewards from the contract, tx: %s", receipt["transactionHash"])
+            return
+        logger.info("Transfering wROSE to owner")
+        time.sleep(4)
+        balance = wROSE.balanceOf(pred_submitter_mgr.contract_address)
+        receipt = pred_submitter_mgr.transfer_erc20(wROSE_addr, web3_config.owner, balance, True)
+        if receipt["status"] != 1:
+            logger.warning("Failed to transfer wROSE tokens to the owner, tx: %s", receipt["transactionHash"])
+            return
     else:
         logger.warning("No rewards available to claim")
+        return
 
-    logger.info("Sleeping")
-    time.sleep(10)
-    wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
+    logger.info("Converting wROSE to ROSE")
+    time.sleep(4)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == Wei(0):
         logger.warning("wROSE balance is 0")
