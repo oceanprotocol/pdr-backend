@@ -39,6 +39,8 @@ class Prediction(LakeMapper):
         self.slot = slot
         self.user = user
 
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

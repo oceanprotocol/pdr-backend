@@ -27,6 +27,8 @@ class Slot(LakeMapper):
         self.roundSumStakes = roundSumStakes
         self.slot = slot
 
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

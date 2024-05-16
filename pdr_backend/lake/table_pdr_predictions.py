@@ -7,6 +7,10 @@ from pdr_backend.lake.lake_mapper import LakeMapper
 
 
 class PredictoorSummary(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(
@@ -24,6 +28,10 @@ class PredictoorSummary(LakeMapper):
 
 
 class FeedSummary(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

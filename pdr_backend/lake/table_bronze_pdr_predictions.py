@@ -13,6 +13,10 @@ logger = logging.getLogger("lake")
 
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
 class BronzePrediction(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

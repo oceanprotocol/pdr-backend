@@ -36,6 +36,8 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         self.roundSumStakes = roundSumStakes
         self.stake = stake
 
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

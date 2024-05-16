@@ -25,6 +25,8 @@ class Trueval(LakeMapper):
         self.token = token
         self.slot = slot
 
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(
