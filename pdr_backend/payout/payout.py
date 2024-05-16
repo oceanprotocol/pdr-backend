@@ -112,7 +112,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         down_addr, wROSE_addr
     )
     total_claimable = claimable_rewards_up + claimable_rewards_down
-    logger.info("Found %s wROSE available to claim", total_claimable.amt_eth)
+    logger.info("Found %s wROSE available to claim", total_claimable.to_eth().amt_eth)
 
     if total_claimable > Eth(0):
         logger.info("Claiming wROSE rewards from the manager contract...")
