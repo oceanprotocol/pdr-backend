@@ -82,13 +82,9 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
 
     pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
-    pred_submitter_mgr = PredSubmitterMgr(
-        ppss.web3_pp, pred_submitter_mgr_addr
-    )
-
+    pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
 
     find_slots_and_payout_with_mgr()
-
 
 
 @enforce_types
@@ -102,9 +98,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
     pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
-    pred_submitter_mgr = PredSubmitterMgr(
-        ppss.web3_pp, pred_submitter_mgr_addr
-    )
+    pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
     up_addr = pred_submitter_mgr.pred_submitter_up_address()
     down_addr = pred_submitter_mgr.pred_submitter_down_address()
 
@@ -113,9 +107,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
 
     dfrewards_contract = DFRewards(ppss.web3_pp, dfrewards_addr)
-    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(
-        up_addr, wROSE_addr
-    )
+    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(up_addr, wROSE_addr)
     claimable_rewards_down = dfrewards_contract.get_claimable_rewards(
         down_addr, wROSE_addr
     )
@@ -126,14 +118,22 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         logger.info("Claiming wROSE rewards from the manager contract...")
         receipt = pred_submitter_mgr.claim_dfrewards(wROSE_addr, dfrewards_addr, True)
         if receipt["status"] != 1:
-            logger.warning("Failed to claim wROSE rewards from the contract, tx: %s", receipt["transactionHash"])
+            logger.warning(
+                "Failed to claim wROSE rewards from the contract, tx: %s",
+                receipt["transactionHash"],
+            )
             return
         logger.info("Transfering wROSE to owner")
         time.sleep(4)
         balance = wROSE.balanceOf(pred_submitter_mgr.contract_address)
-        receipt = pred_submitter_mgr.transfer_erc20(wROSE_addr, web3_config.owner, balance, True)
+        receipt = pred_submitter_mgr.transfer_erc20(
+            wROSE_addr, web3_config.owner, balance, True
+        )
         if receipt["status"] != 1:
-            logger.warning("Failed to transfer wROSE tokens to the owner, tx: %s", receipt["transactionHash"])
+            logger.warning(
+                "Failed to transfer wROSE tokens to the owner, tx: %s",
+                receipt["transactionHash"],
+            )
             return
     else:
         logger.warning("No rewards available to claim")
