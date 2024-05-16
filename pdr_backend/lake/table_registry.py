@@ -1,7 +1,8 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 
 from enforce_typing import enforce_types
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 
@@ -16,15 +17,15 @@ class TableRegistry:
         return cls._instance
 
     @enforce_types
-    def register_table(self, dataclass: type, ppss: PPSS):
-        table_name = dataclass.get_lake_table_name()  # type: ignore[attr-defined]
+    def register_table(self, dataclass: Type[LakeMapper], ppss: PPSS):
+        table_name = dataclass.get_lake_table_name()
         if table_name in self._tables:
             pass
         self._tables[table_name] = Table(dataclass, ppss)
         return self._tables[table_name]
 
     @enforce_types
-    def register_tables(self, dataclasses: List[type], ppss: PPSS):
+    def register_tables(self, dataclasses: List[Type[LakeMapper]], ppss: PPSS):
         for dataclass in dataclasses:
             self.register_table(dataclass, ppss)
 

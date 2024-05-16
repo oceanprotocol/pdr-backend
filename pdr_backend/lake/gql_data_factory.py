@@ -190,13 +190,11 @@ class GQLDataFactory:
         save_backoff_count = 0
         pagination_offset = 0
 
-        buffer_df = pl.DataFrame(
-            [], schema=table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
-        )
+        buffer_df = pl.DataFrame([], schema=table.dataclass.get_lake_schema())
 
         PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
             TempTable.from_table(table).fullname,
-            table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+            table.dataclass.get_lake_schema(),
         )
 
         while True:
@@ -214,7 +212,7 @@ class GQLDataFactory:
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(
                 data,
-                fallback_schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+                fallback_schema=table.dataclass.get_lake_schema(),
             )
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
@@ -234,7 +232,7 @@ class GQLDataFactory:
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
-                assert df.schema == table.dataclass.get_lake_schema()  # type: ignore[attr-defined]
+                assert df.schema == table.dataclass.get_lake_schema()
                 table.append_to_storage(buffer_df, TableType.TEMP)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
@@ -242,7 +240,7 @@ class GQLDataFactory:
 
                 buffer_df = pl.DataFrame(
                     [],
-                    schema=table.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+                    schema=table.dataclass.get_lake_schema(),
                 )
                 save_backoff_count = 0
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:

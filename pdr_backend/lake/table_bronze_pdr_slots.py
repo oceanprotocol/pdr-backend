@@ -4,6 +4,7 @@ from collections import OrderedDict
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
@@ -16,7 +17,7 @@ logger = logging.getLogger("lake")
 
 
 # CLEAN & ENRICHED PREDICTOOR SLOTS SCHEMA
-class BronzeSlot:
+class BronzeSlot(LakeMapper):
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

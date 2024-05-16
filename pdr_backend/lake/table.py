@@ -1,11 +1,12 @@
 import logging
 from enum import Enum
-from typing import Optional
+from typing import Optional, Type
 
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import PPSS
 
@@ -74,10 +75,10 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
 
 @enforce_types
 class Table:
-    def __init__(self, dataclass: type, ppss: PPSS):
+    def __init__(self, dataclass: Type[LakeMapper], ppss: PPSS):
         self.ppss = ppss
         self.dataclass = dataclass
-        self.table_name = dataclass.get_lake_table_name()  # type: ignore[attr-defined]
+        self.table_name = dataclass.get_lake_table_name()
 
         self.base_path = self.ppss.lake_ss.lake_dir
 
@@ -101,7 +102,7 @@ class Table:
         logger.info(" csvds = %s", csvds)
         csvds.write(
             data,
-            schema=self.dataclass.get_lake_schema(),  # type: ignore[attr-defined]
+            schema=self.dataclass.get_lake_schema(),
         )
         logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
 
@@ -138,14 +139,12 @@ class NamedTable:
 
     @staticmethod
     def from_dataclass(
-        dataclass: type, table_type: Optional[TableType] = None
+        dataclass: Type[LakeMapper], table_type: Optional[TableType] = None
     ) -> "NamedTable":
         if not table_type:
             table_type = TableType.NORMAL
 
-        return NamedTable(
-            dataclass.get_lake_table_name(), table_type  # type: ignore[attr-defined]
-        )
+        return NamedTable(dataclass.get_lake_table_name(), table_type)
 
     @staticmethod
     def from_table(
@@ -155,7 +154,7 @@ class NamedTable:
             table_type = TableType.NORMAL
 
         return NamedTable(
-            table.dataclass.get_lake_table_name(),  # type: ignore[attr-defined]
+            table.dataclass.get_lake_table_name(),
             table_type,
         )
 
@@ -167,14 +166,14 @@ class TempTable(NamedTable):
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
-    def from_dataclass(dataclass: type) -> "TempTable":
-        return TempTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "TempTable":
+        return TempTable(dataclass.get_lake_table_name())
 
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_table(table: Table) -> "TempTable":
-        return TempTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+        return TempTable(table.dataclass.get_lake_table_name())
 
 
 class ETLTable(NamedTable):
@@ -184,11 +183,11 @@ class ETLTable(NamedTable):
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
-    def from_dataclass(dataclass: type) -> "ETLTable":
-        return ETLTable(dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "ETLTable":
+        return ETLTable(dataclass.get_lake_table_name())
 
     @staticmethod
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_table(table: Table) -> "ETLTable":
-        return ETLTable(table.dataclass.get_lake_table_name())  # type: ignore[attr-defined]
+        return ETLTable(table.dataclass.get_lake_table_name())

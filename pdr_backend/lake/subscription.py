@@ -4,11 +4,12 @@ from typing import List
 from enforce_typing import enforce_types
 from polars import Float32, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class Subscription:
+class Subscription(LakeMapper):
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
