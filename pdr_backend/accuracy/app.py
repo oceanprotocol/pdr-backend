@@ -1,5 +1,6 @@
 import logging
 import threading
+import json
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -18,12 +19,20 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_slot import PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
+import argparse
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
 SECONDS_IN_A_DAY = 86400
 logger = logging.getLogger("accuracy_app")
 
+# Take the ppss file from the cli run command
+
+accuracy_ppss = PPSS(
+    yaml_filename='./ppss.yaml',
+    network="sapphire-mainnet",
+    nested_override_args=None,
+)
 
 @enforce_types
 def calculate_prediction_result(
@@ -247,20 +256,56 @@ def calculate_timeframe_timestamps(
     start_ts = UnixTimeS(int((datetime.utcnow() - time_delta).timestamp()))
     return start_ts, end_ts
 
+@enforce_types
+def calculate_statistics_from_DuckDB_tables():
+    four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+    start_ts = UnixTimeS(int(four_weeks_ago.timestamp()))
+
+    db_conn = PersistentDataStore(accuracy_ppss.lake_ss.lake_dir)
+    slots_table_name = Slot.get_lake_table_name()
+
+    print("slots_table_name: ", slots_table_name)
+    slots_table = db_conn.query_data(
+        f"""
+        SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
+        """
+    )
+    print("THE_QUERY:", f"""
+          SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
+          """)
+    db_conn.duckdb_conn.close()
+
+    slots_table = slots_table.group_by("ID").first()
+    slots_table = slots_table.sort("slot")
+
+    all_slots: List[PredictSlot] = []
+
+    # Iterate over rows and create objects
+    for row in slots_table.rows(named=True):
+        slot = PredictSlot(
+            row["ID"],
+            row["timestamp"],
+            row["slot"],
+            row["truevalue"],
+            row["roundSumStakesUp"],
+            row["roundSumStakes"],
+        )
+        all_slots.append(slot)
+
+    print("All slots len: ", len(all_slots))
+    data = transform_slots_to_statistics(all_slots)
+    json_data = json.dumps(data)
+    ## put the data in a file
+    with open(JSON_FILE_PATH, "w") as f:
+        f.write(json_data)
 
 @enforce_types
 def fetch_statistics_using_ETL():
     # return
-    ppss = PPSS(
-        yaml_filename="./ppss.yaml",
-        network="sapphire-mainnet",
-        nested_override_args=None,
-    )
-
-    gql_data_factory = GQLDataFactory(ppss)
-    etl = ETL(ppss, gql_data_factory)
+    gql_data_factory = GQLDataFactory(accuracy_ppss)
     while True:
-        etl.do_etl()
+        gql_data_factory.get_gql_tables()
+        calculate_statistics_from_DuckDB_tables()
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
 
@@ -340,7 +385,7 @@ def transform_slots_to_statistics(all_slots: List[PredictSlot]):
 
 @enforce_types
 @app.route("/statistics", methods=["GET"])
-def calculate_statistics_from_DuckDB_tables():
+def serve_statisctics():
     """
     Serves statistical data from a JSON file via a GET request.
 
@@ -350,38 +395,10 @@ def calculate_statistics_from_DuckDB_tables():
 
     If the file cannot be read or another error occurs, it returns a 500 Internal Server Error.
     """
-
-    four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
-    start_ts = UnixTimeS(int(four_weeks_ago.timestamp()))
-    end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
     try:
-        db_conn = PersistentDataStore("./lake_data", read_only=True)
-        slots_table_name = Slot.get_lake_table_name()
-        slots_table = db_conn.query_data(
-            f"""
-            SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts} AND SLOT < {end_ts}
-            """
-        )
-        db_conn.duckdb_conn.close()
-
-        slots_table = slots_table.group_by("ID").first()
-        slots_table = slots_table.sort("slot")
-
-        all_slots: List[PredictSlot] = []
-
-        # Iterate over rows and create objects
-        for row in slots_table.rows(named=True):
-            slot = PredictSlot(
-                row["ID"],
-                row["timestamp"],
-                row["slot"],
-                row["truevalue"],
-                row["roundSumStakesUp"],
-                row["roundSumStakes"],
-            )
-            all_slots.append(slot)
-
-        data = transform_slots_to_statistics(all_slots)
+        with open(JSON_FILE_PATH, "r") as f:
+            data = json.load(f)  # Load JSON data from file
+        
         response = jsonify(data)
         response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
         return response
