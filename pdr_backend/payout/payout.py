@@ -52,6 +52,7 @@ def request_payout_batches(
 
 @enforce_types
 def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
+    # we only need to query in one direction, since both predict on the same slots
     up_addr = pred_submitter_mgr.pred_submitter_up_address()
     logger.info("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
