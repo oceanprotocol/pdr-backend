@@ -78,7 +78,6 @@ def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
 @enforce_types
 def do_ocean_payout(ppss: PPSS, check_network: bool = True):
     web3_config = ppss.web3_pp.web3_config
-    subgraph_url: str = ppss.web3_pp.subgraph_url
     if check_network:
         assert ppss.web3_pp.network == "sapphire-mainnet"
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
