@@ -94,7 +94,7 @@ class GQLDataFactory:
         # To solve, for a given call to this method, we make a constant fin_ut
 
         logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
 
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
@@ -104,14 +104,17 @@ class GQLDataFactory:
     def _prepare_temp_table(self, table_name, st_ut, fin_ut, schema):
         """
         @description
+            _prepare_temp_table is a helper function to fill the temp table with
+            missing data that already exists in the csv files. This way all new records
+            can be appended to the temp table and then moved to the live table.
+
             # 1. get last timestamp from database
             # 2. get last timestamp from csv
-            # 3. check conditions and move to temp tables
+            # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
+            # 4. resume appending to CSVs + Temp tables until complete
         """
         table = TableRegistry().get_table(table_name)
-        csv_last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
-            table_name
-        )
+        csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
         db_last_timestamp = PersistentDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
@@ -123,7 +126,7 @@ class GQLDataFactory:
             db_last_timestamp['max("timestamp")'][0] is None
         ):
             logger.info("  Table not yet created. Insert all %s csv data", table_name)
-            data = CSVDataStore(table.base_path).read_all(table_name, schema)
+            data = CSVDataStore.from_table(table).read_all(schema)
             table._append_to_db(data, TableType.TEMP)
             return
 
@@ -131,8 +134,7 @@ class GQLDataFactory:
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
             logger.info("  Table exists. Insert pending %s csv data", table_name)
-            data = CSVDataStore(table.base_path).read(
-                table_name,
+            data = CSVDataStore.from_table(table).read(
                 st_ut,
                 fin_ut,
                 schema,
@@ -153,9 +155,7 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = CSVDataStore(table.base_path).get_last_timestamp(
-            table.table_name
-        )
+        last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
 
         start_ut = (
             last_timestamp
@@ -287,7 +287,6 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
-
         for table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):

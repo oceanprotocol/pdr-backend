@@ -116,7 +116,7 @@ def test_csv_data_store(
     table = Table(Prediction, ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
-    assert CSVDataStore(table.base_path).has_data(Prediction.get_lake_table_name())
+    assert CSVDataStore.from_table(table).has_data()
 
     csv_file_path = os.path.join(
         ppss.lake_ss.lake_dir,

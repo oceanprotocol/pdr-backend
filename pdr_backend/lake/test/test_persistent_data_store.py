@@ -5,7 +5,6 @@ import time
 import duckdb
 import polars as pl
 
-from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 
@@ -187,16 +186,6 @@ def test_multiton_instances_with_different_base_paths(tmpdir):
     persistent_data_store_2 = PersistentDataStore(different_path)
 
     assert id(persistent_data_store_1) != id(persistent_data_store_2)
-
-
-def test_multiton_with_CSVDataStore(tmpdir):
-    persistent_data_store_1 = PersistentDataStore(str(tmpdir))
-    csv_data_store_1 = CSVDataStore(str(tmpdir))
-
-    assert id(persistent_data_store_1) != id(csv_data_store_1)
-
-    # test cls._instances so that it is not the same
-    assert persistent_data_store_1._instances != csv_data_store_1._instances
 
 
 def test__duckdb_connection(tmpdir):

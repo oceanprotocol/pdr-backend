@@ -13,13 +13,13 @@ from pdr_backend.accuracy.app import (
     calculate_statistics_for_all_assets,
     calculate_statistics_from_DuckDB_tables,
 )
-from pdr_backend.subgraph.subgraph_slot import PredictSlot
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import mock_ppss
 
 # Sample data for tests
-SAMPLE_PREDICT_SLOT = PredictSlot(
+SAMPLE_PREDICT_SLOT = Slot(
     ID="0xAsset-12345",
     timestamp=12345,
     slot=12345,
