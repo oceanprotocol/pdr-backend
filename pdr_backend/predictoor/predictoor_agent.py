@@ -15,7 +15,7 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
 from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
-from pdr_backend.predictoor.util import find_shared_slots
+from pdr_backend.predictoor.util import find_shared_slots, to_checksum
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
@@ -226,8 +226,7 @@ class PredictoorAgent:
     @enforce_types
     def _to_checksum(self, addrs: List[str]) -> List[str]:
         w3 = self.ppss.web3_pp.w3
-        checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
-        return checksummed_addrs
+        return to_checksum(w3, addrs)
 
     @property
     def cur_block(self):
