@@ -98,7 +98,6 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
 
     web3_config = ppss.web3_pp.web3_config
-    subgraph_url: str = ppss.web3_pp.subgraph_url
     pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
     pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
     up_addr = pred_submitter_mgr.pred_submitter_up_address()

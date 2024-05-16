@@ -15,10 +15,9 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
 from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
-from pdr_backend.predictoor.util import find_shared_slots, to_checksum
+from pdr_backend.predictoor.util import to_checksum
 from pdr_backend.payout.payout import find_slots_and_payout_with_mgr
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
-from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
