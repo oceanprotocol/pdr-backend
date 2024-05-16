@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 from flask import Flask, jsonify
 
-from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
@@ -19,7 +18,6 @@ from pdr_backend.subgraph.subgraph_predictions import (
 )
 from pdr_backend.subgraph.subgraph_slot import PredictSlot
 from pdr_backend.util.time_types import UnixTimeS
-import argparse
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -29,10 +27,11 @@ logger = logging.getLogger("accuracy_app")
 # Take the ppss file from the cli run command
 
 accuracy_ppss = PPSS(
-    yaml_filename='./ppss.yaml',
+    yaml_filename="./ppss.yaml",
     network="sapphire-mainnet",
     nested_override_args=None,
 )
+
 
 @enforce_types
 def calculate_prediction_result(
@@ -256,6 +255,7 @@ def calculate_timeframe_timestamps(
     start_ts = UnixTimeS(int((datetime.utcnow() - time_delta).timestamp()))
     return start_ts, end_ts
 
+
 @enforce_types
 def calculate_statistics_from_DuckDB_tables():
     four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
@@ -270,9 +270,12 @@ def calculate_statistics_from_DuckDB_tables():
         SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
         """
     )
-    print("THE_QUERY:", f"""
+    print(
+        "THE_QUERY:",
+        f"""
           SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
-          """)
+          """,
+    )
     db_conn.duckdb_conn.close()
 
     slots_table = slots_table.group_by("ID").first()
@@ -298,6 +301,7 @@ def calculate_statistics_from_DuckDB_tables():
     ## put the data in a file
     with open(JSON_FILE_PATH, "w") as f:
         f.write(json_data)
+
 
 @enforce_types
 def fetch_statistics_using_ETL():
@@ -398,7 +402,7 @@ def serve_statisctics():
     try:
         with open(JSON_FILE_PATH, "r") as f:
             data = json.load(f)  # Load JSON data from file
-        
+
         response = jsonify(data)
         response.headers.add("Access-Control-Allow-Origin", "*")  # Allow any origin
         return response
