@@ -5,8 +5,10 @@ from typing import Any, List
 from enforce_typing import enforce_types
 
 from pdr_backend.contract.dfrewards import DFRewards
+from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
+from pdr_backend.predictoor.util import find_shared_slots, to_checksum
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
@@ -49,29 +51,43 @@ def request_payout_batches(
 
 
 @enforce_types
+def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
+    up_addr = pred_submitter_mgr.pred_submitter_up_address()
+    logger.info("Starting payout")
+    wait_until_subgraph_syncs(web3_config, subgraph_url)
+    logger.info("Finding pending payouts")
+    pending_slots = query_pending_payouts(subgraph_url, up_addr)
+    shared_slots = find_shared_slots(pending_slots)
+    if not shared_slots:
+        logger.info("No payouts available")
+        return
+    logger.info("Found %d slots", len(shared_slots))
+    for slot_tuple in shared_slots:
+        contract_addrs, slots = slot_tuple
+        contract_addrs = to_checksum(ppss.web3_pp.w3, contract_addrs)
+        tx = pred_submitter_mgr.get_payout(slots, contract_addrs)
+        cur_index = shared_slots.index(slot_tuple)
+        progress = f"{cur_index + 1}/{len(shared_slots)}"
+        logger.info("Payout tx %s: %s", progress, tx["transactionHash"].hex())
+    logger.info("Payout done")
+
+
+@enforce_types
 def do_ocean_payout(ppss: PPSS, check_network: bool = True):
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
-
     if check_network:
         assert ppss.web3_pp.network == "sapphire-mainnet"
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
 
-    logger.info("Starting payout")
-    wait_until_subgraph_syncs(web3_config, subgraph_url)
-    logger.info("Finding pending payouts")
-    pending_payouts = query_pending_payouts(subgraph_url, web3_config.owner)
-    total_timestamps = sum(len(timestamps) for timestamps in pending_payouts.values())
-    logger.info("Found %d slots", total_timestamps)
+    pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
+    pred_submitter_mgr = PredSubmitterMgr(
+        ppss.web3_pp, pred_submitter_mgr_addr
+    )
 
-    for pdr_contract_addr in pending_payouts:
-        logger.info("Claiming payouts for %s", pdr_contract_addr)
-        pdr_contract = FeedContract(ppss.web3_pp, pdr_contract_addr)
-        request_payout_batches(
-            pdr_contract, ppss.payout_ss.batch_size, pending_payouts[pdr_contract_addr]
-        )
 
-    logger.info("Payout done")
+    find_slots_and_payout_with_mgr()
+
 
 
 @enforce_types
@@ -81,6 +97,13 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     if check_network:
         assert ppss.web3_pp.network == "sapphire-mainnet"
         assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+
+    web3_config = ppss.web3_pp.web3_config
+    subgraph_url: str = ppss.web3_pp.subgraph_url
+    pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
+    pred_submitter_mgr = PredSubmitterMgr(
+        ppss.web3_pp, pred_submitter_mgr_addr
+    )
 
     dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
     wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
