@@ -63,7 +63,7 @@ class PersistentDataStore(BaseDataStore):
         Create the table and insert data
         @arguments:
             df - The Polars DataFrame to append.
-            dataset_identifier - A unique identifier for the dataset.
+            table_name - A unique identifier for the dataset.
         """
 
         # Create the table
