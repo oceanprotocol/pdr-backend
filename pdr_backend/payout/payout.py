@@ -54,6 +54,8 @@ def request_payout_batches(
 def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
     # we only need to query in one direction, since both predict on the same slots
     up_addr = pred_submitter_mgr.pred_submitter_up_address()
+    web3_config = ppss.web3_pp.web3_config
+    subgraph_url: str = ppss.web3_pp.subgraph_url
     logger.info("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
     logger.info("Finding pending payouts")
@@ -84,7 +86,7 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
     pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
     pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
 
-    find_slots_and_payout_with_mgr()
+    find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss)
 
 
 @enforce_types
@@ -112,9 +114,9 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         down_addr, wROSE_addr
     )
     total_claimable = claimable_rewards_up + claimable_rewards_down
-    logger.info("Found %s wROSE available to claim", claimable_rewards.amt_eth)
+    logger.info("Found %s wROSE available to claim", total_claimable.amt_eth)
 
-    if claimable_rewards > Eth(0):
+    if total_claimable > Eth(0):
         logger.info("Claiming wROSE rewards from the manager contract...")
         receipt = pred_submitter_mgr.claim_dfrewards(wROSE_addr, dfrewards_addr, True)
         if receipt["status"] != 1:
