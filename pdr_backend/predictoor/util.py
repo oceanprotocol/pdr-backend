@@ -40,6 +40,6 @@ def find_shared_slots(
     return result
 
 
-def to_checksum(self, w3, addrs: List[str]) -> List[str]:
+def to_checksum(w3, addrs: List[str]) -> List[str]:
     checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
     return checksummed_addrs
