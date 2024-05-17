@@ -24,7 +24,7 @@ class LakeValidate(LakeInfo):
             "validate_tables_in_lake": self.validate_expected_table_names,
             "validate_no_views_in_lake": self.validate_expected_view_names,
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
-            "validate_no_duplicates_in_lake": self.validate_lake_tables_no_duplicates,
+            "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
         }
         self.results: Dict[str, List[str]] = {}
 
@@ -182,16 +182,17 @@ class LakeValidate(LakeInfo):
         description:
             Validate that there are no duplicate rows in the lake tables using a single column
             For every duplicate in a table log 1 row w/: table_name, id, date, count_duplicates
-            
+
             This function logs a table with the following columns:
             - table_name, count_duplicates
-            
+
             You can call write_csv(validate_no_duplicats.csv) to get a report.
         """
         violations = []
         duplicate_summary = pl.DataFrame()
         duplicate_rows = pl.DataFrame()
-        
+
+        # get duplicate incidents
         query_duplicate_summary = """
             SELECT
                 'target_table' as table_name,
@@ -210,11 +211,9 @@ class LakeValidate(LakeInfo):
         for table_name in self.all_table_names:
             query = query_duplicate_summary.replace("target_table", table_name)
             summary_df: pl.DataFrame = self.pds.query_data(query)
-            
+
             if summary_df.shape[0] > 0:
-                # if we do have duplicates, we will get the duplicate rows and append them, so they can be written out
-                # get the rows that have a dupplicate count > 1 (known_duplicates)
-                # and then join them with the table_rows, so we can get all the individual rows
+                # get individual instances of duplicate rows
                 query_duplicate_rows = """
                     SELECT
                         'target_table' as table_name,
@@ -235,15 +234,15 @@ class LakeValidate(LakeInfo):
                 query = query_duplicate_rows.replace("target_table", table_name)
                 rows_df: pl.DataFrame = self.pds.query_data(query)
                 duplicate_rows = duplicate_rows.vstack(rows_df)
-            
+
                 duplicate_summary = duplicate_summary.vstack(summary_df)
                 violations.append(f"Table {table_name} has duplicates.")
 
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
 
-        # enable if you need to write out and debug
-        # duplicate_rows.write_csv("validate_no_duplicates.csv")
+        # to write out and debug:
+        # duplicate_rows.write_csv("validate_duplicate_rows.csv")
 
         return violations
 
