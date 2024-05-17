@@ -7,11 +7,20 @@ SPDX-License-Identifier: Apache-2.0
 
 This README describes how you can operate the lake and use analytics to understand the world of predictoor.
 
-First, we want to make sure we get all the data we'll need! Then, we'll process this data so it's easy to chart and undeerstand things.
+First, we want to make sure we get all the data we'll need! Then, we'll process this data so it's easy to chart and understand things.
 
-To complete this we'll be interacting different components in our stack, such as the: lake, GQLDataFactory, and the ETL.
+To complete this we'll be interacting different components in our stack, such as the: Lake, GQLDataFactory, and the ETL.
 
-## Lake - Think "Database"
+## **Content** ##
+
+- [**Lake**](#lake)
+- [**ETL**](#etl)
+- [**PredictoorJob**](#predictoorjob---from-subgraph-to-chart-data)
+- [**Examples**](#examples)
+- [**Dos and Don'ts**](#dos-and-donts)
+- [**What's next?**](#tbd---to-come)
+
+## **Lake - Think "Database"**
 For most users, the lake can simply be thought of as a database. It contains many tables with complete records and reliable information. It should be easy to understand and to work with. We use a combination of CSVs & DuckDB as our Data Lake/Warehouse.
 
 Currently, the "Lake" (DB) data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via the CLI module `lake` command `pdr lake describe ppss.yaml sapphire-mainnet` (cli_module_lake.py)
@@ -25,7 +34,11 @@ Some features include:
 1. The main work building the data take place inside the ETL in the form of SQL queries that run on DuckDB.
 1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
 
-## ETL
+## Lake Data
+ -- Add picture with the current tables schema
+
+
+## **ETL**
 Is responsible for running a series of Jobs and queries that keep the lake in great shape.
 
 ### ETL - End-To-End Update from CLI
@@ -48,7 +61,7 @@ As you are developing and building around the lake, your workflow migh look like
 1. Insert only. No updates. Null values inside `bronze_pdr_prediction` tables.
 1. No backfilling data before `st_ts`. If you want to backfill drop all records or select a new `lake_path`.
 
-## PredictoorJob - From subgraph to chart data
+## **PredictoorJob - From subgraph to chart data**
 To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
 
 PredictoorJob helps us achieve this by breaking the process down into 3 steps.
@@ -75,7 +88,7 @@ To understand how this works a bit better, let's break this down into more detai
 
 _There were already streamlit plots created for silver tables. Please read further._
 
-## PredictoorJob Checkpointing
+## **PredictoorJob Checkpointing**
 In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
 The simplest way to do this right now is to use the most frequent event we have in our data: **predictions submitted by predictoors**. We use this timestamp/checkpoint such that we only process new events, once.
@@ -106,7 +119,7 @@ How to resolve a drop?
 
 All systems [GQLDF + CSV + RAW + ETL Updating] should be working as expected along w/ the cli & ppss.yaml.
 
-## [PredictoorJob][Ingest + Load Step] - GQLDF Fetch + DuckDB Insert
+## **[PredictoorJob][Ingest + Load Step] - GQLDF Fetch + DuckDB Insert**
 
 GQL CSV and Lake max(timestamp) should remain 1:1 right now.
 As new records are fetched, both of these should update atomically.
@@ -137,7 +150,7 @@ Providing us with the parmeters:
 
 **ETL Step does not begin until this completes successfully**
 
-## [PredictoorJob][ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates
+## **[PredictoorJob][ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates**
 
 When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step. Now that the latest raw records have been written to DuckDB the ETL can kick off.
 
@@ -149,7 +162,7 @@ The `bronze_pdr_prediction` query captures all parameters required to complete a
 
 We now have to handle events as-they-are-happening in hot (new) data. (Incremental Updates)
 
-## Jobs and Environment
+## **Jobs and Environment**
 
 Jobs should be self-contained and only be concerned about going from A->B.
 It takes an input [A] -> Does Stuff -> generates an output [B]
@@ -158,7 +171,7 @@ Each components responsible for each job is dumb and unaware of other jobs. You 
 
 Build dumb components that serve a single purpose and operate within their environment.
 
-## Dumb Components - No Magic
+## **Dumb Components - No Magic**
 
 The jobs and pipelines are not "smart". 
 They are designed to be components with a single function.
@@ -170,6 +183,62 @@ What is expected, is that you understand the lake and know how to operate it.
 - If you drop the "tail" of most things, they should be rebuilt back-up again.
 
 Anything outside of how the lake works is not expected to be supported. Example: User randomly deletes records... Please, **do not try and solve for these scenarios.**
+
+## **Examples**
+
+### **Run Lake end to end**
+
+1. Fetch the data and create the Lake with **RAW** and **ETL** data
+```console
+pdr lake etl update ./ppss.yaml sapphire-mainnet
+```
+2. Validate the Lake
+```console
+pdr lake validate ./ppss.yaml sapphire-mainnet 
+```
+3. Inspect the Lake
+```console
+pdr lake describe ./ppss.yaml sapphire-mainnet 
+```
+4. Query data from the Lake
+```console
+pdr lake query ./lake_data "SELECT * FROM pdr_predictions"
+```
+
+
+### **Modify Lake data**
+5. Drop data from the Lake at **ETL** level starting from a specified date
+```console
+pdr lake etl drop ./lake_data 2024-01-10
+```
+
+6. Drop data from the Lake at **RAW** level starting from a specified date
+```console
+pdr lake raw drop ./lake_data 2024-01-10
+```
+
+7. Recover data at **RAW** level starting from a specified date
+```console
+pdr lake raw update ./ppss.yaml sapphire-mainnet
+```
+
+8. Recover data at **ETL** level starting from a specified date
+```console
+pdr lake etl update ./ppss.yaml sapphire-mainnet
+```
+
+9. Validate the Lake
+```console
+pdr lake validate ./ppss.yaml sapphire-mainnet 
+```
+
+## **DOS and DONT'S**
+**Don't**:
+ - !! Don't modify the CSV files in any way, otherwise data is going to be eronated !!
+
+**Dos**:
+ - If data is eronated or there is any issue with the Lake reset the lake
+ - Reset the Lake by deleting the **lake_data** folder and creating it again
 
 # [TBD - TO COME] 
 
