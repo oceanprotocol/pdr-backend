@@ -84,10 +84,18 @@ def test_do_rose_payout(tmpdir):
     ppss = _ppss(tmpdir)
     web3_config = ppss.web3_pp.web3_config
 
-    mock_contract = Mock(spec=DFRewards)
+    mock_contract = Mock()
     mock_contract.get_claimable_rewards = Mock()
     mock_contract.get_claimable_rewards.return_value = Eth(100)
-    mock_contract.claim_rewards = Mock()
+    mock_contract.claim_dfrewards = Mock()
+    mock_contract.claim_dfrewards.return_value = {
+        "transactionHash": b"0x1",
+        "status": 1,
+    }
+    mock_contract.transfer_erc20 = Mock()
+    mock_contract.transfer_erc20.return_value = {"transactionHash": b"0x1", "status": 1}
+    mock_contract.pred_submitter_up_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x1"
 
     mock_wrose = Mock(spec=WrappedToken)
     mock_wrose.balanceOf = Mock()
@@ -96,10 +104,20 @@ def test_do_rose_payout(tmpdir):
 
     with patch("pdr_backend.payout.payout.time"), patch(
         "pdr_backend.payout.payout.WrappedToken", return_value=mock_wrose
-    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract):
+    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract), patch(
+        "pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract
+    ):
         do_rose_payout(ppss, check_network=False)
-        mock_contract.claim_rewards.assert_called_with(
-            web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+        mock_contract.claim_dfrewards.assert_called_with(
+            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
+            "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0",
+            True,
+        )
+        mock_contract.transfer_erc20.assert_called_with(
+            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
+            web3_config.owner,
+            Eth(100).to_wei(),
+            True,
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(Eth(100).to_wei())
