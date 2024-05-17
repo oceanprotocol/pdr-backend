@@ -7,6 +7,7 @@ from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.time_types import UnixTimeMs
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
@@ -84,35 +85,26 @@ class LakeInfo:
             )
 
             if has_timestamp:
+                min_timestamp = source[table_name]["timestamp"].min()
                 max_timestamp = source[table_name]["timestamp"].max()
-                badge = dbc.Button(
-                    [
-                        "Max timestamp:",
-                        dbc.Badge(
-                            str(max_timestamp) if max_timestamp else "no data",
-                            color="light",
-                            text_color="primary" if max_timestamp else "danger",
-                            className="ms-1",
-                        ),
-                    ],
-                    color="primary" if max_timestamp else "danger",
-                )
 
-                table_1_result.append(html.Div(badge, style={"margin-bottom": "10px"}))
+                if isinstance(min_timestamp, (int, float)):
+                    min_datestr = UnixTimeMs(min_timestamp).to_timestr()
+                else:
+                    min_datestr = None
+
+                if isinstance(max_timestamp, (int, float)):
+                    max_datestr = UnixTimeMs(max_timestamp).to_timestr()
+                else:
+                    max_datestr = None
+
+                min_badge = fallback_badge("Min timestamp:", min_timestamp, min_datestr)
+                max_badge = fallback_badge("Max timestamp:", max_timestamp, max_datestr)
+
+                table_1_result.append(html.Div([min_badge, max_badge]))
 
             shape = source[table_name].shape
-            nrows_badge = dbc.Button(
-                [
-                    "Number of rows:",
-                    dbc.Badge(
-                        str(shape[0]),
-                        color="light",
-                        text_color="primary",
-                        className="ms-1",
-                    ),
-                ],
-                color="primary",
-            )
+            nrows_badge = simple_badge("Number of rows:", shape[0])
             table_1_result.append(
                 html.Div(nrows_badge, style={"margin-bottom": "10px"})
             )
@@ -185,3 +177,41 @@ class LakeInfo:
         )
 
         app.run_server(debug=True)
+
+
+def simple_badge(text, value):
+    return dbc.Button(
+        [
+            text,
+            dbc.Badge(
+                str(value),
+                color="light",
+                text_color="primary",
+                className="ms-1",
+            ),
+        ],
+        color="primary",
+    )
+
+
+def fallback_badge(text, value, nat_str):
+    return dbc.Button(
+        [
+            text,
+            dbc.Badge(
+                str(value) if value is not None else "no data",
+                color="light",
+                text_color="primary" if value is not None else "danger",
+                className="ms-1",
+            ),
+            " aka ",
+            dbc.Badge(
+                str(nat_str),
+                color="light",
+                text_color="primary" if value is not None else "danger",
+                className="ms-1",
+            ),
+        ],
+        color="primary" if value else "danger",
+        style={"margin-bottom": "10px"},
+    )
