@@ -42,6 +42,10 @@ class LakeInfo:
             columns = []
             has_timestamp = False
 
+            if len(source[table_name]) == 0:
+                print("Table is empty. Please drop it.")
+                continue
+
             for col in source[table_name].iter_columns():
                 if col.name == "timestamp":
                     has_timestamp = True
