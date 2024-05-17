@@ -51,7 +51,7 @@ def do_lake_query(args, ppss):
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(ppss, read_only=True)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
         print(df)

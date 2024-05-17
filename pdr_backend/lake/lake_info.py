@@ -36,6 +36,7 @@ class LakeInfo:
             "validate_tables_in_lake": self.validate_expected_table_names,
             "validate_no_views_in_lake": self.validate_expected_view_names,
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
+            "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
         }
         self.validation_results: Dict[str, List[str]] = {}
 
@@ -206,5 +207,75 @@ class LakeInfo:
                 logger.info("%s Gap Report\n%s", table_name, gap_pct)
 
             violations.append("Gap validation failed. Please review logs.")
+
+        return violations
+
+    @enforce_types
+    def validate_lake_tables_no_duplicates(self) -> List[str]:
+        """
+        description:
+            Validate that there are no duplicate rows in the lake tables using a single column
+            For every duplicate in a table log 1 row w/: table_name, id, date, count_duplicates
+
+            This function logs a table with the following columns:
+            - table_name, count_duplicates
+
+            You can call write_csv(validate_no_duplicats.csv) to get a report.
+        """
+        violations = []
+        duplicate_summary = pl.DataFrame()
+        duplicate_rows = pl.DataFrame()
+
+        # get duplicate incidents
+        query_duplicate_summary = """
+            SELECT
+                'target_table' as table_name,
+                COUNT(*) as incident_count
+            FROM (
+                SELECT
+                    ID as ID,
+                    timestamp,
+                FROM target_table
+                GROUP BY ID, timestamp
+                HAVING COUNT(*) > 1
+            ) as inner_query
+            GROUP BY table_name
+        """
+
+        for table_name in self.all_table_names:
+            query = query_duplicate_summary.replace("target_table", table_name)
+            summary_df: pl.DataFrame = self.pds.query_data(query)
+
+            if summary_df.shape[0] > 0:
+                # get individual instances of duplicate rows
+                query_duplicate_rows = """
+                    SELECT
+                        'target_table' as table_name,
+                        target_table.ID,
+                        target_table.timestamp
+                    FROM (
+                        SELECT
+                            ID as ID,
+                            timestamp,
+                        FROM target_table
+                        GROUP BY ID, timestamp
+                        HAVING COUNT(*) > 1
+                    ) as known_duplicates
+                    LEFT JOIN target_table
+                    ON known_duplicates.ID = target_table.ID
+                """
+
+                query = query_duplicate_rows.replace("target_table", table_name)
+                rows_df: pl.DataFrame = self.pds.query_data(query)
+                duplicate_rows = duplicate_rows.vstack(rows_df)
+
+                duplicate_summary = duplicate_summary.vstack(summary_df)
+                violations.append(f"Table {table_name} has duplicates.")
+
+        logger.info("Duplicate Summary\n%s", duplicate_summary)
+        logger.info("Duplicate Rows:\n%s", duplicate_rows)
+
+        # to write out and debug:
+        # duplicate_rows.write_csv("validate_duplicate_rows.csv")
 
         return violations
