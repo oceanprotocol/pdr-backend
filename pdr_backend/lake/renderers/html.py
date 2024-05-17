@@ -12,21 +12,33 @@ class HtmlRenderer:
         self.lake_info = lake_info
 
     def html_table_info(
-        self, source: Dict[str, DataFrame], violations: Optional[List[str]] = None
+        self,
+        source: Dict[str, DataFrame],
+        violations: Optional[List[str]] = None,
+        violation_key: str = "",
     ):
         result = []
 
-        if violations is None:
-            violations = []
-
-        alerts = [
-            dbc.Alert(
-                [html.I(className="bi bi-x-octagon-fill me-2"), violation],
-                color="danger",
-                className="d-flex align-items-center",
-            )
-            for violation in violations
-        ]
+        if not violations:
+            alerts = [
+                dbc.Alert(
+                    [
+                        html.I(className="bi bi-check-circle-fill me-2"),
+                        f"{violation_key} - No violations found.",
+                    ],
+                    color="success",
+                    className="d-flex align-items-center",
+                )
+            ]
+        else:
+            alerts = [
+                dbc.Alert(
+                    [html.I(className="bi bi-x-octagon-fill me-2"), violation],
+                    color="danger",
+                    className="d-flex align-items-center",
+                )
+                for violation in violations
+            ]
 
         if not source:
             return alerts
@@ -102,17 +114,47 @@ class HtmlRenderer:
 
         return dbc.Tabs(children=result, style={"margin-top": "10px"})
 
+    def validation_report(self):
+        result = []
+        for key, violations in self.lake_info.validation_results.items():
+            if key == "validate_tables_in_lake" or key == "validate_no_views_in_lake":
+                continue
+
+            if not violations:
+                alerts = [
+                    dbc.Alert(
+                        [
+                            html.I(className="bi bi-check-circle-fill me-2"),
+                            f"{key} - No violations found",
+                        ],
+                        color="success",
+                        className="d-flex align-items-center",
+                    )
+                ]
+                result += alerts
+
+                continue
+
+            alerts = [
+                dbc.Alert(
+                    [html.I(className="bi bi-x-octagon-fill me-2"), violation],
+                    color="danger",
+                    className="d-flex align-items-center",
+                )
+                for violation in violations
+            ]
+
+            result += alerts
+
+        return [html.Div(result, style={"margin-top": "10px"})]
+
     def show(self):
         app = Dash(
             __name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
         )
 
-        # TODO: should we add all the validations here? or only those corresponding to the tabs?
-        all_violations = (
-            self.lake_info.validate_expected_table_names()
-            + self.lake_info.validate_expected_view_names()
-        )
-        total_violations = len(all_violations)
+        total_violations = any(self.lake_info.validation_results.values())
+
         violations_text = (
             "No violations found"
             if total_violations == 0
@@ -137,7 +179,10 @@ class HtmlRenderer:
                             label="Table Info",
                             children=self.html_table_info(
                                 self.lake_info.table_info,
-                                self.lake_info.validate_expected_table_names(),
+                                self.lake_info.validation_results[
+                                    "validate_tables_in_lake"
+                                ],
+                                "validate_tables",
                             ),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
@@ -146,8 +191,17 @@ class HtmlRenderer:
                             label="View Info",
                             children=self.html_table_info(
                                 self.lake_info.view_info,
-                                self.lake_info.validate_expected_view_names(),
+                                self.lake_info.validation_results[
+                                    "validate_no_views_in_lake"
+                                ],
+                                "validate_views",
                             ),
+                            labelClassName="text-success",
+                            style={"margin-top": "10px"},
+                        ),
+                        dbc.Tab(
+                            label="Validation report (others)",
+                            children=self.validation_report(),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
                         ),
