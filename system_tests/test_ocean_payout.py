@@ -21,8 +21,10 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
     mock_web3_config.owner = "0x00000000000000000000000000000000000c0ffe"
     mock_web3_config.w3 = Mock()
     mock_web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
+
     def checksum_mock(_, y):
         return y
+
     mock_web3_config.w3.to_checksum_address = lambda x: x
     mock_web3_pp.web3_config = mock_web3_config
 
