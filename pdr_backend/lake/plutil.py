@@ -15,6 +15,7 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake_plutil")
@@ -185,7 +186,7 @@ def text_to_df(s: str) -> pl.DataFrame:
 
 
 @enforce_types
-def _object_list_to_df(objects: List[object], fallback_schema=None) -> pl.DataFrame:
+def _object_list_to_df(objects: List[LakeMapper], fallback_schema=None) -> pl.DataFrame:
     """
     @description
         Convert list objects to a dataframe using their __dict__ structure.

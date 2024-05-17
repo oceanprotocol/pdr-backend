@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.util.time_types import UnixTimeMs
@@ -11,7 +12,11 @@ logger = logging.getLogger("lake")
 
 
 # CLEAN & ENRICHED PREDICTOOR PREDICTIONS SCHEMA
-class BronzePrediction:
+class BronzePrediction(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

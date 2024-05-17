@@ -4,11 +4,12 @@ from typing import List, Union
 from enforce_typing import enforce_types
 from polars import Boolean, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class Trueval:
+class Trueval(LakeMapper):
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
@@ -23,6 +24,8 @@ class Trueval:
         self.timestamp = timestamp
         self.token = token
         self.slot = slot
+
+        self.check_against_schema()
 
     @staticmethod
     def get_lake_schema():

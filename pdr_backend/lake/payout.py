@@ -4,11 +4,12 @@ from typing import List
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class Payout:  # pylint: disable=too-many-instance-attributes
+class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         ID: str,
@@ -34,6 +35,8 @@ class Payout:  # pylint: disable=too-many-instance-attributes
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.stake = stake
+
+        self.check_against_schema()
 
     @staticmethod
     def get_lake_schema():

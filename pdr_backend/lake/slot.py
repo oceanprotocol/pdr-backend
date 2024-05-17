@@ -4,9 +4,11 @@ from typing import List, Union
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
+
 
 @enforce_types
-class Slot:
+class Slot(LakeMapper):
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
@@ -24,6 +26,8 @@ class Slot:
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
         self.slot = slot
+
+        self.check_against_schema()
 
     @staticmethod
     def get_lake_schema():
