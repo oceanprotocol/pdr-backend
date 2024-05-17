@@ -21,8 +21,7 @@ class LakeMapper(ABC):
         try:
             pl.DataFrame(dict_form, schema=schema)
         except Exception as e:
-            # TODO: how strict do we want to be?
-            # Raising an error or just logging some warnings?
+            # Raise error so the user knows the lake data will have problems
             raise ValueError(
                 f"Schema error converting {self.__class__} to dataframe: {e}"
             ) from e
