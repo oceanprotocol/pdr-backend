@@ -3,7 +3,6 @@ import sys
 from unittest.mock import Mock, patch, MagicMock
 
 from pdr_backend.cli import cli_module
-from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
 from pdr_backend.util.web3_config import Web3Config
@@ -22,7 +21,8 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
     mock_web3_config.owner = "0x00000000000000000000000000000000000c0ffe"
     mock_web3_config.w3 = Mock()
     mock_web3_config.w3.eth.chain_id = SAPPHIRE_MAINNET_CHAINID
-    checksum_mock = lambda _, y: y
+    def checksum_mock(_, y):
+        return y
     mock_web3_config.w3.to_checksum_address = lambda x: x
     mock_web3_pp.web3_config = mock_web3_config
 
@@ -68,6 +68,7 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
 
         # Additional assertions
         mock_query_pending_payouts.assert_called_with(mock_web3_pp.subgraph_url, "0x1")
+        print(mock_contract.get_payout.call_args_list)
         mock_contract.get_payout.assert_any_call([1, 2, 3], ["0x1"])
         mock_contract.get_payout.assert_any_call([5, 6, 7], ["0x2"])
         assert mock_contract.get_payout.call_count == 2
