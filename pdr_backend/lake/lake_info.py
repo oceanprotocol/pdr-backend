@@ -110,7 +110,7 @@ class LakeInfo:
             )
 
             table = dbc.Table.from_dataframe(
-                source[table_name].to_pandas(),
+                source[table_name].limit(100).to_pandas(),
                 striped=True,
                 bordered=True,
                 hover=True,
