@@ -4,8 +4,6 @@ from typing import Dict, List
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.lake_info import LakeInfo
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
@@ -26,37 +24,6 @@ class LakeValidate(LakeInfo):
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
         }
         self.results: Dict[str, List[str]] = {}
-
-        self.gql_data_factory = GQLDataFactory(ppss)
-        self.etl = ETL(ppss, self.gql_data_factory)
-
-    @enforce_types
-    def validate_expected_table_names(self) -> List[str]:
-        violations = []
-        expected_table_names = []
-        expected_table_names += self.etl.raw_table_names
-        expected_table_names += self.etl.bronze_table_names
-        expected_table_names.sort()
-
-        temp_table_names = self.all_table_names
-        temp_table_names.sort()
-
-        if temp_table_names != expected_table_names:
-            violations.append(
-                "Tables in lake do not match expected names - [Lake: {}], [Expected: {}]".format(
-                    temp_table_names, expected_table_names
-                )
-            )
-
-        return violations
-
-    @enforce_types
-    def validate_expected_view_names(self) -> List[str]:
-        violations = []
-        if len(self.all_view_names) > 0:
-            violations.append("Lake has VIEWs. Please clean lake using CLI.")
-
-        return violations
 
     @enforce_types
     def validate_lake_bronze_predictions_gaps(self) -> List[str]:

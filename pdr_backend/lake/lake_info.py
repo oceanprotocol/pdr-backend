@@ -1,10 +1,12 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import dash_bootstrap_components as dbc
 import polars as pl
 from dash import Dash, html
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
@@ -12,9 +14,13 @@ from pdr_backend.util.time_types import UnixTimeMs
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
 
+# pylint: disable=too-many-instance-attributes
 class LakeInfo:
     def __init__(self, ppss: PPSS, use_html: bool = False):
         self.pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
+        self.gql_data_factory = GQLDataFactory(ppss)
+        self.etl = ETL(ppss, self.gql_data_factory)
+
         self.all_table_names: List[str] = []
         self.table_info: Dict[str, DataFrame] = {}
         self.all_view_names: List[str] = []
@@ -63,8 +69,26 @@ class LakeInfo:
             print("Data: \n")
             print(source[table_name])
 
-    def html_table_info(self, source: Dict[str, DataFrame]):
+    def html_table_info(
+        self, source: Dict[str, DataFrame], violations: Optional[List[str]] = None
+    ):
         result = []
+
+        if violations is None:
+            violations = []
+
+        alerts = [
+            dbc.Alert(
+                [html.I(className="bi bi-x-octagon-fill me-2"), violation],
+                color="danger",
+                className="d-flex align-items-center",
+            )
+            for violation in violations
+        ]
+
+        if not source:
+            return alerts
+
         for table_name in source:
             table_1_result = []
             table_2_result = []
@@ -122,17 +146,19 @@ class LakeInfo:
             result.append(
                 dbc.Tab(
                     label=table_name,
-                    children=dbc.Row(
-                        [
-                            dbc.Col(table_1_result, width=3),
-                            dbc.Col(table_2_result, width=9),
-                        ],
-                        style={"margin-top": "10px"},
-                    ),
+                    children=[
+                        dbc.Row([dbc.Col(alerts)]),
+                        dbc.Row(
+                            [
+                                dbc.Col(table_1_result, width=3),
+                                dbc.Col(table_2_result, width=9),
+                            ],
+                        ),
+                    ],
                 )
             )
 
-        return dbc.Tabs(children=result)
+        return dbc.Tabs(children=result, style={"margin-top": "10px"})
 
     def run(self):
         self.generate()
@@ -151,25 +177,53 @@ class LakeInfo:
         self.print_table_info(self.view_info)
 
     def show_dashboard(self):
-        app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+        app = Dash(
+            __name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
+        )
+
+        # TODO: should we add all the validations here? or only those corresponding to the tabs?
+        all_violations = (
+            self.validate_expected_table_names() + self.validate_expected_view_names()
+        )
+        total_violations = len(all_violations)
+        violations_text = (
+            "No violations found"
+            if total_violations == 0
+            else "Please check violations!"
+        )
+
         app.layout = html.Div(
             [
                 html.H2("Lake Tables"),
+                dbc.Toast(
+                    [html.P(violations_text, className="mb-0")],
+                    id="simple-toast",
+                    header="Validation result",
+                    icon="success" if total_violations == 0 else "danger",
+                    dismissable=True,
+                    is_open=True,
+                    style={"position": "fixed", "top": 10, "right": 10, "width": 350},
+                ),
                 dbc.Tabs(
                     [
                         dbc.Tab(
                             label="Table Info",
-                            children=self.html_table_info(self.table_info),
+                            children=self.html_table_info(
+                                self.table_info, self.validate_expected_table_names()
+                            ),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
                         ),
                         dbc.Tab(
                             label="View Info",
-                            children=self.html_table_info(self.view_info),
+                            children=self.html_table_info(
+                                self.view_info, self.validate_expected_view_names()
+                            ),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
                         ),
-                    ]
+                    ],
+                    style={"margin-top": "10px"},
                 ),
             ],
             className="container",
@@ -177,6 +231,29 @@ class LakeInfo:
         )
 
         app.run_server(debug=True)
+
+    def validate_expected_table_names(self) -> List[str]:
+        violations = []
+        expected_table_names = self.etl.raw_table_names + self.etl.bronze_table_names
+
+        temp_table_names = self.all_table_names
+
+        for table_name in set(temp_table_names) - set(expected_table_names):
+            violations.append(
+                "Unexpected table in lake - [Table: {}]".format(table_name)
+            )
+
+        for table_name in set(expected_table_names) - set(temp_table_names):
+            violations.append("Missing table in lake - [Table: {}]".format(table_name))
+
+        return violations
+
+    def validate_expected_view_names(self) -> List[str]:
+        violations = []
+        if len(self.all_view_names) > 0:
+            violations.append("Lake has VIEWs. Please clean lake using CLI.")
+
+        return violations
 
 
 def simple_badge(text, value):
