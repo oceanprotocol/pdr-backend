@@ -83,7 +83,7 @@ def test_do_rose_payout(tmpdir):
     ppss = _ppss(tmpdir)
     web3_config = ppss.web3_pp.web3_config
 
-    mock_contract = Mock()
+    mock_contract = Mock(spec=PredSubmitterMgr)
     mock_contract.get_claimable_rewards = Mock()
     mock_contract.get_claimable_rewards.return_value = Eth(100)
     mock_contract.claim_dfrewards = Mock()
