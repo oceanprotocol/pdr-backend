@@ -149,6 +149,28 @@ The `bronze_pdr_prediction` query captures all parameters required to complete a
 
 We now have to handle events as-they-are-happening in hot (new) data. (Incremental Updates)
 
+## Jobs and Environment
+
+Jobs should be self-contained and only be concerned about going from A->B.
+It takes an input [A] -> Does Stuff -> generates an output [B]
+
+Each components responsible for each job is dumb and unaware of other jobs. You do not solve a downstream job problem by reaching back upstream. GQLDF does not have any knowledge of ETL. If you delete a CSV file, you should not use GQLDF to update the ETL. 
+
+Build dumb components that serve a single purpose and operate within their environment.
+
+## Dumb Components - No Magic
+
+The jobs and pipelines are not "smart". 
+They are designed to be components with a single function.
+
+If you delete data from CSV, there are no expectations that Raw or ETL tables will be updated.
+What is expected, is that you understand the lake and know how to operate it.
+- You can delete part of the CSV data and it should just fetch back-up again.
+- If you drop your Raw + ETL tables, everything should just build back-up again.
+- If you drop the "tail" of most things, they should be rebuilt back-up again.
+
+Anything outside of how the lake works is not expected to be supported. Example: User randomly deletes records... Please, **do not try and solve for these scenarios.**
+
 # [TBD - TO COME] 
 
 ### [PredictoorJob][IncrementalJob][ETL]
