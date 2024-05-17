@@ -47,11 +47,16 @@ class LakeInfo:
             print(",".join(columns))
 
             if has_timestamp:
+                min_timestamp = source[table_name]["timestamp"].min()
                 max_timestamp = source[table_name]["timestamp"].max()
+                
+                if min_timestamp is not None:
+                    print("Min timestamp: " + str(min_timestamp))
                 if max_timestamp is not None:
                     print("Max timestamp: " + str(max_timestamp))
-                else:
-                    print("No timestamp data")
+
+            else:
+                print("No timestamp data")
 
             shape = source[table_name].shape
             print(f"Number of rows: {shape[0]}")
