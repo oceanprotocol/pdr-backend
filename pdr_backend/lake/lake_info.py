@@ -1,4 +1,6 @@
+from dash import Dash, html
 from typing import Dict, List
+import dash_bootstrap_components as dbc
 
 import polars as pl
 from polars.dataframe.frame import DataFrame
@@ -10,12 +12,13 @@ pl.Config.set_tbl_hide_dataframe_shape(True)
 
 
 class LakeInfo:
-    def __init__(self, ppss: PPSS):
-        self.pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    def __init__(self, ppss: PPSS, html: bool = False):
+        self.pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
         self.all_table_names: List[str] = []
         self.table_info: Dict[str, DataFrame] = {}
         self.all_view_names: List[str] = []
         self.view_info: Dict[str, DataFrame] = {}
+        self.html = html
 
     def generate(self):
         self.all_table_names = self.pds.get_table_names(all_schemas=True)
@@ -59,8 +62,93 @@ class LakeInfo:
             print("Preview: \n")
             print(source[table_name])
 
+    def html_table_info(self, source: Dict[str, DataFrame]):
+        result = []
+        for table_name in source:
+            table_1_result = []
+            table_2_result = []
+            has_timestamp = False
+
+            types = []
+            for col in source[table_name].iter_columns():
+                if col.name == "timestamp":
+                    has_timestamp = True
+
+                types.append(html.Tr([html.Td(str(col.name)), html.Td(str(col.dtype))]))
+
+            types_table = dbc.Table(types, bordered=True)
+            table_1_result.append(
+                html.Div(
+                    [html.Strong("Schema"), types_table],
+                )
+            )
+
+            if has_timestamp:
+                max_timestamp = source[table_name]["timestamp"].max()
+                badge = dbc.Button(
+                    [
+                        "Max timestamp:",
+                        dbc.Badge(
+                            str(max_timestamp) if max_timestamp else "no data",
+                            color="light",
+                            text_color="primary" if max_timestamp else "danger",
+                            className="ms-1",
+                        ),
+                    ],
+                    color="primary" if max_timestamp else "danger",
+                )
+
+                table_1_result.append(html.Div(badge, style={"margin-bottom": "10px"}))
+
+            shape = source[table_name].shape
+            nrows_badge = dbc.Button(
+                [
+                    "Number of rows:",
+                    dbc.Badge(
+                        str(shape[0]),
+                        color="light",
+                        text_color="primary",
+                        className="ms-1",
+                    ),
+                ],
+                color="primary",
+            )
+            table_1_result.append(
+                html.Div(nrows_badge, style={"margin-bottom": "10px"})
+            )
+
+            table = dbc.Table.from_dataframe(
+                source[table_name].to_pandas(),
+                striped=True,
+                bordered=True,
+                hover=True,
+                responsive=True,
+                className="small",
+            )
+            table_2_result.append(html.Div([html.Strong("Preview:"), table]))
+
+            result.append(
+                dbc.Tab(
+                    label=table_name,
+                    children=dbc.Row(
+                        [
+                            dbc.Col(table_1_result, width=3),
+                            dbc.Col(table_2_result, width=9),
+                        ],
+                        style={"margin-top": "10px"},
+                    ),
+                )
+            )
+
+        return dbc.Tabs(children=result)
+
     def run(self):
         self.generate()
+
+        if self.html:
+            self.show_dashboard()
+            return
+
         print("Lake Tables:")
         print(self.all_table_names)
         self.print_table_info(self.table_info)
@@ -69,3 +157,31 @@ class LakeInfo:
         print("Lake Views:")
         print(self.all_view_names)
         self.print_table_info(self.view_info)
+
+    def show_dashboard(self):
+        app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+        app.layout = html.Div(
+            [
+                html.H2("Lake Tables"),
+                dbc.Tabs(
+                    [
+                        dbc.Tab(
+                            label="Table Info",
+                            children=self.html_table_info(self.table_info),
+                            labelClassName="text-success",
+                            style={"margin-top": "10px"},
+                        ),
+                        dbc.Tab(
+                            label="View Info",
+                            children=self.html_table_info(self.view_info),
+                            labelClassName="text-success",
+                            style={"margin-top": "10px"},
+                        ),
+                    ]
+                ),
+            ],
+            className="container",
+            style={"margin-top": "10px"},
+        )
+
+        app.run_server(debug=True)
