@@ -1,8 +1,8 @@
-from dash import Dash, html
 from typing import Dict, List
-import dash_bootstrap_components as dbc
 
+import dash_bootstrap_components as dbc
 import polars as pl
+from dash import Dash, html
 from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
@@ -12,13 +12,13 @@ pl.Config.set_tbl_hide_dataframe_shape(True)
 
 
 class LakeInfo:
-    def __init__(self, ppss: PPSS, html: bool = False):
+    def __init__(self, ppss: PPSS, use_html: bool = False):
         self.pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
         self.all_table_names: List[str] = []
         self.table_info: Dict[str, DataFrame] = {}
         self.all_view_names: List[str] = []
         self.view_info: Dict[str, DataFrame] = {}
-        self.html = html
+        self.html = use_html
 
     def generate(self):
         self.all_table_names = self.pds.get_table_names(all_schemas=True)
@@ -59,7 +59,7 @@ class LakeInfo:
             shape = source[table_name].shape
             print(f"Number of rows: {shape[0]}")
 
-            print("Preview: \n")
+            print("Data: \n")
             print(source[table_name])
 
     def html_table_info(self, source: Dict[str, DataFrame]):

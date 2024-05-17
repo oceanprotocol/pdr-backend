@@ -35,7 +35,7 @@ def do_lake_subcommand(args):
 # subcommands
 @enforce_types
 def do_lake_describe(args, ppss):
-    lake_info = LakeInfo(ppss, html=args.html)
+    lake_info = LakeInfo(ppss, use_html=args.html)
     lake_info.run()
 
 
