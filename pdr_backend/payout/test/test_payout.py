@@ -1,5 +1,6 @@
 from unittest.mock import Mock, call, patch
 
+from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 import pytest
 from enforce_typing import enforce_types
 
@@ -52,26 +53,30 @@ def test_do_ocean_payout(tmpdir):
     ppss = _ppss(tmpdir)
     ppss.payout_ss.set_batch_size(5)
 
+    mock_addr_1 = "0x0000000000000000000000000000000000000000"
+    mock_addr_2 = "0x0000000000000000000000000000000000000001"
     mock_pending_payouts = {
-        "address_1": [1, 2, 3],
-        "address_2": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        mock_addr_1: [1, 2, 3, 4, 5],
+        mock_addr_2: [4, 5, 6, 7, 8, 9, 10],
     }
 
-    mock_contract = Mock(spec=FeedContract)
-    mock_contract.payout_multiple = Mock()
+    mock_contract = Mock(spec=PredSubmitterMgr)
+    mock_contract.get_payout = Mock()
+    mock_contract.get_payout.return_value = {"transactionHash": b"0x1", "status": 1}
+    mock_contract.pred_submitter_up_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x1"
 
     with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), patch(
         "pdr_backend.payout.payout.query_pending_payouts",
         return_value=mock_pending_payouts,
-    ), patch("pdr_backend.payout.payout.FeedContract", return_value=mock_contract):
+    ), patch("pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract):
         do_ocean_payout(ppss, check_network=False)
-        print(mock_contract.payout_multiple.call_args_list)
-        call_args = mock_contract.payout_multiple.call_args_list
-        assert call_args[0] == call([1, 2, 3], True)
-        assert call_args[1] == call([4, 5, 6, 7, 8], True)
-        assert call_args[2] == call([9, 10, 11, 12, 13], True)
-        assert call_args[3] == call([14, 15], True)
-        assert len(call_args) == 4
+        print(mock_contract.get_payout.call_args_list)
+        call_args = mock_contract.get_payout.call_args_list
+        assert call_args[0] == call([1, 2, 3], [mock_addr_1])
+        assert call_args[1] == call([4, 5], [mock_addr_1, mock_addr_2])
+        assert call_args[2] == call([6, 7, 8, 9, 10], [mock_addr_2])
+        assert len(call_args) == 3
 
 
 @enforce_types
