@@ -86,6 +86,7 @@ def test_do_rose_payout(tmpdir):
     mock_contract = Mock(spec=PredSubmitterMgr)
     mock_contract.get_claimable_rewards = Mock()
     mock_contract.get_claimable_rewards.return_value = Eth(100)
+    mock_contract.contract_address = "0x0"
     mock_contract.claim_dfrewards = Mock()
     mock_contract.claim_dfrewards.return_value = {
         "transactionHash": b"0x1",
@@ -94,7 +95,7 @@ def test_do_rose_payout(tmpdir):
     mock_contract.transfer_erc20 = Mock()
     mock_contract.transfer_erc20.return_value = {"transactionHash": b"0x1", "status": 1}
     mock_contract.pred_submitter_up_address.return_value = "0x1"
-    mock_contract.pred_submitter_down_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x2"
 
     mock_wrose = Mock(spec=WrappedToken)
     mock_wrose.balanceOf = Mock()
