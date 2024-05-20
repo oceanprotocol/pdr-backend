@@ -8,7 +8,11 @@ from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
-from pdr_backend.predictoor.util import count_unique_slots, find_shared_slots, to_checksum
+from pdr_backend.predictoor.util import (
+    count_unique_slots,
+    find_shared_slots,
+    to_checksum,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
