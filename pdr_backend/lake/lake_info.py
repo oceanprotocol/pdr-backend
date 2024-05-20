@@ -15,7 +15,7 @@ from pdr_backend.ppss.ppss import PPSS
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
-logger = logging.getLogger("LakeValidate")
+logger = logging.getLogger("LakeInfo")
 
 
 # pylint: disable=too-many-instance-attributes
