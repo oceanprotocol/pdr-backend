@@ -8,7 +8,7 @@ from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
-from pdr_backend.predictoor.util import find_shared_slots, to_checksum
+from pdr_backend.predictoor.util import count_unique_slots, find_shared_slots, to_checksum
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
@@ -61,10 +61,15 @@ def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
     logger.info("Finding pending payouts")
     pending_slots = query_pending_payouts(subgraph_url, up_addr)
     shared_slots = find_shared_slots(pending_slots)
+    unique_slots = count_unique_slots(shared_slots)
+    min_payout_slots = ppss.predictoor_ss.min_payout_slots
+    if unique_slots < min_payout_slots:
+        logger.info("Not enough slots to payout, %d/%d", unique_slots, min_payout_slots)
+        return
     if not shared_slots:
         logger.info("No payouts available")
         return
-    logger.info("Found %d slots", len(shared_slots))
+    logger.info("Found %d slots", unique_slots)
     for slot_tuple in shared_slots:
         contract_addrs, slots = slot_tuple
         contract_addrs = to_checksum(ppss.web3_pp.w3, contract_addrs)
