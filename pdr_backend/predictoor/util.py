@@ -40,6 +40,23 @@ def find_shared_slots(
     return result
 
 
+def count_unique_slots(shared_slots: List[Tuple[List[str], List[int]]]) -> int:
+    """
+    This function calculates the number of unique slots from the output of the find_shared_slots function.
+
+    @param shared_slots: List[Tuple[List[str], List[int]]]
+        The output of the find_shared_slots function.
+
+    @return
+    int: The number of unique slots.
+    """
+    all_slots = []
+    for _, slots in shared_slots:
+        all_slots.extend(slots)
+    unique_slots = set(all_slots)
+    return len(unique_slots)
+
+
 def to_checksum(w3, addrs: List[str]) -> List[str]:
     checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
     return checksummed_addrs
