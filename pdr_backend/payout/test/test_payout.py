@@ -3,7 +3,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.contract.dfrewards import DFRewards
+from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
 from pdr_backend.payout.payout import (
@@ -52,26 +52,30 @@ def test_do_ocean_payout(tmpdir):
     ppss = _ppss(tmpdir)
     ppss.payout_ss.set_batch_size(5)
 
+    mock_addr_1 = "0x0000000000000000000000000000000000000000"
+    mock_addr_2 = "0x0000000000000000000000000000000000000001"
     mock_pending_payouts = {
-        "address_1": [1, 2, 3],
-        "address_2": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        mock_addr_1: [1, 2, 3, 4, 5],
+        mock_addr_2: [4, 5, 6, 7, 8, 9, 10],
     }
 
-    mock_contract = Mock(spec=FeedContract)
-    mock_contract.payout_multiple = Mock()
+    mock_contract = Mock(spec=PredSubmitterMgr)
+    mock_contract.get_payout = Mock()
+    mock_contract.get_payout.return_value = {"transactionHash": b"0x1", "status": 1}
+    mock_contract.pred_submitter_up_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x1"
 
     with patch("pdr_backend.payout.payout.wait_until_subgraph_syncs"), patch(
         "pdr_backend.payout.payout.query_pending_payouts",
         return_value=mock_pending_payouts,
-    ), patch("pdr_backend.payout.payout.FeedContract", return_value=mock_contract):
+    ), patch("pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract):
         do_ocean_payout(ppss, check_network=False)
-        print(mock_contract.payout_multiple.call_args_list)
-        call_args = mock_contract.payout_multiple.call_args_list
-        assert call_args[0] == call([1, 2, 3], True)
-        assert call_args[1] == call([4, 5, 6, 7, 8], True)
-        assert call_args[2] == call([9, 10, 11, 12, 13], True)
-        assert call_args[3] == call([14, 15], True)
-        assert len(call_args) == 4
+        print(mock_contract.get_payout.call_args_list)
+        call_args = mock_contract.get_payout.call_args_list
+        assert call_args[0] == call([1, 2, 3], [mock_addr_1])
+        assert call_args[1] == call([4, 5], [mock_addr_1, mock_addr_2])
+        assert call_args[2] == call([6, 7, 8, 9, 10], [mock_addr_2])
+        assert len(call_args) == 3
 
 
 @enforce_types
@@ -79,10 +83,19 @@ def test_do_rose_payout(tmpdir):
     ppss = _ppss(tmpdir)
     web3_config = ppss.web3_pp.web3_config
 
-    mock_contract = Mock(spec=DFRewards)
+    mock_contract = Mock(spec=PredSubmitterMgr)
     mock_contract.get_claimable_rewards = Mock()
     mock_contract.get_claimable_rewards.return_value = Eth(100)
-    mock_contract.claim_rewards = Mock()
+    mock_contract.contract_address = "0x0"
+    mock_contract.claim_dfrewards = Mock()
+    mock_contract.claim_dfrewards.return_value = {
+        "transactionHash": b"0x1",
+        "status": 1,
+    }
+    mock_contract.transfer_erc20 = Mock()
+    mock_contract.transfer_erc20.return_value = {"transactionHash": b"0x1", "status": 1}
+    mock_contract.pred_submitter_up_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x2"
 
     mock_wrose = Mock(spec=WrappedToken)
     mock_wrose.balanceOf = Mock()
@@ -91,10 +104,20 @@ def test_do_rose_payout(tmpdir):
 
     with patch("pdr_backend.payout.payout.time"), patch(
         "pdr_backend.payout.payout.WrappedToken", return_value=mock_wrose
-    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract):
+    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract), patch(
+        "pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract
+    ):
         do_rose_payout(ppss, check_network=False)
-        mock_contract.claim_rewards.assert_called_with(
-            web3_config.owner, "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
+        mock_contract.claim_dfrewards.assert_called_with(
+            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
+            "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0",
+            True,
+        )
+        mock_contract.transfer_erc20.assert_called_with(
+            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
+            web3_config.owner,
+            Eth(100).to_wei(),
+            True,
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(Eth(100).to_wei())
