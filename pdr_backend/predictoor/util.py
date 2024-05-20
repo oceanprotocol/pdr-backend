@@ -42,7 +42,7 @@ def find_shared_slots(
 
 def count_unique_slots(shared_slots: List[Tuple[List[str], List[int]]]) -> int:
     """
-    This function calculates the number of unique slots from the output of the find_shared_slots function.
+    Calculates the number of unique slots from the output of the `find_shared_slots`.
 
     @param shared_slots: List[Tuple[List[str], List[int]]]
         The output of the find_shared_slots function.
