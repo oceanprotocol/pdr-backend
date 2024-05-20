@@ -71,7 +71,7 @@ class LakeInfo:
         cli_renderer.show()
 
     def validate_expected_table_names(self) -> List[str]:
-        violations = []
+        violations: List[str] = []
         expected_table_names = self.etl.raw_table_names + self.etl.bronze_table_names
 
         temp_table_names = self.all_table_names
@@ -87,7 +87,7 @@ class LakeInfo:
         return violations
 
     def validate_expected_view_names(self) -> List[str]:
-        violations = []
+        violations: List[str] = []
         if len(self.all_view_names) > 0:
             violations.append("Lake has VIEWs. Please clean lake using CLI.")
 
@@ -106,7 +106,7 @@ class LakeInfo:
         how to improve:
             Expand ohlcv into lake/this check
         """
-        violations = []
+        violations: List[str] = []
         table_name = BronzePrediction.get_lake_table_name()
 
         # Query retrieves results grouped by [pair, timeframe, slot]
@@ -194,11 +194,11 @@ class LakeInfo:
 
         # check if quality is less than 99.5
         gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
-        
+
         if gap_validation_failures.shape[0] == 0:
             logger.info("No gaps found in bronze_predictions.")
             return violations
-    
+
         # Report results
         logger.info("[Gap Validation - %s Table]", table_name)
         logger.info("[%s] feeds in gap validation", gap_pct.shape[0])
@@ -279,7 +279,7 @@ class LakeInfo:
         if duplicate_summary.shape[0] == 0:
             logger.info("No duplicate rows found in the lake.")
             return violations
-        
+
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
 
