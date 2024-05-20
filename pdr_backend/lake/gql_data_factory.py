@@ -293,7 +293,9 @@ class GQLDataFactory:
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
             logger.info(
-                "      Aim to fetch data from start time: %s", st_ut.pretty_timestr()
+                "      Aim to fetch data from start_time: [%s] to end_time: [%s]",
+                st_ut.pretty_timestr(),
+                fin_ut.pretty_timestr()
             )
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 logger.info("      Given start time, no data to gather. Exit.")
