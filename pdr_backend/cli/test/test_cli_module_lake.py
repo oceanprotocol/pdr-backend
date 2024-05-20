@@ -40,13 +40,14 @@ def test_do_lake_describe():
     args.subcommand = "describe"
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
+    args.HTML = False
 
     ppss = Mock()
 
     with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
         do_lake_describe(args, ppss)
 
-    mock_lake_info.assert_called_once_with(ppss)
+    mock_lake_info.assert_called_once_with(ppss, use_html=False)
 
 
 @enforce_types

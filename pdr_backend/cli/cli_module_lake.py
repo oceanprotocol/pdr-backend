@@ -34,8 +34,8 @@ def do_lake_subcommand(args):
 
 # subcommands
 @enforce_types
-def do_lake_describe(_, ppss):
-    lake_info = LakeInfo(ppss)
+def do_lake_describe(args, ppss):
+    lake_info = LakeInfo(ppss, use_html=args.HTML)
     lake_info.run()
 
 
@@ -51,7 +51,7 @@ def do_lake_query(args, ppss):
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(ppss, read_only=True)
+    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
     try:
         df = pds.query_data(args.QUERY)
         print(df)
