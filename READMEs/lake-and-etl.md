@@ -35,7 +35,8 @@ Some features include:
 1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
 
 ## Lake Data
- -- Add picture with the current tables schema
+The following diagram presents the table schemas within the lake together with their relationships. This visualization aims to provide a clearer understanding of the lake's structure.
+![Project Logo](images/lake_tables_diagram.png)
 
 
 ## **ETL**
