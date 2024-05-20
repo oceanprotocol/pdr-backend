@@ -92,6 +92,8 @@ class PredictoorSS(StrMixin):
 
     @property
     def slot_threshold_payout(self) -> int:
+        if "slot_threshold_payout" not in self.d["bot_only"]:
+            return 0
         return self.d["bot_only"]["slot_threshold_payout"]
 
     # --------------------------------
