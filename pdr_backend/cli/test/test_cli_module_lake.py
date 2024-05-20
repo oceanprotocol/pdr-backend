@@ -40,7 +40,7 @@ def test_do_lake_describe():
     args.subcommand = "describe"
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
-    args.html = False
+    args.HTML = False
 
     ppss = Mock()
 
