@@ -30,7 +30,7 @@ install_requirements = [
     "polars==0.20.26",
     "polars[timezone]",
     "pyarrow==16.1.0",
-    "pylint==3.1.0",
+    "pylint==3.2.1",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
