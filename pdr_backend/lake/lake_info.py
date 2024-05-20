@@ -192,21 +192,25 @@ class LakeInfo:
             .sort(["pair", "timeframe", "timedelta"])
         )
 
+        # check if quality is less than 99.5
+        gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
+        
+        if gap_validation_failures.shape[0] == 0:
+            logger.info("No gaps found in bronze_predictions.")
+            return violations
+    
         # Report results
         logger.info("[Gap Validation - %s Table]", table_name)
         logger.info("[%s] feeds in gap validation", gap_pct.shape[0])
 
-        # check if quality is less than 99.5
-        gap_validation_failures = gap_pct.filter(pl.col("gap_pct") < alert_threshold)
-        if gap_validation_failures.shape[0] != 0:
-            # display report in a readable format
-            logger.info(
-                "[%s] feeds failed gap validation", gap_validation_failures.shape[0]
-            )
-            with pl.Config(tbl_rows=100):
-                logger.info("%s Gap Report\n%s", table_name, gap_pct)
+        # display report in a readable format
+        logger.info(
+            "[%s] feeds failed gap validation", gap_validation_failures.shape[0]
+        )
+        with pl.Config(tbl_rows=100):
+            logger.info("%s Gap Report\n%s", table_name, gap_pct)
 
-            violations.append("Gap validation failed. Please review logs.")
+        violations.append("Gap validation failed. Please review logs.")
 
         return violations
 
@@ -272,6 +276,10 @@ class LakeInfo:
                 duplicate_summary = duplicate_summary.vstack(summary_df)
                 violations.append(f"Table {table_name} has duplicates.")
 
+        if duplicate_summary.shape[0] == 0:
+            logger.info("No duplicate rows found in the lake.")
+            return violations
+        
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
 

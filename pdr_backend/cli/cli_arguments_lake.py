@@ -68,9 +68,9 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
 
         if plain_args[0] == "describe":
             self.add_argument(
-                "--html",
-                type=bool,
-                help="Output to html file",
+                "--HTML",
+                action="store_true",
                 default=False,
+                help="If --HTML then run describe in HTML app",
                 required=False,
             )

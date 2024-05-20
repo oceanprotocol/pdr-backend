@@ -60,7 +60,7 @@ Utilities:
   pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
 Inspect and manage lake:
-  pdr lake describe PPSS_FILE
+  pdr lake describe PPSS_FILE --HTML
   pdr lake query PPSS_FILE "SQL QUERY ..."
   pdr lake raw drop PPSS_FILE ST
   pdr lake raw update PPSS_FILE NETWORK
