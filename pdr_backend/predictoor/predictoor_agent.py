@@ -15,9 +15,9 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
 from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
-from pdr_backend.predictoor.util import find_shared_slots
+from pdr_backend.predictoor.util import to_checksum
+from pdr_backend.payout.payout import find_slots_and_payout_with_mgr
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
-from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
@@ -226,8 +226,7 @@ class PredictoorAgent:
     @enforce_types
     def _to_checksum(self, addrs: List[str]) -> List[str]:
         w3 = self.ppss.web3_pp.w3
-        checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
-        return checksummed_addrs
+        return to_checksum(w3, addrs)
 
     @property
     def cur_block(self):
@@ -474,23 +473,7 @@ class PredictoorAgent:
 
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_unique_epoch)
-
-        # we only need to query in one direction, since both predict on the same slots
-        up_addr = self.pred_submitter_mgr.pred_submitter_up_address()
-        pending_slots = query_pending_payouts(self.ppss.web3_pp.subgraph_url, up_addr)
-        shared_slots = find_shared_slots(pending_slots)
-        if not shared_slots:
-            logger.info("No payouts available")
-            return
-
-        for slot_tuple in shared_slots:
-            contract_addrs, slots = slot_tuple
-            contract_addrs = self._to_checksum(contract_addrs)
-            tx = self.pred_submitter_mgr.get_payout(slots, contract_addrs)
-
-            cur_index = shared_slots.index(slot_tuple)
-            progress = f"{cur_index + 1}/{len(shared_slots)}"
-            logger.info("Payout tx %s: %s", progress, tx["transactionHash"].hex())
+        find_slots_and_payout_with_mgr(self.pred_submitter_mgr, self.ppss)
 
 
 @enforce_types

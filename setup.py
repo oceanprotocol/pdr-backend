@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.21",
+    "ccxt==4.3.27",
     "coverage",
     "dash==2.17.0",
     "dateparser==1.2.0",
@@ -27,10 +27,10 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.22.0",
-    "polars==0.20.23",
+    "polars==0.20.26",
     "polars[timezone]",
-    "pyarrow==16.0.0",
-    "pylint==3.1.0",
+    "pyarrow==16.1.0",
+    "pylint==3.2.1",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
