@@ -90,6 +90,10 @@ class PredictoorSS(StrMixin):
     def pred_submitter_mgr(self) -> str:
         return self.d["bot_only"]["pred_submitter_mgr"]
 
+    @property
+    def slot_threshold_payout(self) -> int:
+        return self.d["bot_only"]["slot_threshold_payout"]
+
     # --------------------------------
     # setters (add as needed)
     @enforce_types
