@@ -33,7 +33,7 @@ install_requirements = [
     "pylint==3.2.1",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
-    "pytest-asyncio==0.21.1",
+    "pytest-asyncio==0.23.7",
     "pytest-env",
     "pyyaml",
     "requests==2.31.0",
