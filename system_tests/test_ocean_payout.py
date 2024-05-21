@@ -39,7 +39,7 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
 
     mock_query_pending_payouts = Mock()
     mock_query_pending_payouts.return_value = {"0x1": [1, 2, 3], "0x2": [5, 6, 7]}
-    number_of_slots = 6 # 6 slots
+    number_of_slots = 6  # 6 slots
 
     with patch(
         "pdr_backend.payout.payout.query_pending_payouts", mock_query_pending_payouts
