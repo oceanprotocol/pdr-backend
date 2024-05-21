@@ -4,7 +4,6 @@ import pickle
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -28,19 +27,6 @@ class SimPlotter:
         self.multi_id = None
 
     @staticmethod
-    def available_snapshots(multi_id):
-        all_state_files = glob.glob(f"sim_state/{multi_id}/st_*.pkl")
-
-        all_timestamps = [
-            f.replace(f"sim_state/{multi_id}/st_", "").replace(".pkl", "")
-            for f in all_state_files
-            if "final" not in f
-        ]
-        all_timestamps.sort()
-
-        return all_timestamps + ["final"]
-
-    @staticmethod
     def get_latest_run_id():
         path = sorted(Path("sim_state").iterdir(), key=os.path.getmtime)[-1]
         return str(path).replace("sim_state/", "")
@@ -50,7 +36,7 @@ class SimPlotter:
         path = Path("sim_state").iterdir()
         return [str(p).replace("sim_state/", "") for p in path]
 
-    def load_state(self, multi_id, timestamp: Optional[str] = None):
+    def load_state(self, multi_id):
         root_path = f"sim_state/{multi_id}"
 
         if not os.path.exists("sim_state"):
@@ -66,15 +52,6 @@ class SimPlotter:
         all_state_files = glob.glob(f"{root_path}/st_*.pkl")
         if not all_state_files:
             raise Exception("No state files found. Please run the simulation first.")
-
-        if timestamp:
-            with open(f"{root_path}/st_{timestamp}.pkl", "rb") as f:
-                self.st = pickle.load(f)
-
-            with open(f"{root_path}/aimodel_plotdata_{timestamp}.pkl", "rb") as f:
-                self.aimodel_plotdata = pickle.load(f)
-
-            return self.st, "final"
 
         if not os.path.exists(f"{root_path}/st_final.pkl"):
             # plot previous state to avoid using a pickle that hasn't finished

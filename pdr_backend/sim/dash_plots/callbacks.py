@@ -7,17 +7,15 @@ from pdr_backend.sim.dash_plots.view_elements import (
     arrange_figures,
     get_header_elements,
     get_waiting_template,
-    non_final_state_div,
     selected_var_checklist,
-    snapshot_slider,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
 
-def wait_for_state(sim_plotter, run_id, set_ts):
+def wait_for_state(sim_plotter, run_id):
     for _ in range(5):
         try:
-            st, ts = sim_plotter.load_state(run_id, set_ts)
+            st, ts = sim_plotter.load_state(run_id)
             return st, ts
         except Exception as e:
             if "out of input" in str(e):
@@ -59,33 +57,19 @@ def get_callbacks(app):
         Output("live-graphs", "children"),
         Input("interval-component", "n_intervals"),
         Input("selected_vars", "value"),
-        Input("state_slider", "value"),
         State("selected_vars", "value"),
     )
     # pylint: disable=unused-argument
-    def update_graph_live(n, selected_vars, slider_value, selected_vars_old):
+    def update_graph_live(n, selected_vars, selected_vars_old):
         run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
-        set_ts = None
-
-        if slider_value is not None:
-            snapshots = SimPlotter.available_snapshots(run_id)
-            set_ts = snapshots[slider_value]
-
         sim_plotter = SimPlotter()
 
         try:
-            st, ts = wait_for_state(sim_plotter, run_id, set_ts)
+            st, ts = wait_for_state(sim_plotter, run_id)
         except Exception as e:
             return [get_waiting_template(e)]
 
         elements = get_header_elements(run_id, st, ts)
-
-        slider = (
-            snapshot_slider(run_id, set_ts, slider_value)
-            if ts == "final"
-            else non_final_state_div
-        )
-        elements.append(slider)
 
         state_options = sim_plotter.aimodel_plotdata.colnames
         elements.append(selected_var_checklist(state_options, selected_vars_old))
