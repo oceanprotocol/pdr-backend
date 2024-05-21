@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import dateparser
+import pytz
 from enforce_typing import enforce_types
 
 
@@ -50,7 +51,10 @@ class UnixTimeMs(int):
     @staticmethod
     def from_natural_language(nat_lang: str) -> "UnixTimeMs":
         try:
-            dt = dateparser.parse(nat_lang).replace(tzinfo=timezone.utc)
+            dt = dateparser.parse(nat_lang)
+            if not dt.tzinfo:
+                dt = pytz.utc.localize(dt)
+
             return UnixTimeMs(dt.timestamp() * 1000)
         except AttributeError as e:
             raise ValueError(f"Could not parse {nat_lang}.") from e
@@ -117,6 +121,6 @@ class UnixTimeMs(int):
 
 @enforce_types
 def _dt_now_UTC() -> datetime:
-    dt = datetime.now()
+    dt = datetime.utcnow()
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
     return dt
