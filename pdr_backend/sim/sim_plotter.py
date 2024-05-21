@@ -101,8 +101,12 @@ class SimPlotter:
             else "final"
         )
 
-        existing_states = glob.glob(f"{root_path}/st_*.pkl")
-        existing_aimodel_plotdata = glob.glob(f"{root_path}/aimodel_plotdata_*.pkl")
+        existing_states = sorted(
+            glob.glob(f"{root_path}/st_*.pkl"), key=os.path.getmtime
+        )
+        existing_aimodel_plotdata = sorted(
+            glob.glob(f"{root_path}/aimodel_plotdata_*.pkl"), key=os.path.getmtime
+        )
 
         if existing_states and not is_final:
             # remove old files, but if state is not final,
@@ -111,11 +115,11 @@ class SimPlotter:
             existing_states = existing_states[:-1]
             existing_aimodel_plotdata = existing_aimodel_plotdata[:-1]
 
-        for f in existing_states:
-            os.remove(f)
+        for fl in existing_states:
+            os.remove(fl)
 
-        for f in existing_aimodel_plotdata:
-            os.remove(f)
+        for fl in existing_aimodel_plotdata:
+            os.remove(fl)
 
         with open(f"{root_path}/st_{ts}.pkl", "wb") as f:
             pickle.dump(sim_state, f)
