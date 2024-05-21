@@ -13,6 +13,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
+
 # from pdr_backend.lake.table_bronze_pdr_slots import (
 #     BronzeSlot,
 #     get_bronze_pdr_slots_data_with_SQL,
