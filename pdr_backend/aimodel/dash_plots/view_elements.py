@@ -36,17 +36,11 @@ def get_header_elements():
     ]
 
 
-def side_by_side_graphs(figures, name1, name2):
+def display_on_column_graphs(figures: dict):
     return html.Div(
         [
-            dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
-            dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
+            dcc.Graph(figure=fig, id=graph_id, style={"width": "50%"})
+            for graph_id, fig in figures.items()
         ],
         style={"display": "flex", "justifyContent": "space-between"},
     )
-
-
-def arrange_figures(figures):
-    return [
-        side_by_side_graphs(figures, "autocorelation", "partial_autocorelation"),
-    ]
