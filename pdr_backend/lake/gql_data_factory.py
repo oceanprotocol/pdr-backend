@@ -285,12 +285,13 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
+        fin_ut = self.ppss.lake_ss.fin_timestamp
+
         for table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):
             # calculate start and end timestamps
             st_ut = self._calc_start_ut(table)
-            fin_ut = self.ppss.lake_ss.fin_timestamp
             logger.info(
                 "      Aim to fetch data from start time: %s", st_ut.pretty_timestr()
             )
