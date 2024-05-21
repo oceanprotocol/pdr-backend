@@ -51,11 +51,10 @@ class UnixTimeMs(int):
     @staticmethod
     def from_natural_language(nat_lang: str) -> "UnixTimeMs":
         try:
-            dt = dateparser.parse(nat_lang)
-            if not dt.tzinfo:
-                dt = pytz.utc.localize(dt)
+            dt = dateparser.parse(nat_lang, settings={"RETURN_AS_TIMEZONE_AWARE": True})
+            dt = dt.astimezone(pytz.utc)
 
-            return UnixTimeMs(dt.timestamp() * 1000)
+            return UnixTimeMs.from_dt(dt)
         except AttributeError as e:
             raise ValueError(f"Could not parse {nat_lang}.") from e
 
