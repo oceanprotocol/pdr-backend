@@ -100,6 +100,23 @@ class SimPlotter:
             if not is_final
             else "final"
         )
+
+        existing_states = glob.glob(f"{root_path}/st_*.pkl")
+        existing_aimodel_plotdata = glob.glob(f"{root_path}/aimodel_plotdata_*.pkl")
+
+        if existing_states and not is_final:
+            # remove old files, but if state is not final,
+            # keep next to last so that the runner knows the sim
+            # is running and not warming up
+            existing_states = existing_states[:-1]
+            existing_aimodel_plotdata = existing_aimodel_plotdata[:-1]
+
+        for f in existing_states:
+            os.remove(f)
+
+        for f in existing_aimodel_plotdata:
+            os.remove(f)
+
         with open(f"{root_path}/st_{ts}.pkl", "wb") as f:
             pickle.dump(sim_state, f)
 
