@@ -21,6 +21,7 @@ HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
   pdr sim_plots [--run_id RUN_ID] [--port PORT]
+  pdr arima_plots [--port PORT]
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
@@ -590,6 +591,19 @@ class SimPlotsArgParser(CustomArgParser):
             default=8050,
         )
 
+class ArimaPlotsArgParser(CustomArgParser):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str):
+        super().__init__(description=description)
+
+        self.add_argument(
+            "--port",
+            nargs="?",
+            help="The port to run the server on. Default is 8050.",
+            type=int,
+            default=8050,
+        )
+
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
@@ -636,6 +650,7 @@ defined_parsers = {
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
+    "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data"),
 }
 
 

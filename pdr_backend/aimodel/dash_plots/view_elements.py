@@ -18,6 +18,12 @@ def get_waiting_template(err):
         id="live-graphs",
     )
 
+def get_waiting_template(data):
+    return html.Div(
+        [html.H2(f"Error/waiting: {err}", id="sim_state_text")],
+        id="live-graphs",
+    )
+
 
 def get_header_elements():
     return [

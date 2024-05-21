@@ -10,6 +10,7 @@ app.layout = html.Div(
     html.Div(
         [
             html.Div(empty_graphs_template, id="arima-graphs"),
+            dcc.Store(id='data-store')
         ]
     )
 )
