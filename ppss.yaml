@@ -24,6 +24,7 @@ predictoor_ss:
     pred_submitter_mgr: "DeployNewMgr" # DeployNewMgr | <address of deployed mgr>
     s_start_payouts: 220 # in s. Run payout if > this time left. 0 to disable
     s_until_epoch_end: 60 # in s. Start predicting if > this time left
+    payout_batch_size: 3 # no. epochs to payout in each batch
 
   aimodel_ss:
     max_n_train: 5000 # no. epochs to train model on
