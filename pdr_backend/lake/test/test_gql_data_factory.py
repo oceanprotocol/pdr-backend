@@ -173,7 +173,7 @@ def test_get_gql_tables(mock_update):
 
     gql_dfs = gql_data_factory.get_gql_tables()
 
-    assert len(gql_dfs.items()) == 5
+    assert len(gql_dfs.items()) == 3
 
 
 def test_calc_start_ut(tmpdir):

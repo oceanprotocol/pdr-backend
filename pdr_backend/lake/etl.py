@@ -47,16 +47,13 @@ class ETL:
         TableRegistry().register_tables([BronzePrediction, BronzeSlot], ppss)
 
         self.raw_table_names = [
-            Payout.get_lake_table_name(),
             Prediction.get_lake_table_name(),
             Trueval.get_lake_table_name(),
-            Slot.get_lake_table_name(),
-            Subscription.get_lake_table_name(),
+            Payout.get_lake_table_name()
         ]
 
         self.bronze_table_getters = {
-            BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL,
-            BronzeSlot.get_lake_table_name(): get_bronze_pdr_slots_data_with_SQL,
+            BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL
         }
 
         self.bronze_table_names = list(self.bronze_table_getters.keys())
@@ -316,6 +313,9 @@ class ETL:
 
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
+
+        print("st_timestamp", st_timestamp)
+        print("fin_timestamp", fin_timestamp)
 
         for table_name, get_data_func in self.bronze_table_getters.items():
             get_data_func(
