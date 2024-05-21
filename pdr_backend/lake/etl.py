@@ -317,9 +317,6 @@ class ETL:
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
-        print("st_timestamp", st_timestamp)
-        print("fin_timestamp", fin_timestamp)
-
         for table_name, get_data_func in self.bronze_table_getters.items():
             get_data_func(
                 path=self.ppss.lake_ss.lake_dir,
