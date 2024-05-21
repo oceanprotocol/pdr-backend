@@ -41,7 +41,7 @@ def test_etl_tables(
     assert len(pdr_payouts_df) == 4
     assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 5
+    assert len(TableRegistry().get_tables()) == 4
 
 
 # pylint: disable=too-many-statements
