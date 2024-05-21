@@ -114,7 +114,7 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt.
         """
-        call_params = self.web3_pp.tx_call_params()
+        call_params = self.web3_pp.tx_call_params(gas=13000000)
         tx = self.contract_instance.functions.getPayout(epochs, feed_addrs).transact(
             call_params
         )
