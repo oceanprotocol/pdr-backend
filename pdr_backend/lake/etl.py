@@ -8,21 +8,23 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-from pdr_backend.lake.table_bronze_pdr_slots import (
-    BronzeSlot,
-    get_bronze_pdr_slots_data_with_SQL,
-)
+# from pdr_backend.lake.table_bronze_pdr_slots import (
+#     BronzeSlot,
+#     get_bronze_pdr_slots_data_with_SQL,
+# )
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
+
+# from pdr_backend.lake.slot import Slot
+# from pdr_backend.lake.subscription import Subscription
+
 
 logger = logging.getLogger("etl")
 
@@ -44,12 +46,12 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_tables([BronzePrediction, BronzeSlot], ppss)
+        TableRegistry().register_tables([BronzePrediction], ppss)
 
         self.raw_table_names = [
             Prediction.get_lake_table_name(),
             Trueval.get_lake_table_name(),
-            Payout.get_lake_table_name()
+            Payout.get_lake_table_name(),
         ]
 
         self.bronze_table_getters = {

@@ -22,6 +22,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
+
 # from pdr_backend.lake.slot import Slot
 # from pdr_backend.subgraph.subgraph_slot import fetch_slots
 # from pdr_backend.lake.subscription import Subscription
@@ -61,7 +62,7 @@ class GQLDataFactory:
             "fetch_functions": {
                 Prediction: fetch_filtered_predictions,
                 Trueval: fetch_truevals,
-                Payout: fetch_payouts
+                Payout: fetch_payouts,
             },
             "config": {
                 "contract_list": contract_list,
@@ -72,9 +73,7 @@ class GQLDataFactory:
             ],
         }
 
-        TableRegistry().register_tables(
-            [Prediction, Trueval, Payout], self.ppss
-        )
+        TableRegistry().register_tables([Prediction, Trueval, Payout], self.ppss)
 
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
