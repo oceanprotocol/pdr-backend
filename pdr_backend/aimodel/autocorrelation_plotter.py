@@ -3,7 +3,6 @@ import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
 from pdr_backend.util.strutil import compactSmallNum
-import plotly.express as px
 
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
@@ -55,11 +54,11 @@ def plot_autocorrelation(data: AutocorrelationPlotdata):
 
 @enforce_types
 def plot_acf(autocorrelation_plotdata: AutocorrelationPlotdata):
-    d = autocorrelation_plotdata
     """
     @description
       Plot autocorrelation function (ACF)
     """
+    d = autocorrelation_plotdata
     fig = make_subplots(rows=1, cols=1)
 
     _add_corr_traces(d.acf_results, fig, row=1)

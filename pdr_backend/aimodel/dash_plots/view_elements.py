@@ -30,15 +30,22 @@ def get_header_elements():
     ]
 
 
+def display_plots_view(columns):
+    return html.Div(
+        columns,
+        id="plots_container",
+        style={
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
+    )
+
+
 def display_on_column_graphs(figures: list[dict]):
     return html.Div(
         [
-            dcc.Graph(figure=fig["fig"], id=fig["graph_id"], style={"width": "50%"})
+            dcc.Graph(figure=fig["fig"], id=fig["graph_id"], style={"width": "100%"})
             for fig in figures
         ],
-        style={
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "space-between",
-        },
+        style={"display": "flex", "flexDirection": "column", "width": "100%"},
     )
