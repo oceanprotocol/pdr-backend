@@ -8,9 +8,7 @@ from pdr_backend.sim.dash_plots.view_elements import (
     figure_names,
     get_header_elements,
     get_waiting_template,
-    prune_snapshots,
     selected_var_checklist,
-    snapshot_slider,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
@@ -45,31 +43,6 @@ def test_arrange_figures():
                 seen.add(graph.id)
 
     assert len(seen) == len(figure_names)
-
-
-def test_snapshot_slider():
-    with patch(
-        "pdr_backend.sim.dash_plots.view_elements.prune_snapshots"
-    ) as mock_prune_snapshots:
-        mock_prune_snapshots.return_value = ["ts1", "ts2", "final"]
-
-    result = snapshot_slider("abcd", "ts1", 1)
-    assert result
-
-
-def test_prune_snapshots():
-    with patch(
-        "pdr_backend.sim.dash_plots.view_elements.SimPlotter.available_snapshots"
-    ) as mock_snapshots:
-        mock_snapshots.return_value = ["ts1", "ts2", "final"]
-        assert prune_snapshots("abcd") == ["ts1", "ts2"]
-
-    more_than_50 = [f"ts{i}" for i in range(100)] + ["final"]
-    with patch(
-        "pdr_backend.sim.dash_plots.view_elements.SimPlotter.available_snapshots"
-    ) as mock_snapshots:
-        mock_snapshots.return_value = more_than_50
-        assert prune_snapshots("abcd") == [f"ts{i}" for i in range(100) if i % 2 == 0]
 
 
 def test_selected_var_checklist():
