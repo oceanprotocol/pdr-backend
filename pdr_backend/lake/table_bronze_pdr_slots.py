@@ -6,7 +6,7 @@ from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
@@ -53,9 +53,9 @@ def get_bronze_pdr_slots_data_with_SQL(
     ).fullname
     temp_bronze_pdr_slots_table_name = TempTable.from_dataclass(BronzeSlot).fullname
 
-    pds = PersistentDataStore(path)
+    duckDB = DuckDBDataStore(path)
 
-    pds.create_table_if_not_exists(
+    duckDB.create_table_if_not_exists(
         temp_bronze_pdr_slots_table_name, BronzeSlot.get_lake_schema()
     )
 
@@ -109,4 +109,4 @@ def get_bronze_pdr_slots_data_with_SQL(
 
     logger.info("table_bronze_slot_query %s", query)
 
-    return pds.execute_sql(query)
+    return duckDB.execute_sql(query)

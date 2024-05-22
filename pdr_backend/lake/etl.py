@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
@@ -73,9 +73,9 @@ class ETL:
             If exists, drop them and rebuild
         """
         # drop the tables if it exists
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
-            pds.drop_table(TempTable(table_name).fullname)
+            duckDB.drop_table(TempTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
@@ -83,15 +83,15 @@ class ETL:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
             logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
 
-            pds.move_table_data(temp_table, table_name)
+            duckDB.move_table_data(temp_table, table_name)
 
-            pds.drop_table(temp_table.fullname)
-            pds.drop_view(ETLTable(table_name).fullname)
+            duckDB.drop_table(temp_table.fullname)
+            duckDB.drop_view(ETLTable(table_name).fullname)
 
     def do_etl(self):
         """
@@ -161,9 +161,7 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        all_db_tables = PersistentDataStore(
-            self.ppss.lake_ss.lake_dir
-        ).get_table_names()
+        all_db_tables = DuckDBDataStore(self.ppss.lake_ss.lake_dir).get_table_names()
 
         queries = []
 
@@ -188,7 +186,7 @@ class ETL:
             return none_values
 
         final_query = " UNION ALL ".join(queries)
-        result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
+        result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
         logger.info("_get_max_timestamp_values_from - result: %s", result)
 
@@ -265,13 +263,13 @@ class ETL:
             table_name in self.bronze_table_names
         ), f"{table_name} must be a bronze table"
 
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         temp_table = TempTable(table_name)
         etl_view = ETLTable(table_name)
 
-        table_exists = pds.table_exists(table_name)
-        temp_table_exists = pds.table_exists(temp_table.fullname)
-        etl_view_exists = pds.view_exists(etl_view.fullname)
+        table_exists = duckDB.table_exists(table_name)
+        temp_table_exists = duckDB.table_exists(temp_table.fullname)
+        etl_view_exists = duckDB.view_exists(etl_view.fullname)
         assert temp_table_exists, f"{temp_table.fullname} must already exist"
         if etl_view_exists:
             logger.error("%s must not exist", etl_view.fullname)
@@ -291,7 +289,7 @@ class ETL:
                 table_name,
                 temp_table.fullname,
             )
-            pds.query_data(view_query)
+            duckDB.query_data(view_query)
             logger.info(
                 "  Created %s view using %s table and %s temp table",
                 etl_view.fullname,
@@ -300,7 +298,7 @@ class ETL:
             )
         else:
             view_query = f"CREATE VIEW {etl_view.fullname} AS SELECT * FROM {temp_table.fullname}"
-            pds.query_data(view_query)
+            duckDB.query_data(view_query)
             logger.info(
                 "  Created %s view using %s temp table",
                 etl_view.fullname,

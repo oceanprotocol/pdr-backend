@@ -7,7 +7,7 @@ from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.renderers.cli import CliRenderer
 from pdr_backend.lake.renderers.html import HtmlRenderer
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
@@ -21,7 +21,7 @@ logger = logging.getLogger("LakeInfo")
 # pylint: disable=too-many-instance-attributes
 class LakeInfo:
     def __init__(self, ppss: PPSS, use_html: bool = False):
-        self.pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
+        self.duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
         self.gql_data_factory = GQLDataFactory(ppss)
         self.etl = ETL(ppss, self.gql_data_factory)
 
@@ -41,17 +41,17 @@ class LakeInfo:
         self.validation_results: Dict[str, List[str]] = {}
 
     def generate(self):
-        self.all_table_names = self.pds.get_table_names(all_schemas=True)
+        self.all_table_names = self.duckDB.get_table_names(all_schemas=True)
 
         for table_name in self.all_table_names:
-            self.table_info[table_name] = self.pds.query_data(
+            self.table_info[table_name] = self.duckDB.query_data(
                 "SELECT * FROM {}".format(table_name)
             )
 
-        self.all_view_names = self.pds.get_view_names()
+        self.all_view_names = self.duckDB.get_view_names()
 
         for view_name in self.all_view_names:
-            self.view_info[view_name] = self.pds.query_data(
+            self.view_info[view_name] = self.duckDB.query_data(
                 "SELECT * FROM {}".format(view_name)
             )
 
@@ -157,7 +157,7 @@ class LakeInfo:
 
         # Process query and get results
         query = query.format(table_name)
-        df: pl.DataFrame = self.pds.query_data(query)
+        df: pl.DataFrame = self.duckDB.query_data(query)
 
         # Get the count of slots with the same timedelta
         # understand how frequent the event/slots are happening based
@@ -248,7 +248,7 @@ class LakeInfo:
 
         for table_name in self.all_table_names:
             query = query_duplicate_summary.replace("target_table", table_name)
-            summary_df: pl.DataFrame = self.pds.query_data(query)
+            summary_df: pl.DataFrame = self.duckDB.query_data(query)
 
             if summary_df.shape[0] > 0:
                 # get individual instances of duplicate rows
@@ -270,7 +270,7 @@ class LakeInfo:
                 """
 
                 query = query_duplicate_rows.replace("target_table", table_name)
-                rows_df: pl.DataFrame = self.pds.query_data(query)
+                rows_df: pl.DataFrame = self.duckDB.query_data(query)
                 duplicate_rows = duplicate_rows.vstack(rows_df)
 
                 duplicate_summary = duplicate_summary.vstack(summary_df)

@@ -4,7 +4,7 @@ import polars as pl
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
@@ -68,8 +68,8 @@ if os.path.exists(file_path2):
     os.remove(file_path2)
 
 
-def _table_exists(persistent_data_store, searched_table_name):
-    table_names = persistent_data_store.get_table_names()
+def _table_exists(duckdb, searched_table_name):
+    table_names = duckdb.get_table_names()
     return [searched_table_name in table_names, table_name]
 
 
@@ -169,22 +169,22 @@ def test_persistent_store(
 
     predictions_table_name = Prediction.get_lake_table_name()
     # Initialize Table, fill with data, validate
-    PDS = PersistentDataStore(ppss.lake_ss.lake_dir)
-    PDS._create_and_fill_table(
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    duckDB._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
-    assert _table_exists(PDS, predictions_table_name)
+    assert _table_exists(duckDB, predictions_table_name)
 
-    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = duckDB.query_data(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    PDS.insert_to_table(
+    duckDB.insert_to_table(
         _gql_datafactory_second_predictions_df, Prediction.get_lake_table_name()
     )
 
-    result = PDS.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = duckDB.query_data(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 

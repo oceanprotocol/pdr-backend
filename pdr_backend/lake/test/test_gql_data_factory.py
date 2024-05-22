@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
@@ -79,7 +79,7 @@ def test_update_partial_then_resume(
     _mock_fetch_gql_truevals,
     _mock_fetch_gql_payouts,
     _mock_fetch_gql_slots,
-    _get_test_PDS,
+    _get_test_DuckDB,
     tmpdir,
 ):
     """
@@ -117,9 +117,9 @@ def test_update_partial_then_resume(
         gql_data_factory._update()
 
         # Verify records exist in temp pred tables
-        pds = _get_test_PDS(ppss.lake_ss.lake_dir)
+        duckDB = _get_test_DuckDB(ppss.lake_ss.lake_dir)
         target_table_name = TempTable("pdr_predictions").fullname
-        target_records = pds.query_data("SELECT * FROM {}".format(target_table_name))
+        target_records = duckDB.query_data("SELECT * FROM {}".format(target_table_name))
 
         assert len(target_records) == 2
         assert target_records["pair"].to_list() == ["ADA/USDT", "BNB/USDT"]
@@ -128,7 +128,7 @@ def test_update_partial_then_resume(
     # Work 2: apply simulated error, update ppss "poorly", and verify it works as expected
     # Inject error by dropping db tables
     for dataclass in gql_data_factory.record_config["fetch_functions"]:
-        pds.drop_table(TempTable.from_dataclass(dataclass).fullname)
+        duckDB.drop_table(TempTable.from_dataclass(dataclass).fullname)
 
     # manipulate ppss poorly and run gql_data_factory again
     gql_data_factory.ppss.lake_ss.d["st_timestr"] = "2023-11-01"
@@ -137,7 +137,7 @@ def test_update_partial_then_resume(
 
     # Verify expected records were written to db
     target_table_name = NamedTable("pdr_predictions").fullname
-    target_records = pds.query_data("SELECT * FROM {}".format(target_table_name))
+    target_records = duckDB.query_data("SELECT * FROM {}".format(target_table_name))
     assert len(target_records) == 4
     assert target_records["pair"].to_list() == [
         "ADA/USDT",
@@ -261,11 +261,11 @@ def test_do_fetch_with_empty_data(
     # check if the db table is created
 
     temp_table_name = TempTable("pdr_predictions").fullname
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
-    all_tables = pds.get_table_names()
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    all_tables = duckDB.get_table_names()
 
     assert temp_table_name in all_tables
-    assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 0
+    assert len(duckDB.query_data("SELECT * FROM {}".format(temp_table_name))) == 0
 
 
 def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
@@ -309,13 +309,13 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
         {"contract_list": ["0x123"]},
     )
     temp_table_name = TempTable("pdr_predictions").fullname
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
-    all_tables = pds.get_table_names()
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    all_tables = duckDB.get_table_names()
 
     assert temp_table_name in all_tables
 
     # check that data with wrong timestamp is filtered out
-    assert len(pds.query_data("SELECT * FROM {}".format(temp_table_name))) == 3
+    assert len(duckDB.query_data("SELECT * FROM {}".format(temp_table_name))) == 3
 
     assert "Fetched" in caplog.text
 
@@ -339,7 +339,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
 
     table = TableRegistry().get_table("pdr_predictions")
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     initial_response = mock_daily_predictions()
     assert len(initial_response) == 6
@@ -360,7 +360,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     )
     assert (
         len(
-            pds.query_data(
+            duckDB.query_data(
                 "SELECT * FROM {}".format("_temp_{}".format(table.table_name))
             )
         )
@@ -368,12 +368,12 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     )
 
     # move temp table to production and check the data is there
-    pds.move_table_data(TempTable(table.table_name), table.table_name)
+    duckDB.move_table_data(TempTable(table.table_name), table.table_name)
 
     # now keep both temp and production tables but remove values
-    pds.query_data("DELETE FROM {}".format(table.table_name))
-    pds.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
-    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 0
+    duckDB.query_data("DELETE FROM {}".format(table.table_name))
+    duckDB.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
+    assert len(duckDB.query_data("SELECT * FROM {}".format(table.table_name))) == 0
 
     # run prepare_temp_table again to check that,
     # if production table doesn't have any rows doesn't break the preparation
@@ -383,6 +383,6 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
         UnixTimeMs(1699300800000),
         table.dataclass.get_lake_schema(),
     )
-    pds.move_table_data(TempTable(table.table_name), table.table_name)
+    duckDB.move_table_data(TempTable(table.table_name), table.table_name)
 
-    assert len(pds.query_data("SELECT * FROM {}".format(table.table_name))) == 6
+    assert len(duckDB.query_data("SELECT * FROM {}".format(table.table_name))) == 6

@@ -7,7 +7,7 @@ from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.lake_info import LakeInfo
 from pdr_backend.lake.lake_validate import LakeValidate
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import drop_tables_from_st
 from pdr_backend.ppss.ppss import PPSS
 
@@ -51,9 +51,9 @@ def do_lake_query(args, ppss):
     @description
         Query the lake for a table or view
     """
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=True)
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
     try:
-        df = pds.query_data(args.QUERY)
+        df = duckDB.query_data(args.QUERY)
         print(df)
     except Exception as e:
         logger.error("Error querying lake: %s", e)
@@ -62,8 +62,8 @@ def do_lake_query(args, ppss):
 
 @enforce_types
 def do_lake_raw_drop(args, ppss):
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(pds, "raw", args.ST)
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(duckDB, "raw", args.ST)
 
 
 @enforce_types
@@ -86,8 +86,8 @@ def do_lake_raw_update(_, ppss):
 
 @enforce_types
 def do_lake_etl_drop(args, ppss):
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(pds, "etl", args.ST)
+    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(duckDB, "etl", args.ST)
 
 
 @enforce_types

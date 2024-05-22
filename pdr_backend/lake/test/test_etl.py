@@ -5,7 +5,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
@@ -24,13 +24,13 @@ def test_etl_tables(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    _, pds, _ = setup_data
+    _, duckDB, _ = setup_data
 
     # Assert all dfs are not the same size as mock data
-    pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
-    pdr_payouts_df = pds.query_data("SELECT * FROM pdr_payouts")
-    pdr_truevals_df = pds.query_data("SELECT * FROM pdr_truevals")
-    pdr_slots_df = pds.query_data("SELECT * FROM pdr_slots")
+    pdr_predictions_df = duckDB.query_data("SELECT * FROM pdr_predictions")
+    pdr_payouts_df = duckDB.query_data("SELECT * FROM pdr_payouts")
+    pdr_truevals_df = duckDB.query_data("SELECT * FROM pdr_truevals")
+    pdr_slots_df = duckDB.query_data("SELECT * FROM pdr_slots")
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
@@ -55,7 +55,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    etl, pds, _ = setup_data
+    etl, duckDB, _ = setup_data
 
     # Work 1: Do bronze
     etl.do_bronze_step()
@@ -63,7 +63,7 @@ def test_etl_do_bronze_step(
 
     # assert bronze_pdr_predictions_df is created
     table_name = NamedTable.from_dataclass(BronzePrediction).fullname
-    bronze_pdr_predictions_records = pds.query_data(
+    bronze_pdr_predictions_records = duckDB.query_data(
         "SELECT * FROM {}".format(table_name)
     )
     assert len(bronze_pdr_predictions_records) == 5
@@ -147,7 +147,7 @@ def test_etl_do_bronze_step(
 
     # Assert bronze slots table is building correctly
     table_name = NamedTable.from_dataclass(BronzeSlot).fullname
-    bronze_pdr_slots_records = pds.query_data("SELECT * FROM {}".format(table_name))
+    bronze_pdr_slots_records = duckDB.query_data("SELECT * FROM {}".format(table_name))
 
     assert len(bronze_pdr_slots_records) == 6
     assert bronze_pdr_slots_records["truevalue"].null_count() == 1
@@ -159,7 +159,7 @@ def test_etl_do_bronze_step(
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_etl_views(setup_data):
-    etl, pds, _ = setup_data
+    etl, duckDB, _ = setup_data
 
     # Work 1: First Run
     with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
@@ -170,12 +170,12 @@ def test_etl_views(setup_data):
     # live table shouldn't exist
     # temp table should be created
     # etl view shouldn't exist
-    assert not BronzePrediction.get_lake_table_name() in pds.get_table_names()
-    records = pds.query_data(
+    assert not BronzePrediction.get_lake_table_name() in duckDB.get_table_names()
+    records = duckDB.query_data(
         "SELECT * FROM {}".format(TempTable.from_dataclass(BronzePrediction).fullname)
     )
     assert len(records) == 5
-    assert ETLTable.from_dataclass(BronzePrediction).fullname in pds.get_view_names()
+    assert ETLTable.from_dataclass(BronzePrediction).fullname in duckDB.get_view_names()
 
     # move from temp to live
     etl._move_from_temp_tables_to_live()
@@ -186,29 +186,29 @@ def test_etl_views(setup_data):
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_drop_temp_sql_tables(setup_data):
-    etl, pds, _ = setup_data
+    etl, duckDB, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
 
     # DROP ALL TABLES
     for table in table_names:
-        pds.duckdb_conn.execute(f"DROP TABLE {table}")
+        duckDB.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
 
     assert len(table_names) == 3
 
     etl.temp_table_names = ["a", "b", "c"]
     etl._drop_temp_sql_tables()
 
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
 
     assert len(table_names) == 0
 
@@ -218,37 +218,37 @@ def test_drop_temp_sql_tables(setup_data):
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_move_from_temp_tables_to_live(setup_data):
-    etl, pds, gql_tables = setup_data
+    etl, duckDB, gql_tables = setup_data
     assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
     etl.temp_table_names = ["a", "b", "c"]
     etl._move_from_temp_tables_to_live()
 
     # check "c" exists in permanent tables
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
     assert len(table_names) == 8
     assert "c" in table_names
     assert "a" in table_names
     assert "b" in table_names
 
     # Verify no build tables exist
-    table_names = pds.get_table_names()
+    table_names = duckDB.get_table_names()
     for table_name in table_names:
         assert "_temp_" not in table_name
 
 
 @enforce_types
 def test_get_max_timestamp_values_from(tmpdir):
-    pds = PersistentDataStore(str(tmpdir))
+    duckDB = DuckDBDataStore(str(tmpdir))
 
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         CREATE TABLE test_table_1 (timestamp INT64);
         CREATE TABLE test_table_2 (timestamp INT64);
@@ -260,7 +260,7 @@ def test_get_max_timestamp_values_from(tmpdir):
     ts2 = UnixTimeMs.from_timestr("2023-11-03_0:00")
     ts3 = UnixTimeMs.from_timestr("2023-11-04_0:00")
     ts4 = UnixTimeMs.from_timestr("2023-11-09_0:00")
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         INSERT INTO test_table_1 VALUES (INT64 '{0}');
         INSERT INTO test_table_2 VALUES (INT64 '{1}');
@@ -312,10 +312,10 @@ def test_get_max_timestamp_values_from(tmpdir):
 
 @enforce_types
 def _fill_dummy_tables(tmpdir):
-    pds = PersistentDataStore(str(tmpdir))
+    duckDB = DuckDBDataStore(str(tmpdir))
 
     # mock bronze + raw tables
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         CREATE TABLE raw_table_1 (timestamp INT64);
         CREATE TABLE raw_table_2 (timestamp INT64);
@@ -323,7 +323,7 @@ def _fill_dummy_tables(tmpdir):
         """
     )
 
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         CREATE TABLE bronze_table_1 (timestamp INT64);
         CREATE TABLE bronze_table_2 (timestamp INT64);
@@ -335,7 +335,7 @@ def _fill_dummy_tables(tmpdir):
     # etl should start from the bronze table max_timestamp => 2023-11-02
     ts1 = UnixTimeMs.from_timestr("2023-11-01_0:00")
     ts2 = UnixTimeMs.from_timestr("2023-11-02_0:00")
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         INSERT INTO bronze_table_1 VALUES (INT64 '{1}');
         INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
@@ -352,7 +352,7 @@ def _fill_dummy_tables(tmpdir):
     ts2 = UnixTimeMs.from_timestr("2023-11-22_0:00")
     ts3 = UnixTimeMs.from_timestr("2023-11-23_0:00")
     ts4 = UnixTimeMs.from_timestr("2023-11-25_0:00")
-    pds.duckdb_conn.execute(
+    duckDB.duckdb_conn.execute(
         """
         INSERT INTO raw_table_1 VALUES (INT64 '{0}');
         INSERT INTO raw_table_2 VALUES (INT64 '{1}');
