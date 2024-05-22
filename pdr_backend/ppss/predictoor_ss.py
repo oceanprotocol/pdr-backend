@@ -92,9 +92,7 @@ class PredictoorSS(StrMixin):
 
     @property
     def min_payout_slots(self) -> int:
-        if "min_payout_slots" not in self.d["bot_only"]:
-            return 0
-        return self.d["bot_only"]["min_payout_slots"]
+        return self.d["bot_only"].get("min_payout_slots", 0)
 
     # --------------------------------
     # setters (add as needed)
