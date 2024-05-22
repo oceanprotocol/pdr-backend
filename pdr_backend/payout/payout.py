@@ -127,7 +127,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     else:
         logger.warning("No rewards available to claim")
 
-    def _claim_instance(instance_address, instance_name):
+    def _transfer_wrose(instance_address, instance_name):
         balance = wROSE.balanceOf(instance_address)
         if balance > 0:
             instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
@@ -144,9 +144,9 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
 
     logger.info("Transfering wROSE to owner")
 
-    _claim_instance(up_addr, "up predictoor")
-    _claim_instance(down_addr, "down predictoor")
-    _claim_instance(pred_submitter_mgr.contract_address, "manager")
+    _transfer_wrose(up_addr, "up predictoor")
+    _transfer_wrose(down_addr, "down predictoor")
+    _transfer_wrose(pred_submitter_mgr.contract_address, "manager")
 
     logger.info("Converting wROSE to ROSE")
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
