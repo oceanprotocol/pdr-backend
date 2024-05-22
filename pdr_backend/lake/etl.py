@@ -14,17 +14,10 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     get_bronze_pdr_predictions_data_with_SQL,
 )
 
-# from pdr_backend.lake.table_bronze_pdr_slots import (
-#     BronzeSlot,
-#     get_bronze_pdr_slots_data_with_SQL,
-# )
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
-
-# from pdr_backend.lake.slot import Slot
-# from pdr_backend.lake.subscription import Subscription
 
 
 logger = logging.getLogger("etl")
@@ -130,7 +123,7 @@ class ETL:
         @description
             We have updated our lake's raw data
             Now, let's build the bronze tables
-            key tables: [bronze_pdr_predictions and bronze_pdr_slots]
+            key tables: [bronze_pdr_predictions]
         """
         logger.info("do_bronze_step - Build bronze tables.")
 

@@ -23,11 +23,6 @@ from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 
-# from pdr_backend.lake.slot import Slot
-# from pdr_backend.subgraph.subgraph_slot import fetch_slots
-# from pdr_backend.lake.subscription import Subscription
-# from pdr_backend.subgraph.subgraph_subscriptions import fetch_filtered_subscriptions
-
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -273,7 +268,6 @@ class GQLDataFactory:
         @description
             Iterate across all gql queries and update their lake data:
             - Predictoors
-            - Slots
             - Claims
 
             Improve this by:
