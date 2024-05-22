@@ -1,9 +1,5 @@
-from datetime import datetime
-
 from dash import dcc, html
 from plotly.graph_objs import Figure
-
-from pdr_backend.sim.sim_plotter import SimPlotter
 
 figure_names = [
     "pdr_profit_vs_time",
@@ -17,25 +13,11 @@ figure_names = [
     "log_loss_vs_time",
 ]
 
-empty_slider = dcc.Slider(
-    id="state_slider",
-    min=0,
-    max=0,
-    step=1,
-    disabled=True,
-)
-
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
-
-non_final_state_div = html.Div(
-    [empty_slider, empty_selected_vars],
-    style={"display": "none"},
-)
-
 
 empty_graphs_template = html.Div(
     [dcc.Graph(figure=Figure(), id=key) for key in figure_names]
-    + [empty_slider, empty_selected_vars],
+    + [empty_selected_vars],
     style={"display": "none"},
 )
 
@@ -82,40 +64,6 @@ def arrange_figures(figures):
         side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response"),
         side_by_side_graphs(figures, "f1_precision_recall_vs_time", "log_loss_vs_time"),
     ]
-
-
-def format_ts(s):
-    base = s.replace("_", "")[:-4]
-    return datetime.strptime(base, "%Y%m%d%H%M%S").strftime("%H:%M:%S")
-
-
-def prune_snapshots(run_id):
-    snapshots = SimPlotter.available_snapshots(run_id)[:-1]
-    max_states_ux = 50
-    if len(snapshots) > max_states_ux:
-        return snapshots[:: len(snapshots) // max_states_ux]
-
-    return snapshots
-
-
-def snapshot_slider(run_id, set_ts, slider_value):
-    snapshots = prune_snapshots(run_id)
-
-    marks = {
-        i: {"label": format_ts(s), "style": {"transform": "rotate(45deg)"}}
-        for i, s in enumerate(snapshots)
-    }
-    marks[len(snapshots)] = {"label": "final", "style": {"transform": "rotate(45deg)"}}
-
-    return html.Div(
-        dcc.Slider(
-            id="state_slider",
-            marks=marks,
-            value=len(snapshots) if not set_ts else slider_value,
-            step=1,
-        ),
-        style={"padding-bottom": "35px"},
-    )
 
 
 def selected_var_checklist(state_options, selected_vars_old):
