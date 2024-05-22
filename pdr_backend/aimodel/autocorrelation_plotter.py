@@ -2,7 +2,6 @@ import numpy as np
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
-from pdr_backend.util.strutil import compactSmallNum
 
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
@@ -62,7 +61,6 @@ def plot_acf(autocorrelation_plotdata: AutocorrelationPlotdata):
     fig = make_subplots(rows=1, cols=1)
 
     _add_corr_traces(d.acf_results, fig, row=1)
-    fig.update_yaxes(title_text="autocorrelation (acf)", row=1, col=1)
     fig.update_xaxes(title_text="lag", row=1, col=1)
 
     # Set minor ticks
@@ -70,8 +68,17 @@ def plot_acf(autocorrelation_plotdata: AutocorrelationPlotdata):
     fig.update_yaxes(minor=minor, row=1, col=1)
 
     # Layout settings
-    s = f"Autocorrelation for {d.N_samples} points. ADF p-value={compactSmallNum(d.adf_pvalue)}"
-    fig.update_layout(title_text=s, showlegend=False)
+    fig.update_layout(
+        title={
+            "text": "Autocorrelation (ACF)",
+            "y": 0.96,
+            "x": 0.5,
+            "xanchor": "center",
+            "yanchor": "top",
+        },
+        margin=dict(l=5, r=5, t=50, b=0),
+        showlegend=False,
+    )
 
     fig.update_yaxes(nticks=8)
     fig.update_xaxes(nticks=16)
@@ -91,7 +98,6 @@ def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
     fig = make_subplots(rows=1, cols=1)
 
     _add_corr_traces(d.pacf_results, fig, row=1)
-    fig.update_yaxes(title_text="partial autocorrelation (pacf)", row=1, col=1)
     fig.update_xaxes(title_text="lag", row=1, col=1)
 
     # Set minor ticks
@@ -99,8 +105,17 @@ def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
     fig.update_yaxes(minor=minor, row=1, col=1)
 
     # Layout settings
-    s = f"Partial Autocorrelation for {d.N_samples} points. ADF p-value={compactSmallNum(d.adf_pvalue)}"
-    fig.update_layout(title_text=s, showlegend=False)
+    fig.update_layout(
+        title={
+            "text": "Partial Autocorrelation (PACF)",
+            "y": 0.96,
+            "x": 0.5,
+            "xanchor": "center",
+            "yanchor": "top",
+        },
+        margin=dict(l=5, r=5, t=50, b=0),
+        showlegend=False,
+    )
 
     fig.update_yaxes(nticks=8)
     fig.update_xaxes(nticks=16)

@@ -1,5 +1,4 @@
 from enforce_typing import enforce_types
-from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from pdr_backend.aimodel.seasonal import SeasonalPlotdata
 
@@ -25,7 +24,17 @@ def plot_relative_energies(seasonal_plotdata: SeasonalPlotdata):
             width=0.25,
         )
     )
-    fig.update_yaxes(minor=minor)
+    fig.update_layout(
+        title={
+            "text": "Seasonal Decomp.",
+            "y": 0.9,
+            "x": 0.5,
+            "xanchor": "center",
+            "yanchor": "top",
+        },
+        margin=dict(l=5, r=5, t=50, b=0),
+    )
+    fig.update_yaxes(title_text="Rel energy", minor=minor)
     fig.update_xaxes(minor=minor)
     return fig
 
@@ -46,8 +55,9 @@ def plot_observed(seasonal_plotdata: SeasonalPlotdata):
             line={"color": "black", "width": 1},
         ),
     )
-    fig.update_yaxes(minor=minor)
+    fig.update_yaxes(title_text="Obseved", minor=minor)
     fig.update_xaxes(minor=minor)
+    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
     return fig
 
 
@@ -64,11 +74,12 @@ def plot_trend(seasonal_plotdata: SeasonalPlotdata):
             x=x,
             y=d.dr.observed,
             mode="lines",
-            line={"color": "black", "width": 1},
+            line={"color": "blue", "width": 1},
         )
     )
-    fig.update_yaxes(minor=minor)
+    fig.update_yaxes(title_text="Trend", minor=minor)
     fig.update_xaxes(minor=minor)
+    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
     return fig
 
 
@@ -85,11 +96,12 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
             x=x,
             y=d.dr.observed,
             mode="lines",
-            line={"color": "black", "width": 1},
+            line={"color": "green", "width": 1},
         )
     )
-    fig.update_yaxes(minor=minor)
+    fig.update_yaxes(title_text="Seasonal", minor=minor)
     fig.update_xaxes(minor=minor)
+    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
     return fig
 
 
@@ -106,9 +118,10 @@ def plot_residual(seasonal_plotdata: SeasonalPlotdata):
             x=x,
             y=d.dr.observed,
             mode="lines",
-            line={"color": "black", "width": 1},
+            line={"color": "red", "width": 1},
         )
     )
-    fig.update_yaxes(minor=minor)
+    fig.update_yaxes(title_text="Resid", minor=minor)
     fig.update_xaxes(minor=minor)
+    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
     return fig

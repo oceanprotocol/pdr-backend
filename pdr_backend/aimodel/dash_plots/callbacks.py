@@ -87,6 +87,13 @@ def get_callbacks(app):
         columns.append(
             display_on_column_graphs(
                 [
+                    {"fig": acf, "graph_id": "transform"},
+                ]
+            )
+        )
+        columns.append(
+            display_on_column_graphs(
+                [
                     {"fig": fig1, "graph_id": "relativeEnergies"},
                     {"fig": fig2, "graph_id": "observed"},
                     {"fig": fig3, "graph_id": "trend"},
