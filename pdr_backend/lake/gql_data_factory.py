@@ -23,8 +23,15 @@ from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 
-
 logger = logging.getLogger("gql_data_factory")
+
+
+# Registered GQL fetches & tables
+_GQLDF_REGISTERED_LAKE_TABLES = {
+    Prediction: fetch_filtered_predictions,
+    Trueval: fetch_truevals,
+    Payout: fetch_payouts,
+}
 
 
 @enforce_types
@@ -52,23 +59,25 @@ class GQLDataFactory:
 
         contract_list = [f.lower() for f in contract_list]
 
-        # configure all tables that will be recorded onto lake
+        # configure all DB tables <> QGL queries
         self.record_config = {
-            "fetch_functions": {
-                Prediction: fetch_filtered_predictions,
-                Trueval: fetch_truevals,
-                Payout: fetch_payouts,
-            },
+            "fetch_functions": _GQLDF_REGISTERED_LAKE_TABLES,
             "config": {
                 "contract_list": contract_list,
             },
             "gql_tables": [
                 dn.get_lake_table_name()  # type: ignore[attr-defined]
-                for dn in [Prediction, Trueval, Payout]
+                for dn in _GQLDF_REGISTERED_LAKE_TABLES
             ],
         }
 
-        TableRegistry().register_tables([Prediction, Trueval, Payout], self.ppss)
+        TableRegistry().register_tables(
+            list(_GQLDF_REGISTERED_LAKE_TABLES.keys()), self.ppss
+        )
+
+    @property
+    def raw_table_names(self):
+        return self.record_config["gql_tables"]
 
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:

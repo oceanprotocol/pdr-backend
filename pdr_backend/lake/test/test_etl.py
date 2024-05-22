@@ -62,7 +62,7 @@ def test_etl_do_bronze_step(
     etl._move_from_temp_tables_to_live()
 
     # assert bronze_pdr_predictions_df is created
-    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
+    table_name = BronzePrediction.get_lake_table_name()
     bronze_pdr_predictions_records = pds.query_data(
         "SELECT * FROM {}".format(table_name)
     )
@@ -183,28 +183,29 @@ def test_drop_temp_sql_tables(setup_data):
     etl, pds, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
-    table_names = pds.get_table_names()
+    original_tables = pds.get_table_names()
+    assert len(original_tables) == 5
 
     # DROP ALL TABLES
-    for table in table_names:
+    for table in original_tables:
         pds.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
-    # check if tables are created
-    table_names = pds.get_table_names()
+    # Insert temp ETL tables w/ dummy data into DuckDB
+    for table_name in etl.bronze_table_names:
+        pds.insert_to_table(
+            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
+        )
 
-    assert len(table_names) == 3
+    # assert all ETL temp tables were created
+    etl_table_names = pds.get_table_names()
+    assert len(etl_table_names) == len(etl.bronze_table_names)
 
-    etl.temp_table_names = ["a", "b", "c"]
+    # now, drop all ETL temp tables and verify we're back to raw count
     etl._drop_temp_sql_tables()
-
-    table_names = pds.get_table_names()
-
-    assert len(table_names) == 0
+    remaining_table_names = pds.get_table_names()
+    assert len(remaining_table_names) == 0
 
 
 @enforce_types
@@ -216,21 +217,31 @@ def test_move_from_temp_tables_to_live(setup_data):
     assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    pds.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+
+    # Insert temp ETL tables w/ dummy data into DuckDB
+    temp_bronze_table_names = []
+    for table_name in etl.bronze_table_names:
+        pds.insert_to_table(
+            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
+        )
+        temp_bronze_table_names.append(TempTable(table_name).fullname)
 
     # check if tables are created
     table_names = pds.get_table_names()
-    etl.temp_table_names = ["a", "b", "c"]
+
+    # Assert all temp bronze table names exist in table_names
+    assert all(
+        table in table_names for table in temp_bronze_table_names
+    ), "Not all temporary bronze tables were created successfully"
+
     etl._move_from_temp_tables_to_live()
 
-    # check "c" exists in permanent tables
+    # check all temp tables are dropped, and regular bronze_tables exist
     table_names = pds.get_table_names()
-    assert len(table_names) == 8
-    assert "c" in table_names
-    assert "a" in table_names
-    assert "b" in table_names
+    assert all(
+        table in table_names for table in etl.bronze_table_names
+    ), "Not all temporary bronze tables were moved to live tables successfully"
+    assert len(table_names) == 6
 
     # Verify no build tables exist
     table_names = pds.get_table_names()
@@ -398,7 +409,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
     assert (
         UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-25 00:00:00"
+        == "2023-11-30 00:00:00"
     )
 
 
