@@ -92,9 +92,7 @@ class PredictoorSS(StrMixin):
 
     @property
     def payout_batch_size(self) -> int:
-        if "payout_batch_size" not in self.d["bot_only"]:
-            return 8
-        return self.d["bot_only"]["payout_batch_size"]
+        return self.d["bot_only"].get("payout_batch_size", 8)
 
     # --------------------------------
     # setters (add as needed)
