@@ -10,7 +10,6 @@ from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import drop_tables_from_st
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
 
@@ -64,7 +63,7 @@ def do_lake_query(args, ppss):
 @enforce_types
 def do_lake_raw_drop(args, ppss):
     pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(pds, "raw", UnixTimeMs(args.ST))
+    drop_tables_from_st(pds, "raw", args.ST)
 
 
 @enforce_types
@@ -88,7 +87,7 @@ def do_lake_raw_update(_, ppss):
 @enforce_types
 def do_lake_etl_drop(args, ppss):
     pds = PersistentDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(pds, "etl", UnixTimeMs(args.ST))
+    drop_tables_from_st(pds, "etl", args.ST)
 
 
 @enforce_types
