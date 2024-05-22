@@ -9,6 +9,7 @@ from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("table")
 
@@ -35,7 +36,7 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st):
+def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st: UnixTimeMs):
     trunc_count = table_count = 0
     if type_filter not in ["raw", "etl"]:
         return
