@@ -127,45 +127,27 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     else:
         logger.warning("No rewards available to claim")
 
+
+    def _claim_instance(instance_address, instance_name):
+        balance = wROSE.balanceOf(instance_address)
+        if balance > 0:
+            instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
+            receipt = instance.transfer_erc20(
+                wROSE_addr, web3_config.owner, balance, True
+            )
+            if receipt["status"] != 1:
+                logger.warning(
+                    "Failed to transfer wROSE tokens to the owner from %s, tx: %s",
+                    instance_name,
+                    receipt["transactionHash"],
+                )
+            time.sleep(4)
+
     logger.info("Transfering wROSE to owner")
-    up_balance = wROSE.balanceOf(up_addr)
-    down_balance = wROSE.balanceOf(down_addr)
-    mgr_balance = wROSE.balanceOf(pred_submitter_mgr.contract_address)
 
-    if up_balance > 0:
-        up_instance = PredSubmitterMgr(ppss.web3_pp, up_addr)
-        receipt = up_instance.transfer_erc20(
-            wROSE_addr, web3_config.owner, up_balance, True
-        )
-        if receipt["status"] != 1:
-            logger.warning(
-                "Failed to transfer wROSE tokens to the owner from up predictoor, tx: %s",
-                receipt["transactionHash"],
-            )
-        time.sleep(4)
-
-    if down_balance > 0:
-        down_instance = PredSubmitterMgr(ppss.web3_pp, down_addr)
-        receipt = down_instance.transfer_erc20(
-            wROSE_addr, web3_config.owner, down_balance, True
-        )
-        if receipt["status"] != 1:
-            logger.warning(
-                "Failed to transfer wROSE tokens to the owner from up predictoor, tx: %s",
-                receipt["transactionHash"],
-            )
-        time.sleep(4)
-
-    if mgr_balance > 0:
-        receipt = pred_submitter_mgr.transfer_erc20(
-            wROSE_addr, web3_config.owner, mgr_balance, True
-        )
-        if receipt["status"] != 1:
-            logger.warning(
-                "Failed to transfer wROSE tokens to the owner from manager, tx: %s",
-                receipt["transactionHash"],
-            )
-        time.sleep(4)
+    _claim_instance(up_addr, "up predictoor")
+    _claim_instance(down_addr, "down predictoor")
+    _claim_instance(pred_submitter_mgr.contract_address, "manager")
 
     logger.info("Converting wROSE to ROSE")
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
