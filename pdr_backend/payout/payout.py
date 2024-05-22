@@ -127,7 +127,6 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     else:
         logger.warning("No rewards available to claim")
 
-
     def _claim_instance(instance_address, instance_name):
         balance = wROSE.balanceOf(instance_address)
         if balance > 0:
