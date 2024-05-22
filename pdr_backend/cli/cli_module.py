@@ -348,6 +348,7 @@ def do_deploy_pred_submitter_mgr(args, nested_args=None):
 def do_sim_plots(args, nested_args=None):
     sim_dash(args)
 
+
 @enforce_types
 # pylint: disable=unused-argument
 def do_arima_plots(args, nested_args=None):

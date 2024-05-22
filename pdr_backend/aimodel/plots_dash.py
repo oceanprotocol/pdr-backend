@@ -8,10 +8,7 @@ app = Dash(__name__)
 app.config["suppress_callback_exceptions"] = True
 app.layout = html.Div(
     html.Div(
-        [
-            html.Div(empty_graphs_template, id="arima-graphs"),
-            dcc.Store(id='data-store')
-        ]
+        [html.Div(empty_graphs_template, id="arima-graphs"), dcc.Store(id="data-store")]
     )
 )
 

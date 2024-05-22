@@ -18,12 +18,6 @@ def get_waiting_template(err):
         id="live-graphs",
     )
 
-def get_waiting_template(data):
-    return html.Div(
-        [html.H2(f"Error/waiting: {err}", id="sim_state_text")],
-        id="live-graphs",
-    )
-
 
 def get_header_elements():
     return [
@@ -36,11 +30,15 @@ def get_header_elements():
     ]
 
 
-def display_on_column_graphs(figures: dict):
+def display_on_column_graphs(figures: list[dict]):
     return html.Div(
         [
-            dcc.Graph(figure=fig, id=graph_id, style={"width": "50%"})
-            for graph_id, fig in figures.items()
+            dcc.Graph(figure=fig["fig"], id=fig["graph_id"], style={"width": "50%"})
+            for fig in figures
         ],
-        style={"display": "flex", "justifyContent": "space-between"},
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "space-between",
+        },
     )

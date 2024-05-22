@@ -591,6 +591,7 @@ class SimPlotsArgParser(CustomArgParser):
             default=8050,
         )
 
+
 class ArimaPlotsArgParser(CustomArgParser):
     # pylint: disable=unused-argument
     def __init__(self, description: str):
