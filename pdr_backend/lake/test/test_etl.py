@@ -395,13 +395,19 @@ def test_calc_bronze_start_end_ts(tmpdir):
         fin_timestr,
     )
 
+    gql_data_factory.record_config["gql_tables"] = [
+        "raw_table_1", 
+        "raw_table_2", 
+        "raw_table_3"
+    ]
+
     etl = ETL(ppss, gql_data_factory)
     etl.bronze_table_names = [
         "bronze_table_1",
         "bronze_table_2",
         "bronze_table_3",
     ]
-
+    
     # Calculate from + to timestamps
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
@@ -411,7 +417,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
     assert (
         UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-30 00:00:00"
+        == "2023-11-25 00:00:00"
     )
 
 
