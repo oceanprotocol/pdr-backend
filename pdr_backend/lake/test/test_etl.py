@@ -396,9 +396,9 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
 
     gql_data_factory.record_config["gql_tables"] = [
-        "raw_table_1", 
-        "raw_table_2", 
-        "raw_table_3"
+        "raw_table_1",
+        "raw_table_2",
+        "raw_table_3",
     ]
 
     etl = ETL(ppss, gql_data_factory)
@@ -407,7 +407,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
         "bronze_table_2",
         "bronze_table_3",
     ]
-    
+
     # Calculate from + to timestamps
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
