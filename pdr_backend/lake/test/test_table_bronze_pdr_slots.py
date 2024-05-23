@@ -53,10 +53,10 @@ def test_table_bronze_pdr_slots(
     gql_tables["pdr_slots"].append_to_storage(_gql_datafactory_etl_slots_df)
 
     # Check that the data is appended correctly
-    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     slots_table_prefixed_name = NamedTable.from_dataclass(Slot).fullname
-    pdr_slots_df = duckDB.query_data(
+    pdr_slots_df = db.query_data(
         f"""
         SELECT * FROM {slots_table_prefixed_name}
         """
@@ -81,7 +81,7 @@ def test_table_bronze_pdr_slots(
         TempTable.from_dataclass(BronzePrediction).fullname,
     )
 
-    duckDB.execute_sql(view_query)
+    db.execute_sql(view_query)
 
     get_bronze_pdr_slots_data_with_SQL(
         ppss.lake_ss.lake_dir,
@@ -91,13 +91,13 @@ def test_table_bronze_pdr_slots(
 
     bronze_pdr_slots_temp_table_name = TempTable.from_dataclass(BronzeSlot).fullname
 
-    bronze_pdr_slots = duckDB.query_data(
+    bronze_pdr_slots = db.query_data(
         f"""
         SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """
     )
 
-    pdr_slots = duckDB.query_data("""SELECT * FROM pdr_slots""")
+    pdr_slots = db.query_data("""SELECT * FROM pdr_slots""")
 
     assert len(bronze_pdr_slots) == 7
     assert bronze_pdr_slots.schema == BronzeSlot.get_lake_schema()
@@ -113,7 +113,7 @@ def test_table_bronze_pdr_slots(
     ## test data without filtering
 
     # delete current rows from the bronze table
-    duckDB.query_data(
+    db.query_data(
         f"""
         DELETE FROM {bronze_pdr_slots_temp_table_name}
         """
@@ -127,7 +127,7 @@ def test_table_bronze_pdr_slots(
     )
 
     # select new data from bronze table
-    bronze_pdr_slots = duckDB.query_data(
+    bronze_pdr_slots = db.query_data(
         f"""
         SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """

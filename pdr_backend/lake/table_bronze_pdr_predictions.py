@@ -57,15 +57,15 @@ def get_bronze_pdr_predictions_data_with_SQL(
         BronzePrediction
     ).fullname
 
-    duckDB = DuckDBDataStore(path)
-    logger.info("duckDB tables %s", duckDB.get_table_names())
+    db = DuckDBDataStore(path)
+    logger.info("duckDB tables %s", db.get_table_names())
 
-    duckDB.create_table_if_not_exists(
+    db.create_table_if_not_exists(
         temp_bronze_pdr_predictions_table_name,
         BronzePrediction.get_lake_schema(),
     )
 
-    return duckDB.execute_sql(
+    return db.execute_sql(
         f"""
         INSERT INTO {temp_bronze_pdr_predictions_table_name}
         SELECT

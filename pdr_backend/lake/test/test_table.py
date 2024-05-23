@@ -169,22 +169,22 @@ def test_persistent_store(
 
     predictions_table_name = Prediction.get_lake_table_name()
     # Initialize Table, fill with data, validate
-    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir)
-    duckDB._create_and_fill_table(
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    db._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
 
     assert _table_exists(duckDB, predictions_table_name)
 
-    result = duckDB.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = db.query_data(f"SELECT * FROM {predictions_table_name}")
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    duckDB.insert_to_table(
+    db.o_table(
         _gql_datafactory_second_predictions_df, Prediction.get_lake_table_name()
     )
 
-    result = duckDB.query_data(f"SELECT * FROM {predictions_table_name}")
+    result = db.query_data(f"SELECT * FROM {predictions_table_name}")
 
     assert len(result) == 8, "Length of the table is not as expected"
 

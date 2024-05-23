@@ -27,10 +27,10 @@ def test_etl_tables(
     _, duckDB, _ = setup_data
 
     # Assert all dfs are not the same size as mock data
-    pdr_predictions_df = duckDB.query_data("SELECT * FROM pdr_predictions")
-    pdr_payouts_df = duckDB.query_data("SELECT * FROM pdr_payouts")
-    pdr_truevals_df = duckDB.query_data("SELECT * FROM pdr_truevals")
-    pdr_slots_df = duckDB.query_data("SELECT * FROM pdr_slots")
+    pdr_predictions_df = db.query_data("SELECT * FROM pdr_predictions")
+    pdr_payouts_df = db.query_data("SELECT * FROM pdr_payouts")
+    pdr_truevals_df = db.query_data("SELECT * FROM pdr_truevals")
+    pdr_slots_df = db.query_data("SELECT * FROM pdr_slots")
     assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
     assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
@@ -63,7 +63,7 @@ def test_etl_do_bronze_step(
 
     # assert bronze_pdr_predictions_df is created
     table_name = NamedTable.from_dataclass(BronzePrediction).fullname
-    bronze_pdr_predictions_records = duckDB.query_data(
+    bronze_pdr_predictions_records = db.query_data(
         "SELECT * FROM {}".format(table_name)
     )
     assert len(bronze_pdr_predictions_records) == 5
@@ -147,7 +147,7 @@ def test_etl_do_bronze_step(
 
     # Assert bronze slots table is building correctly
     table_name = NamedTable.from_dataclass(BronzeSlot).fullname
-    bronze_pdr_slots_records = duckDB.query_data("SELECT * FROM {}".format(table_name))
+    bronze_pdr_slots_records = db.query_data("SELECT * FROM {}".format(table_name))
 
     assert len(bronze_pdr_slots_records) == 6
     assert bronze_pdr_slots_records["truevalue"].null_count() == 1
@@ -170,12 +170,12 @@ def test_etl_views(setup_data):
     # live table shouldn't exist
     # temp table should be created
     # etl view shouldn't exist
-    assert not BronzePrediction.get_lake_table_name() in duckDB.get_table_names()
-    records = duckDB.query_data(
+    assert not BronzePrediction.get_lake_table_name() in db.get_table_names()
+    records = db.query_data(
         "SELECT * FROM {}".format(TempTable.from_dataclass(BronzePrediction).fullname)
     )
     assert len(records) == 5
-    assert ETLTable.from_dataclass(BronzePrediction).fullname in duckDB.get_view_names()
+    assert ETLTable.from_dataclass(BronzePrediction).fullname in db.get_view_names()
 
     # move from temp to live
     etl._move_from_temp_tables_to_live()
@@ -189,26 +189,26 @@ def test_drop_temp_sql_tables(setup_data):
     etl, duckDB, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
 
     # DROP ALL TABLES
     for table in table_names:
-        duckDB.duckdb_conn.execute(f"DROP TABLE {table}")
+        db.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
 
     assert len(table_names) == 3
 
     etl.temp_table_names = ["a", "b", "c"]
     etl._drop_temp_sql_tables()
 
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
 
     assert len(table_names) == 0
 
@@ -222,33 +222,33 @@ def test_move_from_temp_tables_to_live(setup_data):
     assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    duckDB.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
+    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
     # check if tables are created
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
     etl.temp_table_names = ["a", "b", "c"]
     etl._move_from_temp_tables_to_live()
 
     # check "c" exists in permanent tables
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
     assert len(table_names) == 8
     assert "c" in table_names
     assert "a" in table_names
     assert "b" in table_names
 
     # Verify no build tables exist
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
     for table_name in table_names:
         assert "_temp_" not in table_name
 
 
 @enforce_types
 def test_get_max_timestamp_values_from(tmpdir):
-    duckDB = DuckDBDataStore(str(tmpdir))
+    db = DuckDBDataStore(str(tmpdir))
 
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         CREATE TABLE test_table_1 (timestamp INT64);
         CREATE TABLE test_table_2 (timestamp INT64);
@@ -260,7 +260,7 @@ def test_get_max_timestamp_values_from(tmpdir):
     ts2 = UnixTimeMs.from_timestr("2023-11-03_0:00")
     ts3 = UnixTimeMs.from_timestr("2023-11-04_0:00")
     ts4 = UnixTimeMs.from_timestr("2023-11-09_0:00")
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         INSERT INTO test_table_1 VALUES (INT64 '{0}');
         INSERT INTO test_table_2 VALUES (INT64 '{1}');
@@ -312,10 +312,10 @@ def test_get_max_timestamp_values_from(tmpdir):
 
 @enforce_types
 def _fill_dummy_tables(tmpdir):
-    duckDB = DuckDBDataStore(str(tmpdir))
+    db = DuckDBDataStore(str(tmpdir))
 
     # mock bronze + raw tables
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         CREATE TABLE raw_table_1 (timestamp INT64);
         CREATE TABLE raw_table_2 (timestamp INT64);
@@ -323,7 +323,7 @@ def _fill_dummy_tables(tmpdir):
         """
     )
 
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         CREATE TABLE bronze_table_1 (timestamp INT64);
         CREATE TABLE bronze_table_2 (timestamp INT64);
@@ -335,7 +335,7 @@ def _fill_dummy_tables(tmpdir):
     # etl should start from the bronze table max_timestamp => 2023-11-02
     ts1 = UnixTimeMs.from_timestr("2023-11-01_0:00")
     ts2 = UnixTimeMs.from_timestr("2023-11-02_0:00")
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         INSERT INTO bronze_table_1 VALUES (INT64 '{1}');
         INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
@@ -352,7 +352,7 @@ def _fill_dummy_tables(tmpdir):
     ts2 = UnixTimeMs.from_timestr("2023-11-22_0:00")
     ts3 = UnixTimeMs.from_timestr("2023-11-23_0:00")
     ts4 = UnixTimeMs.from_timestr("2023-11-25_0:00")
-    duckDB.duckdb_conn.execute(
+    db.duckdb_conn.execute(
         """
         INSERT INTO raw_table_1 VALUES (INT64 '{0}');
         INSERT INTO raw_table_2 VALUES (INT64 '{1}');

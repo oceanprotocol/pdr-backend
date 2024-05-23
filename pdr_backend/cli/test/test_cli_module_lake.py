@@ -136,12 +136,12 @@ def test_do_lake_etl_delegation():
     assert etl_update.called
 
 
-def _make_and_fill_timestamps(duckDB, table_name, first_entry_ts):
+def _make_and_fill_timestamps(db, table_name, first_entry_ts):
     one_day = 1000 * 60 * 60 * 24
-    duckDB.query_data(f"CREATE TABLE {table_name} (id INT, timestamp INT64)")
+    db.query_data(f"CREATE TABLE {table_name} (id INT, timestamp INT64)")
 
     for i in range(5):
-        duckDB.query_data(
+        db.query_data(
             f"INSERT INTO {table_name} VALUES ({i}, {first_entry_ts + i * one_day})"
         )
 
@@ -157,14 +157,14 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     ts = 1609459200000
     one_day = 1000 * 60 * 60 * 24
 
-    duckDB = DuckDBDataStore(str(tmpdir))
-    _make_and_fill_timestamps(duckDB, "_temp_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(duckDB, "test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(duckDB, "_etl_bronze_test", ts - 2 * one_day)
+    db = DuckDBDataStore(str(tmpdir))
+    _make_and_fill_timestamps(db, "_temp_test1", ts - 3 * one_day)
+    _make_and_fill_timestamps(db, "test2", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_etl_bronze_test", ts - 2 * one_day)
 
     mock_ppss = Mock()
 
-    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=duckDB):
+    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=db):
         do_lake_raw_drop(args, mock_ppss)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
@@ -187,14 +187,14 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     one_day = 1000 * 60 * 60 * 24
     ts = 1609459200000
 
-    duckDB = DuckDBDataStore(str(tmpdir))
-    _make_and_fill_timestamps(duckDB, "_temp_bronze_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(duckDB, "_etl_silver_test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(duckDB, "_etl_test_raw", ts - 2 * one_day)
+    db = DuckDBDataStore(str(tmpdir))
+    _make_and_fill_timestamps(db, "_temp_bronze_test1", ts - 3 * one_day)
+    _make_and_fill_timestamps(db, "_etl_silver_test2", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_etl_test_raw", ts - 2 * one_day)
 
     mock_ppss = Mock()
 
-    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=duckDB):
+    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=db):
         do_lake_etl_drop(args, mock_ppss)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text

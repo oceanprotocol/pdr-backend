@@ -625,12 +625,12 @@ def setup_data(
 
     # provide the setup data to the test
     etl = ETL(ppss, gql_data_factory)
-    duckDB = _get_test_DuckDB(tmpdir)
+    db = _get_test_DuckDB(tmpdir)
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
 
-    _records = duckDB.query_data("SELECT * FROM pdr_predictions")
+    _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
 
     yield etl, duckDB, gql_tables

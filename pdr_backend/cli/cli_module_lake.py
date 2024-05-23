@@ -51,9 +51,9 @@ def do_lake_query(args, ppss):
     @description
         Query the lake for a table or view
     """
-    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
     try:
-        df = duckDB.query_data(args.QUERY)
+        df = db.query_data(args.QUERY)
         print(df)
     except Exception as e:
         logger.error("Error querying lake: %s", e)
@@ -62,8 +62,8 @@ def do_lake_query(args, ppss):
 
 @enforce_types
 def do_lake_raw_drop(args, ppss):
-    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(duckDB, "raw", args.ST)
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "raw", args.ST)
 
 
 @enforce_types
@@ -86,8 +86,8 @@ def do_lake_raw_update(_, ppss):
 
 @enforce_types
 def do_lake_etl_drop(args, ppss):
-    duckDB = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(duckDB, "etl", args.ST)
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "etl", args.ST)
 
 
 @enforce_types

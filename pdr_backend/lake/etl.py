@@ -73,9 +73,9 @@ class ETL:
             If exists, drop them and rebuild
         """
         # drop the tables if it exists
-        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
-            duckDB.drop_table(TempTable(table_name).fullname)
+            db.drop_table(TempTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
@@ -83,15 +83,15 @@ class ETL:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.temp_table_names:
             logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
 
-            duckDB.move_table_data(temp_table, table_name)
+            db.move_table_data(temp_table, table_name)
 
-            duckDB.drop_table(temp_table.fullname)
-            duckDB.drop_view(ETLTable(table_name).fullname)
+            db.drop_table(temp_table.fullname)
+            db.drop_view(ETLTable(table_name).fullname)
 
     def do_etl(self):
         """
@@ -263,13 +263,13 @@ class ETL:
             table_name in self.bronze_table_names
         ), f"{table_name} must be a bronze table"
 
-        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         temp_table = TempTable(table_name)
         etl_view = ETLTable(table_name)
 
-        table_exists = duckDB.table_exists(table_name)
-        temp_table_exists = duckDB.table_exists(temp_table.fullname)
-        etl_view_exists = duckDB.view_exists(etl_view.fullname)
+        table_exists = db.table_exists(table_name)
+        temp_table_exists = db.table_exists(temp_table.fullname)
+        etl_view_exists = db.view_exists(etl_view.fullname)
         assert temp_table_exists, f"{temp_table.fullname} must already exist"
         if etl_view_exists:
             logger.error("%s must not exist", etl_view.fullname)
@@ -289,7 +289,7 @@ class ETL:
                 table_name,
                 temp_table.fullname,
             )
-            duckDB.query_data(view_query)
+            db.query_data(view_query)
             logger.info(
                 "  Created %s view using %s table and %s temp table",
                 etl_view.fullname,
@@ -298,7 +298,7 @@ class ETL:
             )
         else:
             view_query = f"CREATE VIEW {etl_view.fullname} AS SELECT * FROM {temp_table.fullname}"
-            duckDB.query_data(view_query)
+            db.query_data(view_query)
             logger.info(
                 "  Created %s view using %s temp table",
                 etl_view.fullname,

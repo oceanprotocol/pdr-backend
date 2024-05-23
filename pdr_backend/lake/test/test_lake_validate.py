@@ -190,7 +190,7 @@ def test_validate_lake_mock_sql_failure(tmpdir):
     # mock duckDB
     mock_pds = MagicMock()
     mock_pds.query_data.return_value = sql_result
-    lake_validate.duckDB = mock_pds
+    lake_validate.db = mock_pds
 
     result = lake_validate.validate_lake_bronze_predictions_gaps()
 

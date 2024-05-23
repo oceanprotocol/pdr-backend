@@ -262,12 +262,12 @@ class GQLDataFactory:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        duckDB = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
             temp_table = TempTable(table_name)
 
-            duckDB.move_table_data(temp_table, table_name)
-            duckDB.drop_table(temp_table.fullname)
+            db.move_table_data(temp_table, table_name)
+            db.drop_table(temp_table.fullname)
 
     @enforce_types
     def _update(self):

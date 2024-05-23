@@ -53,9 +53,9 @@ def get_bronze_pdr_slots_data_with_SQL(
     ).fullname
     temp_bronze_pdr_slots_table_name = TempTable.from_dataclass(BronzeSlot).fullname
 
-    duckDB = DuckDBDataStore(path)
+    db = DuckDBDataStore(path)
 
-    duckDB.create_table_if_not_exists(
+    db.create_table_if_not_exists(
         temp_bronze_pdr_slots_table_name, BronzeSlot.get_lake_schema()
     )
 
@@ -109,4 +109,4 @@ def get_bronze_pdr_slots_data_with_SQL(
 
     logger.info("table_bronze_slot_query %s", query)
 
-    return duckDB.execute_sql(query)
+    return db.execute_sql(query)

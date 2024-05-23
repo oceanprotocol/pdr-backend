@@ -41,7 +41,7 @@ def drop_tables_from_st(duckDB: DuckDBDataStore, type_filter: str, st: UnixTimeM
     if type_filter not in ["raw", "etl"]:
         return
 
-    table_names = duckDB.get_table_names()
+    table_names = db.get_table_names()
 
     for table_name in table_names:
         if type_filter == "etl" and not is_etl_table(table_name):
@@ -62,10 +62,10 @@ def drop_tables_from_st(duckDB: DuckDBDataStore, type_filter: str, st: UnixTimeM
             table_name,
             st,
         )
-        rows_before = duckDB.row_count(table_name)
+        rows_before = db.row_count(table_name)
         logger.info("rows before: %s", rows_before)
-        duckDB.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")
-        rows_after = duckDB.row_count(table_name)
+        db.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")
+        rows_after = db.row_count(table_name)
         logger.info("rows after: %s", rows_after)
         if rows_before != rows_after:
             table_count += 1
