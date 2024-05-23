@@ -72,7 +72,7 @@ class LakeInfo:
 
     def validate_expected_table_names(self) -> List[str]:
         violations: List[str] = []
-        expected_table_names = self.etl.raw_table_names + self.etl.bronze_table_names
+        expected_table_names = self.all_table_names
 
         temp_table_names = self.all_table_names
 
