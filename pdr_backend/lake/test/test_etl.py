@@ -393,7 +393,6 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
 
     etl = ETL(ppss, gql_data_factory)
-    etl.raw_table_names = ["raw_table_1", "raw_table_2", "raw_table_3"]
     etl.bronze_table_names = [
         "bronze_table_1",
         "bronze_table_2",
@@ -435,13 +434,6 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
         "bronze_table_4",
         "bronze_table_5",
     ]
-    etl.raw_table_names = [
-        "dummy_table_1",
-        "dummy_table_2",
-        "dummy_table_3",
-        "dummy_table_4",
-        "dummy_table_5",
-    ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     assert (
@@ -474,7 +466,6 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
         "bronze_table_2",
         "bronze_table_3",
     ]
-    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     ts_now = UnixTimeMs.now()
@@ -506,13 +497,6 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         "bronze_table_3",
         "bronze_table_4",
         "bronze_table_5",
-    ]
-    etl.raw_table_names = [
-        "dummy_table_1",
-        "dummy_table_2",
-        "dummy_table_3",
-        "dummy_table_4",
-        "dummy_table_5",
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
