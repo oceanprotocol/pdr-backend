@@ -4,7 +4,8 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
+from pdr_backend.lake.etl import ETL, _ETL_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
@@ -24,7 +25,7 @@ def test_etl_tables(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    _, pds, _ = setup_data
+    _, pds, gql_tables = setup_data
 
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = pds.query_data("SELECT * FROM pdr_predictions")
@@ -36,12 +37,14 @@ def test_etl_tables(
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all dfs
+    assert len(gql_tables.keys()) == len(TableRegistry().get_tables())
+    assert len(TableRegistry().get_tables()) == len(
+        _GQLDF_REGISTERED_LAKE_TABLES.keys()
+    ) + len(_ETL_REGISTERED_LAKE_TABLES.keys())
     assert len(pdr_slots_df) == 6
     assert len(pdr_predictions_df) == 5
     assert len(pdr_payouts_df) == 4
-    assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 4
 
 
 # pylint: disable=too-many-statements
@@ -184,7 +187,6 @@ def test_drop_temp_sql_tables(setup_data):
 
     # SELECT ALL TABLES FROM DB
     original_tables = pds.get_table_names()
-    assert len(original_tables) == 5
 
     # DROP ALL TABLES
     for table in original_tables:
@@ -202,7 +204,7 @@ def test_drop_temp_sql_tables(setup_data):
     etl_table_names = pds.get_table_names()
     assert len(etl_table_names) == len(etl.bronze_table_names)
 
-    # now, drop all ETL temp tables and verify we're back to raw count
+    # now, drop all ETL temp tables and verify we're back to 0
     etl._drop_temp_sql_tables()
     remaining_table_names = pds.get_table_names()
     assert len(remaining_table_names) == 0
@@ -214,12 +216,10 @@ def test_drop_temp_sql_tables(setup_data):
 )
 def test_move_from_temp_tables_to_live(setup_data):
     etl, pds, gql_tables = setup_data
-    assert len(gql_tables) == 5
-
-    dummy_schema = {"test_column": str}
 
     # Insert temp ETL tables w/ dummy data into DuckDB
     temp_bronze_table_names = []
+    dummy_schema = {"test_column": str}
     for table_name in etl.bronze_table_names:
         pds.insert_to_table(
             pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
@@ -236,12 +236,12 @@ def test_move_from_temp_tables_to_live(setup_data):
 
     etl._move_from_temp_tables_to_live()
 
-    # check all temp tables are dropped, and regular bronze_tables exist
+    # check all temp tables are dropped, and raw + etl exist
     table_names = pds.get_table_names()
     assert all(
         table in table_names for table in etl.bronze_table_names
     ), "Not all temporary bronze tables were moved to live tables successfully"
-    assert len(table_names) == 6
+    assert len(table_names) == len(gql_tables) + len(etl.bronze_table_names)
 
     # Verify no build tables exist
     table_names = pds.get_table_names()

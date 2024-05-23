@@ -18,7 +18,7 @@ from pdr_backend.lake.prediction import (
     mock_second_predictions,
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
-from pdr_backend.lake.subscription import Subscription, mock_subscriptions
+from pdr_backend.lake.subscription import mock_subscriptions
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import (
@@ -611,14 +611,12 @@ def setup_data(
         "pdr_truevals": Table(Trueval, ppss),
         "pdr_payouts": Table(Payout, ppss),
         "pdr_slots": Table(Slot, ppss),
-        "pdr_subscriptions": Table(Subscription, ppss),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
     gql_tables["pdr_slots"].append_to_storage(slots)
-    gql_tables["pdr_subscriptions"].append_to_storage(slots)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
@@ -631,6 +629,9 @@ def setup_data(
     assert etl.gql_data_factory == gql_data_factory
 
     _records = pds.query_data("SELECT * FROM pdr_predictions")
-    assert len(_records) == 5
+    assert len(_records) == preds.shape[0]
+
+    all_dfs = [preds, truevals, payouts, slots]
+    assert len(gql_tables.keys()) == len(all_dfs)
 
     yield etl, pds, gql_tables
