@@ -37,16 +37,16 @@ def clean_up_table_registry():
 @pytest.fixture(autouse=True)
 def clean_up_persistent_data_store(tmpdir):
     # Clean up duckDB
-    duckdb = DuckDBDataStore(str(tmpdir))
+    db = DuckDBDataStore(str(tmpdir))
 
     # Select tables from duckdb
-    table_names = duckdb.get_table_names()
+    table_names = db.get_table_names()
 
     # Drop the tables
     for table in table_names:
-        duckdb.execute_sql(f"DROP TABLE {table}")
+        db.execute_sql(f"DROP TABLE {table}")
 
-    duckdb.duckdb_conn.close()
+    db.duckdb_conn.close()
 
 
 @pytest.fixture()

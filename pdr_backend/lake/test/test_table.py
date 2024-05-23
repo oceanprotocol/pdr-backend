@@ -68,8 +68,8 @@ if os.path.exists(file_path2):
     os.remove(file_path2)
 
 
-def _table_exists(duckdb, searched_table_name):
-    table_names = duckdb.get_table_names()
+def _table_exists(db, searched_table_name):
+    table_names = db.get_table_names()
     return [searched_table_name in table_names, table_name]
 
 
