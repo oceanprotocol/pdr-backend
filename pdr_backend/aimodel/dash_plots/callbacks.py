@@ -25,11 +25,16 @@ from pdr_backend.aimodel.seasonal_plotter import (
     plot_residual,
     plot_seasonal,
     plot_trend,
+    get_transitions,
 )
 
 
 def get_callbacks(app):
-    @app.callback(Output("arima-graphs", "children"), [Input("page_title", "id")])
+    @app.callback(
+        Output("arima-graphs", "children"),
+        Output("loading", "children"),
+        [Input("page_title", "id")],
+    )
     # pylint: disable=unused-argument
     def create_charts(n_intervals):
         nlags = 5
@@ -76,11 +81,13 @@ def get_callbacks(app):
         fig4 = plot_seasonal(plotdata)
         fig5 = plot_residual(plotdata)
 
+        transitions = get_transitions()
+
         columns = []
         columns.append(
             display_on_column_graphs(
                 [
-                    {"fig": acf, "graph_id": "transform"},
+                    {"fig": transitions, "graph_id": "transition"},
                 ]
             )
         )
@@ -106,4 +113,22 @@ def get_callbacks(app):
 
         # elements.append(display_on_column_graphs(elements))
 
-        return display_plots_view(columns)
+        return display_plots_view(columns), None
+
+    @app.callback(
+        Output("transition", "figure"),
+        Output("clicked-data", "children"),
+        [Input("transition", "clickData")],
+    )
+    def display_click_data(clickData):
+        if clickData is None:
+            return get_transitions(), "Click on a bar to see the data"
+
+        point = clickData["points"][0]
+        selected_idx = point["pointIndex"]
+        transition = point["y"]
+        value = point["x"]
+
+        fig = get_transitions(selected_idx)
+        message = f"You clicked on transition '{transition}' with value {value}"
+        return fig, message

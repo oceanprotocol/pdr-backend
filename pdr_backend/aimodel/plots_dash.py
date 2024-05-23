@@ -14,8 +14,9 @@ app.layout = html.Div(
                 id="page_title",
                 # stops refreshing if final state was reached. Do not remove this class!
                 className="title",
-                style={"width": "100%", "text-align": "center"},
+                style={"width": "100%", "textAlign": "center"},
             ),
+            html.Div(id="clicked-data"),
             html.Div(id="arima-graphs"),
             dcc.Loading(
                 id="loading",
