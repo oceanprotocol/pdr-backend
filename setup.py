@@ -36,7 +36,7 @@ install_requirements = [
     "pytest-asyncio==0.21.1",
     "pytest-env",
     "pyyaml",
-    "requests==2.31.0",
+    "requests==2.32.0",
     "requests-mock==1.12.1",
     "scikit-learn==1.4.2",
     "statsmodels==0.14.2",

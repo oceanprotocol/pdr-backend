@@ -132,24 +132,32 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
                 receipt["transactionHash"],
             )
             return
-        logger.info("Transfering wROSE to owner")
         time.sleep(4)
-        balance = wROSE.balanceOf(pred_submitter_mgr.contract_address)
-        receipt = pred_submitter_mgr.transfer_erc20(
-            wROSE_addr, web3_config.owner, balance, True
-        )
-        if receipt["status"] != 1:
-            logger.warning(
-                "Failed to transfer wROSE tokens to the owner, tx: %s",
-                receipt["transactionHash"],
-            )
-            return
     else:
         logger.warning("No rewards available to claim")
-        return
+
+    def _transfer_wrose(instance_address, instance_name):
+        balance = wROSE.balanceOf(instance_address)
+        if balance > 0:
+            instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
+            receipt = instance.transfer_erc20(
+                wROSE_addr, web3_config.owner, balance, True
+            )
+            if receipt["status"] != 1:
+                logger.warning(
+                    "Failed to transfer wROSE tokens to the owner from %s, tx: %s",
+                    instance_name,
+                    receipt["transactionHash"],
+                )
+            time.sleep(4)
+
+    logger.info("Transfering wROSE to owner")
+
+    _transfer_wrose(up_addr, "up predictoor")
+    _transfer_wrose(down_addr, "down predictoor")
+    _transfer_wrose(pred_submitter_mgr.contract_address, "manager")
 
     logger.info("Converting wROSE to ROSE")
-    time.sleep(4)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == Wei(0):
         logger.warning("wROSE balance is 0")
