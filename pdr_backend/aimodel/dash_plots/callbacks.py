@@ -1,13 +1,12 @@
+import os
 from dash import Input, Output
 import pandas as pd
-import os
 from scipy import stats
 import dash
 import numpy as np
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.aimodel.dash_plots.view_elements import (
-    get_header_elements,
     display_on_column_graphs,
     display_plots_view,
 )
@@ -30,14 +29,9 @@ from pdr_backend.aimodel.seasonal_plotter import (
 
 
 def get_callbacks(app):
-    @app.callback(Output("data-store", "data"), Input("arima-graphs", "id"))
+    @app.callback(Output("arima-graphs", "children"), [Input("page_title", "id")])
     # pylint: disable=unused-argument
-    def load_data(arg):
-        return []
-
-    @app.callback(Output("arima-graphs", "children"), Input("data-store", "data"))
-    # pylint: disable=unused-argument
-    def create_charts(d):
+    def create_charts(n_intervals):
         nlags = 5
         do_boxcox = True
         differencing_order = 1
@@ -82,7 +76,6 @@ def get_callbacks(app):
         fig4 = plot_seasonal(plotdata)
         fig5 = plot_residual(plotdata)
 
-        elements = get_header_elements()
         columns = []
         columns.append(
             display_on_column_graphs(
@@ -110,8 +103,7 @@ def get_callbacks(app):
                 ]
             )
         )
-        elements.append(display_plots_view(columns))
 
         # elements.append(display_on_column_graphs(elements))
 
-        return elements
+        return display_plots_view(columns)

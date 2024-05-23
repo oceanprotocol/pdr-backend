@@ -32,7 +32,7 @@ def plot_relative_energies(seasonal_plotdata: SeasonalPlotdata):
             "xanchor": "center",
             "yanchor": "top",
         },
-        margin=dict(l=5, r=5, t=50, b=0),
+        margin={"l": 5, "r": 5, "t": 50, "b": 0},
     )
     fig.update_yaxes(title_text="Rel energy", minor=minor)
     fig.update_xaxes(minor=minor)
@@ -57,7 +57,7 @@ def plot_observed(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Obseved", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 50, "b": 0})
     return fig
 
 
@@ -79,7 +79,7 @@ def plot_trend(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Trend", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
     return fig
 
 
@@ -101,7 +101,7 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Seasonal", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
     return fig
 
 
@@ -123,5 +123,5 @@ def plot_residual(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Resid", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin=dict(l=5, r=5, t=20, b=0))
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
     return fig

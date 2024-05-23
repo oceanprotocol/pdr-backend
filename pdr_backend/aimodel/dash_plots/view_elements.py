@@ -1,34 +1,16 @@
 from dash import dcc, html
-from plotly.graph_objs import Figure
 
 figure_names = [
     "autocorelation",
     "partial_autocorelation",
 ]
 
-empty_graphs_template = html.Div(
-    [dcc.Graph(figure=Figure(), id=key) for key in figure_names],
-    style={"display": "none"},
-)
 
-
-def get_waiting_template(err):
+def display_waiting_template():
     return html.Div(
-        [html.H1(f"Error/waiting: {err}", id="sim_state_text")],
-        id="live-graphs",
+        [html.H2("Loading data and creating charts...", id="wating-text")],
+        id="wating",
     )
-
-
-def get_header_elements():
-    return [
-        html.H1(
-            "ARIMA feed data",
-            id="page_title",
-            # stops refreshing if final state was reached. Do not remove this class!
-            className="title",
-            style={"width": "100%", "text-align": "center"},
-        ),
-    ]
 
 
 def display_plots_view(columns):
