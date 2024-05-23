@@ -374,9 +374,12 @@ def test_calc_bronze_start_end_ts(tmpdir):
     """
     @description
         Verify that the start and end timestamps for the bronze tables are calculated correctly
-        1. ETL step starts from bronze_table max timestamp
+        1. ETL step resumes from max(timestamp) across all bronze tables
+        - this gets the "checkpoint" from where the ETL pipeline last ended/should resume
+        - this gives us our "from" timestamp
         2. raw_tables can have different max timestamps
-        3. bronze_tables should have the same max timestamp
+        - db raw tables should have just been updated by GQLDF
+        - this gives us our "to" timestamp
     """
     _fill_dummy_tables(tmpdir)
 
