@@ -180,7 +180,9 @@ def test_persistent_store(
     assert len(result) == 2, "Length of the table is not as expected"
 
     # Add second batch of predictions, validate
-    db.insert_to_table(_gql_datafactory_second_predictions_df, Prediction.get_lake_table_name())
+    db.insert_to_table(
+        _gql_datafactory_second_predictions_df, Prediction.get_lake_table_name()
+    )
 
     result = db.query_data(f"SELECT * FROM {predictions_table_name}")
 
