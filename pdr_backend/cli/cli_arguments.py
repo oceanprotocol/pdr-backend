@@ -61,7 +61,7 @@ Utilities:
 
 Inspect and manage lake:
   pdr lake describe PPSS_FILE NETWORK --HTML
-  pdr lake query PPSS_FILE "SQL QUERY ..."
+  pdr lake query PPSS_FILE NETWORK "SQL QUERY ..."
   pdr lake raw drop PPSS_FILE NETWORK ST
   pdr lake raw update PPSS_FILE NETWORK
   pdr lake etl drop PPSS_FILE NETWORK ST
