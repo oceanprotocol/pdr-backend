@@ -24,7 +24,7 @@ def test_etl_tables(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    _, duckDB, _ = setup_data
+    _, db, _ = setup_data
 
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = db.query_data("SELECT * FROM pdr_predictions")
@@ -55,7 +55,7 @@ def test_etl_do_bronze_step(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    etl, duckDB, _ = setup_data
+    etl, db, _ = setup_data
 
     # Work 1: Do bronze
     etl.do_bronze_step()
@@ -159,7 +159,7 @@ def test_etl_do_bronze_step(
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_etl_views(setup_data):
-    etl, duckDB, _ = setup_data
+    etl, db, _ = setup_data
 
     # Work 1: First Run
     with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
@@ -186,7 +186,7 @@ def test_etl_views(setup_data):
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_drop_temp_sql_tables(setup_data):
-    etl, duckDB, _ = setup_data
+    etl, db, _ = setup_data
 
     # SELECT ALL TABLES FROM DB
     table_names = db.get_table_names()
@@ -218,7 +218,7 @@ def test_drop_temp_sql_tables(setup_data):
     "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
 )
 def test_move_from_temp_tables_to_live(setup_data):
-    etl, duckDB, gql_tables = setup_data
+    etl, db, gql_tables = setup_data
     assert len(gql_tables) == 5
 
     dummy_schema = {"test_column": str}

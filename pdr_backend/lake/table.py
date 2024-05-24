@@ -36,7 +36,7 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(duckDB: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
+def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
     trunc_count = table_count = 0
     if type_filter not in ["raw", "etl"]:
         return

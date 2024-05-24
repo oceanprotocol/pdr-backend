@@ -633,4 +633,4 @@ def setup_data(
     _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
 
-    yield etl, duckDB, gql_tables
+    yield etl, db, gql_tables
