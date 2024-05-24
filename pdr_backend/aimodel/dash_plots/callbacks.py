@@ -1,5 +1,5 @@
-import os
-from dash import Input, Output
+import datetime
+from dash import Input, Output, State
 import pandas as pd
 from scipy import stats
 import dash
@@ -27,28 +27,36 @@ from pdr_backend.aimodel.seasonal_plotter import (
     plot_trend,
     get_transitions,
 )
+from pdr_backend.aimodel.dash_plots.util import read_files_from_directory
 
 
+# pylint: disable=too-many-statements
 def get_callbacks(app):
+    @app.callback(Output("data-store", "data"), Input("data-folder", "data"))
+    def read_from_file(data):
+        print(data)
+        files_dir = data
+        data = read_files_from_directory(files_dir)
+        return data
+
     @app.callback(
         Output("arima-graphs", "children"),
-        Output("loading", "children"),
-        [Input("page_title", "id")],
+        [
+            Input("feed-dropdown", "value"),
+            Input("date-picker-range", "start_date"),
+            Input("date-picker-range", "end_date"),
+        ],
+        State("data-store", "data"),
     )
     # pylint: disable=unused-argument
-    def create_charts(n_intervals):
+    def create_charts(
+        feed_data, date_picker_start_date, date_picker_end_date, store_data
+    ):
         nlags = 5
         do_boxcox = True
         differencing_order = 1
 
-        filebase = "binance_BTC-USDT_5m.parquet"
-        log_dir = "./parquet_data"  # type: ignore[attr-defined]
-        file = os.path.join(log_dir, filebase)
-
-        # get data from file
-        df = pd.read_parquet(file)
-        BTC_COL = "close"
-        y = df[BTC_COL].array
+        y = store_data[feed_data]["close_data"]
 
         # get data for autocorelation
         y = np.array(y)
@@ -62,11 +70,15 @@ def get_callbacks(app):
 
         if data is None:
             return dash.no_update
-        print(data.acf_results)
 
         # get data for seasonal
-        y = df[BTC_COL].array
-        st = UnixTimeMs(df["timestamp"][0])
+        y = store_data[feed_data]["close_data"]
+        y = np.array(y)
+        timestamp_str = store_data[feed_data]["timestamps"][0]
+        st = UnixTimeMs(
+            datetime.datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S").timestamp()
+            * 1000
+        )
         t = ArgTimeframe("5m")
         dr = SeasonalDecomposeFactory.build(t, y)
 
@@ -75,11 +87,11 @@ def get_callbacks(app):
         acf = plot_acf(data)
         pacf = plot_pacf(data)
 
-        fig1 = plot_relative_energies(plotdata)
-        fig2 = plot_observed(plotdata)
-        fig3 = plot_trend(plotdata)
-        fig4 = plot_seasonal(plotdata)
-        fig5 = plot_residual(plotdata)
+        relativeEnergies = plot_relative_energies(plotdata)
+        observed = plot_observed(plotdata)
+        trend = plot_trend(plotdata)
+        seasonal = plot_seasonal(plotdata)
+        ressidual = plot_residual(plotdata)
 
         transitions = get_transitions()
 
@@ -94,11 +106,11 @@ def get_callbacks(app):
         columns.append(
             display_on_column_graphs(
                 [
-                    {"fig": fig1, "graph_id": "relativeEnergies"},
-                    {"fig": fig2, "graph_id": "observed"},
-                    {"fig": fig3, "graph_id": "trend"},
-                    {"fig": fig4, "graph_id": "seasonal"},
-                    {"fig": fig5, "graph_id": "ressidual"},
+                    {"fig": relativeEnergies, "graph_id": "relativeEnergies"},
+                    {"fig": observed, "graph_id": "observed"},
+                    {"fig": trend, "graph_id": "trend"},
+                    {"fig": seasonal, "graph_id": "seasonal"},
+                    {"fig": ressidual, "graph_id": "ressidual"},
                 ]
             )
         )
@@ -113,7 +125,7 @@ def get_callbacks(app):
 
         # elements.append(display_on_column_graphs(elements))
 
-        return display_plots_view(columns), None
+        return display_plots_view(columns)
 
     @app.callback(
         Output("transition", "figure"),
@@ -132,3 +144,54 @@ def get_callbacks(app):
         fig = get_transitions(selected_idx)
         message = f"You clicked on transition '{transition}' with value {value}"
         return fig, message
+
+    @app.callback(
+        [
+            Output("feed-dropdown", "options"),
+            Output("feed-dropdown", "value"),
+        ],
+        Input("data-store", "data"),
+    )
+    def update_dropdown_options(data):
+        if data is None:
+            return []
+        options = [{"label": filename, "value": filename} for filename in data.keys()]
+        value = options[0]["value"] if options else None
+        return options, value
+
+    @app.callback(
+        [
+            Output("start-date-picker", "options"),
+            Output("end-date-picker", "value"),
+        ],
+        Input("data-store", "data"),
+    )
+    def update_date_picker_value_and_range(data):
+        if data is None:
+            return []
+        options = [{"label": filename, "value": filename} for filename in data.keys()]
+        value = options[0]["value"] if options else None
+        return options, value
+
+    @app.callback(
+        [
+            Output("date-picker-range", "start_date"),
+            Output("date-picker-range", "end_date"),
+            Output("date-picker-range", "min_date_allowed"),
+            Output("date-picker-range", "max_date_allowed"),
+        ],
+        Input("feed-dropdown", "value"),
+        State("data-store", "data"),
+    )
+    def update_date_picker(selected_file, data):
+        if selected_file is None or data is None:
+            return None, None, None, None
+
+        timestamps = data[selected_file]["timestamps"]
+        if not timestamps:
+            return None, None, None, None
+
+        timestamps = pd.to_datetime(timestamps)
+        start_date = min(timestamps).date()
+        end_date = max(timestamps).date()
+        return start_date, end_date, start_date, end_date

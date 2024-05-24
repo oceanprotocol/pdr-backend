@@ -352,4 +352,9 @@ def do_sim_plots(args, nested_args=None):
 @enforce_types
 # pylint: disable=unused-argument
 def do_arima_plots(args, nested_args=None):
-    arima_dash(args)
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="development",
+        nested_override_args=nested_args,
+    )
+    arima_dash(8050, ppss)

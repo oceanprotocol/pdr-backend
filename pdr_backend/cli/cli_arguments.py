@@ -21,7 +21,7 @@ HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
   pdr sim_plots [--run_id RUN_ID] [--port PORT]
-  pdr arima_plots [--port PORT]
+  pdr arima_plots PPSS_FILE
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
@@ -537,6 +537,7 @@ def print_args(arguments: Namespace, nested_args: dict):
 
 # main tools
 SimArgParser = _ArgParser_PPSS
+ArimaArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
@@ -594,7 +595,7 @@ class SimPlotsArgParser(CustomArgParser):
 
 class ArimaPlotsArgParser(CustomArgParser):
     # pylint: disable=unused-argument
-    def __init__(self, description: str):
+    def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
 
         self.add_argument(
@@ -604,6 +605,7 @@ class ArimaPlotsArgParser(CustomArgParser):
             type=int,
             default=8050,
         )
+        self.add_arguments_bulk(command_name, ["PPSS"])
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
@@ -651,7 +653,7 @@ defined_parsers = {
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
-    "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data"),
+    "do_arima_plots": ArimaArgParser("Visualize ARIMA data", "arima_plots"),
 }
 
 

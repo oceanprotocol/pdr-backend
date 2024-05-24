@@ -47,3 +47,39 @@ def display_on_column_graphs(figures: list[dict]):
             "width": "30%",
         },
     )
+
+
+def get_input_elements():
+    elements = html.Div(
+        [
+            dcc.Dropdown(
+                id="feed-dropdown",
+                options=[],
+                value="",
+                style={
+                    "width": "300px",
+                    "fontSize": "22px",
+                    "marginRight": "20px",
+                    "height": "100%",
+                },
+            ),
+            # Date input components
+            dcc.DatePickerRange(
+                id="date-picker-range",
+                start_date=None,
+                end_date=None,
+                min_date_allowed=None,
+                max_date_allowed=None,
+            ),
+        ],
+        style={
+            "height": "100%",
+            "margin": "auto",
+            "display": "flex",
+            "justifyContent": "flex-start",
+            "alignItems": "center",
+            "padding": "10px",
+        },
+    )
+
+    return elements
