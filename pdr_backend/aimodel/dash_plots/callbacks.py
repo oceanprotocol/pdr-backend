@@ -42,6 +42,19 @@ def get_callbacks(app):
         return data
 
     @app.callback(
+        Output("error-message", "children"),
+        [
+            Input("data-store", "data"),
+        ],
+    )
+    def display_read_data_error(store_data):
+        if store_data == {}:
+            return html.H2(
+                "No data found! Fetch ohlcv data before running the ARIMA plots."
+            )
+        return None
+
+    @app.callback(
         Output("autocorelation_column", "children"),
         Output("seasonal_column", "children"),
         [

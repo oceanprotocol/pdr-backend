@@ -21,6 +21,7 @@ app.layout = html.Div(
             style={"width": "100%", "textAlign": "center"},
         ),
         html.Div(id="input-elements", children=get_input_elements()),
+        html.Div(id="error-message"),
         dcc.Store(id="data-store"),
         dcc.Store(id="window-data"),
         dcc.Store(id="data-loading"),
