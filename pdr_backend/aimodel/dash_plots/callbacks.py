@@ -1,15 +1,12 @@
 import datetime
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 import pandas as pd
 from scipy import stats
 import dash
 import numpy as np
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.aimodel.dash_plots.view_elements import (
-    display_on_column_graphs,
-    display_plots_view,
-)
+from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdataFactory,
     AutocorrelationPlotdata,
@@ -34,27 +31,30 @@ from pdr_backend.aimodel.dash_plots.util import read_files_from_directory
 def get_callbacks(app):
     @app.callback(Output("data-store", "data"), Input("data-folder", "data"))
     def read_from_file(data):
-        print(data)
         files_dir = data
         data = read_files_from_directory(files_dir)
         return data
 
     @app.callback(
-        Output("arima-graphs", "children"),
+        Output("autocorelation_column", "children"),
+        Output("seasonal_column", "children"),
         [
             Input("feed-dropdown", "value"),
             Input("date-picker-range", "start_date"),
             Input("date-picker-range", "end_date"),
+            Input("data-transition", "data"),
         ],
         State("data-store", "data"),
     )
     # pylint: disable=unused-argument
     def create_charts(
-        feed_data, date_picker_start_date, date_picker_end_date, store_data
+        feed_data, date_picker_start_date, date_picker_end_date, transition, store_data
     ):
-        nlags = 5
-        do_boxcox = True
-        differencing_order = 1
+        if transition is None:
+            return [], []
+        nlags = 10
+        do_boxcox = transition["BC"]
+        differencing_order = transition["D"]
 
         y = store_data[feed_data]["close_data"]
 
@@ -93,57 +93,56 @@ def get_callbacks(app):
         seasonal = plot_seasonal(plotdata)
         ressidual = plot_residual(plotdata)
 
-        transitions = get_transitions()
-
-        columns = []
-        columns.append(
-            display_on_column_graphs(
-                [
-                    {"fig": transitions, "graph_id": "transition"},
-                ]
-            )
-        )
-        columns.append(
-            display_on_column_graphs(
-                [
-                    {"fig": relativeEnergies, "graph_id": "relativeEnergies"},
-                    {"fig": observed, "graph_id": "observed"},
-                    {"fig": trend, "graph_id": "trend"},
-                    {"fig": seasonal, "graph_id": "seasonal"},
-                    {"fig": ressidual, "graph_id": "ressidual"},
-                ]
-            )
-        )
-        columns.append(
-            display_on_column_graphs(
-                [
-                    {"fig": acf, "graph_id": "autocorelation"},
-                    {"fig": pacf, "graph_id": "pautocorelation"},
-                ]
-            )
+        seasonal_charts = get_column_graphs(
+            [
+                {"fig": relativeEnergies, "graph_id": "relativeEnergies"},
+                {"fig": observed, "graph_id": "observed"},
+                {"fig": trend, "graph_id": "trend"},
+                {"fig": seasonal, "graph_id": "seasonal"},
+                {"fig": ressidual, "graph_id": "ressidual"},
+            ]
         )
 
-        # elements.append(display_on_column_graphs(elements))
+        autocorelation_charts = get_column_graphs(
+            [
+                {"fig": acf, "graph_id": "autocorelation"},
+                {"fig": pacf, "graph_id": "pautocorelation"},
+            ]
+        )
 
-        return display_plots_view(columns)
+        return autocorelation_charts, seasonal_charts
 
     @app.callback(
-        Output("transition", "figure"),
-        Output("clicked-data", "children"),
-        [Input("transition", "clickData")],
+        Output("transition_column", "children"),
+        Input("transition_column", "id"),
+    )
+    # pylint: disable=unused-argument
+    def create_transition_chart(div):
+        figure = get_transitions()
+        transitions = get_column_graphs(
+            [{"fig": figure, "graph_id": "transition_graph"}]
+        )
+        return html.Div(transitions)
+
+    @app.callback(
+        Output("transition_graph", "figure"),
+        Output("data-transition", "data"),
+        [Input("transition_graph", "clickData")],
     )
     def display_click_data(clickData):
         if clickData is None:
-            return get_transitions(), "Click on a bar to see the data"
+            return get_transitions(1), {"BC": True, "D": 1}
 
         point = clickData["points"][0]
         selected_idx = point["pointIndex"]
         transition = point["y"]
-        value = point["x"]
 
         fig = get_transitions(selected_idx)
-        message = f"You clicked on transition '{transition}' with value {value}"
-        return fig, message
+        transition_data = {
+            "BC": "T" in transition.split("=")[1],
+            "D": int(transition.split("=")[2]),
+        }
+        return fig, transition_data
 
     @app.callback(
         [

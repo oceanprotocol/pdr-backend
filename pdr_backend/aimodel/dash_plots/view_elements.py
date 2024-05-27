@@ -25,21 +25,29 @@ def display_plots_view(columns):
     )
 
 
-def display_on_column_graphs(figures: list[dict]):
+def get_column_graphs(figures: list[dict]):
     height_percentage = 90 / (len(figures) if (len(figures) > 1) else 2)
+    return (
+        html.Div(
+            [
+                dcc.Graph(
+                    figure=fig["fig"],
+                    id=fig["graph_id"],
+                    style={
+                        "width": "100%",
+                        "height": f"{height_percentage}vh",
+                        "padding": "0",
+                    },
+                )
+                for fig in figures
+            ]
+        ),
+    )
+
+
+def display_on_column_graphs(div_id: str):
     return html.Div(
-        [
-            dcc.Graph(
-                figure=fig["fig"],
-                id=fig["graph_id"],
-                style={
-                    "width": "100%",
-                    "height": f"{height_percentage}vh",
-                    "padding": "0",
-                },
-            )
-            for fig in figures
-        ],
+        id=div_id,
         style={
             "display": "flex",
             "flexDirection": "column",
@@ -83,3 +91,19 @@ def get_input_elements():
     )
 
     return elements
+
+
+def get_graphs_container():
+    return html.Div(
+        [
+            display_on_column_graphs("transition_column"),
+            display_on_column_graphs("seasonal_column"),
+            display_on_column_graphs("autocorelation_column"),
+        ],
+        id="arima-graphs",
+        style={
+            "width": "100%",
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
+    )

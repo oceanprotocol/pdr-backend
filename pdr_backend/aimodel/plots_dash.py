@@ -3,8 +3,8 @@ from enforce_typing import enforce_types
 from dash import Dash, dcc, html
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.aimodel.dash_plots.view_elements import (
-    display_waiting_template,
     get_input_elements,
+    get_graphs_container,
 )
 from pdr_backend.aimodel.dash_plots.callbacks import get_callbacks
 
@@ -21,16 +21,17 @@ app.layout = html.Div(
             style={"width": "100%", "textAlign": "center"},
         ),
         html.Div(id="input-elements", children=get_input_elements()),
-        html.Div(id="clicked-data"),
-        html.Div(id="arima-graphs"),
         dcc.Store(id="data-store"),
         dcc.Store(id="data-loading"),
+        dcc.Store(id="data-transition"),
         dcc.Loading(
             id="loading",
             type="default",
             children=html.Div(
-                id="loading-container", children=[display_waiting_template()]
+                id="loading-container",
+                children=get_graphs_container(),
             ),
+            style={"height": "100%"},
         ),
     ]
 )
