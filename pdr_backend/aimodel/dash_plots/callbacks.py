@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from dash import Input, Output, State, html
 import pandas as pd
 from scipy import stats
@@ -11,7 +11,11 @@ from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdataFactory,
     AutocorrelationPlotdata,
 )
-from pdr_backend.aimodel.autocorrelation_plotter import plot_acf, plot_pacf
+from pdr_backend.aimodel.autocorrelation_plotter import (
+    plot_acf,
+    plot_pacf,
+    get_transitions,
+)
 from pdr_backend.aimodel.seasonal import (
     SeasonalDecomposeFactory,
     SeasonalPlotdata,
@@ -22,9 +26,11 @@ from pdr_backend.aimodel.seasonal_plotter import (
     plot_residual,
     plot_seasonal,
     plot_trend,
-    get_transitions,
 )
-from pdr_backend.aimodel.dash_plots.util import read_files_from_directory
+from pdr_backend.aimodel.dash_plots.util import (
+    read_files_from_directory,
+    filter_file_data_by_date,
+)
 
 
 # pylint: disable=too-many-statements
@@ -56,6 +62,12 @@ def get_callbacks(app):
         do_boxcox = transition["BC"]
         differencing_order = transition["D"]
 
+        store_data[feed_data] = filter_file_data_by_date(
+            store_data[feed_data],
+            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+        )
+
         y = store_data[feed_data]["close_data"]
 
         # get data for autocorelation
@@ -75,10 +87,7 @@ def get_callbacks(app):
         y = store_data[feed_data]["close_data"]
         y = np.array(y)
         timestamp_str = store_data[feed_data]["timestamps"][0]
-        st = UnixTimeMs(
-            datetime.datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S").timestamp()
-            * 1000
-        )
+        st = UnixTimeMs(timestamp_str.timestamp() * 1000)
         t = ArgTimeframe("5m")
         dr = SeasonalDecomposeFactory.build(t, y)
 
@@ -114,11 +123,24 @@ def get_callbacks(app):
 
     @app.callback(
         Output("transition_column", "children"),
-        Input("transition_column", "id"),
+        [
+            Input("transition_column", "id"),
+            Input("date-picker-range", "start_date"),
+            Input("date-picker-range", "end_date"),
+            Input("feed-dropdown", "value"),
+        ],
+        State("data-store", "data"),
     )
     # pylint: disable=unused-argument
-    def create_transition_chart(div):
-        figure = get_transitions()
+    def create_transition_chart(
+        div, date_picker_start_date, date_picker_end_date, feed_data, store_data
+    ):
+        store_data[feed_data] = store_data[feed_data] = filter_file_data_by_date(
+            store_data[feed_data],
+            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+        )
+        figure = get_transitions(None, store_data[feed_data]["close_data"])
         transitions = get_column_graphs(
             [{"fig": figure, "graph_id": "transition_graph"}]
         )
@@ -128,21 +150,25 @@ def get_callbacks(app):
         Output("transition_graph", "figure"),
         Output("data-transition", "data"),
         [Input("transition_graph", "clickData")],
+        [State("transition_graph", "figure")],
     )
-    def display_click_data(clickData):
+    def display_click_data(clickData, figure):
         if clickData is None:
-            return get_transitions(1), {"BC": True, "D": 1}
+            figure["data"][0]["marker"]["color"][2] = "grey"
+            return figure, {"BC": True, "D": 1}
 
         point = clickData["points"][0]
         selected_idx = point["pointIndex"]
         transition = point["y"]
 
-        fig = get_transitions(selected_idx)
+        for i in range(len(figure["data"][0]["marker"]["color"])):
+            figure["data"][0]["marker"]["color"][i] = "blue"
+        figure["data"][0]["marker"]["color"][selected_idx] = "grey"
         transition_data = {
             "BC": "T" in transition.split("=")[1],
             "D": int(transition.split("=")[2]),
         }
-        return fig, transition_data
+        return figure, transition_data
 
     @app.callback(
         [
@@ -152,20 +178,6 @@ def get_callbacks(app):
         Input("data-store", "data"),
     )
     def update_dropdown_options(data):
-        if data is None:
-            return []
-        options = [{"label": filename, "value": filename} for filename in data.keys()]
-        value = options[0]["value"] if options else None
-        return options, value
-
-    @app.callback(
-        [
-            Output("start-date-picker", "options"),
-            Output("end-date-picker", "value"),
-        ],
-        Input("data-store", "data"),
-    )
-    def update_date_picker_value_and_range(data):
         if data is None:
             return []
         options = [{"label": filename, "value": filename} for filename in data.keys()]

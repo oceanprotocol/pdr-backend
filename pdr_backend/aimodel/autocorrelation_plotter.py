@@ -1,6 +1,9 @@
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
-
+from statsmodels.tsa.stattools import adfuller
+import plotly.graph_objects as go
+import numpy as np
+from scipy import stats
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
     _add_corr_traces,
@@ -78,4 +81,51 @@ def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
     delta = 0.05 * d.max_lag
     fig.update_xaxes(range=[0 - delta, d.max_lag - delta])
 
+    return fig
+
+
+def get_transitions(selected_idx=None, y=[]):
+    bar_colors = ["blue"] * 4  # Default bar color
+    if selected_idx is not None:
+        bar_colors[selected_idx] = "grey"  # Change color of the selected bar
+
+    labels = ["BC=F,D=0", "BC=T,D=0", "BC=T,D=1", "BC=T,D=2"]
+
+    adf_results = {}
+
+    # No transformation
+    adf_result = adfuller(y)
+    adf_results["BC=F,D=0"] = adf_result
+
+    # Box-Cox transformation without differencing
+    y_bc, _ = stats.boxcox(y)
+    adf_result = adfuller(y_bc)
+    adf_results["BC=T,D=0"] = adf_result
+
+    # Box-Cox transformation with differencing
+    y_bc_diff = np.diff(y_bc)
+    adf_result = adfuller(y_bc_diff)
+    adf_results["BC=T,D=1"] = adf_result
+
+    # Box-Cox transformation with second differencing
+    y_bc_diff2 = np.diff(y_bc_diff)
+    adf_result = adfuller(y_bc_diff2)
+    adf_results["BC=T,D=2"] = adf_result
+
+    adf_values = [adf_results[label][1] for label in labels]
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=adf_values,
+                y=labels,
+                orientation="h",
+                marker_color=bar_colors,
+                width=0.5,
+            )
+        ]
+    )
+    fig.update_yaxes(title_text="Transition")
+    fig.update_xaxes(title_text="ADF")
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 55, "b": 0})
     return fig

@@ -120,25 +120,3 @@ def plot_residual(seasonal_plotdata: SeasonalPlotdata):
     fig.update_xaxes(minor=minor)
     fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
     return fig
-
-
-def get_transitions(selected_idx=None):
-    bar_colors = ["blue"] * 4  # Default bar color
-    if selected_idx is not None:
-        bar_colors[selected_idx] = "red"  # Change color of the selected bar
-
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=[10, 20, 30, 40],
-                y=["BC=F,D=0", "BC=T,D=0", "BC=T,D=1", "BC=T,D=2"],
-                orientation="h",
-                marker_color=bar_colors,
-                width=0.5,
-            )
-        ]
-    )
-    fig.update_yaxes(title_text="Transition", minor=minor)
-    fig.update_xaxes(minor=minor)
-    fig.update_layout(margin={"l": 5, "r": 5, "t": 55, "b": 0})
-    return fig

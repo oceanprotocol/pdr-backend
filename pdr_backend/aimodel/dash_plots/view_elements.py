@@ -26,7 +26,7 @@ def display_plots_view(columns):
 
 
 def get_column_graphs(figures: list[dict]):
-    height_percentage = 90 / (len(figures) if (len(figures) > 1) else 2)
+    height_percentage = 80 / (len(figures) if (len(figures) > 1) else 2)
     return (
         html.Div(
             [

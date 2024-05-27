@@ -22,15 +22,13 @@ app.layout = html.Div(
         ),
         html.Div(id="input-elements", children=get_input_elements()),
         dcc.Store(id="data-store"),
+        dcc.Store(id="window-data"),
         dcc.Store(id="data-loading"),
         dcc.Store(id="data-transition"),
         dcc.Loading(
             id="loading",
             type="default",
-            children=html.Div(
-                id="loading-container",
-                children=get_graphs_container(),
-            ),
+            children=get_graphs_container(),
             style={"height": "100%"},
         ),
     ]
