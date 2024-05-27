@@ -9,8 +9,6 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.table_registry import TableRegistry
@@ -21,13 +19,19 @@ from pdr_backend.subgraph.subgraph_predictions import (
     fetch_filtered_predictions,
     get_all_contract_ids_by_owner,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots
-from pdr_backend.subgraph.subgraph_subscriptions import fetch_filtered_subscriptions
 from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("gql_data_factory")
+
+
+# Registered GQL fetches & tables
+_GQLDF_REGISTERED_LAKE_TABLES = {
+    Prediction: fetch_filtered_predictions,
+    Trueval: fetch_truevals,
+    Payout: fetch_payouts,
+}
 
 
 @enforce_types
@@ -55,27 +59,25 @@ class GQLDataFactory:
 
         contract_list = [f.lower() for f in contract_list]
 
-        # configure all tables that will be recorded onto lake
+        # configure all DB tables <> QGL queries
         self.record_config = {
-            "fetch_functions": {
-                Prediction: fetch_filtered_predictions,
-                Subscription: fetch_filtered_subscriptions,
-                Trueval: fetch_truevals,
-                Payout: fetch_payouts,
-                Slot: fetch_slots,
-            },
+            "fetch_functions": _GQLDF_REGISTERED_LAKE_TABLES,
             "config": {
                 "contract_list": contract_list,
             },
             "gql_tables": [
                 dn.get_lake_table_name()  # type: ignore[attr-defined]
-                for dn in [Prediction, Subscription, Trueval, Payout, Slot]
+                for dn in _GQLDF_REGISTERED_LAKE_TABLES
             ],
         }
 
         TableRegistry().register_tables(
-            [Prediction, Subscription, Trueval, Payout, Slot], self.ppss
+            list(_GQLDF_REGISTERED_LAKE_TABLES.keys()), self.ppss
         )
+
+    @property
+    def raw_table_names(self):
+        return self.record_config["gql_tables"]
 
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
@@ -275,7 +277,6 @@ class GQLDataFactory:
         @description
             Iterate across all gql queries and update their lake data:
             - Predictoors
-            - Slots
             - Claims
 
             Improve this by:

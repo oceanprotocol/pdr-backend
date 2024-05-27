@@ -4,7 +4,8 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
+from pdr_backend.lake.etl import ETL, _ETL_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
@@ -24,7 +25,7 @@ def test_etl_tables(
     _gql_datafactory_etl_truevals_df,
     setup_data,
 ):
-    _, db, _ = setup_data
+    _, db, gql_tables = setup_data
 
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = db.query_data("SELECT * FROM pdr_predictions")
@@ -36,12 +37,14 @@ def test_etl_tables(
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all dfs
+    assert len(gql_tables.keys()) == len(TableRegistry().get_tables())
+    assert len(TableRegistry().get_tables()) == len(
+        _GQLDF_REGISTERED_LAKE_TABLES.keys()
+    ) + len(_ETL_REGISTERED_LAKE_TABLES.keys())
     assert len(pdr_slots_df) == 6
     assert len(pdr_predictions_df) == 5
     assert len(pdr_payouts_df) == 4
-    assert len(pdr_predictions_df) == 5
     assert len(pdr_truevals_df) == 5
-    assert len(TableRegistry().get_tables()) == 7
 
 
 # pylint: disable=too-many-statements
@@ -149,10 +152,7 @@ def test_etl_do_bronze_step(
     table_name = NamedTable.from_dataclass(BronzeSlot).fullname
     bronze_pdr_slots_records = db.query_data("SELECT * FROM {}".format(table_name))
 
-    assert len(bronze_pdr_slots_records) == 6
-    assert bronze_pdr_slots_records["truevalue"].null_count() == 1
-    assert bronze_pdr_slots_records["roundSumStakes"].null_count() == 2
-    assert bronze_pdr_slots_records["source"].null_count() == 0
+    assert bronze_pdr_slots_records is None
 
 
 @pytest.mark.parametrize(
@@ -196,16 +196,18 @@ def test_drop_temp_sql_tables(setup_data):
         db.duckdb_conn.execute(f"DROP TABLE {table}")
 
     dummy_schema = {"test_column": str}
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
 
-    # check if tables are created
-    table_names = db.get_table_names()
+    # Insert temp ETL tables w/ dummy data into DuckDB
+    for table_name in etl.bronze_table_names:
+        db.insert_to_table(
+            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
+        )
 
-    assert len(table_names) == 3
+    # assert all ETL temp tables were created
+    etl_table_names = db.get_table_names()
+    assert len(etl_table_names) == len(etl.bronze_table_names)
 
-    etl.temp_table_names = ["a", "b", "c"]
+    # now, drop all ETL temp tables and verify we're back to 0
     etl._drop_temp_sql_tables()
 
     table_names = db.get_table_names()
@@ -219,24 +221,32 @@ def test_drop_temp_sql_tables(setup_data):
 )
 def test_move_from_temp_tables_to_live(setup_data):
     etl, db, gql_tables = setup_data
-    assert len(gql_tables) == 5
 
+    # Insert temp ETL tables w/ dummy data into DuckDB
+    temp_bronze_table_names = []
     dummy_schema = {"test_column": str}
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_a")
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_b")
-    db.insert_to_table(pl.DataFrame([], schema=dummy_schema), "_temp_c")
+    for table_name in etl.bronze_table_names:
+        db.insert_to_table(
+            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
+        )
+        temp_bronze_table_names.append(TempTable(table_name).fullname)
 
     # check if tables are created
     table_names = db.get_table_names()
-    etl.temp_table_names = ["a", "b", "c"]
+
+    # Assert all temp bronze table names exist in table_names
+    assert all(
+        table in table_names for table in temp_bronze_table_names
+    ), "Not all temporary bronze tables were created successfully"
+
     etl._move_from_temp_tables_to_live()
 
-    # check "c" exists in permanent tables
+    # check all temp tables are dropped, and raw + etl exist
     table_names = db.get_table_names()
-    assert len(table_names) == 8
-    assert "c" in table_names
-    assert "a" in table_names
-    assert "b" in table_names
+    assert all(
+        table in table_names for table in etl.bronze_table_names
+    ), "Not all temporary bronze tables were moved to live tables successfully"
+    assert len(table_names) == len(gql_tables) + len(etl.bronze_table_names)
 
     # Verify no build tables exist
     table_names = db.get_table_names()
@@ -369,9 +379,12 @@ def test_calc_bronze_start_end_ts(tmpdir):
     """
     @description
         Verify that the start and end timestamps for the bronze tables are calculated correctly
-        1. ETL step starts from bronze_table max timestamp
+        1. ETL step resumes from max(timestamp) across all bronze tables
+        - this gets the "checkpoint" from where the ETL pipeline last ended/should resume
+        - this gives us our "from" timestamp
         2. raw_tables can have different max timestamps
-        3. bronze_tables should have the same max timestamp
+        - db raw tables should have just been updated by GQLDF
+        - this gives us our "to" timestamp
     """
     _fill_dummy_tables(tmpdir)
 
@@ -387,8 +400,13 @@ def test_calc_bronze_start_end_ts(tmpdir):
         fin_timestr,
     )
 
+    gql_data_factory.record_config["gql_tables"] = [
+        "raw_table_1",
+        "raw_table_2",
+        "raw_table_3",
+    ]
+
     etl = ETL(ppss, gql_data_factory)
-    etl.raw_table_names = ["raw_table_1", "raw_table_2", "raw_table_3"]
     etl.bronze_table_names = [
         "bronze_table_1",
         "bronze_table_2",
@@ -430,13 +448,6 @@ def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
         "bronze_table_4",
         "bronze_table_5",
     ]
-    etl.raw_table_names = [
-        "dummy_table_1",
-        "dummy_table_2",
-        "dummy_table_3",
-        "dummy_table_4",
-        "dummy_table_5",
-    ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     assert (
@@ -469,7 +480,6 @@ def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
         "bronze_table_2",
         "bronze_table_3",
     ]
-    etl.raw_table_names = ["dummy_table_1", "dummy_table_2", "dummy_table_3"]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     ts_now = UnixTimeMs.now()
@@ -501,13 +511,6 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         "bronze_table_3",
         "bronze_table_4",
         "bronze_table_5",
-    ]
-    etl.raw_table_names = [
-        "dummy_table_1",
-        "dummy_table_2",
-        "dummy_table_3",
-        "dummy_table_4",
-        "dummy_table_5",
     ]
     from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 

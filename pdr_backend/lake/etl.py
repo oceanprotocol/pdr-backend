@@ -5,26 +5,24 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-from pdr_backend.lake.table_bronze_pdr_slots import (
-    BronzeSlot,
-    get_bronze_pdr_slots_data_with_SQL,
-)
+
 from pdr_backend.lake.table_registry import TableRegistry
-from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("etl")
+
+
+# Registered ETL queries & tables
+_ETL_REGISTERED_LAKE_TABLES = {
+    BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL
+}
 
 
 class ETL:
@@ -44,54 +42,39 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_tables([BronzePrediction, BronzeSlot], ppss)
+        TableRegistry().register_tables([BronzePrediction], ppss)
 
-        self.raw_table_names = [
-            Payout.get_lake_table_name(),
-            Prediction.get_lake_table_name(),
-            Trueval.get_lake_table_name(),
-            Slot.get_lake_table_name(),
-            Subscription.get_lake_table_name(),
-        ]
-
-        self.bronze_table_getters = {
-            BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL,
-            BronzeSlot.get_lake_table_name(): get_bronze_pdr_slots_data_with_SQL,
-        }
-
-        self.bronze_table_names = list(self.bronze_table_getters.keys())
-        self.temp_table_names = []
-
-        for table_name in self.bronze_table_names:
-            self.temp_table_names.append(NamedTable(table_name).fullname)
+        self.bronze_table_getters = _ETL_REGISTERED_LAKE_TABLES
+        self.bronze_table_names = list(_ETL_REGISTERED_LAKE_TABLES.keys())
 
     def _drop_temp_sql_tables(self):
         """
         @description
             Check if the etl temp tables are built
-            If not, build them
-            If exists, drop them and rebuild
+            If exists, drop them
         """
         # drop the tables if it exists
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for table_name in self.temp_table_names:
+        for table_name in self.bronze_table_names:
+            db.drop_view(ETLTable(table_name).fullname)
             db.drop_table(TempTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
         @description
-            Move the records from our ETL temporary build tables to live, in-production tables
+            Move the records from our bronze temporary tables to live, in-production tables
         """
 
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for table_name in self.temp_table_names:
+        for table_name in self.bronze_table_names:
             logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
 
-            db.move_table_data(temp_table, table_name)
+            if db.table_exists(temp_table.fullname):
+                db.move_table_data(temp_table, table_name)
 
-            db.drop_table(temp_table.fullname)
-            db.drop_view(ETLTable(table_name).fullname)
+                db.drop_view(ETLTable(table_name).fullname)
+                db.drop_table(temp_table.fullname)
 
     def do_etl(self):
         """
@@ -130,7 +113,7 @@ class ETL:
         @description
             We have updated our lake's raw data
             Now, let's build the bronze tables
-            key tables: [bronze_pdr_predictions and bronze_pdr_slots]
+            key tables: [bronze_pdr_predictions]
         """
         logger.info("do_bronze_step - Build bronze tables.")
 
@@ -246,7 +229,7 @@ class ETL:
         )
 
         to_timestamp = self.get_timestamp_values(
-            self.raw_table_names, self.ppss.lake_ss.fin_timestr
+            self.gql_data_factory.raw_table_names, self.ppss.lake_ss.fin_timestr
         )
 
         assert from_timestamp <= to_timestamp, (
@@ -315,8 +298,8 @@ class ETL:
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
-        for table_name, get_data_func in self.bronze_table_getters.items():
-            get_data_func(
+        for table_name, etl_func in self.bronze_table_getters.items():
+            etl_func(
                 path=self.ppss.lake_ss.lake_dir,
                 st_ms=st_timestamp,
                 fin_ms=fin_timestamp,

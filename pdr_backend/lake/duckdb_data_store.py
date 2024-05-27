@@ -81,7 +81,6 @@ class DuckDBDataStore(BaseDataStore):
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables " + where
         ).fetchall()
-
         return [table[0] for table in tables]
 
     @enforce_types
