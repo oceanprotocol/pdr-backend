@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
@@ -54,10 +54,10 @@ class ETL:
             If exists, drop them
         """
         # drop the tables if it exists
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.bronze_table_names:
-            pds.drop_table(TempTable(table_name).fullname)
-            pds.drop_view(ETLTable(table_name).fullname)
+            db.drop_view(ETLTable(table_name).fullname)
+            db.drop_table(TempTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
@@ -65,15 +65,16 @@ class ETL:
             Move the records from our bronze temporary tables to live, in-production tables
         """
 
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.bronze_table_names:
+            logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
 
-            if pds.table_exists(temp_table.fullname):
-                pds.move_table_data(temp_table, table_name)
+            if db.table_exists(temp_table.fullname):
+                db.move_table_data(temp_table, table_name)
 
-                pds.drop_table(TempTable(table_name).fullname)
-                pds.drop_view(ETLTable(table_name).fullname)
+                db.drop_view(ETLTable(table_name).fullname)
+                db.drop_table(temp_table.fullname)
 
     def do_etl(self):
         """
@@ -143,9 +144,7 @@ class ETL:
             "SELECT '{}' as table_name, MAX(timestamp) as max_timestamp FROM {}"
         )
 
-        all_db_tables = PersistentDataStore(
-            self.ppss.lake_ss.lake_dir
-        ).get_table_names()
+        all_db_tables = DuckDBDataStore(self.ppss.lake_ss.lake_dir).get_table_names()
 
         queries = []
 
@@ -170,7 +169,7 @@ class ETL:
             return none_values
 
         final_query = " UNION ALL ".join(queries)
-        result = PersistentDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
+        result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
         logger.info("_get_max_timestamp_values_from - result: %s", result)
 
@@ -247,13 +246,13 @@ class ETL:
             table_name in self.bronze_table_names
         ), f"{table_name} must be a bronze table"
 
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         temp_table = TempTable(table_name)
         etl_view = ETLTable(table_name)
 
-        table_exists = pds.table_exists(table_name)
-        temp_table_exists = pds.table_exists(temp_table.fullname)
-        etl_view_exists = pds.view_exists(etl_view.fullname)
+        table_exists = db.table_exists(table_name)
+        temp_table_exists = db.table_exists(temp_table.fullname)
+        etl_view_exists = db.view_exists(etl_view.fullname)
         assert temp_table_exists, f"{temp_table.fullname} must already exist"
         if etl_view_exists:
             logger.error("%s must not exist", etl_view.fullname)
@@ -273,7 +272,7 @@ class ETL:
                 table_name,
                 temp_table.fullname,
             )
-            pds.query_data(view_query)
+            db.query_data(view_query)
             logger.info(
                 "  Created %s view using %s table and %s temp table",
                 etl_view.fullname,
@@ -282,7 +281,7 @@ class ETL:
             )
         else:
             view_query = f"CREATE VIEW {etl_view.fullname} AS SELECT * FROM {temp_table.fullname}"
-            pds.query_data(view_query)
+            db.query_data(view_query)
             logger.info(
                 "  Created %s view using %s temp table",
                 etl_view.fullname,
