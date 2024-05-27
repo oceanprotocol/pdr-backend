@@ -4,7 +4,7 @@ from collections import OrderedDict
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -57,15 +57,15 @@ def get_bronze_pdr_predictions_data_with_SQL(
         BronzePrediction
     ).fullname
 
-    pds = PersistentDataStore(path)
-    logger.info("pds tables %s", pds.get_table_names())
+    db = DuckDBDataStore(path)
+    logger.info("duckDB tables %s", db.get_table_names())
 
-    pds.create_table_if_not_exists(
+    db.create_table_if_not_exists(
         temp_bronze_pdr_predictions_table_name,
         BronzePrediction.get_lake_schema(),
     )
 
-    return pds.execute_sql(
+    return db.execute_sql(
         f"""
         INSERT INTO {temp_bronze_pdr_predictions_table_name}
         SELECT

@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
     Prediction,
@@ -36,17 +36,17 @@ def clean_up_table_registry():
 
 @pytest.fixture(autouse=True)
 def clean_up_persistent_data_store(tmpdir):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
+    # Clean up duckDB
+    db = DuckDBDataStore(str(tmpdir))
 
     # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
+    table_names = db.get_table_names()
 
     # Drop the tables
     for table in table_names:
-        persistent_data_store.execute_sql(f"DROP TABLE {table}")
+        db.execute_sql(f"DROP TABLE {table}")
 
-    persistent_data_store.duckdb_conn.close()
+    db.duckdb_conn.close()
 
 
 @pytest.fixture()
@@ -75,11 +75,11 @@ def sample_slots():
 
 
 @pytest.fixture()
-def _get_test_PDS():
-    def create_persistent_datastore(tmpdir):
-        return PersistentDataStore(str(tmpdir))
+def _get_test_DuckDB():
+    def create_duckdb_datastore(tmpdir):
+        return DuckDBDataStore(str(tmpdir))
 
-    return create_persistent_datastore
+    return create_duckdb_datastore
 
 
 @pytest.fixture()
@@ -579,7 +579,7 @@ def setup_data(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
+    _get_test_DuckDB,
     tmpdir,
     request,
 ):
@@ -625,12 +625,12 @@ def setup_data(
 
     # provide the setup data to the test
     etl = ETL(ppss, gql_data_factory)
-    pds = _get_test_PDS(tmpdir)
+    db = _get_test_DuckDB(tmpdir)
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
 
-    _records = pds.query_data("SELECT * FROM pdr_predictions")
+    _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
 
-    yield etl, pds, gql_tables
+    yield etl, db, gql_tables

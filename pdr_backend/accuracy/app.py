@@ -8,7 +8,7 @@ from flask import Flask, jsonify
 
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import (
@@ -354,7 +354,7 @@ def calculate_statistics_from_DuckDB_tables():
     start_ts = UnixTimeS(int(four_weeks_ago.timestamp()))
     end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
     try:
-        db_conn = PersistentDataStore("./lake_data", read_only=True)
+        db_conn = DuckDBDataStore("./lake_data", read_only=True)
         slots_table_name = Slot.get_lake_table_name()
         slots_table = db_conn.query_data(
             f"""

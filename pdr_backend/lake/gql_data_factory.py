@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
@@ -115,7 +115,7 @@ class GQLDataFactory:
         """
         table = TableRegistry().get_table(table_name)
         csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
-        db_last_timestamp = PersistentDataStore(table.base_path).query_data(
+        db_last_timestamp = DuckDBDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table_name}"
         )
 
@@ -192,7 +192,7 @@ class GQLDataFactory:
 
         buffer_df = pl.DataFrame([], schema=table.dataclass.get_lake_schema())
 
-        PersistentDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
+        DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
             TempTable.from_table(table).fullname,
             table.dataclass.get_lake_schema(),
         )
@@ -262,12 +262,12 @@ class GQLDataFactory:
             Move the records from our ETL temporary build tables to live, in-production tables
         """
 
-        pds = PersistentDataStore(self.ppss.lake_ss.lake_dir)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for table_name in self.record_config["gql_tables"]:
             temp_table = TempTable(table_name)
 
-            pds.move_table_data(temp_table, table_name)
-            pds.drop_table(temp_table.fullname)
+            db.move_table_data(temp_table, table_name)
+            db.drop_table(temp_table.fullname)
 
     @enforce_types
     def _update(self):

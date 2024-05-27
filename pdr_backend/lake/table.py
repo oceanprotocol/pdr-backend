@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -36,12 +36,12 @@ def is_etl_table(table_name: str) -> bool:
 
 
 @enforce_types
-def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st: UnixTimeMs):
+def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
     trunc_count = table_count = 0
     if type_filter not in ["raw", "etl"]:
         return
 
-    table_names = pds.get_table_names()
+    table_names = db.get_table_names()
 
     for table_name in table_names:
         if type_filter == "etl" and not is_etl_table(table_name):
@@ -62,10 +62,10 @@ def drop_tables_from_st(pds: PersistentDataStore, type_filter: str, st: UnixTime
             table_name,
             st,
         )
-        rows_before = pds.row_count(table_name)
+        rows_before = db.row_count(table_name)
         logger.info("rows before: %s", rows_before)
-        pds.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")
-        rows_after = pds.row_count(table_name)
+        db.query_data(f"DELETE FROM {table_name} WHERE timestamp >= {st}")
+        rows_after = db.row_count(table_name)
         logger.info("rows after: %s", rows_after)
         if rows_before != rows_after:
             table_count += 1
@@ -119,7 +119,7 @@ class Table:
             data - The Polars DataFrame to save.
         """
         table_name = NamedTable(self.table_name, table_type).fullname
-        PersistentDataStore(self.base_path).insert_to_table(data, table_name)
+        DuckDBDataStore(self.base_path).insert_to_table(data, table_name)
         logger.info("  Appended %s rows to db table: %s", data.shape[0], table_name)
 
 

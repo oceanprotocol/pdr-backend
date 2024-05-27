@@ -2,7 +2,7 @@ import sys
 from unittest.mock import MagicMock, Mock, patch
 
 from pdr_backend.cli import cli_module
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
@@ -68,9 +68,9 @@ def test_get_predictoors_info_system(get_get_predictoor_summary_stats, caplog):
     get_get_predictoor_summary_stats.return_value = predictions_df
 
     # DROP TABLE IF EXISTS
-    PersistentDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
+    DuckDBDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
 
-    PersistentDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+    DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(
         predictions_df, "pdr_predictions"
     )
 
