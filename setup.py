@@ -42,7 +42,7 @@ install_requirements = [
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.32.0.20240523",
-    "web3==6.17.2",
+    "web3==6.19.0",
     "sapphire.py==0.2.3",
     "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last
