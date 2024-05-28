@@ -5,13 +5,12 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_payout import fetch_payouts
@@ -32,6 +31,10 @@ _GQLDF_REGISTERED_LAKE_TABLES = {
     Trueval: fetch_truevals,
     Payout: fetch_payouts,
 }
+
+_GQLDF_REGISTERED_TABLE_NAMES = [
+    t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES.keys()
+]
 
 
 @enforce_types
@@ -71,10 +74,6 @@ class GQLDataFactory:
             ],
         }
 
-        TableRegistry().register_tables(
-            list(_GQLDF_REGISTERED_LAKE_TABLES.keys()), self.ppss
-        )
-
     @property
     def raw_table_names(self):
         return self.record_config["gql_tables"]
@@ -101,9 +100,12 @@ class GQLDataFactory:
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
 
-        return TableRegistry().get_tables(self.record_config["gql_tables"])
+        return {
+            name: Table(name, self.ppss)
+            for name in _GQLDF_REGISTERED_LAKE_TABLES.keys()
+        }
 
-    def _prepare_temp_table(self, table_name, st_ut, fin_ut, schema):
+    def _prepare_temp_table(self, table, st_ut, fin_ut, schema):
         """
         @description
             _prepare_temp_table is a helper function to fill the temp table with
@@ -115,10 +117,9 @@ class GQLDataFactory:
             # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
             # 4. resume appending to CSVs + Temp tables until complete
         """
-        table = TableRegistry().get_table(table_name)
         csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
         db_last_timestamp = DuckDBDataStore(table.base_path).query_data(
-            f"SELECT MAX(timestamp) FROM {table_name}"
+            f"SELECT MAX(timestamp) FROM {table.table_name}"
         )
 
         if csv_last_timestamp is None:
@@ -127,7 +128,9 @@ class GQLDataFactory:
         if (db_last_timestamp is None) or (
             db_last_timestamp['max("timestamp")'][0] is None
         ):
-            logger.info("  Table not yet created. Insert all %s csv data", table_name)
+            logger.info(
+                "  Table not yet created. Insert all %s csv data", table.table_name
+            )
             data = CSVDataStore.from_table(table).read_all(schema)
             table._append_to_db(data, TableType.TEMP)
             return
@@ -135,7 +138,7 @@ class GQLDataFactory:
         if db_last_timestamp['max("timestamp")'][0] and (
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
-            logger.info("  Table exists. Insert pending %s csv data", table_name)
+            logger.info("  Table exists. Insert pending %s csv data", table.table_name)
             data = CSVDataStore.from_table(table).read(
                 st_ut,
                 fin_ut,
@@ -288,10 +291,9 @@ class GQLDataFactory:
         """
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
-        for table in (
-            TableRegistry().get_tables(self.record_config["gql_tables"]).values()
-        ):
+        for table_name in _GQLDF_REGISTERED_LAKE_TABLES.keys():
             # calculate start and end timestamps
+            table = Table(table_name, self.ppss)
             st_ut = self._calc_start_ut(table)
             logger.info(
                 "      Aim to fetch data from start_time: [%s] to end_time: [%s]",
@@ -303,7 +305,7 @@ class GQLDataFactory:
 
             # make sure that unwritten csv records are pre-loaded into the temp table
             self._prepare_temp_table(
-                table.table_name, st_ut, fin_ut, table.dataclass.get_lake_schema()
+                table, st_ut, fin_ut, table.dataclass.get_lake_schema()
             )
 
             # fetch from subgraph and add to temp table

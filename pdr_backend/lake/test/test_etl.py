@@ -4,13 +4,12 @@ import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
-from pdr_backend.lake.etl import ETL, _ETL_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.etl import _ETL_REGISTERED_LAKE_TABLES, ETL
+from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -37,10 +36,9 @@ def test_etl_tables(
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all dfs
-    assert len(gql_tables.keys()) == len(TableRegistry().get_tables())
-    assert len(TableRegistry().get_tables()) == len(
-        _GQLDF_REGISTERED_LAKE_TABLES.keys()
-    ) + len(_ETL_REGISTERED_LAKE_TABLES.keys())
+    assert len(gql_tables) == len(_GQLDF_REGISTERED_LAKE_TABLES.keys()) + len(
+        _ETL_REGISTERED_LAKE_TABLES.keys()
+    )
     assert len(pdr_slots_df) == 6
     assert len(pdr_predictions_df) == 5
     assert len(pdr_payouts_df) == 4

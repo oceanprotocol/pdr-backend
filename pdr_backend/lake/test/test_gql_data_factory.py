@@ -1,13 +1,15 @@
 from unittest.mock import MagicMock, patch
 
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.gql_data_factory import (
+    _GQLDF_REGISTERED_TABLE_NAMES,
+    GQLDataFactory,
+)
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, TempTable
-from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.table import NamedTable, Table, TempTable
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
@@ -29,7 +31,6 @@ def test_gql_data_factory():
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    assert len(TableRegistry().get_tables()) > 0
     assert gql_data_factory.record_config["config"] is not None
     assert gql_data_factory.ppss is not None
 
@@ -69,8 +70,7 @@ def test_update_end_to_end(
 
     gql_data_factory._update()
 
-    tables = TableRegistry().get_tables().items()
-    assert caplog.text.count("Updating table") == len(tables)
+    assert caplog.text.count("Updating table") == len(_GQLDF_REGISTERED_TABLE_NAMES)
 
 
 def test_update_partial_then_resume(
@@ -191,7 +191,7 @@ def test_calc_start_ut(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
 
     st_ut = gql_data_factory._calc_start_ut(table)
     assert st_ut.to_seconds() == 1701561601
@@ -214,7 +214,7 @@ def test_do_subgraph_fetch(
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
 
     gql_data_factory._do_subgraph_fetch(
         table,
@@ -244,8 +244,7 @@ def test_do_fetch_with_empty_data(
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
 
     gql_data_factory._do_subgraph_fetch(
         table,
@@ -285,8 +284,7 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
 
     initial_response = mock_daily_predictions()
     mocked_function = MagicMock()
@@ -338,7 +336,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     gql_data_factory = GQLDataFactory(ppss)
     gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
 
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     initial_response = mock_daily_predictions()
@@ -378,7 +376,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     # run prepare_temp_table again to check that,
     # if production table doesn't have any rows doesn't break the preparation
     gql_data_factory._prepare_temp_table(
-        table.table_name,
+        table,
         UnixTimeMs(1699300800000),
         UnixTimeMs(1699300800000),
         table.dataclass.get_lake_schema(),

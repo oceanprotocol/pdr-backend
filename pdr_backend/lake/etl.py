@@ -4,15 +4,13 @@ from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
 )
-
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -41,8 +39,6 @@ class ETL:
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
-
-        TableRegistry().register_tables([BronzePrediction], ppss)
 
         self.bronze_table_getters = _ETL_REGISTERED_LAKE_TABLES
         self.bronze_table_names = list(_ETL_REGISTERED_LAKE_TABLES.keys())
