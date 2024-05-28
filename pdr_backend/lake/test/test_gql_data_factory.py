@@ -1,13 +1,16 @@
 from unittest.mock import MagicMock, patch
 
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.gql_data_factory import (
+    _GQLDF_REGISTERED_LAKE_TABLES,
+    _GQLDF_REGISTERED_TABLE_NAMES,
+    GQLDataFactory,
+)
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, TempTable
-from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.table import NamedTable, Table, TempTable
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
@@ -29,7 +32,6 @@ def test_gql_data_factory():
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    assert len(TableRegistry().get_tables()) > 0
     assert gql_data_factory.record_config["config"] is not None
     assert gql_data_factory.ppss is not None
 
@@ -64,13 +66,12 @@ def test_update_end_to_end(
     }
 
     gql_data_factory = GQLDataFactory(ppss)
-    for dataclass in gql_data_factory.record_config["fetch_functions"]:
-        gql_data_factory.record_config["fetch_functions"][dataclass] = fns[dataclass]
+    for dataclass in fns:
+        dataclass.get_fetch_function = MagicMock(return_value=fns[dataclass])
 
     gql_data_factory._update()
 
-    tables = TableRegistry().get_tables().items()
-    assert caplog.text.count("Updating table") == len(tables)
+    assert caplog.text.count("Updating table") == len(_GQLDF_REGISTERED_TABLE_NAMES)
 
 
 def test_update_partial_then_resume(
@@ -110,10 +111,9 @@ def test_update_partial_then_resume(
     with patch(
         "pdr_backend.lake.gql_data_factory.GQLDataFactory._move_from_temp_tables_to_live"
     ):
-        for dataclass in gql_data_factory.record_config["fetch_functions"]:
-            gql_data_factory.record_config["fetch_functions"][dataclass] = fns[
-                dataclass
-            ]
+        for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
+            dataclass.get_fetch_function = MagicMock(return_value=fns[dataclass])
+
         gql_data_factory._update()
 
         # Verify records exist in temp pred tables
@@ -127,7 +127,7 @@ def test_update_partial_then_resume(
 
     # Work 2: apply simulated error, update ppss "poorly", and verify it works as expected
     # Inject error by dropping db tables
-    for dataclass in gql_data_factory.record_config["fetch_functions"]:
+    for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
         db.drop_table(TempTable.from_dataclass(dataclass).fullname)
 
     # manipulate ppss poorly and run gql_data_factory again
@@ -191,7 +191,7 @@ def test_calc_start_ut(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
 
     st_ut = gql_data_factory._calc_start_ut(table)
     assert st_ut.to_seconds() == 1701561601
@@ -214,11 +214,8 @@ def test_do_subgraph_fetch(
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = TableRegistry().get_table("pdr_predictions")
-
     gql_data_factory._do_subgraph_fetch(
-        table,
-        _mock_fetch_gql,
+        Prediction,
         "sapphire-mainnet",
         UnixTimeMs(1701634300000),
         UnixTimeMs(1701634500000),
@@ -245,11 +242,8 @@ def test_do_fetch_with_empty_data(
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = TableRegistry().get_table("pdr_predictions")
-
     gql_data_factory._do_subgraph_fetch(
-        table,
-        _mock_fetch_empty_gql,
+        Prediction,
         "sapphire-mainnet",
         UnixTimeMs(1701634300000),
         UnixTimeMs(1701634500000),
@@ -286,10 +280,7 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = TableRegistry().get_table("pdr_predictions")
-
     initial_response = mock_daily_predictions()
-    mocked_function = MagicMock()
 
     assert len(initial_response) == 6
 
@@ -298,11 +289,12 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     initial_response[4].timestamp = 1697865700000
     initial_response[5].timestamp = 1697866200000
 
+    mocked_function = MagicMock()
     mocked_function.return_value = initial_response
+    Prediction.get_fetch_function = MagicMock(return_value=mocked_function)
 
     gql_data_factory._do_subgraph_fetch(
-        table,
-        mocked_function,
+        Prediction,
         "sapphire-mainnet",
         UnixTimeMs(1698865200000),
         UnixTimeMs(1699300800000),
@@ -336,9 +328,8 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    gql_data_factory.record_config["gql_tables"] = ["pdr_predictions"]
 
-    table = TableRegistry().get_table("pdr_predictions")
+    table = Table(Prediction, ppss)
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     initial_response = mock_daily_predictions()
@@ -346,13 +337,11 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
 
     mocked_function = MagicMock()
     mocked_function.return_value = initial_response
-
-    gql_data_factory.record_config["gql_tables"] = []
+    Prediction.get_fetch_function = MagicMock(return_value=mocked_function)
 
     # temp table and csv should be created with the initial data
     gql_data_factory._do_subgraph_fetch(
-        table,
-        mocked_function,
+        Prediction,
         "sapphire-mainnet",
         UnixTimeMs(1698865200000),
         UnixTimeMs(1699300800000),
@@ -368,7 +357,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     )
 
     # move temp table to production and check the data is there
-    db.move_table_data(TempTable(table.table_name), table.table_name)
+    db.move_table_data(TempTable(table.table_name), table)
 
     # now keep both temp and production tables but remove values
     db.query_data("DELETE FROM {}".format(table.table_name))
@@ -378,11 +367,10 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
     # run prepare_temp_table again to check that,
     # if production table doesn't have any rows doesn't break the preparation
     gql_data_factory._prepare_temp_table(
-        table.table_name,
+        Prediction,
         UnixTimeMs(1699300800000),
         UnixTimeMs(1699300800000),
-        table.dataclass.get_lake_schema(),
     )
-    db.move_table_data(TempTable(table.table_name), table.table_name)
+    db.move_table_data(TempTable(table.table_name), table)
 
     assert len(db.query_data("SELECT * FROM {}".format(table.table_name))) == 6

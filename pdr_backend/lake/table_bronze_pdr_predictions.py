@@ -1,10 +1,11 @@
 import logging
 from collections import OrderedDict
+from typing import Callable
 
 from polars import Boolean, Float64, Int64, Utf8
 
-from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -41,6 +42,10 @@ class BronzePrediction(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "bronze_pdr_predictions"
+
+    @staticmethod
+    def get_fetch_function() -> Callable:
+        return get_bronze_pdr_predictions_data_with_SQL
 
 
 def get_bronze_pdr_predictions_data_with_SQL(

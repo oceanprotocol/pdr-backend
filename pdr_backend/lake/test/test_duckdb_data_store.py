@@ -198,7 +198,8 @@ def test_move_table_data(tmpdir):
     assert table_exists
 
     # Move the table
-    db.move_table_data(TempTable(table_name), table_name)
+    table = NamedTable(table_name)
+    db.move_table_data(TempTable(table_name), table)
 
     # Assert table hasn't dropped
     table_names = db.get_table_names()

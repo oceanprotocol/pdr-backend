@@ -6,9 +6,9 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
     Prediction,
@@ -20,18 +20,12 @@ from pdr_backend.lake.prediction import (
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
 from pdr_backend.lake.subscription import mock_subscriptions
 from pdr_backend.lake.table import Table
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
 )
 from pdr_backend.lake.trueval import Trueval, mock_trueval, mock_truevals
 from pdr_backend.util.time_types import UnixTimeMs
-
-
-@pytest.fixture(autouse=True)
-def clean_up_table_registry():
-    TableRegistry()._tables = {}
 
 
 @pytest.fixture(autouse=True)

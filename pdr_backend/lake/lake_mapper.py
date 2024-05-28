@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from typing import Callable
 import polars as pl
 
 
@@ -12,6 +13,11 @@ class LakeMapper(ABC):
     @staticmethod
     @abstractmethod
     def get_lake_table_name() -> str:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_fetch_function() -> Callable:
         pass
 
     def check_against_schema(self):

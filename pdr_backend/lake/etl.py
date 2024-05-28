@@ -4,15 +4,10 @@ from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
-from pdr_backend.lake.table_bronze_pdr_predictions import (
-    BronzePrediction,
-    get_bronze_pdr_predictions_data_with_SQL,
-)
-
-from pdr_backend.lake.table_registry import TableRegistry
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -20,9 +15,11 @@ logger = logging.getLogger("etl")
 
 
 # Registered ETL queries & tables
-_ETL_REGISTERED_LAKE_TABLES = {
-    BronzePrediction.get_lake_table_name(): get_bronze_pdr_predictions_data_with_SQL
-}
+_ETL_REGISTERED_LAKE_TABLES = [BronzePrediction]
+
+_ETL_REGISTERED_TABLE_NAMES = [
+    t.get_lake_table_name() for t in _ETL_REGISTERED_LAKE_TABLES
+]
 
 
 class ETL:
@@ -42,11 +39,6 @@ class ETL:
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
 
-        TableRegistry().register_tables([BronzePrediction], ppss)
-
-        self.bronze_table_getters = _ETL_REGISTERED_LAKE_TABLES
-        self.bronze_table_names = list(_ETL_REGISTERED_LAKE_TABLES.keys())
-
     def _drop_temp_sql_tables(self):
         """
         @description
@@ -55,7 +47,8 @@ class ETL:
         """
         # drop the tables if it exists
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for table_name in self.bronze_table_names:
+        for dataclass in _ETL_REGISTERED_LAKE_TABLES:
+            table_name = dataclass.get_lake_table_name()
             db.drop_view(ETLTable(table_name).fullname)
             db.drop_table(TempTable(table_name).fullname)
 
@@ -66,12 +59,14 @@ class ETL:
         """
 
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for table_name in self.bronze_table_names:
+        for dataclass in _ETL_REGISTERED_LAKE_TABLES:
+            table_name = dataclass.get_lake_table_name()
             logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
+            permanent_table = NamedTable(table_name)
 
             if db.table_exists(temp_table.fullname):
-                db.move_table_data(temp_table, table_name)
+                db.move_table_data(temp_table, permanent_table)
 
                 db.drop_view(ETLTable(table_name).fullname)
                 db.drop_table(temp_table.fullname)
@@ -225,7 +220,7 @@ class ETL:
             min(max(source_tables_max_timestamp)).
         """
         from_timestamp = self.get_timestamp_values(
-            self.bronze_table_names, self.ppss.lake_ss.st_timestr
+            _ETL_REGISTERED_TABLE_NAMES, self.ppss.lake_ss.st_timestr
         )
 
         to_timestamp = self.get_timestamp_values(
@@ -243,7 +238,7 @@ class ETL:
     def create_etl_view(self, table_name: str):
         # Assemble view query and create the view
         assert (
-            table_name in self.bronze_table_names
+            table_name in _ETL_REGISTERED_TABLE_NAMES
         ), f"{table_name} must be a bronze table"
 
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
@@ -298,15 +293,19 @@ class ETL:
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
 
-        for table_name, etl_func in self.bronze_table_getters.items():
+        for dataclass in _ETL_REGISTERED_LAKE_TABLES:
+            etl_func = dataclass.get_fetch_function()
             etl_func(
                 path=self.ppss.lake_ss.lake_dir,
                 st_ms=st_timestamp,
                 fin_ms=fin_timestamp,
             )
 
-            logger.info("update_bronze_pdr - Inserting data into %s", table_name)
+            logger.info(
+                "update_bronze_pdr - Inserting data into %s",
+                dataclass.get_lake_table_name(),
+            )
 
             # For each bronze table that we process, that data will be entered into TEMP
             # Create view so downstream queries can access production + TEMP data
-            self.create_etl_view(table_name)
+            self.create_etl_view(dataclass.get_lake_table_name())
