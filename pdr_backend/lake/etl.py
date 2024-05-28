@@ -185,10 +185,74 @@ class ETL:
             values[table_name] = UnixTimeMs(max_timestamp) if max_timestamp else None
 
         return values
+    
+    @enforce_types
+    def _get_min_timestamp_values_from(
+        self, tables: List[NamedTable]
+    ) -> Dict[str, Optional[UnixTimeMs]]:
+        """
+        @description
+            Get the min timestamp values from the tables
+
+        @arguments
+            table_names - The list of table names to get the min timestamp values from
+            table_type - The type of table to get the min timestamp values from
+        @returns
+            values - The min timestamp values from the tables
+        """
+        min_timestamp_query = (
+            "SELECT '{}' as table_name, MIN(timestamp) as min_timestamp FROM {}"
+        )
+        print(tables)
+
+        all_db_tables = DuckDBDataStore(self.ppss.lake_ss.lake_dir).get_table_names()
+
+        queries = []
+
+        for table in tables:
+            if table.fullname not in all_db_tables:
+                logger.info(
+                    "_get_min_timestamp_values_from - Table %s does not exist.",
+                    table.fullname,
+                )
+                continue
+
+            queries.append(min_timestamp_query.format(table.fullname, table.fullname))
+
+        logger.info("_get_min_timestamp_values_from - queries: %s", queries)
+
+        table_names = [table.fullname for table in tables]
+        none_values: Dict[str, Optional[UnixTimeMs]] = {
+            table_name: None for table_name in table_names
+        }
+
+        if len(queries) == 0:
+            return none_values
+
+        final_query = " UNION ALL ".join(queries)
+        result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
+
+        logger.info("_get_min_timestamp_values_from - result: %s", result)
+
+        if result is None:
+            return none_values
+
+        values: Dict[str, Optional[UnixTimeMs]] = {}
+
+        timesamps = []
+
+        for row in result.rows(named=True):
+            table_name = row["table_name"]
+            min_timestamp = row["min_timestamp"]
+            if min_timestamp:
+                timesamps.append(UnixTimeMs(min_timestamp - 1))
+            values[table_name] = UnixTimeMs(min_timestamp) if min_timestamp else None
+
+        return min(timesamps)
 
     @enforce_types
     def get_timestamp_values(
-        self, table_names: List[str], default_timestr: str
+        self, table_names: List[str], default_timestr: UnixTimeMs
     ) -> UnixTimeMs:
         max_timestamp_values = self._get_max_timestamp_values_from(
             [NamedTable(tb) for tb in table_names]
@@ -200,7 +264,7 @@ class ETL:
         # check if all values are None in max_timestamp_values
         # and return the default_timestr if so
         if all(value is None for value in max_timestamp_values.values()):
-            return UnixTimeMs.from_timestr(default_timestr)
+            return default_timestr
 
         values = []
         if len(max_timestamp_values) > 0:
@@ -210,7 +274,7 @@ class ETL:
 
         logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
-            max(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
+            max(values) if len(values) > 0 else default_timestr
         )
         return timestamp
 
@@ -224,12 +288,13 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
+        st_timestr = self._get_min_timestamp_values_from([NamedTable(tb) for tb in self.gql_data_factory.raw_table_names])
         from_timestamp = self.get_timestamp_values(
-            self.bronze_table_names, self.ppss.lake_ss.st_timestr
+            self.bronze_table_names, st_timestr
         )
 
         to_timestamp = self.get_timestamp_values(
-            self.gql_data_factory.raw_table_names, self.ppss.lake_ss.fin_timestr
+            self.gql_data_factory.raw_table_names, UnixTimeMs.from_timestr(self.ppss.lake_ss.fin_timestr)
         )
 
         assert from_timestamp <= to_timestamp, (
