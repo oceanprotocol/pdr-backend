@@ -4,7 +4,8 @@ from enforce_typing import enforce_types
 
 @enforce_types
 def find_shared_slots(
-    pending_slots: Dict[str, List[int]]
+    pending_slots: Dict[str, List[int]],
+    payout_batch_size: int,
 ) -> List[Tuple[List[str], List[int]]]:
     """
     This function is used to organize payout slots and contract addresses based on shared slots.
@@ -31,11 +32,12 @@ def find_shared_slots(
             address_combination_to_slots[address_tuple] = []
         address_combination_to_slots[address_tuple].append(slot)
 
-    # Format the results as a list of tuples
+    # Split slots into batches based on payout_batch_size
     result: List[Tuple[List[str], List[int]]] = []
     for addresses, slots in address_combination_to_slots.items():  # type: ignore
-        tup = (list(addresses), list(slots))
-        result.append(tup)
+        for i in range(0, len(slots), payout_batch_size):
+            batch_slots = slots[i : i + payout_batch_size]
+            result.append((list(addresses), batch_slots))
 
     return result
 

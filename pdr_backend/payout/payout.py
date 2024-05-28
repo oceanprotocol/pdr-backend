@@ -64,7 +64,8 @@ def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
     wait_until_subgraph_syncs(web3_config, subgraph_url)
     logger.info("Finding pending payouts")
     pending_slots = query_pending_payouts(subgraph_url, up_addr)
-    shared_slots = find_shared_slots(pending_slots)
+    payout_batch_size = ppss.predictoor_ss.payout_batch_size
+    shared_slots = find_shared_slots(pending_slots, payout_batch_size)
     unique_slots = count_unique_slots(shared_slots)
     min_payout_slots = ppss.predictoor_ss.min_payout_slots
     if unique_slots < min_payout_slots:
