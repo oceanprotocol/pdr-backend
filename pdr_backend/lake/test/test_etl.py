@@ -1,11 +1,15 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.etl import _ETL_REGISTERED_LAKE_TABLES, ETL
+from pdr_backend.lake.etl import (
+    _ETL_REGISTERED_LAKE_TABLES,
+    _ETL_REGISTERED_TABLE_NAMES,
+    ETL,
+)
 from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
@@ -36,8 +40,8 @@ def test_etl_tables(
     assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all dfs
-    assert len(gql_tables) == len(_GQLDF_REGISTERED_LAKE_TABLES.keys()) + len(
-        _ETL_REGISTERED_LAKE_TABLES.keys()
+    assert len(gql_tables) == len(_GQLDF_REGISTERED_LAKE_TABLES) + len(
+        _ETL_REGISTERED_LAKE_TABLES
     )
     assert len(pdr_slots_df) == 6
     assert len(pdr_predictions_df) == 5
@@ -196,14 +200,14 @@ def test_drop_temp_sql_tables(setup_data):
     dummy_schema = {"test_column": str}
 
     # Insert temp ETL tables w/ dummy data into DuckDB
-    for table_name in etl.bronze_table_names:
+    for table_name in _ETL_REGISTERED_TABLE_NAMES:
         db.insert_to_table(
             pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
         )
 
     # assert all ETL temp tables were created
     etl_table_names = db.get_table_names()
-    assert len(etl_table_names) == len(etl.bronze_table_names)
+    assert len(etl_table_names) == len(_ETL_REGISTERED_TABLE_NAMES)
 
     # now, drop all ETL temp tables and verify we're back to 0
     etl._drop_temp_sql_tables()
@@ -223,7 +227,7 @@ def test_move_from_temp_tables_to_live(setup_data):
     # Insert temp ETL tables w/ dummy data into DuckDB
     temp_bronze_table_names = []
     dummy_schema = {"test_column": str}
-    for table_name in etl.bronze_table_names:
+    for table_name in _ETL_REGISTERED_TABLE_NAMES:
         db.insert_to_table(
             pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
         )
@@ -242,9 +246,9 @@ def test_move_from_temp_tables_to_live(setup_data):
     # check all temp tables are dropped, and raw + etl exist
     table_names = db.get_table_names()
     assert all(
-        table in table_names for table in etl.bronze_table_names
+        table in table_names for table in _ETL_REGISTERED_TABLE_NAMES
     ), "Not all temporary bronze tables were moved to live tables successfully"
-    assert len(table_names) == len(gql_tables) + len(etl.bronze_table_names)
+    assert len(table_names) == len(gql_tables) + len(_ETL_REGISTERED_TABLE_NAMES)
 
     # Verify no build tables exist
     table_names = db.get_table_names()
@@ -398,21 +402,23 @@ def test_calc_bronze_start_end_ts(tmpdir):
         fin_timestr,
     )
 
-    gql_data_factory.record_config["gql_tables"] = [
+    gql_data_factory = Mock(spec=gql_data_factory)
+    gql_data_factory.raw_table_names = [
         "raw_table_1",
         "raw_table_2",
         "raw_table_3",
     ]
 
     etl = ETL(ppss, gql_data_factory)
-    etl.bronze_table_names = [
+    mock_tables = [
         "bronze_table_1",
         "bronze_table_2",
         "bronze_table_3",
     ]
 
-    # Calculate from + to timestamps
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+    with patch("pdr_backend.lake.etl._ETL_REGISTERED_TABLE_NAMES", mock_tables):
+        # Calculate from + to timestamps
+        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     assert (
         UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")

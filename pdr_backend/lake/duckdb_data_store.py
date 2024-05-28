@@ -1,13 +1,13 @@
 # The DuckDBDataStore class is a subclass of the Base
+import glob
 import logging
 import os
-import glob
 from typing import Optional
-import duckdb
 
-from polars.type_aliases import SchemaDict
-from enforce_typing import enforce_types
+import duckdb
 import polars as pl
+from enforce_typing import enforce_types
+from polars.type_aliases import SchemaDict
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
@@ -177,7 +177,7 @@ class DuckDBDataStore(BaseDataStore):
         self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
-    def move_table_data(self, temp_table, permanent_table_name: str):
+    def move_table_data(self, temp_table, permanent_table):
         """
         Move the table data from the temporary storage to the permanent storage.
         @arguments:
@@ -195,6 +195,7 @@ class DuckDBDataStore(BaseDataStore):
                 "move_table_data - Table %s does not exist", temp_table.fullname
             )
 
+        permanent_table_name = permanent_table.table_name
         # check if the permanent table exists
         if permanent_table_name not in table_names:
             # create table if it does not exist

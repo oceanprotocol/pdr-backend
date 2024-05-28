@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from polars import Boolean, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
+from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -42,6 +43,10 @@ class Trueval(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "pdr_truevals"
+
+    @staticmethod
+    def get_fetch_function():
+        return fetch_truevals
 
 
 # =========================================================================

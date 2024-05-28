@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
+from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -63,6 +64,10 @@ class Prediction(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "pdr_predictions"
+
+    @staticmethod
+    def get_fetch_function():
+        return fetch_filtered_predictions
 
 
 # =========================================================================

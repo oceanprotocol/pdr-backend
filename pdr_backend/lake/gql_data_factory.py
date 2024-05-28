@@ -1,11 +1,12 @@
 import logging
-from typing import Callable, Dict
+from typing import Callable, Dict, Type
 
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
@@ -13,12 +14,7 @@ from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.subgraph.subgraph_payout import fetch_payouts
-from pdr_backend.subgraph.subgraph_predictions import (
-    fetch_filtered_predictions,
-    get_all_contract_ids_by_owner,
-)
-from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
+from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -27,13 +23,13 @@ logger = logging.getLogger("gql_data_factory")
 
 # Registered GQL fetches & tables
 _GQLDF_REGISTERED_LAKE_TABLES = {
-    Prediction: fetch_filtered_predictions,
-    Trueval: fetch_truevals,
-    Payout: fetch_payouts,
+    Prediction,
+    Trueval,
+    Payout,
 }
 
 _GQLDF_REGISTERED_TABLE_NAMES = [
-    t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES.keys()
+    t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES
 ]
 
 
@@ -64,19 +60,17 @@ class GQLDataFactory:
 
         # configure all DB tables <> QGL queries
         self.record_config = {
-            "fetch_functions": _GQLDF_REGISTERED_LAKE_TABLES,
             "config": {
                 "contract_list": contract_list,
-            },
-            "gql_tables": [
-                dn.get_lake_table_name()  # type: ignore[attr-defined]
-                for dn in _GQLDF_REGISTERED_LAKE_TABLES
-            ],
+            }
         }
 
     @property
     def raw_table_names(self):
-        return self.record_config["gql_tables"]
+        return [
+            dn.get_lake_table_name()  # type: ignore[attr-defined]
+            for dn in _GQLDF_REGISTERED_LAKE_TABLES
+        ]
 
     @enforce_types
     def get_gql_tables(self) -> Dict[str, Table]:
@@ -100,12 +94,9 @@ class GQLDataFactory:
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
 
-        return {
-            name: Table(name, self.ppss)
-            for name in _GQLDF_REGISTERED_LAKE_TABLES.keys()
-        }
+        return {name: Table(name, self.ppss) for name in _GQLDF_REGISTERED_LAKE_TABLES}
 
-    def _prepare_temp_table(self, table, st_ut, fin_ut, schema):
+    def _prepare_temp_table(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
         """
         @description
             _prepare_temp_table is a helper function to fill the temp table with
@@ -117,6 +108,8 @@ class GQLDataFactory:
             # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
             # 4. resume appending to CSVs + Temp tables until complete
         """
+        table = Table(dataclass, self.ppss)
+        schema = dataclass.get_lake_schema()
         csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
         db_last_timestamp = DuckDBDataStore(table.base_path).query_data(
             f"SELECT MAX(timestamp) FROM {table.table_name}"
@@ -173,8 +166,7 @@ class GQLDataFactory:
     @enforce_types
     def _do_subgraph_fetch(
         self,
-        table: Table,
-        fetch_function: Callable,
+        dataclass: Type[LakeMapper],
         network: str,
         st_ut: UnixTimeMs,
         fin_ut: UnixTimeMs,
@@ -188,6 +180,7 @@ class GQLDataFactory:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
+        table = Table(dataclass, self.ppss)
         logger.info("Fetching data for %s", table.table_name)
         network = get_sapphire_postfix(network)
 
@@ -195,15 +188,16 @@ class GQLDataFactory:
         save_backoff_count = 0
         pagination_offset = 0
 
-        buffer_df = pl.DataFrame([], schema=table.dataclass.get_lake_schema())
+        buffer_df = pl.DataFrame([], schema=dataclass.get_lake_schema())
 
         DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
             TempTable.from_table(table).fullname,
-            table.dataclass.get_lake_schema(),
+            dataclass.get_lake_schema(),
         )
 
         while True:
             # call the function
+            fetch_function = dataclass.get_fetch_function()
             data = fetch_function(
                 st_ut.to_seconds(),
                 fin_ut.to_seconds(),
@@ -217,7 +211,7 @@ class GQLDataFactory:
             # convert predictions to df and transform timestamp into ms
             df = _object_list_to_df(
                 data,
-                fallback_schema=table.dataclass.get_lake_schema(),
+                fallback_schema=dataclass.get_lake_schema(),
             )
             df = _transform_timestamp_to_ms(df)
             df = df.filter(pl.col("timestamp").is_between(st_ut, fin_ut))
@@ -237,7 +231,7 @@ class GQLDataFactory:
             if (
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
-                assert df.schema == table.dataclass.get_lake_schema()
+                assert df.schema == dataclass.get_lake_schema()
                 table.append_to_storage(buffer_df, TableType.TEMP)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
@@ -245,7 +239,7 @@ class GQLDataFactory:
 
                 buffer_df = pl.DataFrame(
                     [],
-                    schema=table.dataclass.get_lake_schema(),
+                    schema=dataclass.get_lake_schema(),
                 )
                 save_backoff_count = 0
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
@@ -268,10 +262,10 @@ class GQLDataFactory:
         """
 
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for table_name in self.record_config["gql_tables"]:
-            temp_table = TempTable(table_name)
+        for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
+            temp_table = TempTable.from_dataclass(dataclass)
 
-            db.move_table_data(temp_table, table_name)
+            db.move_table_data(temp_table, Table(dataclass, self.ppss))
             db.drop_table(temp_table.fullname)
 
     @enforce_types
@@ -291,9 +285,9 @@ class GQLDataFactory:
         """
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
-        for table_name in _GQLDF_REGISTERED_LAKE_TABLES.keys():
+        for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
             # calculate start and end timestamps
-            table = Table(table_name, self.ppss)
+            table = Table(dataclass, self.ppss)
             st_ut = self._calc_start_ut(table)
             logger.info(
                 "      Aim to fetch data from start_time: [%s] to end_time: [%s]",
@@ -304,15 +298,12 @@ class GQLDataFactory:
                 logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
-            self._prepare_temp_table(
-                table, st_ut, fin_ut, table.dataclass.get_lake_schema()
-            )
+            self._prepare_temp_table(dataclass, st_ut, fin_ut)
 
             # fetch from subgraph and add to temp table
             logger.info("Updating table %s", NamedTable.from_table(table).fullname)
             self._do_subgraph_fetch(
-                table,
-                self.record_config["fetch_functions"][table.dataclass],
+                dataclass,
                 self.ppss.web3_pp.network,
                 st_ut,
                 fin_ut,
