@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List
+from typing import Callable, List
 
 from enforce_typing import enforce_types
 from polars import Float32, Int64, Utf8
@@ -49,6 +49,12 @@ class Subscription(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "pdr_subscriptions"
+
+    @staticmethod
+    def get_fetch_function() -> Callable:
+        raise NotImplementedError(
+            "Subscription.get_fetch_function() not implemented yet"
+        )
 
 
 # =========================================================================

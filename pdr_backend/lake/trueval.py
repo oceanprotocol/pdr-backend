@@ -1,11 +1,10 @@
 from collections import OrderedDict
-from typing import List, Union
+from typing import Callable, List, Union
 
 from enforce_typing import enforce_types
 from polars import Boolean, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.subgraph.subgraph_trueval import fetch_truevals
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -45,7 +44,12 @@ class Trueval(LakeMapper):
         return "pdr_truevals"
 
     @staticmethod
-    def get_fetch_function():
+    def get_fetch_function() -> Callable:
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_trueval import (
+            fetch_truevals,
+        )
+
         return fetch_truevals
 
 

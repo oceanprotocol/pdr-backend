@@ -1,11 +1,10 @@
 from collections import OrderedDict
-from typing import List, Union
+from typing import Callable, List, Union
 
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -66,7 +65,12 @@ class Prediction(LakeMapper):
         return "pdr_predictions"
 
     @staticmethod
-    def get_fetch_function():
+    def get_fetch_function() -> Callable:
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_predictions import (
+            fetch_filtered_predictions,
+        )
+
         return fetch_filtered_predictions
 
 

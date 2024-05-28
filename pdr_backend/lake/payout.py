@@ -1,11 +1,10 @@
 from collections import OrderedDict
-from typing import List
+from typing import Callable, List
 
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.subgraph.subgraph_payout import fetch_payouts
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -62,7 +61,12 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         return "pdr_payouts"
 
     @staticmethod
-    def get_fetch_function():
+    def get_fetch_function() -> Callable:
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_payout import (
+            fetch_payouts,
+        )
+
         return fetch_payouts
 
 

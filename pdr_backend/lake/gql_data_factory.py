@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, Type
+from typing import Dict, Type
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -22,14 +22,14 @@ logger = logging.getLogger("gql_data_factory")
 
 
 # Registered GQL fetches & tables
-_GQLDF_REGISTERED_LAKE_TABLES = {
+_GQLDF_REGISTERED_LAKE_TABLES = [
     Prediction,
     Trueval,
     Payout,
-}
+]
 
 _GQLDF_REGISTERED_TABLE_NAMES = [
-    t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES
+    t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES  # type: ignore[attr-defined]
 ]
 
 
@@ -94,7 +94,12 @@ class GQLDataFactory:
         self._update()
         logger.info("Get historical data across many subgraphs. Done.")
 
-        return {name: Table(name, self.ppss) for name in _GQLDF_REGISTERED_LAKE_TABLES}
+        tables = [
+            Table(dataclass, self.ppss)  # type: ignore[arg-type]
+            for dataclass in _GQLDF_REGISTERED_LAKE_TABLES
+        ]
+
+        return {table.table_name: table for table in tables}
 
     def _prepare_temp_table(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
         """

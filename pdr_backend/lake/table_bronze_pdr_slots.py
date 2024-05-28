@@ -1,5 +1,6 @@
 import logging
 from collections import OrderedDict
+from typing import Callable
 
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
@@ -39,6 +40,10 @@ class BronzeSlot(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "bronze_pdr_slots"
+
+    @staticmethod
+    def get_fetch_function() -> Callable:
+        raise NotImplementedError("BronzeSlot.get_fetch_function() not implemented yet")
 
 
 @enforce_types

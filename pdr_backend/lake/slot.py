@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List, Union
+from typing import Callable, List, Union
 
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
@@ -45,6 +45,10 @@ class Slot(LakeMapper):
     @staticmethod
     def get_lake_table_name():
         return "pdr_slots"
+
+    @staticmethod
+    def get_fetch_function() -> Callable:
+        raise NotImplementedError("Slot.get_fetch_function() not implemented yet")
 
 
 # =========================================================================

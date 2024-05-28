@@ -66,7 +66,7 @@ def test_update_end_to_end(
     }
 
     gql_data_factory = GQLDataFactory(ppss)
-    for dataclass in fns.keys():
+    for dataclass in fns:
         dataclass.get_fetch_function = MagicMock(return_value=fns[dataclass])
 
     gql_data_factory._update()
