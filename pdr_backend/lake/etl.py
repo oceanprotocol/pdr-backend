@@ -185,7 +185,7 @@ class ETL:
             values[table_name] = UnixTimeMs(max_timestamp) if max_timestamp else None
 
         return values
-    
+
     @enforce_types
     def _get_min_timestamp_values_from(
         self, tables: List[NamedTable]
@@ -273,9 +273,7 @@ class ETL:
             ]
 
         logger.info("get_timestamp_values - values: %s", values)
-        timestamp = (
-            max(values) if len(values) > 0 else default_timestr
-        )
+        timestamp = max(values) if len(values) > 0 else default_timestr
         return timestamp
 
     @enforce_types
@@ -288,13 +286,14 @@ class ETL:
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
         """
-        st_timestr = self._get_min_timestamp_values_from([NamedTable(tb) for tb in self.gql_data_factory.raw_table_names])
-        from_timestamp = self.get_timestamp_values(
-            self.bronze_table_names, st_timestr
+        st_timestr = self._get_min_timestamp_values_from(
+            [NamedTable(tb) for tb in self.gql_data_factory.raw_table_names]
         )
+        from_timestamp = self.get_timestamp_values(self.bronze_table_names, st_timestr)
 
         to_timestamp = self.get_timestamp_values(
-            self.gql_data_factory.raw_table_names, UnixTimeMs.from_timestr(self.ppss.lake_ss.fin_timestr)
+            self.gql_data_factory.raw_table_names,
+            UnixTimeMs.from_timestr(self.ppss.lake_ss.fin_timestr),
         )
 
         assert from_timestamp <= to_timestamp, (

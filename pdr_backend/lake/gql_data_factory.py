@@ -144,7 +144,7 @@ class GQLDataFactory:
             table._append_to_db(data, TableType.TEMP)
 
     @enforce_types
-    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
+    def _calc_start_ut(self, table: Table, start_ut_ppss: int) -> UnixTimeMs:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
@@ -159,11 +159,7 @@ class GQLDataFactory:
 
         last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
 
-        start_ut = (
-            last_timestamp
-            if last_timestamp is not None
-            else self.ppss.lake_ss.st_timestamp
-        )
+        start_ut = last_timestamp if last_timestamp is not None else start_ut_ppss
 
         return UnixTimeMs(start_ut + 1000)
 
@@ -285,14 +281,16 @@ class GQLDataFactory:
             3. Integrate config/pp if needed
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
+            start_ut_ppss -- a timestamp, in ms, as int
         """
         fin_ut = self.ppss.lake_ss.fin_timestamp
+        start_ut_ppss = self.ppss.lake_ss.st_timestamp
 
         for table in (
             TableRegistry().get_tables(self.record_config["gql_tables"]).values()
         ):
             # calculate start and end timestamps
-            st_ut = self._calc_start_ut(table)
+            st_ut = self._calc_start_ut(table, start_ut_ppss)
             logger.info(
                 "      Aim to fetch data from start_time: [%s] to end_time: [%s]",
                 st_ut.pretty_timestr(),

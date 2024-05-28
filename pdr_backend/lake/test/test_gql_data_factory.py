@@ -193,7 +193,7 @@ def test_calc_start_ut(tmpdir):
     gql_data_factory = GQLDataFactory(ppss)
     table = TableRegistry().get_table("pdr_predictions")
 
-    st_ut = gql_data_factory._calc_start_ut(table)
+    st_ut = gql_data_factory._calc_start_ut(table, st_timestr)
     assert st_ut.to_seconds() == 1701561601
 
 
