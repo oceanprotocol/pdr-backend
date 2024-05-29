@@ -18,6 +18,7 @@ class TableType(Enum):
     NORMAL = "NORMAL"
     TEMP = "TEMP"
     ETL = "ETL"
+    UPDATE = "UPDATE"
 
 
 @enforce_types
@@ -27,6 +28,7 @@ def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("etl_")
     table_name = table_name.removeprefix("temp_")
+    table_name = table_name.removeprefix("update_")
 
     return (
         table_name.startswith("bronze_")
@@ -135,6 +137,8 @@ class NamedTable:
             return f"_temp_{self.table_name}"
         if self.table_type == TableType.ETL:
             return f"_etl_{self.table_name}"
+        if self.table_type == TableType.UPDATE:
+            return f"_update_{self.table_name}"
 
         return self.table_name
 
