@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Optional, Type
+from typing import Optional, Type, Union
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -8,7 +8,6 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("table")
@@ -79,6 +78,7 @@ class NamedTable:
     def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
         self.table_name = table_name
         self.table_type = table_type
+        self._dataclass: Union[None, Type["LakeMapper"]] = None
 
     @property
     def fullname(self) -> str:
@@ -91,7 +91,7 @@ class NamedTable:
 
     @property
     def dataclass(self) -> Type[LakeMapper]:
-        if hasattr(self, "_dataclass"):
+        if self._dataclass:
             return self._dataclass
 
         raise AttributeError("dataclass not set")
