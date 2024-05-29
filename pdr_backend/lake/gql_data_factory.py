@@ -65,42 +65,6 @@ class GQLDataFactory:
             }
         }
 
-    @property
-    def raw_table_names(self):
-        return [
-            dn.get_lake_table_name()  # type: ignore[attr-defined]
-            for dn in _GQLDF_REGISTERED_LAKE_TABLES
-        ]
-
-    @enforce_types
-    def get_gql_tables(self) -> Dict[str, Table]:
-        """
-        @description
-          Get historical dataframes across many feeds and timeframes.
-
-        @return
-          predictions_df -- *polars* Dataframe. See class docstring
-        """
-
-        logger.info("Get predictions data across many feeds and timeframes.")
-
-        # st_timestamp is calculated dynamically if ss.fin_timestr = "now".
-        # But, we don't want fin_timestamp changing as we gather data here.
-        # To solve, for a given call to this method, we make a constant fin_ut
-
-        logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
-
-        self._update()
-        logger.info("Get historical data across many subgraphs. Done.")
-
-        tables = [
-            Table(dataclass, self.ppss)  # type: ignore[arg-type]
-            for dataclass in _GQLDF_REGISTERED_LAKE_TABLES
-        ]
-
-        return {table.table_name: table for table in tables}
-
     def _prepare_temp_table(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
         """
         @description
@@ -270,7 +234,7 @@ class GQLDataFactory:
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
             temp_table = TempTable.from_dataclass(dataclass)
 
-            db.move_table_data(temp_table, Table(dataclass, self.ppss))
+            db.move_table_data(temp_table, NamedTable.from_dataclass(dataclass))
             db.drop_table(temp_table.fullname)
 
     @enforce_types
@@ -288,6 +252,9 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
+        logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
+
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:

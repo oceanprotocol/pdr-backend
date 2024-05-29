@@ -5,7 +5,10 @@ from typing import Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.gql_data_factory import (
+    GQLDataFactory,
+    _GQLDF_REGISTERED_TABLE_NAMES,
+)
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
@@ -86,7 +89,7 @@ class ETL:
             logger.info("do_etl - Drop build tables.")
 
             # Sync data
-            self.gql_data_factory.get_gql_tables()
+            self.gql_data_factory._update()
             logger.info("do_etl - Synced data. Start bronze_step.")
 
             self.do_bronze_step()
@@ -224,7 +227,7 @@ class ETL:
         )
 
         to_timestamp = self.get_timestamp_values(
-            self.gql_data_factory.raw_table_names, self.ppss.lake_ss.fin_timestr
+            _GQLDF_REGISTERED_TABLE_NAMES, self.ppss.lake_ss.fin_timestr
         )
 
         assert from_timestamp <= to_timestamp, (

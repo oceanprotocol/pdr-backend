@@ -78,7 +78,7 @@ def do_lake_raw_update(_, ppss):
     """
     try:
         gql_data_factory = GQLDataFactory(ppss)
-        gql_data_factory.get_gql_tables()
+        gql_data_factory._update()
     except Exception as e:
         logger.error("Error updating raw lake data: %s", e)
         print(e)
