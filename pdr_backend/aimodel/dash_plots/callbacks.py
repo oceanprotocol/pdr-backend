@@ -9,7 +9,6 @@ from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdataFactory,
-    AutocorrelationPlotdata,
 )
 from pdr_backend.aimodel.autocorrelation_plotter import (
     plot_acf,
@@ -43,9 +42,7 @@ def get_callbacks(app):
 
     @app.callback(
         Output("error-message", "children"),
-        [
-            Input("file-data", "data"),
-        ],
+        [Input("file-data", "data")],
     )
     def display_read_data_error(store_data):
         if store_data == {}:
@@ -56,22 +53,27 @@ def get_callbacks(app):
 
     @app.callback(
         Output("autocorelation_column", "children"),
-        Output("seasonal_column", "children"),
         [
             Input("feed-dropdown", "value"),
             Input("date-picker-range", "start_date"),
             Input("date-picker-range", "end_date"),
             Input("transition-data", "data"),
+            Input("autocorelation-lag", "value"),
         ],
         State("file-data", "data"),
     )
-    # pylint: disable=unused-argument
-    def create_charts(
-        feed_data, date_picker_start_date, date_picker_end_date, transition, files_data
+    def create_autocorelation_plots(
+        feed_data,
+        date_picker_start_date,
+        date_picker_end_date,
+        transition,
+        lag,
+        files_data,
     ):
         if transition is None:
-            return [], []
-        nlags = 10
+            return dash.no_update
+
+        nlags = int(lag) if lag is not None else 1
         do_boxcox = transition["BC"]
         differencing_order = transition["D"]
 
@@ -91,10 +93,44 @@ def get_callbacks(app):
             y = y[1:] - y[:-1]
 
         data = AutocorrelationPlotdataFactory.build(y, nlags)
-        assert isinstance(data, AutocorrelationPlotdata)
+        transition_text = f" for BC={'T' if do_boxcox else 'F'},D={differencing_order}"
 
-        if data is None:
+        acf = plot_acf(data)
+        acf.layout.title.text += transition_text
+        pacf = plot_pacf(data)
+
+        autocorelation_charts = get_column_graphs(
+            [
+                {"fig": acf, "graph_id": "autocorelation"},
+                {"fig": pacf, "graph_id": "pautocorelation"},
+            ]
+        )
+        return autocorelation_charts
+
+    @app.callback(
+        Output("seasonal_column", "children"),
+        [
+            Input("feed-dropdown", "value"),
+            Input("date-picker-range", "start_date"),
+            Input("date-picker-range", "end_date"),
+            Input("transition-data", "data"),
+        ],
+        State("file-data", "data"),
+    )
+    # pylint: disable=unused-argument
+    def create_seasonal_plots(
+        feed_data, date_picker_start_date, date_picker_end_date, transition, files_data
+    ):
+        if transition is None:
             return dash.no_update
+        do_boxcox = transition["BC"]
+        differencing_order = transition["D"]
+
+        files_data[feed_data] = filter_file_data_by_date(
+            files_data[feed_data],
+            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+        )
 
         # get data for seasonal
         y = files_data[feed_data]["close_data"]
@@ -105,11 +141,10 @@ def get_callbacks(app):
         dr = SeasonalDecomposeFactory.build(t, y)
 
         plotdata = SeasonalPlotdata(st, dr)
-
-        acf = plot_acf(data)
-        pacf = plot_pacf(data)
+        transition_text = f" for BC={'T' if do_boxcox else 'F'},D={differencing_order}"
 
         relativeEnergies = plot_relative_energies(plotdata)
+        relativeEnergies.layout.title.text += transition_text
         observed = plot_observed(plotdata)
         trend = plot_trend(plotdata)
         seasonal = plot_seasonal(plotdata)
@@ -125,14 +160,7 @@ def get_callbacks(app):
             ]
         )
 
-        autocorelation_charts = get_column_graphs(
-            [
-                {"fig": acf, "graph_id": "autocorelation"},
-                {"fig": pacf, "graph_id": "pautocorelation"},
-            ]
-        )
-
-        return autocorelation_charts, seasonal_charts
+        return seasonal_charts
 
     @app.callback(
         Output("transition_column", "children"),
@@ -167,7 +195,7 @@ def get_callbacks(app):
     )
     def display_click_data(clickData, figure):
         if clickData is None:
-            figure["data"][0]["marker"]["color"][2] = "grey"
+            figure["data"][0]["marker"]["color"][1] = "grey"
             return figure, {"BC": True, "D": 1}
 
         point = clickData["points"][0]

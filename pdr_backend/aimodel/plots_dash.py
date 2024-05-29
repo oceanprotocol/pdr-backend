@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import webbrowser
 from enforce_typing import enforce_types
 from dash import Dash, dcc, html
 from pdr_backend.ppss.ppss import PPSS
@@ -17,7 +18,7 @@ app.layout = html.Div(
         dcc.Store(id="window-data"),
         dcc.Store(id="transition-data"),
         html.H1(
-            "ARIMA feed data",
+            "ARIMA-style feed analysis",
             id="page_title",
             # stops refreshing if final state was reached. Do not remove this class!
             className="title",
@@ -39,6 +40,7 @@ get_callbacks(app)
 
 @enforce_types
 def arima_dash(port, ppss: PPSS):
+    webbrowser.open("http://127.0.0.1:8050/")
     folder = ppss.lake_ss.parquet_dir
     app.layout.children[0].data = folder
     app.run(debug=True, port=port)

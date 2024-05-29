@@ -33,14 +33,14 @@ def get_column_graphs(figures: list[dict]):
     )
 
 
-def display_on_column_graphs(div_id: str):
+def display_on_column_graphs(div_id: str, width: str = "30%"):
     return html.Div(
         id=div_id,
         style={
             "display": "flex",
             "flexDirection": "column",
             "height": "100%",
-            "width": "30%",
+            "width": width,
         },
     )
 
@@ -48,31 +48,59 @@ def display_on_column_graphs(div_id: str):
 def get_input_elements():
     elements = html.Div(
         [
-            dcc.Dropdown(
-                id="feed-dropdown",
-                options=[],
-                value="",
+            html.Div(
+                [
+                    dcc.Dropdown(
+                        id="feed-dropdown",
+                        options=[],
+                        value="",
+                        style={
+                            "width": "300px",
+                            "fontSize": "22px",
+                            "marginRight": "20px",
+                            "height": "100%",
+                        },
+                    ),
+                    # Date input components
+                    dcc.DatePickerRange(
+                        id="date-picker-range",
+                        start_date=None,
+                        end_date=None,
+                        min_date_allowed=None,
+                        max_date_allowed=None,
+                    ),
+                ],
                 style={
-                    "width": "300px",
-                    "fontSize": "22px",
-                    "marginRight": "20px",
                     "height": "100%",
+                    "width": "100%",
+                    "display": "flex",
+                    "justifyContent": "flex-start",
+                    "alignItems": "center",
+                    "padding": "10px",
                 },
             ),
-            # Date input components
-            dcc.DatePickerRange(
-                id="date-picker-range",
-                start_date=None,
-                end_date=None,
-                min_date_allowed=None,
-                max_date_allowed=None,
+            html.Div(
+                [
+                    html.Label("Lag", style={"fontSize": "20px"}),
+                    dcc.Input(
+                        id="autocorelation-lag",
+                        type="number",
+                        value="10",
+                        style={
+                            "width": "100px",
+                            "fontSize": "22px",
+                            "marginLeft": "20px",
+                            "height": "100%",
+                        },
+                    ),
+                ]
             ),
         ],
         style={
             "height": "100%",
             "margin": "auto",
             "display": "flex",
-            "justifyContent": "flex-start",
+            "justifyContent": "space-between",
             "alignItems": "center",
             "padding": "10px",
         },
@@ -84,9 +112,9 @@ def get_input_elements():
 def get_graphs_container():
     return html.Div(
         [
-            display_on_column_graphs("transition_column"),
-            display_on_column_graphs("seasonal_column"),
-            display_on_column_graphs("autocorelation_column"),
+            display_on_column_graphs("transition_column", "22.5%"),
+            display_on_column_graphs("seasonal_column", "50%"),
+            display_on_column_graphs("autocorelation_column", "22.5%"),
         ],
         id="arima-graphs",
         style={

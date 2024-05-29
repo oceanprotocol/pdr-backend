@@ -89,7 +89,7 @@ def get_transitions(selected_idx=None, y=[]):
     if selected_idx is not None:
         bar_colors[selected_idx] = "grey"  # Change color of the selected bar
 
-    labels = ["BC=F,D=0", "BC=T,D=0", "BC=T,D=1", "BC=T,D=2"]
+    labels = ["BC=T,D=2", "BC=T,D=1", "BC=T,D=0", "BC=F,D=0"]
 
     adf_results = {}
 
@@ -126,7 +126,7 @@ def get_transitions(selected_idx=None, y=[]):
         ]
     )
     fig.update_yaxes(title_text="Transition")
-    fig.update_xaxes()
+    fig.update_xaxes(title_text="ADF")
     fig.update_layout(
         title={
             "text": "ADF",
@@ -135,6 +135,7 @@ def get_transitions(selected_idx=None, y=[]):
             "xanchor": "center",
             "yanchor": "top",
         },
-        margin={"l": 5, "r": 5, "t": 55, "b": 0},
+        margin={"l": 5, "r": 5, "t": 50, "b": 0},
+        xaxis={"range":[0.05, 0.1]},
     )
     return fig

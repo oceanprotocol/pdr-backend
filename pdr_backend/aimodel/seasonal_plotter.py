@@ -55,7 +55,9 @@ def plot_observed(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Obseved", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin={"l": 5, "r": 5, "t": 50, "b": 0})
+    fig.update_layout(
+        margin={"l": 5, "r": 5, "t": 30, "b": 0}, xaxis={"showticklabels": False}
+    )
     return fig
 
 
@@ -76,7 +78,9 @@ def plot_trend(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Trend", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
+    fig.update_layout(
+        margin={"l": 5, "r": 5, "t": 0, "b": 0}, xaxis={"showticklabels": False}
+    )
     return fig
 
 
@@ -97,7 +101,9 @@ def plot_seasonal(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Seasonal", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
+    fig.update_layout(
+        margin={"l": 5, "r": 5, "t": 0, "b": 0}, xaxis={"showticklabels": False}
+    )
     return fig
 
 
@@ -118,5 +124,5 @@ def plot_residual(seasonal_plotdata: SeasonalPlotdata):
     )
     fig.update_yaxes(title_text="Resid", minor=minor)
     fig.update_xaxes(minor=minor)
-    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 0, "b": 0})
     return fig
