@@ -75,55 +75,6 @@ def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
 
 
 @enforce_types
-class Table:
-    def __init__(self, dataclass: Type[LakeMapper], ppss: PPSS):
-        self.ppss = ppss
-        self.dataclass = dataclass
-        self.table_name = dataclass.get_lake_table_name()
-
-        self.base_path = self.ppss.lake_ss.lake_dir
-
-    @enforce_types
-    def append_to_storage(
-        self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL
-    ):
-        self._append_to_csv(data)
-        self._append_to_db(data, table_type)
-
-    @enforce_types
-    def _append_to_csv(self, data: pl.DataFrame):
-        """
-        Append the data from the DataFrame object into the CSV file
-        It only saves the new data that has been fetched
-
-        @arguments:
-            data - The Polars DataFrame to save.
-        """
-        csvds = CSVDataStore.from_table(self)
-        logger.info(" csvds = %s", csvds)
-        csvds.write(
-            data,
-            schema=self.dataclass.get_lake_schema(),
-        )
-        logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
-
-    @enforce_types
-    def _append_to_db(
-        self, data: pl.DataFrame, table_type: TableType = TableType.NORMAL
-    ):
-        """
-        Append the data from the DataFrame object into the database
-        It only saves the new data that has been fetched
-
-        @arguments:
-            data - The Polars DataFrame to save.
-        """
-        table_name = NamedTable(self.table_name, table_type).fullname
-        DuckDBDataStore(self.base_path).insert_to_table(data, table_name)
-        logger.info("  Appended %s rows to db table: %s", data.shape[0], table_name)
-
-
-@enforce_types
 class NamedTable:
     def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
         self.table_name = table_name
@@ -138,6 +89,13 @@ class NamedTable:
 
         return self.table_name
 
+    @property
+    def dataclass(self) -> Type[LakeMapper]:
+        if hasattr(self, "_dataclass"):
+            return self._dataclass
+
+        raise AttributeError("dataclass not set")
+
     @staticmethod
     def from_dataclass(
         dataclass: Type[LakeMapper], table_type: Optional[TableType] = None
@@ -145,19 +103,43 @@ class NamedTable:
         if not table_type:
             table_type = TableType.NORMAL
 
-        return NamedTable(dataclass.get_lake_table_name(), table_type)
+        named_table = NamedTable(dataclass.get_lake_table_name(), table_type)
+        named_table._dataclass = dataclass
+        return named_table
 
-    @staticmethod
-    def from_table(
-        table: Table, table_type: Optional[TableType] = None
-    ) -> "NamedTable":
-        if not table_type:
-            table_type = TableType.NORMAL
+    @enforce_types
+    def append_to_storage(self, data: pl.DataFrame, ppss):
+        self._append_to_csv(data, ppss)
+        self._append_to_db(data, ppss)
 
-        return NamedTable(
-            table.dataclass.get_lake_table_name(),
-            table_type,
+    @enforce_types
+    def _append_to_csv(self, data: pl.DataFrame, ppss):
+        """
+        Append the data from the DataFrame object into the CSV file
+        It only saves the new data that has been fetched
+
+        @arguments:
+            data - The Polars DataFrame to save.
+        """
+        csvds = CSVDataStore.from_table(self, ppss)
+        logger.info(" csvds = %s", csvds)
+        csvds.write(
+            data,
+            schema=self.dataclass.get_lake_schema(),
         )
+        logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
+
+    @enforce_types
+    def _append_to_db(self, data: pl.DataFrame, ppss):
+        """
+        Append the data from the DataFrame object into the database
+        It only saves the new data that has been fetched
+
+        @arguments:
+            data - The Polars DataFrame to save.
+        """
+        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.fullname)
+        logger.info("  Appended %s rows to db table: %s", data.shape[0], self.fullname)
 
 
 class TempTable(NamedTable):
@@ -168,13 +150,9 @@ class TempTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "TempTable":
-        return TempTable(dataclass.get_lake_table_name())
-
-    @staticmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def from_table(table: Table) -> "TempTable":
-        return TempTable(table.dataclass.get_lake_table_name())
+        temp_table = TempTable(dataclass.get_lake_table_name())
+        temp_table._dataclass = dataclass
+        return temp_table
 
 
 class ETLTable(NamedTable):
@@ -185,10 +163,6 @@ class ETLTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "ETLTable":
-        return ETLTable(dataclass.get_lake_table_name())
-
-    @staticmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def from_table(table: Table) -> "ETLTable":
-        return ETLTable(table.dataclass.get_lake_table_name())
+        etl_table = ETLTable(dataclass.get_lake_table_name())
+        etl_table._dataclass = dataclass
+        return etl_table

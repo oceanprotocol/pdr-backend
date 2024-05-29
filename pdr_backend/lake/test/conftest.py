@@ -19,7 +19,7 @@ from pdr_backend.lake.prediction import (
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
 from pdr_backend.lake.subscription import mock_subscriptions
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import NamedTable
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
@@ -601,16 +601,16 @@ def setup_data(
     )
 
     gql_tables = {
-        "pdr_predictions": Table(Prediction, ppss),
-        "pdr_truevals": Table(Trueval, ppss),
-        "pdr_payouts": Table(Payout, ppss),
-        "pdr_slots": Table(Slot, ppss),
+        "pdr_predictions": NamedTable.from_dataclass(Prediction),
+        "pdr_truevals": NamedTable.from_dataclass(Trueval),
+        "pdr_payouts": NamedTable.from_dataclass(Payout),
+        "pdr_slots": NamedTable.from_dataclass(Slot),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds)
-    gql_tables["pdr_truevals"].append_to_storage(truevals)
-    gql_tables["pdr_payouts"].append_to_storage(payouts)
-    gql_tables["pdr_slots"].append_to_storage(slots)
+    gql_tables["pdr_predictions"].append_to_storage(preds, ppss)
+    gql_tables["pdr_truevals"].append_to_storage(truevals, ppss)
+    gql_tables["pdr_payouts"].append_to_storage(payouts, ppss)
+    gql_tables["pdr_slots"].append_to_storage(slots, ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)

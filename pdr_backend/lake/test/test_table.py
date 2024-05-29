@@ -6,7 +6,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import NamedTable
 from pdr_backend.ppss.ppss import mock_ppss
 
 
@@ -73,27 +73,6 @@ def _table_exists(db, searched_table_name):
     return [searched_table_name in table_names, table_name]
 
 
-def test_table_initialization(tmpdir):
-    """
-    Test that show Table initializing correctly
-    """
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        str(tmpdir),
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table(Prediction, ppss)
-
-    assert table.table_name == Prediction.get_lake_table_name()
-    assert table.ppss.lake_ss.st_timestr == st_timestr
-    assert table.ppss.lake_ss.fin_timestr == fin_timestr
-
-
 def test_csv_data_store(
     _gql_datafactory_first_predictions_df,
     _gql_datafactory_1k_predictions_df,
@@ -113,10 +92,10 @@ def test_csv_data_store(
     )
 
     # Initialize Table, fill with data, validate
-    table = Table(Prediction, ppss)
-    table._append_to_csv(_gql_datafactory_first_predictions_df)
+    table = NamedTable.from_dataclass(Prediction)
+    table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
 
-    assert CSVDataStore.from_table(table).has_data()
+    assert CSVDataStore.from_table(table, ppss).has_data()
 
     csv_file_path = os.path.join(
         ppss.lake_ss.lake_dir,
@@ -132,7 +111,7 @@ def test_csv_data_store(
         file.close()
 
     # Add second batch of predictions, validate
-    table._append_to_csv(_gql_datafactory_1k_predictions_df)
+    table._append_to_csv(_gql_datafactory_1k_predictions_df, ppss)
 
     files = os.listdir(os.path.join(ppss.lake_ss.lake_dir, table.table_name))
     files.sort(reverse=True)
@@ -212,8 +191,8 @@ def test_append_to_db(caplog):
         fin_timestr=fin_timestr,
     )
 
-    table = Table(Prediction, ppss)
+    table = NamedTable.from_dataclass(Prediction)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
-    table._append_to_db(data)
+    table._append_to_db(data, ppss)
 
     assert "Appended 1 rows to db table: pdr_predictions" in caplog.text
