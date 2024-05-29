@@ -35,7 +35,7 @@ from pdr_backend.aimodel.dash_plots.util import (
 
 # pylint: disable=too-many-statements
 def get_callbacks(app):
-    @app.callback(Output("data-store", "data"), Input("data-folder", "data"))
+    @app.callback(Output("file-data", "data"), Input("data-folder", "data"))
     def read_from_file(data):
         files_dir = data
         data = read_files_from_directory(files_dir)
@@ -44,7 +44,7 @@ def get_callbacks(app):
     @app.callback(
         Output("error-message", "children"),
         [
-            Input("data-store", "data"),
+            Input("file-data", "data"),
         ],
     )
     def display_read_data_error(store_data):
@@ -61,13 +61,13 @@ def get_callbacks(app):
             Input("feed-dropdown", "value"),
             Input("date-picker-range", "start_date"),
             Input("date-picker-range", "end_date"),
-            Input("data-transition", "data"),
+            Input("transition-data", "data"),
         ],
-        State("data-store", "data"),
+        State("file-data", "data"),
     )
     # pylint: disable=unused-argument
     def create_charts(
-        feed_data, date_picker_start_date, date_picker_end_date, transition, store_data
+        feed_data, date_picker_start_date, date_picker_end_date, transition, files_data
     ):
         if transition is None:
             return [], []
@@ -75,13 +75,13 @@ def get_callbacks(app):
         do_boxcox = transition["BC"]
         differencing_order = transition["D"]
 
-        store_data[feed_data] = filter_file_data_by_date(
-            store_data[feed_data],
+        files_data[feed_data] = filter_file_data_by_date(
+            files_data[feed_data],
             datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
             datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
         )
 
-        y = store_data[feed_data]["close_data"]
+        y = files_data[feed_data]["close_data"]
 
         # get data for autocorelation
         y = np.array(y)
@@ -97,11 +97,11 @@ def get_callbacks(app):
             return dash.no_update
 
         # get data for seasonal
-        y = store_data[feed_data]["close_data"]
+        y = files_data[feed_data]["close_data"]
         y = np.array(y)
-        timestamp_str = store_data[feed_data]["timestamps"][0]
+        timestamp_str = files_data[feed_data]["timestamps"][0]
         st = UnixTimeMs(timestamp_str.timestamp() * 1000)
-        t = ArgTimeframe("5m")
+        t = ArgTimeframe(feed_data.split("_")[len(feed_data.split("_")) - 1])
         dr = SeasonalDecomposeFactory.build(t, y)
 
         plotdata = SeasonalPlotdata(st, dr)
@@ -142,18 +142,18 @@ def get_callbacks(app):
             Input("date-picker-range", "end_date"),
             Input("feed-dropdown", "value"),
         ],
-        State("data-store", "data"),
+        State("file-data", "data"),
     )
     # pylint: disable=unused-argument
     def create_transition_chart(
-        div, date_picker_start_date, date_picker_end_date, feed_data, store_data
+        div, date_picker_start_date, date_picker_end_date, feed_data, files_data
     ):
-        store_data[feed_data] = store_data[feed_data] = filter_file_data_by_date(
-            store_data[feed_data],
+        files_data[feed_data] = files_data[feed_data] = filter_file_data_by_date(
+            files_data[feed_data],
             datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
             datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
         )
-        figure = get_transitions(None, store_data[feed_data]["close_data"])
+        figure = get_transitions(None, files_data[feed_data]["close_data"])
         transitions = get_column_graphs(
             [{"fig": figure, "graph_id": "transition_graph"}]
         )
@@ -161,7 +161,7 @@ def get_callbacks(app):
 
     @app.callback(
         Output("transition_graph", "figure"),
-        Output("data-transition", "data"),
+        Output("transition-data", "data"),
         [Input("transition_graph", "clickData")],
         [State("transition_graph", "figure")],
     )
@@ -188,7 +188,7 @@ def get_callbacks(app):
             Output("feed-dropdown", "options"),
             Output("feed-dropdown", "value"),
         ],
-        Input("data-store", "data"),
+        Input("file-data", "data"),
     )
     def update_dropdown_options(data):
         if data is None:
@@ -205,7 +205,7 @@ def get_callbacks(app):
             Output("date-picker-range", "max_date_allowed"),
         ],
         Input("feed-dropdown", "value"),
-        State("data-store", "data"),
+        State("file-data", "data"),
     )
     def update_date_picker(selected_file, data):
         if selected_file is None or data is None:

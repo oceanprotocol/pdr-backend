@@ -13,6 +13,9 @@ app.config["suppress_callback_exceptions"] = True
 app.layout = html.Div(
     [
         dcc.Store(id="data-folder"),
+        dcc.Store(id="file-data"),
+        dcc.Store(id="window-data"),
+        dcc.Store(id="transition-data"),
         html.H1(
             "ARIMA feed data",
             id="page_title",
@@ -22,10 +25,6 @@ app.layout = html.Div(
         ),
         html.Div(id="input-elements", children=get_input_elements()),
         html.Div(id="error-message"),
-        dcc.Store(id="data-store"),
-        dcc.Store(id="window-data"),
-        dcc.Store(id="data-loading"),
-        dcc.Store(id="data-transition"),
         dcc.Loading(
             id="loading",
             type="default",

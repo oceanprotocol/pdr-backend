@@ -1,17 +1,5 @@
 from dash import dcc, html
 
-figure_names = [
-    "autocorelation",
-    "partial_autocorelation",
-]
-
-
-def display_waiting_template():
-    return html.Div(
-        [html.H2("Loading data and creating charts...", id="wating-text")],
-        id="wating",
-    )
-
 
 def display_plots_view(columns):
     return html.Div(
