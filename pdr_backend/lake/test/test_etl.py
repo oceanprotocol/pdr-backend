@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import time
 
 import polars as pl
 import pytest
@@ -520,3 +521,49 @@ def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
         == "2023-11-02 00:00:00"
     )
     assert abs(ts_now - to_timestamp) < 100
+
+
+@enforce_types
+def test_start_time_from_ppss(tmpdir):
+    fin_timestr = "now"
+
+    # At first config we use a fixed date for ppss.lake_ss.start_timestr
+    ppss, gql_data_factory2 = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        "2023-11-02_0:00",
+        fin_timestr,
+    )
+
+    # timestamp at the start of gql update
+    start_ts_1 = ppss.lake_ss.st_timestamp
+
+    # wait to simulate the time we wait for gql update to finish
+    time.sleep(5)
+
+    # timestamp at the start of the etl update
+    start_ts_2 = ppss.lake_ss.st_timestamp
+
+    # both should be the same. They are are.
+    assert start_ts_1 == start_ts_2
+    print("FIRST START TIME CHECK PASSED")
+
+    # At second config we use a variable date for ppss.lake_ss.start_timestr
+    ppss2, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        "18 days ago",
+        fin_timestr,
+    )
+
+    # timestamp at the start of gql update
+    start_ts_1 = ppss2.lake_ss.st_timestamp
+
+    # wait to simulate the time we wait for gql update to finish
+    time.sleep(5)
+
+    # timestamp at the start of the etl update
+    start_ts_2 = ppss2.lake_ss.st_timestamp
+
+    # both should be the same. They are not.
+    assert start_ts_1 == start_ts_2

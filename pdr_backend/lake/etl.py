@@ -227,7 +227,7 @@ class ETL:
         }
 
         if len(queries) == 0:
-            return none_values
+            return None
 
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
@@ -235,7 +235,7 @@ class ETL:
         logger.info("_get_min_timestamp_values_from - result: %s", result)
 
         if result is None:
-            return none_values
+            return None
 
         values: Dict[str, Optional[UnixTimeMs]] = {}
 
@@ -289,7 +289,14 @@ class ETL:
         st_timestr = self._get_min_timestamp_values_from(
             [NamedTable(tb) for tb in self.gql_data_factory.raw_table_names]
         )
-        from_timestamp = self.get_timestamp_values(self.bronze_table_names, st_timestr)
+        from_timestamp = self.get_timestamp_values(
+            self.bronze_table_names,
+            (
+                st_timestr
+                if st_timestr
+                else UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr)
+            ),
+        )
 
         to_timestamp = self.get_timestamp_values(
             self.gql_data_factory.raw_table_names,
