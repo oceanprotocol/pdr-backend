@@ -14,7 +14,6 @@ from pdr_backend.accuracy.app import (
 )
 from pdr_backend.lake.slot import Slot
 from pdr_backend.util.time_types import UnixTimeS
-from pdr_backend.ppss.ppss import mock_ppss
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = Slot(
@@ -129,8 +128,8 @@ def test_calculate_statistics_from_DuckDB_tables(tmpdir):
         contracts,
         first,
         skip,
-        network,  # pylint: disable=unused-argument
-    ):
+        network,
+    ):  # pylint: disable=unused-argument
         return slots_list
 
     def mock_get_all_contract_ids_by_owner(
@@ -183,8 +182,8 @@ def test_calculate_statistics_from_DuckDB_tables(tmpdir):
         contracts,
         first,
         skip,
-        network,  # pylint: disable=unused-argument
-    ):
+        network,
+    ):  # pylint: disable=unused-argument
         return slots_list
 
     test_json_file_path = str(tmpdir.join("test.json"))
