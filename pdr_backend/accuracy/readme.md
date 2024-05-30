@@ -11,7 +11,6 @@ This document provides instructions on how to deploy and run the `app.py` script
 
 ```bash
 git clone <repository_url>
-cd pdr_backend
 
 pip install -r requirements.txt
 ```
@@ -25,7 +24,7 @@ python pdr_backend/accuracy/app.py
 ```
 
 
-The script uses the `GQLDataFactory` to fetch the predictions. Be sure to provide the correct values for `st_timestr` in the `ppss.yaml` file to get the correct predictions. It needs to be at least `28 days ago` from the current date. 
+The script uses the subgraph to fetch the predictions. 
     
 The script will output the accuracy of the predictoor based on the provided values to a file named `pdr_backend/accuracy/output/accuracy.json`.
 
