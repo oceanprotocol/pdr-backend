@@ -65,3 +65,12 @@ class LakeArgParser(ArgumentParser, PPSS_Mixin, NETWORK_Mixin):
             self.add_argument("QUERY", type=str, help="The query to run")
         elif plain_args[1] == "drop":
             self.add_argument("ST", type=timestr, help="Start date yyyy-mm-dd")
+
+        if plain_args[0] == "describe":
+            self.add_argument(
+                "--HTML",
+                action="store_true",
+                default=False,
+                help="If --HTML then run describe in HTML app",
+                required=False,
+            )

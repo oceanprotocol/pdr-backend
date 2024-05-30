@@ -3,8 +3,14 @@ from collections import OrderedDict
 import polars as pl
 from polars import Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 
-class PredictoorSummary:
+
+class PredictoorSummary(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(
@@ -21,7 +27,11 @@ class PredictoorSummary:
         )
 
 
-class FeedSummary:
+class FeedSummary(LakeMapper):
+    def __init__(self):
+        super().__init__()
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(

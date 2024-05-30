@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.table import ETLTable, NamedTable, Table, TempTable
@@ -53,10 +53,10 @@ def test_table_bronze_pdr_slots(
     gql_tables["pdr_slots"].append_to_storage(_gql_datafactory_etl_slots_df)
 
     # Check that the data is appended correctly
-    pds = PersistentDataStore(ppss.lake_ss.lake_dir)
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     slots_table_prefixed_name = NamedTable.from_dataclass(Slot).fullname
-    pdr_slots_df = pds.query_data(
+    pdr_slots_df = db.query_data(
         f"""
         SELECT * FROM {slots_table_prefixed_name}
         """
@@ -81,7 +81,7 @@ def test_table_bronze_pdr_slots(
         TempTable.from_dataclass(BronzePrediction).fullname,
     )
 
-    pds.execute_sql(view_query)
+    db.execute_sql(view_query)
 
     get_bronze_pdr_slots_data_with_SQL(
         ppss.lake_ss.lake_dir,
@@ -91,13 +91,13 @@ def test_table_bronze_pdr_slots(
 
     bronze_pdr_slots_temp_table_name = TempTable.from_dataclass(BronzeSlot).fullname
 
-    bronze_pdr_slots = pds.query_data(
+    bronze_pdr_slots = db.query_data(
         f"""
         SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """
     )
 
-    pdr_slots = pds.query_data("""SELECT * FROM pdr_slots""")
+    pdr_slots = db.query_data("""SELECT * FROM pdr_slots""")
 
     assert len(bronze_pdr_slots) == 7
     assert bronze_pdr_slots.schema == BronzeSlot.get_lake_schema()
@@ -113,7 +113,7 @@ def test_table_bronze_pdr_slots(
     ## test data without filtering
 
     # delete current rows from the bronze table
-    pds.query_data(
+    db.query_data(
         f"""
         DELETE FROM {bronze_pdr_slots_temp_table_name}
         """
@@ -127,7 +127,7 @@ def test_table_bronze_pdr_slots(
     )
 
     # select new data from bronze table
-    bronze_pdr_slots = pds.query_data(
+    bronze_pdr_slots = db.query_data(
         f"""
         SELECT * FROM {bronze_pdr_slots_temp_table_name}
         """

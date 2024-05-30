@@ -1,14 +1,15 @@
 from collections import OrderedDict
-from typing import List, Union
+from typing import Callable, List, Union
 
 from enforce_typing import enforce_types
 from polars import Boolean, Float64, Int64, Utf8
 
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-class Prediction:
+class Prediction(LakeMapper):
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
@@ -38,6 +39,8 @@ class Prediction:
         self.slot = slot
         self.user = user
 
+        self.check_against_schema()
+
     @staticmethod
     def get_lake_schema():
         return OrderedDict(
@@ -60,6 +63,15 @@ class Prediction:
     @staticmethod
     def get_lake_table_name():
         return "pdr_predictions"
+
+    @staticmethod
+    def get_fetch_function() -> Callable:
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_predictions import (
+            fetch_filtered_predictions,
+        )
+
+        return fetch_filtered_predictions
 
 
 # =========================================================================

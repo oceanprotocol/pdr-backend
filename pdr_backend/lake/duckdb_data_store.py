@@ -1,20 +1,20 @@
-# The PersistentDataStore class is a subclass of the Base
+# The DuckDBDataStore class is a subclass of the Base
+import glob
 import logging
 import os
-import glob
 from typing import Optional
-import duckdb
 
-from polars.type_aliases import SchemaDict
-from enforce_typing import enforce_types
+import duckdb
 import polars as pl
+from enforce_typing import enforce_types
+from polars.type_aliases import SchemaDict
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
-logger = logging.getLogger("pds")
+logger = logging.getLogger("duckDB")
 
 
-class PersistentDataStore(BaseDataStore):
+class DuckDBDataStore(BaseDataStore):
     """
     A class to store and retrieve persistent data.
     """
@@ -22,7 +22,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def __init__(self, base_path: str, read_only: bool = False):
         """
-        Initialize a PersistentDataStore instance.
+        Initialize a DuckDBDataStore instance.
         @arguments:
             base_path - The base directory to store the persistent data.
         """
@@ -63,7 +63,7 @@ class PersistentDataStore(BaseDataStore):
         Create the table and insert data
         @arguments:
             df - The Polars DataFrame to append.
-            dataset_identifier - A unique identifier for the dataset.
+            table_name - A unique identifier for the dataset.
         """
 
         # Create the table
@@ -81,7 +81,6 @@ class PersistentDataStore(BaseDataStore):
         tables = self.duckdb_conn.execute(
             "SELECT table_name FROM information_schema.tables " + where
         ).fetchall()
-
         return [table[0] for table in tables]
 
     @enforce_types
@@ -107,7 +106,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def insert_to_table(self, df: pl.DataFrame, table_name: str):
         """
-        Insert data to an persistent dataset.
+        Insert data to a table
         @arguments:
             df - The Polars DataFrame to append.
             table_name - A unique table.
@@ -135,7 +134,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:
         """
-        Execute a SQL query across the persistent dataset using DuckDB.
+        Execute a SQL query on DuckDB and return the result as a polars dataframe.
         @arguments:
             table_name - A unique name for the table.
             query - The SQL query to execute.
@@ -156,7 +155,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def drop_table(self, table_name: str):
         """
-        Drop the persistent table.
+        Drop the table.
         @arguments:
             table_name - A unique name for the table.
         @example:
@@ -178,7 +177,7 @@ class PersistentDataStore(BaseDataStore):
         self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
-    def move_table_data(self, temp_table, permanent_table_name: str):
+    def move_table_data(self, temp_table, permanent_table):
         """
         Move the table data from the temporary storage to the permanent storage.
         @arguments:
@@ -196,6 +195,7 @@ class PersistentDataStore(BaseDataStore):
                 "move_table_data - Table %s does not exist", temp_table.fullname
             )
 
+        permanent_table_name = permanent_table.table_name
         # check if the permanent table exists
         if permanent_table_name not in table_names:
             # create table if it does not exist
@@ -212,7 +212,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
         """
-        Fill the persistent dataset from CSV files.
+        Insert to table from CSV files.
         @arguments:
             table_name - A unique name for the table.
             csv_folder_path - The path to the folder containing the CSV files.
@@ -230,7 +230,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
         """
-        Update the persistent dataset with the provided DataFrame.
+        Update the table with the provided DataFrame.
         @arguments:
             df - The Polars DataFrame to update.
             table_name - A unique name for the table.
@@ -256,7 +256,7 @@ class PersistentDataStore(BaseDataStore):
     @enforce_types
     def execute_sql(self, query: str):
         """
-        Execute a SQL query across the persistent dataset using DuckDB.
+        Execute a SQL query across DuckDB using SQL.
         @arguments:
             query - The SQL query to execute.
         @example:

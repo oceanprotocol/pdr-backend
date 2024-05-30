@@ -5,7 +5,7 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_module_lake import (
-    PersistentDataStore,
+    DuckDBDataStore,
     do_lake_describe,
     do_lake_etl_drop,
     do_lake_etl_update,
@@ -40,13 +40,14 @@ def test_do_lake_describe():
     args.subcommand = "describe"
     args.PPSS_FILE = "ppss.yaml"
     args.NETWORK = "sapphire-mainnet"
+    args.HTML = False
 
     ppss = Mock()
 
     with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
         do_lake_describe(args, ppss)
 
-    mock_lake_info.assert_called_once_with(ppss)
+    mock_lake_info.assert_called_once_with(ppss, use_html=False)
 
 
 @enforce_types
@@ -78,7 +79,7 @@ def test_do_lake_query(caplog):
     mock_ppss = Mock()
 
     with patch(
-        "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds
+        "pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=mock_pds
     ):
         do_lake_query(args, mock_ppss)
 
@@ -88,7 +89,7 @@ def test_do_lake_query(caplog):
     mock_pds_err.query_data.side_effect = Exception("boom!")
 
     with patch(
-        "pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=mock_pds_err
+        "pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=mock_pds_err
     ):
         do_lake_query(args, mock_ppss)
 
@@ -135,12 +136,12 @@ def test_do_lake_etl_delegation():
     assert etl_update.called
 
 
-def _make_and_fill_timestamps(pds, table_name, first_entry_ts):
+def _make_and_fill_timestamps(db, table_name, first_entry_ts):
     one_day = 1000 * 60 * 60 * 24
-    pds.query_data(f"CREATE TABLE {table_name} (id INT, timestamp INT64)")
+    db.query_data(f"CREATE TABLE {table_name} (id INT, timestamp INT64)")
 
     for i in range(5):
-        pds.query_data(
+        db.query_data(
             f"INSERT INTO {table_name} VALUES ({i}, {first_entry_ts + i * one_day})"
         )
 
@@ -156,14 +157,14 @@ def test_do_lake_raw_drop(tmpdir, caplog):
     ts = 1609459200000
     one_day = 1000 * 60 * 60 * 24
 
-    pds = PersistentDataStore(str(tmpdir))
-    _make_and_fill_timestamps(pds, "_temp_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(pds, "test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(pds, "_etl_bronze_test", ts - 2 * one_day)
+    db = DuckDBDataStore(str(tmpdir))
+    _make_and_fill_timestamps(db, "_temp_test1", ts - 3 * one_day)
+    _make_and_fill_timestamps(db, "test2", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_etl_bronze_test", ts - 2 * one_day)
 
     mock_ppss = Mock()
 
-    with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
+    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=db):
         do_lake_raw_drop(args, mock_ppss)
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
@@ -186,14 +187,14 @@ def test_do_lake_etl_drop(tmpdir, caplog):
     one_day = 1000 * 60 * 60 * 24
     ts = 1609459200000
 
-    pds = PersistentDataStore(str(tmpdir))
-    _make_and_fill_timestamps(pds, "_temp_bronze_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(pds, "_etl_silver_test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(pds, "_etl_test_raw", ts - 2 * one_day)
+    db = DuckDBDataStore(str(tmpdir))
+    _make_and_fill_timestamps(db, "_temp_bronze_test1", ts - 3 * one_day)
+    _make_and_fill_timestamps(db, "_etl_silver_test2", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_etl_test_raw", ts - 2 * one_day)
 
     mock_ppss = Mock()
 
-    with patch("pdr_backend.cli.cli_module_lake.PersistentDataStore", return_value=pds):
+    with patch("pdr_backend.cli.cli_module_lake.DuckDBDataStore", return_value=db):
         do_lake_etl_drop(args, mock_ppss)
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text

@@ -118,9 +118,9 @@ def _get_from_value(file_path: str) -> int:
 
 
 class CSVDataStore:
-    def __init__(self, base_path: str, dataset_identifier: str):
+    def __init__(self, base_path: str, table_name: str):
         self.base_path = base_path
-        self.dataset_identifier = dataset_identifier
+        self.table_name = table_name
 
     @staticmethod
     def from_table(table):
@@ -129,7 +129,7 @@ class CSVDataStore:
     @enforce_types
     def _create_file_name(self, start_time: int, end_time: Optional[int]) -> str:
         """
-        Creates a file name using the given dataset_identifier,
+        Creates a file name using the given table name (key),
         start_time, end_time, and row_count.
         @args:
             start_time: int - start time of the data TIMESTAMP
@@ -138,12 +138,12 @@ class CSVDataStore:
         start_time_str = _pad_with_zeroes(start_time)
         end_time_str = _pad_with_zeroes(end_time) if end_time else ""
 
-        return f"{self.dataset_identifier}_from_{start_time_str}_to_{end_time_str}.csv"
+        return f"{self.table_name}_from_{start_time_str}_to_{end_time_str}.csv"
 
     @enforce_types
     def _create_file_path(self, start_time: int, end_time: Optional[int]) -> str:
         """
-        Creates the file path for the given dataset_identifier,
+        Creates the file path for the given table name (key),
         start_time, end_time.
         @args:
             start_time: str - start time of the data
@@ -156,17 +156,17 @@ class CSVDataStore:
 
     def _get_folder_path(self) -> str:
         """
-        Returns the folder path for the given dataset_identifier.
+        Returns the folder path for the given table name (key).
         If the folder does not exist, it will be created.
         """
-        folder_path = os.path.join(self.base_path, self.dataset_identifier)
+        folder_path = os.path.join(self.base_path, self.table_name)
         os.makedirs(folder_path, exist_ok=True)
 
         return folder_path
 
     def get_file_paths(self, do_sort=True) -> list:
         """
-        Returns the file paths for the given dataset_identifier.
+        Returns the file paths for the given table name (key).
         """
         folder_path = self._get_folder_path()
         file_names = os.listdir(folder_path)
@@ -179,7 +179,7 @@ class CSVDataStore:
     def has_data(self) -> bool:
         """
         Returns True if the csv files in the folder
-        corresponding to the given dataset_identifier have data.
+        corresponding to the given table name (key) have data.
         @returns:
             bool - True if the csv files have data
         """
@@ -190,7 +190,7 @@ class CSVDataStore:
 
     def _get_last_file_row_count(self) -> Optional[int]:
         """
-        Returns the row count of the last file for the given dataset_identifier.
+        Returns the row count of the last file for the given table name(key).
         @returns:
             row_count: Optional[int] - The row count of the last file
         """
@@ -251,7 +251,7 @@ class CSVDataStore:
     def read_all(self, schema: Optional[SchemaDict] = None) -> pl.DataFrame:
         """
         Reads all the data from the csv files in the folder
-        corresponding to the given dataset_identifier.
+        corresponding to the given table name (key).
         @returns:
             pl.DataFrame - data read from the csv files
         """
@@ -277,10 +277,9 @@ class CSVDataStore:
     ) -> pl.DataFrame:
         """
         Reads the data from the csv file in the folder
-        corresponding to the given dataset_identifier,
+        corresponding to the given table_name (key),
         start_time, and end_time.
         @args:
-            dataset_identifier: str - identifier of the dataset
             start_time: int - start time of the data
             end_time: int - end time of the data
         @returns:
@@ -307,10 +306,9 @@ class CSVDataStore:
     ):
         """
         Writes the given data to a csv file in the folder
-        corresponding to the given dataset_identifier.
+        corresponding to the given table name (key).
         @args:
             data: pl.DataFrame - The data to write, it has to be sorted by timestamp
-            dataset_identifier: str - The dataset identifier
         """
         max_row_count = 1000
         data = data.sort("timestamp")
@@ -334,7 +332,7 @@ class CSVDataStore:
     def get_last_timestamp(self) -> Optional[int]:
         """
         Returns the last timestamp from the last csv files in the folder
-        corresponding to the given dataset_identifier.
+        corresponding to the given table name (key).
         @returns:
             Optional[int] - last timestamp from the csv files
         """

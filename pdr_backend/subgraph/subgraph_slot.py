@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 from enforce_typing import enforce_types
 
@@ -143,7 +143,7 @@ def fetch_slots(
     first: int,
     skip: int,
     network: str = "mainnet",
-) -> Dict[str, List[Slot]]:
+) -> List[Slot]:
     """
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
 
@@ -161,4 +161,46 @@ def fetch_slots(
     all_slots = get_slots(
         contracts, end_ts_param, start_ts_param, first, skip, [], network
     )
+    return all_slots
+
+
+@enforce_types
+def fetch_all_slots(
+    start_ts_param: UnixTimeS,
+    end_ts_param: UnixTimeS,
+    contracts: List[str],
+    first: int,
+    skip: int,
+    network: str = "mainnet",
+) -> List[Slot]:
+    """
+    Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
+
+    Args:
+        contracts: A list of asset identifiers for which slots will be fetched.
+        start_ts_param: The Unix timestamp marking the beginning of the desired time range.
+        end_ts_param: The Unix timestamp marking the end of the desired time range.
+        first: The number of records to fetch in one query.
+        skip: The number of records to skip for pagination.
+        network: The blockchain network to query ('mainnet' or 'testnet').
+
+    Returns:
+        A dictionary mapping asset IDs to lists of Slot dataclass
+        containing slot information.
+    """
+
+    all_slots: List[Slot] = []
+
+    def recursive_fetch(current_skip: int):
+        print(f"Fetching slots with skip={current_skip}")
+        nonlocal all_slots
+        slots = get_slots(
+            contracts, end_ts_param, start_ts_param, first, current_skip, [], network
+        )
+        all_slots.extend(slots)
+        if len(slots) == first:
+            recursive_fetch(current_skip + first)
+
+    recursive_fetch(skip)
+
     return all_slots

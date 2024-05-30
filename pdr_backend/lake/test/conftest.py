@@ -6,9 +6,9 @@ import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
     Prediction,
@@ -18,9 +18,8 @@ from pdr_backend.lake.prediction import (
     mock_second_predictions,
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
-from pdr_backend.lake.subscription import Subscription, mock_subscriptions
+from pdr_backend.lake.subscription import mock_subscriptions
 from pdr_backend.lake.table import Table
-from pdr_backend.lake.table_registry import TableRegistry
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
@@ -30,21 +29,18 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 
 @pytest.fixture(autouse=True)
-def clean_up_table_registry():
-    TableRegistry()._tables = {}
-
-
-@pytest.fixture(autouse=True)
 def clean_up_persistent_data_store(tmpdir):
-    # Clean up PDS
-    persistent_data_store = PersistentDataStore(str(tmpdir))
+    # Clean up duckDB
+    db = DuckDBDataStore(str(tmpdir))
 
     # Select tables from duckdb
-    table_names = persistent_data_store.get_table_names()
+    table_names = db.get_table_names()
 
     # Drop the tables
     for table in table_names:
-        persistent_data_store.duckdb_conn.execute(f"DROP TABLE {table}")
+        db.execute_sql(f"DROP TABLE {table}")
+
+    db.duckdb_conn.close()
 
 
 @pytest.fixture()
@@ -73,11 +69,11 @@ def sample_slots():
 
 
 @pytest.fixture()
-def _get_test_PDS():
-    def create_persistent_datastore(tmpdir):
-        return PersistentDataStore(str(tmpdir))
+def _get_test_DuckDB():
+    def create_duckdb_datastore(tmpdir):
+        return DuckDBDataStore(str(tmpdir))
 
-    return create_persistent_datastore
+    return create_duckdb_datastore
 
 
 @pytest.fixture()
@@ -577,7 +573,7 @@ def setup_data(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
-    _get_test_PDS,
+    _get_test_DuckDB,
     tmpdir,
     request,
 ):
@@ -609,26 +605,24 @@ def setup_data(
         "pdr_truevals": Table(Trueval, ppss),
         "pdr_payouts": Table(Payout, ppss),
         "pdr_slots": Table(Slot, ppss),
-        "pdr_subscriptions": Table(Subscription, ppss),
     }
 
     gql_tables["pdr_predictions"].append_to_storage(preds)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
     gql_tables["pdr_slots"].append_to_storage(slots)
-    gql_tables["pdr_subscriptions"].append_to_storage(slots)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
     # provide the setup data to the test
     etl = ETL(ppss, gql_data_factory)
-    pds = _get_test_PDS(tmpdir)
+    db = _get_test_DuckDB(tmpdir)
 
     assert etl is not None
     assert etl.gql_data_factory == gql_data_factory
 
-    _records = pds.query_data("SELECT * FROM pdr_predictions")
+    _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
 
-    yield etl, pds, gql_tables
+    yield etl, db, gql_tables

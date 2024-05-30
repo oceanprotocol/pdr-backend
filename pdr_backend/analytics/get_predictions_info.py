@@ -12,7 +12,7 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
 )
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import NamedTable
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
@@ -55,7 +55,7 @@ def get_predictions_info_main(
             AND contract IN {feed_addrs_str}
     """
 
-    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
+    predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     _checks_for_empty_df(predictions_df, table_name)
 
@@ -84,7 +84,7 @@ def get_predictoors_info_main(
             AND user IN {pdr_addrs_str}
     """
 
-    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
+    predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     _checks_for_empty_df(predictions_df, table_name)
 
@@ -104,7 +104,7 @@ def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
             AND timestamp <= {UnixTimeMs.from_timestr(end_timestr)}
     """
 
-    predictions_df = PersistentDataStore(ppss.lake_ss.lake_dir).query_data(query)
+    predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
     _checks_for_empty_df(predictions_df, table_name)
 

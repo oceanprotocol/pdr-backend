@@ -7,8 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from enforce_typing import enforce_types
 from flask import Flask, jsonify
 
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.persistent_data_store import PersistentDataStore
 from pdr_backend.lake.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import (
@@ -17,6 +15,7 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
 )
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.subgraph.subgraph_slot import fetch_all_slots
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -256,44 +255,22 @@ def calculate_timeframe_timestamps(
 
 
 @enforce_types
-def calculate_statistics_from_DuckDB_tables():
+def calculate_statistics_from_slots():
     four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
     start_ts = UnixTimeS(int(four_weeks_ago.timestamp()))
+    end_ts = UnixTimeS(int(datetime.utcnow().timestamp()))
 
-    db_conn = PersistentDataStore(accuracy_ppss.lake_ss.lake_dir)
-    slots_table_name = Slot.get_lake_table_name()
+    network_param = "mainnet"  # or 'testnet' depending on your preference
 
-    slots_table = db_conn.query_data(
-        f"""
-        SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
-        """
+    contract_addresses = get_all_contract_ids_by_owner(
+        "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
     )
-    print(
-        "THE_QUERY:",
-        f"""
-          SELECT * FROM {slots_table_name} WHERE SLOT > {start_ts}
-          """,
+
+    all_slots = fetch_all_slots(
+        start_ts, end_ts, contract_addresses, 1000, 0, network_param
     )
-    db_conn.duckdb_conn.close()
 
-    slots_table = slots_table.group_by("ID").first()
-    slots_table = slots_table.sort("slot")
-
-    all_slots: List[Slot] = []
-
-    # Iterate over rows and create objects
-    for row in slots_table.rows(named=True):
-        slot = Slot(
-            row["ID"],
-            row["timestamp"],
-            row["slot"],
-            row["truevalue"],
-            row["roundSumStakesUp"],
-            row["roundSumStakes"],
-        )
-        all_slots.append(slot)
-
-    data = transform_slots_to_statistics(all_slots)
+    data = transform_slots_to_statistics(all_slots, contract_addresses, network_param)
     json_data = json.dumps(data)
     ## put the data in a file
     with open(JSON_FILE_PATH, "w") as f:
@@ -303,10 +280,10 @@ def calculate_statistics_from_DuckDB_tables():
 @enforce_types
 def fetch_statistics_using_ETL():
     # return
-    gql_data_factory = GQLDataFactory(accuracy_ppss)
+    # gql_data_factory = GQLDataFactory(accuracy_ppss)
     while True:
-        gql_data_factory.get_gql_tables()
-        calculate_statistics_from_DuckDB_tables()
+        # gql_data_factory.get_gql_tables()
+        calculate_statistics_from_slots()
         threading.Event().wait(300)  # Wait for 5 minutes (300 seconds)
 
 
@@ -317,7 +294,9 @@ def filter_func(seconds_per_epoch: int) -> Callable[[Any], bool]:
 
 
 @enforce_types
-def transform_slots_to_statistics(all_slots: List[Slot]):
+def transform_slots_to_statistics(
+    all_slots: List[Slot], contract_addresses: List[str], network_param: str
+):
     """
     Periodically fetches and saves statistical data to a JSON file.
 
@@ -333,8 +312,6 @@ def transform_slots_to_statistics(all_slots: List[Slot]):
     value defined for each statistic type.
     """
 
-    network_param = "mainnet"  # or 'testnet' depending on your preference
-
     statistic_types = [
         {
             "alias": "5m",
@@ -345,10 +322,6 @@ def transform_slots_to_statistics(all_slots: List[Slot]):
             "seconds_per_epoch": 3600,
         },
     ]
-
-    contract_addresses = get_all_contract_ids_by_owner(
-        "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
-    )
 
     contracts_list_unfiltered: List[ContractIdAndSPE] = fetch_contract_id_and_spe(
         contract_addresses,
