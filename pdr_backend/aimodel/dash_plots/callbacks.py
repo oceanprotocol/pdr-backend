@@ -26,10 +26,7 @@ from pdr_backend.aimodel.dash_plots.tooltips_text import (
 )
 from pdr_backend.aimodel.seasonal_plotter import (
     plot_relative_energies,
-    plot_observed,
-    plot_residual,
-    plot_seasonal,
-    plot_trend,
+    create_seasonal_plot,
 )
 from pdr_backend.aimodel.dash_plots.util import (
     read_files_from_directory,
@@ -150,18 +147,19 @@ def get_callbacks(app):
         transition_text = f" for BC={'T' if do_boxcox else 'F'},D={differencing_order}"
 
         relativeEnergies = plot_relative_energies(plotdata)
-        observed = plot_observed(plotdata)
-        trend = plot_trend(plotdata)
-        seasonal = plot_seasonal(plotdata)
-        ressidual = plot_residual(plotdata)
+        seasonal_plots = create_seasonal_plot(plotdata)
+        # trend = plot_trend(plotdata)
+        # seasonal = plot_seasonal(plotdata)
+        # ressidual = plot_residual(plotdata)
 
         seasonal_charts = get_column_graphs(
             [
-                {"fig": relativeEnergies, "graph_id": "relativeEnergies"},
-                {"fig": observed, "graph_id": "observed"},
-                {"fig": trend, "graph_id": "trend"},
-                {"fig": seasonal, "graph_id": "seasonal"},
-                {"fig": ressidual, "graph_id": "ressidual"},
+                {
+                    "fig": relativeEnergies,
+                    "graph_id": "relativeEnergies",
+                    "height": 80 / 5,
+                },
+                {"fig": seasonal_plots, "graph_id": "seasonal_plots", "height": 80 - 80 / 5},
             ],
             title="Seasonal Decomp." + transition_text,
             tooltip=SEASONAL_DECOMP_TOOLTIP,

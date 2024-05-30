@@ -13,9 +13,9 @@ def display_plots_view(columns):
         },
     )
 
-
+# pylint: disable=line-too-long
 def get_column_graphs(figures: list[dict], title: str, tooltip: str):
-    height_percentage = 80 / (len(figures) if (len(figures) > 1) else 2)
+    height_percentage = 80 / (len(figures) if (title != "ADF") else 2)
     return (
         html.Div(
             [
@@ -39,7 +39,7 @@ def get_column_graphs(figures: list[dict], title: str, tooltip: str):
                         id=fig["graph_id"],
                         style={
                             "width": "100%",
-                            "height": f"{height_percentage}vh",
+                            "height": f"{fig['height'] if 'height' in fig and fig['height'] else height_percentage}vh",
                             "padding": "0",
                         },
                     )
