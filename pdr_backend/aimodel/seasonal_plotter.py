@@ -23,9 +23,7 @@ def plot_relative_energies(seasonal_plotdata: SeasonalPlotdata):
             width=0.25,
         )
     )
-    fig.update_layout(
-        margin={"l": 5, "r": 5, "t": 20, "b": 0},
-    )
+    fig.update_layout(margin={"l": 5, "r": 5, "t": 20, "b": 0})
     fig.update_yaxes(title_text="Rel energy", minor=minor)
     fig.update_xaxes(minor=minor)
     return fig
