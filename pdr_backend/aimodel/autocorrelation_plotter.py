@@ -28,14 +28,7 @@ def plot_acf(autocorrelation_plotdata: AutocorrelationPlotdata):
 
     # Layout settings
     fig.update_layout(
-        title={
-            "text": "Autocorrelation (ACF)",
-            "y": 0.96,
-            "x": 0.5,
-            "xanchor": "center",
-            "yanchor": "top",
-        },
-        margin={"l": 5, "r": 5, "t": 50, "b": 0},
+        margin={"l": 5, "r": 5, "t": 20, "b": 0},
         showlegend=False,
     )
 
@@ -128,14 +121,7 @@ def get_transitions(selected_idx=None, y=[]):
     fig.update_yaxes(title_text="Transition")
     fig.update_xaxes(title_text="ADF")
     fig.update_layout(
-        title={
-            "text": "ADF",
-            "y": 0.96,
-            "x": 0.5,
-            "xanchor": "center",
-            "yanchor": "top",
-        },
-        margin={"l": 5, "r": 5, "t": 50, "b": 0},
-        xaxis={"range":[0.05, 0.1]},
+        margin={"l": 5, "r": 5, "t": 20, "b": 0},
+        xaxis={"range": [0.05, 0.1]},
     )
     return fig

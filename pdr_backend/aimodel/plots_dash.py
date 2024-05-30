@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import webbrowser
+import dash_bootstrap_components as dbc
 from enforce_typing import enforce_types
 from dash import Dash, dcc, html
 from pdr_backend.ppss.ppss import PPSS
@@ -9,7 +10,7 @@ from pdr_backend.aimodel.dash_plots.view_elements import (
 )
 from pdr_backend.aimodel.dash_plots.callbacks import get_callbacks
 
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.config["suppress_callback_exceptions"] = True
 app.layout = html.Div(
     [

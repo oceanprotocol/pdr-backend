@@ -19,6 +19,11 @@ from pdr_backend.aimodel.seasonal import (
     SeasonalDecomposeFactory,
     SeasonalPlotdata,
 )
+from pdr_backend.aimodel.dash_plots.tooltips_text import (
+    TRANSITION_TOOLTIP,
+    SEASONAL_DECOMP_TOOLTIP,
+    AUTOCORRELATION_TOOLTIP,
+)
 from pdr_backend.aimodel.seasonal_plotter import (
     plot_relative_energies,
     plot_observed,
@@ -96,14 +101,15 @@ def get_callbacks(app):
         transition_text = f" for BC={'T' if do_boxcox else 'F'},D={differencing_order}"
 
         acf = plot_acf(data)
-        acf.layout.title.text += transition_text
         pacf = plot_pacf(data)
 
         autocorelation_charts = get_column_graphs(
             [
                 {"fig": acf, "graph_id": "autocorelation"},
                 {"fig": pacf, "graph_id": "pautocorelation"},
-            ]
+            ],
+            title="Autocorrelation (ACF)" + transition_text,
+            tooltip=AUTOCORRELATION_TOOLTIP,
         )
         return autocorelation_charts
 
@@ -144,7 +150,6 @@ def get_callbacks(app):
         transition_text = f" for BC={'T' if do_boxcox else 'F'},D={differencing_order}"
 
         relativeEnergies = plot_relative_energies(plotdata)
-        relativeEnergies.layout.title.text += transition_text
         observed = plot_observed(plotdata)
         trend = plot_trend(plotdata)
         seasonal = plot_seasonal(plotdata)
@@ -157,7 +162,9 @@ def get_callbacks(app):
                 {"fig": trend, "graph_id": "trend"},
                 {"fig": seasonal, "graph_id": "seasonal"},
                 {"fig": ressidual, "graph_id": "ressidual"},
-            ]
+            ],
+            title="Seasonal Decomp." + transition_text,
+            tooltip=SEASONAL_DECOMP_TOOLTIP,
         )
 
         return seasonal_charts
@@ -183,7 +190,9 @@ def get_callbacks(app):
         )
         figure = get_transitions(None, files_data[feed_data]["close_data"])
         transitions = get_column_graphs(
-            [{"fig": figure, "graph_id": "transition_graph"}]
+            [{"fig": figure, "graph_id": "transition_graph"}],
+            title="ADF",
+            tooltip=TRANSITION_TOOLTIP,
         )
         return html.Div(transitions)
 

@@ -1,4 +1,5 @@
 from dash import dcc, html
+import dash_bootstrap_components as dbc
 
 
 def display_plots_view(columns):
@@ -13,22 +14,44 @@ def display_plots_view(columns):
     )
 
 
-def get_column_graphs(figures: list[dict]):
+def get_column_graphs(figures: list[dict], title: str, tooltip: str):
     height_percentage = 80 / (len(figures) if (len(figures) > 1) else 2)
     return (
         html.Div(
             [
-                dcc.Graph(
-                    figure=fig["fig"],
-                    id=fig["graph_id"],
+                html.Span(
+                    children=title + " ⓘ",
+                    id=figures[0]["graph_id"] + "-title",
                     style={
-                        "width": "100%",
-                        "height": f"{height_percentage}vh",
-                        "padding": "0",
+                        "textAlign": "center",
+                        "fontSize": "18px",
+                        "margin": "auto",
+                        "cursour": "pointer",
                     },
-                )
-                for fig in figures
-            ]
+                ),
+                dbc.Tooltip(
+                    dcc.Markdown(tooltip),
+                    target=figures[0]["graph_id"] + "-title",
+                ),
+                *[
+                    dcc.Graph(
+                        figure=fig["fig"],
+                        id=fig["graph_id"],
+                        style={
+                            "width": "100%",
+                            "height": f"{height_percentage}vh",
+                            "padding": "0",
+                        },
+                    )
+                    for fig in figures
+                ],
+            ],
+            style={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+            },
         ),
     )
 
@@ -93,7 +116,12 @@ def get_input_elements():
                             "height": "100%",
                         },
                     ),
-                ]
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "flex-start",
+                    "alignItems": "center",
+                },
             ),
         ],
         style={
