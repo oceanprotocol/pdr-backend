@@ -78,7 +78,7 @@ def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
 
 
 def get_transitions(selected_idx=None, y=[]):
-    bar_colors = ["blue"] * 4  # Default bar color
+    bar_colors = ["white"] * 4  # Default bar color
     if selected_idx is not None:
         bar_colors[selected_idx] = "grey"  # Change color of the selected bar
 
@@ -110,12 +110,21 @@ def get_transitions(selected_idx=None, y=[]):
     fig = go.Figure(
         data=[
             go.Bar(
+                x=[1, 1, 1, 1],
+                y=labels,
+                orientation="h",
+                width=0.3,
+                marker_color=bar_colors,
+                showlegend=False,
+            ),
+            go.Bar(
                 x=adf_values,
                 y=labels,
                 orientation="h",
-                marker_color=bar_colors,
-                width=0.5,
-            )
+                marker_color=["blue"] * 4,
+                width=0.3,
+                showlegend=False,
+            ),
         ]
     )
     fig.update_yaxes(title_text="Transition")

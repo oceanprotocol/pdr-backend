@@ -212,7 +212,7 @@ def get_callbacks(app):
         transition = point["y"]
 
         for i in range(len(figure["data"][0]["marker"]["color"])):
-            figure["data"][0]["marker"]["color"][i] = "blue"
+            figure["data"][0]["marker"]["color"][i] = "white"
         figure["data"][0]["marker"]["color"][selected_idx] = "grey"
         transition_data = {
             "BC": "T" in transition.split("=")[1],
