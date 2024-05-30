@@ -41,7 +41,7 @@ def do_lake_subcommand(args):
     ppss.lake_ss.d["st_timestr"] = st_ts_ms.to_timestr()
     ppss.lake_ss.d["fin_timestr"] = fin_ts_ms.to_timestr()
 
-    # Finally, pass in the ppss object w/ a fixed st_timestr and fin_timestr for the duration of this command
+    # Finally, pass fixed st_timestr and fin_timestr throuh ppss
     func(parsed_args, ppss)
 
 
