@@ -72,6 +72,11 @@ class AimodelSS(StrMixin):
         return self.d["balance_classes"]
 
     @property
+    def train_every_n_epochs(self) -> int:
+        """eg 1. Train every 5 epochs"""
+        return int(self.d["train_every_n_epochs"])
+
+    @property
     def calibrate_probs(self) -> str:
         """eg 'CalibratedClassifierCV_Sigmoid'"""
         return self.d["calibrate_probs"]
@@ -112,6 +117,7 @@ def aimodel_ss_test_dict(
     """Use this function's return dict 'd' to construct AimodelSS(d)"""
     d = {
         "max_n_train": 7 if max_n_train is None else max_n_train,
+        "train_every_n_epochs": 1,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
         "approach": approach or "LinearLogistic",
         "weight_recent": weight_recent or "10x_5x",
