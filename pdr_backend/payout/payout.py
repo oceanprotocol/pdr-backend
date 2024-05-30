@@ -8,7 +8,11 @@ from pdr_backend.contract.dfrewards import DFRewards
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.feed_contract import FeedContract
 from pdr_backend.contract.wrapped_token import WrappedToken
-from pdr_backend.predictoor.util import find_shared_slots, to_checksum
+from pdr_backend.predictoor.util import (
+    count_unique_slots,
+    find_shared_slots,
+    to_checksum,
+)
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
@@ -60,11 +64,17 @@ def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
     wait_until_subgraph_syncs(web3_config, subgraph_url)
     logger.info("Finding pending payouts")
     pending_slots = query_pending_payouts(subgraph_url, up_addr)
-    shared_slots = find_shared_slots(pending_slots)
+    payout_batch_size = ppss.predictoor_ss.payout_batch_size
+    shared_slots = find_shared_slots(pending_slots, payout_batch_size)
+    unique_slots = count_unique_slots(shared_slots)
+    min_payout_slots = ppss.predictoor_ss.min_payout_slots
+    if unique_slots < min_payout_slots:
+        logger.info("Not enough slots to payout, %d/%d", unique_slots, min_payout_slots)
+        return
     if not shared_slots:
         logger.info("No payouts available")
         return
-    logger.info("Found %d slots", len(shared_slots))
+    logger.info("Found %d slots", unique_slots)
     for slot_tuple in shared_slots:
         contract_addrs, slots = slot_tuple
         contract_addrs = to_checksum(ppss.web3_pp.w3, contract_addrs)
@@ -123,24 +133,32 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
                 receipt["transactionHash"],
             )
             return
-        logger.info("Transfering wROSE to owner")
         time.sleep(4)
-        balance = wROSE.balanceOf(pred_submitter_mgr.contract_address)
-        receipt = pred_submitter_mgr.transfer_erc20(
-            wROSE_addr, web3_config.owner, balance, True
-        )
-        if receipt["status"] != 1:
-            logger.warning(
-                "Failed to transfer wROSE tokens to the owner, tx: %s",
-                receipt["transactionHash"],
-            )
-            return
     else:
         logger.warning("No rewards available to claim")
-        return
+
+    def _transfer_wrose(instance_address, instance_name):
+        balance = wROSE.balanceOf(instance_address)
+        if balance > 0:
+            instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
+            receipt = instance.transfer_erc20(
+                wROSE_addr, web3_config.owner, balance, True
+            )
+            if receipt["status"] != 1:
+                logger.warning(
+                    "Failed to transfer wROSE tokens to the owner from %s, tx: %s",
+                    instance_name,
+                    receipt["transactionHash"],
+                )
+            time.sleep(4)
+
+    logger.info("Transfering wROSE to owner")
+
+    _transfer_wrose(up_addr, "up predictoor")
+    _transfer_wrose(down_addr, "down predictoor")
+    _transfer_wrose(pred_submitter_mgr.contract_address, "manager")
 
     logger.info("Converting wROSE to ROSE")
-    time.sleep(4)
     wROSE_bal = wROSE.balanceOf(web3_config.owner)
     if wROSE_bal == Wei(0):
         logger.warning("wROSE balance is 0")
