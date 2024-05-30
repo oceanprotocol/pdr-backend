@@ -2,7 +2,6 @@ from typing import List
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import ContractIdAndSPE
@@ -96,13 +95,6 @@ def test_calculate_statistics_for_all_assets():
 
 @enforce_types
 def test_calculate_statistics_from_DuckDB_tables(tmpdir):
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        str(tmpdir),
-        st_timestr="2023-12-20",
-        fin_timestr="now",
-    )
 
     two_weeks_ago = datetime.utcnow() - timedelta(weeks=2)
     slot_timestamp = UnixTimeS(int(two_weeks_ago.timestamp()))
@@ -132,11 +124,18 @@ def test_calculate_statistics_from_DuckDB_tables(tmpdir):
     test_json_file_path = str(tmpdir.join("test.json"))
 
     def mock_fetch_all_slots(
-        start_ts_param, end_ts_param, contracts, first, skip, network
+        start_ts_param,
+        end_ts_param,
+        contracts,
+        first,
+        skip,
+        network,  # pylint: disable=unused-argument
     ):
         return slots_list
 
-    def mock_get_all_contract_ids_by_owner(owner_address, network):
+    def mock_get_all_contract_ids_by_owner(
+        owner_address, network
+    ):  # pylint: disable=unused-argument
         return contracts_mock
 
     with patch("pdr_backend.accuracy.app.JSON_FILE_PATH", test_json_file_path):
@@ -179,7 +178,12 @@ def test_calculate_statistics_from_DuckDB_tables(tmpdir):
         slots_list.append(slot)
 
     def mock_fetch_all_slots_with_false_results(
-        start_ts_param, end_ts_param, contracts, first, skip, network
+        start_ts_param,
+        end_ts_param,
+        contracts,
+        first,
+        skip,
+        network,  # pylint: disable=unused-argument
     ):
         return slots_list
 
