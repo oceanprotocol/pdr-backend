@@ -13,6 +13,7 @@ def display_plots_view(columns):
         },
     )
 
+
 # pylint: disable=line-too-long
 def get_column_graphs(figures: list[dict], title: str, tooltip: str):
     height_percentage = 80 / (len(figures) if (title != "ADF") else 2)

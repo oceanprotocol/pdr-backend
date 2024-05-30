@@ -159,7 +159,11 @@ def get_callbacks(app):
                     "graph_id": "relativeEnergies",
                     "height": 80 / 5,
                 },
-                {"fig": seasonal_plots, "graph_id": "seasonal_plots", "height": 80 - 80 / 5},
+                {
+                    "fig": seasonal_plots,
+                    "graph_id": "seasonal_plots",
+                    "height": 80 - 80 / 5,
+                },
             ],
             title="Seasonal Decomp." + transition_text,
             tooltip=SEASONAL_DECOMP_TOOLTIP,
