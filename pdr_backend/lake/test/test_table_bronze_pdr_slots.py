@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
@@ -47,12 +47,10 @@ def test_table_bronze_pdr_slots(
     }
 
     # Work 1: Append all data onto tables
-    gql_tables["pdr_predictions"].append_to_storage(
-        _gql_datafactory_etl_predictions_df, ppss
-    )
-    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df, ppss)
-    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df, ppss)
-    gql_tables["pdr_slots"].append_to_storage(_gql_datafactory_etl_slots_df, ppss)
+    gql_tables["pdr_predictions"].append_to_storage(_gql_datafactory_etl_predictions_df)
+    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df)
+    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df)
+    gql_tables["pdr_slots"].append_to_storage(_gql_datafactory_etl_slots_df)
 
     # Check that the data is appended correctly
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)

@@ -29,7 +29,7 @@ def test_get_predictoors_info_main_mainnet(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
-    predictions_table.append_to_storage(predictions_df, ppss)
+    predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -81,7 +81,7 @@ def test_get_predictoors_info_bad_date_range(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
-    predictions_table.append_to_storage(predictions_df, ppss)
+    predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
@@ -131,7 +131,7 @@ def test_get_predictoors_info_bad_user_address(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
-    predictions_table.append_to_storage(predictions_df, ppss)
+    predictions_table.append_to_storage(predictions_df)
 
     user_addr = "0xbbbb4cb4ff2584bad80ff5f109034a891c3d223"
 
