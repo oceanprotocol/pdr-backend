@@ -41,7 +41,7 @@ class TraderSS(SingleFeedMixin, StrMixin):
         return ["livemock", "livereal"]
 
     @property
-    def confidence_threshold(self) -> float:
+    def sim_confidence_threshold(self) -> float:
         return self.d["sim_only"].get("confidence_threshold", 0.0)
 
     # feed defined in base
