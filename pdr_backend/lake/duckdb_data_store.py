@@ -195,7 +195,7 @@ class DuckDBDataStore(BaseDataStore):
                 "move_table_data - Table %s does not exist", temp_table.fullname
             )
 
-        permanent_table_name = permanent_table.table_name
+        permanent_table_name = permanent_table.fullname
         # check if the permanent table exists
         if permanent_table_name not in table_names:
             # create table if it does not exist
