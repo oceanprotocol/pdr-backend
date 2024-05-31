@@ -1,9 +1,10 @@
+import numpy as np
+import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
-from statsmodels.tsa.stattools import adfuller
-import plotly.graph_objects as go
-import numpy as np
 from scipy import stats
+from statsmodels.tsa.stattools import adfuller
+
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
     _add_corr_traces,

@@ -1,6 +1,7 @@
-from enforce_typing import enforce_types
 import plotly.graph_objects as go
+from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
+
 from pdr_backend.aimodel.seasonal import SeasonalPlotdata
 
 colors = ["black", "blue", "green", "red"]

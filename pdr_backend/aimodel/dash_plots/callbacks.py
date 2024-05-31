@@ -1,37 +1,34 @@
 from datetime import datetime
-from dash import Input, Output, State, html
-import pandas as pd
-from scipy import stats
+
 import dash
 import numpy as np
-from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
-from pdr_backend.aimodel.autocorrelation import (
-    AutocorrelationPlotdataFactory,
-)
+import pandas as pd
+from dash import Input, Output, State, html
+from scipy import stats
+
+from pdr_backend.aimodel.autocorrelation import AutocorrelationPlotdataFactory
 from pdr_backend.aimodel.autocorrelation_plotter import (
+    get_transitions,
     plot_acf,
     plot_pacf,
-    get_transitions,
-)
-from pdr_backend.aimodel.seasonal import (
-    SeasonalDecomposeFactory,
-    SeasonalPlotdata,
 )
 from pdr_backend.aimodel.dash_plots.tooltips_text import (
-    TRANSITION_TOOLTIP,
-    SEASONAL_DECOMP_TOOLTIP,
     AUTOCORRELATION_TOOLTIP,
-)
-from pdr_backend.aimodel.seasonal_plotter import (
-    plot_relative_energies,
-    create_seasonal_plot,
+    SEASONAL_DECOMP_TOOLTIP,
+    TRANSITION_TOOLTIP,
 )
 from pdr_backend.aimodel.dash_plots.util import (
-    read_files_from_directory,
     filter_file_data_by_date,
+    read_files_from_directory,
 )
+from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
+from pdr_backend.aimodel.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
+from pdr_backend.aimodel.seasonal_plotter import (
+    create_seasonal_plot,
+    plot_relative_energies,
+)
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 # pylint: disable=too-many-statements
