@@ -2,21 +2,22 @@ import logging
 import os
 import time
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
+from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.payout.payout import find_slots_and_payout_with_mgr
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
 from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
 from pdr_backend.predictoor.util import to_checksum
-from pdr_backend.payout.payout import find_slots_and_payout_with_mgr
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
@@ -81,6 +82,9 @@ class PredictoorAgent:
         self.prev_block_number: UnixTimeS = UnixTimeS(0)
         self.prev_submit_epochs: List[int] = []
         self.prev_submit_payouts: List[int] = []
+
+        self.iter_number: int = 0
+        self.crt_trained_model: Optional[Aimodel] = None
 
     @enforce_types
     def run(self):
@@ -180,6 +184,8 @@ class PredictoorAgent:
         feeds = list(self.feeds.values())
         logger.info("Calculating predictions and stakes")
         stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
+
+        self.iter_number += 1
 
         if len(stakes.slots) == 0:
             logger.info("No predictions to submit, skipping")
@@ -411,9 +417,14 @@ class PredictoorAgent:
         y_thr = curprice
         ybool = data_f.ycont_to_ytrue(ycont, y_thr)
 
-        # build model
-        model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-        model = model_f.build(X, ybool)
+        if (
+            self.iter_number % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
+        ) == 0:
+            model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
+            model = model_f.build(X, ybool)
+        else:
+            assert self.crt_trained_model is not None
+            model = self.crt_trained_model
 
         # predict
         X_test = xrecent.reshape((1, len(xrecent)))

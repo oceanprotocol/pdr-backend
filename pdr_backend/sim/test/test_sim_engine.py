@@ -1,7 +1,9 @@
 import os
-from enforce_typing import enforce_types
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 
+from enforce_typing import enforce_types
+
+from pdr_backend.aimodel.aimodel import Aimodel
+from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
@@ -39,6 +41,7 @@ def test_sim_engine(tmpdir):
     d["aimodel_ss"]["approach"] = "LinearLogistic"
     d["aimodel_ss"]["max_n_train"] = 20
     d["aimodel_ss"]["autoregressive_n"] = 1
+    d["aimodel_ss"]["train_every_n_epochs"] = 2
     ppss.predictoor_ss = PredictoorSS(d)
 
     # sim ss
@@ -49,6 +52,7 @@ def test_sim_engine(tmpdir):
     # go
     feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])
-    sim_engine.run()
 
-    # after implementing the P/C architeture, check state saved
+    assert sim_engine.crt_trained_model is None
+    sim_engine.run()
+    assert isinstance(sim_engine.crt_trained_model, Aimodel)
