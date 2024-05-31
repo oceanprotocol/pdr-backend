@@ -21,7 +21,6 @@ HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
   pdr sim_plots [--run_id RUN_ID] [--port PORT]
-  pdr arima_plots PPSS_FILE
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
@@ -46,6 +45,7 @@ Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --l
 HELP_OTHER_TOOLS = """
 Power tools:
   pdr multisim PPSS_FILE
+  pdr arima_plots PPSS_FILE
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
