@@ -10,6 +10,7 @@ from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
+from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
@@ -62,6 +63,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        self.crt_trained_model: Optional[Aimodel] = None
+
     @property
     def predict_feed(self) -> ArgFeed:
         return self.predict_train_feedset.predict
@@ -97,6 +100,7 @@ class SimEngine:
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
+
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -134,8 +138,16 @@ class SimEngine:
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
-        model_f = AimodelFactory(pdr_ss.aimodel_ss)
-        model = model_f.build(X_train, ytrue_train)
+        if (
+            self.st.iter_number
+            % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
+        ) == 0:
+            model_f = AimodelFactory(pdr_ss.aimodel_ss)
+            model = model_f.build(X_train, ytrue_train)
+            self.crt_trained_model = model
+        else:
+            assert self.crt_trained_model is not None
+            model = self.crt_trained_model
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))

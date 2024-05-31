@@ -34,6 +34,7 @@ predictoor_ss:
     weight_recent: 10x_5x # 10x_5x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
+    train_every_n_epochs: 1
 
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000
