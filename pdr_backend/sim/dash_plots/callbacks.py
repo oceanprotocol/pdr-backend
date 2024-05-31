@@ -8,6 +8,7 @@ from pdr_backend.sim.dash_plots.view_elements import (
     get_header_elements,
     get_waiting_template,
     selected_var_checklist,
+    get_tabs_component,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
@@ -54,7 +55,8 @@ def get_callbacks(app):
         return selected_vars
 
     @app.callback(
-        Output("live-graphs", "children"),
+        Output("tabs-container", "children"),
+        Output("header", "children"),
         Input("interval-component", "n_intervals"),
         Input("selected_vars", "value"),
         State("selected_vars", "value"),
@@ -69,12 +71,22 @@ def get_callbacks(app):
         except Exception as e:
             return [get_waiting_template(e)]
 
-        elements = get_header_elements(run_id, st, ts)
+        header = get_header_elements(run_id, st, ts)
+        elements = []
 
         state_options = sim_plotter.aimodel_plotdata.colnames
         elements.append(selected_var_checklist(state_options, selected_vars_old))
 
         figures = get_figures_by_state(sim_plotter, selected_vars)
-        elements = elements + arrange_figures(figures)
+        aranged_figures = arrange_figures(figures)
+        tabs = [
+            {"name": "Profit", "components": [aranged_figures[0], aranged_figures[2]]},
+            {
+                "name": "Model performance",
+                "components": [aranged_figures[1], aranged_figures[4]],
+            },
+            {"name": "Model response", "components": [aranged_figures[3]]},
+        ]
+        elements = elements + [get_tabs_component(tabs)]
 
-        return elements
+        return elements, header
