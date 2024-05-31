@@ -40,6 +40,10 @@ class TraderSS(SingleFeedMixin, StrMixin):
     def allowed_tradetypes(self) -> List[str]:
         return ["livemock", "livereal"]
 
+    @property
+    def confidence_threshold(self) -> float:
+        return self.d["sim_only"].get("confidence_threshold", 0.0)
+
     # feed defined in base
 
     # --------------------------------
