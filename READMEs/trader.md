@@ -23,14 +23,14 @@ In a new console:
 git clone https://github.com/oceanprotocol/pdr-backend
 cd pdr-backend
 
-# Create & activate virtualenv
+# create & activate virtualenv
 python -m venv venv
 source venv/bin/activate
 
-# Install modules in the environment
+# install modules in the environment
 pip install -r requirements.txt
 
-#add pwd to bash path
+# add pwd to bash path
 export PATH=$PATH:.
 ```
 
