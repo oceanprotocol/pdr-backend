@@ -105,8 +105,12 @@ def test_csv_data_store(
 
     # Initialize Table, fill with data, validate
     table = NamedTable.from_dataclass(Prediction)
+<<<<<<< HEAD
 
     table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
+=======
+    table._append_to_csv(_gql_datafactory_first_predictions_df)
+>>>>>>> cda8c57d (Add automagical retrieval of ppss in named tables.)
 
     assert CSVDataStore.from_table(table, ppss).has_data()
 
@@ -124,7 +128,7 @@ def test_csv_data_store(
         file.close()
 
     # Add second batch of predictions, validate
-    table._append_to_csv(_gql_datafactory_1k_predictions_df, ppss)
+    table._append_to_csv(_gql_datafactory_1k_predictions_df)
 
     files = os.listdir(os.path.join(ppss.lake_ss.lake_dir, table.table_name))
     files.sort(reverse=True)
@@ -196,6 +200,9 @@ def test_append_to_db(caplog):
     """
     st_timestr = "2023-12-03"
     fin_timestr = "2023-12-05"
+
+    # ppss automatically retrieved from locals in NamedTable.from_dataclass
+    # pylint: disable=unused-variable
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
@@ -206,7 +213,6 @@ def test_append_to_db(caplog):
 
     table = NamedTable.from_dataclass(Prediction)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
-
-    table._append_to_db(data, ppss)
+    table._append_to_db(data)
 
     assert "Appended 1 rows to db table: pdr_predictions" in caplog.text
