@@ -101,7 +101,7 @@ class GQLDataFactory:
                 "  Table not yet created. Insert all %s csv data", table.fullname
             )
             data = CSVDataStore.from_table(table, self.ppss).read_all(schema)
-            temp_table._append_to_db(data, self.ppss)
+            temp_table._append_to_db(data)
             return
 
         if db_last_timestamp['max("timestamp")'][0] and (
@@ -113,7 +113,7 @@ class GQLDataFactory:
                 fin_ut,
                 schema,
             )
-            temp_table._append_to_db(data, self.ppss)
+            temp_table._append_to_db(data)
 
     @enforce_types
     def _calc_start_ut(self, table: NamedTable) -> UnixTimeMs:
@@ -210,7 +210,7 @@ class GQLDataFactory:
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
                 assert df.schema == dataclass.get_lake_schema()
-                temp_table.append_to_storage(buffer_df, self.ppss)
+                temp_table.append_to_storage(buffer_df)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
                 )
@@ -229,7 +229,7 @@ class GQLDataFactory:
             pagination_offset += pagination_limit
 
         if len(buffer_df) > 0:
-            temp_table.append_to_storage(buffer_df, self.ppss)
+            temp_table.append_to_storage(buffer_df)
             logger.info("Saved %s records to storage while fetching", len(buffer_df))
 
     @enforce_types

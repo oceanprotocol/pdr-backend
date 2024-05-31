@@ -2,6 +2,7 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
+import inspect
 import logging
 from enum import Enum
 from typing import Optional, Type, Union
@@ -10,8 +11,9 @@ import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
-from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.lake_mapper import LakeMapper
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("table")
@@ -77,12 +79,46 @@ def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
     logger.info("truncated %s rows from %s tables", trunc_count, table_count)
 
 
+def get_caller_ppss():
+    caller_ppss = None
+    prev_frame = inspect.currentframe()
+
+    while caller_ppss is None and prev_frame is not None:
+        prev_frame = prev_frame.f_back
+
+        if not prev_frame:
+            break
+
+        # allow for "magical" ppss retrieval from tests
+        if "test/" in prev_frame.f_code.co_filename:
+            if prev_frame.f_locals.get("etl"):
+                caller_ppss = prev_frame.f_locals["etl"].ppss
+                break
+            if prev_frame.f_locals.get("ppss"):
+                caller_ppss = prev_frame.f_locals["ppss"]
+                break
+
+        # along the way, some caller of the NamedTable.from_dataclass() method
+        # must have a ppss attribute
+        if not prev_frame.f_locals.get("self"):
+            continue
+
+        caller = prev_frame.f_locals["self"]
+        if hasattr(caller, "ppss"):
+            caller_ppss = caller.ppss
+
+    if not caller_ppss:
+        raise ValueError("Could not find a PPSS object in the call stack")
+    return caller_ppss
+
+
 @enforce_types
 class NamedTable:
     def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
         self.table_name = table_name
         self.table_type = table_type
         self._dataclass: Union[None, Type["LakeMapper"]] = None
+        self._ppss: Union[None, PPSS] = None
 
     @property
     def fullname(self) -> str:
@@ -100,6 +136,13 @@ class NamedTable:
 
         raise AttributeError("dataclass not set")
 
+    @property
+    def ppss(self) -> PPSS:
+        if self._ppss:
+            return self._ppss
+
+        raise AttributeError("ppss not set")
+
     @staticmethod
     def from_dataclass(
         dataclass: Type[LakeMapper], table_type: Optional[TableType] = None
@@ -109,15 +152,16 @@ class NamedTable:
 
         named_table = NamedTable(dataclass.get_lake_table_name(), table_type)
         named_table._dataclass = dataclass
+        named_table._ppss = get_caller_ppss()
         return named_table
 
     @enforce_types
-    def append_to_storage(self, data: pl.DataFrame, ppss):
-        self._append_to_csv(data, ppss)
-        self._append_to_db(data, ppss)
+    def append_to_storage(self, data: pl.DataFrame):
+        self._append_to_csv(data)
+        self._append_to_db(data)
 
     @enforce_types
-    def _append_to_csv(self, data: pl.DataFrame, ppss):
+    def _append_to_csv(self, data: pl.DataFrame):
         """
         Append the data from the DataFrame object into the CSV file
         It only saves the new data that has been fetched
@@ -125,7 +169,7 @@ class NamedTable:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        csvds = CSVDataStore.from_table(self, ppss)
+        csvds = CSVDataStore.from_table(self, self.ppss)
         logger.info(" csvds = %s", csvds)
         csvds.write(
             data,
@@ -134,7 +178,7 @@ class NamedTable:
         logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
 
     @enforce_types
-    def _append_to_db(self, data: pl.DataFrame, ppss):
+    def _append_to_db(self, data: pl.DataFrame):
         """
         Append the data from the DataFrame object into the database
         It only saves the new data that has been fetched
@@ -142,7 +186,7 @@ class NamedTable:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.fullname)
+        DuckDBDataStore(self.ppss.lake_ss.lake_dir).insert_to_table(data, self.fullname)
         logger.info("  Appended %s rows to db table: %s", data.shape[0], self.fullname)
 
 
@@ -156,6 +200,7 @@ class TempTable(NamedTable):
     def from_dataclass(dataclass: Type[LakeMapper]) -> "TempTable":
         temp_table = TempTable(dataclass.get_lake_table_name())
         temp_table._dataclass = dataclass
+        temp_table._ppss = get_caller_ppss()
         return temp_table
 
 
@@ -169,4 +214,5 @@ class ETLTable(NamedTable):
     def from_dataclass(dataclass: Type[LakeMapper]) -> "ETLTable":
         etl_table = ETLTable(dataclass.get_lake_table_name())
         etl_table._dataclass = dataclass
+        etl_table._ppss = get_caller_ppss()
         return etl_table
