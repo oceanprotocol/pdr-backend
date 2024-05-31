@@ -6,7 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.table import NamedTable
 from pdr_backend.ppss.ppss import mock_ppss
 
 
@@ -31,8 +31,8 @@ def test_get_predictions_info_main_mainnet(
         fin_timestr=fin_timestr,
     )
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(Prediction, ppss)
-    predictions_table.append_to_storage(predictions_df)
+    predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.append_to_storage(predictions_df, ppss)
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -96,8 +96,8 @@ def test_get_predictions_info_bad_date_range(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(Prediction, ppss)
-    predictions_table.append_to_storage(predictions_df)
+    predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.append_to_storage(predictions_df, ppss)
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -151,8 +151,8 @@ def test_get_predictions_info_bad_feed(
     )
 
     predictions_df = _gql_datafactory_first_predictions_df
-    predictions_table = Table(Prediction, ppss)
-    predictions_table.append_to_storage(predictions_df)
+    predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.append_to_storage(predictions_df, ppss)
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
 
@@ -193,9 +193,9 @@ def test_get_predictions_info_empty(_gql_datafactory_first_predictions_df, tmpdi
         fin_timestr=fin_timestr,
     )
 
-    predictions_table = Table(Prediction, ppss)
+    predictions_table = NamedTable.from_dataclass(Prediction)
     predictions_table.append_to_storage(
-        pl.DataFrame([], schema=Prediction.get_lake_schema())
+        pl.DataFrame([], schema=Prediction.get_lake_schema()), ppss
     )
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"

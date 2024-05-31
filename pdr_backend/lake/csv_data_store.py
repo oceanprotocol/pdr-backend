@@ -123,8 +123,8 @@ class CSVDataStore:
         self.table_name = table_name
 
     @staticmethod
-    def from_table(table):
-        return CSVDataStore(table.base_path, table.table_name)
+    def from_table(table, ppss):
+        return CSVDataStore(ppss.lake_ss.lake_dir, table.table_name)
 
     @enforce_types
     def _create_file_name(self, start_time: int, end_time: Optional[int]) -> str:

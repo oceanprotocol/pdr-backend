@@ -10,7 +10,7 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, Table, TempTable
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
@@ -168,7 +168,7 @@ def test_calc_start_ut(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    table = Table(Prediction, ppss)
+    table = NamedTable.from_dataclass(Prediction)
 
     st_ut = gql_data_factory._calc_start_ut(table)
     assert st_ut.to_seconds() == 1701561601
