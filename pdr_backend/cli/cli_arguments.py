@@ -597,14 +597,6 @@ class ArimaPlotsArgParser(CustomArgParser):
     # pylint: disable=unused-argument
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-
-        self.add_argument(
-            "--port",
-            nargs="?",
-            help="The port to run the server on. Default is 8050.",
-            type=int,
-            default=8050,
-        )
         self.add_arguments_bulk(command_name, ["PPSS"])
 
 

@@ -28,7 +28,9 @@ from pdr_backend.aimodel.seasonal_plotter import (
     plot_relative_energies,
 )
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeS
+
+DATE_STRING_FORMAT = "%Y-%m-%d"
 
 
 # pylint: disable=too-many-statements
@@ -44,7 +46,7 @@ def get_callbacks(app):
         [Input("file-data", "data")],
     )
     def display_read_data_error(store_data):
-        if store_data == {}:
+        if not store_data:
             return html.H2(
                 "No data found! Fetch ohlcv data before running the ARIMA plots."
             )
@@ -78,8 +80,8 @@ def get_callbacks(app):
 
         files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
-            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
-            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
+            datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
         )
 
         y = files_data[feed_data]["close_data"]
@@ -88,6 +90,7 @@ def get_callbacks(app):
         y = np.array(y)
         if do_boxcox:
             y, _ = stats.boxcox(y)
+
         for _ in range(differencing_order):
             y = y[1:] - y[:-1]
 
@@ -123,21 +126,22 @@ def get_callbacks(app):
     ):
         if transition is None:
             return dash.no_update
+
         do_boxcox = transition["BC"]
         differencing_order = transition["D"]
 
         files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
-            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
-            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
+            datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
         )
 
         # get data for seasonal
         y = files_data[feed_data]["close_data"]
         y = np.array(y)
         timestamp_str = files_data[feed_data]["timestamps"][0]
-        st = UnixTimeMs(timestamp_str.timestamp() * 1000)
-        t = ArgTimeframe(feed_data.split("_")[len(feed_data.split("_")) - 1])
+        st = UnixTimeS.to_milliseconds(timestamp_str.timestamp())
+        t = ArgTimeframe(feed_data.split("_")[-1])
         dr = SeasonalDecomposeFactory.build(t, y)
 
         plotdata = SeasonalPlotdata(st, dr)
@@ -184,8 +188,8 @@ def get_callbacks(app):
     ):
         files_data[feed_data] = files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
-            datetime.strptime(date_picker_start_date, "%Y-%m-%d"),
-            datetime.strptime(date_picker_end_date, "%Y-%m-%d"),
+            datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
+            datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
         )
         figure = get_transitions(None, files_data[feed_data]["close_data"])
         transitions = get_column_graphs(
@@ -254,4 +258,5 @@ def get_callbacks(app):
         timestamps = pd.to_datetime(timestamps)
         start_date = min(timestamps).date()
         end_date = max(timestamps).date()
+
         return start_date, end_date, start_date, end_date

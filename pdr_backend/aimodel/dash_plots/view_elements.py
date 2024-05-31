@@ -40,7 +40,7 @@ def get_column_graphs(figures: list[dict], title: str, tooltip: str):
                         id=fig["graph_id"],
                         style={
                             "width": "100%",
-                            "height": f"{fig['height'] if 'height' in fig and fig['height'] else height_percentage}vh",
+                            "height": str(fig.get("height", height_percentage)) + "vh",
                             "padding": "0",
                         },
                     )

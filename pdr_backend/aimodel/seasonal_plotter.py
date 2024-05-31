@@ -40,65 +40,24 @@ def create_seasonal_plot(seasonal_plotdata: SeasonalPlotdata):
 
     fig = make_subplots(rows=4, cols=1, vertical_spacing=0)
 
-    # subplot 1: observed
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=d.dr.observed,
-            mode="lines",
-            line={"color": colormap["observed"], "width": 1},
-        ),
-        row=1,
-        col=1,
-    )
-    fig.update_yaxes(title_text="Observed", row=1, col=1)
+    plot_names = ["observed", "trend", "seasonal", "resid"]
+    for i, plotname in enumerate(plot_names):
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=getattr(d.dr, plotname),
+                mode="lines",
+                line={"color": colormap[plotname], "width": 1},
+            ),
+            row=i + 1,
+            col=1,
+        )
+        fig.update_yaxes(
+            minor=minor, title_text=plotname.capitalize(), row=i + 1, col=1
+        )
+        fig.update_xaxes(minor=minor, row=i + 1, col=1)
 
-    # subplot 2: trend
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=d.dr.trend,
-            mode="lines",
-            line={"color": colormap["trend"], "width": 1},
-        ),
-        row=2,
-        col=1,
-    )
-    fig.update_yaxes(title_text="Trend", row=2, col=1)
-
-    # subplot 3: seasonal
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=d.dr.seasonal,
-            mode="lines",
-            line={"color": colormap["seasonal"], "width": 1},
-        ),
-        row=3,
-        col=1,
-    )
-    fig.update_yaxes(title_text="Seasonal", row=3, col=1)
-
-    # subplot 4: residual
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=d.dr.resid,
-            mode="lines",
-            line={"color": colormap["resid"], "width": 1},
-        ),
-        row=4,
-        col=1,
-    )
-    fig.update_yaxes(title_text="Resid", row=4, col=1)
-    fig.update_xaxes(title_text="time", row=4, col=1)
-
-    fig.update_yaxes(minor=minor, row=1, col=1)
-    for row in [1, 2, 3, 4]:
-        fig.update_yaxes(minor=minor, row=row, col=1)
-        fig.update_xaxes(minor=minor, row=row, col=1)
-
-    # global: share x-axes of subplots 2-5
+    # global: share x-axes of subplots 1-4
     fig.update_layout(
         {
             "xaxis1": {"matches": "x", "showticklabels": False},

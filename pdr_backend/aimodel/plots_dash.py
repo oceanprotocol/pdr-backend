@@ -23,8 +23,6 @@ app.layout = html.Div(
         html.H1(
             "ARIMA-style feed analysis",
             id="page_title",
-            # stops refreshing if final state was reached. Do not remove this class!
-            className="title",
             style={"width": "100%", "textAlign": "center"},
         ),
         html.Div(id="input-elements", children=get_input_elements()),
@@ -42,8 +40,9 @@ get_callbacks(app)
 
 
 @enforce_types
-def arima_dash(port, ppss: PPSS):
-    webbrowser.open("http://127.0.0.1:8050/")
+def arima_dash(ppss: PPSS):
+    port = 8050
+    webbrowser.open(f"http://127.0.0.1:{port}/")
     folder = ppss.lake_ss.parquet_dir
     app.layout.children[0].data = folder
     app.run(debug=True, port=port)

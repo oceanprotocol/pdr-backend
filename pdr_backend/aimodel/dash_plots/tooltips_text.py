@@ -11,7 +11,7 @@ The "ADF" (Augmented Dickey-Fuller) measure tells us how stationary a feed is. W
 The order of transforms should be: first apply BC, then D=1, then D=2. Where:
  - "BC=T/F" = Do apply Box-Cox Transform True/False? The Box-Cox transform makes the feed's values follow a more Gaussian distribution, by warping the outliers to be less outlying, as needed.
  - "D=0/1/2" = Apply no differencing (0), apply first-order differencing: "x(t-1) - x(t-2)" (trend), or apply second-order differencing "(x(t-1) - x(t-2)) - (x(t-2) - x(t-3))" (curvature).
-Eg if "BC=T, D=1" is the first transform where ADF < 0.05, then that's the transform you want to work with.
+E.g. if "BC=T, D=1" is the first transform where ADF < 0.05, then that's the transform you want to work with.
 
 
 Guideline: choose the least amount of transformations to make your data stationary. When building models later, apply this transform.
