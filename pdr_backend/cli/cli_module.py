@@ -87,23 +87,17 @@ def do_sim(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_predictoor(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     agent = PredictoorAgent(ppss)
     agent.run()
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_trader(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     approach = args.APPROACH
 
     if approach == 1:
@@ -153,18 +147,16 @@ def do_deployer(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_lake(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_analytics(args, nested_args=None):
     """
     @description
@@ -178,11 +170,7 @@ def do_analytics(args, nested_args=None):
         Please use nested_args to control lake_ss
         ie: st_timestr, fin_timestr, parquet_dir
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
 
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
@@ -190,6 +178,7 @@ def do_analytics(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_get_predictoors_info(args, nested_args=None):
     """
     @description
@@ -198,16 +187,13 @@ def do_get_predictoors_info(args, nested_args=None):
         END = End time string (e.g. "2022-01-01")
         PDRS = List of predictoor addresses to filter on (e.g. ["0x1", "0x2"])
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     pdrs = args.PDRS or []
     get_predictoors_info_main(ppss, args.ST, args.END, pdrs)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_get_predictions_info(args, nested_args=None):
     """
     @description
@@ -216,16 +202,13 @@ def do_get_predictions_info(args, nested_args=None):
         END = End time string (e.g. "2022-01-01")
         PDRS = List of feed addresses to filter on (e.g. ["0x1", "0x2"])
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     feeds = args.FEEDS or []
     get_predictions_info_main(ppss, args.ST, args.END, feeds)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_get_traction_info(args, nested_args=None):
     """
     @description
@@ -235,32 +218,22 @@ def do_get_traction_info(args, nested_args=None):
         ST = Start time string (e.g. "2021-01-01")
         END = End time string (e.g. "2022-01-01")
     """
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     ppss.lake_ss.d["parquet_dir"] = args.PQDIR
     get_traction_info_main(ppss, args.ST, args.END)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_check_network(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     check_network_main(ppss, args.LOOKBACK_HOURS)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_trueval(args, nested_args=None, testing=False):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     predictoor_batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
     agent = TruevalAgent(ppss, predictoor_batcher_addr)
 
@@ -268,23 +241,17 @@ def do_trueval(args, nested_args=None, testing=False):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_dfbuyer(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     agent = DFBuyerAgent(ppss)
     agent.run()
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_publisher(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
 
     if ppss.web3_pp.network == "development":
         fund_accounts_with_OCEAN(ppss.web3_pp)
@@ -292,12 +259,9 @@ def do_publisher(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_topup(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     topup_main(ppss)
 
 
@@ -308,34 +272,25 @@ def do_create_accounts(args, nested_args=None):
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_print_balances(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     account = args.ACCOUNT
     print_balances(account, ppss.web3_pp)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_fund_accounts(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     to_accounts = args.ACCOUNTS
     fund_accounts(Eth(args.TOKEN_AMOUNT), to_accounts, ppss.web3_pp, args.NATIVE_TOKEN)
 
 
 @enforce_types
+# pylint: disable=unused-argument
 def do_deploy_pred_submitter_mgr(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
+    ppss = args.PPSS
     contract_address = deploy_pred_submitter_mgr_contract(ppss.web3_pp)
     logger.info(
         "Prediction Submitter Manager Contract deployed at %s", contract_address
