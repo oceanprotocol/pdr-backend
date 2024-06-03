@@ -90,7 +90,9 @@ def _process_truevals(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
 
     # update only the ones within this time range
     predictions_df = (
-        predictions_df.join(truevals_df, left_on="slot_id", right_on="ID", how="left")
+        predictions_df.join(
+            truevals_df, left_on="slot_id", right_on="ID", how="left", coalesce=True
+        )
         .with_columns(
             [
                 pl.col("trueval").fill_null(pl.col("truevalue")),
@@ -131,7 +133,7 @@ def _process_payouts(tables: Dict[str, Table], ppss: PPSS) -> Dict[str, Table]:
 
     # do work to join from pdr_payout onto bronze_pdr_predictions
     predictions_df = (
-        predictions_df.join(payouts_df, on=["ID"], how="left")
+        predictions_df.join(payouts_df, on=["ID"], how="left", coalesce=True)
         .with_columns(
             [
                 pl.col("payout_right").fill_null(pl.col("payout")),
