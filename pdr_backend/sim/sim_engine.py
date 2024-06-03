@@ -156,7 +156,12 @@ class SimEngine:
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        pred_up: bool = prob_up > 0.5
+        prob_down: float = 1.0 - prob_up
+        conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
+        conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
+        conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
+        pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
+        pred_down: bool = prob_up < 0.5 and conf_down > conf_threshold
         st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
@@ -169,12 +174,9 @@ class SimEngine:
         # trader: enter the trading position
         usdcoin_holdings_before = st.holdings[self.usdcoin]
         if pred_up:  # buy; exit later by selling
-            conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
             usdcoin_amt_send = trade_amt * conf_up
             tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
-        else:  # sell; exit later by buying
-            prob_down = 1.0 - prob_up
-            conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
+        elif pred_down:  # sell; exit later by buying
             target_usdcoin_amt_recd = trade_amt * conf_down
             p = self.ppss.trader_ss.fee_percent
             tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
@@ -205,7 +207,7 @@ class SimEngine:
         if pred_up:
             # we'd bought; so now sell
             self._sell(trueprice, tokcoin_amt_recd)
-        else:
+        elif pred_down:
             # we'd sold, so buy back the same # tokcoins as we sold
             # (do *not* buy back the same # usdcoins! Not the same thing!)
             target_tokcoin_amt_recd = tokcoin_amt_send
