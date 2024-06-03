@@ -10,6 +10,7 @@ from pdr_backend.lake.lake_validate import LakeValidate
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import drop_tables_from_st
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
 
@@ -29,6 +30,18 @@ def do_lake_subcommand(args):
 
     ppss = PPSS(yaml_filename=parsed_args.PPSS_FILE, network=parsed_args.NETWORK)
 
+    # Every lake interaction goes through here and we don't have any processes/looping yet
+    # So, we can resolve the st_timestr and fin_timestr here
+    # Let's transform "1d ago" or "now" into a UnixTimeMs object
+    st_ts_ms = UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr)
+    fin_ts_ms = UnixTimeMs.from_timestr(ppss.lake_ss.fin_timestr)
+
+    # And then let's update the ppss object with these new values
+    # So we don't have any time drifting while we're running the lake commands
+    ppss.lake_ss.d["st_timestr"] = st_ts_ms.to_timestr()
+    ppss.lake_ss.d["fin_timestr"] = fin_ts_ms.to_timestr()
+
+    # Finally, pass fixed st_timestr and fin_timestr throuh ppss
     func(parsed_args, ppss)
 
 
@@ -78,7 +91,7 @@ def do_lake_raw_update(_, ppss):
     """
     try:
         gql_data_factory = GQLDataFactory(ppss)
-        gql_data_factory.get_gql_tables()
+        gql_data_factory._update()
     except Exception as e:
         logger.error("Error updating raw lake data: %s", e)
         print(e)

@@ -10,7 +10,7 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction, mock_daily_predictions
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import NamedTable, Table, TempTable
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.time_types import UnixTimeMs
@@ -153,29 +153,6 @@ def test_update_partial_then_resume(
     ]
 
 
-@patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._update")
-def test_get_gql_tables(mock_update):
-    """
-    Test GQLDataFactory's get_gql_tablesreturns all the tables
-    """
-    mock_update.return_value = None
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    gql_data_factory = GQLDataFactory(ppss)
-
-    gql_dfs = gql_data_factory.get_gql_tables()
-
-    assert len(gql_dfs.items()) == 3
-
-
 def test_calc_start_ut(tmpdir):
     """
     Test GQLDataFactory's calc_start_ut returns the correct UnixTimeMs
@@ -191,7 +168,7 @@ def test_calc_start_ut(tmpdir):
     )
 
     gql_data_factory = GQLDataFactory(ppss)
-    table = Table(Prediction, ppss)
+    table = NamedTable.from_dataclass(Prediction)
 
     st_ut = gql_data_factory._calc_start_ut(table)
     assert st_ut.to_seconds() == 1701561601
@@ -329,7 +306,7 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
 
     gql_data_factory = GQLDataFactory(ppss)
 
-    table = Table(Prediction, ppss)
+    table = NamedTable.from_dataclass(Prediction)
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
     initial_response = mock_daily_predictions()
@@ -348,21 +325,17 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
         {"contract_list": ["0x123"]},
     )
     assert (
-        len(
-            db.query_data(
-                "SELECT * FROM {}".format("_temp_{}".format(table.table_name))
-            )
-        )
+        len(db.query_data("SELECT * FROM {}".format("_temp_{}".format(table.fullname))))
         == 6
     )
 
     # move temp table to production and check the data is there
-    db.move_table_data(TempTable(table.table_name), table)
+    db.move_table_data(TempTable.from_dataclass(Prediction), table)
 
     # now keep both temp and production tables but remove values
-    db.query_data("DELETE FROM {}".format(table.table_name))
-    db.query_data("DELETE FROM {}".format("_temp_{}".format(table.table_name)))
-    assert len(db.query_data("SELECT * FROM {}".format(table.table_name))) == 0
+    db.query_data("DELETE FROM {}".format(table.fullname))
+    db.query_data("DELETE FROM {}".format("_temp_{}".format(table.fullname)))
+    assert len(db.query_data("SELECT * FROM {}".format(table.fullname))) == 0
 
     # run prepare_temp_table again to check that,
     # if production table doesn't have any rows doesn't break the preparation
@@ -371,6 +344,6 @@ def test_prepare_temp_table_get_data_from_csv_if_production_table_empty(tmpdir):
         UnixTimeMs(1699300800000),
         UnixTimeMs(1699300800000),
     )
-    db.move_table_data(TempTable(table.table_name), table)
+    db.move_table_data(TempTable.from_dataclass(Prediction), table)
 
-    assert len(db.query_data("SELECT * FROM {}".format(table.table_name))) == 6
+    assert len(db.query_data("SELECT * FROM {}".format(table.fullname))) == 6

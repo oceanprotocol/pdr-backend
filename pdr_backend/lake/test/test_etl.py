@@ -403,7 +403,7 @@ def test_calc_bronze_start_end_ts(tmpdir):
     )
 
     gql_data_factory = Mock(spec=gql_data_factory)
-    gql_data_factory.raw_table_names = [
+    mock_gql_tables = [
         "raw_table_1",
         "raw_table_2",
         "raw_table_3",
@@ -417,8 +417,11 @@ def test_calc_bronze_start_end_ts(tmpdir):
     ]
 
     with patch("pdr_backend.lake.etl._ETL_REGISTERED_TABLE_NAMES", mock_tables):
-        # Calculate from + to timestamps
-        from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
+        with patch(
+            "pdr_backend.lake.etl._GQLDF_REGISTERED_TABLE_NAMES", mock_gql_tables
+        ):
+            # Calculate from + to timestamps
+            from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
 
     assert (
         UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")

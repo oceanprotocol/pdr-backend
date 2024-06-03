@@ -10,7 +10,7 @@ from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable, Table, TableType, TempTable
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
@@ -65,42 +65,6 @@ class GQLDataFactory:
             }
         }
 
-    @property
-    def raw_table_names(self):
-        return [
-            dn.get_lake_table_name()  # type: ignore[attr-defined]
-            for dn in _GQLDF_REGISTERED_LAKE_TABLES
-        ]
-
-    @enforce_types
-    def get_gql_tables(self) -> Dict[str, Table]:
-        """
-        @description
-          Get historical dataframes across many feeds and timeframes.
-
-        @return
-          predictions_df -- *polars* Dataframe. See class docstring
-        """
-
-        logger.info("Get predictions data across many feeds and timeframes.")
-
-        # st_timestamp is calculated dynamically if ss.fin_timestr = "now".
-        # But, we don't want fin_timestamp changing as we gather data here.
-        # To solve, for a given call to this method, we make a constant fin_ut
-
-        logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
-        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
-
-        self._update()
-        logger.info("Get historical data across many subgraphs. Done.")
-
-        tables = [
-            Table(dataclass, self.ppss)  # type: ignore[arg-type]
-            for dataclass in _GQLDF_REGISTERED_LAKE_TABLES
-        ]
-
-        return {table.table_name: table for table in tables}
-
     def _prepare_temp_table(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
         """
         @description
@@ -113,11 +77,14 @@ class GQLDataFactory:
             # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
             # 4. resume appending to CSVs + Temp tables until complete
         """
-        table = Table(dataclass, self.ppss)
+        table = NamedTable.from_dataclass(dataclass)
+        temp_table = TempTable.from_dataclass(dataclass)
         schema = dataclass.get_lake_schema()
-        csv_last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
-        db_last_timestamp = DuckDBDataStore(table.base_path).query_data(
-            f"SELECT MAX(timestamp) FROM {table.table_name}"
+        csv_last_timestamp = CSVDataStore.from_table(
+            table, self.ppss
+        ).get_last_timestamp()
+        db_last_timestamp = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(
+            f"SELECT MAX(timestamp) FROM {table.fullname}"
         )
 
         if csv_last_timestamp is None:
@@ -127,25 +94,25 @@ class GQLDataFactory:
             db_last_timestamp['max("timestamp")'][0] is None
         ):
             logger.info(
-                "  Table not yet created. Insert all %s csv data", table.table_name
+                "  Table not yet created. Insert all %s csv data", table.fullname
             )
-            data = CSVDataStore.from_table(table).read_all(schema)
-            table._append_to_db(data, TableType.TEMP)
+            data = CSVDataStore.from_table(table, self.ppss).read_all(schema)
+            temp_table._append_to_db(data, self.ppss)
             return
 
         if db_last_timestamp['max("timestamp")'][0] and (
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
-            logger.info("  Table exists. Insert pending %s csv data", table.table_name)
-            data = CSVDataStore.from_table(table).read(
+            logger.info("  Table exists. Insert pending %s csv data", table.fullname)
+            data = CSVDataStore.from_table(table, self.ppss).read(
                 st_ut,
                 fin_ut,
                 schema,
             )
-            table._append_to_db(data, TableType.TEMP)
+            temp_table._append_to_db(data, self.ppss)
 
     @enforce_types
-    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
+    def _calc_start_ut(self, table: NamedTable) -> UnixTimeMs:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
@@ -158,7 +125,7 @@ class GQLDataFactory:
             start_ut - timestamp (ut) to start grabbing data for (in ms)
         """
 
-        last_timestamp = CSVDataStore.from_table(table).get_last_timestamp()
+        last_timestamp = CSVDataStore.from_table(table, self.ppss).get_last_timestamp()
 
         start_ut = (
             last_timestamp
@@ -185,8 +152,10 @@ class GQLDataFactory:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
-        table = Table(dataclass, self.ppss)
-        logger.info("Fetching data for %s", table.table_name)
+        table = NamedTable.from_dataclass(dataclass)
+        temp_table = TempTable.from_dataclass(dataclass)
+
+        logger.info("Fetching data for %s", table.fullname)
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -196,7 +165,7 @@ class GQLDataFactory:
         buffer_df = pl.DataFrame([], schema=dataclass.get_lake_schema())
 
         DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
-            TempTable.from_table(table).fullname,
+            temp_table.fullname,
             dataclass.get_lake_schema(),
         )
 
@@ -237,7 +206,7 @@ class GQLDataFactory:
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
                 assert df.schema == dataclass.get_lake_schema()
-                table.append_to_storage(buffer_df, TableType.TEMP)
+                temp_table.append_to_storage(buffer_df, self.ppss)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
                 )
@@ -256,7 +225,7 @@ class GQLDataFactory:
             pagination_offset += pagination_limit
 
         if len(buffer_df) > 0:
-            table.append_to_storage(buffer_df, TableType.TEMP)
+            temp_table.append_to_storage(buffer_df, self.ppss)
             logger.info("Saved %s records to storage while fetching", len(buffer_df))
 
     @enforce_types
@@ -270,7 +239,7 @@ class GQLDataFactory:
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
             temp_table = TempTable.from_dataclass(dataclass)
 
-            db.move_table_data(temp_table, Table(dataclass, self.ppss))
+            db.move_table_data(temp_table, NamedTable.from_dataclass(dataclass))
             db.drop_table(temp_table.fullname)
 
     @enforce_types
@@ -288,11 +257,14 @@ class GQLDataFactory:
         @arguments
             fin_ut -- a timestamp, in ms, in UTC
         """
+        logger.info("  Data start: %s", self.ppss.lake_ss.st_timestamp.pretty_timestr())
+        logger.info("  Data fin: %s", self.ppss.lake_ss.fin_timestamp.pretty_timestr())
+
         fin_ut = self.ppss.lake_ss.fin_timestamp
 
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
             # calculate start and end timestamps
-            table = Table(dataclass, self.ppss)
+            table = NamedTable.from_dataclass(dataclass)
             st_ut = self._calc_start_ut(table)
             logger.info(
                 "      Aim to fetch data from start_time: [%s] to end_time: [%s]",
@@ -306,7 +278,7 @@ class GQLDataFactory:
             self._prepare_temp_table(dataclass, st_ut, fin_ut)
 
             # fetch from subgraph and add to temp table
-            logger.info("Updating table %s", NamedTable.from_table(table).fullname)
+            logger.info("Updating table %s", table.fullname)
             self._do_subgraph_fetch(
                 dataclass,
                 self.ppss.web3_pp.network,

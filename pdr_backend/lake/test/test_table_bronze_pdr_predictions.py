@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable, Table, TempTable
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -32,16 +32,18 @@ def test_table_bronze_pdr_predictions(
     )
 
     gql_tables = {
-        "pdr_predictions": Table(Prediction, ppss),
-        "pdr_truevals": Table(Trueval, ppss),
-        "pdr_payouts": Table(Payout, ppss),
-        "bronze_pdr_predictions": Table(BronzePrediction, ppss),
+        "pdr_predictions": NamedTable.from_dataclass(Prediction),
+        "pdr_truevals": NamedTable.from_dataclass(Trueval),
+        "pdr_payouts": NamedTable.from_dataclass(Payout),
+        "bronze_pdr_predictions": NamedTable.from_dataclass(BronzePrediction),
     }
 
     # Work 1: Append all data onto bronze_table
-    gql_tables["pdr_predictions"].append_to_storage(_gql_datafactory_etl_predictions_df)
-    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df)
-    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df)
+    gql_tables["pdr_predictions"].append_to_storage(
+        _gql_datafactory_etl_predictions_df, ppss
+    )
+    gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df, ppss)
+    gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df, ppss)
 
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
     # truevals should have 6
