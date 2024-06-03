@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.33",
+    "ccxt==4.3.38",
     "coverage",
     "dash==2.17.0",
     "dateparser==1.2.0",
@@ -38,7 +38,7 @@ install_requirements = [
     "pyyaml",
     "requests==2.32.3",
     "requests-mock==1.12.1",
-    "scikit-learn==1.4.2",
+    "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.32.0.20240523",
