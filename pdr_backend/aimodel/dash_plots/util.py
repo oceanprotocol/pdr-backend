@@ -6,7 +6,7 @@ import pandas as pd
 def read_files_from_directory(directory):
     file_data = {}
     for filename in os.listdir(directory):
-        if not (filename.endswith(".csv") or filename.endswith(".parquet")):
+        if not filename.endswith(".csv") and not filename.endswith(".parquet"):
             continue
         filepath = os.path.join(directory, filename)
         df = (
