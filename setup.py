@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.33",
+    "ccxt==4.3.38",
     "coverage",
     "dash==2.17.0",
     "dash_bootstrap_components=1.6.0",
@@ -28,7 +28,7 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.22.0",
-    "polars==0.20.26",
+    "polars==0.20.31",
     "polars[timezone]",
     "pyarrow==16.1.0",
     "pylint==3.2.2",
@@ -37,15 +37,15 @@ install_requirements = [
     "pytest-asyncio==0.21.1",
     "pytest-env",
     "pyyaml",
-    "requests==2.32.0",
+    "requests==2.32.3",
     "requests-mock==1.12.1",
-    "scikit-learn==1.4.2",
+    "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.32.0.20240523",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
-    "typeguard==4.2.1",
+    "typeguard==4.3.0",
     "ocean-contracts==2.0.4",  # install this last
 ]
 
