@@ -13,7 +13,7 @@ install_requirements = [
     "ccxt==4.3.38",
     "coverage",
     "dash==2.17.0",
-    "dash_bootstrap_components=1.6.0",
+    "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
     "enforce_typing",
     "eth-account==0.11.0",
