@@ -15,7 +15,8 @@ app.layout = html.Div(
             n_intervals=0,
             disabled=False,
         ),
-    ]
+    ],
+    style={"height": "100vh"},
 )
 
 get_callbacks(app)

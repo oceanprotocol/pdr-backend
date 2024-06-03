@@ -38,7 +38,7 @@ def get_header_elements(run_id, st, ts):
             id="sim_current_ts",
             # stops refreshing if final state was reached. Do not remove this class!
             className="finalState" if ts == "final" else "runningState",
-            style={"marginTop": "0"},
+            style={"marginTop": "0", "textAlign": "center"},
         ),
     ]
 
@@ -49,7 +49,12 @@ def side_by_side_graphs(figures, name1, name2):
             dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
             dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
         ],
-        style={"display": "flex", "justifyContent": "space-between", "width": "100%"},
+        style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "width": "100%",
+            "height": "50%",
+        },
     )
 
 
@@ -64,7 +69,7 @@ def arrange_figures(figures):
                     style={"width": "100%"},
                 ),
             ],
-            style={"width": "100%"},
+            style={"width": "100%", "height": "50%"},
         ),
         side_by_side_graphs(figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"),
         side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response"),
@@ -97,8 +102,13 @@ def get_tabs_component(elements):
         ],
         vertical=True,
         style={"fontSize": "20px"},
-        content_style={"width": "100%", "borderLeft": "1px solid #d6d6d6"},
-        parent_style={"width": "100%"},
+        content_style={
+            "width": "100%",
+            "height": "100%",
+            "borderLeft": "1px solid #d6d6d6",
+            "borderTop": "1px solid #d6d6d6",
+        },
+        parent_style={"width": "100%", "height": "100%"},
     )
 
 
@@ -113,11 +123,13 @@ def get_main_container():
                     "flexDirection": "column",
                     "alignItems": "center",
                     "justifyContent": "center",
+                    "height": "100px",
                 },
             ),
             html.Div(
                 empty_graphs_template,
                 id="tabs-container",
+                style={"height": "calc(100% - 100px)"},
             ),
         ],
         id="main-container",
@@ -126,5 +138,6 @@ def get_main_container():
             "flexDirection": "column",
             "justifyContent": "flexStart",
             "alignIntems": "start",
+            "height": "100%",
         },
     )
