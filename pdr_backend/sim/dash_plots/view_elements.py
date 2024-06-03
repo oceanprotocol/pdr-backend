@@ -58,22 +58,43 @@ def side_by_side_graphs(figures, name1, name2):
     )
 
 
-def arrange_figures(figures):
+def get_tabs(figures):
     return [
-        side_by_side_graphs(figures, "pdr_profit_vs_time", "trader_profit_vs_time"),
-        html.Div(
-            [
-                dcc.Graph(
-                    figure=figures["accuracy_vs_time"],
-                    id="accuracy_vs_time",
-                    style={"width": "100%"},
+        {
+            "name": "Profit",
+            "components": [
+                side_by_side_graphs(
+                    figures, "pdr_profit_vs_time", "trader_profit_vs_time"
+                ),
+                side_by_side_graphs(
+                    figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"
                 ),
             ],
-            style={"width": "100%", "height": "50%"},
-        ),
-        side_by_side_graphs(figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"),
-        side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response"),
-        side_by_side_graphs(figures, "f1_precision_recall_vs_time", "log_loss_vs_time"),
+        },
+        {
+            "name": "Model performance",
+            "components": [
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["accuracy_vs_time"],
+                            id="accuracy_vs_time",
+                            style={"width": "100%"},
+                        ),
+                    ],
+                    style={"width": "100%", "height": "50%"},
+                ),
+                side_by_side_graphs(
+                    figures, "f1_precision_recall_vs_time", "log_loss_vs_time"
+                ),
+            ],
+        },
+        {
+            "name": "Model response",
+            "components": [
+                side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response")
+            ],
+        },
     ]
 
 

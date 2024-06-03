@@ -4,7 +4,7 @@ from dash import Input, Output, State
 
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
-    arrange_figures,
+    get_tabs,
     get_header_elements,
     get_waiting_template,
     selected_var_checklist,
@@ -78,15 +78,7 @@ def get_callbacks(app):
         elements.append(selected_var_checklist(state_options, selected_vars_old))
 
         figures = get_figures_by_state(sim_plotter, selected_vars)
-        aranged_figures = arrange_figures(figures)
-        tabs = [
-            {"name": "Profit", "components": [aranged_figures[0], aranged_figures[2]]},
-            {
-                "name": "Model performance",
-                "components": [aranged_figures[1], aranged_figures[4]],
-            },
-            {"name": "Model response", "components": [aranged_figures[3]]},
-        ]
+        tabs = get_tabs(figures)
         elements = elements + [get_tabs_component(tabs)]
 
         return elements, header
