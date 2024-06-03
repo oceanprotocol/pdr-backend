@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.33",
+    "ccxt==4.3.38",
     "coverage",
     "dash==2.17.0",
     "dateparser==1.2.0",
