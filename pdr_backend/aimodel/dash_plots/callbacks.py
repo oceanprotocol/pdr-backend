@@ -140,7 +140,7 @@ def get_callbacks(app):
         y = files_data[feed_data]["close_data"]
         y = np.array(y)
         timestamp_str = files_data[feed_data]["timestamps"][0]
-        st = UnixTimeS.to_milliseconds(timestamp_str.timestamp())
+        st = UnixTimeS(timestamp_str.timestamp()).to_milliseconds()
         t = ArgTimeframe(feed_data.split("_")[-1])
         dr = SeasonalDecomposeFactory.build(t, y)
 
