@@ -74,7 +74,7 @@ def _plot_aimodel_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             )
         )
 
-    # line plot: model response surface
+    # line plot: classifier probability response
     fig_line = go.Figure(
         data=go.Scatter(
             x=mesh_x,
@@ -119,6 +119,10 @@ def _plot_aimodel_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     fig_bars.add_trace(fig_scatter_true.data[0])
     fig_bars.add_trace(fig_scatter_true.data[1])
     fig_bars.add_trace(fig_scatter_true.data[2])
+    
+    # line plot: regressor response
+    if model.do_regr:
+        raise NotImplementedError("build me")
 
     return fig_bars
 

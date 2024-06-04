@@ -16,7 +16,7 @@ from pdr_backend.aimodel.aimodel_plotter import (
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 
 @enforce_types
@@ -25,23 +25,32 @@ def test_aimodel_factory_SHOW_PLOT():
     assert not SHOW_PLOT
 
 
-@enforce_types
-def test_aimodel_factory_2vars_LinearLogistic():
-    _test_aimodel_factory_2vars_main(approach="LinearLogistic")
+# Do *not* parameterize the following tests. We keep them separate to
+# facilitate rapid-turnaround manual testing and debugging
+def test_aimodel_Constant():
+    _test_aimodel_2vars(approach="Constant")
+    
+def test_aimodel_LinearLogistic():
+    _test_aimodel_2vars(approach="LinearLogistic")
+
+def test_aimodel_LinearSVC():
+    _test_aimodel_2vars(approach="LinearSVC")
+
+def test_aimodel_RegrLinearLS():
+    _test_aimodel_2vars(approach="RegrLinearLS")
+
+def test_aimodel_RegrLinearLasso():
+    _test_aimodel_2vars(approach="RegrLinearLasso")
+
+def test_aimodel_RegrLinearRidge():
+    _test_aimodel_2vars(approach="RegrLinearRidge")
+
+def test_aimodel_RegrLinearElasticNet():
+    _test_aimodel_2vars(approach="RegrLinearElasticNet")
 
 
 @enforce_types
-def test_aimodel_factory_2vars_LinearSVC():
-    _test_aimodel_factory_2vars_main(approach="LinearSVC")
-
-
-@enforce_types
-def test_aimodel_factory_2vars_Constant():
-    _test_aimodel_factory_2vars_main(approach="Constant")
-
-
-@enforce_types
-def _test_aimodel_factory_2vars_main(approach):
+def _test_aimodel_2vars(approach:str):
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -57,6 +66,7 @@ def _test_aimodel_factory_2vars_main(approach):
 
     # build model
     model = factory.build(X, ytrue, show_warnings=False)
+    assert model.do_regr == ss.do_regr
 
     # test predict_true() & predict_ptrue()
     ytrue_hat = model.predict_true(X)
@@ -77,19 +87,34 @@ def _test_aimodel_factory_2vars_main(approach):
     assert imps[0] == approx(0.333, abs=0.3)
     assert imps[1] == approx(0.667, abs=0.3)
 
-    # plot
+    # plot classifier response
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    figure = plot_aimodel_response(d)
-    assert isinstance(figure, Figure)
-
+    classif_figure = plot_aimodel_response(d)
+    assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
-        figure.show()
+        classif_figure.show()
+
+    # test predict_ycont()
+    if not model.do_regr:
+        return
+    ycont_hat = model.predict_ycont(X)
+    assert ycont_hat.shape == (N,)
+    assert ycont_hat.dtype == float
+    
+    # plot regressor response
+    colnames = ["x0", "x1"]
+    slicing_x = np.array([0.0, 1.0])  # arbitrary
+    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    regr_figure = plot_aimodel_regr_response(d)
+    assert isinstance(regr_figure, Figure)
+    if SHOW_PLOT:
+        regr_figure.show()
 
 
 @enforce_types
-def test_aimodel_factory_constantdata():
+def test_aimodel_factory_constantdata_classif():
     # approach cannot be constant! That has to emerge
     ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
     factory = AimodelFactory(ss)
@@ -107,6 +132,9 @@ def test_aimodel_factory_constantdata():
     assert_array_equal(model.predict_true(X), np.full((N,), False))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
 
+@enforce_types
+def test_aimodel_factory_constantdata_regr():
+    raise NotImplementedError("build me")
 
 @enforce_types
 def test_aimodel_accuracy_from_create_xy():
@@ -137,11 +165,17 @@ def test_aimodel_accuracy_from_create_xy():
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
 
 
+def test_aimodel_1var_LinearLogistic():
+    self._test_aimodel_1var("LinearLogistic")
+    
+def test_aimodel_1var_RegrLinearLS():
+    self._test_aimodel_1var("RegrLinearLS")
+    
 @enforce_types
-def test_aimodel_factory_1varmodel_lineplot():
+def _test_aimodel_1var(approach:str):
     """1 input var. It will plot that var on both axes"""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -159,7 +193,7 @@ def test_aimodel_factory_1varmodel_lineplot():
     imps = model.importance_per_var()
     assert_array_equal(imps, np.array([1.0]))
 
-    # plot
+    # plot response: always classifier, and regressor if relevant
     colnames = ["x0"]
     slicing_x = np.array([0.1])  # arbitrary
     sweep_vars = [0]
@@ -173,11 +207,12 @@ def test_aimodel_factory_1varmodel_lineplot():
     )
     figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
-
     if SHOW_PLOT:
         figure.show()
 
 
+
+    
 @enforce_types
 def test_aimodel_factory_5varmodel_lineplot():
     """5 input vars; sweep 1 var."""

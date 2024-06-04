@@ -10,6 +10,10 @@ APPROACH_OPTIONS = [
     "LinearLogistic_Balanced",
     "LinearSVC",
     "Constant",
+    "RegrLinearLS",
+    "RegrLinearLasso",
+    "RegrLinearRidge",
+    "RegrLinearElasticNet",
 ]
 WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
@@ -99,6 +103,12 @@ class AimodelSS(StrMixin):
         if c == "CalibratedClassifierCV_Isotonic":
             return "isotonic"
         raise ValueError(c)
+    
+    # --------------------------------
+    # derivative properties
+    @property
+    def do_regr(self) -> bool:
+        return self.approach[:4] == "Regr"
 
 
 # =========================================================================

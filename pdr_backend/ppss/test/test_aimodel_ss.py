@@ -30,6 +30,7 @@ def test_aimodel_ss__default_values():
     # str
     assert "AimodelSS" in str(ss)
     assert "approach" in str(ss)
+    assert not ss.do_regr
 
 
 @enforce_types
@@ -46,6 +47,14 @@ def test_aimodel_ss__nondefault_values():
     for approach in APPROACH_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
         assert ss.approach == approach and approach in str(ss)
+        
+        do_regr = approach in [
+            "RegrLinearLS",
+            "RegrLinearLasso",
+            "RegrLinearRidge",
+            "RegrLinearElasticNet",
+        ]
+        assert ss.do_regr == do_regr
 
     for weight_recent in WEIGHT_RECENT_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(weight_recent=weight_recent))
