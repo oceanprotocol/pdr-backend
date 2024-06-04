@@ -149,9 +149,6 @@ def get_callbacks(app):
 
         relativeEnergies = plot_relative_energies(plotdata)
         seasonal_plots = create_seasonal_plot(plotdata)
-        # trend = plot_trend(plotdata)
-        # seasonal = plot_seasonal(plotdata)
-        # ressidual = plot_residual(plotdata)
 
         seasonal_charts = get_column_graphs(
             [
