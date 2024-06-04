@@ -8,7 +8,6 @@ from enforce_typing import enforce_types
 from imblearn.over_sampling import SMOTE, RandomOverSampler  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
-from sklearn.inspection import permutation_importance
 from sklearn.linear_model import (
     ElasticNet,
     Lasso,
@@ -57,10 +56,7 @@ class AimodelFactory:
           model -- Aimodel
         """
         do_regr = self.ss.do_regr
-        assert all([not do_regr, have(ytrue), nothave(ycont), nothave(y_thr)])\
-            or all([do_regr, nothave(ytrue), have(ycont), have(y_thr)]), \
-            (do_regr, have(ytrue), have(ycont), have(y_thr))
-
+        
         # regressor, wrapped by classifier
         if do_regr:
             return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)
@@ -75,23 +71,12 @@ class AimodelFactory:
         y_thr: float,
         show_warnings: bool = True,
     ) -> Aimodel:
-        assert self.ss.do_regr
+        ss = self.ss
+        assert ss.do_regr
+        if not _approach_to_skm(ss.approach):
+            raise ValueError(ss.approach)
         do_constant = min(ycont) == max(ycont)
         assert not do_constant, "FIXME handle constant build_wrapped_regr"
-
-        ss = self.ss
-        if ss.approach == "RegrLinearLS":
-            sk_regr = LinearRegression()
-        elif ss.approach == "RegrLinearLasso":
-            sk_regr = Lasso()
-        elif ss.approach == "RegrLinearRidge":
-            sk_regr = Ridge()
-        elif ss.approach == "RegrLinearElasticNet":
-            sk_regr = ElasticNet()
-
-        # error handling
-        else:
-            raise ValueError(ss.approach)
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
@@ -118,21 +103,24 @@ class AimodelFactory:
         X = scaler.transform(X)
 
         # in-place fit model
-        # ideally: 5-10 models are built, using bootstrap sampling
-        # FIXME: maybe use cross_val_predict()
-        # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_predict.html#sklearn.model_selection.cross_val_predict
-        _fit(sk_regr, X, ycont, show_warnings)
-        sk_classif = FIXME
+        sk_regrs = []
+        n_regrs = 5
+        for i in range(n_regrs):
+            N = len(ycont)
+            I = np.random.choice(a=N, size=N, replace=True)
+            X_i, ycont_I = X[I,:], ycont[I]
+            sk_regr = _approach_to_skm(ss.approach)
+            _fit(sk_regr, X, ycont, show_warnings)
+            sk_regrs.append(sk_regr)
 
-        # FIXME: maybe calibrate classifier
-        if ss.calibrate_probs != "None":
-            pass
+        # model
+        model = Aimodel(scaler, sk_regrs, y_thr, None)
                 
-        # calc variable importances
-        imps_tup = self._calc_var_importances(do_constant, skm, X, ycont)
+        # variable importances
+        ytrue = ycont > y_thr
+        model.set_importance_per_var(X, ytrue)
 
         # return
-        model = Aimodel(scaler, sk_regr, sk_classif, imps_tup)
         return model
 
 
@@ -143,8 +131,10 @@ class AimodelFactory:
         ytrue: np.ndarray,
         show_warnings: bool = True,
     ) -> Aimodel:
-        assert not self.ss.do_regr
         ss = self.ss
+        assert not ss.do_regr
+        if not _approach_to_skm(ss.approach):
+            raise ValueError(ss.approach)
         n_True, n_False = sum(ytrue), sum(np.invert(ytrue))
         smallest_n = min(n_True, n_False)
         do_constant = (smallest_n == 0) or ss.approach == "Constant"
@@ -155,17 +145,9 @@ class AimodelFactory:
             ytrue = copy.copy(ytrue)
             ytrue[0], ytrue[1] = True, False
             sk_classif = DummyClassifier(strategy="most_frequent")
-
-        # classifier approaches
-        elif ss.approach == "LinearLogistic":
-            sk_classif = LogisticRegression(max_iter=1000)
-        elif ss.approach == "LinearLogistic_Balanced":
-            sk_classif = LogisticRegression(max_iter=1000, class_weight="balanced")
-        elif ss.approach == "LinearSVC":
-            sk_classif = SVC(kernel="linear", probability=True, C=0.025)
-
-        # error handling
         else:
+            sk_classif = _approach_to_skm(ss.approach)
+        if sk_classif is None:
             raise ValueError(ss.approach)
 
         # weight newest sample 10x, and 2nd-newest sample 5x
@@ -225,71 +207,17 @@ class AimodelFactory:
 
         # in-place fit model
         _fit(sk_classif, X, ytrue, show_warnings)
+
+        # model
+        model = Aimodel(scaler, None, None, sk_classif)
         
-        # calc variable importances
-        imps_tup = self._calc_var_importances(do_constant, sk_classif, X, ytrue)
+        # variable importances
+        model.set_importance_per_var(X, ytrue)
 
         # return
-        sk_regr = None
-        model = Aimodel(scaler, sk_regr, sk_classif, imps_tup)
         return model
 
-    def _calc_var_importances(self, do_constant: bool, skm, X, ytrue) -> tuple:
-        """
-        @return
-          imps_avg - 1d array of [var_i]: rel_importance_float
-          imps_stddev -- array [var_i]: rel_stddev_float
-        """
-        n = X.shape[1]
-        flat_imps_avg = np.ones((n,), dtype=float) / n
-        flat_imps_stddev = np.ones((n,), dtype=float) / n
-
-        if do_constant:
-            return flat_imps_avg, flat_imps_stddev
-
-        imps_bunch = permutation_importance(
-            skm,
-            X,
-            ytrue,
-            n_repeats=30,
-            scoring="accuracy",
-        )
-        imps_avg = imps_bunch.importances_mean
-
-        if max(imps_avg) <= 0:  # all vars have negligible importance
-            return flat_imps_avg, flat_imps_stddev
-
-        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
-        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
-
-        imps_stddev = imps_bunch.importances_std
-
-        # normalize
-        _sum = sum(imps_avg)
-        imps_avg = np.array(imps_avg) / _sum
-        imps_stddev = np.array(imps_stddev) / _sum
-
-        # postconditions
-        assert imps_avg.shape == (n,)
-        assert imps_stddev.shape == (n,)
-        assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
-        assert min(imps_avg) >= 0.0
-        assert max(imps_avg) > 0
-        assert min(imps_stddev) >= 0.0
-
-        # return
-        imps_tup = (imps_avg, imps_stddev)
-        return imps_tup
-
     
-@enforce_types
-def have(x) -> bool:
-    return x is not None
-
-@enforce_types
-def nothave(x) -> bool:
-    return x is None
-
 @enforce_types
 def _fit(skm, X, y, show_warnings:bool):
     """
@@ -311,3 +239,26 @@ def _fit(skm, X, y, show_warnings:bool):
         skm.fit(X, y)
 
         
+
+@enforce_types
+def _approach_to_skm(approach: str):
+    # regressor approaches
+    if approach == "RegrLinearLS":
+        return LinearRegression()
+    if approach == "RegrLinearLasso":
+        return Lasso()
+    if approach == "RegrLinearRidge":
+        return Ridge()
+    if approach == "RegrLinearElasticNet":
+        return ElasticNet()
+
+    # classifier approaches
+    if approach == "LinearLogistic":
+        return LogisticRegression(max_iter=1000)
+    if approach == "LinearLogistic_Balanced":
+        return LogisticRegression(max_iter=1000, class_weight="balanced")
+    if approach == "LinearSVC":
+        return SVC(kernel="linear", probability=True, C=0.025)
+
+    # unidentified      
+    return None

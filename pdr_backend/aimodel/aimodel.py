@@ -1,5 +1,8 @@
+from typing import Optional
+
 from enforce_typing import enforce_types
 import numpy as np
+from sklearn.inspection import permutation_importance
 
 
 class Aimodel:
@@ -8,18 +11,19 @@ class Aimodel:
     def __init__(
         self,
         scaler,
-        sk_regr,
+        sk_regrs: Optional[list],
+        y_thr: Optional[float],
         sk_classif,
-        imps_tup: tuple,
     ):
         self._scaler = scaler  # for scaling X-inputs
-        self._sk_regr = sk_regr # sklearn regressor model
+        self._sk_regrs = sk_regrs # list of sklearn regressor model
+        self._y_thr = y_thr # threshold value for True vs False
         self._sk_classif = sk_classif  # sklearn classifier model
-        self._imps_tup = imps_tup  # tuple of (imps_avg, imps_stddev)
+        self._imps_tup = None # tuple of (imps_avg, imps_stddev)
 
     @property
     def do_regr(self) -> bool:
-        return self._sk_regr is not None
+        return self._sk_regrs is not None
 
     @enforce_types
     def predict_true(self, X):
@@ -53,30 +57,18 @@ class Aimodel:
           yptrue - 1d array of [sample_i]: prob_of_being_true -- model outputs
         """
         if self.do_regr:
-            ycont = self.predict_ycont(X)
-            raise NotImplementedError("build me")
+            Ycont = self._predict_Ycont(X)
+            assert self._y_thr is not None
+            yptrue = np.mean(Ycont > self._y_thr, axis=1)
         else:
             X = self._scaler.transform(X)
             T = self._sk_classif.predict_proba(X)  # [sample_i][class_i]
             N = T.shape[0]
             class_i = 1  # this is the class for "True"
             yptrue = np.array([T[i, class_i] for i in range(N)])
-            
+
+        assert len(yptrue) == X.shape[0]
         return yptrue
-
-    @enforce_types
-    def importance_per_var(self, include_stddev: bool = False):
-        """
-        @description
-          Report relative importance of each input variable
-
-        @return
-          imps_avg - 1d array of [var_i]: rel_importance_float
-          (optional) imps_stddev -- array [var_i]: rel_stddev_float
-        """
-        if include_stddev:
-            return self._imps_tup
-        return self._imps_tup[0]
 
     @enforce_types
     def predict_ycont(self, X):
@@ -91,5 +83,114 @@ class Aimodel:
           ycont -- 1d array of [sample_i]:cont_value -- regressor model outputs
         """
         assert self.do_regr
-        ycont = self._sk_regr.predict(X)
+        Ycont = self._predict_Ycont(X)
+        ycont = np.mean(Ycont, axis=1)
+        assert len(ycont) == X.shape[0]
         return ycont
+
+    @enforce_types
+    def _predict_Ycont(self, X):
+        """
+        @description
+          Continuous-value prediction. For do_regr=True only.
+
+        @arguments
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
+
+        @return
+          Ycont -- 2d array of [sample_i, model_i]:cont_value -- regressor model outputs
+        """
+        assert self.do_regr
+        N = X.shape[0]
+        n_regrs = len(self._sk_regrs)
+        Ycont = np.zeros((N, n_regrs), dtype=float)
+        for i in range(n_regrs):
+            Ycont[:,i] = self._sk_regrs[i].predict(X)
+        return Ycont
+    
+    @enforce_types
+    def importance_per_var(self, include_stddev: bool = False):
+        """
+        @description
+          Report relative importance of each input variable
+
+        @return
+          imps_avg - 1d array of [var_i]: rel_importance_float
+          (optional) imps_stddev -- array [var_i]: rel_stddev_float
+        """
+        assert self._imps_tup is not None
+        if include_stddev:
+            return self._imps_tup
+        return self._imps_tup[0]
+
+    @enforce_types
+    def set_importance_per_var(self, X: np.ndarray, ytrue: np.ndarray):
+        """
+        @arguments
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs        
+          ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
+
+        @return
+          <<sets self._imps_tup>>
+        """
+        assert not self._imps_tup, "have already set importances"
+        self._imps_tup = self._calc_importance_per_var(X, ytrue)
+
+    @enforce_types
+    def _calc_importance_per_var(self, X, ytrue) -> tuple:
+        """
+        @arguments
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs        
+          ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
+
+        @return
+          imps_avg -- 1d array of [var_i]: rel_importance_float
+          imps_stddev -- array [var_i]: rel_stddev_float
+        """
+        n = X.shape[1]
+        flat_imps_avg = np.ones(n, dtype=float) / n
+        flat_imps_stddev = np.ones(n, dtype=float) / n
+
+        is_constant = min(ytrue) == max(ytrue)
+        if is_constant:
+            return flat_imps_avg, flat_imps_stddev
+
+        imps_bunch = permutation_importance(
+            self,
+            X,
+            ytrue,
+            scoring="accuracy",
+            n_repeats=30,
+        )
+        imps_avg = imps_bunch.importances_mean
+
+        if max(imps_avg) <= 0:  # all vars have negligible importance
+            return flat_imps_avg, flat_imps_stddev
+
+        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
+        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+
+        imps_stddev = imps_bunch.importances_std
+
+        # normalize
+        _sum = sum(imps_avg)
+        imps_avg = np.array(imps_avg) / _sum
+        imps_stddev = np.array(imps_stddev) / _sum
+
+        # postconditions
+        assert imps_avg.shape == (n,)
+        assert imps_stddev.shape == (n,)
+        assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
+        assert min(imps_avg) >= 0.0
+        assert max(imps_avg) > 0
+        assert min(imps_stddev) >= 0.0
+
+        # return
+        imps_tup = (imps_avg, imps_stddev)
+        return imps_tup
+
+    # so that permutation_importance() works
+    def fit(self):
+        return
+    def predict(self, X):
+        return self.predict_ptrue(X)

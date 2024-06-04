@@ -56,16 +56,15 @@ def _test_aimodel_2vars(approach:str):
     factory = AimodelFactory(ss)
 
     # data
-    y_thr = 2.0
-
     N = 1000
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 2))
     ycont = 3.0 + 1.0 * X[:, 0] + 2.0 * X[:, 1]  # ycont = 3 + 1*x0 + 2*x1
+    y_thr = 2.0
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
     assert model.do_regr == ss.do_regr
 
     # test predict_true() & predict_ptrue()
