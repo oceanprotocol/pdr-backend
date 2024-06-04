@@ -31,7 +31,8 @@ app.layout = html.Div(
             id="loading",
             type="default",
             children=get_graphs_container(),
-            style={"height": "100%"},
+            style={"height": "100%", "display": "flex", "alignItems": "flexStart"},
+            custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
         ),
     ]
 )

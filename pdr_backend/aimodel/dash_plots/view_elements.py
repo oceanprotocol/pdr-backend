@@ -148,6 +148,7 @@ def get_graphs_container():
         id="arima-graphs",
         style={
             "width": "100%",
+            "height": "100%",
             "display": "flex",
             "justifyContent": "space-between",
         },
