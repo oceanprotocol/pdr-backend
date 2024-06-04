@@ -73,7 +73,7 @@ def _add_df_col(
     if merged_df is None:
         merged_df = newraw_df
     else:
-        merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
+        merged_df = merged_df.join(newraw_df, on="timestamp", how="full")
         merged_df = merge_cols(merged_df, "timestamp", "timestamp_right")
 
     # re-order merged_df's columns
