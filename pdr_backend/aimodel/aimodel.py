@@ -155,8 +155,9 @@ class Aimodel:
         if is_constant:
             return flat_imps_avg, flat_imps_stddev
 
+        skm = self if self.do_regr else self._sk_classif
         imps_bunch = permutation_importance(
-            self,
+            skm,
             X,
             ytrue,
             scoring="accuracy",
