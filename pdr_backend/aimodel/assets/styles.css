@@ -1,0 +1,7 @@
+.tooltip-inner {
+    width: 700px !important; 
+    max-width: 700px !important; /* Adjust the width as needed */
+    white-space: pre-wrap; /* Ensures text wraps inside the tooltip */
+    background-color: #2b2a26;
+    text-align: start;
+}
