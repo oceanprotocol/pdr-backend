@@ -6,6 +6,7 @@ from dash import Dash, Input, Output, html
 from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake_info.overview import TableViewsOverview, ValidationOverview
+from pdr_backend.lake_info.html_components import get_types_table, fallback_badge, simple_badge, alert_validation_ok, alert_validation_error
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -15,52 +16,34 @@ class HtmlRenderer:
         self.table_views_overview = table_views_overview
         self.validation_overview = validation_overview
 
-    def get_side_info(self, source: Dict[str, DataFrame], table_name: str):
+    def get_side_info(self, info_key: str, table_name: str):
         result = []
-        has_timestamp = False
+        df = getattr(self.table_views_overview, info_key)[table_name]
+        has_timestamp = any(col.name == "timestamp" for col in df.iter_columns())
 
-        types = []
-        for col in source[table_name].iter_columns():
-            if col.name == "timestamp":
-                has_timestamp = True
-
-            types.append(html.Tr([html.Td(str(col.name)), html.Td(str(col.dtype))]))
-
-        types_table = dbc.Table(types, bordered=True)
-        result.append(
-            html.Div(
-                [html.Strong("Schema"), types_table],
-            )
-        )
+        types_table = get_types_table(df)
+        result.append(types_table)
 
         if has_timestamp:
-            min_badge = fallback_badge(
-                "Min timestamp:", source[table_name]["timestamp"].min()
-            )
-            max_badge = fallback_badge(
-                "Max timestamp:", source[table_name]["timestamp"].max()
-            )
+            min_badge = fallback_badge("Min timestamp:", df["timestamp"].min())
+            max_badge = fallback_badge("Max timestamp:", df["timestamp"].max())
 
-            result.append(html.Div([min_badge, max_badge]))
+            result += [min_badge, max_badge]
 
-        shape = source[table_name].shape
-        nrows_badge = simple_badge("Number of rows:", shape[0])
+        nrows_badge = simple_badge("Number of rows:", df.shape[0])
         result.append(html.Div(nrows_badge, style={"margin-bottom": "10px"}))
 
         return result
 
-    def get_main_info(
-        self,
-        source: Dict[str, DataFrame],
-        table_name: str,
-        filter_value: Optional[str] = None,
-    ):
+    def _get_main_info(self, info_key: str, table_name: str, filter_value: Optional[str] = None):
+        df = getattr(self.table_views_overview, info_key)[table_name]
+
         if not filter_value:
             table_type = "Preview:"
-            filtered_df = source[table_name].limit(100)
+            filtered_df = df.limit(100)
         else:
-            table_type = "Results:"
-            filtered_df = source[table_name].filter(pl.col("user") == filter_value)
+            table_type = "Results (ltd. to 100 rows):"
+            filtered_df = self.table_views_overview.get_filtered_result(table_name, filter_value)
 
         table = dbc.Table.from_dataframe(
             filtered_df.to_pandas(),
@@ -71,20 +54,27 @@ class HtmlRenderer:
             className="small",
         )
 
-        return html.Div([html.Strong(table_type), table])
+        return [html.Strong(table_type), table]
 
-    def html_table_info(
+    def get_main_info(
         self,
-        source: Dict[str, DataFrame],
-        filter_value: Optional[str] = None,
+        info_key: str,
+        table_name: str,
     ):
-        if not source:
-            return []
+        # add callback ids as wrappers here
+        return html.Div(
+            children=self._get_main_info(info_key, table_name),
+            id=f"tinfo_{info_key}_{table_name}",
+        )
+
+    def html_table_info(self, info_key: str):
+        if not getattr(self.table_views_overview, info_key):
+            return [html.Div("No tables found")]
 
         result = []
-        for table_name in source:
-            side_info = self.get_side_info(source, table_name)
-            main_info = self.get_main_info(source, table_name, filter_value)
+        for table_name in getattr(self.table_views_overview, info_key):
+            side_info = self.get_side_info(info_key, table_name)
+            main_info = self.get_main_info(info_key, table_name)
 
             result.append(
                 dbc.Tab(
@@ -105,29 +95,10 @@ class HtmlRenderer:
     def validation_report(self):
         result = []
         for key, violations in self.validation_overview.validation_results.items():
-            if not violations:
-                alerts = [
-                    dbc.Alert(
-                        [
-                            html.I(className="bi bi-check-circle-fill me-2"),
-                            f"{key} - No violations found",
-                        ],
-                        color="success",
-                        className="d-flex align-items-center",
-                    )
-                ]
-                result += alerts
+            alerts = [alert_validation_error(violation) for violation in violations]
 
-                continue
-
-            alerts = [
-                dbc.Alert(
-                    [html.I(className="bi bi-x-octagon-fill me-2"), violation],
-                    color="danger",
-                    className="d-flex align-items-center",
-                )
-                for violation in violations
-            ]
+            if not alerts:
+                alerts = [alert_validation_ok(key)]
 
             result += alerts
 
@@ -168,21 +139,15 @@ class HtmlRenderer:
                     [
                         dbc.Tab(
                             label="Table Info",
-                            children=self.html_table_info(
-                                self.table_views_overview.table_info,
-                            ),
+                            children=self.html_table_info("table_info"),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
-                            id="table_info",
                         ),
                         dbc.Tab(
                             label="View Info",
-                            children=self.html_table_info(
-                                self.table_views_overview.view_info,
-                            ),
+                            children=self.html_table_info("view_info"),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
-                            id="view_info",
                         ),
                         dbc.Tab(
                             label="Validation report",
@@ -202,55 +167,19 @@ class HtmlRenderer:
         app.run_server(debug=True)
 
 
-def simple_badge(text, value):
-    return dbc.Button(
-        [
-            text,
-            dbc.Badge(
-                str(value),
-                color="light",
-                text_color="primary",
-                className="ms-1",
-            ),
-        ],
-        color="primary",
-    )
-
-
-def fallback_badge(text, value):
-    nat_str = (
-        UnixTimeMs(value).to_timestr() if isinstance(value, (int, float)) else None
-    )
-
-    return dbc.Button(
-        [
-            text,
-            dbc.Badge(
-                str(value) if value is not None else "no data",
-                color="light",
-                text_color="primary" if value is not None else "danger",
-                className="ms-1",
-            ),
-            " aka ",
-            dbc.Badge(
-                str(nat_str),
-                color="light",
-                text_color="primary" if value is not None else "danger",
-                className="ms-1",
-            ),
-        ],
-        color="primary" if value else "danger",
-        style={"margin-bottom": "10px"},
-    )
-
-
 def get_callbacks(html_renderer, app):
-    @app.callback(
-        Output("table_info", "children"),
-        Input("userFilter", "value"),
-    )
-    def filter_tables(filter_value):
-        return html_renderer.html_table_info(
-            html_renderer.table_views_overview.table_info,
-            filter_value,
+    table_wrapper_ids = []
+
+    for info_key in ["table_info", "view_info"]:
+        for table_name in getattr(html_renderer.table_views_overview, info_key):
+            table_wrapper_ids.append(f"tinfo_{info_key}_{table_name}")
+
+    for table_wrapper_id in table_wrapper_ids:
+        @app.callback(
+            Output(table_wrapper_id, "children"),
+            Input("userFilter", "value"),
         )
+        def filter_tables(filter_value):
+            info_key = table_wrapper_id.split("_")[1] + "_info"
+            table_name = table_wrapper_id[table_wrapper_id.index(info_key) + len(info_key) + 1:]
+            return html_renderer._get_main_info(info_key, table_name, filter_value)
