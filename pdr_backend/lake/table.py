@@ -20,8 +20,10 @@ logger = logging.getLogger("table")
 class TableType(Enum):
     NORMAL = "NORMAL"
     TEMP = "TEMP"
+    UPDATE = "UPDATE"
+    TEMP_UPDATE = "TEMP_UPDATE"
     ETL = "ETL"
-
+    
 
 @enforce_types
 def is_etl_table(table_name: str) -> bool:
@@ -29,8 +31,10 @@ def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("temp_")
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("etl_")
+    table_name = table_name.removeprefix("update_")
+    table_name = table_name.removeprefix("temp_update_")
     table_name = table_name.removeprefix("temp_")
-
+    
     return (
         table_name.startswith("bronze_")
         or table_name.startswith("silver_")
@@ -47,6 +51,12 @@ def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
     table_names = db.get_table_names()
 
     for table_name in table_names:
+        if type_filter == "update" and not is_etl_table(table_name):
+            logger.info(
+                "[while dropping update tables] skipping non-update table %s", table_name
+            )
+            continue
+
         if type_filter == "etl" and not is_etl_table(table_name):
             logger.info(
                 "[while dropping etl tables] skipping non-etl table %s", table_name
@@ -90,6 +100,8 @@ class NamedTable:
             return f"_temp_{self.table_name}"
         if self.table_type == TableType.ETL:
             return f"_etl_{self.table_name}"
+        if self.table_type == TableType.UPDATE:
+            return f"_update_{self.table_name}"
 
         return self.table_name
 
@@ -168,5 +180,30 @@ class ETLTable(NamedTable):
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "ETLTable":
         etl_table = ETLTable(dataclass.get_lake_table_name())
+        etl_table._dataclass = dataclass
+        return etl_table
+
+
+class UpdateTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.UPDATE)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "UpdateTable":
+        etl_table = UpdateTable(dataclass.get_lake_table_name())
+        etl_table._dataclass = dataclass
+        return etl_table
+
+class TempUpdateTable(NamedTable):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.TEMP_UPDATE)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "TempUpdateTable":
+        etl_table = UpdateTable(dataclass.get_lake_table_name())
         etl_table._dataclass = dataclass
         return etl_table

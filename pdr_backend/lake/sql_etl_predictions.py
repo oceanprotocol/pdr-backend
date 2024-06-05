@@ -1,55 +1,51 @@
-# THIS IS QUERY NUMBER 1
-process_predictions_query = """
--- Start a transaction
-BEGIN TRANSACTION;
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.util.time_types import UnixTimeMS
+from pdr_backend.lake.table import NamedTable, EventTable
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
--- Define a CTE to select data once and use it multiple times
-WITH SelectedData AS (
-SELECT
-    ID,
-    slot,
-    "predictoorPrediction" as event_name,
-    user,
-    stake,
-    predVal,
-    timestamp
-from
-    pdr_predictions
-where
-    pdr_predictions.timestamp >= st_ms
-    and pdr_predictions.timestamp < fin_ms
-)
+def _do_sql_predictions(
+        db:DuckDBDataStore, 
+        st_ms: UnixTimeMS, 
+        fin_ms: UnixTimeMS ) -> None:
+    
+    prediction_table = NamedTable.from_dataclass(Prediction)
+    event_bronze_prediction_table = EventTable.from_dataclass(BronzePrediction)
 
--- Insert new records into bronze_predictions
-INSERT INTO _temp_bronze_predictions (ID, slot, eventType, eventName, user, stake, predval, trueval, payout, timestamp)
-SELECT
-    ID,
-    slot,
-    "new" as event_type,
-    event_name,
-    user,
-    stake,
-    predVal,
-    null,
-    null,
-    timestamp
-FROM SelectedData;
+    query = f"""
+    -- Start a transaction
+    BEGIN TRANSACTION;
 
--- DO NOT IMPLEMENT SLOTS TABLE
--- THIS IS JUST AN EXAMPLE OF HOW THIS WILL GROW...
--- Insert update record into bronze_slots
-INSERT INTO _update_temp_bronze_slot (ID, slot, eventType, eventName, stake, trueval, payout, timestamp)
-SELECT
-    ID,
-    slot,
-    "update" as event_type,
-    event_name,
-    stake,
-    null,
-    null,
-    timestamp
-FROM SelectedData;
+    -- Define a CTE to select data once and use it multiple times
+    WITH SelectedData AS (
+    SELECT
+        {prediction_table.table_name}.ID as ID,
+        "predictoorPrediction" as eventName,
+        "new" as eventType,
+        SPLIT_PART({prediction_table.table_name}.ID, '-', 1)
+            || '-' || SPLIT_PART({prediction_table.table_name}.ID, '-', 2) AS slotID,
+        {prediction_table.table_name}.contract,
+        {prediction_table.table_name}.slot,
+        {prediction_table.table_name}.user,
+        {prediction_table.table_name}.pair,
+        {prediction_table.table_name}.timeframe,
+        {prediction_table.table_name}.source,
+        {prediction_table.table_name}.stake,
+        {prediction_table.table_name}.predVal,
+        {prediction_table.table_name}.timestamp
+    from
+        {prediction_table.table_name}
+    where
+        {prediction_table.table_name}.timestamp >= {st_ms}
+        and {prediction_table.table_name}.timestamp < {fin_ms}
+    )
 
--- Commit the transaction
-COMMIT;
-"""
+    INSERT INTO {event_bronze_prediction_table.table_name}
+    SELECT * FROM SelectedData;
+
+    -- Commit the transaction
+    COMMIT;
+    """
+
+    db.create_table_if_not_exists(event_bronze_prediction_table.table_name)
+    db.execute_sql(query)
