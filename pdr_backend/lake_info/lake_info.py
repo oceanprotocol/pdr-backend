@@ -22,12 +22,16 @@ class LakeInfo:
         self.html = use_html
 
     def run(self):
+        table_views_overview = TableViewsOverview(self.db)
+
         if self.html:
-            html_renderer = HtmlRenderer(self)
+            validation_overview = ValidationOverview(self.db)
+            html_renderer = HtmlRenderer(
+                self, table_views_overview, validation_overview
+            )
             html_renderer.show()
             return
 
-        table_views_overview = TableViewsOverview(self.db)
         cli_renderer = CliRenderer(table_views_overview)
         cli_renderer.show()
 
