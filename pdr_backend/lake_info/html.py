@@ -9,37 +9,15 @@ import polars as pl
 from dash import Dash, Input, Output, html
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake_info.overview import TableViewsOverview, ValidationOverview
 from pdr_backend.util.time_types import UnixTimeMs
 
 
 class HtmlRenderer:
-    def __init__(self, lake_info):
+    def __init__(self, lake_info, table_views_overview, validation_overview):
         self.lake_info = lake_info
-
-    def get_alerts(self, key: str):
-        violations = self.lake_info.validation_results[key]
-
-        if not violations:
-            return [
-                dbc.Alert(
-                    [
-                        html.I(className="bi bi-check-circle-fill me-2"),
-                        f"{violation_key} - No violations found.",
-                    ],
-                    color="success",
-                    className="d-flex align-items-center",
-                )
-                for violation_key in violations
-            ]
-
-        return [
-            dbc.Alert(
-                [html.I(className="bi bi-x-octagon-fill me-2"), violation],
-                color="danger",
-                className="d-flex align-items-center",
-            )
-            for violation in violations
-        ]
+        self.table_views_overview = table_views_overview
+        self.validation_overview = validation_overview
 
     def get_side_info(self, source: Dict[str, DataFrame], table_name: str):
         result = []
@@ -60,21 +38,12 @@ class HtmlRenderer:
         )
 
         if has_timestamp:
-            min_timestamp = source[table_name]["timestamp"].min()
-            max_timestamp = source[table_name]["timestamp"].max()
-
-            if isinstance(min_timestamp, (int, float)):
-                min_datestr = UnixTimeMs(min_timestamp).to_timestr()
-            else:
-                min_datestr = None
-
-            if isinstance(max_timestamp, (int, float)):
-                max_datestr = UnixTimeMs(max_timestamp).to_timestr()
-            else:
-                max_datestr = None
-
-            min_badge = fallback_badge("Min timestamp:", min_timestamp, min_datestr)
-            max_badge = fallback_badge("Max timestamp:", max_timestamp, max_datestr)
+            min_badge = fallback_badge(
+                "Min timestamp:", source[table_name]["timestamp"].min()
+            )
+            max_badge = fallback_badge(
+                "Max timestamp:", source[table_name]["timestamp"].max()
+            )
 
             result.append(html.Div([min_badge, max_badge]))
 
@@ -84,45 +53,47 @@ class HtmlRenderer:
 
         return result
 
+    def get_main_info(
+        self,
+        source: Dict[str, DataFrame],
+        table_name: str,
+        filter_value: Optional[str] = None,
+    ):
+        if not filter_value:
+            table_type = "Preview:"
+            filtered_df = source[table_name].limit(100)
+        else:
+            table_type = "Results:"
+            filtered_df = source[table_name].filter(pl.col("user") == filter_value)
+
+        table = dbc.Table.from_dataframe(
+            filtered_df.to_pandas(),
+            striped=True,
+            bordered=True,
+            hover=True,
+            responsive=True,
+            className="small",
+        )
+
+        return html.Div([html.Strong(table_type), table])
+
     def html_table_info(
         self,
         source: Dict[str, DataFrame],
-        violation_key: str,
         filter_value: Optional[str] = None,
     ):
-        result = []
-
-        alerts = self.get_alerts(violation_key)
-
         if not source:
-            return alerts
+            return []
 
+        result = []
         for table_name in source:
             side_info = self.get_side_info(source, table_name)
-            main_info = []
-
-            if not filter_value:
-                table_type = "Preview:"
-                filtered_df = source[table_name].limit(100)
-            else:
-                table_type = "Results:"
-                filtered_df = source[table_name].filter(pl.col("user") == filter_value)
-
-            table = dbc.Table.from_dataframe(
-                filtered_df.to_pandas(),
-                striped=True,
-                bordered=True,
-                hover=True,
-                responsive=True,
-                className="small",
-            )
-            main_info.append(html.Div([html.Strong(table_type), table]))
+            main_info = self.get_main_info(source, table_name, filter_value)
 
             result.append(
                 dbc.Tab(
                     label=table_name,
                     children=[
-                        dbc.Row([dbc.Col(alerts)]),
                         dbc.Row(
                             [
                                 dbc.Col(side_info, width=3),
@@ -137,10 +108,7 @@ class HtmlRenderer:
 
     def validation_report(self):
         result = []
-        for key, violations in self.lake_info.validation_results.items():
-            if key == "validate_tables_in_lake" or key == "validate_no_views_in_lake":
-                continue
-
+        for key, violations in self.validation_overview.validation_results.items():
             if not violations:
                 alerts = [
                     dbc.Alert(
@@ -174,7 +142,7 @@ class HtmlRenderer:
             __name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
         )
 
-        total_violations = any(self.lake_info.validation_results.values())
+        total_violations = any(self.validation_overview.validation_results.values())
 
         violations_text = (
             "No violations found"
@@ -205,8 +173,7 @@ class HtmlRenderer:
                         dbc.Tab(
                             label="Table Info",
                             children=self.html_table_info(
-                                self.lake_info.table_info,
-                                "validate_tables_in_lake",
+                                self.table_views_overview.table_info,
                             ),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
@@ -215,15 +182,14 @@ class HtmlRenderer:
                         dbc.Tab(
                             label="View Info",
                             children=self.html_table_info(
-                                self.lake_info.view_info,
-                                "validate_no_views_in_lake",
+                                self.table_views_overview.view_info,
                             ),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
                             id="view_info",
                         ),
                         dbc.Tab(
-                            label="Validation report (others)",
+                            label="Validation report",
                             children=self.validation_report(),
                             labelClassName="text-success",
                             style={"margin-top": "10px"},
@@ -255,7 +221,11 @@ def simple_badge(text, value):
     )
 
 
-def fallback_badge(text, value, nat_str):
+def fallback_badge(text, value):
+    nat_str = (
+        UnixTimeMs(value).to_timestr() if isinstance(value, (int, float)) else None
+    )
+
     return dbc.Button(
         [
             text,
@@ -285,7 +255,6 @@ def get_callbacks(html_renderer, app):
     )
     def filter_tables(filter_value):
         return html_renderer.html_table_info(
-            html_renderer.lake_info.table_info,
-            "validate_tables_in_lake",
+            html_renderer.table_views_overview.table_info,
             filter_value,
         )
