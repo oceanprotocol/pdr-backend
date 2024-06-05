@@ -62,19 +62,8 @@ def simple_badge(text, value):
     )
 
 
-def alert_validation_ok(key: str):
-    return dbc.Alert(
-        [
-            html.I(className="bi bi-check-circle-fill me-2"),
-            f"{key} - No violations found",
-        ],
-        color="success",
-        className="d-flex align-items-center",
-    )
-
-
 def alert_validation_error(violation: str):
-    dbc.Alert(
+    return dbc.Alert(
         [html.I(className="bi bi-x-octagon-fill me-2"), violation],
         color="danger",
         className="d-flex align-items-center",

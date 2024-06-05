@@ -11,7 +11,6 @@ from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake_info.html_components import (
     alert_validation_error,
-    alert_validation_ok,
     fallback_badge,
     get_types_table,
     simple_badge,
@@ -107,16 +106,31 @@ class HtmlRenderer:
         return dbc.Tabs(children=result, style={"margin-top": "10px"})
 
     def validation_report(self):
-        result = []
-        for key, violations in self.validation_overview.validation_results.items():
-            alerts = [alert_validation_error(violation) for violation in violations]
+        accordion_items = []
+        active_items = []
 
-            if not alerts:
-                alerts = [alert_validation_ok(key)]
+        for i, key in enumerate(self.validation_overview.validation_results.keys()):
+            violations = self.validation_overview.validation_results[key]
+            if violations:
+                active_items.append(f"item-{i}")
 
-            result += alerts
+            accordion_items.append(
+                dbc.AccordionItem(
+                    [alert_validation_error(violation) for violation in violations],
+                    title=(
+                        f"{key} - {len(violations)} violation(s)"
+                        if violations
+                        else f"{key} - OK!"
+                    ),
+                )
+            )
 
-        return [html.Div(result, style={"margin-top": "10px"})]
+        return dbc.Accordion(
+            accordion_items,
+            always_open=True,
+            active_item=active_items,
+            style={"margin-top": "10px"},
+        )
 
     def show(self):
         app = Dash(
