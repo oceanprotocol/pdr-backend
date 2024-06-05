@@ -177,6 +177,18 @@ class DuckDBDataStore(BaseDataStore):
         self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
+    def drop_records_from_table_by_ids(self, table_name: str, ids: list):
+        """
+        Drop the records from the table by the provided IDs.
+        @arguments:
+            table_name - A unique name for the table.
+            ids - The list of IDs to drop.
+        @example:
+            drop_records_from_table_by_ids("slots", [1, 2, 3])
+        """
+        self.execute_sql(f"DELETE FROM {table_name} WHERE ID IN {ids}")
+
+    @enforce_types
     def move_table_data(self, temp_table, permanent_table):
         """
         Move the table data from the temporary storage to the permanent storage.
