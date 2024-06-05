@@ -261,7 +261,7 @@ class SimEngine:
           tokcoin_amt_recd -- # tokcoins received.
         """
         if usdcoin_amt_send > self.st.holdings[self.usdcoin]:
-            raise Exception(f"Out of USD, this shouldn't happen.")
+            raise Exception("Out of USD, this shouldn't happen.")
         self.st.holdings[self.usdcoin] -= usdcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
@@ -299,7 +299,7 @@ class SimEngine:
           usdcoin_amt_recd -- # usdcoins received
         """
         if tokcoin_amt_send > self.st.holdings[self.tokcoin]:
-            raise Exception(f"Out of tokens, this shouldn't happen.")
+            raise Exception("Out of tokens, this shouldn't happen.")
         self.st.holdings[self.tokcoin] -= tokcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
