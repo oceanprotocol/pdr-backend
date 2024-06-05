@@ -33,11 +33,12 @@ def get_waiting_template(err):
 def get_header_elements(run_id, st, ts):
     return [
         html.H2(f"Simulation ID: {run_id}", id="sim_state_text"),
-        html.H2(
+        html.H3(
             f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state",
             id="sim_current_ts",
             # stops refreshing if final state was reached. Do not remove this class!
             className="finalState" if ts == "final" else "runningState",
+            style={"marginTop": "0", "textAlign": "center"},
         ),
     ]
 
@@ -48,21 +49,52 @@ def side_by_side_graphs(figures, name1, name2):
             dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
             dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
         ],
-        style={"display": "flex", "justifyContent": "space-between"},
+        style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "width": "100%",
+            "height": "50%",
+        },
     )
 
 
-def arrange_figures(figures):
+def get_tabs(figures):
     return [
-        side_by_side_graphs(figures, "pdr_profit_vs_time", "trader_profit_vs_time"),
-        html.Div(
-            [
-                dcc.Graph(figure=figures["accuracy_vs_time"], id="accuracy_vs_time"),
-            ]
-        ),
-        side_by_side_graphs(figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"),
-        side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response"),
-        side_by_side_graphs(figures, "f1_precision_recall_vs_time", "log_loss_vs_time"),
+        {
+            "name": "Profit",
+            "components": [
+                side_by_side_graphs(
+                    figures, "pdr_profit_vs_time", "trader_profit_vs_time"
+                ),
+                side_by_side_graphs(
+                    figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"
+                ),
+            ],
+        },
+        {
+            "name": "Model performance",
+            "components": [
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["accuracy_vs_time"],
+                            id="accuracy_vs_time",
+                            style={"width": "100%"},
+                        ),
+                    ],
+                    style={"width": "100%", "height": "50%"},
+                ),
+                side_by_side_graphs(
+                    figures, "f1_precision_recall_vs_time", "log_loss_vs_time"
+                ),
+            ],
+        },
+        {
+            "name": "Model response",
+            "components": [
+                side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response")
+            ],
+        },
     ]
 
 
@@ -72,4 +104,61 @@ def selected_var_checklist(state_options, selected_vars_old):
         value=selected_vars_old,
         id="selected_vars",
         style={"display": "none"},
+    )
+
+
+def get_tabs_component(elements):
+    return dcc.Tabs(
+        id="tabs",
+        value=elements[0]["name"],
+        children=[
+            dcc.Tab(
+                label=e["name"],
+                value=e["name"],
+                children=e["components"],
+                style={"width": "250px"},
+                selected_style={"borderLeft": "4px solid blue"},
+            )
+            for e in elements
+        ],
+        vertical=True,
+        style={"fontSize": "20px"},
+        content_style={
+            "width": "100%",
+            "height": "100%",
+            "borderLeft": "1px solid #d6d6d6",
+            "borderTop": "1px solid #d6d6d6",
+        },
+        parent_style={"width": "100%", "height": "100%"},
+    )
+
+
+def get_main_container():
+    return html.Div(
+        [
+            html.Div(
+                empty_graphs_template,
+                id="header",
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "height": "100px",
+                },
+            ),
+            html.Div(
+                empty_graphs_template,
+                id="tabs-container",
+                style={"height": "calc(100% - 100px)"},
+            ),
+        ],
+        id="main-container",
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "flexStart",
+            "alignIntems": "start",
+            "height": "100%",
+        },
     )
