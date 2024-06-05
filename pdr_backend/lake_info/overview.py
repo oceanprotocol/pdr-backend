@@ -34,6 +34,11 @@ class TableViewsOverview:
                 "SELECT * FROM {}".format(view_name)
             )
 
+    def get_filtered_result(self, table_name: str, filter_value: str) -> DataFrame:
+        return self.db.query_data(
+            "SELECT * FROM {} WHERE user = '{}' LIMIT 100".format(table_name, filter_value)
+        )
+
 
 class ValidationOverview:
     def __init__(self, db):
