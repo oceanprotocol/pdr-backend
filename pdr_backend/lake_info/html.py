@@ -5,8 +5,14 @@ import polars as pl
 from dash import Dash, Input, Output, html
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake_info.html_components import (
+    alert_validation_error,
+    alert_validation_ok,
+    fallback_badge,
+    get_types_table,
+    simple_badge,
+)
 from pdr_backend.lake_info.overview import TableViewsOverview, ValidationOverview
-from pdr_backend.lake_info.html_components import get_types_table, fallback_badge, simple_badge, alert_validation_ok, alert_validation_error
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -35,7 +41,9 @@ class HtmlRenderer:
 
         return result
 
-    def _get_main_info(self, info_key: str, table_name: str, filter_value: Optional[str] = None):
+    def _get_main_info(
+        self, info_key: str, table_name: str, filter_value: Optional[str] = None
+    ):
         df = getattr(self.table_views_overview, info_key)[table_name]
 
         if not filter_value:
@@ -43,7 +51,9 @@ class HtmlRenderer:
             filtered_df = df.limit(100)
         else:
             table_type = "Results (ltd. to 100 rows):"
-            filtered_df = self.table_views_overview.get_filtered_result(table_name, filter_value)
+            filtered_df = self.table_views_overview.get_filtered_result(
+                table_name, filter_value
+            )
 
         table = dbc.Table.from_dataframe(
             filtered_df.to_pandas(),
@@ -175,11 +185,14 @@ def get_callbacks(html_renderer, app):
             table_wrapper_ids.append(f"tinfo_{info_key}_{table_name}")
 
     for table_wrapper_id in table_wrapper_ids:
+
         @app.callback(
             Output(table_wrapper_id, "children"),
             Input("userFilter", "value"),
         )
         def filter_tables(filter_value):
             info_key = table_wrapper_id.split("_")[1] + "_info"
-            table_name = table_wrapper_id[table_wrapper_id.index(info_key) + len(info_key) + 1:]
+            table_name = table_wrapper_id[
+                table_wrapper_id.index(info_key) + len(info_key) + 1 :
+            ]
             return html_renderer._get_main_info(info_key, table_name, filter_value)
