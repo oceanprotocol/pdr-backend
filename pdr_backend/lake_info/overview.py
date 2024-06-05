@@ -76,8 +76,10 @@ class ValidationOverview:
 
     def validate_expected_view_names(self) -> List[str]:
         violations: List[str] = []
-        if len(self.all_view_names) > 0:
-            violations.append("Lake has VIEWs. Please clean lake using CLI.")
+        violations = [
+            "Unexpected view: {}. Please clean using CLI.".format(view_name)
+            for view_name in self.all_view_names
+        ]
 
         return violations
 
