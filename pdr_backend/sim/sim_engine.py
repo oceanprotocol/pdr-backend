@@ -57,6 +57,8 @@ class SimEngine:
         self.exchange = exchange_mgr.exchange(
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
+        self.prev_portfolio_worth = 0
+        self.position_open = False
 
         if multi_id:
             self.multi_id = multi_id
@@ -171,16 +173,27 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        # trader: enter the trading position
-        usdcoin_holdings_before = st.holdings[self.usdcoin]
-        if pred_up:  # buy; exit later by selling
+        def portfolio_worth(price):
+            return st.holdings[self.usdcoin] + st.holdings[self.tokcoin] * price
+
+        portfolio_worth_now = portfolio_worth(curprice)
+
+        if pred_up and not self.position_open:
+            # position size determined by confidence
             usdcoin_amt_send = trade_amt * conf_up
-            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
-        elif pred_down:  # sell; exit later by buying
-            target_usdcoin_amt_recd = trade_amt * conf_down
-            p = self.ppss.trader_ss.fee_percent
-            tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
+            self._buy(curprice, usdcoin_amt_send)  # open position
+            self.position_open = True
+            self.prev_portfolio_worth = portfolio_worth_now
+            st.trader_profits_USD.append(0)
+        elif pred_down and self.position_open:
+            tokcoin_amt_send = st.holdings[self.tokcoin]
             self._sell(curprice, tokcoin_amt_send)
+            self.position_open = False
+            profit = portfolio_worth_now - self.prev_portfolio_worth
+            # profit only recorded when exiting the position
+            st.trader_profits_USD.append(profit)
+        else:
+            st.trader_profits_USD.append(0)
 
         # observe true price
         true_up = trueprice > curprice
@@ -203,19 +216,6 @@ class SimEngine:
             loss = log_loss(st.ytrues, st.probs_up)
         st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
 
-        # trader: exit the trading position
-        if pred_up:
-            # we'd bought; so now sell
-            self._sell(trueprice, tokcoin_amt_recd)
-        elif pred_down:
-            # we'd sold, so buy back the same # tokcoins as we sold
-            # (do *not* buy back the same # usdcoins! Not the same thing!)
-            target_tokcoin_amt_recd = tokcoin_amt_send
-            p = self.ppss.trader_ss.fee_percent
-            usdcoin_amt_send = target_tokcoin_amt_recd * (1 - p) * trueprice
-            tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
-        usdcoin_holdings_after = st.holdings[self.usdcoin]
-
         # track predictoor profit
         tot_stake = others_stake + stake_amt
         others_stake_correct = others_stake * pdr_ss.others_accuracy
@@ -229,10 +229,6 @@ class SimEngine:
             acct_down_profit += (revenue + tot_stake) * percent_to_me
         pdr_profit_OCEAN = acct_up_profit + acct_down_profit
         st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
-
-        # track trading profit
-        trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        st.trader_profits_USD.append(trader_profit_USD)
 
         SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 
@@ -264,12 +260,13 @@ class SimEngine:
         @return
           tokcoin_amt_recd -- # tokcoins received.
         """
-        usdcoin_amt_send = min(usdcoin_amt_send, self.st.holdings[self.usdcoin])
+        if usdcoin_amt_send > self.st.holdings[self.usdcoin]:
+            raise Exception(f"Out of USD, this shouldn't happen.")
         self.st.holdings[self.usdcoin] -= usdcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = usdcoin_amt_send * p
-        tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
+        tokcoin_amt_recd = (usdcoin_amt_send - usdcoin_amt_fee) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
@@ -301,18 +298,20 @@ class SimEngine:
         @return
           usdcoin_amt_recd -- # usdcoins received
         """
-        tokcoin_amt_send = min(tokcoin_amt_send, self.st.holdings[self.tokcoin])
+        if tokcoin_amt_send > self.st.holdings[self.tokcoin]:
+            raise Exception(f"Out of tokens, this shouldn't happen.")
         self.st.holdings[self.tokcoin] -= tokcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = tokcoin_amt_send * p * price
-        usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
+        tok_amt_fee = tokcoin_amt_send * p
+        usdcoin_amt_recd = (tokcoin_amt_send - tok_amt_fee) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
             str(self.predict_feed.pair), tokcoin_amt_send
         )
 
+        usdcoin_amt_fee = tok_amt_fee * price
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
             tokcoin_amt_send,
