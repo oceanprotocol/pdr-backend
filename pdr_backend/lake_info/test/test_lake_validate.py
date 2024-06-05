@@ -1,11 +1,12 @@
 import io
 from unittest.mock import MagicMock
 
-from enforce_typing import enforce_types
 import polars as pl
+from enforce_typing import enforce_types
 
 from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.lake.lake_validate import LakeValidate
+from pdr_backend.lake_info.lake_info import LakeInfo
+from pdr_backend.lake_info.overview import ValidationOverview
 
 csv_string = """
 pair,timeframe,slot,datetime,timedelta,count
@@ -185,17 +186,16 @@ def test_validate_lake_mock_sql_failure(tmpdir):
         fin_timestr,
     )
 
-    lake_validate = LakeValidate(ppss)
-
     # mock duckDB
     mock_pds = MagicMock()
     mock_pds.query_data.return_value = sql_result
-    lake_validate.db = mock_pds
 
-    result = lake_validate.validate_lake_bronze_predictions_gaps()
+    validation_overview = ValidationOverview(mock_pds)
+
+    result = validation_overview.validate_lake_bronze_predictions_gaps()
 
     # assert that the function called the query_data method
-    mock_pds.query_data.assert_called_once()
+    mock_pds.query_data.assert_called()
 
     # assert that the data validation failed as we would expect it to
     # review the logs and verify the data is what we expect to see
