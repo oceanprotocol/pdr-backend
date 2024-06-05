@@ -36,7 +36,9 @@ class TableViewsOverview:
 
     def get_filtered_result(self, table_name: str, filter_value: str) -> DataFrame:
         return self.db.query_data(
-            "SELECT * FROM {} WHERE user = '{}' LIMIT 100".format(table_name, filter_value)
+            "SELECT * FROM {} WHERE user = '{}' LIMIT 100".format(
+                table_name, filter_value
+            )
         )
 
 
