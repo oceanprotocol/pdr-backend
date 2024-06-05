@@ -1,9 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Optional
 
 import dash_bootstrap_components as dbc
-import polars as pl
 from dash import Dash, Input, Output, html
-from polars.dataframe.frame import DataFrame
 
 from pdr_backend.lake_info.html_components import (
     alert_validation_error,
@@ -11,8 +9,6 @@ from pdr_backend.lake_info.html_components import (
     get_types_table,
     simple_badge,
 )
-from pdr_backend.lake_info.overview import TableViewsOverview, ValidationOverview
-from pdr_backend.util.time_types import UnixTimeMs
 
 
 class HtmlRenderer:
@@ -201,12 +197,11 @@ def get_callbacks(html_renderer, app):
     for table_wrapper_id in table_wrapper_ids:
 
         @app.callback(
-            Output(table_wrapper_id, "children"),
+            Output(table_wrapper_id, "children"),  # pylint: disable=cell-var-from-loop
             Input("userFilter", "value"),
         )
         def filter_tables(filter_value):
-            info_key = table_wrapper_id.split("_")[1] + "_info"
-            table_name = table_wrapper_id[
-                table_wrapper_id.index(info_key) + len(info_key) + 1 :
-            ]
+            twid_alias = table_wrapper_id  # pylint: disable=cell-var-from-loop
+            info_key = twid_alias.split("_")[1] + "_info"
+            table_name = twid_alias[twid_alias.index(info_key) + len(info_key) + 1 :]
             return html_renderer._get_main_info(info_key, table_name, filter_value)

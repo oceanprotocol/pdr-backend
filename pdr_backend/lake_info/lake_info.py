@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL

@@ -1,10 +1,6 @@
-from typing import Dict, List, Optional
-
 import dash_bootstrap_components as dbc
-from dash import Dash, Input, Output, html
-from polars.dataframe.frame import DataFrame
+from dash import html
 
-from pdr_backend.lake_info.overview import TableViewsOverview, ValidationOverview
 from pdr_backend.util.time_types import UnixTimeMs
 
 

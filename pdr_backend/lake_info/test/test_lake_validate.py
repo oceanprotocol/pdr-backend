@@ -4,8 +4,6 @@ from unittest.mock import MagicMock
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.lake_info.lake_info import LakeInfo
 from pdr_backend.lake_info.overview import ValidationOverview
 
 csv_string = """
@@ -172,19 +170,9 @@ ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 
 
 @enforce_types
-def test_validate_lake_mock_sql_failure(tmpdir):
+def test_validate_lake_mock_sql_failure():
     sql_result = pl.read_csv(io.StringIO(csv_string))
     assert isinstance(sql_result, pl.DataFrame)
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, _ = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
 
     # mock duckDB
     mock_pds = MagicMock()
