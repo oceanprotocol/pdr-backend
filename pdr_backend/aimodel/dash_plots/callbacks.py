@@ -4,6 +4,7 @@ import dash
 import numpy as np
 import pandas as pd
 from dash import Input, Output, State, html
+import dash_bootstrap_components as dbc
 from scipy import stats
 
 from pdr_backend.aimodel.autocorrelation import AutocorrelationPlotdataFactory
@@ -42,9 +43,23 @@ def get_callbacks(app):
         return data
 
     @app.callback(
-        Output("error-message", "children"),
-        [Input("file-data", "data")],
+        Output("loading", "custom_spinner"), Input("autocorelation-lag", "value")
     )
+    def custom_spinner(autocorelation_lag):
+        lag = int(autocorelation_lag) if autocorelation_lag else 0
+        return html.H2(
+            [
+                (
+                    "This could take several seconds, please be patient "
+                    if lag > 50
+                    else ""
+                ),
+                dbc.Spinner(),
+            ],
+            style={"height": "100%"},
+        )
+
+    @app.callback(Output("error-message", "children"), Input("file-data", "data"))
     def display_read_data_error(store_data):
         if not store_data:
             return html.H2(
