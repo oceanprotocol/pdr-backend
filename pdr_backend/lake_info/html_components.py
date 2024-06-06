@@ -64,3 +64,40 @@ def alert_validation_error(violation: str):
         color="danger",
         className="d-flex align-items-center",
     )
+
+
+def get_overview_summary(dfs):
+    rows = [
+        html.Tr(
+            [
+                html.Th("Table name"),
+                html.Th("Number of rows"),
+                html.Th("Min timestamp"),
+                html.Th("Max timestamp"),
+                html.Th("Min datestr"),
+                html.Th("Max datestr"),
+            ]
+        )
+    ]
+
+    for name, df in dfs.items():
+        cells = [
+            name,
+            df.shape[0],
+            df["timestamp"].min() if "timestamp" in df.columns else "-",
+            df["timestamp"].max() if "timestamp" in df.columns else "-",
+            (
+                UnixTimeMs(df["timestamp"].min()).to_timestr()
+                if "timestamp" in df.columns
+                else "-"
+            ),
+            (
+                UnixTimeMs(df["timestamp"].max()).to_timestr()
+                if "timestamp" in df.columns
+                else "-"
+            ),
+        ]
+
+        rows.append(html.Tr([html.Td(cell) for cell in cells]))
+
+    return dbc.Table(rows, bordered=True, striped=True, hover=True, responsive=True)
