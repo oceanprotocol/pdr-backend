@@ -10,6 +10,7 @@ from dash import Dash, Input, Output, html
 from pdr_backend.lake_info.html_components import (
     alert_validation_error,
     fallback_badge,
+    get_overview_summary,
     get_types_table,
     simple_badge,
 )
@@ -128,6 +129,9 @@ class HtmlRenderer:
             style={"margin-top": "10px"},
         )
 
+    def summary_overview(self):
+        return get_overview_summary(self.table_views_overview.table_info)
+
     def show(self):
         app = Dash(
             __name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
@@ -161,6 +165,12 @@ class HtmlRenderer:
                 ),
                 dbc.Tabs(
                     [
+                        dbc.Tab(
+                            label="Summary overview",
+                            children=self.summary_overview(),
+                            labelClassName="text-success",
+                            style={"margin-top": "10px"},
+                        ),
                         dbc.Tab(
                             label="Table Info",
                             children=self.html_table_info("table_info"),
