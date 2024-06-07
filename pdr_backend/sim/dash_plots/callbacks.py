@@ -70,7 +70,7 @@ def get_callbacks(app):
         try:
             st, ts = wait_for_state(sim_plotter, run_id)
         except Exception as e:
-            return [get_waiting_template(e)]
+            return [], [get_waiting_template(e)]
 
         header = get_header_elements(run_id, st, ts)
         elements = []
