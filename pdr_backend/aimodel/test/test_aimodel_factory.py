@@ -10,8 +10,9 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
-    plot_classif_response,
     plot_aimodel_varimps,
+    plot_classif_response,
+    plot_regr_response,
 )
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
@@ -89,7 +90,8 @@ def _test_aimodel_2vars(approach:str):
     # plot classifier response
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    sweep_vars = [0, 1]
+    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
     classif_figure = plot_classif_response(d)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
@@ -103,10 +105,8 @@ def _test_aimodel_2vars(approach:str):
     assert ycont_hat.dtype == float
     
     # plot regressor response
-    colnames = ["x0", "x1"]
-    slicing_x = np.array([0.0, 1.0])  # arbitrary
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    regr_figure = plot_aimodel_regr_response(d)
+    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
+    regr_figure = plot_regr_response(d)
     assert isinstance(regr_figure, Figure)
     if SHOW_PLOT:
         regr_figure.show()
@@ -165,10 +165,10 @@ def test_aimodel_accuracy_from_create_xy():
 
 
 def test_aimodel_1var_LinearLogistic():
-    self._test_aimodel_1var("LinearLogistic")
+    _test_aimodel_1var("LinearLogistic")
     
 def test_aimodel_1var_RegrLinearLS():
-    self._test_aimodel_1var("RegrLinearLS")
+    _test_aimodel_1var("RegrLinearLS")
     
 @enforce_types
 def _test_aimodel_1var(approach:str):
@@ -186,7 +186,7 @@ def _test_aimodel_1var(approach:str):
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
@@ -208,7 +208,7 @@ def _test_aimodel_1var(approach:str):
     assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()
-
+        
 
     
 @enforce_types

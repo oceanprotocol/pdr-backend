@@ -54,11 +54,9 @@ class AimodelFactory:
 
         @return
           model -- Aimodel
-        """
-        do_regr = self.ss.do_regr
-        
+        """        
         # regressor, wrapped by classifier
-        if do_regr:
+        if self.ss.do_regr:
             return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)
 
         # direct classifier
